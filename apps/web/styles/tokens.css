@@ -1,0 +1,77 @@
+:root {
+  /* colors */
+  --color-bg-page: #f7f8fb;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-text-primary: #101828;
+  --color-text-secondary: #344054;
+  --color-text-muted: #667085;
+  --color-border-subtle: #eaecf0;
+  --color-border-strong: #d0d5dd;
+  --color-brand-primary: #2357ff;
+  --color-brand-primary-hover: #1d46d8;
+  --color-danger: #d92d20;
+  --color-warning: #dc6803;
+  --color-success: #039855;
+  --color-info: #1570ef;
+  --color-focus-ring: #84adff;
+
+  /* gradients */
+  --gradient-hero: radial-gradient(circle at top left, rgba(35, 87, 255, 0.14), transparent 32%), linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
+
+  /* typography */
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 3.5rem;
+  --line-height-tight: 1.1;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-full: 999px;
+
+  /* shadow */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.1);
+  --shadow-md: 0 8px 20px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 20px 44px rgba(16, 24, 40, 0.12);
+
+  /* layout */
+  --container-max-width: 1180px;
+  --sidebar-width: 17rem;
+  --header-height: 4rem;
+  --inbox-filter-width: 17rem;
+  --message-detail-width: 28rem;
+
+  /* states */
+  --transition-fast: 120ms ease;
+  --transition-normal: 180ms ease;
+  --opacity-disabled: 0.5;
+}

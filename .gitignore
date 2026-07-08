@@ -1,0 +1,46 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.npm/
+.pnpm-store/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker/local data
+postgres-data/
+redis-data/
