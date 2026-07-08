@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.schemas.common import MessageResponse
 from app.schemas.marketplace_account import (
     MarketplaceAccountActionResponse,
     MarketplaceAccountCreateRequest,
@@ -18,7 +17,9 @@ from app.schemas.marketplace_account import (
     MarketplaceAccountUpdateRequest,
     MarketplaceAccountValidateResponse,
 )
+from app.schemas.sync import MarketplaceSyncResponse
 from app.services.marketplace_account_service import MarketplaceAccountService
+from app.services.sync_service import MarketplaceSyncService
 
 router = APIRouter(prefix="/api/marketplace-accounts", tags=["marketplace-accounts"])
 
@@ -148,14 +149,27 @@ async def revoke_marketplace_credentials(
     )
 
 
-@router.post("/{account_id}/sync", response_model=MessageResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/{account_id}/sync", response_model=MarketplaceSyncResponse, status_code=status.HTTP_202_ACCEPTED)
 async def request_marketplace_sync(
     account_id: UUID,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
-) -> MessageResponse:
-    # Sprint 2 intentionally exposes the endpoint shape but does not run sync yet.
-    # Sprint 3 will enqueue a WB sync job after adapter ingestion is implemented.
-    service = MarketplaceAccountService(session)
-    await service.get_account(actor=current_user, account_id=account_id)
-    return MessageResponse(message="Sync request accepted. Worker implementation starts in Sprint 3.")
+) -> MarketplaceSyncResponse:
+    service = MarketplaceSyncService(session)
+    account, stats, error_code, error_message_safe = await service.sync_account(
+        actor=current_user,
+        account_id=account_id,
+    )
+    await session.commit()
+    return MarketplaceSyncResponse(
+        account_id=account.id,
+        marketplace=account.marketplace,
+        status="failed" if error_code else "success",
+        imported_reviews=stats.imported_reviews,
+        imported_questions=stats.imported_questions,
+        updated_reviews=stats.updated_reviews,
+        updated_questions=stats.updated_questions,
+        skipped=stats.skipped,
+        error_code=error_code,
+        error_message_safe=error_message_safe,
+    )

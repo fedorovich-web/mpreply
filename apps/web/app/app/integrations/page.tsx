@@ -38,8 +38,7 @@ export default function IntegrationsPage() {
         <p className="eyebrow">Integrations</p>
         <h1>Подключение маркетплейсов</h1>
         <p>
-          Sprint 2 добавляет безопасный lifecycle API-ключей: encrypted storage, masked UI, validate,
-          rotate, revoke и audit trail.
+          Sprint 3 добавляет ручной запуск WB sync, импорт отзывов и вопросов, deduplication и integration events.
         </p>
       </section>
 
