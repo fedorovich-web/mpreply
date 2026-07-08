@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     auth_secret_key: SecretStr = Field(default=SecretStr("replace-with-local-dev-secret"))
     auth_access_token_ttl_minutes: int = 15
     auth_refresh_token_ttl_days: int = 30
+    auth_cookie_secure: bool = False
+    auth_cookie_samesite: str = "lax"
 
     credentials_encryption_key: SecretStr = Field(default=SecretStr("replace-with-fernet-compatible-key"))
     openrouter_api_key: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))

@@ -45,6 +45,22 @@ docs/
   deployment/
 ```
 
+
+## Sprint 1 status
+
+Sprint 1 adds the first multi-tenant SaaS layer:
+
+- auth API: register, login, logout, current user;
+- HTTP-only auth cookie baseline;
+- organizations API;
+- owner membership creation;
+- RBAC roles: owner, admin, manager, viewer;
+- tenant membership checks;
+- audit events for auth and organization changes;
+- frontend auth placeholders for `/auth/register` and `/auth/login`.
+
+Next planned sprint: encrypted marketplace credentials and marketplace account management.
+
 ## Local development target
 
 ```bash

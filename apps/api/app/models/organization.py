@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,6 +21,7 @@ class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class OrganizationUser(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "organization_users"
+    __table_args__ = (UniqueConstraint("organization_id", "user_id", name="uq_organization_users_member"),)
 
     organization_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, index=True)
     user_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
