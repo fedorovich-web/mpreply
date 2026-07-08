@@ -361,3 +361,91 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+.inbox-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, var(--inbox-filter-width)) minmax(0, 1fr) minmax(280px, var(--message-detail-width));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.inbox-filters,
+.message-list,
+.message-detail {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.inbox-filters,
+.message-detail,
+.message-card,
+.detail-block {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.inbox-filters h2,
+.message-card h2,
+.message-card p,
+.message-detail h2,
+.message-detail p,
+.detail-block strong {
+  margin: 0;
+}
+
+.filter-chip {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  justify-content: flex-start;
+  padding: 0 var(--space-4);
+  transition: background var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
+}
+
+.filter-chip:hover {
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.message-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.message-card-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.message-card p,
+.message-detail p {
+  color: var(--color-text-secondary);
+}
+
+.detail-block {
+  background: var(--color-bg-elevated);
+}
+
+.detail-block span {
+  display: block;
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 1100px) {
+  .inbox-layout {
+    grid-template-columns: 1fr;
+  }
+}
