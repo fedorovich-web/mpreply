@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
+from app.api.marketplace_accounts import router as marketplace_accounts_router
 from app.api.organizations import router as organizations_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -30,6 +31,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(organizations_router)
+    app.include_router(marketplace_accounts_router)
     return app
 
 

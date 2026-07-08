@@ -1,72 +1,43 @@
-# Respio
+# Respio Sprint 2 patch — Marketplace credentials
 
-Production-grade SaaS foundation for auto-first marketplace replies.
+This patch must be applied on top of Sprint 1.
 
-## Product baseline
+## Includes
 
-Respio is an auto-first SaaS for marketplace sellers. The default response mode is automatic: Respio generates and sends replies through supported marketplace APIs when automation rules and safety checks allow it. Semi-automatic mode is available as an explicit option: AI prepares a draft, and a manager confirms sending.
+- Marketplace accounts API:
+  - `POST /api/marketplace-accounts`
+  - `GET /api/marketplace-accounts?organization_id=...`
+  - `GET /api/marketplace-accounts/{id}`
+  - `PATCH /api/marketplace-accounts/{id}`
+  - `POST /api/marketplace-accounts/{id}/validate`
+  - `POST /api/marketplace-accounts/{id}/rotate-credentials`
+  - `POST /api/marketplace-accounts/{id}/revoke-credentials`
+  - `POST /api/marketplace-accounts/{id}/sync` placeholder for Sprint 3
+- Backend-only encrypted marketplace credentials lifecycle.
+- Owner/admin-only credential management.
+- Masked credentials in API responses.
+- Validation through Wildberries adapter.
+- Audit and integration events for credential operations.
+- Alembic migration `20260708_0003_marketplace_account_management.py`.
+- Frontend integration screens:
+  - `/app/integrations`
+  - `/app/integrations/wildberries`
+- QA and security docs.
 
-## Security baseline
+## Apply
 
-- Marketplace API credentials are backend-only.
-- Credentials are stored encrypted at rest.
-- Credentials are never returned to the frontend after creation.
-- Credentials are never logged.
-- OpenRouter API key is backend-only.
-- Every critical action must be written to audit logs.
-
-## Frontend baseline
-
-All UI values must be tokenized via CSS variables from the first commit:
-colors, gradients, typography, spacing, margins, paddings, gaps, radius, shadows, hover, active, focus, layout sizes and dashboard density values.
-
-## Repository layout
-
-```text
-apps/
-  api/          FastAPI backend
-  web/          Next.js frontend
-  worker/       background worker placeholder
-  scheduler/    scheduler placeholder
-packages/
-  design-tokens/
-  ui/
-  contracts/
-infra/
-  docker/
-  coolify/
-docs/
-  adr/
-  security/
-  architecture/
-  api/
-  product/
-  qa/
-  deployment/
+```powershell
+cd C:\Projects\respio
+git checkout develop
+git checkout -b sprint-2-marketplace-credentials
+Expand-Archive C:\Users\<USER>\Downloads\respio-sprint2-marketplace-credentials-patch.zip -DestinationPath . -Force
+git status
+git add .
+git commit -m "add marketplace credentials management"
 ```
 
+## Notes
 
-## Sprint 1 status
-
-Sprint 1 adds the first multi-tenant SaaS layer:
-
-- auth API: register, login, logout, current user;
-- HTTP-only auth cookie baseline;
-- organizations API;
-- owner membership creation;
-- RBAC roles: owner, admin, manager, viewer;
-- tenant membership checks;
-- audit events for auth and organization changes;
-- frontend auth placeholders for `/auth/register` and `/auth/login`.
-
-Next planned sprint: encrypted marketplace credentials and marketplace account management.
-
-## Local development target
-
-```bash
-cp .env.example .env
-cd infra/docker
-docker compose -f docker-compose.local.yml up --build
-```
-
-This foundation intentionally contains no production marketplace credentials, no OpenRouter keys, and no business secrets.
+- Sync job execution remains out of scope until Sprint 3.
+- Ozon/Yandex/Avito remain non-production adapters until endpoint-level verification is complete.
+- Do not commit real `.env` files or marketplace API keys.

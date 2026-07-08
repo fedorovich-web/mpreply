@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -22,3 +22,6 @@ class MarketplaceAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     credentials_status: Mapped[str] = mapped_column(String(64), default="pending")
     scopes_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     default_response_mode: Mapped[str] = mapped_column(String(32), default=ResponseMode.INHERIT.value)
+    last_success_sync_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error_sync_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
