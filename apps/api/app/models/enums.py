@@ -51,3 +51,5 @@ class ReplyStatus(StrEnum):
     FAILED = "failed"
     BLOCKED = "blocked"
     MANUAL_REVIEW_REQUIRED = "manual_review_required"
+    WAITING_REVIEW = "waiting_review"
+    APPROVED = "approved"
