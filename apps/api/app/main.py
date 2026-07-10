@@ -8,6 +8,7 @@ from app.api.health import router as health_router
 from app.api.marketplace_accounts import router as marketplace_accounts_router
 from app.api.messages import router as messages_router
 from app.api.organizations import router as organizations_router
+from app.api.replies import router as replies_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 
@@ -28,7 +29,7 @@ def create_app() -> FastAPI:
         allow_origins=[settings.web_app_url, settings.public_site_url],
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-CSRF-Token"],
+        allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Organization-Id"],
     )
 
     app.include_router(health_router)
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(organizations_router)
     app.include_router(marketplace_accounts_router)
     app.include_router(messages_router)
+    app.include_router(replies_router)
     return app
 
 
