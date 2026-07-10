@@ -7,6 +7,7 @@ import { useState } from "react";
 const navItems = [
   { href: "/app/dashboard", label: "Dashboard", description: "Сводка" },
   { href: "/app/inbox", label: "Inbox", description: "Отзывы и вопросы" },
+  { href: "/app/review-queue", label: "Review Queue", description: "Ручная проверка" },
   { href: "/app/ai-assistant", label: "AI Assistant", description: "OpenRouter" },
   { href: "/app/automation-rules", label: "Automation Rules", description: "Auto + SafetyGate" },
   { href: "/app/integrations", label: "Integrations", description: "API-ключи" },

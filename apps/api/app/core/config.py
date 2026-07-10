@@ -12,7 +12,7 @@ _INSECURE_SECRET_MARKERS = {
     "",
     "change-me",
     "replace-me",
-    "replace-with-local-dev-secret",
+    "replace-with-local-dev-secret-at-least-32-bytes",
     "replace-with-fernet-compatible-key",
     "replace-only-in-real-env",
 }
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["local", "staging", "production"] = "local"
     app_name: str = "Respio"
-    app_version: str = "0.1.9"
+    app_version: str = "0.1.10"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     database_url: SecretStr = Field(default=SecretStr("postgresql+asyncpg://respio:respio_password@localhost:5432/respio"))
     redis_url: SecretStr = Field(default=SecretStr("redis://localhost:6379/0"))
 
-    auth_secret_key: SecretStr = Field(default=SecretStr("replace-with-local-dev-secret"))
+    auth_secret_key: SecretStr = Field(default=SecretStr("replace-with-local-dev-secret-at-least-32-bytes"))
     auth_access_token_ttl_minutes: int = 15
     auth_refresh_token_ttl_days: int = 30
     auth_cookie_secure: bool = False
