@@ -1,5 +1,6 @@
 @import "./tokens.css";
 @import "./theme.css";
+@import "./public-site.css";
 
 * {
   box-sizing: border-box;
@@ -98,7 +99,7 @@ h1 {
 
 .button-primary {
   background: var(--color-brand-primary);
-  color: white;
+  color: var(--color-text-on-brand);
 }
 
 .button-primary:hover {
