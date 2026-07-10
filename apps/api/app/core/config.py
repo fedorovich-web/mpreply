@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["local", "staging", "production"] = "local"
     app_name: str = "Respio"
-    app_version: str = "0.1.0"
+    app_version: str = "0.1.8"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"
@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = False
     ai_daily_cost_limit_default: float = 5.00
     auto_reply_daily_limit_default: int = 100
+    auto_reply_max_attempts: int = 4
+    auto_reply_execution_lease_seconds: int = 120
 
 
 @lru_cache
