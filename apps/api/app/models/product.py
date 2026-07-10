@@ -24,4 +24,4 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     category: Mapped[str | None] = mapped_column(String(255), nullable=True)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     product_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    metadata_json: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)

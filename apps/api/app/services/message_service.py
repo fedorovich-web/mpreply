@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import Select, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.errors import bad_request, not_found
 from app.models.customer_message import CustomerMessage
@@ -67,33 +68,24 @@ class MessageService:
         page = max(page, 1)
         page_size = min(max(page_size, 1), 100)
 
+        filters = self._build_filter_conditions(
+            marketplace=marketplace,
+            message_type=message_type,
+            status=status,
+            rating_min=rating_min,
+            rating_max=rating_max,
+            product_id=product_id,
+            search=search,
+        )
         stmt = (
             select(CustomerMessage, Product)
             .outerjoin(Product, CustomerMessage.product_id == Product.id)
-            .where(CustomerMessage.organization_id == organization_id)
+            .where(CustomerMessage.organization_id == organization_id, *filters)
         )
-        stmt = self._apply_filters(
-            stmt,
-            marketplace=marketplace,
-            message_type=message_type,
-            status=status,
-            rating_min=rating_min,
-            rating_max=rating_max,
-            product_id=product_id,
-            search=search,
-        )
-        count_stmt = select(func.count()).select_from(CustomerMessage).where(
-            CustomerMessage.organization_id == organization_id
-        )
-        count_stmt = self._apply_filters(
-            count_stmt,
-            marketplace=marketplace,
-            message_type=message_type,
-            status=status,
-            rating_min=rating_min,
-            rating_max=rating_max,
-            product_id=product_id,
-            search=search,
+        count_stmt = (
+            select(func.count())
+            .select_from(CustomerMessage)
+            .where(CustomerMessage.organization_id == organization_id, *filters)
         )
         count_result = await self.session.execute(count_stmt)
         total = int(count_result.scalar_one())
@@ -202,8 +194,7 @@ class MessageService:
         )
 
     @staticmethod
-    def _apply_filters(
-        stmt: Select,
+    def _build_filter_conditions(
         *,
         marketplace: str | None,
         message_type: str | None,
@@ -212,19 +203,21 @@ class MessageService:
         rating_max: int | None,
         product_id: UUID | None,
         search: str | None,
-    ) -> Select:
+    ) -> list[ColumnElement[bool]]:
+        conditions: list[ColumnElement[bool]] = []
         if marketplace:
-            stmt = stmt.where(CustomerMessage.marketplace == marketplace)
+            conditions.append(CustomerMessage.marketplace == marketplace)
         if message_type:
-            stmt = stmt.where(CustomerMessage.type == message_type)
+            conditions.append(CustomerMessage.type == message_type)
         if status:
-            stmt = stmt.where(CustomerMessage.status == status)
+            conditions.append(CustomerMessage.status == status)
         if rating_min is not None:
-            stmt = stmt.where(CustomerMessage.rating >= rating_min)
+            conditions.append(CustomerMessage.rating >= rating_min)
         if rating_max is not None:
-            stmt = stmt.where(CustomerMessage.rating <= rating_max)
+            conditions.append(CustomerMessage.rating <= rating_max)
         if product_id is not None:
-            stmt = stmt.where(CustomerMessage.product_id == product_id)
+            conditions.append(CustomerMessage.product_id == product_id)
         if search:
-            stmt = stmt.where(CustomerMessage.customer_text.ilike(f"%{search}%"))
-        return stmt
+            conditions.append(CustomerMessage.customer_text.ilike(f"%{search}%"))
+        return conditions
+

@@ -1,3 +1,5 @@
+from typing import cast
+
 from app.adapters.wildberries import WildberriesAdapter
 
 
@@ -24,8 +26,9 @@ def test_wildberries_normalizes_feedback_without_customer_name():
     assert normalized["type"] == "review"
     assert normalized["rating"] == 5
     assert normalized["customer_text"] == "Хороший товар"
-    assert normalized["product"]["external_id"] == "123"
-    assert normalized["product"]["name"] == "Кроссовки"
+    product = cast(dict[str, object], normalized["product"])
+    assert product["external_id"] == "123"
+    assert product["name"] == "Кроссовки"
 
 
 def test_wildberries_normalizes_question():
@@ -44,4 +47,5 @@ def test_wildberries_normalizes_question():
     assert normalized["type"] == "question"
     assert normalized["rating"] is None
     assert normalized["customer_text"] == "Подойдёт на рост 170?"
-    assert normalized["product"]["external_id"] == "777"
+    product = cast(dict[str, object], normalized["product"])
+    assert product["external_id"] == "777"

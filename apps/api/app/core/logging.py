@@ -1,5 +1,6 @@
 import logging
 import re
+from collections.abc import MutableMapping
 from typing import Any
 
 import structlog
@@ -21,7 +22,7 @@ def _scrub(value: Any) -> Any:
     return scrubbed
 
 
-def scrub_secrets(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+def scrub_secrets(_: Any, __: str, event_dict: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
     return {key: _scrub(value) for key, value in event_dict.items()}
 
 

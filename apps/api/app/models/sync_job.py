@@ -19,4 +19,4 @@ class SyncJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    stats_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    stats_json: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)

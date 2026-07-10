@@ -31,13 +31,13 @@ class CustomerMessageResponse(BaseModel):
     rating: int | None = None
     customer_display_name: str | None = None
     customer_text: str
-    customer_photos_json: list
+    customer_photos_json: list[object]
     marketplace_created_at: datetime
     imported_at: datetime
     last_synced_at: datetime
     assigned_to: UUID | None = None
     priority: str
-    metadata_json: dict
+    metadata_json: dict[str, object]
     product: ProductSummary | None = None
     created_at: datetime
     updated_at: datetime

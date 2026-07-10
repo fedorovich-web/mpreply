@@ -39,7 +39,7 @@ class MarketplaceAccountResponse(BaseModel):
     status: str
     credentials_masked: str
     credentials_status: str
-    scopes_json: dict
+    scopes_json: dict[str, object]
     default_response_mode: str
     last_success_sync_at: datetime | None = None
     last_error_sync_at: datetime | None = None

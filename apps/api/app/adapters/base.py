@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 
 @dataclass(frozen=True)
 class AdapterResult:
     ok: bool
-    data: Any | None = None
+    data: object | None = None
     error_code: str | None = None
     error_message_safe: str | None = None
 
@@ -35,7 +35,7 @@ class MarketplaceAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def map_error(self, status_code: int, payload: Any | None = None) -> AdapterResult:
+    def map_error(self, status_code: int, payload: object | None = None) -> AdapterResult:
         raise NotImplementedError
 
 
