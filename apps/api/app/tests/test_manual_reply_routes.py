@@ -18,6 +18,7 @@ def test_manual_reply_workflow_routes_are_registered() -> None:
         ("/api/replies/{reply_id}/approve", "POST"),
         ("/api/replies/{reply_id}/reject", "POST"),
         ("/api/replies/{reply_id}/send", "POST"),
+        ("/api/replies/review-queue", "GET"),
     }
 
     assert expected.issubset(routes)

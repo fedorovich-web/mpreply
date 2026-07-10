@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { useWorkspace } from "../workspace/WorkspaceProvider";
+
 const navItems = [
   { href: "/app/dashboard", label: "Dashboard", description: "Сводка" },
   { href: "/app/inbox", label: "Inbox", description: "Отзывы и вопросы" },
@@ -19,6 +21,14 @@ const upcomingItems = ["Templates", "Knowledge Base", "Analytics", "Team", "Bill
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const {
+    user,
+    organizations,
+    activeOrganization,
+    setActiveOrganizationId,
+    logout,
+    isLoggingOut,
+  } = useWorkspace();
 
   return (
     <div className="app-shell">
@@ -74,13 +84,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span aria-hidden="true" />
             <span aria-hidden="true" />
           </button>
+
           <div className="app-topbar-title">
             <span>Auto-first workspace</span>
-            <strong>Автоответы включены по умолчанию</strong>
+            <strong>{activeOrganization.name}</strong>
           </div>
-          <div className="app-topbar-actions" aria-label="Статус workspace">
-            <span className="app-status-dot" aria-hidden="true" />
-            <span>MVP foundation</span>
+
+          <div className="app-topbar-controls">
+            {organizations.length > 1 ? (
+              <label className="workspace-selector">
+                <span className="sr-only">Выбрать организацию</span>
+                <select
+                  aria-label="Выбрать организацию"
+                  onChange={(event) => setActiveOrganizationId(event.target.value)}
+                  value={activeOrganization.id}
+                >
+                  {organizations.map((organization) => (
+                    <option key={organization.id} value={organization.id}>{organization.name}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            <div className="app-topbar-user">
+              <span className="app-status-dot" aria-hidden="true" />
+              <span>
+                <strong>{user.name || user.email}</strong>
+                {user.name ? <small>{user.email}</small> : null}
+              </span>
+            </div>
+
+            <button
+              className="button button-secondary button-compact"
+              disabled={isLoggingOut}
+              onClick={() => void logout()}
+              type="button"
+            >
+              {isLoggingOut ? "Выходим..." : "Выйти"}
+            </button>
           </div>
         </header>
 

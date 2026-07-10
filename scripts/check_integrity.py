@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.10"
+EXPECTED_VERSION = "0.1.11"
 EXPECTED_ALEMBIC_HEAD = "20260710_0008"
 
 ERRORS: list[str] = []
@@ -135,6 +135,10 @@ def check_versions_and_frontend_security_baseline() -> None:
     pyproject = (API / "pyproject.toml").read_text(encoding="utf-8")
     config = (API / "app" / "core" / "config.py").read_text(encoding="utf-8")
     env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
+    local_compose = (ROOT / "infra" / "docker" / "docker-compose.local.yml").read_text(encoding="utf-8")
+    production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
+    coolify_env = (ROOT / "infra" / "coolify" / ".env.production.example").read_text(encoding="utf-8")
+    web_health = (WEB / "app" / "api" / "health" / "route.ts").read_text(encoding="utf-8")
 
     if package.get("version") != EXPECTED_VERSION:
         fail(f"apps/web/package.json version != {EXPECTED_VERSION}")
@@ -146,6 +150,15 @@ def check_versions_and_frontend_security_baseline() -> None:
         fail(f"Backend app_version != {EXPECTED_VERSION}")
     if f"APP_VERSION={EXPECTED_VERSION}" not in env_example:
         fail(f".env.example APP_VERSION != {EXPECTED_VERSION}")
+    for label, content in (
+        ("local Compose", local_compose),
+        ("production Compose", production_compose),
+        ("Coolify env example", coolify_env),
+    ):
+        if f"APP_VERSION: {EXPECTED_VERSION}" not in content and f"APP_VERSION={EXPECTED_VERSION}" not in content:
+            fail(f"{label} APP_VERSION != {EXPECTED_VERSION}")
+    if f'version: "{EXPECTED_VERSION}"' not in web_health:
+        fail(f"Web health route version != {EXPECTED_VERSION}")
 
     expected_dependencies = {
         ("dependencies", "next"): "16.2.10",
@@ -198,6 +211,12 @@ def check_deployment_contract() -> None:
         WEB / "app" / "api" / "health" / "route.ts",
         WEB / "app" / "app" / "review-queue" / "page.tsx",
         WEB / "components" / "review-queue" / "ReviewQueueWorkspace.tsx",
+        WEB / "components" / "workspace" / "WorkspaceProvider.tsx",
+        WEB / "components" / "providers" / "AppProviders.tsx",
+        WEB / "components" / "auth" / "AuthForm.tsx",
+        WEB / "app" / "auth" / "layout.tsx",
+        WEB / "lib" / "api" / "client.ts",
+        WEB / "lib" / "api" / "schemas.ts",
         ROOT / ".dockerignore",
         ROOT / "infra" / "docker" / "docker-compose.local.yml",
         ROOT / "infra" / "docker" / "docker-compose.production.yml",
@@ -220,12 +239,14 @@ def check_deployment_contract() -> None:
         (api_dockerfile, "USER respio", "API image must run as non-root user"),
         (worker_dockerfile, "USER respio", "Worker image must run as non-root user"),
         (web_dockerfile, "USER nextjs", "Web image must run as non-root user"),
+        (web_dockerfile, "NEXT_PUBLIC_API_BASE_URL", "Web image must receive public API base URL at build time"),
         (next_config, 'output: "standalone"', "Next.js must use standalone output for production image"),
         (production_compose, "no-new-privileges:true", "Production Compose must enable no-new-privileges"),
         (production_compose, "service_completed_successfully", "Production Compose must gate app startup on migrations"),
         (production_compose, "AUTH_SECRET_KEY is required", "Production Compose must require AUTH_SECRET_KEY"),
         (production_compose, "CREDENTIALS_ENCRYPTION_KEY is required", "Production Compose must require encryption key"),
         (production_compose, "FORWARDED_ALLOW_IPS is required", "Production Compose must require an explicit proxy trust boundary"),
+        (production_compose, "NEXT_PUBLIC_API_BASE_URL", "Production Compose must inject the public API URL into the web build"),
     ]
     for content, token, message in docker_contracts:
         if token not in content:

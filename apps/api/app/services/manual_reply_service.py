@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import cast
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
@@ -13,6 +14,7 @@ from app.core.errors import conflict, not_found
 from app.models.ai_draft import AIDraft
 from app.models.customer_message import CustomerMessage
 from app.models.enums import MessageStatus, ReplyStatus, ResponseMode
+from app.models.product import Product
 from app.models.reply import Reply
 from app.models.user import User
 from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput, SafetyResult
@@ -25,6 +27,12 @@ _WRITE_ROLES = {"owner", "admin", "manager"}
 _REVIEWABLE_REPLY_STATUSES = {
     ReplyStatus.DRAFT.value,
     ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
+}
+_REVIEW_QUEUE_STATUSES = {
+    ReplyStatus.DRAFT.value,
+    ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
+    ReplyStatus.WAITING_REVIEW.value,
+    ReplyStatus.APPROVED.value,
 }
 
 
@@ -48,6 +56,56 @@ class ManualReplyService:
         self.messages = MessageService(session)
         self.organizations = OrganizationService(session)
         self.safety_gate = SafetyGate()
+
+    async def list_review_queue(
+        self,
+        *,
+        actor: User,
+        organization_id: UUID,
+        page: int,
+        page_size: int,
+    ) -> tuple[list[tuple[Reply, CustomerMessage, Product | None]], int]:
+        await self.organizations.require_membership_role(
+            organization_id=organization_id,
+            user_id=actor.id,
+            allowed_roles={"owner", "admin", "manager", "viewer"},
+        )
+        normalized_page = max(page, 1)
+        normalized_page_size = min(max(page_size, 1), 100)
+        filters = (
+            Reply.organization_id == organization_id,
+            Reply.mode == ResponseMode.SEMI_AUTO.value,
+            Reply.status.in_(_REVIEW_QUEUE_STATUSES),
+        )
+
+        count_result = await self.session.execute(select(func.count(Reply.id)).where(*filters))
+        total = int(count_result.scalar_one())
+
+        stmt = (
+            select(Reply, CustomerMessage, Product)
+            .join(CustomerMessage, Reply.message_id == CustomerMessage.id)
+            .outerjoin(Product, CustomerMessage.product_id == Product.id)
+            .where(*filters)
+            .order_by(Reply.updated_at.desc(), Reply.created_at.desc())
+            .offset((normalized_page - 1) * normalized_page_size)
+            .limit(normalized_page_size)
+        )
+        result = await self.session.execute(stmt)
+        return [(reply, message, product) for reply, message, product in result.all()], total
+
+    @staticmethod
+    def safety_summary(reply: Reply) -> tuple[str, list[str], list[str]]:
+        metadata = reply.metadata_json or {}
+        decision = metadata.get("safety_decision")
+        flags = metadata.get("safety_flags")
+        reasons = metadata.get("safety_reasons")
+        flag_items = cast(list[object], flags) if isinstance(flags, list) else []
+        reason_items = cast(list[object], reasons) if isinstance(reasons, list) else []
+        return (
+            decision if isinstance(decision, str) else "manual_review",
+            [item for item in flag_items if isinstance(item, str)],
+            [item for item in reason_items if isinstance(item, str)],
+        )
 
     async def create_draft(
         self,
