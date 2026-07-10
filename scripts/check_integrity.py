@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.9"
-EXPECTED_ALEMBIC_HEAD = "20260710_0007"
+EXPECTED_VERSION = "0.1.10"
+EXPECTED_ALEMBIC_HEAD = "20260710_0008"
 
 ERRORS: list[str] = []
 
@@ -196,6 +196,8 @@ def check_deployment_contract() -> None:
         API / ".dockerignore",
         WEB / ".dockerignore",
         WEB / "app" / "api" / "health" / "route.ts",
+        WEB / "app" / "app" / "review-queue" / "page.tsx",
+        WEB / "components" / "review-queue" / "ReviewQueueWorkspace.tsx",
         ROOT / ".dockerignore",
         ROOT / "infra" / "docker" / "docker-compose.local.yml",
         ROOT / "infra" / "docker" / "docker-compose.production.yml",
@@ -261,7 +263,18 @@ def _git_tracked_paths() -> list[Path] | None:
 
 
 def check_generated_artifacts_absent() -> None:
-    forbidden_names = {"node_modules", ".next", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
+    forbidden_names = {
+        "node_modules",
+        ".next",
+        ".venv",
+        ".qa-venv",
+        "__pycache__",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".mypy_cache",
+        ".coverage",
+        "coverage.xml",
+    }
     paths = _git_tracked_paths()
 
     if paths is None:
@@ -274,7 +287,8 @@ def check_generated_artifacts_absent() -> None:
         relative = path.relative_to(ROOT)
         parts = relative.parts
         for index, part in enumerate(parts):
-            if part not in forbidden_names:
+            is_forbidden = part in forbidden_names or part.endswith(".egg-info")
+            if not is_forbidden:
                 continue
             artifact = Path(*parts[: index + 1])
             if artifact not in reported:

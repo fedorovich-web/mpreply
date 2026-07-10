@@ -239,9 +239,15 @@ class ReplyExecutionService:
         reply.error_code = None
         reply.failed_reason = None
         message = await self._get_message(reply.message_id)
-        self._transition_message(message, MessageStatus.AUTO_REPLY_PENDING.value)
+        retry_message_target = (
+            MessageStatus.AUTO_REPLY_PENDING.value
+            if reply.mode == ResponseMode.AUTO.value
+            else MessageStatus.APPROVED.value
+        )
+        self._transition_message(message, retry_message_target)
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
         await self.audit.write(
-            action="auto_reply.retry_queued",
+            action=f"{action_prefix}.retry_queued",
             entity_type="reply",
             organization_id=reply.organization_id,
             actor_user_id=actor.id,
@@ -274,11 +280,12 @@ class ReplyExecutionService:
 
         message = await self._get_message(reply.message_id)
         account = await self._get_account(message.marketplace_account_id)
-        rule = await self._get_rule(reply.automation_rule_id)
-        quota = await self._check_quota(message=message, rule=rule)
-        if not quota.allowed:
-            await self._mark_quota_blocked(reply=reply, message=message, quota=quota)
-            return ExecuteReplyResult(reply.id, reply.status, False, quota.reason)
+        if reply.mode == ResponseMode.AUTO.value:
+            rule = await self._get_rule(reply.automation_rule_id)
+            quota = await self._check_quota(message=message, rule=rule)
+            if not quota.allowed:
+                await self._mark_quota_blocked(reply=reply, message=message, quota=quota)
+                return ExecuteReplyResult(reply.id, reply.status, False, quota.reason)
 
         self._transition_reply(reply, ReplyStatus.SENDING.value)
         self._transition_message(message, MessageStatus.SENDING.value)
@@ -448,7 +455,7 @@ class ReplyExecutionService:
         return AdapterResult(
             False,
             error_code="unsupported_message_type",
-            error_message_safe="Message type cannot be replied to automatically",
+            error_message_safe="Message type cannot be replied to through the marketplace adapter",
         )
 
     async def _mark_sent(
@@ -460,7 +467,12 @@ class ReplyExecutionService:
         externally_already_answered: bool,
     ) -> None:
         self._transition_reply(reply, ReplyStatus.SENT.value)
-        self._transition_message(message, MessageStatus.AUTO_REPLY_SENT.value)
+        message_target = (
+            MessageStatus.AUTO_REPLY_SENT.value
+            if reply.mode == ResponseMode.AUTO.value
+            else MessageStatus.ANSWERED.value
+        )
+        self._transition_message(message, message_target)
         reply.sent_at = datetime.now(UTC)
         reply.marketplace_reply_id = marketplace_reply_id
         reply.error_code = None
@@ -470,11 +482,13 @@ class ReplyExecutionService:
             **(reply.metadata_json or {}),
             "externally_already_answered": externally_already_answered,
         }
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        usage_user_id = reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by
         self.session.add(
             UsageEvent(
                 organization_id=reply.organization_id,
-                user_id=reply.created_by,
-                event_type="auto_reply.sent",
+                user_id=usage_user_id,
+                event_type=f"{action_prefix}.sent",
                 quantity=1,
                 metadata_json={
                     "reply_id": str(reply.id),
@@ -493,10 +507,10 @@ class ReplyExecutionService:
             error_message_safe=None,
         )
         await self.audit.write(
-            action="auto_reply.sent",
+            action=f"{action_prefix}.sent",
             entity_type="reply",
             organization_id=reply.organization_id,
-            actor_user_id=reply.created_by,
+            actor_user_id=usage_user_id,
             entity_id=str(reply.id),
             metadata={
                 "message_id": str(message.id),
@@ -515,7 +529,12 @@ class ReplyExecutionService:
         result: AdapterResult,
     ) -> None:
         self._transition_reply(reply, ReplyStatus.RETRY_PENDING.value)
-        self._transition_message(message, MessageStatus.AUTO_REPLY_PENDING.value)
+        message_target = (
+            MessageStatus.AUTO_REPLY_PENDING.value
+            if reply.mode == ResponseMode.AUTO.value
+            else MessageStatus.APPROVED.value
+        )
+        self._transition_message(message, message_target)
         reply.error_code = result.error_code
         reply.failed_reason = result.error_message_safe
         delay_seconds = min(60, 2 ** max(reply.attempt_count - 1, 0))
@@ -527,8 +546,9 @@ class ReplyExecutionService:
             error_code=result.error_code,
             error_message_safe=result.error_message_safe,
         )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
         await self.audit.write(
-            action="auto_reply.retry_pending",
+            action=f"{action_prefix}.retry_pending",
             entity_type="reply",
             organization_id=reply.organization_id,
             actor_user_id=reply.created_by,
@@ -567,8 +587,9 @@ class ReplyExecutionService:
             error_code=error_code,
             error_message_safe=result.error_message_safe,
         )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
         await self.audit.write(
-            action="auto_reply.failed",
+            action=f"{action_prefix}.failed",
             entity_type="reply",
             organization_id=reply.organization_id,
             actor_user_id=reply.created_by,

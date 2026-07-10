@@ -4,7 +4,7 @@ Respio is a SaaS platform for AI-assisted and automatic replies to marketplace r
 
 ## Current foundation
 
-Implemented through Sprint 9:
+Implemented through Sprint 10:
 
 - FastAPI backend with organizations, RBAC and tenant isolation;
 - encrypted marketplace credentials;
@@ -15,7 +15,8 @@ Implemented through Sprint 9:
 - automation rules engine;
 - Dramatiq/Redis worker-backed auto-reply execution;
 - public site, SEO and legal drafts;
-- production-readiness baseline with health checks, runtime validation, non-root containers, migration orchestration, release gates and operational runbooks.
+- production-readiness baseline with health checks, runtime validation, non-root containers, migration orchestration, release gates and operational runbooks;
+- optional semi-automatic manual review workflow: draft editing, optimistic revision checks, SafetyGate re-checks, submit for review, approve/reject, idempotent queueing and marketplace execution.
 
 Wildberries is the current MVP marketplace integration. Ozon, Yandex Market and Avito remain planned until current official API contracts and production sending capabilities are verified and implemented.
 
