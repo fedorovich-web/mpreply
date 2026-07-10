@@ -49,6 +49,21 @@ services:
       timeout: 5s
       retries: 5
 
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/worker/Dockerfile
+    env_file:
+      - ../../.env.example
+    environment:
+      DATABASE_URL: postgresql+asyncpg://respio:respio_password@postgres:5432/respio
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   web:
     build:
       context: ../../apps/web
