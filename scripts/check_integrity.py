@@ -3,18 +3,27 @@ from __future__ import annotations
 import ast
 import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
+EXPECTED_VERSION = "0.1.9"
+EXPECTED_ALEMBIC_HEAD = "20260710_0007"
 
 ERRORS: list[str] = []
 
 
 def fail(message: str) -> None:
     ERRORS.append(message)
+
+
+def require_file(path: Path) -> None:
+    if not path.is_file():
+        fail(f"Required file is missing: {path.relative_to(ROOT)}")
 
 
 def check_public_routes() -> None:
@@ -59,6 +68,28 @@ def check_ts_imports() -> None:
                 fail(f"Unresolved relative TypeScript import: {source.relative_to(ROOT)} -> {specifier}")
 
 
+def _python_module_exists(module_name: str) -> bool:
+    if not module_name.startswith("app"):
+        return True
+    relative = module_name.split(".")[1:]
+    base = API / "app"
+    candidate = base.joinpath(*relative)
+    return candidate.with_suffix(".py").is_file() or (candidate / "__init__.py").is_file()
+
+
+def check_python_imports() -> None:
+    for source in (API / "app").rglob("*.py"):
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if not _python_module_exists(alias.name):
+                        fail(f"Unresolved Python import: {source.relative_to(ROOT)} -> {alias.name}")
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                if not _python_module_exists(node.module):
+                    fail(f"Unresolved Python import: {source.relative_to(ROOT)} -> {node.module}")
+
+
 def check_alembic_chain() -> None:
     versions_dir = API / "alembic" / "versions"
     revisions: dict[str, str | None] = {}
@@ -85,7 +116,7 @@ def check_alembic_chain() -> None:
     heads = sorted(set(revisions) - referenced)
     if len(heads) != 1:
         fail(f"Expected exactly one Alembic head, found: {heads}")
-    elif heads[0] != "20260710_0007":
+    elif heads[0] != EXPECTED_ALEMBIC_HEAD:
         fail(f"Unexpected Alembic head: {heads[0]}")
 
 
@@ -98,29 +129,39 @@ def check_lockfile_hygiene() -> None:
             fail(f"package-lock.json contains forbidden internal registry token: {token}")
 
 
-def check_versions() -> None:
+def check_versions_and_frontend_security_baseline() -> None:
     package = json.loads((WEB / "package.json").read_text(encoding="utf-8"))
     lock = json.loads((WEB / "package-lock.json").read_text(encoding="utf-8"))
     pyproject = (API / "pyproject.toml").read_text(encoding="utf-8")
     config = (API / "app" / "core" / "config.py").read_text(encoding="utf-8")
     env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
 
-    expected = "0.1.8"
-    if package.get("version") != expected:
-        fail(f"apps/web/package.json version != {expected}")
-    if lock.get("version") != expected or lock.get("packages", {}).get("", {}).get("version") != expected:
-        fail(f"apps/web/package-lock.json version != {expected}")
-    if f'version = "{expected}"' not in pyproject:
-        fail(f"apps/api/pyproject.toml version != {expected}")
-    if f'app_version: str = "{expected}"' not in config:
-        fail(f"Backend app_version != {expected}")
-    if f"APP_VERSION={expected}" not in env_example:
-        fail(f".env.example APP_VERSION != {expected}")
+    if package.get("version") != EXPECTED_VERSION:
+        fail(f"apps/web/package.json version != {EXPECTED_VERSION}")
+    if lock.get("version") != EXPECTED_VERSION or lock.get("packages", {}).get("", {}).get("version") != EXPECTED_VERSION:
+        fail(f"apps/web/package-lock.json version != {EXPECTED_VERSION}")
+    if f'version = "{EXPECTED_VERSION}"' not in pyproject:
+        fail(f"apps/api/pyproject.toml version != {EXPECTED_VERSION}")
+    if f'app_version: str = "{EXPECTED_VERSION}"' not in config:
+        fail(f"Backend app_version != {EXPECTED_VERSION}")
+    if f"APP_VERSION={EXPECTED_VERSION}" not in env_example:
+        fail(f".env.example APP_VERSION != {EXPECTED_VERSION}")
 
+    expected_dependencies = {
+        ("dependencies", "next"): "16.2.10",
+        ("devDependencies", "eslint-config-next"): "16.2.10",
+        ("devDependencies", "vitest"): "4.1.10",
+        ("overrides", "postcss"): "8.5.10",
+    }
+    for (section, name), expected in expected_dependencies.items():
+        actual = package.get(section, {}).get(name)
+        if actual != expected:
+            fail(f"apps/web/package.json {section}.{name} != {expected}; got {actual!r}")
 
 
 def check_release_gate_contract() -> None:
     release_gate = (ROOT / "scripts" / "release-gate.ps1").read_text(encoding="utf-8")
+    container_gate = (ROOT / "scripts" / "container-gate.ps1").read_text(encoding="utf-8")
     workflow = (ROOT / ".github" / "workflows" / "quality-gate.yml").read_text(encoding="utf-8")
     pyproject = (API / "pyproject.toml").read_text(encoding="utf-8")
 
@@ -128,25 +169,130 @@ def check_release_gate_contract() -> None:
         "--pythonpath $VenvPython app",
         "Backend environment smoke test",
         "Backend dependency consistency",
+        "Frontend security audit",
+        "& $Npm audit --audit-level=high",
         "Release gate stopped",
     ]
     for token in required_local_tokens:
         if token not in release_gate:
-            fail(f"release-gate.ps1 missing required fail-fast/environment contract: {token}")
+            fail(f"release-gate.ps1 missing required contract: {token}")
+
+    for token in ["& $Docker compose", "--wait", "/health/ready", "/api/health"]:
+        if token not in container_gate:
+            fail(f"container-gate.ps1 missing required contract: {token}")
 
     if '--pythonpath "$(command -v python)" app' not in workflow:
         fail("GitHub quality gate Pyright is not bound to the installed Python interpreter")
-
+    if "npm audit --audit-level=high" not in workflow:
+        fail("GitHub quality gate does not enforce frontend high/critical audit threshold")
+    if "Build production images" not in workflow:
+        fail("GitHub quality gate does not build production Docker images")
     if '"pyright==' in pyproject:
         fail("Python pyright wrapper must not be installed; project uses official Node-based Pyright via npx")
+
+
+def check_deployment_contract() -> None:
+    required_files = [
+        API / ".dockerignore",
+        WEB / ".dockerignore",
+        WEB / "app" / "api" / "health" / "route.ts",
+        ROOT / ".dockerignore",
+        ROOT / "infra" / "docker" / "docker-compose.local.yml",
+        ROOT / "infra" / "docker" / "docker-compose.production.yml",
+        ROOT / "scripts" / "container-gate.ps1",
+        ROOT / "docs" / "operations" / "backup-restore.md",
+        ROOT / "docs" / "operations" / "incident-runbook.md",
+        ROOT / "docs" / "operations" / "rollback.md",
+        ROOT / "infra" / "coolify" / "deployment-checklist.md",
+    ]
+    for path in required_files:
+        require_file(path)
+
+    api_dockerfile = (API / "Dockerfile").read_text(encoding="utf-8")
+    worker_dockerfile = (ROOT / "apps" / "worker" / "Dockerfile").read_text(encoding="utf-8")
+    web_dockerfile = (WEB / "Dockerfile").read_text(encoding="utf-8")
+    next_config = (WEB / "next.config.ts").read_text(encoding="utf-8")
+    production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
+
+    docker_contracts = [
+        (api_dockerfile, "USER respio", "API image must run as non-root user"),
+        (worker_dockerfile, "USER respio", "Worker image must run as non-root user"),
+        (web_dockerfile, "USER nextjs", "Web image must run as non-root user"),
+        (next_config, 'output: "standalone"', "Next.js must use standalone output for production image"),
+        (production_compose, "no-new-privileges:true", "Production Compose must enable no-new-privileges"),
+        (production_compose, "service_completed_successfully", "Production Compose must gate app startup on migrations"),
+        (production_compose, "AUTH_SECRET_KEY is required", "Production Compose must require AUTH_SECRET_KEY"),
+        (production_compose, "CREDENTIALS_ENCRYPTION_KEY is required", "Production Compose must require encryption key"),
+        (production_compose, "FORWARDED_ALLOW_IPS is required", "Production Compose must require an explicit proxy trust boundary"),
+    ]
+    for content, token, message in docker_contracts:
+        if token not in content:
+            fail(message)
+
+    if "--forwarded-allow-ips=*" in api_dockerfile:
+        fail("API Dockerfile must not hardcode wildcard proxy-header trust")
+
+    forbidden_production_tokens = ["respio_password", "replace-with-local-dev-secret", "replace-only-in-real-env"]
+    for token in forbidden_production_tokens:
+        if token in production_compose:
+            fail(f"Production Compose contains forbidden hardcoded placeholder/secret: {token}")
+
+
+def _git_tracked_paths() -> list[Path] | None:
+    """Return tracked repository paths when Git metadata is available.
+
+    Local developer caches such as .venv, node_modules and .next are expected to
+    exist in a working tree and must not make the integrity gate fail. The release
+    rule is that generated artifacts must not be tracked or shipped.
+    """
+    git = shutil.which("git")
+    if git is None:
+        return None
+
+    result = subprocess.run(
+        [git, "-C", str(ROOT), "ls-files", "-z"],
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        return None
+
+    return [ROOT / entry.decode("utf-8") for entry in result.stdout.split(b"\0") if entry]
+
+
+def check_generated_artifacts_absent() -> None:
+    forbidden_names = {"node_modules", ".next", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
+    paths = _git_tracked_paths()
+
+    if paths is None:
+        # Extracted release archives have no .git directory, so inspect the archive
+        # tree itself. Developer working trees use the tracked-file path above.
+        paths = [path for path in ROOT.rglob("*") if path.is_file()]
+
+    reported: set[Path] = set()
+    for path in paths:
+        relative = path.relative_to(ROOT)
+        parts = relative.parts
+        for index, part in enumerate(parts):
+            if part not in forbidden_names:
+                continue
+            artifact = Path(*parts[: index + 1])
+            if artifact not in reported:
+                reported.add(artifact)
+                fail(f"Generated artifact must not be tracked or included in release archive: {artifact}")
+            break
+
 
 def main() -> int:
     check_public_routes()
     check_ts_imports()
+    check_python_imports()
     check_alembic_chain()
     check_lockfile_hygiene()
-    check_versions()
+    check_versions_and_frontend_security_baseline()
     check_release_gate_contract()
+    check_deployment_contract()
+    check_generated_artifacts_absent()
 
     if ERRORS:
         print("Integrity gate failed:")
@@ -154,9 +300,9 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    print("Integrity gate passed: routes, imports, migrations, lockfile and versions are consistent.")
+    print("Integrity gate passed: routes, Python/TypeScript imports, migrations, versions, dependency baseline, release gates and deployment contracts are consistent.")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
