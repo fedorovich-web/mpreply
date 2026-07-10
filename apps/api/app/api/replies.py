@@ -21,6 +21,8 @@ from app.schemas.reply import (
     ReplyListResponse,
     ReplyResponse,
     ReplyRetryResponse,
+    ReviewQueueItemResponse,
+    ReviewQueueListResponse,
     SafetySummary,
 )
 from app.services.manual_reply_service import ManualReplyService
@@ -164,6 +166,41 @@ async def send_approved_manual_reply(
         reply_id=result.reply.id,
         worker_message_id=worker_message_id,
         status=result.reply.status,
+    )
+
+
+@router.get("/review-queue", response_model=ReviewQueueListResponse)
+async def list_manual_review_queue(
+    organization_id: UUID,
+    page: int = 1,
+    page_size: int = 50,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> ReviewQueueListResponse:
+    service = ManualReplyService(session)
+    rows, total = await service.list_review_queue(
+        actor=current_user,
+        organization_id=organization_id,
+        page=page,
+        page_size=page_size,
+    )
+    normalized_page = max(page, 1)
+    normalized_page_size = min(max(page_size, 1), 100)
+    items: list[ReviewQueueItemResponse] = []
+    for reply, message, product in rows:
+        decision, flags, reasons = service.safety_summary(reply)
+        items.append(
+            ReviewQueueItemResponse(
+                reply=ReplyResponse.model_validate(reply),
+                message=service.messages.to_response(message, product),
+                safety=SafetySummary(decision=decision, flags=flags, reasons=reasons),
+            )
+        )
+    return ReviewQueueListResponse(
+        items=items,
+        total=total,
+        page=normalized_page,
+        page_size=normalized_page_size,
     )
 
 

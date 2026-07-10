@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.schemas.message import CustomerMessageResponse
+
 
 class AutoReplyEnqueueRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -110,6 +112,23 @@ class ManualReplySendResponse(BaseModel):
     reply_id: UUID
     worker_message_id: str | None = None
     status: str
+
+
+class ReviewQueueItemResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reply: ReplyResponse
+    message: CustomerMessageResponse
+    safety: SafetySummary
+
+
+class ReviewQueueListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[ReviewQueueItemResponse]
+    total: int = Field(ge=0)
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
 
 
 class ReplyRetryResponse(BaseModel):

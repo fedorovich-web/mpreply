@@ -8,8 +8,8 @@ export default function ReviewQueuePage() {
           <p className="eyebrow">Review Queue</p>
           <h1>Ручная проверка без отключения auto-first режима</h1>
           <p>
-            Только обращения, остановленные SafetyGate, правилом или выбранным semi-auto режимом,
-            попадают в очередь менеджера: редактирование, проверка, одобрение и отправка.
+            Реальная очередь semi-auto ответов: загрузка из API, optimistic revision, редактирование,
+            SafetyGate, одобрение или возврат на доработку и отправка через worker pipeline.
           </p>
         </div>
         <div className="app-header-actions">
