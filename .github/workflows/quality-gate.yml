@@ -1,0 +1,72 @@
+name: Quality Gate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: apps/api/pyproject.toml
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Install backend dependencies
+        working-directory: apps/api
+        run: pip install -e ".[dev]"
+      - name: Integrity gate
+        run: python scripts/check_integrity.py
+      - name: Backend import smoke test
+        working-directory: apps/api
+        run: python -c "import fastapi, pydantic, sqlalchemy, httpx, dramatiq, pytest"
+      - name: Dependency consistency
+        working-directory: apps/api
+        run: python -m pip check
+      - name: Ruff
+        working-directory: apps/api
+        run: ruff check app alembic
+      - name: Pyright
+        working-directory: apps/api
+        run: npx --yes pyright@1.1.411 --pythonpath "$(command -v python)" app
+      - name: Tests
+        working-directory: apps/api
+        run: pytest -q
+      - name: Compile Python
+        working-directory: apps/api
+        run: python -m compileall -q app alembic
+      - name: Alembic heads
+        working-directory: apps/api
+        run: alembic heads
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+      - name: Typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+      - name: Lint
+        working-directory: apps/web
+        run: npm run lint
+      - name: Build
+        working-directory: apps/web
+        run: npm run build

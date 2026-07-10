@@ -34,6 +34,12 @@ class WildberriesAdapter(MarketplaceAdapter):
             params["skip"] = int(cursor)
         return await self._get("/api/v1/questions", credential, params=params)
 
+    async def get_review(self, credential: str, external_id: str) -> AdapterResult:
+        return await self._get("/api/v1/feedback", credential, params={"id": external_id})
+
+    async def get_question(self, credential: str, external_id: str) -> AdapterResult:
+        return await self._get("/api/v1/question", credential, params={"id": external_id})
+
     async def send_review_reply(self, credential: str, external_id: str, reply_text: str) -> AdapterResult:
         payload: dict[str, object] = {"id": external_id, "text": reply_text}
         return await self._post("/api/v1/feedbacks/answer", credential, json=payload)
@@ -41,6 +47,19 @@ class WildberriesAdapter(MarketplaceAdapter):
     async def send_question_reply(self, credential: str, external_id: str, reply_text: str) -> AdapterResult:
         payload: dict[str, object] = {"id": external_id, "answer": {"text": reply_text}}
         return await self._patch("/api/v1/questions", credential, json=payload)
+
+    def is_already_answered(self, payload: object) -> bool:
+        data = self._data(payload)
+        if not isinstance(data, dict):
+            return False
+        mapping = cast(dict[str, object], data)
+        answer = mapping.get("answer")
+        if isinstance(answer, dict):
+            answer_mapping = cast(dict[str, object], answer)
+            return bool(self._optional_string(answer_mapping.get("text")))
+        if isinstance(answer, str):
+            return bool(answer.strip())
+        return bool(mapping.get("isAnswered"))
 
     def extract_reviews(self, payload: object) -> list[dict[str, object]]:
         return self._extract_items(payload, keys=("feedbacks", "items", "data"))

@@ -44,3 +44,4 @@ logs/
 # Docker/local data
 postgres-data/
 redis-data/
+apps/web/tsconfig.tsbuildinfo
