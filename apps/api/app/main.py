@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.ai import router as ai_router
 from app.api.auth import router as auth_router
+from app.api.automation_rules import router as automation_rules_router
 from app.api.health import router as health_router
 from app.api.marketplace_accounts import router as marketplace_accounts_router
 from app.api.messages import router as messages_router
@@ -30,6 +32,8 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health_router)
+    app.include_router(ai_router)
+    app.include_router(automation_rules_router)
     app.include_router(auth_router)
     app.include_router(organizations_router)
     app.include_router(marketplace_accounts_router)

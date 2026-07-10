@@ -23,12 +23,14 @@ class Settings(BaseSettings):
     auth_access_token_ttl_minutes: int = 15
     auth_refresh_token_ttl_days: int = 30
     auth_cookie_secure: bool = False
-    auth_cookie_samesite: str = "lax"
+    auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     credentials_encryption_key: SecretStr = Field(default=SecretStr("replace-with-fernet-compatible-key"))
     openrouter_api_key: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_default_model: str = "openai/gpt-5.2"
     openrouter_fallback_model: str = "anthropic/claude-sonnet-4.6"
+    openrouter_timeout_seconds: float = 45.0
 
     sentry_dsn: str | None = None
     log_level: str = "INFO"

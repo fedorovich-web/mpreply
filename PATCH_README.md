@@ -1,26 +1,44 @@
-# Respio Sprint 3 patch — Wildberries sync + Inbox API
+# Respio Sprint 6 patch
 
-Apply this archive over the current project after Sprint 2 is merged into `develop`.
+Apply this patch over the project after Sprint 5 and the Sprint 5 RUF001 lint fix.
 
-## Includes
+## Sprint 6 scope
 
-- Wildberries adapter extraction and normalization for feedbacks/questions.
-- Manual sync endpoint: `POST /api/marketplace-accounts/{id}/sync`.
-- Product/message upsert with deduplication.
-- Sync jobs and integration events updates.
-- Inbox API: `GET /api/messages`, `GET /api/messages/{id}`, `PATCH /api/messages/{id}`.
-- `/app/inbox` UI preview.
-- ADR and QA checklist for Sprint 3.
+- Deterministic SafetyGate with `allow`, `manual_review`, and `block` decisions.
+- SafetyGate integrated into AI draft generation.
+- Message status mapping to `ai_draft_ready`, `needs_manual_check`, and `safety_blocked`.
+- Automation Rules CRUD API.
+- Automation Rules evaluation API.
+- Auto-first precedence: organization default -> marketplace override -> highest-priority matching rule -> context/confidence/sensitive-topic checks.
+- Strict Pydantic v2 schemas with `extra="forbid"`.
+- Migration `20260710_0006_automation_rules_engine.py`.
+- `/app/automation-rules` UI foundation.
+- Strict typing cleanup in touched backend modules so `pyright app` passes with zero errors.
+- Frontend package version raised to `0.1.6`.
+- Backend package version raised to `0.1.6`.
 
-## Suggested Git flow
+## Verification performed before packaging
 
-```powershell
-git checkout develop
-git pull
-git checkout -b sprint-3-wildberries-sync
-# unpack patch into project root
-git status
-git add .
-git commit -m "add wildberries sync and inbox api foundation"
-git push -u origin sprint-3-wildberries-sync
+Backend:
+
+```text
+ruff check app       -> All checks passed
+pyright app          -> 0 errors, 0 warnings
+pytest -q            -> 24 passed
+python -m compileall -> passed
+alembic heads        -> 20260710_0006 (head)
 ```
+
+Frontend:
+
+```text
+npm run typecheck -> passed
+npm run lint      -> passed
+npm run build     -> passed
+```
+
+Production Next.js build completed successfully on Next.js 16.2.9.
+
+## Important boundary
+
+Sprint 6 evaluates rules and safety decisions. It does not send marketplace replies or enforce real hourly/daily counters. Worker-backed auto-send execution and runtime quota enforcement are Sprint 7 scope.

@@ -32,7 +32,7 @@ class SyncStats:
     updated_questions: int = 0
     skipped: int = 0
 
-    def as_dict(self) -> dict[str, int]:
+    def as_dict(self) -> dict[str, object]:
         return {
             "imported_reviews": self.imported_reviews,
             "imported_questions": self.imported_questions,
