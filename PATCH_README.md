@@ -1,34 +1,27 @@
-# Respio Sprint 7 patch
+# Respio Sprint 8 patch — public site, SEO and legal foundation
 
-Apply this patch on top of a clean Sprint 6 / `develop` working tree.
+Apply this archive over a clean `develop` branch that already contains Sprint 7 and the repair fixes completed during verification.
 
-## Sprint 7 scope
+## Included
 
-- Dramatiq + Redis worker-backed automatic reply execution.
-- Real Wildberries review/question sends through the adapter.
-- Preflight reconciliation to suppress duplicate outbound sends when WB already has an answer.
-- Durable reply state, attempts, retry metadata, worker message id and error codes.
-- Application-level idempotency with a unique database index.
-- Runtime organization and automation-rule quotas.
-- Explicit message/reply state-machine guards.
-- API endpoints for enqueue/list/detail/retry.
-- Docker Compose worker service.
-- Alembic migration `20260710_0007`.
+- Public site routes: `/`, `/features`, `/marketplaces`, four marketplace pages, `/pricing`, `/demo`, `/resources`, `/contacts`, `/privacy`, `/terms`.
+- Next.js Metadata API, canonical URLs, Open Graph, Twitter metadata.
+- `robots.ts`, `sitemap.ts`, JSON-LD.
+- Dashboard noindex metadata.
+- Structured legal drafts with explicit pre-production legal-review gate.
+- Public design system styles using CSS variables/tokens.
+- `scripts/check_integrity.py`.
+- `scripts/release-gate.ps1`.
+- GitHub Actions quality gate.
+- Version `0.1.8` synchronized across backend, frontend and env example.
+- Clean `package-lock.json` without internal CAAS/OpenAI registry URLs.
 
-## Version
+## Local verification
 
-- `respio-api`: `0.1.7`
-- `respio-web`: `0.1.7`
-- `APP_VERSION`: `0.1.7`
+From repository root on Windows PowerShell:
 
-## Verification completed
+```powershell
+.\scripts\release-gate.ps1
+```
 
-- Ruff: passed.
-- Pyright: 0 errors, 0 warnings.
-- Pytest: 32 passed.
-- Compileall: passed.
-- Alembic head: `20260710_0007`.
-- Frontend typecheck: passed.
-- Frontend lint: passed.
-- Frontend production build: passed.
-- Docker runtime validation: not executed because Docker daemon was unavailable in the build environment.
+Or run the checks manually as documented in `docs/qa/sprint-8-release-gate.md`.

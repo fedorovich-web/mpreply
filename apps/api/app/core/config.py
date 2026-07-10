@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["local", "staging", "production"] = "local"
     app_name: str = "Respio"
-    app_version: str = "0.1.7"
+    app_version: str = "0.1.8"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"

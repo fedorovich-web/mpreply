@@ -16,6 +16,31 @@
   --color-info: #1570ef;
   --color-focus-ring: #84adff;
 
+
+  /* public site semantic tokens */
+  --color-text-on-brand: #ffffff;
+  --color-brand-soft: rgba(35, 87, 255, 0.08);
+  --color-brand-soft-strong: rgba(35, 87, 255, 0.14);
+  --color-surface-muted: #f0f3f9;
+  --color-surface-dark: #101828;
+  --color-text-on-dark: #f8fafc;
+  --color-border-on-dark: rgba(255, 255, 255, 0.12);
+  --color-warning-soft: rgba(220, 104, 3, 0.08);
+  --color-success-soft: rgba(3, 152, 85, 0.08);
+  --gradient-public-hero: radial-gradient(circle at 12% 12%, var(--color-brand-soft-strong), transparent 34%), linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-page) 100%);
+  --gradient-public-cta: linear-gradient(135deg, var(--color-surface-dark), #1b2a4a);
+  --font-size-5xl: 4.5rem;
+  --font-size-display: 5.5rem;
+  --space-24: 6rem;
+  --space-28: 7rem;
+  --space-32: 8rem;
+  --radius-2xl: 1.75rem;
+  --container-content-width: 760px;
+  --container-legal-width: 820px;
+  --public-header-height: 4.75rem;
+  --public-section-spacing: var(--space-24);
+  --shadow-public-card: 0 18px 54px rgba(16, 24, 40, 0.08);
+
   /* gradients */
   --gradient-hero: radial-gradient(circle at top left, rgba(35, 87, 255, 0.14), transparent 32%), linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
 
@@ -74,4 +99,17 @@
   --transition-fast: 120ms ease;
   --transition-normal: 180ms ease;
   --opacity-disabled: 0.5;
+}
+
+:root {
+  --app-shell-gap: var(--space-6);
+  --app-sidebar-bg: #ffffff;
+  --app-topbar-bg: rgba(255, 255, 255, 0.86);
+  --app-nav-active-bg: rgba(35, 87, 255, 0.08);
+  --app-nav-hover-bg: rgba(16, 24, 40, 0.04);
+  --app-card-hover-shadow: 0 16px 36px rgba(16, 24, 40, 0.1);
+  --app-danger-bg: rgba(217, 45, 32, 0.08);
+  --app-warning-bg: rgba(220, 104, 3, 0.08);
+  --app-success-bg: rgba(3, 152, 85, 0.08);
+  --app-info-bg: rgba(21, 112, 239, 0.08);
 }
