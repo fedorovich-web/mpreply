@@ -51,7 +51,7 @@ Run-Step "Repository integrity" {
 Push-Location $Api
 try {
     Run-Step "Backend environment smoke test" {
-        & $VenvPython -c "import fastapi, pydantic, sqlalchemy, httpx, dramatiq, pytest; print('Backend imports OK')"
+        & $VenvPython -c "import fastapi, pydantic, sqlalchemy, httpx, dramatiq, redis, pytest; print('Backend imports OK')"
     }
     Run-Step "Backend dependency consistency" {
         & $VenvPython -m pip check
@@ -81,6 +81,9 @@ try {
     Run-Step "Frontend clean install" {
         & $Npm ci
     }
+    Run-Step "Frontend security audit" {
+        & $Npm audit --audit-level=high
+    }
     Run-Step "Frontend typecheck" {
         & $Npm run typecheck
     }
@@ -96,3 +99,4 @@ finally {
 }
 
 Write-Host "`nAll release-gate checks passed." -ForegroundColor Green
+Write-Host "Run .\scripts\container-gate.ps1 separately when Docker Desktop is available." -ForegroundColor DarkGray

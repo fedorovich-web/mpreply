@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.ai import router as ai_router
 from app.api.auth import router as auth_router
@@ -10,26 +13,36 @@ from app.api.messages import router as messages_router
 from app.api.organizations import router as organizations_router
 from app.api.replies import router as replies_router
 from app.core.config import get_settings
+from app.core.lifecycle import application_lifespan
 from app.core.logging import configure_logging
+from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
+from app.core.observability import configure_observability
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level)
+    configure_observability(settings)
 
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         docs_url="/docs" if settings.app_env != "production" else None,
         redoc_url="/redoc" if settings.app_env != "production" else None,
+        lifespan=application_lifespan,
     )
 
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
+    if settings.security_headers_enabled:
+        app.add_middleware(SecurityHeadersMiddleware, production=settings.app_env == "production")
+    app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.web_app_url, settings.public_site_url],
+        allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Organization-Id"],
+        allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Organization-Id", "X-Request-ID"],
+        expose_headers=["X-Request-ID"],
     )
 
     app.include_router(health_router)
