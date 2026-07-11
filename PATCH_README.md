@@ -1,27 +1,27 @@
-# Respio Sprint 8 patch — public site, SEO and legal foundation
+# Respio patch 0.1.16
 
-Apply this archive over a clean `develop` branch that already contains Sprint 7 and the repair fixes completed during verification.
+## Scope
 
-## Included
+Public-shell and interaction polish after the `0.1.14` hero foundation and `0.1.15` secondary-route redesign.
 
-- Public site routes: `/`, `/features`, `/marketplaces`, four marketplace pages, `/pricing`, `/demo`, `/resources`, `/contacts`, `/privacy`, `/terms`.
-- Next.js Metadata API, canonical URLs, Open Graph, Twitter metadata.
-- `robots.ts`, `sitemap.ts`, JSON-LD.
-- Dashboard noindex metadata.
-- Structured legal drafts with explicit pre-production legal-review gate.
-- Public design system styles using CSS variables/tokens.
-- `scripts/check_integrity.py`.
-- `scripts/release-gate.ps1`.
-- GitHub Actions quality gate.
-- Version `0.1.8` synchronized across backend, frontend and env example.
-- Clean `package-lock.json` without internal CAAS/OpenAI registry URLs.
+## Changed
 
-## Local verification
+- Replaced the passive `<details>` mobile navigation with a controlled accessible menu that supports explicit open/close state, Escape closing, backdrop closing and link-close behavior.
+- Added current-page states to desktop and mobile navigation where a single route can be identified unambiguously.
+- Improved the theme switch so its accessible name always describes the next action and `aria-pressed` reflects the active dark theme.
+- Strengthened the public footer with a clearer brand statement, conversion CTA, marketplace readiness links and grouped product/resources/legal navigation.
+- Converted homepage FAQ items into keyboard-accessible disclosure controls.
+- Rewrote remaining homepage implementation jargon into natural Russian product language where possible.
+- Kept the approved `#6F33AB` violet + `#79D6B0` mint palette and the existing Handhold-inspired hero canvas unchanged in core composition.
+- Synchronized project version to `0.1.16`.
 
-From repository root on Windows PowerShell:
+## Not changed
 
-```powershell
-.\scripts\release-gate.ps1
-```
+- Backend business logic, database models, Alembic migrations, worker behavior or marketplace send flow.
+- Dashboard/SaaS application UI.
+- Marketplace readiness truth: Wildberries remains the current MVP path; Ozon, Yandex Market and Avito remain planned.
+- Megamarket is not presented as supported because a complete official review/question receive-and-reply API contract is still unconfirmed.
 
-Or run the checks manually as documented in `docs/qa/sprint-8-release-gate.md`.
+## Validation
+
+See the final delivery note for the exact checks that were actually executed in this environment.

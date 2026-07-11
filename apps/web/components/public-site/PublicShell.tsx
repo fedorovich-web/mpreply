@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { siteConfig } from "../../lib/site-config";
+import { marketplaces } from "../../lib/site-config";
+import { PublicHeader } from "./PublicHeader";
 
 type PublicShellProps = {
   children: ReactNode;
@@ -13,64 +14,59 @@ export function PublicShell({ children }: PublicShellProps) {
       <a className="skip-link" href="#main-content">
         Перейти к содержимому
       </a>
-      <header className="public-header">
-        <div className="public-container public-header-inner">
-          <Link className="public-brand" href="/" aria-label="Respio — главная">
-            <span className="public-brand-mark" aria-hidden="true">
-              R
-            </span>
-            <span>
-              <strong>Respio</strong>
-              <small>AI-ответы для маркетплейсов</small>
-            </span>
-          </Link>
-          <nav className="public-nav" aria-label="Основная навигация">
-            {siteConfig.navigation.map((item) => (
-              <Link key={item.href} href={item.href}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="public-header-actions">
-            <Link className="button button-ghost" href="/auth/login">
-              Войти
-            </Link>
-            <Link className="button button-primary" href="/demo">
-              Посмотреть демо
-            </Link>
-          </div>
-        </div>
-      </header>
+
+      <PublicHeader />
 
       <main id="main-content">{children}</main>
 
       <footer className="public-footer">
-        <div className="public-container public-footer-grid">
+        <div className="public-container public-footer-topline">
           <div className="public-footer-brand">
-            <strong>Respio</strong>
+            <Link className="public-footer-logo" href="/" aria-label="Respio — главная">
+              <span className="public-brand-mark" aria-hidden="true">R</span>
+              <strong>Respio</strong>
+            </Link>
             <p>
-              Auto-first SaaS для безопасной автоматизации ответов на отзывы и вопросы
-              маркетплейсов.
+              Автоматизирует ответы на отзывы и вопросы маркетплейсов, проверяет рискованные случаи до отправки и оставляет понятную историю действий.
             </p>
           </div>
+          <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+            Подключить маркетплейс
+          </Link>
+        </div>
+
+        <div className="public-container public-footer-grid">
           <div>
             <strong>Продукт</strong>
             <Link href="/features">Возможности</Link>
-            <Link href="/marketplaces">Маркетплейсы</Link>
+            <Link href="/#safetygate">SafetyGate</Link>
             <Link href="/pricing">Тарифы</Link>
-            <Link href="/demo">Демо</Link>
+            <Link href="/demo">Как работает Respio</Link>
           </div>
           <div>
-            <strong>Компания</strong>
+            <strong>Маркетплейсы</strong>
+            {marketplaces.map((marketplace) => (
+              <Link key={marketplace.key} href={marketplace.path}>
+                <span>{marketplace.name}</span>
+                <small>{marketplace.statusLabel}</small>
+              </Link>
+            ))}
+          </div>
+          <div>
+            <strong>Ресурсы</strong>
             <Link href="/resources">Материалы</Link>
             <Link href="/contacts">Контакты</Link>
+          </div>
+          <div>
+            <strong>Документы</strong>
             <Link href="/privacy">Конфиденциальность</Link>
-            <Link href="/terms">Условия</Link>
+            <Link href="/terms">Условия использования</Link>
           </div>
         </div>
+
         <div className="public-container public-footer-bottom">
           <span>© {new Date().getFullYear()} Respio</span>
-          <span>Перед production-запуском юридические документы проходят финальную проверку.</span>
+          <span>Информация о планируемых интеграциях не означает их текущую production-доступность.</span>
         </div>
       </footer>
     </div>

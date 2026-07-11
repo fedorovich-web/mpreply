@@ -20,10 +20,12 @@ export const siteConfig = {
   description:
     "Respio автоматизирует ответы на отзывы и вопросы маркетплейсов: AI готовит ответ, SafetyGate проверяет риски, а спорные обращения уходят на ручную проверку.",
   navigation: [
+    { href: "/#product", label: "Продукт" },
     { href: "/features", label: "Возможности" },
     { href: "/marketplaces", label: "Маркетплейсы" },
+    { href: "/#safetygate", label: "SafetyGate" },
     { href: "/pricing", label: "Тарифы" },
-    { href: "/resources", label: "Материалы" },
+    { href: "/resources", label: "Ресурсы" },
   ],
 } as const;
 

@@ -5,8 +5,9 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "AI-ответы для Ozon",
-  description: "Страница roadmap-интеграции Respio с Ozon. Production-доступность не заявляется до финальной проверки официальных API-контрактов.",
+  title: "Интеграция Respio с Ozon — статус и планы",
+  description:
+    "Текущий статус интеграции Respio с Ozon. Production-доступность не заявляется до проверки официального API, ограничений и runtime-сценариев отправки.",
   path: "/marketplaces/ozon",
 });
 
