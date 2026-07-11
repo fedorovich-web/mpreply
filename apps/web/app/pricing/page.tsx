@@ -5,48 +5,120 @@ import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Тарифы",
+  title: "Тарифы Respio — модель оплаты и принципы расчёта",
   description:
-    "Тарифная архитектура Respio: подписка, включённый объём ответов и usage-based overage. Финальные цены будут опубликованы перед коммерческим запуском.",
+    "Как будет устроена тарификация Respio: подписка, включённый объём операций и прозрачный перерасход. Финальные цены публикуются только после проверки себестоимости.",
   path: "/pricing",
 });
 
-const plans = [
-  { name: "Start", audience: "Для одного кабинета и первого сценария автоматизации", features: ["Auto-first режим", "AI drafts", "SafetyGate", "Базовые правила"] },
-  { name: "Growth", audience: "Для растущего магазина с большим потоком обращений", features: ["Больше включённого usage", "Расширенные automation rules", "Приоритетная очередь", "Базовая аналитика"] },
-  { name: "Team", audience: "Для команды поддержки и нескольких участников workspace", features: ["RBAC", "Ручная проверка", "Audit log", "Командный workflow"] },
-  { name: "Agency", audience: "Для агентств и нескольких клиентских контуров", features: ["Расширенная tenant-модель", "Несколько workspace", "Управление лимитами", "Отчётность"] },
+const pricingParts = [
+  {
+    number: "01",
+    title: "Подписка",
+    text: "Оплата за доступ к продукту, интеграционному контуру, правилам, очередям, журналу и рабочему месту команды.",
+  },
+  {
+    number: "02",
+    title: "Включённый объём",
+    text: "В тариф входит определённый объём AI-обработки и отправок. Конкретные лимиты будут рассчитаны по реальной себестоимости.",
+  },
+  {
+    number: "03",
+    title: "Прозрачный перерасход",
+    text: "Если объём превышен, дополнительное использование должно быть видно заранее и не превращаться в скрытый платёж.",
+  },
+];
+
+const audienceModes = [
+  ["Один продавец", "Один или несколько кабинетов, базовая автоматизация и понятные лимиты."],
+  ["Команда", "Роли, ручная проверка исключений, журнал действий и распределение ответственности."],
+  ["Агентство", "Несколько клиентских организаций, изоляция данных и отдельная отчётность по контурам."],
 ];
 
 export default function PricingPage() {
   return (
     <PublicShell>
-      <section className="public-hero public-hero-compact">
-        <div className="public-container public-hero-copy public-hero-copy-centered">
-          <p className="eyebrow">Pricing foundation</p>
-          <h1>Тарифы без выдуманных цифр до финализации unit economics</h1>
-          <p className="public-lead">
-            Модель тарификации: подписка + включённый объём ответов + overage. Конкретные цены не публикуются, пока не завершены FinOps-расчёты, AI cost model и коммерческая проверка.
-          </p>
+      <section className="public-subhero public-subhero-pricing">
+        <div className="public-container public-subhero-grid">
+          <div className="public-subhero-copy">
+            <p className="eyebrow">Тарифы</p>
+            <h1>Цена будет опубликована только после проверки реальной себестоимости</h1>
+            <p className="public-lead">
+              Мы не ставим на страницу выдуманные суммы ради красивого pricing-блока. Сначала считаем стоимость AI, инфраструктуры, повторных попыток, хранения и поддержки — затем фиксируем лимиты и цены.
+            </p>
+          </div>
+
+          <aside className="pricing-principle-panel">
+            <span className="panel-kicker">Базовая модель</span>
+            <strong>Подписка + включённый объём + прозрачный перерасход</strong>
+            <p>Эта модель учитывает не только генерацию текста, но и весь операционный контур Respio.</p>
+          </aside>
         </div>
       </section>
+
       <section className="public-section">
-        <div className="public-container pricing-grid">
-          {plans.map((plan) => (
-            <article className="pricing-card" key={plan.name}>
-              <span className="panel-kicker">План</span>
-              <h2>{plan.name}</h2>
-              <p>{plan.audience}</p>
-              <strong className="pricing-state">Цена будет опубликована перед запуском</strong>
-              <ul>{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
-            </article>
-          ))}
+        <div className="public-container">
+          <div className="section-heading section-heading-wide">
+            <p className="eyebrow">Из чего складывается модель</p>
+            <h2>Платформа выполняет больше работы, чем один AI-запрос</h2>
+            <p>Получение данных, контекст, SafetyGate, правила, очередь, повторы, отправка, журнал и аналитика тоже входят в продукт.</p>
+          </div>
+
+          <div className="pricing-model-grid">
+            {pricingParts.map((part) => (
+              <article className="pricing-model-item" key={part.number}>
+                <span>{part.number}</span>
+                <h3>{part.title}</h3>
+                <p>{part.text}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
+
+      <section className="public-section public-section-muted">
+        <div className="public-container">
+          <div className="section-heading section-heading-wide">
+            <p className="eyebrow">Для разных операционных моделей</p>
+            <h2>Тариф должен учитывать способ работы, а не просто число карточек на странице</h2>
+          </div>
+
+          <div className="audience-pricing-list">
+            {audienceModes.map(([title, text]) => (
+              <article className="audience-pricing-row" key={title}>
+                <h3>{title}</h3>
+                <p>{text}</p>
+                <span>Конкретные лимиты — после FinOps-проверки</span>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="public-section">
+        <div className="public-container public-two-column public-two-column-balanced">
+          <div>
+            <p className="eyebrow">Что не будет скрыто</p>
+            <h2>Пользователь должен заранее понимать, за что платит и что произойдёт при достижении лимита</h2>
+          </div>
+          <div className="public-check-list public-check-list-large">
+            <p>Текущий расход и остаток включённого объёма.</p>
+            <p>Какая операция расходует лимит и сколько именно.</p>
+            <p>Что произойдёт после достижения квоты.</p>
+            <p>Как изменится доступ при смене тарифа или организации.</p>
+          </div>
+        </div>
+      </section>
+
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
-          <div><p className="eyebrow">Без скрытых обещаний</p><h2>Сначала подтверждаем себестоимость и лимиты — потом фиксируем цену</h2></div>
-          <Link className="button button-primary" href="/contacts">Связаться</Link>
+          <div>
+            <p className="eyebrow">Коммерческий запуск</p>
+            <h2>Нужен пилот или хотите обсудить требования к тарифу для вашей команды?</h2>
+          </div>
+          <Link className="button button-primary button-on-dark" href="/contacts">
+            Обсудить подключение
+          </Link>
         </div>
       </section>
     </PublicShell>

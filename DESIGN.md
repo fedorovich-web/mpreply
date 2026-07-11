@@ -1,13 +1,40 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.13
+Version: 0.1.16
 
 ## Design intent
 
 **Operational clarity. Quiet intelligence. Marketplace confidence.**
 
+## Approved public brand direction · Respio Signal Flow
+
+The approved public-site direction combines a light-first editorial SaaS layout with a full-width animated ribbon canvas in the hero, visually close in motion language and composition to the Handhold reference while using original Respio code, content and brand colors. The public site must not feel empty or unfinished: keep a complete header/navigation, real product evidence, substantial page structure and a functional footer.
+
+Approved public palette:
+- Primary violet: `#6F33AB`.
+- Signal mint: `#79D6B0`.
+- Warm light canvas: `#F7F5F2`.
+- Deep violet is secondary for selected contrast surfaces and optional dark theme, not the default page background.
+- Status colors remain semantic and separate from the mint brand accent.
+
+Approved hero behavior:
+- Large centered headline and supporting copy.
+- Full-width organic animated canvas/ribbon below the copy.
+- Primary CTA: `Подключить маркетплейс`, not a single-marketplace CTA.
+- Complete desktop navigation and accessible mobile menu.
+- Light theme is the default; optional theme switch is allowed.
+- Respect reduced motion and pause canvas animation when off-screen or the page is hidden.
+
 Respio should feel like a reliable operating system for marketplace communication: calm, precise, fast and accountable. Marketing may be more expressive than the dashboard, but both must belong to one family.
+
+## Secondary public routes · 0.1.15
+
+The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resources` and `contacts` routes use the same Signal Flow language as the homepage: editorial hierarchy, restrained violet/mint accents, explicit operational states, fewer card grids and more structured rows/lists. Planned marketplace pages must visually separate roadmap status from an implemented integration and must not use a production-ready headline.
+
+## Public shell polish · 0.1.16
+
+The shared public shell adds active desktop/mobile navigation states, an accessible controlled mobile menu with Escape/backdrop close behavior, a theme toggle that announces the next action, a fuller conversion-oriented footer and disclosure-based FAQ interaction. Public copy avoids internal implementation jargon when a clear Russian term exists.
 
 ## Two visual lanes
 

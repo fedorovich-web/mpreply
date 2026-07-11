@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { HeroFlowCanvas } from "../components/public-site/HeroFlowCanvas";
 import { PublicShell } from "../components/public-site/PublicShell";
 import { JsonLd } from "../components/seo/JsonLd";
 import { createPageMetadata } from "../lib/seo";
 import { marketplaces, siteConfig } from "../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "AI-ответы на отзывы и вопросы маркетплейсов",
+  title: "Автоматические ответы на отзывы и вопросы маркетплейсов",
   description:
     "Respio автоматизирует ответы на отзывы и вопросы: AI готовит ответ, SafetyGate проверяет риски, а правила определяют автоотправку или ручную проверку.",
   path: "/",
@@ -17,22 +18,22 @@ const faq = [
   {
     question: "Respio отправляет ответы полностью автоматически?",
     answer:
-      "Да, auto-first — базовый режим. При этом SafetyGate, правила, квоты и исключения могут остановить автоотправку и перевести обращение на ручную проверку.",
+      "Да. Автоматический режим является основным: безопасные ответы отправляются без обязательного подтверждения менеджером. SafetyGate и правила останавливают только те случаи, которые требуют проверки или не должны быть отправлены.",
   },
   {
     question: "Какая интеграция реализована в MVP?",
     answer:
-      "Текущая техническая основа содержит WildberriesAdapter. Ozon, Яндекс Маркет и Авито не заявляются как production-ready до отдельной проверки официальных API-контрактов.",
+      "Сейчас реальный MVP-путь реализован для Wildberries. Ozon, Яндекс Маркет и Авито остаются в планах и не считаются готовыми, пока не проверены официальные API, ограничения и полный цикл отправки ответов.",
   },
   {
     question: "Где хранится API-ключ маркетплейса?",
     answer:
-      "Ключ обрабатывается только на backend, хранится в зашифрованном виде и не должен попадать во frontend, ответы API или обычные логи.",
+      "Ключ обрабатывается только на сервере, хранится в зашифрованном виде и не должен попадать в браузер, обычные ответы API или журналы в открытом виде.",
   },
   {
     question: "Что происходит с рискованным AI-ответом?",
     answer:
-      "SafetyGate может разрешить ответ, отправить его на ручную проверку или заблокировать. Решение фиксируется в статусах и audit trail.",
+      "SafetyGate может разрешить автоматическую отправку, передать ответ менеджеру или заблокировать его. Причина решения и дальнейшие действия сохраняются в истории.",
   },
 ];
 
@@ -60,54 +61,46 @@ export default function HomePage() {
   return (
     <PublicShell>
       <JsonLd data={jsonLd} />
-      <section className="public-hero">
-        <div className="public-container public-hero-grid">
-          <div className="public-hero-copy">
-            <p className="eyebrow">Auto-first SaaS для продавцов маркетплейсов</p>
-            <h1>AI-ответы на отзывы и вопросы — автоматически, но без слепой автоотправки</h1>
-            <p className="public-lead">
-              Respio получает обращения через API, готовит ответ с помощью AI, проверяет риски через SafetyGate и отправляет безопасные ответы по заданным правилам. Спорные случаи переходят на ручную проверку.
-            </p>
-            <div className="hero-actions">
-              <Link className="button button-primary" href="/demo">
-                Посмотреть workflow
-              </Link>
-              <Link className="button button-secondary" href="/features">
-                Изучить возможности
-              </Link>
-            </div>
-            <div className="public-trust-row" aria-label="Ключевые принципы Respio">
-              <span>API keys — backend only</span>
-              <span>SafetyGate перед отправкой</span>
-              <span>Audit trail и idempotency</span>
-            </div>
+
+      <section className="public-hero public-hero-flow">
+        <div className="public-container public-hero-flow-copy">
+          <p className="hero-kicker">Автоматизация ответов на отзывы и вопросы маркетплейсов</p>
+          <h1>Ответы работают сами. Рискованные случаи остаются под контролем.</h1>
+          <p className="public-lead">
+            Respio получает обращения, учитывает товар и правила компании, готовит ответ с помощью ИИ, проверяет его через SafetyGate и автоматически отправляет безопасные ответы. Сложные случаи оставляет менеджеру.
+          </p>
+          <div className="hero-actions public-hero-actions">
+            <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+              Подключить маркетплейс
+            </Link>
+            <Link className="button button-secondary" href="/demo">
+              Посмотреть, как работает Respio
+            </Link>
           </div>
-          <div className="dashboard-preview public-dashboard-preview" aria-label="Превью рабочего процесса Respio">
-            <div className="preview-toolbar" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="preview-grid">
-              <div className="preview-card strong">Автоответы активны</div>
-              <div className="preview-card">На ручной проверке: 3</div>
-              <div className="preview-card wide">WB · Отзыв · SafetyGate: allow</div>
-              <div className="preview-card wide warning">Вопрос: не хватает данных о товаре → manual review</div>
-              <div className="preview-card wide">Worker · queued → sending → sent</div>
-            </div>
-          </div>
+        </div>
+
+        <HeroFlowCanvas />
+
+        <div className="public-container hero-proof-row" aria-label="Ключевые принципы Respio">
+          <span>Автоматический режим по умолчанию</span>
+          <span>SafetyGate до отправки</span>
+          <span>Ручная проверка только для исключений</span>
+          <span>Повторные попытки без дублей</span>
         </div>
       </section>
 
       <section className="marketplace-strip" aria-labelledby="marketplace-strip-title">
         <div className="public-container">
-          <p id="marketplace-strip-title" className="marketplace-strip-label">
-            Интеграционная архитектура
-          </p>
+          <div className="marketplace-strip-heading">
+            <p id="marketplace-strip-title">Маркетплейсы</p>
+            <Link className="text-link" href="/marketplaces">
+              Все интеграции
+            </Link>
+          </div>
           <div className="marketplace-pill-row">
             {marketplaces.map((marketplace) => (
               <Link key={marketplace.key} href={marketplace.path} className="marketplace-pill">
-                <strong>{marketplace.shortName}</strong>
+                <strong>{marketplace.name}</strong>
                 <span>{marketplace.statusLabel}</span>
               </Link>
             ))}
@@ -115,68 +108,133 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-section">
+      <section className="public-section" id="product">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
             <p className="eyebrow">Не просто генератор текста</p>
-            <h2>Respio принимает решение, можно ли отправлять ответ автоматически</h2>
+            <h2>Respio проводит ответ через весь путь — от входящего обращения до подтверждённой отправки</h2>
             <p>
-              AI — только один слой. Перед внешней отправкой работают контекст, правила автоматизации, SafetyGate, квоты, idempotency и worker execution.
+              ИИ — только один слой. До отправки Respio учитывает товарный контекст и правила компании, проверяет риски, контролирует лимиты и защищает от повторной публикации одного и того же ответа.
             </p>
           </div>
-          <div className="feature-grid feature-grid-3">
-            <article className="feature-card feature-card-emphasis">
-              <span className="feature-number">01</span>
-              <h3>Понимает контекст обращения</h3>
-              <p>Тип обращения, рейтинг, текст покупателя, товар, брендовые правила и база знаний входят в prompt context.</p>
+
+          <div className="signal-flow" aria-label="Путь автоматического ответа в Respio">
+            <div className="signal-flow-track" aria-hidden="true" />
+            <article className="signal-flow-step">
+              <span>01</span>
+              <div>
+                <strong>Новое обращение</strong>
+                <p>Отзыв или вопрос поступает через официальную интеграцию и нормализуется.</p>
+              </div>
             </article>
-            <article className="feature-card">
-              <span className="feature-number">02</span>
-              <h3>Останавливает рискованные ответы</h3>
-              <p>Недостаток контекста, сомнительные обещания и чувствительные темы переводят обращение на ручную проверку.</p>
+            <article className="signal-flow-step">
+              <span>02</span>
+              <div>
+                <strong>Контекст и AI</strong>
+                <p>Respio учитывает товар, правила компании и доступные знания перед генерацией ответа.</p>
+              </div>
             </article>
-            <article className="feature-card">
-              <span className="feature-number">03</span>
-              <h3>Отправляет через worker queue</h3>
-              <p>Временные ошибки обрабатываются retry-механизмом, а idempotency защищает от повторной постановки одного ответа.</p>
+            <article className="signal-flow-step signal-flow-step-highlight" id="safetygate">
+              <span>03</span>
+              <div>
+                <strong>SafetyGate</strong>
+                <p>Решает: можно отправить ответ автоматически, нужно передать его человеку или заблокировать.</p>
+              </div>
+              <div className="safety-decision-row" aria-label="Решения SafetyGate">
+                <span className="safety-decision safety-decision-allow">Разрешено</span>
+                <span className="safety-decision safety-decision-review">На проверку</span>
+                <span className="safety-decision safety-decision-block">Заблокировано</span>
+              </div>
+            </article>
+            <article className="signal-flow-step">
+              <span>04</span>
+              <div>
+                <strong>Правило и отправка</strong>
+                <p>Automation Rules определяют дальнейшее действие, worker отправляет ответ и фиксирует статус.</p>
+              </div>
             </article>
           </div>
         </div>
       </section>
 
       <section className="public-section public-section-muted">
-        <div className="public-container public-two-column">
+        <div className="public-container public-two-column public-two-column-feature">
           <div>
-            <p className="eyebrow">Auto-first</p>
-            <h2>Автоматизация по умолчанию. Ручная проверка — как управляемый fallback.</h2>
+            <p className="eyebrow">Автоматический режим</p>
+            <h2>Менеджер не обязан подтверждать каждый ответ вручную</h2>
             <p className="public-copy-muted">
-              Организация задаёт базовый режим, кабинет маркетплейса может его переопределить, а точечные правила уточняют поведение для рейтингов, товаров, категорий и чувствительных тем.
+              Безопасная рутина обрабатывается автоматически. Человек подключается только там, где не хватает контекста, есть рискованная формулировка или правило требует ручной проверки.
             </p>
+            <Link className="text-link section-inline-link" href="/features">
+              Посмотреть все возможности
+            </Link>
           </div>
-          <div className="decision-stack" aria-label="Pipeline автоответа">
-            <div><span>1</span><strong>Новое обращение</strong><small>Импорт и deduplication</small></div>
-            <div><span>2</span><strong>AI draft</strong><small>Prompt strategy + товарный контекст</small></div>
-            <div><span>3</span><strong>SafetyGate</strong><small>allow / manual review / block</small></div>
-            <div><span>4</span><strong>Automation rules</strong><small>режим, квоты, исключения</small></div>
-            <div><span>5</span><strong>Worker execution</strong><small>queue, retry, idempotency</small></div>
+
+          <div className="operations-panel" aria-label="Пример состояний обработки">
+            <div className="operations-panel-header">
+              <div>
+                <span className="operations-live-dot" aria-hidden="true" />
+                <strong>Автоматизация активна</strong>
+              </div>
+              <span>Сейчас</span>
+            </div>
+            <div className="operations-list">
+              <div className="operations-item">
+                <span className="operations-channel">WB</span>
+                <div>
+                  <strong>Отзыв обработан автоматически</strong>
+                  <small>SafetyGate: allow · ответ отправлен</small>
+                </div>
+                <span className="operations-status operations-status-success">Готово</span>
+              </div>
+              <div className="operations-item">
+                <span className="operations-channel">WB</span>
+                <div>
+                  <strong>Не хватает данных о товаре</strong>
+                  <small>SafetyGate: manual review</small>
+                </div>
+                <span className="operations-status operations-status-review">Проверить</span>
+              </div>
+              <div className="operations-item">
+                <span className="operations-channel">WB</span>
+                <div>
+                  <strong>Временная ошибка API</strong>
+                  <small>Следующая попытка запланирована автоматически</small>
+                </div>
+                <span className="operations-status operations-status-processing">Повтор</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="public-section">
         <div className="public-container">
-          <div className="section-heading">
-            <p className="eyebrow">Возможности</p>
-            <h2>Операционный контур для ответов на маркетплейсах</h2>
+          <div className="section-heading section-heading-wide">
+            <p className="eyebrow">Операционный контур</p>
+            <h2>Не только ответить, но и понимать, что произошло на каждом этапе</h2>
           </div>
-          <div className="feature-grid feature-grid-4">
-            <article className="feature-card"><h3>Единый Inbox</h3><p>Отзывы и вопросы в нормализованном формате с фильтрами и статусами.</p></article>
-            <article className="feature-card"><h3>AI Assistant</h3><p>Черновики с фиксируемой моделью, usage, latency, cost и версией prompt.</p></article>
-            <article className="feature-card"><h3>Automation Rules</h3><p>Условия по рейтингу, типу обращения, ключевым словам и контексту товара.</p></article>
-            <article className="feature-card"><h3>Audit Log</h3><p>История значимых действий пользователя, AI и интеграционных процессов.</p></article>
-          </div>
-          <div className="section-action">
-            <Link className="button button-secondary" href="/features">Все возможности</Link>
+          <div className="feature-grid feature-grid-4 feature-grid-editorial">
+            <article className="feature-card">
+              <span className="feature-number">01</span>
+              <h3>Единый Inbox</h3>
+              <p>Отзывы и вопросы в нормализованном формате с фильтрами и понятными статусами.</p>
+            </article>
+            <article className="feature-card">
+              <span className="feature-number">02</span>
+              <h3>Правила автоматизации</h3>
+              <p>Условия по рейтингу, типу обращения, ключевым словам, товарам и чувствительным темам.</p>
+            </article>
+            <article className="feature-card">
+              <span className="feature-number">03</span>
+              <h3>Очередь проверки</h3>
+              <p>Только исключения, которые действительно требуют решения менеджера.</p>
+            </article>
+            <article className="feature-card">
+              <span className="feature-number">04</span>
+              <h3>История действий</h3>
+              <p>Понятная хронология значимых действий пользователя, ИИ и интеграционных процессов.</p>
+            </article>
           </div>
         </div>
       </section>
@@ -189,10 +247,13 @@ export default function HomePage() {
           </div>
           <div className="faq-list">
             {faq.map((item) => (
-              <article className="faq-item" key={item.question}>
-                <h3>{item.question}</h3>
+              <details className="faq-item" key={item.question}>
+                <summary>
+                  <span>{item.question}</span>
+                  <span className="faq-item-icon" aria-hidden="true" />
+                </summary>
                 <p>{item.answer}</p>
-              </article>
+              </details>
             ))}
           </div>
         </div>
@@ -201,10 +262,12 @@ export default function HomePage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Посмотрите логику Respio</p>
-            <h2>От нового отзыва до безопасного ответа — один прозрачный workflow</h2>
+            <p className="eyebrow">Автоматизация без слепой отправки</p>
+            <h2>Подключите маркетплейс и настройте, какие ответы Respio может отправлять самостоятельно</h2>
           </div>
-          <Link className="button button-primary" href="/demo">Открыть демо</Link>
+          <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">
+            Подключить маркетплейс
+          </Link>
         </div>
       </section>
     </PublicShell>

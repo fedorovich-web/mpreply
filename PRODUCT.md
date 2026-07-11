@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.13
+Version: 0.1.16
 
 ## Product
 
@@ -41,6 +41,12 @@ Respio is a multi-tenant SaaS for marketplace sellers, operators and agencies. I
 ## Brand voice
 
 Calm, competent, concise, specific and operational. Use native Russian, concrete verbs, evidence and explicit limitations. Never use fake urgency, fabricated customers/logos/testimonials/metrics/prices, “магия AI”, “100% безопасно”, or unsupported claims.
+
+## Public redesign progress
+
+- `0.1.14`: approved Signal Flow foundation — full header, light-first theme, violet/mint tokens and animated hero canvas.
+- `0.1.15`: secondary public routes aligned to the same system; public copy prefers natural Russian product language over internal implementation jargon.
+- `0.1.16`: public shell polish — active navigation, accessible mobile menu, clearer theme switching, stronger footer and expandable FAQ.
 
 ## Public-site conversion priorities
 
