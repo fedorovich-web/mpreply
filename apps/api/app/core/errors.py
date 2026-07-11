@@ -19,3 +19,7 @@ def not_found(message: str = "Not found") -> HTTPException:
 
 def conflict(message: str = "Conflict") -> HTTPException:
     return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=message)
+
+
+def payment_required(message: str = "Payment required") -> HTTPException:
+    return HTTPException(status_code=status.HTTP_402_PAYMENT_REQUIRED, detail=message)

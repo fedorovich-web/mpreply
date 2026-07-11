@@ -1,7 +1,8 @@
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -23,4 +24,4 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     category: Mapped[str | None] = mapped_column(String(255), nullable=True)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     product_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    metadata_json: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)

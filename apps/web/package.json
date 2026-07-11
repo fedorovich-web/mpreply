@@ -1,29 +1,51 @@
 {
   "name": "respio-web",
-  "version": "0.1.0",
+  "version": "0.1.16",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "design:detect": "impeccable detect app components styles",
+    "design:detect:json": "impeccable detect --json app components styles",
+    "impeccable:install": "impeccable skills install -y --providers=claude,codex --scope=project",
+    "test:e2e": "playwright test e2e/public-site.spec.ts --project=chromium",
+    "test:e2e:all": "playwright test e2e/public-site.spec.ts",
+    "test:a11y": "playwright test e2e/accessibility.spec.ts --project=chromium",
+    "test:visual": "playwright test e2e/visual.spec.ts --project=chromium",
+    "test:visual:update": "playwright test e2e/visual.spec.ts --project=chromium --update-snapshots",
+    "test:report": "playwright show-report",
+    "lighthouse": "lhci autorun --config=./lighthouserc.cjs",
+    "qa:web": "npm run design:detect && npm run typecheck && npm run lint && npm run build"
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.12",
-    "next": "16.2.9",
+    "next": "16.2.10",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zod": "4.2.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@lhci/cli": "0.15.1",
+    "@playwright/test": "1.61.1",
     "@types/node": "25.0.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.2",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.2.10",
+    "impeccable": "3.2.1",
     "typescript": "5.9.3",
-    "vitest": "4.0.15",
-    "playwright": "1.57.0"
+    "vitest": "4.1.10"
+  },
+  "overrides": {
+    "postcss": "8.5.10",
+    "tmp": "0.2.7",
+    "uuid": "11.1.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

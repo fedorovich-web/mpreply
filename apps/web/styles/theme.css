@@ -4,12 +4,29 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --color-bg-page: #0b1020;
-  --color-bg-surface: #12182b;
-  --color-bg-elevated: #171f35;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #d0d5dd;
-  --color-text-muted: #98a2b3;
-  --color-border-subtle: #28334f;
-  --color-border-strong: #344054;
+  --color-bg-page: #17111d;
+  --color-bg-surface: #211727;
+  --color-bg-elevated: #2a1e31;
+  --color-text-primary: #fbf8fd;
+  --color-text-secondary: #ded4e3;
+  --color-text-muted: #ab9fb1;
+  --color-border-subtle: #403047;
+  --color-border-strong: #58415f;
+  --color-brand-primary: #a86bd9;
+  --color-brand-primary-hover: #b97de6;
+  --color-brand-accent: #7ad9b2;
+  --color-brand-accent-hover: #8be5c0;
+  --color-brand-violet-light: #c49be5;
+  --color-brand-mint-light: #a5e9cf;
+  --color-brand-soft: rgba(168, 107, 217, 0.14);
+  --color-brand-soft-strong: rgba(168, 107, 217, 0.2);
+  --color-surface-muted: #1c1422;
+  --color-surface-dark: #120d16;
+  --color-text-on-dark: #fbf8fd;
+  --gradient-public-hero: linear-gradient(180deg, #211727 0%, #17111d 100%);
+  --gradient-public-cta: linear-gradient(135deg, #4c2667, #2b1837);
+  --app-sidebar-bg: #211727;
+  --app-topbar-bg: rgba(33, 23, 39, 0.86);
+  --app-nav-active-bg: rgba(168, 107, 217, 0.14);
+  --app-nav-hover-bg: rgba(255, 255, 255, 0.05);
 }

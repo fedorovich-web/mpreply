@@ -1,7 +1,8 @@
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -17,4 +18,4 @@ class IntegrationEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(64), nullable=False)
     error_code: Mapped[str | None] = mapped_column(String(128), nullable=True)
     error_message_safe: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    metadata_json: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)

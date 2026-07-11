@@ -14,7 +14,7 @@ class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     owner_user_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
-    plan_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
+    plan_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("billing_plans.id"), nullable=True, index=True)
     default_response_mode: Mapped[str] = mapped_column(String(32), default=ResponseMode.AUTO.value)
     status: Mapped[str] = mapped_column(String(32), default="active")
 

@@ -44,3 +44,13 @@ logs/
 # Docker/local data
 postgres-data/
 redis-data/
+
+apps/web/tsconfig.tsbuildinfo
+apps/web/.next/
+apps/web/node_modules/
+# Frontend QA / browser tooling
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/blob-report/
+apps/web/.lighthouseci/
+apps/web/lighthouse-report/
