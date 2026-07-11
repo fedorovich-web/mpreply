@@ -3,7 +3,7 @@ name: respio-local
 x-backend-env: &backend-env
   APP_ENV: local
   APP_NAME: Respio
-  APP_VERSION: 0.1.11
+  APP_VERSION: 0.1.13
   API_BASE_URL: http://localhost:8000
   WEB_APP_URL: http://localhost:3000
   PUBLIC_SITE_URL: http://localhost:3000

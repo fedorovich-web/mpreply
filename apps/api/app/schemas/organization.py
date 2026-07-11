@@ -22,6 +22,7 @@ class OrganizationResponse(BaseModel):
     name: str
     slug: str
     owner_user_id: UUID | None
+    plan_id: UUID | None
     default_response_mode: str
     status: str
     created_at: datetime

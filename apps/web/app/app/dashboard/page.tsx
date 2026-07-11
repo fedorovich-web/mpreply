@@ -1,25 +1,14 @@
+import { DashboardMetrics } from "../../../components/dashboard/DashboardMetrics";
+
 export default function DashboardPage() {
   return (
-    <main className="app-page">
+    <section className="app-page">
       <section className="app-header">
         <p className="eyebrow">Dashboard</p>
-        <h1>Автоответы Respio</h1>
-        <p>Базовый dashboard для Sprint 1: auth, workspace и роли.</p>
+        <h1>Операционный центр Respio</h1>
+        <p>Live-сводка по обращениям, автоответам, ручной проверке, AI usage и текущему тарифному контексту выбранного workspace.</p>
       </section>
-      <section className="dashboard-cards">
-        <article className="metric-card">
-          <span>Режим по умолчанию</span>
-          <strong>Автоматический</strong>
-        </article>
-        <article className="metric-card">
-          <span>Workspace</span>
-          <strong>Создаётся через API</strong>
-        </article>
-        <article className="metric-card">
-          <span>RBAC</span>
-          <strong>Owner / Admin / Manager / Viewer</strong>
-        </article>
-      </section>
-    </main>
+      <DashboardMetrics />
+    </section>
   );
 }

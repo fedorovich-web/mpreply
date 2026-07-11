@@ -4,9 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from app.api.admin import router as admin_router
 from app.api.ai import router as ai_router
+from app.api.analytics import router as analytics_router
 from app.api.auth import router as auth_router
 from app.api.automation_rules import router as automation_rules_router
+from app.api.billing import router as billing_router
 from app.api.health import router as health_router
 from app.api.marketplace_accounts import router as marketplace_accounts_router
 from app.api.messages import router as messages_router
@@ -46,6 +49,9 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health_router)
+    app.include_router(admin_router)
+    app.include_router(analytics_router)
+    app.include_router(billing_router)
     app.include_router(ai_router)
     app.include_router(automation_rules_router)
     app.include_router(auth_router)

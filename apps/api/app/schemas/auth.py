@@ -22,6 +22,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     name: str | None
     status: str
+    is_superadmin: bool
     created_at: datetime
     updated_at: datetime
 

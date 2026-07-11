@@ -17,6 +17,7 @@ from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.product import Product
 from app.models.sync_job import SyncJob
+from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.services.audit_service import AuditService
 from app.services.organization_service import OrganizationService
@@ -153,6 +154,23 @@ class MarketplaceSyncService:
                 account.credentials_status = "valid"
             job.finished_at = datetime.now(UTC)
             job.stats_json = stats.as_dict()
+            imported_total = stats.imported_reviews + stats.imported_questions
+            if imported_total > 0:
+                self.session.add(
+                    UsageEvent(
+                        organization_id=account.organization_id,
+                        user_id=actor.id,
+                        event_type="marketplace.messages_imported",
+                        quantity=imported_total,
+                        metadata_json={
+                            "marketplace": account.marketplace,
+                            "marketplace_account_id": str(account.id),
+                            "sync_job_id": str(job.id),
+                            "imported_reviews": stats.imported_reviews,
+                            "imported_questions": stats.imported_questions,
+                        },
+                    )
+                )
             await self.audit.write(
                 action="marketplace_account.sync.finished",
                 entity_type="sync_job",

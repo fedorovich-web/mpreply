@@ -90,6 +90,9 @@ try {
     Run-Step "Frontend lint" {
         & $Npm run lint
     }
+    Run-Step "Frontend design anti-pattern scan" {
+        & $Npm run design:detect
+    }
     Run-Step "Frontend production build" {
         & $Npm run build
     }

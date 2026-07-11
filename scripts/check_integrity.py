@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.11"
-EXPECTED_ALEMBIC_HEAD = "20260710_0008"
+EXPECTED_VERSION = "0.1.13"
+EXPECTED_ALEMBIC_HEAD = "20260710_0009"
 
 ERRORS: list[str] = []
 
@@ -164,7 +164,13 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("dependencies", "next"): "16.2.10",
         ("devDependencies", "eslint-config-next"): "16.2.10",
         ("devDependencies", "vitest"): "4.1.10",
+        ("devDependencies", "impeccable"): "3.2.1",
+        ("devDependencies", "@playwright/test"): "1.61.1",
+        ("devDependencies", "@axe-core/playwright"): "4.12.1",
+        ("devDependencies", "@lhci/cli"): "0.15.1",
         ("overrides", "postcss"): "8.5.10",
+        ("overrides", "tmp"): "0.2.7",
+        ("overrides", "uuid"): "11.1.1",
     }
     for (section, name), expected in expected_dependencies.items():
         actual = package.get(section, {}).get(name)
@@ -184,6 +190,8 @@ def check_release_gate_contract() -> None:
         "Backend dependency consistency",
         "Frontend security audit",
         "& $Npm audit --audit-level=high",
+        "Frontend design anti-pattern scan",
+        "& $Npm run design:detect",
         "Release gate stopped",
     ]
     for token in required_local_tokens:
@@ -198,6 +206,15 @@ def check_release_gate_contract() -> None:
         fail("GitHub quality gate Pyright is not bound to the installed Python interpreter")
     if "npm audit --audit-level=high" not in workflow:
         fail("GitHub quality gate does not enforce frontend high/critical audit threshold")
+    for token in [
+        "npm run design:detect",
+        "npx playwright install --with-deps chromium",
+        "npm run test:e2e",
+        "npm run test:a11y",
+        "npm run lighthouse",
+    ]:
+        if token not in workflow:
+            fail(f"GitHub quality gate missing frontend design/browser contract: {token}")
     if "Build production images" not in workflow:
         fail("GitHub quality gate does not build production Docker images")
     if '"pyright==' in pyproject:
@@ -210,7 +227,20 @@ def check_deployment_contract() -> None:
         WEB / ".dockerignore",
         WEB / "app" / "api" / "health" / "route.ts",
         WEB / "app" / "app" / "review-queue" / "page.tsx",
+        WEB / "app" / "app" / "analytics" / "page.tsx",
+        WEB / "app" / "app" / "billing" / "page.tsx",
+        WEB / "app" / "app" / "admin" / "page.tsx",
         WEB / "components" / "review-queue" / "ReviewQueueWorkspace.tsx",
+        WEB / "components" / "analytics" / "AnalyticsWorkspace.tsx",
+        WEB / "components" / "billing" / "BillingWorkspace.tsx",
+        WEB / "components" / "admin" / "AdminOverviewWorkspace.tsx",
+        API / "app" / "api" / "analytics.py",
+        API / "app" / "api" / "billing.py",
+        API / "app" / "api" / "admin.py",
+        API / "app" / "services" / "analytics_service.py",
+        API / "app" / "services" / "plan_limit_service.py",
+        API / "app" / "models" / "billing_plan.py",
+        API / "app" / "models" / "subscription.py",
         WEB / "components" / "workspace" / "WorkspaceProvider.tsx",
         WEB / "components" / "providers" / "AppProviders.tsx",
         WEB / "components" / "auth" / "AuthForm.tsx",
@@ -225,6 +255,29 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "operations" / "incident-runbook.md",
         ROOT / "docs" / "operations" / "rollback.md",
         ROOT / "infra" / "coolify" / "deployment-checklist.md",
+        ROOT / "PRODUCT.md",
+        ROOT / "DESIGN.md",
+        ROOT / "AGENTS.md",
+        WEB / "playwright.config.ts",
+        WEB / "lighthouserc.cjs",
+        WEB / "e2e" / "helpers" / "public-routes.ts",
+        WEB / "e2e" / "public-site.spec.ts",
+        WEB / "e2e" / "accessibility.spec.ts",
+        WEB / "e2e" / "visual.spec.ts",
+        ROOT / "scripts" / "bootstrap-design-tooling.ps1",
+        ROOT / "scripts" / "web-design-gate.ps1",
+        ROOT / "docs" / "product" / "public-site-master-brief.md",
+        ROOT / "docs" / "brand" / "brand-foundation.md",
+        ROOT / "docs" / "seo" / "public-site-seo-spec.md",
+        ROOT / "docs" / "design" / "ui-ux-quality-standard.md",
+        ROOT / "docs" / "design" / "asset-policy.md",
+        ROOT / "docs" / "qa" / "frontend-design-tooling.md",
+        ROOT / "docs" / "qa" / "sprint-13-release-report.md",
+        ROOT / "vendor" / "npm" / "README.md",
+        ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
+        ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
+        ROOT / "vendor" / "npm" / "axe-core-playwright-4.12.1.tgz",
+        ROOT / "vendor" / "npm" / "lhci-cli-0.15.1.tgz",
     ]
     for path in required_files:
         require_file(path)

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.base import AdapterResult
 from app.adapters.wildberries import WildberriesAdapter
 from app.core.config import get_settings
-from app.core.errors import bad_request, forbidden, not_found
+from app.core.errors import bad_request, forbidden, not_found, payment_required
 from app.core.security import CredentialService
 from app.models.enums import Marketplace, ResponseMode
 from app.models.integration_event import IntegrationEvent
@@ -17,6 +17,7 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.user import User
 from app.services.audit_service import AuditService
 from app.services.organization_service import OrganizationService
+from app.services.plan_limit_service import PlanLimitService
 
 _ALLOWED_MANAGE_ROLES = {"owner", "admin"}
 _ALLOWED_READ_ROLES = {"owner", "admin", "manager", "viewer"}
@@ -27,6 +28,7 @@ class MarketplaceAccountService:
         self.session = session
         self.audit = AuditService(session)
         self.organization_service = OrganizationService(session)
+        self.plan_limits = PlanLimitService(session)
         settings = get_settings()
         self.credentials = CredentialService(settings.credentials_encryption_key.get_secret_value())
 
@@ -46,6 +48,12 @@ class MarketplaceAccountService:
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
+        limit_decision = await self.plan_limits.evaluate_metric(
+            organization_id=organization_id,
+            metric="marketplace_accounts",
+        )
+        if not limit_decision.allowed:
+            raise payment_required("Marketplace account limit is exhausted for the current plan")
         encrypted = self.credentials.encrypt(raw_credentials)
         fingerprint = self.credentials.fingerprint(raw_credentials)
         account = MarketplaceAccount(
