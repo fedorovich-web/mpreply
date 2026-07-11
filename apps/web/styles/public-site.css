@@ -183,13 +183,13 @@
 .public-status-mvp {
   border-color: transparent;
   background: var(--color-success-soft);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 
 .public-status-planned {
   border-color: transparent;
   background: var(--color-warning-soft);
-  color: var(--color-warning);
+  color: var(--color-warning-text);
 }
 
 .public-dashboard-preview {
@@ -386,7 +386,7 @@
   top: var(--space-4);
   left: var(--space-4);
   content: "✓";
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-weight: var(--font-weight-bold);
 }
 

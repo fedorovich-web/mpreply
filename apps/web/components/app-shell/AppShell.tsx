@@ -14,9 +14,11 @@ const navItems = [
   { href: "/app/automation-rules", label: "Automation Rules", description: "Auto + SafetyGate" },
   { href: "/app/integrations", label: "Integrations", description: "API-ключи" },
   { href: "/app/integrations/wildberries", label: "Wildberries", description: "MVP adapter" },
+  { href: "/app/analytics", label: "Analytics", description: "Метрики и AI usage" },
+  { href: "/app/billing", label: "Billing", description: "Тариф и лимиты" },
 ];
 
-const upcomingItems = ["Templates", "Knowledge Base", "Analytics", "Team", "Billing"];
+const upcomingItems = ["Templates", "Knowledge Base", "Team", "Settings", "Audit Log"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -29,6 +31,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     logout,
     isLoggingOut,
   } = useWorkspace();
+  const visibleNavItems = user.is_superadmin
+    ? [...navItems, { href: "/app/admin", label: "Admin", description: "Internal overview" }]
+    : navItems;
 
   return (
     <div className="app-shell">
@@ -44,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="app-nav" aria-label="Разделы dashboard">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link

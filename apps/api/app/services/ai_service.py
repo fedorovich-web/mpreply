@@ -22,6 +22,7 @@ from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
 from app.services.audit_service import AuditService
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
+from app.services.plan_limit_service import PlanLimitService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
@@ -40,6 +41,7 @@ class AIService:
         self.audit = AuditService(session)
         self.message_service = MessageService(session)
         self.organization_service = OrganizationService(session)
+        self.plan_limits = PlanLimitService(session)
         self.safety_gate = SafetyGate()
 
     async def generate_draft(
@@ -62,6 +64,8 @@ class AIService:
         )
         if not message.customer_text.strip():
             raise bad_request("Message has no customer text")
+
+        await self.plan_limits.enforce_ai_draft_limit(organization_id=message.organization_id)
 
         settings = get_settings()
         prompt = build_marketplace_reply_prompt(
