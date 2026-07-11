@@ -6,6 +6,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+!infra/coolify/.env.production.example
+!infra/docker/.env.ci
 *.pem
 *.key
 *.crt
