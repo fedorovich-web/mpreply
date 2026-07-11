@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import bad_request, forbidden, not_found
+from app.core.errors import bad_request, forbidden, not_found, payment_required
+from app.models.billing_plan import BillingPlan
 from app.models.enums import ResponseMode
 from app.models.organization import Organization, OrganizationUser
+from app.models.subscription import Subscription
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.plan_limit_service import PlanLimitService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager", "viewer"}
 
@@ -26,12 +30,18 @@ class OrganizationService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.audit = AuditService(session)
+        self.plan_limits = PlanLimitService(session)
 
     async def create_organization(self, *, owner: User, name: str, slug: str | None) -> Organization:
+        plan_result = await self.session.execute(
+            select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1)
+        )
+        default_plan = plan_result.scalar_one_or_none()
         organization = Organization(
             name=name.strip(),
             slug=slugify(slug or name),
             owner_user_id=owner.id,
+            plan_id=default_plan.id if default_plan is not None else None,
             default_response_mode=ResponseMode.AUTO.value,
             status="active",
         )
@@ -50,6 +60,20 @@ class OrganizationService:
         )
         self.session.add(membership)
         await self.session.flush()
+
+        if default_plan is not None:
+            period_start, period_end = PlanLimitService.month_period(datetime.now(UTC))
+            self.session.add(
+                Subscription(
+                    organization_id=organization.id,
+                    plan_id=default_plan.id,
+                    status="active",
+                    current_period_start=period_start,
+                    current_period_end=period_end,
+                    provider=None,
+                )
+            )
+            await self.session.flush()
 
         await self.audit.write(
             action="organization.created",
@@ -159,6 +183,12 @@ class OrganizationService:
             user_id=actor.id,
             allowed_roles={"owner", "admin"},
         )
+        limit_decision = await self.plan_limits.evaluate_metric(
+            organization_id=organization_id,
+            metric="members",
+        )
+        if not limit_decision.allowed:
+            raise payment_required("Member limit is exhausted for the current plan")
         membership = OrganizationUser(
             organization_id=organization_id,
             user_id=user_id,

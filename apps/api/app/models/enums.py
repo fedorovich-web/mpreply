@@ -40,3 +40,16 @@ class MessageStatus(StrEnum):
     SKIPPED = "skipped"
     ARCHIVED = "archived"
     ESCALATED = "escalated"
+
+
+class ReplyStatus(StrEnum):
+    DRAFT = "draft"
+    QUEUED = "queued"
+    SENDING = "sending"
+    RETRY_PENDING = "retry_pending"
+    SENT = "sent"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+    MANUAL_REVIEW_REQUIRED = "manual_review_required"
+    WAITING_REVIEW = "waiting_review"
+    APPROVED = "approved"

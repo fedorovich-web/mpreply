@@ -3,8 +3,8 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import Cookie, Depends, Header
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import decode_access_token
 from app.core.cookies import ACCESS_COOKIE_NAME

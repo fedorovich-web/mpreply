@@ -1,7 +1,8 @@
 from uuid import UUID
 
 from sqlalchemy import Float, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -22,5 +23,5 @@ class AIDraft(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cost_estimate: Mapped[float | None] = mapped_column(Numeric(12, 6), nullable=True)
     confidence_score: Mapped[float | None] = mapped_column(Float, nullable=True)
-    safety_flags_json: Mapped[list] = mapped_column(JSONB, default=list)
+    safety_flags_json: Mapped[list[str]] = mapped_column(JSONB, default=list)
     created_by: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
