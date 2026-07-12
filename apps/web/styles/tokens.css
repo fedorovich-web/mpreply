@@ -199,6 +199,11 @@
 	--public-canvas-mobile-offset: -21%;
 	--public-canvas-mobile-width: 142%;
 
+	/* AI Assistant workspace layout */
+	--ai-workspace-grid-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1.15fr);
+	--ai-workspace-message-max-height: 38rem;
+	--ai-result-copy-min-height: 10rem;
+
 	/* Radius */
 	--radius-sm: 0.375rem;
 	--radius-md: 0.625rem;

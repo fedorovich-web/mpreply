@@ -10,7 +10,7 @@ const nextCli = require.resolve("next/dist/bin/next");
 const appRoot = process.cwd();
 const port = Number.parseInt(process.env.W3C_VALIDATOR_PORT ?? "3119", 10);
 const origin = `http://127.0.0.1:${port}`;
-const publicRoutes = [
+const renderedRoutes = [
   "/",
   "/features",
   "/marketplaces",
@@ -24,6 +24,7 @@ const publicRoutes = [
   "/contacts",
   "/privacy",
   "/terms",
+  "/app/ai-assistant",
 ];
 
 async function ensureBuildExists() {
@@ -66,7 +67,7 @@ async function waitForServer(timeoutMs = 30_000) {
 }
 
 async function fetchRenderedPages(outputDirectory) {
-  for (const route of publicRoutes) {
+  for (const route of renderedRoutes) {
     const response = await fetch(`${origin}${route}`, {
       headers: { "accept-language": "ru-RU,ru;q=0.9,en;q=0.8" },
       redirect: "follow",
@@ -117,9 +118,9 @@ try {
   server = startServer();
   await waitForServer();
   await fetchRenderedPages(tempDirectory);
-  const files = publicRoutes.map((route) => join(tempDirectory, routeFileName(route)));
+  const files = renderedRoutes.map((route) => join(tempDirectory, routeFileName(route)));
   await runVnu(files);
-  console.log(`W3C/Nu HTML validation passed for ${files.length} rendered public routes.`);
+  console.log(`W3C/Nu HTML validation passed for ${files.length} rendered routes.`);
 } finally {
   if (server && server.exitCode === null) {
     server.kill("SIGTERM");

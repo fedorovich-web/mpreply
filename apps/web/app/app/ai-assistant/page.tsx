@@ -3,20 +3,20 @@ import { AIAssistantWorkspace } from "../../../components/ai-assistant/AIAssista
 export default function AIAssistantPage() {
   return (
     <section className="app-page app-page-wide">
-      <section className="app-header app-header-row">
+      <header className="app-header app-header-row">
         <div>
           <p className="eyebrow">AI Assistant</p>
-          <h1>OpenRouter AI для черновиков ответов</h1>
+          <h1>AI-черновики на реальном контексте обращений</h1>
           <p>
-            Sprint 5 подключает backend-only OpenRouter provider, prompt strategy v1, генерацию AI-черновиков,
-            usage/cost logging и safety flags до будущей автоотправки.
+            Respio берёт отзыв или вопрос из Inbox, добавляет контекст товара и правила бренда,
+            генерирует ответ через backend-only OpenRouter и сохраняет confidence, usage и safety flags.
           </p>
         </div>
         <div className="app-header-actions">
-          <span className="status-badge">Backend-only key</span>
-          <span className="status-badge">Prompt v1</span>
+          <span className="status-badge">OpenRouter backend-only</span>
+          <span className="status-badge">SafetyGate</span>
         </div>
-      </section>
+      </header>
 
       <AIAssistantWorkspace />
     </section>

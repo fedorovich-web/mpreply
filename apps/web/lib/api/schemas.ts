@@ -116,6 +116,30 @@ export const customerMessageListSchema = z.object({
   page_size: z.number().int().positive(),
 });
 
+export const aiDraftSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  message_id: uuidSchema,
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  prompt_version: z.string().min(1),
+  draft_text: z.string().min(1),
+  tokens_input: z.number().int().nonnegative().nullable(),
+  tokens_output: z.number().int().nonnegative().nullable(),
+  latency_ms: z.number().int().nonnegative().nullable(),
+  cost_estimate: z.number().nonnegative().nullable(),
+  confidence_score: z.number().min(0).max(1).nullable(),
+  safety_flags_json: z.array(z.string()),
+  created_by: uuidSchema.nullable(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+
+export const aiDraftListSchema = z.object({
+  items: z.array(aiDraftSchema),
+  total: z.number().int().nonnegative(),
+});
+
 export const replySchema = z.object({
   id: uuidSchema,
   organization_id: uuidSchema,
@@ -190,6 +214,8 @@ export type AutomationRule = z.infer<typeof automationRuleSchema>;
 export type AutomationRuleList = z.infer<typeof automationRuleListSchema>;
 export type CustomerMessage = z.infer<typeof customerMessageSchema>;
 export type CustomerMessageList = z.infer<typeof customerMessageListSchema>;
+export type AIDraft = z.infer<typeof aiDraftSchema>;
+export type AIDraftList = z.infer<typeof aiDraftListSchema>;
 export type Reply = z.infer<typeof replySchema>;
 export type SafetySummary = z.infer<typeof safetySummarySchema>;
 export type ReviewQueueItem = z.infer<typeof reviewQueueItemSchema>;
