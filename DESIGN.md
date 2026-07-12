@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.22
+Version: 0.1.23
 
 ## Design intent
 
@@ -164,3 +164,7 @@ The Wildberries management flow uses the existing dashboard design language and 
 ## Test foundation recovery · 0.1.22
 
 The visual-system contract remains unchanged. The patch restores the Vitest jsdom/setup files and baseline UI unit tests required for deterministic React Testing Library execution in CI.
+
+## E2E locator and mock-contract recovery · 0.1.23
+
+No visual-system change is introduced. The patch only hardens E2E semantics: Automation Rules assertions target the intended heading role, and AI Assistant test routing distinguishes draft history from draft generation.
