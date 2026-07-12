@@ -84,6 +84,12 @@ try {
     Run-Step "Frontend security audit" {
         & $Npm audit --audit-level=high
     }
+    Run-Step "Frontend unit tests" {
+        & $Npm run test:unit
+    }
+    Run-Step "Design token tests" {
+        & $Npm run test:design-tokens
+    }
     Run-Step "Frontend typecheck" {
         & $Npm run typecheck
     }
@@ -93,8 +99,20 @@ try {
     Run-Step "Frontend design anti-pattern scan" {
         & $Npm run design:detect
     }
+    Run-Step "Frontend CSS syntax validation" {
+        & $Npm run validate:css-syntax
+    }
     Run-Step "Frontend production build" {
         & $Npm run build
+    }
+    Run-Step "Frontend W3C HTML and CSS validation" {
+        & $Npm run validate:w3c
+    }
+    Run-Step "Frontend critical E2E" {
+        & $Npm run test:e2e
+    }
+    Run-Step "Frontend accessibility" {
+        & $Npm run test:a11y
     }
 }
 finally {

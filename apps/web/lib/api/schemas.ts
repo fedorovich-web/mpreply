@@ -17,6 +17,8 @@ export const authSessionSchema = z.object({
   user: userSchema,
 });
 
+export const organizationRoleSchema = z.enum(["owner", "admin", "manager", "viewer"]);
+
 export const organizationSchema = z.object({
   id: uuidSchema,
   name: z.string(),
@@ -25,11 +27,52 @@ export const organizationSchema = z.object({
   plan_id: uuidSchema.nullable(),
   default_response_mode: z.string(),
   status: z.string(),
+  current_user_role: organizationRoleSchema,
   created_at: timestampSchema,
   updated_at: timestampSchema,
 });
 
 export const organizationListSchema = z.array(organizationSchema);
+
+export const automationRuleSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  marketplace_account_id: uuidSchema.nullable(),
+  name: z.string(),
+  priority: z.number().int().min(0).max(10000),
+  is_enabled: z.boolean(),
+  mode: z.enum(["auto", "semi_auto"]),
+  applies_to: z.enum(["all", "review", "question"]),
+  marketplace: z.enum(["wildberries", "ozon", "yandex_market", "avito"]).nullable(),
+  min_rating: z.number().int().min(1).max(5).nullable(),
+  max_rating: z.number().int().min(1).max(5).nullable(),
+  product_ids: z.array(z.string()),
+  category_ids: z.array(z.string()),
+  include_keywords: z.array(z.string()),
+  exclude_keywords: z.array(z.string()),
+  sensitive_topics: z.array(z.string()),
+  daily_limit: z.number().int().positive().nullable(),
+  hourly_limit: z.number().int().positive().nullable(),
+  require_manual_review_on_flags: z.boolean(),
+  stop_on_missing_product_context: z.boolean(),
+  stop_on_low_confidence: z.boolean(),
+  confidence_threshold: z.number().min(0).max(1),
+  created_by: uuidSchema.nullable(),
+  updated_by: uuidSchema.nullable(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+
+export const automationRuleListSchema = z.object({
+  items: z.array(automationRuleSchema),
+  total: z.number().int().nonnegative(),
+});
+
+export const automationRuleActionSchema = z.object({
+  ok: z.boolean(),
+  id: uuidSchema,
+  is_enabled: z.boolean(),
+});
 
 export const productSummarySchema = z.object({
   id: uuidSchema,
@@ -71,6 +114,30 @@ export const customerMessageListSchema = z.object({
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   page_size: z.number().int().positive(),
+});
+
+export const aiDraftSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  message_id: uuidSchema,
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  prompt_version: z.string().min(1),
+  draft_text: z.string().min(1),
+  tokens_input: z.number().int().nonnegative().nullable(),
+  tokens_output: z.number().int().nonnegative().nullable(),
+  latency_ms: z.number().int().nonnegative().nullable(),
+  cost_estimate: z.number().nonnegative().nullable(),
+  confidence_score: z.number().min(0).max(1).nullable(),
+  safety_flags_json: z.array(z.string()),
+  created_by: uuidSchema.nullable(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+
+export const aiDraftListSchema = z.object({
+  items: z.array(aiDraftSchema),
+  total: z.number().int().nonnegative(),
 });
 
 export const replySchema = z.object({
@@ -137,14 +204,74 @@ export const reviewQueueListSchema = z.object({
   page_size: z.number().int().positive(),
 });
 
+export const marketplaceAccountSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  marketplace: z.string().min(1),
+  display_name: z.string().min(1),
+  seller_id: z.string().nullable(),
+  status: z.string().min(1),
+  credentials_masked: z.string().min(1),
+  credentials_status: z.string().min(1),
+  scopes_json: z.record(z.string(), z.unknown()),
+  default_response_mode: z.string().min(1),
+  last_success_sync_at: timestampSchema.nullable(),
+  last_error_sync_at: timestampSchema.nullable(),
+  error_count: z.number().int().nonnegative(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+
+export const marketplaceAccountListSchema = z.array(marketplaceAccountSchema);
+
+export const marketplaceAccountValidateSchema = z.object({
+  id: uuidSchema,
+  status: z.string().min(1),
+  credentials_status: z.string().min(1),
+  scopes: z.array(z.string()),
+  checked_at: timestampSchema,
+  error_code: z.string().nullable(),
+  error_message_safe: z.string().nullable(),
+});
+
+export const marketplaceAccountActionSchema = z.object({
+  id: uuidSchema,
+  status: z.string().min(1),
+  credentials_status: z.string().min(1),
+  credentials_masked: z.string().min(1),
+  message: z.string().min(1),
+});
+
+export const marketplaceSyncSchema = z.object({
+  account_id: uuidSchema,
+  marketplace: z.string().min(1),
+  status: z.enum(["success", "failed"]),
+  imported_reviews: z.number().int().nonnegative(),
+  imported_questions: z.number().int().nonnegative(),
+  updated_reviews: z.number().int().nonnegative(),
+  updated_questions: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  error_code: z.string().nullable(),
+  error_message_safe: z.string().nullable(),
+});
+
+export type MarketplaceAccount = z.infer<typeof marketplaceAccountSchema>;
+export type MarketplaceAccountValidate = z.infer<typeof marketplaceAccountValidateSchema>;
+export type MarketplaceAccountAction = z.infer<typeof marketplaceAccountActionSchema>;
+export type MarketplaceSync = z.infer<typeof marketplaceSyncSchema>;
+
 export const messageResponseSchema = z.object({
   message: z.string(),
 });
 
 export type User = z.infer<typeof userSchema>;
 export type Organization = z.infer<typeof organizationSchema>;
+export type AutomationRule = z.infer<typeof automationRuleSchema>;
+export type AutomationRuleList = z.infer<typeof automationRuleListSchema>;
 export type CustomerMessage = z.infer<typeof customerMessageSchema>;
 export type CustomerMessageList = z.infer<typeof customerMessageListSchema>;
+export type AIDraft = z.infer<typeof aiDraftSchema>;
+export type AIDraftList = z.infer<typeof aiDraftListSchema>;
 export type Reply = z.infer<typeof replySchema>;
 export type SafetySummary = z.infer<typeof safetySummarySchema>;
 export type ReviewQueueItem = z.infer<typeof reviewQueueItemSchema>;

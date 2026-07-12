@@ -81,7 +81,7 @@ export default function HomePage() {
 
         <HeroFlowCanvas />
 
-        <div className="public-container hero-proof-row" aria-label="Ключевые принципы Respio">
+        <div className="public-container hero-proof-row" role="group" aria-label="Ключевые принципы Respio">
           <span>Автоматический режим по умолчанию</span>
           <span>SafetyGate до отправки</span>
           <span>Ручная проверка только для исключений</span>
@@ -92,7 +92,7 @@ export default function HomePage() {
       <section className="marketplace-strip" aria-labelledby="marketplace-strip-title">
         <div className="public-container">
           <div className="marketplace-strip-heading">
-            <p id="marketplace-strip-title">Маркетплейсы</p>
+            <h2 id="marketplace-strip-title">Маркетплейсы</h2>
             <Link className="text-link" href="/marketplaces">
               Все интеграции
             </Link>
@@ -118,29 +118,29 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="signal-flow" aria-label="Путь автоматического ответа в Respio">
+          <div className="signal-flow" role="group" aria-label="Путь автоматического ответа в Respio">
             <div className="signal-flow-track" aria-hidden="true" />
             <article className="signal-flow-step">
               <span>01</span>
               <div>
-                <strong>Новое обращение</strong>
+                <h3>Новое обращение</h3>
                 <p>Отзыв или вопрос поступает через официальную интеграцию и нормализуется.</p>
               </div>
             </article>
             <article className="signal-flow-step">
               <span>02</span>
               <div>
-                <strong>Контекст и AI</strong>
+                <h3>Контекст и AI</h3>
                 <p>Respio учитывает товар, правила компании и доступные знания перед генерацией ответа.</p>
               </div>
             </article>
-            <article className="signal-flow-step signal-flow-step-highlight" id="safetygate">
+            <article className="signal-flow-step signal-flow-step-safety" id="safetygate">
               <span>03</span>
               <div>
-                <strong>SafetyGate</strong>
+                <h3>SafetyGate</h3>
                 <p>Решает: можно отправить ответ автоматически, нужно передать его человеку или заблокировать.</p>
               </div>
-              <div className="safety-decision-row" aria-label="Решения SafetyGate">
+              <div className="safety-decision-row" role="group" aria-label="Решения SafetyGate">
                 <span className="safety-decision safety-decision-allow">Разрешено</span>
                 <span className="safety-decision safety-decision-review">На проверку</span>
                 <span className="safety-decision safety-decision-block">Заблокировано</span>
@@ -149,7 +149,7 @@ export default function HomePage() {
             <article className="signal-flow-step">
               <span>04</span>
               <div>
-                <strong>Правило и отправка</strong>
+                <h3>Правило и отправка</h3>
                 <p>Automation Rules определяют дальнейшее действие, worker отправляет ответ и фиксирует статус.</p>
               </div>
             </article>
@@ -170,7 +170,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="operations-panel" aria-label="Пример состояний обработки">
+          <div className="operations-panel" role="group" aria-label="Пример состояний обработки">
             <div className="operations-panel-header">
               <div>
                 <span className="operations-live-dot" aria-hidden="true" />
@@ -265,8 +265,8 @@ export default function HomePage() {
             <p className="eyebrow">Автоматизация без слепой отправки</p>
             <h2>Подключите маркетплейс и настройте, какие ответы Respio может отправлять самостоятельно</h2>
           </div>
-          <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">
-            Подключить маркетплейс
+          <Link className="button button-secondary-on-dark" href="/contacts">
+            Обсудить подключение
           </Link>
         </div>
       </section>

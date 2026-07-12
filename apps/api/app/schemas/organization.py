@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
+OrganizationRole = Literal["owner", "admin", "manager", "viewer"]
 
 
 class OrganizationCreateRequest(BaseModel):
@@ -25,6 +28,7 @@ class OrganizationResponse(BaseModel):
     plan_id: UUID | None
     default_response_mode: str
     status: str
+    current_user_role: OrganizationRole
     created_at: datetime
     updated_at: datetime
 
@@ -35,8 +39,9 @@ class OrganizationUserResponse(BaseModel):
     id: UUID
     organization_id: UUID
     user_id: UUID
-    role: str
+    role: OrganizationRole
     status: str
+    current_user_role: OrganizationRole
     created_at: datetime
     updated_at: datetime
 

@@ -52,7 +52,7 @@ export default function DemoPage() {
               <h2>SafetyGate остановил автоотправку из-за недостатка подтверждённого контекста</h2>
               <p>Ответ не публикуется вслепую. Обращение получает статус ручной проверки, а менеджер видит причину решения.</p>
             </div>
-            <div className="demo-decision-badge" aria-label="Решение SafetyGate: на проверку">
+            <div className="demo-decision-badge" role="status" aria-label="Решение SafetyGate: на проверку">
               <span>SafetyGate</span>
               <strong>На проверку</strong>
               <small>Причина: недостаточно данных о товаре</small>

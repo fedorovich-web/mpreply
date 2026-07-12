@@ -65,7 +65,7 @@ export default function FeaturesPage() {
             </div>
           </div>
 
-          <div className="decision-preview" aria-label="Пример решения SafetyGate">
+          <div className="decision-preview" role="group" aria-label="Пример решения SafetyGate">
             <div className="decision-preview-head">
               <span className="decision-preview-label">Новое обращение</span>
               <span className="decision-preview-time">сейчас</span>
@@ -74,7 +74,7 @@ export default function FeaturesPage() {
               <strong>«Можно ли вернуть товар после использования?»</strong>
               <p>Вопрос содержит потенциально рискованное обещание о возврате.</p>
             </div>
-            <div className="decision-preview-path" aria-label="Этапы обработки">
+            <div className="decision-preview-path" role="group" aria-label="Этапы обработки">
               <span>Контекст найден</span>
               <span>AI-ответ готов</span>
               <strong>SafetyGate → на проверку</strong>
@@ -118,7 +118,7 @@ export default function FeaturesPage() {
             </p>
           </div>
 
-          <div className="product-console" aria-label="Пример операционного списка Respio">
+          <div className="product-console" role="group" aria-label="Пример операционного списка Respio">
             <div className="product-console-head">
               <div>
                 <span className="operations-live-dot" aria-hidden="true" />
