@@ -103,7 +103,7 @@
 
 .button-ghost:hover {
 	background: var(--color-brand-soft);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 }
 
 .public-hero {
@@ -190,10 +190,6 @@
 	border-color: var(--color-transparent);
 	background: var(--color-warning-soft);
 	color: var(--color-warning-text);
-}
-
-.readiness-summary-primary .public-status-mvp {
-	color: var(--color-success-text-on-dark);
 }
 
 .public-dashboard-preview {
@@ -420,7 +416,7 @@
 	place-items: center;
 	border-radius: var(--radius-full);
 	background: var(--color-brand-soft);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 	font-weight: var(--font-weight-bold);
 }
 
@@ -822,7 +818,7 @@
 
 .theme-toggle:hover {
 	background: var(--color-brand-soft);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 }
 
 .theme-toggle-track {
@@ -1167,7 +1163,7 @@
 	place-items: center;
 	border-radius: var(--radius-panel-compact);
 	background: var(--color-brand-soft);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 	font-size: var(--font-size-xs);
 	font-weight: var(--font-weight-bold);
 }
@@ -1200,7 +1196,7 @@
 
 .operations-status-processing {
 	background: var(--color-brand-soft);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 }
 
 .feature-grid-editorial .feature-card {

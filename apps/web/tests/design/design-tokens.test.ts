@@ -79,11 +79,20 @@ function declarationsOutsideTokenFiles(source: string): string[] {
 }
 
 const tokens = readTokens(tokenSource);
+const darkThemeTokens = readTokens(themeSource);
 
 function token(name: string): string {
   const value = tokens.get(name);
   if (!value) throw new Error(`Missing required design token: ${name}`);
   return value;
+}
+
+function darkToken(name: string): string {
+  return darkThemeTokens.get(name) ?? token(name);
+}
+
+function expectOpaqueHexColor(value: string, label: string): void {
+  expect(value, `${label} must be an opaque six-digit hex color`).toMatch(/^#[0-9a-f]{6}$/i);
 }
 
 describe("Respio design tokens", () => {
@@ -98,16 +107,26 @@ describe("Respio design tokens", () => {
       "--color-text-primary",
       "--color-text-secondary",
       "--color-text-muted",
+      "--color-kicker-text",
       "--color-brand-primary",
+      "--color-brand-text-on-soft",
       "--color-brand-primary-hover",
       "--color-brand-primary-active",
       "--color-brand-accent",
+      "--color-text-on-brand",
+      "--color-text-on-danger",
       "--color-danger",
       "--color-danger-text",
+      "--color-danger-soft",
       "--color-warning",
+      "--color-warning-text",
+      "--color-warning-soft",
       "--color-success",
+      "--color-success-text",
+      "--color-success-soft",
       "--color-info",
       "--color-info-text",
+      "--color-info-soft",
       "--color-focus-ring",
       "--color-border-subtle",
       "--gradient-public-hero",
@@ -283,13 +302,112 @@ describe("Respio design tokens", () => {
 
   it.each([
     ["primary text on page", "--color-text-primary", "--color-bg-page", 4.5],
+    ["primary text on surface", "--color-text-primary", "--color-bg-surface", 4.5],
+    ["primary text on elevated surface", "--color-text-primary", "--color-bg-elevated", 4.5],
     ["secondary text on page", "--color-text-secondary", "--color-bg-page", 4.5],
+    ["secondary text on surface", "--color-text-secondary", "--color-bg-surface", 4.5],
     ["muted text on page", "--color-text-muted", "--color-bg-page", 4.5],
+    ["muted text on subtle surface", "--color-text-muted", "--color-bg-subtle", 4.5],
+    ["brand text on page", "--color-brand-primary", "--color-bg-page", 4.5],
+    ["brand text on elevated surface", "--color-brand-primary", "--color-bg-elevated", 4.5],
+    ["brand text on brand soft surface", "--color-brand-text-on-soft", "--color-brand-soft", 4.5],
+    ["kicker text on surface", "--color-kicker-text", "--color-bg-surface", 4.5],
     ["text on primary button", "--color-text-on-brand", "--color-brand-primary", 4.5],
+    ["text on danger button", "--color-text-on-danger", "--color-danger", 4.5],
     ["text on dark surface", "--color-text-on-dark", "--color-surface-dark", 4.5],
+    ["success text on success soft surface", "--color-success-text", "--color-success-soft", 4.5],
+    ["warning text on warning soft surface", "--color-warning-text", "--color-warning-soft", 4.5],
     ["danger text on danger soft surface", "--color-danger-text", "--color-danger-soft", 4.5],
     ["info text on info soft surface", "--color-info-text", "--color-info-soft", 4.5],
-  ])("meets WCAG AA contrast for %s", (_label, foregroundToken, backgroundToken, minimum) => {
+  ])("meets WCAG AA contrast for light theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
     expect(contrastRatio(token(foregroundToken), token(backgroundToken))).toBeGreaterThanOrEqual(minimum);
+  });
+
+  it.each([
+    ["primary text on page", "--color-text-primary", "--color-bg-page", 4.5],
+    ["primary text on surface", "--color-text-primary", "--color-bg-surface", 4.5],
+    ["primary text on elevated surface", "--color-text-primary", "--color-bg-elevated", 4.5],
+    ["secondary text on page", "--color-text-secondary", "--color-bg-page", 4.5],
+    ["secondary text on surface", "--color-text-secondary", "--color-bg-surface", 4.5],
+    ["muted text on page", "--color-text-muted", "--color-bg-page", 4.5],
+    ["muted text on subtle surface", "--color-text-muted", "--color-bg-subtle", 4.5],
+    ["brand text on page", "--color-brand-primary", "--color-bg-page", 4.5],
+    ["brand text on elevated surface", "--color-brand-primary", "--color-bg-elevated", 4.5],
+    ["brand text on brand soft surface", "--color-brand-text-on-soft", "--color-brand-soft", 4.5],
+    ["kicker text on elevated surface", "--color-kicker-text", "--color-bg-elevated", 4.5],
+    ["text on primary button", "--color-text-on-brand", "--color-brand-primary", 4.5],
+    ["text on danger button", "--color-text-on-danger", "--color-danger", 4.5],
+    ["success text on success soft surface", "--color-success-text", "--color-success-soft", 4.5],
+    ["warning text on warning soft surface", "--color-warning-text", "--color-warning-soft", 4.5],
+    ["danger text on danger soft surface", "--color-danger-text", "--color-danger-soft", 4.5],
+    ["info text on info soft surface", "--color-info-text", "--color-info-soft", 4.5],
+  ])("meets WCAG AA contrast for dark theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
+    expect(contrastRatio(darkToken(foregroundToken), darkToken(backgroundToken))).toBeGreaterThanOrEqual(minimum);
+  });
+
+  it.each([
+    ["secondary text on success soft", "--color-text-secondary", "--color-success-soft"],
+    ["secondary text on warning soft", "--color-text-secondary", "--color-warning-soft"],
+    ["secondary text on danger soft", "--color-text-secondary", "--color-danger-soft"],
+    ["secondary text on info soft", "--color-text-secondary", "--color-info-soft"],
+    ["muted text on success soft", "--color-text-muted", "--color-success-soft"],
+    ["muted text on warning soft", "--color-text-muted", "--color-warning-soft"],
+    ["muted text on danger soft", "--color-text-muted", "--color-danger-soft"],
+    ["muted text on info soft", "--color-text-muted", "--color-info-soft"],
+    ["secondary text on brand soft", "--color-text-secondary", "--color-brand-soft"],
+    ["muted text on brand soft", "--color-text-muted", "--color-brand-soft"],
+  ])("keeps inherited neutral copy accessible on semantic soft surfaces: %s", (_label, foregroundToken, backgroundToken) => {
+    expect(contrastRatio(token(foregroundToken), token(backgroundToken))).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(darkToken(foregroundToken), darkToken(backgroundToken))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("keeps text-bearing soft surfaces opaque so nested badges and active states cannot lose contrast through parent compositing", () => {
+    const opaqueSoftTokens = [
+      "--color-brand-soft",
+      "--color-success-soft",
+      "--color-warning-soft",
+      "--color-danger-soft",
+      "--color-info-soft",
+    ];
+
+    for (const name of opaqueSoftTokens) {
+      expectOpaqueHexColor(token(name), `light ${name}`);
+      expectOpaqueHexColor(darkToken(name), `dark ${name}`);
+    }
+
+    expect(token("--app-nav-active-bg")).toBe("var(--color-brand-soft)");
+    expect(darkToken("--app-nav-active-bg")).toBe("var(--color-brand-soft)");
+  });
+
+  it("uses the dedicated brand text token on all soft brand text surfaces", () => {
+    const sources = `${globalStyleSource}\n${publicStyleSource}`;
+    const rulePattern = /([^{}]+)\{([^{}]*)\}/gs;
+    for (const match of sources.matchAll(rulePattern)) {
+      const selector = match[1]?.trim() ?? "unknown selector";
+      const body = match[2] ?? "";
+      const hasTextBearingBrandSoftBackground =
+        /background:\s*var\(--(?:color-brand-soft|app-nav-active-bg)\);/.test(body);
+      const usesPrimaryAsText = /(?:^|[;\n])\s*color:\s*var\(--color-brand-primary\);/.test(body);
+      expect(
+        hasTextBearingBrandSoftBackground && usesPrimaryAsText,
+        `${selector} must use --color-brand-text-on-soft instead of --color-brand-primary on a soft brand surface`,
+      ).toBe(false);
+    }
+  });
+
+  it("keeps danger buttons independent from the dark-theme on-brand token", () => {
+    expect(globalStyleSource).toMatch(/\.button-danger\s*\{[^}]*background:\s*var\(--color-danger\);[^}]*color:\s*var\(--color-text-on-danger\);/s);
+    expect(globalStyleSource).not.toMatch(/\.button-danger\s*\{[^}]*color:\s*var\(--color-text-on-brand\);/s);
+  });
+
+  it("keeps public success badges on their own accessible semantic pair even inside dark readiness surfaces", () => {
+    expect(publicStyleSource).toMatch(/\.public-status-mvp\s*\{[^}]*background:\s*var\(--color-success-soft\);[^}]*color:\s*var\(--color-success-text\);/s);
+    expect(publicStyleSource).not.toMatch(/\.readiness-summary-primary\s+\.public-status-mvp\s*\{[^}]*color:/s);
+  });
+
+  it("keeps error copy on the dedicated danger text token instead of the lower-contrast accent token", () => {
+    expect(globalStyleSource).toContain(".automation-state-error,");
+    expect(globalStyleSource).toMatch(/\.automation-state-error,[\s\S]*?background:\s*var\(--app-danger-bg\);[\s\S]*?color:\s*var\(--color-danger-text\);/);
+    expect(globalStyleSource).not.toMatch(/background:\s*var\(--app-danger-bg\);\s*color:\s*var\(--color-danger\);/);
   });
 });

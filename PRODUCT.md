@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.25
+Version: 0.1.26
 
 ## Product
 
@@ -137,3 +137,11 @@ The Automation Rules browser test now uses a stateful mock contract: a created r
 ## Accessibility CI recovery · 0.1.25
 
 Patch 0.1.25 is a focused accessibility hotfix for the remaining GitHub Quality Gate contrast blockers. It does not add product scope or change marketplace/backend business logic.
+
+
+## Accessibility contrast hardening · 0.1.26
+
+Patch 0.1.26 closes the remaining Wildberries accessibility failure from GitHub Actions and hardens the visual system instead of applying another selector-specific color patch. The audit covered semantic status usage across public-site and dashboard CSS, selected/nested surfaces, brand-soft active states, light/dark theme contracts and representative browser-level axe flows.
+
+The key architectural fix is that text-bearing soft surfaces are no longer translucent. Their computed contrast no longer changes depending on the parent card or selected row underneath. The audit also corrected latent dark-theme issues in kicker text, active navigation, brand-soft labels, processing states and the danger-button text contract. A dedicated dark-theme accessibility suite is now part of the frontend a11y gate.
+

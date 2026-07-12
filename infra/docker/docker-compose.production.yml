@@ -3,7 +3,7 @@ name: respio-production
 x-backend-env: &backend-env
   APP_ENV: production
   APP_NAME: Respio
-  APP_VERSION: 0.1.25
+  APP_VERSION: 0.1.26
   API_BASE_URL: ${API_BASE_URL:?API_BASE_URL is required}
   WEB_APP_URL: ${WEB_APP_URL:?WEB_APP_URL is required}
   PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?PUBLIC_SITE_URL is required}
