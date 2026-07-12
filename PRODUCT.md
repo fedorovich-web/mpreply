@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.21
+Version: 0.1.22
 
 ## Product
 
@@ -119,3 +119,7 @@ Approved IA/copy hierarchy, semantic HTML, correct metadata/canonical, responsiv
 - The Wildberries workspace supports the existing backend capabilities: create account, inspect masked credential fingerprint, validate credentials, update account metadata/default response mode, rotate credentials, revoke credentials and request a manual sync.
 - Owner/admin memberships receive management controls; manager/viewer memberships remain read-only. Backend RBAC remains the security boundary.
 - Raw marketplace credentials are accepted only in create/rotate forms, sent to the backend, cleared from local form state after success and never read back from marketplace-account API responses.
+
+## CI recovery · 0.1.22
+
+Restored the tracked frontend unit-test foundation required by the Quality Gate. This closes the gap where incremental patches assumed `vitest.config.ts`, `vitest.setup.ts`, and the baseline API/theme tests already existed in the repository.

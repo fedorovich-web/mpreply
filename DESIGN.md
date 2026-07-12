@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.21
+Version: 0.1.22
 
 ## Design intent
 
@@ -160,3 +160,7 @@ Permission state is explicit without being treated as a security boundary. Owner
 The integrations experience is an operational workspace rather than a marketplace roadmap gallery. Real account health, credential state, masked fingerprint, sync history and error count are visible together, while unsupported marketplace adapters remain visually and textually marked as unavailable.
 
 The Wildberries management flow uses the existing dashboard design language and centralized CSS custom properties for colors, typography, spacing, radii, shadows, focus and transitions. Interactive account rows use stable transform-based hover/active motion, destructive credential revocation is explicit and confirmable, and write controls are absent for read-only memberships without treating frontend hiding as authorization.
+
+## Test foundation recovery · 0.1.22
+
+The visual-system contract remains unchanged. The patch restores the Vitest jsdom/setup files and baseline UI unit tests required for deterministic React Testing Library execution in CI.
