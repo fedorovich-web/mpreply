@@ -23,12 +23,14 @@
 	--color-brand-mint-light: #bcebd8;
 	--color-brand-mint-soft: #ddf5eb;
 	--color-danger: #d92d20;
+	--color-danger-text: #b42318;
 	--color-warning: #dc6803;
 	--color-warning-text: #9a3d07;
 	--color-success: #039855;
 	--color-success-text: #027a48;
 	--color-success-text-on-dark: #79d6b0;
 	--color-info: #1570ef;
+	--color-info-text: #175cd3;
 	--color-focus-ring: #8d55c4;
 	--color-text-on-brand: #ffffff;
 	--color-text-on-dark: #fbf8fd;
@@ -39,8 +41,8 @@
 	--color-brand-soft-strong: rgb(111 51 171 / 16%);
 	--color-warning-soft: rgb(220 104 3 / 8%);
 	--color-success-soft: rgb(3 152 85 / 8%);
-	--color-danger-soft: rgb(217 45 32 / 10%);
-	--color-info-soft: rgb(21 112 239 / 8%);
+	--color-danger-soft: #fef3f2;
+	--color-info-soft: #eff8ff;
 
 	/* Public-site background system */
 	--color-public-page: var(--color-bg-page);

@@ -777,13 +777,13 @@ h1 {
 .ui-badge-danger {
 	border-color: var(--color-transparent);
 	background: var(--app-danger-bg);
-	color: var(--color-danger);
+	color: var(--color-danger-text);
 }
 
 .ui-badge-info {
 	border-color: var(--color-transparent);
 	background: var(--app-info-bg);
-	color: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .inbox-workspace {
@@ -1688,7 +1688,7 @@ h1 {
 
 .automation-decision-block {
 	background: var(--app-danger-bg);
-	color: var(--color-danger);
+	color: var(--color-danger-text);
 }
 
 @media (max-width: 1180px) {
@@ -1927,7 +1927,7 @@ h1 {
 	margin: 0;
 	border-radius: var(--radius-md);
 	background: var(--app-danger-bg);
-	color: var(--color-danger);
+	color: var(--color-danger-text);
 	padding: var(--space-3) var(--space-4);
 	font-size: var(--font-size-sm);
 	line-height: var(--line-height-relaxed);
@@ -2787,6 +2787,10 @@ h1 {
 .integration-account-button-active {
 	border-color: var(--color-brand-primary);
 	background: var(--color-brand-soft);
+}
+
+.integration-account-button-active small {
+	color: var(--color-text-secondary);
 }
 
 .integration-create-form,

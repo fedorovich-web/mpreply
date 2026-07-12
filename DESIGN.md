@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.24
+Version: 0.1.25
 
 ## Design intent
 
@@ -173,3 +173,12 @@ No visual-system change is introduced. The patch only hardens E2E semantics: Aut
 ## E2E mock-state recovery · 0.1.24
 
 Automation Rules E2E mocks now preserve newly created rules in the subsequent list response, matching the workspace flow after React Query invalidation. The change is covered by a unit regression test and does not alter production UI or backend behavior.
+
+
+## Accessibility contrast recovery · 0.1.25
+
+- Error/danger text now uses a dedicated accessible semantic token instead of the decorative danger base color.
+- Info badges use a dedicated accessible info-text token.
+- Soft danger/info surfaces are opaque semantic tokens so contrast does not drift with the parent background.
+- The selected Wildberries account keeps secondary metadata above WCAG AA contrast on the violet-soft active surface.
+- Accessibility diagnostics for the Wildberries workspace now print selector-level failure details.

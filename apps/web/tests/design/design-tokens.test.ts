@@ -103,9 +103,11 @@ describe("Respio design tokens", () => {
       "--color-brand-primary-active",
       "--color-brand-accent",
       "--color-danger",
+      "--color-danger-text",
       "--color-warning",
       "--color-success",
       "--color-info",
+      "--color-info-text",
       "--color-focus-ring",
       "--color-border-subtle",
       "--gradient-public-hero",
@@ -268,6 +270,8 @@ describe("Respio design tokens", () => {
     expect(integrationStyles).not.toMatch(/\b(?:rgb|rgba|hsl|hsla)\(/i);
     expect(integrationStyles).toContain("var(--transition-interactive)");
     expect(integrationStyles).toContain("var(--focus-ring)");
+    expect(integrationStyles).toContain(".integration-account-button-active small");
+    expect(integrationStyles).toContain("color: var(--color-text-secondary)");
     expect(integrationStyles).toContain("@media (max-width: 1080px)");
     expect(integrationStyles).toContain("@media (max-width: 760px)");
   });
@@ -283,6 +287,8 @@ describe("Respio design tokens", () => {
     ["muted text on page", "--color-text-muted", "--color-bg-page", 4.5],
     ["text on primary button", "--color-text-on-brand", "--color-brand-primary", 4.5],
     ["text on dark surface", "--color-text-on-dark", "--color-surface-dark", 4.5],
+    ["danger text on danger soft surface", "--color-danger-text", "--color-danger-soft", 4.5],
+    ["info text on info soft surface", "--color-info-text", "--color-info-soft", 4.5],
   ])("meets WCAG AA contrast for %s", (_label, foregroundToken, backgroundToken, minimum) => {
     expect(contrastRatio(token(foregroundToken), token(backgroundToken))).toBeGreaterThanOrEqual(minimum);
   });
