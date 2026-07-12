@@ -2,6 +2,8 @@ import type { Page, Route } from "@playwright/test";
 
 export type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
 
+export const aiDraftHistoryRoutePattern = /\/api\/ai\/drafts(?:\?.*)?$/;
+
 const organizationId = "11111111-1111-4111-8111-111111111111";
 const userId = "22222222-2222-4222-8222-222222222222";
 const messageId = "33333333-3333-4333-8333-333333333333";
@@ -118,7 +120,7 @@ export async function mockAIAssistantApi(page: Page, role: OrganizationRole = "m
     return fulfillJson(route, generatedDraft);
   });
 
-  await page.route("**/api/ai/drafts**", async (route) => {
+  await page.route(aiDraftHistoryRoutePattern, async (route) => {
     if (route.request().method() === "OPTIONS") return fulfillJson(route, null, 204);
     const history = role === "viewer" ? [generatedDraft] : [];
     return fulfillJson(route, { items: history, total: history.length });

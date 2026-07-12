@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.22
+Version: 0.1.23
 
 ## Product
 
@@ -123,3 +123,7 @@ Approved IA/copy hierarchy, semantic HTML, correct metadata/canonical, responsiv
 ## CI recovery · 0.1.22
 
 Restored the tracked frontend unit-test foundation required by the Quality Gate. This closes the gap where incremental patches assumed `vitest.config.ts`, `vitest.setup.ts`, and the baseline API/theme tests already existed in the repository.
+
+## CI E2E recovery · 0.1.23
+
+Three Chromium E2E failures from the `0.1.22` Quality Gate were corrected without changing product behavior: Automation Rules now uses an unambiguous semantic heading locator, and the AI draft-history mock no longer shadows the generation endpoint. A unit regression contract protects the route matcher.
