@@ -1,34 +1,34 @@
-# Respio patch 0.1.19
+# Respio patch 0.1.20
 
 ## Scope
 
-Public Site Visual System Stabilization: optimized Onest typography, centralized visual tokens, unified background/gradient/motion/focus contracts, revised Canvas ribbons, CTA hierarchy cleanup, equal process-step emphasis, semantic HTML corrections, and W3C/Nu validation integrated into CI/local gates.
+Live AI Assistant: replace the static OpenRouter information screen with a real tenant-scoped product flow over the existing AI draft API.
 
 ## Why this patch is next
 
-The public site already had the approved Signal Flow direction, but visual implementation had drifted: oversized headings, inconsistent section backgrounds, duplicated primary CTAs, abrupt hover/active feedback and an over-emphasized SafetyGate step. This patch stabilizes the existing design system instead of starting another redesign.
+The backend already had a production-oriented AI foundation: message context, product context, OpenRouter provider abstraction, prompt strategy, token/cost/latency logging, confidence, SafetyGate evaluation and persisted AI drafts. The dashboard screen was still static and therefore did not expose this capability to a real workspace user.
 
 ## Changed
 
-- Added self-hosted Onest WOFF2 subsets for Russian and English in weights 400, 500, 600 and 700; the four-file family is about 43% smaller than the supplied source set.
-- Centralized public colors, semantic states, backgrounds, gradients, typography roles, font weights, line heights, letter spacing, spacing, dimensions, radii, shadows, focus rings, transitions/easings and Canvas parameters in CSS custom properties.
-- Replaced uncontrolled beige/white/light-violet section changes with one neutral near-white page foundation and explicit semantic surface tokens.
-- Reworked the hero Canvas into a token-driven violet/mint ribbon system with layered paths, soft glow, edge fading, bounded DPR/FPS, off-screen pausing and reduced-motion behavior.
-- Removed duplicated primary CTA labels from the shared header/footer flow and made conversion actions contextual.
-- Removed the oversized third-step treatment from the process flow; SafetyGate remains differentiated by status content rather than disproportionate card styling.
-- Standardized hover, active and focus behavior around shared motion/focus variables so interaction feedback does not change component geometry.
-- Added strict design-system tests for Onest files/weights/size budgets, required tokens, hardcoded visual-value prevention, Canvas contracts, equal process steps, reduced motion and contrast.
-- Added Nu HTML Checker validation for 13 rendered public routes and Nu/CSS syntax validation for public stylesheet sources.
-- Fixed validator-detected semantic issues instead of filtering them: invalid `aria-label` usage on generic `div` elements, missing heading ownership and non-semantic `section`/`article` wrappers.
-- Added CSS/W3C validation to GitHub Quality Gate, local release gate and web-design gate, with integrity checks protecting the scripts and contracts.
-- Synchronized project version to `0.1.19` across real version sources.
+- Replaced the static AI Assistant screen with a live flow: Inbox context → tone/brand/knowledge context → backend draft generation → persisted history and SafetyGate-related output.
+- Loads real customer messages for the active organization and keeps tenant scoping explicit in frontend queries.
+- Generates drafts only through the existing backend endpoint; no OpenRouter key or provider call is exposed to the browser.
+- Owner/admin/manager roles can generate AI drafts; viewer remains read-only while preserving access to draft history allowed by the backend contract.
+- Displays the actual generated text, provider, model, prompt version, confidence, token usage, latency and safety flags returned by the backend.
+- Adds loading, empty, error, retry, pending, success and read-only states, including backend requestId visibility on generation errors.
+- Adds Zod contracts for AI draft and AI draft list responses.
+- Adds unit tests for API contracts, generation payload, live result rendering and viewer read-only behavior.
+- Adds Playwright E2E and axe accessibility coverage for the AI Assistant flow and includes those specs in the existing CI/local browser-test scripts.
+- Keeps new dashboard styling on the existing design-token system; no page-local hardcoded color, font, spacing or transition system was introduced.
+- Synchronized project version to `0.1.20` across real version sources.
 
 ## Not changed
 
-- No backend business logic, database model, migration, marketplace adapter, AI provider, SafetyGate logic or worker behavior was redesigned.
-- Marketplace readiness truth is unchanged: Wildberries remains the current MVP execution path; Ozon, Yandex Market and Avito remain planned until verified and implemented.
-- The public site information architecture was not restarted, and previous research/redesign stages were not repeated.
+- No new AI provider, prompt engine, SafetyGate implementation, database model, Alembic migration, marketplace adapter or worker architecture was created.
+- OpenRouter remains backend-only.
+- No claim is made that external OpenRouter generation works without a configured valid API key and runtime network access.
+- Marketplace readiness truth is unchanged.
 
 ## Validation
 
-See `docs/qa/patch-0.1.19-release-report.md` for exact commands, final pass counts and any environment-blocked checks. A validation category is reported as passed only when its command actually completed successfully on the final `0.1.19` tree.
+See `docs/qa/patch-0.1.20-release-report.md` for exact completed checks and environment-blocked categories.

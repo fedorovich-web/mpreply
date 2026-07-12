@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.19
+Version: 0.1.20
 
 ## Design intent
 
@@ -148,3 +148,9 @@ Before substantial UI work: read `PRODUCT.md`, `DESIGN.md`, relevant docs, inspe
 ## Absolute anti-pattern bans
 
 Reject gradient text, generic glassmorphism, fake hero metrics, identical card grids, side-stripe accent cards, excessive 32px+ card rounding, decorative CSS grid backgrounds, fake logos/testimonials, uncontrolled glow, and AI-template copy.
+
+## Product dashboard · Live AI Assistant · 0.1.20
+
+AI Assistant is an operational three-part workspace rather than an AI marketing panel: source message context, generation controls, and the resulting draft/SafetyGate telemetry are visible together. The screen uses the existing dashboard language, semantic tokens, restrained motion and responsive composition.
+
+Permission state is explicit without being treated as a security boundary. Owner/admin/manager roles can generate; viewer remains read-only while retaining permitted draft-history visibility. New styles must continue to use the centralized token system for colors, typography, spacing, surfaces, shadows, focus and transitions.

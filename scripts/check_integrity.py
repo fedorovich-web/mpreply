@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.19"
+EXPECTED_VERSION = "0.1.20"
 EXPECTED_ALEMBIC_HEAD = "20260710_0009"
 
 ERRORS: list[str] = []
@@ -186,8 +186,8 @@ def check_versions_and_frontend_security_baseline() -> None:
         "test:unit": "vitest run tests/unit",
         "test:design-tokens": "vitest run tests/design",
         "test:frontend": "npm run test:unit && npm run test:design-tokens",
-        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts --project=chromium",
-        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts --project=chromium",
+        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts --project=chromium",
+        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts --project=chromium",
         "validate:css-syntax": "csstree-validator styles",
         "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
         "validate:w3c:css": "node scripts/validate-w3c-css.mjs",
@@ -301,6 +301,9 @@ def check_deployment_contract() -> None:
         WEB / "tests" / "unit" / "theme-toggle.test.tsx",
         WEB / "tests" / "unit" / "automation-rules-contract.test.ts",
         WEB / "tests" / "unit" / "automation-rules-workspace.test.tsx",
+        WEB / "tests" / "unit" / "ai-assistant-contract.test.ts",
+        WEB / "tests" / "unit" / "ai-assistant-workspace.test.tsx",
+        WEB / "components" / "ai-assistant" / "AIAssistantWorkspace.tsx",
         WEB / "tests" / "design" / "design-tokens.test.ts",
         WEB / "scripts" / "validate-w3c-html.mjs",
         WEB / "scripts" / "validate-w3c-css.mjs",
@@ -313,6 +316,9 @@ def check_deployment_contract() -> None:
         WEB / "e2e" / "helpers" / "automation-rules-api.ts",
         WEB / "e2e" / "automation-rules.spec.ts",
         WEB / "e2e" / "automation-rules-accessibility.spec.ts",
+        WEB / "e2e" / "ai-assistant.spec.ts",
+        WEB / "e2e" / "ai-assistant-accessibility.spec.ts",
+        WEB / "e2e" / "helpers" / "ai-assistant-api.ts",
         API / "app" / "tests" / "test_organization_response.py",
         WEB / "playwright.config.ts",
         WEB / "lighthouserc.cjs",
@@ -331,6 +337,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "sprint-13-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.18-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.19-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.20-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
