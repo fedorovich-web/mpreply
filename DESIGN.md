@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.16
+Version: 0.1.26
 
 ## Design intent
 
@@ -14,7 +14,7 @@ The approved public-site direction combines a light-first editorial SaaS layout 
 Approved public palette:
 - Primary violet: `#6F33AB`.
 - Signal mint: `#79D6B0`.
-- Warm light canvas: `#F7F5F2`.
+- Neutral near-white public page background: `#FBFAFC`; subtle/elevated surfaces use centralized semantic background tokens.
 - Deep violet is secondary for selected contrast surfaces and optional dark theme, not the default page background.
 - Status colors remain semantic and separate from the mint brand accent.
 
@@ -35,6 +35,30 @@ The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resource
 ## Public shell polish · 0.1.16
 
 The shared public shell adds active desktop/mobile navigation states, an accessible controlled mobile menu with Escape/backdrop close behavior, a theme toggle that announces the next action, a fuller conversion-oriented footer and disclosure-based FAQ interaction. Public copy avoids internal implementation jargon when a clear Russian term exists.
+
+## Automated design verification · 0.1.17
+
+The frontend test foundation now verifies critical brand/semantic design tokens, duplicate token declarations and WCAG AA contrast for the primary text/surface combinations used by the current system. These checks run alongside unit tests in both CI and the local release gate.
+
+## Product dashboard · Live Automation Rules · 0.1.18
+
+Automation Rules is an operational workspace, not a decorative gallery of fake rule cards. The screen loads tenant-scoped backend data, exposes explicit loading, empty, error and success states, makes the selected rule and current filter obvious, and preserves a calm dense hierarchy suitable for recurring operational work.
+
+Authorization is visible but never treated as a frontend security boundary: owner/admin roles receive create, edit, enable and disable controls, while manager/viewer roles see a clear read-only state. SafetyGate stop/review behavior stays explicit in the editor and cannot be visually hidden to inflate automation rate. The UI uses existing semantic tokens, responsive composition and restrained motion; no page-specific color hacks or new design system are introduced.
+
+## Public visual-system stabilization · 0.1.19
+
+The public site uses self-hosted Onest for Cyrillic and Latin with four production weights: 400, 500, 600 and 700. The optimized WOFF2 family totals 64,972 bytes, down from 114,084 bytes in the supplied source set (about 43% smaller), while retaining required Russian/English letters and product punctuation.
+
+Reusable visual decisions are centralized in `styles/tokens.css`: brand/semantic colors, backgrounds, gradients, typography roles, font weights, line heights, letter spacing, spacing, layout dimensions, radii, borders, shadows, focus, motion durations/easings and Canvas configuration. Public component CSS must reference these variables instead of introducing local HEX/RGB/HSL colors or one-off transition timing values.
+
+The public background system is neutral and continuous: a near-white page foundation, white surfaces and a restrained subtle violet surface token. Alternating section tones are permitted only through semantic background variables and must not create arbitrary beige/white/violet banding.
+
+Hero motion uses a token-driven Canvas ribbon system in Respio violet/mint, with multiple restrained layers, edge fading, reduced-motion support, intersection/visibility pausing, bounded device-pixel ratio and frame-rate control. Visual parameters belong to CSS custom properties so the motion system can be tuned without hardcoded component constants.
+
+Interactive controls share one motion/focus contract. Hover and active feedback must avoid geometry changes such as border-width/padding shifts; use tokenized transform, color and shadow transitions. Process steps remain equal in layout weight, and CTA labels are contextual rather than mechanically repeating the same primary action.
+
+Rendered public HTML is validated route-by-route through Nu HTML Checker, while stylesheet sources are validated through Nu and CSS syntax tooling. Validator findings are fixed in source rather than silenced; current semantic corrections include valid ARIA roles, heading ownership for sections/process steps and removal of wrappers that falsely claimed independent `section`/`article` semantics.
 
 ## Two visual lanes
 
@@ -124,3 +148,56 @@ Before substantial UI work: read `PRODUCT.md`, `DESIGN.md`, relevant docs, inspe
 ## Absolute anti-pattern bans
 
 Reject gradient text, generic glassmorphism, fake hero metrics, identical card grids, side-stripe accent cards, excessive 32px+ card rounding, decorative CSS grid backgrounds, fake logos/testimonials, uncontrolled glow, and AI-template copy.
+
+## Product dashboard · Live AI Assistant · 0.1.20
+
+AI Assistant is an operational three-part workspace rather than an AI marketing panel: source message context, generation controls, and the resulting draft/SafetyGate telemetry are visible together. The screen uses the existing dashboard language, semantic tokens, restrained motion and responsive composition.
+
+Permission state is explicit without being treated as a security boundary. Owner/admin/manager roles can generate; viewer remains read-only while retaining permitted draft-history visibility. New styles must continue to use the centralized token system for colors, typography, spacing, surfaces, shadows, focus and transitions.
+
+## Product dashboard · Live Integrations · 0.1.21
+
+The integrations experience is an operational workspace rather than a marketplace roadmap gallery. Real account health, credential state, masked fingerprint, sync history and error count are visible together, while unsupported marketplace adapters remain visually and textually marked as unavailable.
+
+The Wildberries management flow uses the existing dashboard design language and centralized CSS custom properties for colors, typography, spacing, radii, shadows, focus and transitions. Interactive account rows use stable transform-based hover/active motion, destructive credential revocation is explicit and confirmable, and write controls are absent for read-only memberships without treating frontend hiding as authorization.
+
+## Test foundation recovery · 0.1.22
+
+The visual-system contract remains unchanged. The patch restores the Vitest jsdom/setup files and baseline UI unit tests required for deterministic React Testing Library execution in CI.
+
+## E2E locator and mock-contract recovery · 0.1.23
+
+No visual-system change is introduced. The patch only hardens E2E semantics: Automation Rules assertions target the intended heading role, and AI Assistant test routing distinguishes draft history from draft generation.
+
+
+## E2E mock-state recovery · 0.1.24
+
+Automation Rules E2E mocks now preserve newly created rules in the subsequent list response, matching the workspace flow after React Query invalidation. The change is covered by a unit regression test and does not alter production UI or backend behavior.
+
+
+## Accessibility contrast recovery · 0.1.25
+
+- Error/danger text now uses a dedicated accessible semantic token instead of the decorative danger base color.
+- Info badges use a dedicated accessible info-text token.
+- Soft danger/info surfaces are opaque semantic tokens so contrast does not drift with the parent background.
+- The selected Wildberries account keeps secondary metadata above WCAG AA contrast on the violet-soft active surface.
+- Accessibility diagnostics for the Wildberries workspace now print selector-level failure details.
+
+
+## Semantic contrast hardening · 0.1.26
+
+A project-wide semantic-color audit found that the final `0.1.25` GitHub axe failure was caused by alpha compositing, not by the badge selector itself: `--color-success-soft` used an 8% transparent green over the selected integration account's translucent violet active surface, producing the computed `#DFE6EA` background and only `4.28:1` contrast against `#027A48`.
+
+The audit was then expanded across all public/dashboard stylesheet status surfaces, brand-soft active states, light/dark theme overrides and representative axe flows. It exposed several latent dark-theme failures that the light-only CI path had never exercised: low-contrast kicker text, brand-primary text over translucent violet active surfaces, the dark primary-button text contract leaking into danger buttons, and a special marketplace readiness override that became invalid once success surfaces were made opaque.
+
+The corrected contract is systemic rather than selector-specific:
+- success/warning/danger/info soft status surfaces are opaque in both themes;
+- brand-soft text-bearing surfaces are opaque and use a dedicated `--color-brand-text-on-soft` token;
+- small kicker/caption copy has an explicit dark-theme token;
+- primary-brand and danger buttons have separate text tokens;
+- public success badges keep their own success text/surface pair even inside dark panels;
+- active navigation/filter/process markers use the soft-surface brand text token;
+- Automation Rules error copy uses the dedicated higher-contrast danger text token.
+
+Design-token tests now verify light/dark text/surface pairs, semantic status pairs, brand-soft pairs, on-brand/on-danger button contrast, opacity invariants and CSS usage contracts. A permanent dark-theme axe suite covers representative public and authenticated product surfaces so the same class of regression cannot remain invisible until a later push.
+

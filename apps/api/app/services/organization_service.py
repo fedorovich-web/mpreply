@@ -86,14 +86,18 @@ class OrganizationService:
         return organization
 
     async def list_for_user(self, *, user_id: UUID) -> list[Organization]:
+        rows = await self.list_for_user_with_roles(user_id=user_id)
+        return [organization for organization, _role in rows]
+
+    async def list_for_user_with_roles(self, *, user_id: UUID) -> list[tuple[Organization, str]]:
         stmt = (
-            select(Organization)
+            select(Organization, OrganizationUser.role)
             .join(OrganizationUser, OrganizationUser.organization_id == Organization.id)
             .where(OrganizationUser.user_id == user_id, OrganizationUser.status == "active")
             .order_by(Organization.created_at.desc())
         )
         result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        return [(organization, role) for organization, role in result.all()]
 
     async def get_for_user(self, *, organization_id: UUID, user_id: UUID) -> Organization:
         stmt = (

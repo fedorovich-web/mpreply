@@ -30,9 +30,6 @@ export function PublicShell({ children }: PublicShellProps) {
               Автоматизирует ответы на отзывы и вопросы маркетплейсов, проверяет рискованные случаи до отправки и оставляет понятную историю действий.
             </p>
           </div>
-          <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-            Подключить маркетплейс
-          </Link>
         </div>
 
         <div className="public-container public-footer-grid">
