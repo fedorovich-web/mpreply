@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.20
+Version: 0.1.21
 
 ## Product
 
@@ -111,3 +111,11 @@ Approved IA/copy hierarchy, semantic HTML, correct metadata/canonical, responsiv
 - Owner/admin/manager memberships can generate drafts through the backend-only OpenRouter flow; viewer memberships remain read-only and can inspect persisted draft history.
 - The workspace exposes the operational result that matters: generated answer, provider/model, prompt version, confidence, token usage, latency and safety flags, with loading/error/retry/empty/read-only states.
 - The browser never receives an OpenRouter API key and does not call the provider directly.
+
+## Product dashboard progress · Live Integrations · 0.1.21
+
+- Integrations is now a live tenant-scoped workspace over the existing marketplace-account API instead of a static Sprint-era card grid and non-functional Wildberries form.
+- The overview loads real marketplace accounts for the active organization, reports active/problem states, and keeps Ozon, Yandex Market and Avito explicitly unavailable until real adapters are implemented and verified.
+- The Wildberries workspace supports the existing backend capabilities: create account, inspect masked credential fingerprint, validate credentials, update account metadata/default response mode, rotate credentials, revoke credentials and request a manual sync.
+- Owner/admin memberships receive management controls; manager/viewer memberships remain read-only. Backend RBAC remains the security boundary.
+- Raw marketplace credentials are accepted only in create/rotate forms, sent to the backend, cleared from local form state after success and never read back from marketplace-account API responses.

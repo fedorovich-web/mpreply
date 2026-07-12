@@ -204,6 +204,62 @@ export const reviewQueueListSchema = z.object({
   page_size: z.number().int().positive(),
 });
 
+export const marketplaceAccountSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  marketplace: z.string().min(1),
+  display_name: z.string().min(1),
+  seller_id: z.string().nullable(),
+  status: z.string().min(1),
+  credentials_masked: z.string().min(1),
+  credentials_status: z.string().min(1),
+  scopes_json: z.record(z.string(), z.unknown()),
+  default_response_mode: z.string().min(1),
+  last_success_sync_at: timestampSchema.nullable(),
+  last_error_sync_at: timestampSchema.nullable(),
+  error_count: z.number().int().nonnegative(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+
+export const marketplaceAccountListSchema = z.array(marketplaceAccountSchema);
+
+export const marketplaceAccountValidateSchema = z.object({
+  id: uuidSchema,
+  status: z.string().min(1),
+  credentials_status: z.string().min(1),
+  scopes: z.array(z.string()),
+  checked_at: timestampSchema,
+  error_code: z.string().nullable(),
+  error_message_safe: z.string().nullable(),
+});
+
+export const marketplaceAccountActionSchema = z.object({
+  id: uuidSchema,
+  status: z.string().min(1),
+  credentials_status: z.string().min(1),
+  credentials_masked: z.string().min(1),
+  message: z.string().min(1),
+});
+
+export const marketplaceSyncSchema = z.object({
+  account_id: uuidSchema,
+  marketplace: z.string().min(1),
+  status: z.enum(["success", "failed"]),
+  imported_reviews: z.number().int().nonnegative(),
+  imported_questions: z.number().int().nonnegative(),
+  updated_reviews: z.number().int().nonnegative(),
+  updated_questions: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  error_code: z.string().nullable(),
+  error_message_safe: z.string().nullable(),
+});
+
+export type MarketplaceAccount = z.infer<typeof marketplaceAccountSchema>;
+export type MarketplaceAccountValidate = z.infer<typeof marketplaceAccountValidateSchema>;
+export type MarketplaceAccountAction = z.infer<typeof marketplaceAccountActionSchema>;
+export type MarketplaceSync = z.infer<typeof marketplaceSyncSchema>;
+
 export const messageResponseSchema = z.object({
   message: z.string(),
 });

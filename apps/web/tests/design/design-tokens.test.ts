@@ -259,6 +259,19 @@ describe("Respio design tokens", () => {
     expect(automationStyles).toContain("@media (max-width: 720px)");
   });
 
+  it("keeps live integrations on semantic tokens, stable motion and responsive states", () => {
+    const start = globalStyleSource.indexOf("/* Live marketplace integrations workspace */");
+    expect(start).toBeGreaterThanOrEqual(0);
+
+    const integrationStyles = globalStyleSource.slice(start);
+    expect(integrationStyles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+    expect(integrationStyles).not.toMatch(/\b(?:rgb|rgba|hsl|hsla)\(/i);
+    expect(integrationStyles).toContain("var(--transition-interactive)");
+    expect(integrationStyles).toContain("var(--focus-ring)");
+    expect(integrationStyles).toContain("@media (max-width: 1080px)");
+    expect(integrationStyles).toContain("@media (max-width: 760px)");
+  });
+
   it("defines dark-theme overrides as custom-property values rather than component hacks", () => {
     expect(themeSource).toMatch(/\[data-theme=['"]dark['"]\]/);
     expect(themeSource).not.toMatch(/\.[\w-]+\s*\{/);

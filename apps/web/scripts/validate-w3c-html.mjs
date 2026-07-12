@@ -25,6 +25,8 @@ const renderedRoutes = [
   "/privacy",
   "/terms",
   "/app/ai-assistant",
+  "/app/integrations",
+  "/app/integrations/wildberries",
 ];
 
 async function ensureBuildExists() {
