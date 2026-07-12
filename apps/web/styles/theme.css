@@ -1,32 +1,41 @@
 :root {
-  color-scheme: light;
+	color-scheme: light;
 }
 
-[data-theme="dark"] {
-  color-scheme: dark;
-  --color-bg-page: #17111d;
-  --color-bg-surface: #211727;
-  --color-bg-elevated: #2a1e31;
-  --color-text-primary: #fbf8fd;
-  --color-text-secondary: #ded4e3;
-  --color-text-muted: #ab9fb1;
-  --color-border-subtle: #403047;
-  --color-border-strong: #58415f;
-  --color-brand-primary: #a86bd9;
-  --color-brand-primary-hover: #b97de6;
-  --color-brand-accent: #7ad9b2;
-  --color-brand-accent-hover: #8be5c0;
-  --color-brand-violet-light: #c49be5;
-  --color-brand-mint-light: #a5e9cf;
-  --color-brand-soft: rgba(168, 107, 217, 0.14);
-  --color-brand-soft-strong: rgba(168, 107, 217, 0.2);
-  --color-surface-muted: #1c1422;
-  --color-surface-dark: #120d16;
-  --color-text-on-dark: #fbf8fd;
-  --gradient-public-hero: linear-gradient(180deg, #211727 0%, #17111d 100%);
-  --gradient-public-cta: linear-gradient(135deg, #4c2667, #2b1837);
-  --app-sidebar-bg: #211727;
-  --app-topbar-bg: rgba(33, 23, 39, 0.86);
-  --app-nav-active-bg: rgba(168, 107, 217, 0.14);
-  --app-nav-hover-bg: rgba(255, 255, 255, 0.05);
+[data-theme='dark'] {
+	color-scheme: dark;
+	--color-bg-page: #17111d;
+	--color-bg-surface: #211727;
+	--color-bg-elevated: #2a1e31;
+	--color-bg-subtle: #1c1422;
+	--color-bg-brand-soft: #261a2e;
+	--color-text-primary: #fbf8fd;
+	--color-text-secondary: #ded4e3;
+	--color-text-muted: #ab9fb1;
+	--color-border-subtle: #403047;
+	--color-border-strong: #58415f;
+	--color-brand-primary: #a86bd9;
+	--color-brand-primary-hover: #b97de6;
+	--color-brand-primary-active: #c88aed;
+	--color-brand-accent: #7ad9b2;
+	--color-brand-accent-hover: #8be5c0;
+	--color-brand-violet-light: #c49be5;
+	--color-brand-mint-light: #a5e9cf;
+	--color-brand-soft: rgb(168 107 217 / 14%);
+	--color-brand-soft-strong: rgb(168 107 217 / 20%);
+	--color-surface-muted: var(--color-bg-subtle);
+	--color-surface-dark: #120d16;
+	--color-text-on-dark: #fbf8fd;
+	--color-public-page: var(--color-bg-page);
+	--color-public-section: var(--color-bg-page);
+	--color-public-section-subtle: var(--color-bg-subtle);
+	--color-public-surface: var(--color-bg-surface);
+	--color-public-header: rgb(33 23 39 / 92%);
+	--color-public-footer: var(--color-bg-page);
+	--gradient-public-hero: linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-page) 100%);
+	--gradient-public-cta: linear-gradient(135deg, #4c2667 0%, #2b1837 100%);
+	--app-sidebar-bg: var(--color-bg-surface);
+	--app-topbar-bg: rgb(33 23 39 / 86%);
+	--app-nav-active-bg: rgb(168 107 217 / 14%);
+	--app-nav-hover-bg: rgb(255 255 255 / 5%);
 }

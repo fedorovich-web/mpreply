@@ -70,7 +70,7 @@ export default function ResourcesPage() {
         </div>
       </section>
 
-      <section className="public-section">
+      <div className="public-section">
         <div className="public-container resource-note-list">
           {notes.map((note) => (
             <article className="resource-note" key={note.number}>
@@ -83,7 +83,7 @@ export default function ResourcesPage() {
             </article>
           ))}
         </div>
-      </section>
+      </div>
     </PublicShell>
   );
 }

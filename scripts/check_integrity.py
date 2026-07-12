@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.18"
+EXPECTED_VERSION = "0.1.19"
 EXPECTED_ALEMBIC_HEAD = "20260710_0009"
 
 ERRORS: list[str] = []
@@ -171,6 +171,8 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "@playwright/test"): "1.61.1",
         ("devDependencies", "@axe-core/playwright"): "4.12.1",
         ("devDependencies", "@lhci/cli"): "0.15.1",
+        ("devDependencies", "vnu-jar"): "26.7.11",
+        ("devDependencies", "csstree-validator"): "4.0.1",
         ("overrides", "postcss"): "8.5.10",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
@@ -186,6 +188,10 @@ def check_versions_and_frontend_security_baseline() -> None:
         "test:frontend": "npm run test:unit && npm run test:design-tokens",
         "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts --project=chromium",
         "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts --project=chromium",
+        "validate:css-syntax": "csstree-validator styles",
+        "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
+        "validate:w3c:css": "node scripts/validate-w3c-css.mjs",
+        "validate:w3c": "npm run validate:w3c:css && npm run validate:w3c:html",
     }
     for name, expected in expected_scripts.items():
         actual = package.get("scripts", {}).get(name)
@@ -211,6 +217,10 @@ def check_release_gate_contract() -> None:
         "& $Npm run test:design-tokens",
         "Frontend design anti-pattern scan",
         "& $Npm run design:detect",
+        "Frontend CSS syntax validation",
+        "& $Npm run validate:css-syntax",
+        "Frontend W3C HTML and CSS validation",
+        "& $Npm run validate:w3c",
         "Frontend critical E2E",
         "& $Npm run test:e2e",
         "Frontend accessibility",
@@ -233,6 +243,8 @@ def check_release_gate_contract() -> None:
         "npm run test:unit",
         "npm run test:design-tokens",
         "npm run design:detect",
+        "npm run validate:css-syntax",
+        "npm run validate:w3c",
         "npx playwright install --with-deps chromium",
         "npm run test:e2e",
         "npm run test:a11y",
@@ -290,6 +302,13 @@ def check_deployment_contract() -> None:
         WEB / "tests" / "unit" / "automation-rules-contract.test.ts",
         WEB / "tests" / "unit" / "automation-rules-workspace.test.tsx",
         WEB / "tests" / "design" / "design-tokens.test.ts",
+        WEB / "scripts" / "validate-w3c-html.mjs",
+        WEB / "scripts" / "validate-w3c-css.mjs",
+        WEB / "styles" / "fonts.css",
+        WEB / "public" / "fonts" / "onest" / "onest-400-ru-en.woff2",
+        WEB / "public" / "fonts" / "onest" / "onest-500-ru-en.woff2",
+        WEB / "public" / "fonts" / "onest" / "onest-600-ru-en.woff2",
+        WEB / "public" / "fonts" / "onest" / "onest-700-ru-en.woff2",
         WEB / "components" / "automation-rules" / "AutomationRulesWorkspace.tsx",
         WEB / "e2e" / "helpers" / "automation-rules-api.ts",
         WEB / "e2e" / "automation-rules.spec.ts",
@@ -311,6 +330,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "frontend-design-tooling.md",
         ROOT / "docs" / "qa" / "sprint-13-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.18-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.19-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",

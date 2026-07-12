@@ -99,8 +99,14 @@ try {
     Run-Step "Frontend design anti-pattern scan" {
         & $Npm run design:detect
     }
+    Run-Step "Frontend CSS syntax validation" {
+        & $Npm run validate:css-syntax
+    }
     Run-Step "Frontend production build" {
         & $Npm run build
+    }
+    Run-Step "Frontend W3C HTML and CSS validation" {
+        & $Npm run validate:w3c
     }
     Run-Step "Frontend critical E2E" {
         & $Npm run test:e2e

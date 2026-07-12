@@ -1,33 +1,34 @@
-# Respio patch 0.1.18
+# Respio patch 0.1.19
 
 ## Scope
 
-Live Automation Rules vertical slice: tenant-scoped dashboard UI over the existing automation-rule backend, explicit role-aware interaction, regression tests, and release-gate enforcement for the critical browser flow.
+Public Site Visual System Stabilization: optimized Onest typography, centralized visual tokens, unified background/gradient/motion/focus contracts, revised Canvas ribbons, CTA hierarchy cleanup, equal process-step emphasis, semantic HTML corrections, and W3C/Nu validation integrated into CI/local gates.
 
 ## Why this patch is next
 
-The backend already had automation-rule CRUD/evaluation and SafetyGate-aware execution, while the dashboard workspace still rendered static demonstration cards. This patch closes that product gap without creating a second service, adapter, backend or parallel architecture.
+The public site already had the approved Signal Flow direction, but visual implementation had drifted: oversized headings, inconsistent section backgrounds, duplicated primary CTAs, abrupt hover/active feedback and an over-emphasized SafetyGate step. This patch stabilizes the existing design system instead of starting another redesign.
 
 ## Changed
 
-- Replaced the static Automation Rules workspace with live API-backed loading, filtering, selection, creation, editing, enable and disable flows.
-- Preserved existing backend authorization and exposed the current organization membership role in organization responses so the UI can present owner/admin write controls and manager/viewer read-only behavior without guessing.
-- Added explicit loading, empty, error, success, disabled and read-only states.
-- Kept SafetyGate stop/review controls visible in the editor and retained backend enforcement as the security boundary.
-- Added backend schema tests for current organization role serialization and validation.
-- Added frontend unit tests for organization-role and automation-rule contracts plus owner/viewer workspace behavior.
-- Added Playwright E2E coverage for live Automation Rules and axe accessibility coverage for the same critical flow.
-- Included the new Automation Rules E2E/a11y specs in existing package scripts used by GitHub Actions.
-- Extended the local release gate and repository integrity contract so the new critical browser flow cannot silently disappear.
-- Synchronized project version to `0.1.18` across the real version sources, including `DESIGN.md`.
+- Added self-hosted Onest WOFF2 subsets for Russian and English in weights 400, 500, 600 and 700; the four-file family is about 43% smaller than the supplied source set.
+- Centralized public colors, semantic states, backgrounds, gradients, typography roles, font weights, line heights, letter spacing, spacing, dimensions, radii, shadows, focus rings, transitions/easings and Canvas parameters in CSS custom properties.
+- Replaced uncontrolled beige/white/light-violet section changes with one neutral near-white page foundation and explicit semantic surface tokens.
+- Reworked the hero Canvas into a token-driven violet/mint ribbon system with layered paths, soft glow, edge fading, bounded DPR/FPS, off-screen pausing and reduced-motion behavior.
+- Removed duplicated primary CTA labels from the shared header/footer flow and made conversion actions contextual.
+- Removed the oversized third-step treatment from the process flow; SafetyGate remains differentiated by status content rather than disproportionate card styling.
+- Standardized hover, active and focus behavior around shared motion/focus variables so interaction feedback does not change component geometry.
+- Added strict design-system tests for Onest files/weights/size budgets, required tokens, hardcoded visual-value prevention, Canvas contracts, equal process steps, reduced motion and contrast.
+- Added Nu HTML Checker validation for 13 rendered public routes and Nu/CSS syntax validation for public stylesheet sources.
+- Fixed validator-detected semantic issues instead of filtering them: invalid `aria-label` usage on generic `div` elements, missing heading ownership and non-semantic `section`/`article` wrappers.
+- Added CSS/W3C validation to GitHub Quality Gate, local release gate and web-design gate, with integrity checks protecting the scripts and contracts.
+- Synchronized project version to `0.1.19` across real version sources.
 
 ## Not changed
 
-- No new database model or Alembic migration was required.
-- No second automation engine, backend service or marketplace adapter was created.
-- Existing automation-rule evaluation, SafetyGate, worker, retry and marketplace behavior were not replaced.
+- No backend business logic, database model, migration, marketplace adapter, AI provider, SafetyGate logic or worker behavior was redesigned.
 - Marketplace readiness truth is unchanged: Wildberries remains the current MVP execution path; Ozon, Yandex Market and Avito remain planned until verified and implemented.
+- The public site information architecture was not restarted, and previous research/redesign stages were not repeated.
 
 ## Validation
 
-See `docs/qa/patch-0.1.18-release-report.md` for exact commands, passed checks and environment-blocked checks. Browser E2E/accessibility are included in the patch and GitHub Actions contract, but local pass status is reported only when a browser run actually completes.
+See `docs/qa/patch-0.1.19-release-report.md` for exact commands, final pass counts and any environment-blocked checks. A validation category is reported as passed only when its command actually completed successfully on the final `0.1.19` tree.

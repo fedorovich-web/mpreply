@@ -68,7 +68,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 <p>Это описание текущей технической реализации, а не обещание production-готовности без проверки реального кабинета.</p>
               </div>
 
-              <div className="integration-flow-list" aria-label="Этапы обработки обращения">
+              <div className="integration-flow-list" role="group" aria-label="Этапы обработки обращения">
                 {[
                   ["01", "Получить и нормализовать", "Adapter получает отзывы и вопросы, приводит payload к внутренним моделям и подавляет дубли."],
                   ["02", "Подготовить ответ", "AI использует необходимый контекст, а система фиксирует модель, токены, задержку и стоимость."],

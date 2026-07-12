@@ -13,12 +13,75 @@ type FlowLayer = {
   blur: number;
 };
 
-function readCssColor(variable: string, fallback: string): string {
-  if (typeof window === "undefined") {
-    return fallback;
+type CanvasSettings = {
+  transparent: string;
+  glowMultiplier: number;
+  glowOpacity: number;
+  edgeFadeStart: number;
+  edgeFadeEnd: number;
+  dprMax: number;
+  fps: number;
+  reducedMotionTime: number;
+  samplePoints: number;
+  centerOffsetStep: number;
+  harmonicFrequencyRatio: number;
+  harmonicSpeedRatio: number;
+  harmonicAmplitudeRatio: number;
+  envelopeBase: number;
+  envelopeGain: number;
+};
+
+function readCssValue(styles: CSSStyleDeclaration, variable: string): string {
+  return styles.getPropertyValue(variable).trim();
+}
+
+function readCssNumber(styles: CSSStyleDeclaration, variable: string): number {
+  const value = Number.parseFloat(readCssValue(styles, variable));
+  if (!Number.isFinite(value)) {
+    throw new Error(`Invalid numeric canvas token: ${variable}`);
+  }
+  return value;
+}
+
+function createWavePath(
+  width: number,
+  height: number,
+  time: number,
+  layer: FlowLayer,
+  index: number,
+  settings: CanvasSettings,
+): Path2D {
+  const points = Math.max(24, Math.round(settings.samplePoints));
+  const step = width / (points - 1);
+  const center = height * (0.5 + index * settings.centerOffsetStep);
+  const path = new Path2D();
+
+  for (let point = 0; point < points; point += 1) {
+    const x = point * step;
+    const progress = point / (points - 1);
+    const envelope = settings.envelopeBase + Math.sin(progress * Math.PI) * settings.envelopeGain;
+    const primary =
+      Math.sin(progress * Math.PI * layer.frequency + time * layer.speed + layer.phase) *
+      layer.amplitude *
+      envelope;
+    const harmonic =
+      Math.sin(
+        progress * Math.PI * (layer.frequency * settings.harmonicFrequencyRatio) -
+          time * layer.speed * settings.harmonicSpeedRatio +
+          layer.phase * 1.7,
+      ) *
+      layer.amplitude *
+      settings.harmonicAmplitudeRatio;
+    const y = center + primary + harmonic;
+
+    if (point === 0) {
+      path.moveTo(x, y);
+    } else {
+      path.lineTo(x, y);
+    }
   }
 
-  return getComputedStyle(document.documentElement).getPropertyValue(variable).trim() || fallback;
+  return path;
 }
 
 function drawRibbon(
@@ -28,68 +91,70 @@ function drawRibbon(
   time: number,
   layer: FlowLayer,
   index: number,
+  settings: CanvasSettings,
 ) {
-  const points = 18;
-  const step = width / (points - 1);
-  const center = height * (0.5 + index * 0.012);
-  const top: Array<[number, number]> = [];
-  const bottom: Array<[number, number]> = [];
-
-  for (let point = 0; point < points; point += 1) {
-    const x = point * step;
-    const progress = point / (points - 1);
-    const envelope = 0.46 + Math.sin(progress * Math.PI) * 0.82;
-    const wave =
-      Math.sin(progress * Math.PI * layer.frequency + time * layer.speed + layer.phase) *
-        layer.amplitude *
-        envelope +
-      Math.sin(progress * Math.PI * (layer.frequency * 0.54) - time * layer.speed * 0.72 + layer.phase * 1.7) *
-        layer.amplitude *
-        0.36;
-    const localThickness =
-      layer.thickness *
-      (0.56 + Math.sin(progress * Math.PI * 2.8 + layer.phase + time * layer.speed * 0.4) * 0.24);
-
-    top.push([x, center + wave - localThickness]);
-    bottom.push([x, center + wave + localThickness]);
-  }
-
-  const path = new Path2D();
-  path.moveTo(top[0][0], top[0][1]);
-
-  for (let point = 1; point < top.length; point += 1) {
-    const previous = top[point - 1];
-    const current = top[point];
-    const midpointX = (previous[0] + current[0]) / 2;
-    path.quadraticCurveTo(previous[0], previous[1], midpointX, (previous[1] + current[1]) / 2);
-  }
-
-  const lastTop = top[top.length - 1];
-  path.lineTo(lastTop[0], lastTop[1]);
-
-  for (let point = bottom.length - 1; point > 0; point -= 1) {
-    const current = bottom[point];
-    const previous = bottom[point - 1];
-    const midpointX = (current[0] + previous[0]) / 2;
-    path.quadraticCurveTo(current[0], current[1], midpointX, (current[1] + previous[1]) / 2);
-  }
-
-  path.lineTo(bottom[0][0], bottom[0][1]);
-  path.closePath();
-
+  const path = createWavePath(width, height, time, layer, index, settings);
   const gradient = context.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0, "transparent");
-  gradient.addColorStop(0.09, layer.color);
-  gradient.addColorStop(0.48, layer.color);
-  gradient.addColorStop(0.91, layer.color);
-  gradient.addColorStop(1, "transparent");
+  gradient.addColorStop(0, settings.transparent);
+  gradient.addColorStop(settings.edgeFadeStart, layer.color);
+  gradient.addColorStop(0.5, layer.color);
+  gradient.addColorStop(settings.edgeFadeEnd, layer.color);
+  gradient.addColorStop(1, settings.transparent);
 
   context.save();
+  context.lineCap = "round";
+  context.lineJoin = "round";
+
+  context.globalAlpha = layer.alpha * settings.glowOpacity;
+  context.filter = `blur(${layer.blur * settings.glowMultiplier}px)`;
+  context.lineWidth = layer.thickness * settings.glowMultiplier;
+  context.strokeStyle = gradient;
+  context.stroke(path);
+
   context.globalAlpha = layer.alpha;
   context.filter = `blur(${layer.blur}px)`;
-  context.fillStyle = gradient;
-  context.fill(path);
+  context.lineWidth = layer.thickness;
+  context.stroke(path);
   context.restore();
+}
+
+function readCanvasConfiguration(height: number): { layers: FlowLayer[]; settings: CanvasSettings } {
+  const styles = getComputedStyle(document.documentElement);
+  const settings: CanvasSettings = {
+    transparent: readCssValue(styles, "--color-transparent"),
+    glowMultiplier: readCssNumber(styles, "--canvas-glow-multiplier"),
+    glowOpacity: readCssNumber(styles, "--canvas-glow-opacity"),
+    edgeFadeStart: readCssNumber(styles, "--canvas-edge-fade-start"),
+    edgeFadeEnd: readCssNumber(styles, "--canvas-edge-fade-end"),
+    dprMax: readCssNumber(styles, "--canvas-dpr-max"),
+    fps: readCssNumber(styles, "--canvas-fps"),
+    reducedMotionTime: readCssNumber(styles, "--canvas-reduced-motion-time"),
+    samplePoints: readCssNumber(styles, "--canvas-sample-points"),
+    centerOffsetStep: readCssNumber(styles, "--canvas-center-offset-step"),
+    harmonicFrequencyRatio: readCssNumber(styles, "--canvas-harmonic-frequency-ratio"),
+    harmonicSpeedRatio: readCssNumber(styles, "--canvas-harmonic-speed-ratio"),
+    harmonicAmplitudeRatio: readCssNumber(styles, "--canvas-harmonic-amplitude-ratio"),
+    envelopeBase: readCssNumber(styles, "--canvas-envelope-base"),
+    envelopeGain: readCssNumber(styles, "--canvas-envelope-gain"),
+  };
+
+  const layer = (
+    suffix: "violet" | "mint" | "soft-violet" | "soft-mint",
+  ): FlowLayer => ({
+    color: readCssValue(styles, `--canvas-color-${suffix}`),
+    alpha: readCssNumber(styles, `--canvas-opacity-${suffix}`),
+    amplitude: height * readCssNumber(styles, `--canvas-amplitude-${suffix}`),
+    thickness: height * readCssNumber(styles, `--canvas-width-${suffix}`),
+    phase: readCssNumber(styles, `--canvas-phase-${suffix}`),
+    speed: readCssNumber(styles, `--canvas-speed-${suffix}`),
+    frequency: readCssNumber(styles, `--canvas-frequency-${suffix}`),
+    blur: readCssNumber(styles, `--canvas-blur-${suffix}`),
+  });
+
+  return {
+    layers: [layer("violet"), layer("mint"), layer("soft-violet"), layer("soft-mint")],
+    settings,
+  };
 }
 
 export function HeroFlowCanvas() {
@@ -97,14 +162,10 @@ export function HeroFlowCanvas() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
+    if (!canvas) return;
 
     const context = canvas.getContext("2d", { alpha: true });
-    if (!context) {
-      return;
-    }
+    if (!context) return;
 
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reducedMotion = reducedMotionQuery.matches;
@@ -115,80 +176,42 @@ export function HeroFlowCanvas() {
     let width = 0;
     let height = 0;
     let layers: FlowLayer[] = [];
+    let settings: CanvasSettings | null = null;
 
-    const buildLayers = () => {
-      const violet = readCssColor("--color-brand-primary", "#6f33ab");
-      const mint = readCssColor("--color-brand-accent", "#79d6b0");
-      const softViolet = readCssColor("--color-brand-violet-light", "#b58bdd");
-      const softMint = readCssColor("--color-brand-mint-light", "#bcebd8");
-
-      layers = [
-        {
-          color: violet,
-          alpha: 0.68,
-          amplitude: height * 0.18,
-          thickness: height * 0.052,
-          phase: 0.35,
-          speed: 0.00042,
-          frequency: 4.15,
-          blur: 2.4,
-        },
-        {
-          color: mint,
-          alpha: 0.66,
-          amplitude: height * 0.2,
-          thickness: height * 0.048,
-          phase: 2.3,
-          speed: 0.00036,
-          frequency: 4.65,
-          blur: 3.2,
-        },
-        {
-          color: softViolet,
-          alpha: 0.38,
-          amplitude: height * 0.14,
-          thickness: height * 0.032,
-          phase: 4.1,
-          speed: 0.00028,
-          frequency: 5.35,
-          blur: 6.5,
-        },
-        {
-          color: softMint,
-          alpha: 0.33,
-          amplitude: height * 0.16,
-          thickness: height * 0.036,
-          phase: 5.25,
-          speed: 0.0003,
-          frequency: 5.7,
-          blur: 7.5,
-        },
-      ];
+    const refreshConfiguration = () => {
+      const configuration = readCanvasConfiguration(height);
+      layers = configuration.layers;
+      settings = configuration.settings;
     };
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const currentSettings = settings ?? readCanvasConfiguration(Math.max(1, rect.height)).settings;
+      const dpr = Math.min(window.devicePixelRatio || 1, currentSettings.dprMax);
       width = Math.max(1, Math.round(rect.width));
       height = Math.max(1, Math.round(rect.height));
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      buildLayers();
+      refreshConfiguration();
     };
 
     const render = (timestamp: number) => {
-      if (!reducedMotion && timestamp - lastFrameTime < 1000 / 30) {
+      if (!settings) refreshConfiguration();
+      if (!settings) return;
+
+      const frameInterval = 1000 / settings.fps;
+      if (!reducedMotion && timestamp - lastFrameTime < frameInterval) {
         animationFrame = window.requestAnimationFrame(render);
         return;
       }
 
       lastFrameTime = timestamp;
       context.clearRect(0, 0, width, height);
-      const elapsed = reducedMotion ? 1320 : timestamp - startTime;
+      const elapsed = reducedMotion ? settings.reducedMotionTime : timestamp - startTime;
 
-      layers.forEach((layer, index) => {
-        drawRibbon(context, width, height, elapsed, layer, index - 1.5);
+      layers.forEach((currentLayer, index) => {
+        drawRibbon(context, width, height, elapsed, currentLayer, index - 1.5, settings!);
       });
 
       if (!reducedMotion && isVisible && !document.hidden) {
@@ -200,7 +223,7 @@ export function HeroFlowCanvas() {
       window.cancelAnimationFrame(animationFrame);
       startTime = performance.now();
       lastFrameTime = 0;
-      buildLayers();
+      refreshConfiguration();
       render(startTime);
     };
 
@@ -209,7 +232,7 @@ export function HeroFlowCanvas() {
       restart();
     };
 
-    const observer = new ResizeObserver(() => {
+    const resizeObserver = new ResizeObserver(() => {
       resize();
       restart();
     });
@@ -236,7 +259,7 @@ export function HeroFlowCanvas() {
 
     const themeObserver = new MutationObserver(() => restart());
 
-    observer.observe(canvas);
+    resizeObserver.observe(canvas);
     visibilityObserver.observe(canvas);
     themeObserver.observe(document.documentElement, {
       attributes: true,
@@ -250,7 +273,7 @@ export function HeroFlowCanvas() {
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
-      observer.disconnect();
+      resizeObserver.disconnect();
       visibilityObserver.disconnect();
       themeObserver.disconnect();
       reducedMotionQuery.removeEventListener("change", handleMotionChange);

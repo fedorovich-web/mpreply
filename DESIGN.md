@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.18
+Version: 0.1.19
 
 ## Design intent
 
@@ -14,7 +14,7 @@ The approved public-site direction combines a light-first editorial SaaS layout 
 Approved public palette:
 - Primary violet: `#6F33AB`.
 - Signal mint: `#79D6B0`.
-- Warm light canvas: `#F7F5F2`.
+- Neutral near-white public page background: `#FBFAFC`; subtle/elevated surfaces use centralized semantic background tokens.
 - Deep violet is secondary for selected contrast surfaces and optional dark theme, not the default page background.
 - Status colors remain semantic and separate from the mint brand accent.
 
@@ -45,6 +45,20 @@ The frontend test foundation now verifies critical brand/semantic design tokens,
 Automation Rules is an operational workspace, not a decorative gallery of fake rule cards. The screen loads tenant-scoped backend data, exposes explicit loading, empty, error and success states, makes the selected rule and current filter obvious, and preserves a calm dense hierarchy suitable for recurring operational work.
 
 Authorization is visible but never treated as a frontend security boundary: owner/admin roles receive create, edit, enable and disable controls, while manager/viewer roles see a clear read-only state. SafetyGate stop/review behavior stays explicit in the editor and cannot be visually hidden to inflate automation rate. The UI uses existing semantic tokens, responsive composition and restrained motion; no page-specific color hacks or new design system are introduced.
+
+## Public visual-system stabilization · 0.1.19
+
+The public site uses self-hosted Onest for Cyrillic and Latin with four production weights: 400, 500, 600 and 700. The optimized WOFF2 family totals 64,972 bytes, down from 114,084 bytes in the supplied source set (about 43% smaller), while retaining required Russian/English letters and product punctuation.
+
+Reusable visual decisions are centralized in `styles/tokens.css`: brand/semantic colors, backgrounds, gradients, typography roles, font weights, line heights, letter spacing, spacing, layout dimensions, radii, borders, shadows, focus, motion durations/easings and Canvas configuration. Public component CSS must reference these variables instead of introducing local HEX/RGB/HSL colors or one-off transition timing values.
+
+The public background system is neutral and continuous: a near-white page foundation, white surfaces and a restrained subtle violet surface token. Alternating section tones are permitted only through semantic background variables and must not create arbitrary beige/white/violet banding.
+
+Hero motion uses a token-driven Canvas ribbon system in Respio violet/mint, with multiple restrained layers, edge fading, reduced-motion support, intersection/visibility pausing, bounded device-pixel ratio and frame-rate control. Visual parameters belong to CSS custom properties so the motion system can be tuned without hardcoded component constants.
+
+Interactive controls share one motion/focus contract. Hover and active feedback must avoid geometry changes such as border-width/padding shifts; use tokenized transform, color and shadow transitions. Process steps remain equal in layout weight, and CTA labels are contextual rather than mechanically repeating the same primary action.
+
+Rendered public HTML is validated route-by-route through Nu HTML Checker, while stylesheet sources are validated through Nu and CSS syntax tooling. Validator findings are fixed in source rather than silenced; current semantic corrections include valid ARIA roles, heading ownership for sections/process steps and removal of wrappers that falsely claimed independent `section`/`article` semantics.
 
 ## Two visual lanes
 
