@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.16
+Version: 0.1.18
 
 ## Design intent
 
@@ -35,6 +35,16 @@ The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resource
 ## Public shell polish · 0.1.16
 
 The shared public shell adds active desktop/mobile navigation states, an accessible controlled mobile menu with Escape/backdrop close behavior, a theme toggle that announces the next action, a fuller conversion-oriented footer and disclosure-based FAQ interaction. Public copy avoids internal implementation jargon when a clear Russian term exists.
+
+## Automated design verification · 0.1.17
+
+The frontend test foundation now verifies critical brand/semantic design tokens, duplicate token declarations and WCAG AA contrast for the primary text/surface combinations used by the current system. These checks run alongside unit tests in both CI and the local release gate.
+
+## Product dashboard · Live Automation Rules · 0.1.18
+
+Automation Rules is an operational workspace, not a decorative gallery of fake rule cards. The screen loads tenant-scoped backend data, exposes explicit loading, empty, error and success states, makes the selected rule and current filter obvious, and preserves a calm dense hierarchy suitable for recurring operational work.
+
+Authorization is visible but never treated as a frontend security boundary: owner/admin roles receive create, edit, enable and disable controls, while manager/viewer roles see a clear read-only state. SafetyGate stop/review behavior stays explicit in the editor and cannot be visually hidden to inflate automation rate. The UI uses existing semantic tokens, responsive composition and restrained motion; no page-specific color hacks or new design system are introduced.
 
 ## Two visual lanes
 
