@@ -1,14 +1,13 @@
-# Respio patch 0.1.23
+# Respio patch 0.1.24
 
-CI hotfix for the three failing Chromium E2E scenarios reported by GitHub Actions on `0.1.22`.
+Targeted CI hotfix for the remaining Automation Rules Chromium E2E failure.
 
-## Fixed
+## What changed
 
-- Replaced the ambiguous `getByText("Balanced auto")` Automation Rules assertions with a semantic heading locator, removing Playwright strict-mode collisions between the rule-list button and the detail heading.
-- Narrowed the AI draft-history route mock so it no longer intercepts `/api/ai/drafts/generate` and returns a history payload to the generation request.
-- Added a regression unit test for the AI mock route contract.
-- Synchronized the project version to `0.1.23` across real version sources.
+- Fixed the Automation Rules E2E mock so POST-created rules persist in subsequent GET list responses.
+- Added a unit regression test protecting the exact create-then-refetch contract.
+- Synchronized all real project version sources to `0.1.24`.
 
 ## Scope
 
-No product functionality, backend business logic, database schema, marketplace adapter, SafetyGate logic, or public-site visual system is changed in this patch.
+No production UI, backend business logic, database schema, marketplace adapter, or public-site design was changed.

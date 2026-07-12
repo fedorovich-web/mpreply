@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createAutomationRulesMockState } from "../../e2e/helpers/automation-rules-api";
 import {
   automationRuleListSchema,
   organizationSchema,
@@ -53,6 +54,23 @@ describe("Automation Rules API contracts", () => {
     expect(automationRuleListSchema.parse({ items: [rule], total: 1 }).items[0]?.name).toBe(
       "Негативные отзывы",
     );
+  });
+
+  it("keeps a newly created rule in the E2E mock list after the POST response", () => {
+    const state = createAutomationRulesMockState();
+
+    const createdRule = state.create({
+      organization_id: organization.id,
+      name: "Отзывы 1–3",
+    });
+
+    expect(createdRule.name).toBe("Отзывы 1–3");
+    expect(state.list()).toMatchObject({
+      total: 2,
+      items: expect.arrayContaining([
+        expect.objectContaining({ id: createdRule.id, name: "Отзывы 1–3" }),
+      ]),
+    });
   });
 
   it("rejects unknown organization roles and unsupported marketplaces", () => {

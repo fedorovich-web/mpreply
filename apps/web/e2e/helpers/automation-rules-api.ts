@@ -46,8 +46,28 @@ const baseRule = {
   updated_at: timestamp,
 };
 
+export function createAutomationRulesMockState() {
+  let rules = [baseRule];
+
+  return {
+    create(payload: Record<string, unknown>) {
+      const createdRule = {
+        ...baseRule,
+        ...payload,
+        id: "44444444-4444-4444-8444-444444444444",
+      };
+      rules = [...rules, createdRule];
+      return createdRule;
+    },
+    list() {
+      return { items: rules, total: rules.length };
+    },
+  };
+}
+
 export async function mockAutomationRulesApi(page: Page, role: OrganizationRole = "owner") {
   const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+  const state = createAutomationRulesMockState();
   const headers = {
     "access-control-allow-credentials": "true",
     "access-control-allow-headers": "content-type",
@@ -87,12 +107,8 @@ export async function mockAutomationRulesApi(page: Page, role: OrganizationRole 
     if (request.method() === "OPTIONS") return fulfillJson(route, null, 204);
     if (request.method() === "POST") {
       const payload = request.postDataJSON() as Record<string, unknown>;
-      return fulfillJson(
-        route,
-        { ...baseRule, ...payload, id: "44444444-4444-4444-8444-444444444444" },
-        201,
-      );
+      return fulfillJson(route, state.create(payload), 201);
     }
-    return fulfillJson(route, { items: [baseRule], total: 1 });
+    return fulfillJson(route, state.list());
   });
 }
