@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.23
+Version: 0.1.24
 
 ## Design intent
 
@@ -168,3 +168,8 @@ The visual-system contract remains unchanged. The patch restores the Vitest jsdo
 ## E2E locator and mock-contract recovery · 0.1.23
 
 No visual-system change is introduced. The patch only hardens E2E semantics: Automation Rules assertions target the intended heading role, and AI Assistant test routing distinguishes draft history from draft generation.
+
+
+## E2E mock-state recovery · 0.1.24
+
+Automation Rules E2E mocks now preserve newly created rules in the subsequent list response, matching the workspace flow after React Query invalidation. The change is covered by a unit regression test and does not alter production UI or backend behavior.

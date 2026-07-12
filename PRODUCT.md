@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.23
+Version: 0.1.24
 
 ## Product
 
@@ -127,3 +127,8 @@ Restored the tracked frontend unit-test foundation required by the Quality Gate.
 ## CI E2E recovery · 0.1.23
 
 Three Chromium E2E failures from the `0.1.22` Quality Gate were corrected without changing product behavior: Automation Rules now uses an unambiguous semantic heading locator, and the AI draft-history mock no longer shadows the generation endpoint. A unit regression contract protects the route matcher.
+
+
+## CI E2E recovery · 0.1.24
+
+The Automation Rules browser test now uses a stateful mock contract: a created rule remains available when the workspace refetches the collection after creation. This fixes the GitHub Chromium failure without changing customer-facing product behavior.

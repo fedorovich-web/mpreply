@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.23"
+EXPECTED_VERSION = "0.1.24"
 EXPECTED_ALEMBIC_HEAD = "20260710_0009"
 
 ERRORS: list[str] = []
@@ -346,7 +346,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.19-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.20-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.22-release-report.md",
-        ROOT / "docs" / "qa" / "patch-0.1.23-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.24-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
