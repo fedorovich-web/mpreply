@@ -1,6 +1,6 @@
 {
   "name": "respio-web",
-  "version": "0.1.16",
+  "version": "0.1.18",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
@@ -11,14 +11,17 @@
     "design:detect": "impeccable detect app components styles",
     "design:detect:json": "impeccable detect --json app components styles",
     "impeccable:install": "impeccable skills install -y --providers=claude,codex --scope=project",
-    "test:e2e": "playwright test e2e/public-site.spec.ts --project=chromium",
-    "test:e2e:all": "playwright test e2e/public-site.spec.ts",
-    "test:a11y": "playwright test e2e/accessibility.spec.ts --project=chromium",
+    "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts --project=chromium",
+    "test:e2e:all": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts",
+    "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts --project=chromium",
     "test:visual": "playwright test e2e/visual.spec.ts --project=chromium",
     "test:visual:update": "playwright test e2e/visual.spec.ts --project=chromium --update-snapshots",
     "test:report": "playwright show-report",
     "lighthouse": "lhci autorun --config=./lighthouserc.cjs",
-    "qa:web": "npm run design:detect && npm run typecheck && npm run lint && npm run build"
+    "qa:web": "npm run test:frontend && npm run design:detect && npm run typecheck && npm run lint && npm run build",
+    "test:unit": "vitest run tests/unit",
+    "test:design-tokens": "vitest run tests/design",
+    "test:frontend": "npm run test:unit && npm run test:design-tokens"
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.12",
@@ -31,12 +34,15 @@
     "@axe-core/playwright": "4.12.1",
     "@lhci/cli": "0.15.1",
     "@playwright/test": "1.61.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
     "@types/node": "25.0.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.2",
     "eslint-config-next": "16.2.10",
     "impeccable": "3.2.1",
+    "jsdom": "29.1.1",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   },

@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.16"
+EXPECTED_VERSION = "0.1.18"
 EXPECTED_ALEMBIC_HEAD = "20260710_0009"
 
 ERRORS: list[str] = []
@@ -164,6 +164,9 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("dependencies", "next"): "16.2.10",
         ("devDependencies", "eslint-config-next"): "16.2.10",
         ("devDependencies", "vitest"): "4.1.10",
+        ("devDependencies", "@testing-library/react"): "16.3.2",
+        ("devDependencies", "@testing-library/jest-dom"): "6.9.1",
+        ("devDependencies", "jsdom"): "29.1.1",
         ("devDependencies", "impeccable"): "3.2.1",
         ("devDependencies", "@playwright/test"): "1.61.1",
         ("devDependencies", "@axe-core/playwright"): "4.12.1",
@@ -176,6 +179,18 @@ def check_versions_and_frontend_security_baseline() -> None:
         actual = package.get(section, {}).get(name)
         if actual != expected:
             fail(f"apps/web/package.json {section}.{name} != {expected}; got {actual!r}")
+
+    expected_scripts = {
+        "test:unit": "vitest run tests/unit",
+        "test:design-tokens": "vitest run tests/design",
+        "test:frontend": "npm run test:unit && npm run test:design-tokens",
+        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts --project=chromium",
+        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts --project=chromium",
+    }
+    for name, expected in expected_scripts.items():
+        actual = package.get("scripts", {}).get(name)
+        if actual != expected:
+            fail(f"apps/web/package.json scripts.{name} != {expected!r}; got {actual!r}")
 
 
 def check_release_gate_contract() -> None:
@@ -190,8 +205,16 @@ def check_release_gate_contract() -> None:
         "Backend dependency consistency",
         "Frontend security audit",
         "& $Npm audit --audit-level=high",
+        "Frontend unit tests",
+        "& $Npm run test:unit",
+        "Design token tests",
+        "& $Npm run test:design-tokens",
         "Frontend design anti-pattern scan",
         "& $Npm run design:detect",
+        "Frontend critical E2E",
+        "& $Npm run test:e2e",
+        "Frontend accessibility",
+        "& $Npm run test:a11y",
         "Release gate stopped",
     ]
     for token in required_local_tokens:
@@ -207,6 +230,8 @@ def check_release_gate_contract() -> None:
     if "npm audit --audit-level=high" not in workflow:
         fail("GitHub quality gate does not enforce frontend high/critical audit threshold")
     for token in [
+        "npm run test:unit",
+        "npm run test:design-tokens",
         "npm run design:detect",
         "npx playwright install --with-deps chromium",
         "npm run test:e2e",
@@ -258,6 +283,18 @@ def check_deployment_contract() -> None:
         ROOT / "PRODUCT.md",
         ROOT / "DESIGN.md",
         ROOT / "AGENTS.md",
+        WEB / "vitest.config.ts",
+        WEB / "vitest.setup.ts",
+        WEB / "tests" / "unit" / "api-client.test.ts",
+        WEB / "tests" / "unit" / "theme-toggle.test.tsx",
+        WEB / "tests" / "unit" / "automation-rules-contract.test.ts",
+        WEB / "tests" / "unit" / "automation-rules-workspace.test.tsx",
+        WEB / "tests" / "design" / "design-tokens.test.ts",
+        WEB / "components" / "automation-rules" / "AutomationRulesWorkspace.tsx",
+        WEB / "e2e" / "helpers" / "automation-rules-api.ts",
+        WEB / "e2e" / "automation-rules.spec.ts",
+        WEB / "e2e" / "automation-rules-accessibility.spec.ts",
+        API / "app" / "tests" / "test_organization_response.py",
         WEB / "playwright.config.ts",
         WEB / "lighthouserc.cjs",
         WEB / "e2e" / "helpers" / "public-routes.ts",
@@ -273,6 +310,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "design" / "asset-policy.md",
         ROOT / "docs" / "qa" / "frontend-design-tooling.md",
         ROOT / "docs" / "qa" / "sprint-13-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.18-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",

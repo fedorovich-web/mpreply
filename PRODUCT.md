@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.16
+Version: 0.1.18
 
 ## Product
 
@@ -47,6 +47,14 @@ Calm, competent, concise, specific and operational. Use native Russian, concrete
 - `0.1.14`: approved Signal Flow foundation — full header, light-first theme, violet/mint tokens and animated hero canvas.
 - `0.1.15`: secondary public routes aligned to the same system; public copy prefers natural Russian product language over internal implementation jargon.
 - `0.1.16`: public shell polish — active navigation, accessible mobile menu, clearer theme switching, stronger footer and expandable FAQ.
+
+## Quality foundation progress
+
+- `0.1.17`: frontend unit-test foundation, automated design-token/contrast tests and CI/local-gate enforcement added before the next substantial dashboard vertical slice.
+
+## Product dashboard progress
+
+- `0.1.18`: Automation Rules became a live, tenant-scoped workspace over the existing backend CRUD/evaluation model. Owner/admin roles can create, edit, enable and disable rules; manager/viewer roles remain read-only. Organization responses now expose the current membership role so the UI does not guess authorization from hidden controls or post-click `403` responses. Critical Automation Rules unit, E2E and accessibility contracts are part of the release tooling.
 
 ## Public-site conversion priorities
 

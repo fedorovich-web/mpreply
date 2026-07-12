@@ -17,6 +17,8 @@ export const authSessionSchema = z.object({
   user: userSchema,
 });
 
+export const organizationRoleSchema = z.enum(["owner", "admin", "manager", "viewer"]);
+
 export const organizationSchema = z.object({
   id: uuidSchema,
   name: z.string(),
@@ -25,11 +27,52 @@ export const organizationSchema = z.object({
   plan_id: uuidSchema.nullable(),
   default_response_mode: z.string(),
   status: z.string(),
+  current_user_role: organizationRoleSchema,
   created_at: timestampSchema,
   updated_at: timestampSchema,
 });
 
 export const organizationListSchema = z.array(organizationSchema);
+
+export const automationRuleSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  marketplace_account_id: uuidSchema.nullable(),
+  name: z.string(),
+  priority: z.number().int().min(0).max(10000),
+  is_enabled: z.boolean(),
+  mode: z.enum(["auto", "semi_auto"]),
+  applies_to: z.enum(["all", "review", "question"]),
+  marketplace: z.enum(["wildberries", "ozon", "yandex_market", "avito"]).nullable(),
+  min_rating: z.number().int().min(1).max(5).nullable(),
+  max_rating: z.number().int().min(1).max(5).nullable(),
+  product_ids: z.array(z.string()),
+  category_ids: z.array(z.string()),
+  include_keywords: z.array(z.string()),
+  exclude_keywords: z.array(z.string()),
+  sensitive_topics: z.array(z.string()),
+  daily_limit: z.number().int().positive().nullable(),
+  hourly_limit: z.number().int().positive().nullable(),
+  require_manual_review_on_flags: z.boolean(),
+  stop_on_missing_product_context: z.boolean(),
+  stop_on_low_confidence: z.boolean(),
+  confidence_threshold: z.number().min(0).max(1),
+  created_by: uuidSchema.nullable(),
+  updated_by: uuidSchema.nullable(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+
+export const automationRuleListSchema = z.object({
+  items: z.array(automationRuleSchema),
+  total: z.number().int().nonnegative(),
+});
+
+export const automationRuleActionSchema = z.object({
+  ok: z.boolean(),
+  id: uuidSchema,
+  is_enabled: z.boolean(),
+});
 
 export const productSummarySchema = z.object({
   id: uuidSchema,
@@ -143,6 +186,8 @@ export const messageResponseSchema = z.object({
 
 export type User = z.infer<typeof userSchema>;
 export type Organization = z.infer<typeof organizationSchema>;
+export type AutomationRule = z.infer<typeof automationRuleSchema>;
+export type AutomationRuleList = z.infer<typeof automationRuleListSchema>;
 export type CustomerMessage = z.infer<typeof customerMessageSchema>;
 export type CustomerMessageList = z.infer<typeof customerMessageListSchema>;
 export type Reply = z.infer<typeof replySchema>;
