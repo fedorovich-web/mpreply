@@ -16,6 +16,15 @@ test("Wildberries integrations workspace has no serious or critical axe violatio
   );
 
   if (blocking.length > 0) {
-    throw new Error(`Accessibility gate failed: ${blocking.map((item) => item.id).join(", ")}`);
+    const details = blocking
+      .map((violation) => {
+        const nodes = violation.nodes
+          .map((node) => `    - ${node.target.join(" ")}: ${node.failureSummary ?? "No failure summary"}`)
+          .join("\n");
+        return `  ${violation.id} [${violation.impact ?? "unknown"}] — ${violation.help}\n${nodes}`;
+      })
+      .join("\n");
+
+    throw new Error(`Accessibility gate failed: ${blocking.length} blocking violation type(s).\n${details}`);
   }
 });

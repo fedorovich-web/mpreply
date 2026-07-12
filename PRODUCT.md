@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.24
+Version: 0.1.25
 
 ## Product
 
@@ -132,3 +132,8 @@ Three Chromium E2E failures from the `0.1.22` Quality Gate were corrected withou
 ## CI E2E recovery · 0.1.24
 
 The Automation Rules browser test now uses a stateful mock contract: a created rule remains available when the workspace refetches the collection after creation. This fixes the GitHub Chromium failure without changing customer-facing product behavior.
+
+
+## Accessibility CI recovery · 0.1.25
+
+Patch 0.1.25 is a focused accessibility hotfix for the remaining GitHub Quality Gate contrast blockers. It does not add product scope or change marketplace/backend business logic.
