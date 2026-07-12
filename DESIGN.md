@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.25
+Version: 0.1.26
 
 ## Design intent
 
@@ -182,3 +182,22 @@ Automation Rules E2E mocks now preserve newly created rules in the subsequent li
 - Soft danger/info surfaces are opaque semantic tokens so contrast does not drift with the parent background.
 - The selected Wildberries account keeps secondary metadata above WCAG AA contrast on the violet-soft active surface.
 - Accessibility diagnostics for the Wildberries workspace now print selector-level failure details.
+
+
+## Semantic contrast hardening · 0.1.26
+
+A project-wide semantic-color audit found that the final `0.1.25` GitHub axe failure was caused by alpha compositing, not by the badge selector itself: `--color-success-soft` used an 8% transparent green over the selected integration account's translucent violet active surface, producing the computed `#DFE6EA` background and only `4.28:1` contrast against `#027A48`.
+
+The audit was then expanded across all public/dashboard stylesheet status surfaces, brand-soft active states, light/dark theme overrides and representative axe flows. It exposed several latent dark-theme failures that the light-only CI path had never exercised: low-contrast kicker text, brand-primary text over translucent violet active surfaces, the dark primary-button text contract leaking into danger buttons, and a special marketplace readiness override that became invalid once success surfaces were made opaque.
+
+The corrected contract is systemic rather than selector-specific:
+- success/warning/danger/info soft status surfaces are opaque in both themes;
+- brand-soft text-bearing surfaces are opaque and use a dedicated `--color-brand-text-on-soft` token;
+- small kicker/caption copy has an explicit dark-theme token;
+- primary-brand and danger buttons have separate text tokens;
+- public success badges keep their own success text/surface pair even inside dark panels;
+- active navigation/filter/process markers use the soft-surface brand text token;
+- Automation Rules error copy uses the dedicated higher-contrast danger text token.
+
+Design-token tests now verify light/dark text/surface pairs, semantic status pairs, brand-soft pairs, on-brand/on-danger button contrast, opacity invariants and CSS usage contracts. A permanent dark-theme axe suite covers representative public and authenticated product surfaces so the same class of regression cannot remain invisible until a later push.
+

@@ -12,18 +12,27 @@
 	--color-text-primary: #fbf8fd;
 	--color-text-secondary: #ded4e3;
 	--color-text-muted: #ab9fb1;
+	--color-kicker-text: #ab9fb1;
+	--color-brand-text-on-soft: #c49be5;
 	--color-border-subtle: #403047;
 	--color-border-strong: #58415f;
-	--color-brand-primary: #a86bd9;
+	--color-brand-primary: #ad72dc;
 	--color-brand-primary-hover: #b97de6;
 	--color-brand-primary-active: #c88aed;
 	--color-brand-accent: #7ad9b2;
 	--color-brand-accent-hover: #8be5c0;
 	--color-brand-violet-light: #c49be5;
-	--color-danger-text: #f97066;
+	--color-text-on-brand: #211a26;
+	--color-success-text: #75e0a7;
+	--color-success-soft: #053321;
+	--color-warning-text: #fec84b;
+	--color-warning-soft: #3f2a0a;
+	--color-danger-text: #fda29b;
+	--color-danger-soft: #55160c;
 	--color-info-text: #84adff;
+	--color-info-soft: #102a56;
 	--color-brand-mint-light: #a5e9cf;
-	--color-brand-soft: rgb(168 107 217 / 14%);
+	--color-brand-soft: #342340;
 	--color-brand-soft-strong: rgb(168 107 217 / 20%);
 	--color-surface-muted: var(--color-bg-subtle);
 	--color-surface-dark: #120d16;
@@ -38,6 +47,6 @@
 	--gradient-public-cta: linear-gradient(135deg, #4c2667 0%, #2b1837 100%);
 	--app-sidebar-bg: var(--color-bg-surface);
 	--app-topbar-bg: rgb(33 23 39 / 86%);
-	--app-nav-active-bg: rgb(168 107 217 / 14%);
+	--app-nav-active-bg: var(--color-brand-soft);
 	--app-nav-hover-bg: rgb(255 255 255 / 5%);
 }

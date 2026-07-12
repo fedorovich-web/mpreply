@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.25"
+EXPECTED_VERSION = "0.1.26"
 EXPECTED_ALEMBIC_HEAD = "20260710_0009"
 
 ERRORS: list[str] = []
@@ -123,7 +123,7 @@ def check_alembic_chain() -> None:
 def check_lockfile_hygiene() -> None:
     lockfile = WEB / "package-lock.json"
     text = lockfile.read_text(encoding="utf-8")
-    forbidden = ["internal" + ".api.openai.org", "applied-" + "caas-gateway"]
+    forbidden = ["internal" + ".api.openai.org", "applied-" + "caas-" + "gateway"]
     for token in forbidden:
         if token in text:
             fail(f"package-lock.json contains forbidden internal registry token: {token}")
@@ -187,7 +187,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         "test:design-tokens": "vitest run tests/design",
         "test:frontend": "npm run test:unit && npm run test:design-tokens",
         "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts --project=chromium",
-        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts --project=chromium",
+        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts e2e/dark-theme-accessibility.spec.ts --project=chromium",
         "validate:css-syntax": "csstree-validator styles",
         "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
         "validate:w3c:css": "node scripts/validate-w3c-css.mjs",
@@ -326,6 +326,7 @@ def check_deployment_contract() -> None:
         WEB / "e2e" / "helpers" / "integrations-api.ts",
         WEB / "e2e" / "integrations.spec.ts",
         WEB / "e2e" / "integrations-accessibility.spec.ts",
+        WEB / "e2e" / "dark-theme-accessibility.spec.ts",
         API / "app" / "tests" / "test_organization_response.py",
         WEB / "playwright.config.ts",
         WEB / "lighthouserc.cjs",
@@ -348,6 +349,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.22-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.24-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.25-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.26-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",

@@ -535,7 +535,7 @@ h1 {
 
 .app-nav-link-active {
 	background: var(--app-nav-active-bg);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 }
 
 .app-nav-link span {
@@ -738,7 +738,7 @@ h1 {
 	place-items: center;
 	border-radius: var(--radius-full);
 	background: var(--app-nav-active-bg);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 	font-weight: var(--font-weight-semibold);
 }
 
@@ -855,7 +855,7 @@ h1 {
 .filter-chip:hover,
 .filter-chip-active {
 	background: var(--app-nav-active-bg);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 	box-shadow: var(--shadow-xs);
 }
 
@@ -980,7 +980,7 @@ h1 {
 	place-items: center;
 	border-radius: var(--radius-full);
 	background: var(--app-nav-active-bg);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 	font-size: var(--font-size-2xl);
 }
 
@@ -1346,7 +1346,7 @@ h1 {
 .automation-filter-button[aria-pressed="true"] {
 	border-color: var(--color-brand-primary);
 	background: var(--app-nav-active-bg);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 }
 
 .automation-live-layout {
@@ -1609,7 +1609,7 @@ h1 {
 .automation-state-error,
 .automation-action-error {
 	background: var(--app-danger-bg);
-	color: var(--color-danger);
+	color: var(--color-danger-text);
 }
 
 .automation-action-error {
@@ -1646,7 +1646,7 @@ h1 {
 	place-items: center;
 	border-radius: var(--radius-full);
 	background: var(--app-nav-active-bg);
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text-on-soft);
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-semibold);
 }
@@ -2847,7 +2847,7 @@ h1 {
 .button-danger {
 	border-color: var(--color-danger);
 	background: var(--color-danger);
-	color: var(--color-text-on-brand);
+	color: var(--color-text-on-danger);
 }
 
 .button-danger:hover {
