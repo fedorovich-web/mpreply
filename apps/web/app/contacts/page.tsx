@@ -37,7 +37,7 @@ export default function ContactsPage() {
         </div>
       </section>
 
-      <section className="public-section">
+      <div className="public-section">
         <div className="public-container contact-paths">
           <article className="contact-path contact-path-primary">
             <span>01</span>
@@ -64,7 +64,7 @@ export default function ContactsPage() {
             <Link className="button button-secondary" href="/features">Все возможности</Link>
           </article>
         </div>
-      </section>
+      </div>
     </PublicShell>
   );
 }

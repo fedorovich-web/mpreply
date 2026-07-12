@@ -1,6 +1,6 @@
 {
   "name": "respio-web",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
@@ -18,10 +18,14 @@
     "test:visual:update": "playwright test e2e/visual.spec.ts --project=chromium --update-snapshots",
     "test:report": "playwright show-report",
     "lighthouse": "lhci autorun --config=./lighthouserc.cjs",
-    "qa:web": "npm run test:frontend && npm run design:detect && npm run typecheck && npm run lint && npm run build",
+    "qa:web": "npm run test:frontend && npm run design:detect && npm run typecheck && npm run lint && npm run validate:css-syntax && npm run build && npm run validate:w3c",
     "test:unit": "vitest run tests/unit",
     "test:design-tokens": "vitest run tests/design",
-    "test:frontend": "npm run test:unit && npm run test:design-tokens"
+    "test:frontend": "npm run test:unit && npm run test:design-tokens",
+    "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
+    "validate:w3c:css": "node scripts/validate-w3c-css.mjs",
+    "validate:w3c": "npm run validate:w3c:css && npm run validate:w3c:html",
+    "validate:css-syntax": "csstree-validator styles"
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.12",
@@ -39,12 +43,14 @@
     "@types/node": "25.0.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "csstree-validator": "4.0.1",
     "eslint": "9.39.2",
     "eslint-config-next": "16.2.10",
     "impeccable": "3.2.1",
     "jsdom": "29.1.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "vnu-jar": "26.7.11"
   },
   "overrides": {
     "postcss": "8.5.10",

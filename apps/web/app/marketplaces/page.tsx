@@ -35,7 +35,7 @@ export default function MarketplacesPage() {
             </p>
           </div>
 
-          <div className="readiness-summary" aria-label="Текущий статус интеграций">
+          <div className="readiness-summary" role="group" aria-label="Текущий статус интеграций">
             <div className="readiness-summary-primary">
               <span className="public-status public-status-mvp">MVP-интеграция</span>
               <strong>{mvpMarketplace?.name ?? "Wildberries"}</strong>

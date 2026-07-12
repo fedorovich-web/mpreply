@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.18
+Version: 0.1.19
 
 ## Product
 
@@ -55,6 +55,15 @@ Calm, competent, concise, specific and operational. Use native Russian, concrete
 ## Product dashboard progress
 
 - `0.1.18`: Automation Rules became a live, tenant-scoped workspace over the existing backend CRUD/evaluation model. Owner/admin roles can create, edit, enable and disable rules; manager/viewer roles remain read-only. Organization responses now expose the current membership role so the UI does not guess authorization from hidden controls or post-click `403` responses. Critical Automation Rules unit, E2E and accessibility contracts are part of the release tooling.
+
+## Public visual-system stabilization · 0.1.19
+
+- The public site uses self-hosted Onest with optimized Russian/English WOFF2 subsets for weights 400, 500, 600 and 700.
+- Public typography, colors, semantic states, page/surface backgrounds, gradients, spacing, radii, shadows, focus rings, transition durations/easings and Canvas parameters are centralized in CSS custom properties rather than page-local visual literals.
+- The default public background is a neutral near-white system, avoiding uncontrolled beige/white/light-violet section jumps.
+- CTA hierarchy is singular and contextual: the hero retains the primary connection action, the header opens the demo, and the final conversion section uses a contact-oriented action instead of repeating the same primary label.
+- Process steps are visually equal; SafetyGate remains meaningful through content and status semantics rather than an oversized third-step card.
+- Rendered public HTML and public stylesheet sources are checked by local Nu HTML Checker tooling, with CSS syntax validation enforced separately.
 
 ## Public-site conversion priorities
 

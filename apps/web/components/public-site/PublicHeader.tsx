@@ -67,11 +67,8 @@ export function PublicHeader() {
           <Link className="button button-ghost public-login-link" href="/auth/login">
             Войти
           </Link>
-          <Link
-            className="button button-primary public-header-cta"
-            href="/auth/register?intent=connect-marketplace"
-          >
-            Подключить маркетплейс
+          <Link className="button button-secondary public-header-cta" href="/demo">
+            Открыть демо
           </Link>
         </div>
 
@@ -118,12 +115,8 @@ export function PublicHeader() {
                   <Link className="button button-secondary" href="/auth/login" onClick={closeMenu}>
                     Войти
                   </Link>
-                  <Link
-                    className="button button-primary"
-                    href="/auth/register?intent=connect-marketplace"
-                    onClick={closeMenu}
-                  >
-                    Подключить маркетплейс
+                  <Link className="button button-primary" href="/demo" onClick={closeMenu}>
+                    Открыть демо
                   </Link>
                 </div>
               </div>

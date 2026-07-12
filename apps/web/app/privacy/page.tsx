@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           <p className="public-lead">Редакция: 10 июля 2026 года. Юридический черновик для технической основы Respio.</p>
         </div>
       </section>
-      <article className="public-container legal-document">
+      <div className="public-container legal-document">
         <aside className="legal-warning">
           <strong>До production-запуска требуется юридическая финализация.</strong>
           <p>Нужно заполнить сведения об операторе, проверить фактическую инфраструктуру, процессы, подрядчиков, локализацию, сроки хранения, формы согласия и применимые требования законодательства.</p>
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
         <section><h2>8. Права пользователей</h2><p>Порядок обращений по вопросам доступа, исправления, удаления и ограничения обработки должен быть указан после утверждения оператора и официального контактного канала.</p></section>
         <section><h2>9. Безопасность</h2><p>Базовые меры включают tenant isolation, RBAC, шифрование credentials, rate limits, secret management, audit trail, резервное копирование, минимизацию PII и запрет на публикацию секретов во frontend.</p></section>
         <section><h2>10. Изменения документа</h2><p>Дата и содержание изменений должны фиксироваться. Существенные изменения должны публиковаться до вступления новой редакции в силу, если это требуется применимыми правилами и договорными обязательствами.</p></section>
-      </article>
+      </div>
     </PublicShell>
   );
 }
