@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.101"
-EXPECTED_ALEMBIC_HEAD = "20260722_0013"
+EXPECTED_VERSION = "0.1.102"
+EXPECTED_ALEMBIC_HEAD = "20260722_0014"
 
 ERRORS: list[str] = []
 
@@ -498,7 +498,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.98-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.99-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.100-release-report.md",
-        ROOT / "docs" / "qa" / "patch-0.1.101-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.102-release-report.md",
         API / "alembic" / "versions" / "20260722_0013_team_sessions_security.py",
         API / "app" / "api" / "team.py",
         API / "app" / "models" / "auth_session.py",
@@ -506,6 +506,15 @@ def check_deployment_contract() -> None:
         API / "app" / "services" / "auth_session_service.py",
         API / "app" / "services" / "team_service.py",
         API / "app" / "tests" / "test_team_sessions_security_contract.py",
+        API / "alembic" / "versions" / "20260722_0014_payment_foundation.py",
+        API / "app" / "api" / "payments.py",
+        API / "app" / "models" / "payment_order.py",
+        API / "app" / "models" / "payment_refund.py",
+        API / "app" / "models" / "payment_webhook_event.py",
+        API / "app" / "providers" / "yookassa.py",
+        API / "app" / "schemas" / "payment.py",
+        API / "app" / "services" / "payment_service.py",
+        API / "app" / "tests" / "test_payment_foundation_contract.py",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
@@ -598,6 +607,30 @@ def check_marketplace_scheduler_contract() -> None:
             fail(f"Marketplace scheduler contract missing {label}: {token}")
 
 
+def check_payment_foundation_contract() -> None:
+    provider = (API / "app" / "providers" / "yookassa.py").read_text(encoding="utf-8")
+    service = (API / "app" / "services" / "payment_service.py").read_text(encoding="utf-8")
+    migration = (API / "alembic" / "versions" / "20260722_0014_payment_foundation.py").read_text(encoding="utf-8")
+    config = (API / "app" / "core" / "config.py").read_text(encoding="utf-8")
+
+    required_tokens = {
+        "provider idempotency header": (provider, '"Idempotence-Key"'),
+        "provider object verification": (service, "get_payment(notification.object_id)"),
+        "refund object verification": (service, "get_refund(notification.object_id)"),
+        "webhook source allowlist": (service, "is_allowed_source_ip"),
+        "idempotent credit grant": (service, 'idempotency_key=f"payment:{order.id}:grant"'),
+        "unspent-grant refund safeguard": (service, "REFUND_REVIEW_REQUIRED"),
+        "payment order table": (migration, "payment_orders"),
+        "webhook inbox table": (migration, "payment_webhook_events"),
+        "refund table": (migration, "payment_refunds"),
+        "ledger revoke type": (migration, "'revoke'"),
+        "official YooKassa network": (config, '"185.71.76.0/27"'),
+    }
+    for label, (content, token) in required_tokens.items():
+        if token not in content:
+            fail(f"Payment foundation contract missing {label}: {token}")
+
+
 def check_generated_artifacts_absent() -> None:
     forbidden_names = {
         "node_modules",
@@ -647,6 +680,7 @@ def main() -> int:
     check_answer_ledger_contract()
     check_seller_settings_audit_contract()
     check_marketplace_scheduler_contract()
+    check_payment_foundation_contract()
     check_deployment_contract()
     check_generated_artifacts_absent()
 

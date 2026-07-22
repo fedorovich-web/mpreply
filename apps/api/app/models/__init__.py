@@ -13,6 +13,9 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.organization import Organization, OrganizationUser
 from app.models.organization_invitation import OrganizationInvitation
+from app.models.payment_order import PaymentOrder
+from app.models.payment_refund import PaymentRefund
+from app.models.payment_webhook_event import PaymentWebhookEvent
 from app.models.product import Product
 from app.models.reply import Reply
 from app.models.seller_settings import SellerSettings
@@ -38,6 +41,9 @@ __all__ = [
     "Organization",
     "OrganizationInvitation",
     "OrganizationUser",
+    "PaymentOrder",
+    "PaymentRefund",
+    "PaymentWebhookEvent",
     "Product",
     "Reply",
     "SellerSettings",

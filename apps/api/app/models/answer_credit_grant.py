@@ -38,6 +38,8 @@ class AnswerCreditGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     original_quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     remaining_quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    revoke_reason: Mapped[str | None] = mapped_column(String(128), nullable=True)
     reference_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
     reference_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     idempotency_key: Mapped[str] = mapped_column(String(255), nullable=False)
