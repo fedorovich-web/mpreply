@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.98"
-EXPECTED_ALEMBIC_HEAD = "20260722_0010"
+EXPECTED_VERSION = "0.1.99"
+EXPECTED_ALEMBIC_HEAD = "20260722_0011"
 
 ERRORS: list[str] = []
 
@@ -339,6 +339,43 @@ def check_answer_ledger_contract() -> None:
         fail("Reply execution must reserve before marketplace send and settle only after success")
 
 
+def check_seller_settings_audit_contract() -> None:
+    migration = (
+        API / "alembic" / "versions" / "20260722_0011_seller_settings_audit_read_api.py"
+    ).read_text(encoding="utf-8")
+    main = (API / "app" / "main.py").read_text(encoding="utf-8")
+    ai_service = (API / "app" / "services" / "ai_service.py").read_text(encoding="utf-8")
+    organization_service = (API / "app" / "services" / "organization_service.py").read_text(encoding="utf-8")
+    seller_service = (API / "app" / "services" / "seller_settings_service.py").read_text(encoding="utf-8")
+    audit_service = (API / "app" / "services" / "audit_service.py").read_text(encoding="utf-8")
+
+    for token in [
+        "seller_settings",
+        "uq_seller_settings_organization",
+        "ON CONFLICT (organization_id) DO NOTHING",
+        "CREATE TRIGGER trg_audit_logs_append_only",
+        "CREATE TRIGGER trg_audit_logs_no_truncate",
+        "audit_logs is append-only",
+    ]:
+        if token not in migration:
+            fail(f"Seller settings/audit migration contract missing: {token}")
+
+    route_contracts = {
+        "audit router registration": (main, "app.include_router(audit_logs_router)"),
+        "seller settings router registration": (main, "app.include_router(seller_settings_router)"),
+        "AI persisted settings resolution": (ai_service, "prompt_settings.resolve"),
+        "AI deterministic seller policy gate": (ai_service, "prompt_settings.policy_flags"),
+        "AI audit settings marker": (ai_service, '"seller_settings_applied"'),
+        "organization defaults": (organization_service, "self.seller_settings.ensure_defaults"),
+        "seller settings owner/admin write boundary": (seller_service, '_WRITE_ROLES = {"owner", "admin"}'),
+        "audit owner/admin read boundary": (audit_service, '_AUDIT_READ_ROLES = {"owner", "admin"}'),
+        "audit keyset ordering": (audit_service, "AuditLog.created_at.desc(), AuditLog.id.desc()"),
+    }
+    for label, (content, token) in route_contracts.items():
+        if token not in content:
+            fail(f"Missing {label} contract")
+
+
 def check_deployment_contract() -> None:
     required_files = [
         API / ".dockerignore",
@@ -366,6 +403,14 @@ def check_deployment_contract() -> None:
         API / "app" / "services" / "answer_entitlement_service.py",
         API / "app" / "tests" / "test_answer_entitlement_contract.py",
         API / "alembic" / "versions" / "20260722_0010_answer_ledger_foundation.py",
+        API / "alembic" / "versions" / "20260722_0011_seller_settings_audit_read_api.py",
+        API / "app" / "api" / "audit_logs.py",
+        API / "app" / "api" / "seller_settings.py",
+        API / "app" / "models" / "seller_settings.py",
+        API / "app" / "schemas" / "audit.py",
+        API / "app" / "schemas" / "seller_settings.py",
+        API / "app" / "services" / "seller_settings_service.py",
+        API / "app" / "tests" / "test_seller_settings_audit_contract.py",
         WEB / "components" / "workspace" / "WorkspaceProvider.tsx",
         WEB / "components" / "providers" / "AppProviders.tsx",
         WEB / "components" / "auth" / "AuthForm.tsx",
@@ -443,6 +488,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.86-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.97-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.98-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.99-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
@@ -556,6 +602,7 @@ def main() -> int:
     check_versions_and_frontend_security_baseline()
     check_release_gate_contract()
     check_answer_ledger_contract()
+    check_seller_settings_audit_contract()
     check_deployment_contract()
     check_generated_artifacts_absent()
 

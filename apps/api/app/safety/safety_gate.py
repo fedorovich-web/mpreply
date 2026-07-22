@@ -63,6 +63,7 @@ class SafetyGate:
         "unclear_customer_issue",
         "needs_manual_review",
         "sensitive_topic",
+        "seller_prohibited_phrase",
     })
 
     def evaluate(self, payload: SafetyInput) -> SafetyResult:
@@ -99,6 +100,8 @@ class SafetyGate:
         else:
             decision = SafetyDecision.ALLOW
 
+        if "seller_prohibited_phrase" in flags:
+            reasons.append("Draft contains a phrase prohibited by seller settings")
         if "needs_manual_review" in flags and not reasons:
             reasons.append("AI model requested manual review")
 

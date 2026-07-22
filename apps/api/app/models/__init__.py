@@ -12,6 +12,7 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.organization import Organization, OrganizationUser
 from app.models.product import Product
 from app.models.reply import Reply
+from app.models.seller_settings import SellerSettings
 from app.models.subscription import Subscription
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
@@ -33,6 +34,7 @@ __all__ = [
     "OrganizationUser",
     "Product",
     "Reply",
+    "SellerSettings",
     "Subscription",
     "SyncJob",
     "UsageEvent",
