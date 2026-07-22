@@ -8,10 +8,9 @@ Required application services:
 
 - `web` — public site and SaaS frontend;
 - `api` — FastAPI backend;
-- `worker` — Dramatiq auto-reply execution;
+- `worker` — Dramatiq auto-reply and marketplace-sync execution;
+- `scheduler` — database-backed marketplace polling dispatcher;
 - `migrate` — one-shot Alembic migration job per deployment.
-
-The scheduler placeholder is intentionally excluded until a real scheduler implementation exists.
 
 ## 2. External stateful services
 
@@ -73,9 +72,10 @@ Use readiness, not liveness, to decide whether the API should receive traffic.
 3. Start API.
 4. Verify API readiness.
 5. Start worker.
-6. Start web.
-7. Run smoke tests.
-8. Only then enable or resume automatic reply execution.
+6. Start scheduler.
+7. Start web.
+8. Run smoke tests.
+9. Only then enable or resume automatic reply execution.
 
 ## 6. Security checks
 

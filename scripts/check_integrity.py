@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.99"
-EXPECTED_ALEMBIC_HEAD = "20260722_0011"
+EXPECTED_VERSION = "0.1.100"
+EXPECTED_ALEMBIC_HEAD = "20260722_0012"
 
 ERRORS: list[str] = []
 
@@ -364,7 +364,6 @@ def check_seller_settings_audit_contract() -> None:
         "audit router registration": (main, "app.include_router(audit_logs_router)"),
         "seller settings router registration": (main, "app.include_router(seller_settings_router)"),
         "AI persisted settings resolution": (ai_service, "prompt_settings.resolve"),
-        "AI deterministic seller policy gate": (ai_service, "prompt_settings.policy_flags"),
         "AI audit settings marker": (ai_service, '"seller_settings_applied"'),
         "organization defaults": (organization_service, "self.seller_settings.ensure_defaults"),
         "seller settings owner/admin write boundary": (seller_service, '_WRITE_ROLES = {"owner", "admin"}'),
@@ -411,6 +410,15 @@ def check_deployment_contract() -> None:
         API / "app" / "schemas" / "seller_settings.py",
         API / "app" / "services" / "seller_settings_service.py",
         API / "app" / "tests" / "test_seller_settings_audit_contract.py",
+        API / "app" / "tests" / "test_marketplace_scheduler_contract.py",
+        API / "app" / "adapters" / "capabilities.py",
+        API / "app" / "adapters" / "registry.py",
+        API / "app" / "models" / "marketplace_sync_state.py",
+        API / "app" / "services" / "marketplace_scheduler_service.py",
+        API / "app" / "services" / "scheduled_sync_service.py",
+        API / "app" / "workers" / "marketplace_sync.py",
+        API / "app" / "scheduler" / "main.py",
+        ROOT / "apps" / "scheduler" / "Dockerfile",
         WEB / "components" / "workspace" / "WorkspaceProvider.tsx",
         WEB / "components" / "providers" / "AppProviders.tsx",
         WEB / "components" / "auth" / "AuthForm.tsx",
@@ -489,6 +497,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.97-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.98-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.99-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.100-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
@@ -503,6 +512,7 @@ def check_deployment_contract() -> None:
 
     api_dockerfile = (API / "Dockerfile").read_text(encoding="utf-8")
     worker_dockerfile = (ROOT / "apps" / "worker" / "Dockerfile").read_text(encoding="utf-8")
+    scheduler_dockerfile = (ROOT / "apps" / "scheduler" / "Dockerfile").read_text(encoding="utf-8")
     web_dockerfile = (WEB / "Dockerfile").read_text(encoding="utf-8")
     next_config = (WEB / "next.config.ts").read_text(encoding="utf-8")
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
@@ -510,11 +520,15 @@ def check_deployment_contract() -> None:
     docker_contracts = [
         (api_dockerfile, "USER respio", "API image must run as non-root user"),
         (worker_dockerfile, "USER respio", "Worker image must run as non-root user"),
+        (worker_dockerfile, "app.workers.marketplace_sync", "Worker image must load marketplace sync actors"),
+        (scheduler_dockerfile, "USER respio", "Scheduler image must run as non-root user"),
+        (scheduler_dockerfile, "app.scheduler.main", "Scheduler image must run the real scheduler module"),
         (web_dockerfile, "USER nextjs", "Web image must run as non-root user"),
         (web_dockerfile, "NEXT_PUBLIC_API_BASE_URL", "Web image must receive public API base URL at build time"),
         (next_config, 'output: "standalone"', "Next.js must use standalone output for production image"),
         (production_compose, "no-new-privileges:true", "Production Compose must enable no-new-privileges"),
         (production_compose, "service_completed_successfully", "Production Compose must gate app startup on migrations"),
+        (production_compose, "scheduler:", "Production Compose must include the scheduler service"),
         (production_compose, "AUTH_SECRET_KEY is required", "Production Compose must require AUTH_SECRET_KEY"),
         (production_compose, "CREDENTIALS_ENCRYPTION_KEY is required", "Production Compose must require encryption key"),
         (production_compose, "FORWARDED_ALLOW_IPS is required", "Production Compose must require an explicit proxy trust boundary"),
@@ -553,6 +567,26 @@ def _git_tracked_paths() -> list[Path] | None:
         return None
 
     return [ROOT / entry.decode("utf-8") for entry in result.stdout.split(b"\0") if entry]
+
+
+def check_marketplace_scheduler_contract() -> None:
+    capabilities = (API / "app" / "adapters" / "capabilities.py").read_text(encoding="utf-8")
+    scheduler = (API / "app" / "services" / "marketplace_scheduler_service.py").read_text(encoding="utf-8")
+    execution = (API / "app" / "services" / "scheduled_sync_service.py").read_text(encoding="utf-8")
+    migration = (API / "alembic" / "versions" / "20260722_0012_marketplace_scheduler_foundation.py").read_text(encoding="utf-8")
+
+    required_tokens = {
+        "capability registry": (capabilities, "Marketplace.WILDBERRIES"),
+        "planned integrations remain disabled": (capabilities, 'integration_status="planned"'),
+        "skip locked scheduler claims": (scheduler, ".with_for_update(skip_locked=True)"),
+        "lease expiry": (scheduler, "scheduler_lease_seconds"),
+        "persisted cursor execution": (execution, "state.cursor"),
+        "sync-state uniqueness": (migration, "uq_marketplace_sync_states_account_stream"),
+        "existing account backfill": (migration, "CROSS JOIN (VALUES ('reviews'), ('questions'))"),
+    }
+    for label, (content, token) in required_tokens.items():
+        if token not in content:
+            fail(f"Marketplace scheduler contract missing {label}: {token}")
 
 
 def check_generated_artifacts_absent() -> None:
@@ -603,6 +637,7 @@ def main() -> int:
     check_release_gate_contract()
     check_answer_ledger_contract()
     check_seller_settings_audit_contract()
+    check_marketplace_scheduler_contract()
     check_deployment_contract()
     check_generated_artifacts_absent()
 

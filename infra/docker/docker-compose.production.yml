@@ -3,7 +3,7 @@ name: respio-production
 x-backend-env: &backend-env
   APP_ENV: production
   APP_NAME: Respio
-  APP_VERSION: 0.1.99
+  APP_VERSION: 0.1.100
   API_BASE_URL: ${API_BASE_URL:?API_BASE_URL is required}
   WEB_APP_URL: ${WEB_APP_URL:?WEB_APP_URL is required}
   PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?PUBLIC_SITE_URL is required}
@@ -27,6 +27,10 @@ x-backend-env: &backend-env
   READINESS_TIMEOUT_SECONDS: ${READINESS_TIMEOUT_SECONDS:-3.0}
   SECURITY_HEADERS_ENABLED: "true"
   ANSWER_RESERVATION_TTL_SECONDS: ${ANSWER_RESERVATION_TTL_SECONDS:-900}
+  MARKETPLACE_SYNC_INTERVAL_SECONDS: ${MARKETPLACE_SYNC_INTERVAL_SECONDS:-300}
+  SCHEDULER_POLL_INTERVAL_SECONDS: ${SCHEDULER_POLL_INTERVAL_SECONDS:-10}
+  SCHEDULER_CLAIM_LIMIT: ${SCHEDULER_CLAIM_LIMIT:-50}
+  SCHEDULER_LEASE_SECONDS: ${SCHEDULER_LEASE_SECONDS:-180}
   FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:?FORWARDED_ALLOW_IPS is required}
   DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:?DEPLOYMENT_VERSION is required}
 
@@ -73,6 +77,23 @@ services:
     build:
       context: ../..
       dockerfile: apps/worker/Dockerfile
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: apps/scheduler/Dockerfile
     environment: *backend-env
     depends_on:
       migrate:

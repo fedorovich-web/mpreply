@@ -20,6 +20,18 @@ class MessageType(StrEnum):
     CHAT = "chat"
 
 
+class MarketplaceSyncStream(StrEnum):
+    REVIEWS = "reviews"
+    QUESTIONS = "questions"
+
+
+class MarketplaceSyncStateStatus(StrEnum):
+    IDLE = "idle"
+    LEASED = "leased"
+    ERROR = "error"
+    PAUSED = "paused"
+
+
 class MessageStatus(StrEnum):
     NEW = "new"
     IMPORTED = "imported"

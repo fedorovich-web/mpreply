@@ -9,6 +9,7 @@ class AdapterResult:
     data: object | None = None
     error_code: str | None = None
     error_message_safe: str | None = None
+    next_cursor: str | None = None
 
 
 class MarketplaceAdapter(ABC):
@@ -24,6 +25,22 @@ class MarketplaceAdapter(ABC):
 
     @abstractmethod
     async def fetch_questions(self, credential: str, cursor: str | None = None) -> AdapterResult:
+        raise NotImplementedError
+
+    @abstractmethod
+    def extract_reviews(self, payload: object | None) -> list[dict[str, object]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def extract_questions(self, payload: object | None) -> list[dict[str, object]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def normalize_review(self, raw: dict[str, object]) -> dict[str, object]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def normalize_question(self, raw: dict[str, object]) -> dict[str, object]:
         raise NotImplementedError
 
     @abstractmethod

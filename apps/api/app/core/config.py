@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["local", "staging", "production"] = "local"
     app_name: str = "Respio"
-    app_version: str = "0.1.99"
+    app_version: str = "0.1.100"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"
@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     auto_reply_max_attempts: int = 4
     auto_reply_execution_lease_seconds: int = 120
     answer_reservation_ttl_seconds: int = Field(default=900, ge=60, le=3600)
+    marketplace_sync_interval_seconds: int = Field(default=300, ge=60, le=86400)
+    scheduler_poll_interval_seconds: int = Field(default=10, ge=1, le=300)
+    scheduler_claim_limit: int = Field(default=50, ge=1, le=500)
+    scheduler_lease_seconds: int = Field(default=180, ge=30, le=1800)
 
     cors_allowed_origins: list[str] = Field(default_factory=list)
     allowed_hosts: list[str] = Field(default_factory=lambda: ["localhost", "127.0.0.1", "testserver"])
