@@ -18,6 +18,7 @@ from app.api.messages import router as messages_router
 from app.api.organizations import router as organizations_router
 from app.api.replies import router as replies_router
 from app.api.seller_settings import router as seller_settings_router
+from app.api.team import router as team_router
 from app.core.config import get_settings
 from app.core.lifecycle import application_lifespan
 from app.core.logging import configure_logging
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(organizations_router)
     app.include_router(seller_settings_router)
+    app.include_router(team_router)
     app.include_router(marketplace_capabilities_router)
     app.include_router(marketplace_accounts_router)
     app.include_router(messages_router)
