@@ -1,4 +1,4 @@
-# Respio 0.1.94 — hero spacing, right-panel lists and trial modal recovery
+# MPReply 0.1.94 — hero spacing, right-panel lists and trial modal recovery
 
 ## Scope
 

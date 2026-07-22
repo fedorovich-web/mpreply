@@ -1,4 +1,4 @@
-# Respio 0.1.36 — Hero Orbital Canvas refinement
+# MPReply 0.1.36 — Hero Orbital Canvas refinement
 
 Date: 2026-07-16
 Baseline: restored 0.1.33 visual implementation carried by 0.1.35
@@ -6,13 +6,13 @@ Status: source gates GREEN; external visual acceptance required
 
 ## Scope
 
-- Preserved the 0.1.33 central Respio AI artwork and small-planet art direction.
+- Preserved the 0.1.33 central MPReply AI artwork and small-planet art direction.
 - Reduced the desktop Canvas footprint by removing the negative-width expansion and capping the scene at 51rem.
 - Reduced the desktop WebGL root scale from 1.0 to 0.9 and recentered the scene.
 - Replaced Catmull-Rom interpolation with an exact parametric 3D ellipse curve so orbit tubes follow the same mathematical path as the moving planets.
 - Refined orbit tube radii and radial segments for cleaner, less heavy tracks.
 - Tightened all five label offsets and assigned stable side anchors so labels remain close to their moving planets.
-- Retained the restored `/public/brand/respio-ai-core-reference.png` asset.
+- Retained the restored `/public/brand/mpreply-ai-core-reference.png` asset.
 - Added focused unit coverage for orbit closure, label anchoring, semantic orbit count and motion periods.
 
 ## Gates executed

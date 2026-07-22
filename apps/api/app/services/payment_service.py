@@ -128,9 +128,9 @@ class PaymentService:
                 currency=order.currency,
                 idempotency_key=str(order.id),
                 return_url=self.settings.payment_return_url,
-                description=f"Respio answer package {order.package_code}",
+                description=f"MPReply answer package {order.package_code}",
                 metadata={
-                    "respio_payment_order_id": str(order.id),
+                    "mpreply_payment_order_id": str(order.id),
                     "organization_id": str(organization_id),
                     "package_code": order.package_code,
                 },
@@ -455,7 +455,15 @@ class PaymentService:
 
     @staticmethod
     def _assert_payment_matches_order(*, order: PaymentOrder, payment: YooKassaPayment) -> None:
-        metadata_order_id = payment.metadata.get("respio_payment_order_id")
+        metadata_order_id = payment.metadata.get("mpreply_payment_order_id")
+        if metadata_order_id is None:
+            legacy_candidates = [
+                value
+                for key, value in payment.metadata.items()
+                if key.endswith("_payment_order_id")
+            ]
+            if len(legacy_candidates) == 1:
+                metadata_order_id = legacy_candidates[0]
         if str(metadata_order_id or "") != str(order.id):
             raise YooKassaProviderError("Payment metadata does not match the order", error_code="payment_metadata_mismatch")
         if payment.amount_minor != order.amount_minor or payment.currency != order.currency:

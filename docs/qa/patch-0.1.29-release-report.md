@@ -1,4 +1,4 @@
-# Respio 0.1.29 — Hero orbital depth and motion correction
+# MPReply 0.1.29 — Hero orbital depth and motion correction
 
 ## Status
 
@@ -9,7 +9,7 @@ Local visual candidate. Not user-approved yet. Historical confirmed GREEN baseli
 The user's real browser screenshot of 0.1.28 exposed a major visual mismatch against the accepted generated reference:
 
 - orbit geometry read as flat 2D ellipses rather than an interwoven 3D system;
-- the central Respio AI planet looked visually flat;
+- the central MPReply AI planet looked visually flat;
 - planets could jump after pause/resume;
 - labels changed side dynamically and could visibly jump;
 - all orbit lines were painted on one depth layer, so front/back occlusion around the core was absent.
@@ -57,7 +57,7 @@ Rotation periods are 52–68 seconds.
 
 ### 4. Central sphere depth
 
-The Respio AI core now has:
+The MPReply AI core now has:
 
 - layered radial and directional shading;
 - separate top cap;

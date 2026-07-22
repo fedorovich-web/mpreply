@@ -14,7 +14,7 @@ describe("ThemeToggle", () => {
     fireEvent.click(button);
 
     expect(document.documentElement.dataset.theme).toBe("dark");
-    expect(window.localStorage.getItem("respio-theme")).toBe("dark");
+    expect(window.localStorage.getItem("mpreply-theme")).toBe("dark");
     expect(screen.getByRole("button", { name: "Включить светлую тему" })).toHaveAttribute(
       "aria-pressed",
       "true",

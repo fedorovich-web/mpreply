@@ -1,4 +1,4 @@
-# Respio 0.1.86 Pricing/Menu Visual Rebalance Report
+# MPReply 0.1.86 Pricing/Menu Visual Rebalance Report
 
 Patch `0.1.86` is a focused visual-quality patch after the user rejected the pricing calculator CTA/background treatment and the weak public navigation hover/background system. It does not change pricing economics, marketplace support claims, AI routing, billing behavior, visual snapshots, or backend business logic.
 

@@ -6,7 +6,7 @@ Accepted.
 
 ## Context
 
-Respio must be a production-grade multi-tenant SaaS for marketplace sellers. It must support auto-first replies to reviews and questions, while allowing semi-automatic approval mode. Customers connect their marketplace accounts through official or allowed API integrations.
+MPReply must be a production-grade multi-tenant SaaS for marketplace sellers. It must support auto-first replies to reviews and questions, while allowing semi-automatic approval mode. Customers connect their marketplace accounts through official or allowed API integrations.
 
 ## Decisions
 

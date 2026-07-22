@@ -1,4 +1,4 @@
-# Respio 0.1.28 — Hero Respio AI Orbital System release report
+# MPReply 0.1.28 — Hero MPReply AI Orbital System release report
 
 Date: 2026-07-15
 Status: local visual candidate; not user-accepted yet; not committed; not pushed; remote CI not verified.
@@ -6,9 +6,9 @@ Historical confirmed GREEN baseline remains 0.1.26.
 
 ## Scope
 
-This candidate replaces the rejected 0.1.27 orbital-core Hero implementation with the user-selected Respio AI planetary composition:
+This candidate replaces the rejected 0.1.27 orbital-core Hero implementation with the user-selected MPReply AI planetary composition:
 
-- one central matte soft-3D `Respio AI` planet;
+- one central matte soft-3D `MPReply AI` planet;
 - equatorial descriptor `AI-ответы для маркетплейсов`;
 - five semantic planets: `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
 - five distinct mathematically exact ellipses with unique radius/eccentricity/rotation;

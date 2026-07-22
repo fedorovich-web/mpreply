@@ -40,6 +40,10 @@
 	--color-brand-violet-light: #c0bdff;
 	--color-brand-cyan-light: #a8ffff;
 	--color-brand-cyan-soft: #12363f;
+	--color-marketplace-wb: #e879f9;
+	--color-marketplace-ozon: #84adff;
+	--color-marketplace-yandex: #fec84b;
+	--color-marketplace-avito: #67e8f9;
 	--color-border-subtle: #293657;
 	--color-border-strong: #3d4d72;
 	--color-text-on-brand: #ffffff;
@@ -125,7 +129,11 @@
 	--shadow-marketing-glyph: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 16px 38px rgb(1 5 20 / 26%);
 
 	--hero-product-flow-brand-soft: color-mix(in srgb, var(--color-brand-primary) 18%, var(--color-public-surface));
-	--hero-product-flow-success-soft: color-mix(in srgb, var(--color-success-text) 16%, var(--color-public-surface));
+	--hero-product-flow-success-soft: #053321;
+	--hero-product-flow-success-text: #75e0a7;
+	--hero-product-flow-warning-soft: #3f2a0a;
+	--hero-product-flow-warning-text: #fec84b;
+	--pricing-pack-volume-text: #c4c1ff;
 	--hero-product-flow-evidence-row-bg: color-mix(in srgb, var(--color-public-surface) 88%, var(--color-bg-brand-soft));
 	--hero-product-flow-kicker-color: #75e0d4;
 	--hero-product-flow-halo-opacity: 0.72;

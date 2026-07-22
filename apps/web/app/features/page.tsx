@@ -8,7 +8,7 @@ import { createPageMetadata } from "../../lib/seo";
 import { trialOffer } from "../../lib/public-pricing";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Возможности Respio для отзывов, вопросов и чатов",
+  title: "Возможности MPReply для отзывов, вопросов и чатов",
   description:
     "Автопубликация, ответы по данным товара, работа с негативом, чаты, правила бренда, журнал решений и аналитика для продавцов маркетплейсов.",
   path: "/features",
@@ -18,7 +18,7 @@ const capabilities = [
   {
     icon: "reviews" as const,
     title: "Персональные ответы на отзывы",
-    text: "Respio учитывает оценку, содержание отзыва, товар, имя покупателя и тон бренда, затем автоматически публикует ответ по правилам продавца.",
+    text: "MPReply учитывает оценку, содержание отзыва, товар, имя покупателя и тон бренда, затем автоматически публикует ответ по правилам продавца.",
   },
   {
     icon: "questions" as const,
@@ -28,7 +28,7 @@ const capabilities = [
   {
     icon: "chats" as const,
     title: "Чаты с покупателями",
-    text: "Respio сохраняет контекст диалога, помогает с выбором товара, совместимостью и типовыми вопросами, затем применяет выбранный режим: автопубликация или согласование.",
+    text: "MPReply сохраняет контекст диалога, помогает с выбором товара, совместимостью и типовыми вопросами, затем применяет выбранный режим: автопубликация или согласование.",
   },
   {
     icon: "settings" as const,
@@ -38,7 +38,7 @@ const capabilities = [
   {
     icon: "context" as const,
     title: "Контекст конкретного товара",
-    text: "Ответ может учитывать карточку товара, FAQ, инструкции, внутреннюю базу знаний и историю обращения. При нехватке данных Respio не должен додумывать факты.",
+    text: "Ответ может учитывать карточку товара, FAQ, инструкции, внутреннюю базу знаний и историю обращения. При нехватке данных MPReply не должен додумывать факты.",
   },
   {
     icon: "flow" as const,
@@ -53,7 +53,7 @@ const capabilities = [
   {
     icon: "recommendations" as const,
     title: "Рекомендации и улучшение качества",
-    text: "Respio помогает находить повторяющиеся вопросы, пробелы в карточках товара и сценарии, которые стоит добавить в базу знаний или правила.",
+    text: "MPReply помогает находить повторяющиеся вопросы, пробелы в карточках товара и сценарии, которые стоит добавить в базу знаний или правила.",
   },
 ] as const;
 
@@ -71,10 +71,10 @@ export default function FeaturesPage() {
       <section className="public-subhero">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="public-eyebrow">Возможности Respio</p>
+            <p className="public-eyebrow">Возможности MPReply</p>
             <h1>Автоматизация ответов без потери контроля над брендом</h1>
             <p className="public-lead">
-              Respio объединяет отзывы, вопросы и чаты, использует данные товара и автоматически публикует ответы по правилам продавца.
+              MPReply объединяет отзывы, вопросы и чаты, использует данные товара и автоматически публикует ответы по правилам продавца.
             </p>
             <div className="hero-actions">
               <PublicTrialCta className="button button-primary public-cta-on-dark" source="features-hero">
@@ -85,9 +85,9 @@ export default function FeaturesPage() {
             <p className="public-subhero-note">{trialOffer.answerLimit} ответов · до 2 маркетплейсов · бесплатно</p>
           </div>
 
-          <aside className="public-proof-panel-v73" aria-label="Что проверяет Respio перед публикацией">
+          <aside className="public-proof-panel-v73" aria-label="Что проверяет MPReply перед публикацией">
             <MarketingGlyph variant="settings" />
-            <h2>Что проверяет Respio</h2>
+            <h2>Что проверяет MPReply</h2>
             <ul>
               {safetySteps.slice(0, 4).map((step) => <li key={step}>{step}</li>)}
             </ul>
@@ -101,7 +101,7 @@ export default function FeaturesPage() {
             <p className="public-eyebrow">Основные сценарии</p>
             <h2>Восемь возможностей для ежедневной работы продавца</h2>
             <p>
-              Функции разделены по задачам: Respio автоматически отвечает покупателям, а продавец управляет правилами публикации и согласования.
+              Функции разделены по задачам: MPReply автоматически отвечает покупателям, а продавец управляет правилами публикации и согласования.
             </p>
           </div>
 
@@ -123,7 +123,7 @@ export default function FeaturesPage() {
             <p className="public-eyebrow">Безопасность автоматизации</p>
             <h2>Автопубликация работает по правилам продавца, а не как слепой шаблон</h2>
             <p className="public-copy-muted">
-              Respio готовит ответ с учётом данных товара и правил бренда. Режим согласования для отдельных сценариев включается в личном кабинете.
+              MPReply готовит ответ с учётом данных товара и правил бренда. Режим согласования для отдельных сценариев включается в личном кабинете.
             </p>
           </div>
           <div className="public-benefit-panel" role="list">
@@ -141,8 +141,8 @@ export default function FeaturesPage() {
         <div className="public-container home-final-cta-card public-page-final-cta">
           <div>
             <p className="public-eyebrow">Тест на реальных обращениях</p>
-            <h2>Проверьте функции Respio на реальных обращениях</h2>
-            <p>Семь дней, {trialOffer.answerLimit} ответов и все ключевые сценарии Respio бесплатно.</p>
+            <h2>Проверьте функции MPReply на реальных обращениях</h2>
+            <p>Семь дней, {trialOffer.answerLimit} ответов и все ключевые сценарии MPReply бесплатно.</p>
           </div>
           <PublicTrialCta className="button button-primary public-cta-on-dark" source="features-footer">
             Начать бесплатный тест

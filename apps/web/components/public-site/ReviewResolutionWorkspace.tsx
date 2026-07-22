@@ -209,7 +209,7 @@ export function ReviewResolutionWorkspace() {
 
         <div className={styles.analysisCard}>
           <p className={styles.kicker}>01 · Диагностика и проверка</p>
-          <h3>Что определил Respio</h3>
+          <h3>Что определил MPReply</h3>
 
           <div className={styles.analysisGrid}>
             <div className={styles.analysisRow}>

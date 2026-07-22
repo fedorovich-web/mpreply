@@ -1,7 +1,7 @@
 # Marketplace credentials lifecycle
 
 ## Principle
-Marketplace credentials are customer secrets. Respio stores them encrypted-at-rest and uses them only inside backend services and workers.
+Marketplace credentials are customer secrets. MPReply stores them encrypted-at-rest and uses them only inside backend services and workers.
 
 ## Lifecycle
 

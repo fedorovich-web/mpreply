@@ -40,7 +40,7 @@ class OpenRouterProvider:
         api_key: str,
         base_url: str = "https://openrouter.ai/api/v1",
         site_url: str | None = None,
-        app_title: str = "Respio",
+        app_title: str = "MPReply",
         timeout_seconds: float = 45.0,
     ) -> None:
         self.api_key = api_key

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Choose how Respio handles a marketplace message before the future auto-send stage.
+Choose how MPReply handles a marketplace message before the future auto-send stage.
 
 ## Inputs
 

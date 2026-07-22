@@ -2,6 +2,8 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
+export const PUBLIC_TRIAL_POPOVER_ID = "mpreply-trial-modal";
+
 type PublicTrialCtaProps = {
   children: ReactNode;
   className?: string;
@@ -14,13 +16,17 @@ export function PublicTrialCta({ children, className, source = "public-site", ..
       {...props}
       aria-haspopup="dialog"
       className={className}
+      data-trial-source={source}
+      popoverTarget={PUBLIC_TRIAL_POPOVER_ID}
+      popoverTargetAction="show"
       type="button"
       onClick={(event) => {
         props.onClick?.(event);
         if (event.defaultPrevented) return;
 
+        document.documentElement.dataset.mpreplyTrialSource = source;
         window.dispatchEvent(
-          new CustomEvent("respio:trial-open", {
+          new CustomEvent("mpreply:trial-open", {
             detail: { source },
           }),
         );

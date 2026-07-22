@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { BrandLogo } from "./BrandLogo";
 import styles from "./HeroProductFlowCanvas.module.css";
 
 type Point = { x: number; y: number };
@@ -370,10 +371,10 @@ export function HeroProductFlowCanvas() {
       ref={sceneRef}
       className={styles.scene}
       data-ready="false"
-      data-respio-hero="commerce-answer-pipeline"
+      data-mpreply-hero="commerce-answer-pipeline"
       data-testid="hero-product-flow"
       role="img"
-      aria-label="Сцена Respio AI: обращение покупателя, контекст товара, проверка данных и готовый ответ"
+      aria-label="Сцена MPReply AI: обращение покупателя, контекст товара, проверка данных и готовый ответ"
     >
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
 
@@ -403,7 +404,7 @@ export function HeroProductFlowCanvas() {
               {/* Direct public asset avoids the Next image optimizer path in patch-only deployments. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/brand/respio-hero-sneakers.webp"
+                src="/brand/mpreply-hero-sneakers.webp"
                 alt="Белые женские кроссовки"
                 width="780"
                 height="370"
@@ -422,8 +423,13 @@ export function HeroProductFlowCanvas() {
 
         <div className={styles.engineWrap}>
           <div ref={(node) => { engineRef.current = node; }} className={`${styles.card} ${styles.engineCard}`}>
-            <div className={styles.logo}>R</div>
-            <p className={styles.engineName}>Respio Engine</p>
+            <BrandLogo
+              variant="canvas"
+              className={styles.logo}
+              imageClassName={styles.logoImage}
+              alt="MPReply"
+              priority
+            />
             <p className={styles.engineTitle}>Сверяет товар, отзывы и правила</p>
 
             <div className={styles.steps}>

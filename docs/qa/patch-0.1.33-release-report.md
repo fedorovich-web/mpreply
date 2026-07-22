@@ -1,16 +1,16 @@
-# Respio 0.1.33 — WebGL Hero visual-recovery candidate
+# MPReply 0.1.33 — WebGL Hero visual-recovery candidate
 
 Date: 2026-07-16
 
 ## Scope
 
-Cumulative patch for the Respio public Hero. It can be applied without installing patch 0.1.32 first.
+Cumulative patch for the MPReply public Hero. It can be applied without installing patch 0.1.32 first.
 
 The patch contains:
 
 - the accepted Hero copy and CTA structure;
 - a Three.js/WebGL orbital scene with five separate 3D orbits;
-- a composite central Respio AI object;
+- a composite central MPReply AI object;
 - five semantic planets and DOM labels;
 - responsive desktop/mobile scene configuration;
 - reduced-motion and WebGL fallback handling;
@@ -41,8 +41,8 @@ Environment used:
 From the repository root on Windows PowerShell:
 
 ```powershell
-Expand-Archive .\respio-0.1.33-webgl-hero-patch.zip -DestinationPath C:\Work\respio -Force
-cd C:\Work\respio\apps\web
+Expand-Archive .\mpreply-0.1.33-webgl-hero-patch.zip -DestinationPath C:\Work\mpreply -Force
+cd C:\Work\mpreply\apps\web
 npm ci
 npm run dev
 ```

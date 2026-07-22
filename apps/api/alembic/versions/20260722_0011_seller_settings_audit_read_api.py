@@ -64,7 +64,7 @@ def upgrade() -> None:
                 updated_at
             )
             SELECT
-                md5('respio:seller-settings:' || organization.id::text)::uuid,
+                md5('mpreply:seller-settings:' || organization.id::text)::uuid,
                 organization.id,
                 'neutral',
                 '[]'::jsonb,

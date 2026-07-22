@@ -1,4 +1,4 @@
-# Respio 0.1.101 — team invitations and refresh-session security
+# MPReply 0.1.101 — team invitations and refresh-session security
 
 ## Scope
 

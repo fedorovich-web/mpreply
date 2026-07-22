@@ -1,11 +1,11 @@
-# Respio — Product Context
+# MPReply — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
 Version: 0.1.31
 
 ## Product
 
-Respio is a multi-tenant SaaS for marketplace sellers, operators and agencies. It centralizes reviews and questions, prepares replies with AI, applies SafetyGate and automation rules, and sends approved replies through supported official integrations. Respio is an operational product, not a generic AI text generator.
+MPReply is a multi-tenant SaaS for marketplace sellers, operators and agencies. It centralizes reviews and questions, prepares replies with AI, applies SafetyGate and automation rules, and sends approved replies through supported official integrations. MPReply is an operational product, not a generic AI text generator.
 
 ## Operating model
 
@@ -24,9 +24,9 @@ Respio is a multi-tenant SaaS for marketplace sellers, operators and agencies. I
 
 ## Public launch target and marketing truth
 
-The public site describes the fully implemented launch product, not an unfinished roadmap. The user will not launch Respio halfway through implementation.
+The public site describes the fully implemented launch product, not an unfinished roadmap. The user will not launch MPReply halfway through implementation.
 
-Therefore public marketing pages must not expose `MVP`, `planned`, `coming soon`, `readiness`, adapter/runtime status or other implementation-stage labels. They should naturally describe Respio working with Wildberries, Ozon, Яндекс Маркет and Авито as one launch product.
+Therefore public marketing pages must not expose `MVP`, `planned`, `coming soon`, `readiness`, adapter/runtime status or other implementation-stage labels. They should naturally describe MPReply working with Wildberries, Ozon, Яндекс Маркет and Авито as one launch product.
 
 This does not permit fabricated claims. At launch, every marketplace, model, capability, price, metric, proof point and integration shown publicly must match production reality. Current engineering truth remains authoritative in repository code and this document until target-launch implementation is complete.
 
@@ -77,9 +77,9 @@ Calm, competent, concise, specific and operational. Use native Russian, concrete
 
 ## Public-site conversion priorities
 
-1. Explain in 3–5 seconds that Respio automates replies to marketplace reviews and buyer questions.
+1. Explain in 3–5 seconds that MPReply automates replies to marketplace reviews and buyer questions.
 2. Show marketplace coverage without public roadmap/readiness labels.
-3. Explain the automation model in plain language: Respio is designed to answer different types of reviews and buyer questions automatically using available product context and company rules; optional manual approval is secondary configuration, not the primary limitation story.
+3. Explain the automation model in plain language: MPReply is designed to answer different types of reviews and buyer questions automatically using available product context and company rules; optional manual approval is secondary configuration, not the primary limitation story.
 4. Demonstrate the workflow with believable review/question examples rather than internal architecture diagrams.
 5. Build trust through real product behavior, clear limits and evidence that actually exists.
 6. Support customer intent and SEO with dedicated marketplace/use-case pages, useful FAQs and practical resources.
@@ -176,17 +176,17 @@ Current public target:
 
 ## Visual Recovery · 0.1.29 orbital correction
 
-The 0.1.28 Hero candidate was visually rejected after real browser review because the coded Canvas did not reproduce the accepted reference: orbit depth read as flat, the central Respio AI object lacked sufficient 3D volume, and moving planets/labels could visibly jump.
+The 0.1.28 Hero candidate was visually rejected after real browser review because the coded Canvas did not reproduce the accepted reference: orbit depth read as flat, the central MPReply AI object lacked sufficient 3D volume, and moving planets/labels could visibly jump.
 
-The 0.1.29 candidate keeps the accepted product metaphor but rebuilds the implementation foundation: five independent 3D orbital planes, five semantic planets, one central Respio AI core, true front/back orbit occlusion, stable labels and slow pause-safe motion. This remains a visual candidate until explicit user acceptance.
+The 0.1.29 candidate keeps the accepted product metaphor but rebuilds the implementation foundation: five independent 3D orbital planes, five semantic planets, one central MPReply AI core, true front/back orbit occlusion, stable labels and slow pause-safe motion. This remains a visual candidate until explicit user acceptance.
 
 ## Visual Recovery · 0.1.30 native CSS 3D orbital rebuild
 
-The 0.1.29 Hero candidate was visually rejected because the orbit system still read as flat projected SVG geometry in the user's real browser. Version 0.1.30 replaced that foundation with native CSS 3D orbital planes, deterministic front/back occlusion, one matte layered Respio AI core, five semantic planets and pause-safe slow motion. No WebGL or Three.js runtime was added in 0.1.30. The user subsequently rejected the real browser render because it still read as pseudo-3D rather than the accepted spatial reference.
+The 0.1.29 Hero candidate was visually rejected because the orbit system still read as flat projected SVG geometry in the user's real browser. Version 0.1.30 replaced that foundation with native CSS 3D orbital planes, deterministic front/back occlusion, one matte layered MPReply AI core, five semantic planets and pause-safe slow motion. No WebGL or Three.js runtime was added in 0.1.30. The user subsequently rejected the real browser render because it still read as pseudo-3D rather than the accepted spatial reference.
 
 ## Visual Recovery · 0.1.31 real WebGL orbital scene
 
-The 0.1.31 candidate supersedes the visually rejected 0.1.30 CSS-3D implementation. The Hero scene now uses a lazy-loaded Three.js/WebGL renderer with one central matte Respio AI planet, five semantic 3D planets and five independent mathematical 3D orbits. The same orbit equations generate both each rendered line and the moving planet position, while the WebGL depth buffer provides real front/back occlusion.
+The 0.1.31 candidate supersedes the visually rejected 0.1.30 CSS-3D implementation. The Hero scene now uses a lazy-loaded Three.js/WebGL renderer with one central matte MPReply AI planet, five semantic 3D planets and five independent mathematical 3D orbits. The same orbit equations generate both each rendered line and the moving planet position, while the WebGL depth buffer provides real front/back occlusion.
 
 The performance contract is strict: the WebGL chunk loads only when the Hero approaches the viewport; device pixel ratio is capped adaptively; no GLTF, HDRI, postprocessing, particle system or physics runtime is used; animation pauses outside the viewport and while the document is hidden; reduced-motion users receive a static resolved state; all geometries, materials, textures and the WebGL context are disposed on unmount. This remains a visual candidate until explicit user browser acceptance.
 

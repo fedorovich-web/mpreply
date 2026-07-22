@@ -6,9 +6,9 @@ import { PublicTrialCta } from "../../components/public-site/PublicTrialCta";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Блог Respio — автоматические ответы на отзывы и вопросы маркетплейсов",
+  title: "Блог MPReply — автоматические ответы на отзывы и вопросы маркетплейсов",
   description:
-    "Блог Respio о том, как автоматизировать ответы на отзывы, вопросы и чаты маркетплейсов: автопубликация, база знаний, правила продавца и качество ИИ-ответов.",
+    "Блог MPReply о том, как автоматизировать ответы на отзывы, вопросы и чаты маркетплейсов: автопубликация, база знаний, правила продавца и качество ИИ-ответов.",
   path: "/blog",
 });
 
@@ -45,13 +45,13 @@ export default function BlogPage() {
       <section className="public-subhero blog-page-hero-v89">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="public-eyebrow">Блог Respio</p>
+            <p className="public-eyebrow">Блог MPReply</p>
             <h1>Практика автоматических ответов на маркетплейсах</h1>
             <p className="public-lead">
               Разбираем SEO, репутацию, клиентскую поддержку, автопубликацию и качество ИИ-ответов для продавцов Wildberries, Ozon, Яндекс Маркета и Авито.
             </p>
           </div>
-          <aside className="public-proof-panel-v73" aria-label="Темы блога Respio">
+          <aside className="public-proof-panel-v73" aria-label="Темы блога MPReply">
             <MarketingGlyph variant="recommendations" />
             <h2>Темы блога</h2>
             <ul>
@@ -89,7 +89,7 @@ export default function BlogPage() {
           <div>
             <p className="public-eyebrow">Проверить вместо теории</p>
             <h2>Запустите автоматические ответы на своих обращениях</h2>
-            <p>Respio даст 400 ответов на 7 дней, чтобы проверить автопубликацию на реальных отзывах, вопросах и чатах.</p>
+            <p>MPReply даст 400 ответов на 7 дней, чтобы проверить автопубликацию на реальных отзывах, вопросах и чатах.</p>
           </div>
           <PublicTrialCta className="button button-primary public-cta-on-dark" source="blog-footer">
             Начать бесплатный тест

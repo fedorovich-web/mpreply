@@ -1,4 +1,4 @@
-# Respio 0.1.102 — Payment foundation
+# MPReply 0.1.102 — Payment foundation
 
 ## Scope
 
@@ -33,7 +33,7 @@ After a verified successful refund, all currently unspent credits from the corre
 
 ## Explicitly not included
 
-- initiating refunds from Respio;
+- initiating refunds from MPReply;
 - receipt/fiscalization configuration required for a real merchant account;
 - invoice and legal-document workflows;
 - production YooKassa credentials;

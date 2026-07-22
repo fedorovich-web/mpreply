@@ -1,4 +1,4 @@
-# Respio 0.1.32 — accepted-reference WebGL Hero rebuild
+# MPReply 0.1.32 — accepted-reference WebGL Hero rebuild
 
 ## Status
 
@@ -11,7 +11,7 @@ No commit or push was performed.
 - restored the accepted Hero headline, lead, calls to action and three trust benefits;
 - rebuilt the right-side scene as a lazy Three.js/WebGL enhancement;
 - added five independent spatial Catmull-Rom/`TubeGeometry` orbits with real depth-buffer occlusion;
-- added five semantic physical planet meshes and one layered central Respio AI planet;
+- added five semantic physical planet meshes and one layered central MPReply AI planet;
 - added stable DOM labels projected from the actual WebGL world positions;
 - removed the rejected dynamic left/right label switching that caused visible jumps;
 - used five distinct full-orbit periods from 101 to 127 seconds;

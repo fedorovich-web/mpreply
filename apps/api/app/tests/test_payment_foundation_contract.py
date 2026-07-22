@@ -70,14 +70,14 @@ def test_provider_payment_parser_preserves_verified_money_and_metadata() -> None
             "status": "succeeded",
             "paid": True,
             "amount": {"value": "1160.00", "currency": "RUB"},
-            "metadata": {"respio_payment_order_id": "order-1"},
+            "metadata": {"mpreply_payment_order_id": "order-1"},
             "confirmation": {"confirmation_url": "https://example.test/confirm"},
         }
     )
 
     assert payment.amount_minor == 116000
     assert payment.currency == "RUB"
-    assert payment.metadata["respio_payment_order_id"] == "order-1"
+    assert payment.metadata["mpreply_payment_order_id"] == "order-1"
     assert payment.confirmation_url == "https://example.test/confirm"
 
 
@@ -164,7 +164,8 @@ def test_payment_creation_requires_idempotency_and_provider_metadata() -> None:
     assert "PaymentOrder.idempotency_key == normalized_key" in service
     assert "pg_advisory_xact_lock" in service
     assert 'headers={"Idempotence-Key": idempotency_key}' in provider
-    assert '"respio_payment_order_id": str(order.id)' in service
+    assert '"mpreply_payment_order_id": str(order.id)' in service
+    assert 'key.endswith("_payment_order_id")' in service
 
 
 def test_webhook_is_verified_by_ip_and_provider_get() -> None:

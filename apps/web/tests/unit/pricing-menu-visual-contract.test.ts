@@ -4,12 +4,13 @@ import { describe, expect, it } from "vitest";
 
 const headerSource = readFileSync(resolve(process.cwd(), "components/public-site/PublicHeader.tsx"), "utf8");
 const calculatorSource = readFileSync(resolve(process.cwd(), "components/public-site/AnswerPackCalculator.tsx"), "utf8");
+const trialCtaSource = readFileSync(resolve(process.cwd(), "components/public-site/PublicTrialCta.tsx"), "utf8");
 const pricingPageSource = readFileSync(resolve(process.cwd(), "app/pricing/page.tsx"), "utf8");
 const siteConfigSource = readFileSync(resolve(process.cwd(), "lib/site-config.ts"), "utf8");
 const publicStyleSource = readFileSync(resolve(process.cwd(), "styles/public-site.css"), "utf8");
 const tokenSource = readFileSync(resolve(process.cwd(), "styles/tokens.css"), "utf8");
 
-describe("Respio pricing and menu visual contract", () => {
+describe("MPReply pricing and menu visual contract", () => {
   it("keeps the public navigation free of visible rail/link backgrounds", () => {
     expect(headerSource).toContain("public-header-v90");
     expect(headerSource).toContain("public-nav-rail-v90");
@@ -20,8 +21,8 @@ describe("Respio pricing and menu visual contract", () => {
     expect(siteConfigSource).toContain('href: "/blog"');
     expect(headerSource).toContain("document.body.style.overflow = \"hidden\"");
     expect(headerSource).not.toContain("href: \"/#product\"");
-    expect(publicStyleSource).toContain("Respio 0.1.90 · dependency-warning audit, typography, pricing and menu recovery");
-    expect(publicStyleSource).toContain("Respio 0.1.94 · public hero spacing, lists and trial modal form recovery");
+    expect(publicStyleSource).toContain("MPReply 0.1.90 · dependency-warning audit, typography, pricing and menu recovery");
+    expect(publicStyleSource).toContain("MPReply 0.1.94 · public hero spacing, lists and trial modal form recovery");
     expect(publicStyleSource).toMatch(/\.public-nav-rail-v90,[\s\S]*?background:\s*var\(--public-v86-transparent\) !important;[\s\S]*?box-shadow:\s*var\(--public-v86-none\) !important;/);
     expect(publicStyleSource).toMatch(/\.public-nav-v90 \.public-nav-link-v90::before \{[\s\S]*?content:\s*none !important;[\s\S]*?display:\s*none !important;/);
     expect(publicStyleSource).toMatch(/\.public-nav-link-label-v90::after \{[\s\S]*?width:\s*100%;[\s\S]*?transform:\s*var\(--public-v90-nav-underline-hidden\);/);
@@ -84,12 +85,36 @@ describe("Respio pricing and menu visual contract", () => {
     expect(modalSource).toContain('name="email"');
     expect(modalSource).not.toContain("Первый маркетплейс для теста");
     expect(modalSource).not.toContain("<select");
-    expect(publicStyleSource).toContain("Respio 0.1.94 · public hero spacing, lists and trial modal form recovery");
+    expect(trialCtaSource).toContain("popoverTarget={PUBLIC_TRIAL_POPOVER_ID}");
+    expect(trialCtaSource).toContain('popoverTargetAction="show"');
+    expect(trialCtaSource).toContain("document.documentElement.dataset.mpreplyTrialSource = source");
+    expect(modalSource).toContain('popover="auto"');
+    expect(modalSource).toContain('className="public-trial-modal-layout"');
+    expect(publicStyleSource).not.toContain(":popover-open");
+    expect(publicStyleSource).toMatch(/\.public-trial-modal-layout \{[\s\S]*?display:\s*grid;[\s\S]*?min-height:\s*100%;[\s\S]*?place-items:\s*center;/);
+    expect(publicStyleSource).not.toMatch(/\.public-trial-modal(?:\[popover\])?\s*\{[^}]*\bdisplay\s*:/);
+    expect(modalSource).toContain('className="public-trial-benefits-v96"');
+    expect(modalSource).toContain('role="list"');
+    expect(modalSource).toContain('aria-label="Что входит в бесплатный тест"');
+    expect(modalSource).toContain('role="listitem"');
+    expect(modalSource).toContain("modal.showPopover()");
+    expect(modalSource).toContain("document.documentElement.dataset.mpreplyTrialSource");
+    expect(modalSource).toContain("delete document.documentElement.dataset.mpreplyTrialSource");
+    expect(publicStyleSource).toContain("MPReply 0.1.94 · public hero spacing, lists and trial modal form recovery");
+  });
+
+
+
+  it("contains mobile public-page paint overflow without creating a horizontal scrollport", () => {
+    expect(publicStyleSource).toContain("MPReply 0.1.103 · mobile horizontal scrollport containment");
+    expect(publicStyleSource).toMatch(
+      /@media \(max-width: 760px\) \{[\s\S]*?\.public-root \{[\s\S]*?overflow-x:\s*clip;[\s\S]*?\}/,
+    );
   });
 
   it("keeps final CTA buttons readable on dark cards and result CTA blue", () => {
     expect(publicStyleSource).toMatch(/\.answer-pack-result-action-v90,[\s\S]*?background:\s*var\(--gradient-brand-action\) !important;/);
-    expect(publicStyleSource).toMatch(/\.home-final-cta-card \.home-final-cta-primary,[\s\S]*?background:\s*#ffffff !important;[\s\S]*?color:\s*var\(--color-brand-primary\) !important;/);
+    expect(publicStyleSource).toMatch(/\.home-final-cta-card \.home-final-cta-primary,[\s\S]*?background:\s*#ffffff !important;[\s\S]*?color:\s*var\(--color-brand-on-light\) !important;/);
   });
 
   it("uses honest auto-first public copy without absolute quality claims", () => {

@@ -11,10 +11,60 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.102"
+EXPECTED_VERSION = "0.1.103"
 EXPECTED_ALEMBIC_HEAD = "20260722_0014"
 
 ERRORS: list[str] = []
+
+GENERATED_ARTIFACT_PARTS = frozenset(
+    {
+        ".git",
+        ".lighthouseci",
+        ".mypy_cache",
+        ".next",
+        ".npm",
+        ".pnpm-store",
+        ".pytest_cache",
+        ".qa-venv",
+        ".ruff_cache",
+        ".turbo",
+        ".venv",
+        "__pycache__",
+        "blob-report",
+        "coverage",
+        "dist",
+        "lighthouse-report",
+        "node_modules",
+        "out",
+        "playwright-report",
+        "test-results",
+    }
+)
+
+GENERATED_ARTIFACT_FILES = frozenset(
+    {
+        ".coverage",
+        "coverage.xml",
+        "tsconfig.tsbuildinfo",
+    }
+)
+
+
+def _is_generated_artifact_path(path: Path) -> bool:
+    """Return true for local build, test and audit output.
+
+    These paths are intentionally excluded from source/brand scans because
+    reports can embed historical page content and are already prohibited from
+    tracked release content by ``check_generated_artifacts_absent``.
+    """
+    try:
+        relative = path.relative_to(ROOT)
+    except ValueError:
+        relative = path
+    return (
+        any(part in GENERATED_ARTIFACT_PARTS or part.endswith(".egg-info") for part in relative.parts)
+        or relative.name in GENERATED_ARTIFACT_FILES
+    )
 
 
 def _compact_archive_excludes(relative_path: str) -> bool:
@@ -364,6 +414,7 @@ def check_seller_settings_audit_contract() -> None:
         "audit router registration": (main, "app.include_router(audit_logs_router)"),
         "seller settings router registration": (main, "app.include_router(seller_settings_router)"),
         "AI persisted settings resolution": (ai_service, "prompt_settings.resolve"),
+        "AI deterministic seller policy gate": (ai_service, "prompt_settings.policy_flags"),
         "AI audit settings marker": (ai_service, '"seller_settings_applied"'),
         "organization defaults": (organization_service, "self.seller_settings.ensure_defaults"),
         "seller settings owner/admin write boundary": (seller_service, '_WRITE_ROLES = {"owner", "admin"}'),
@@ -499,6 +550,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.99-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.100-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.102-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.103-release-report.md",
         API / "alembic" / "versions" / "20260722_0013_team_sessions_security.py",
         API / "app" / "api" / "team.py",
         API / "app" / "models" / "auth_session.py",
@@ -535,10 +587,10 @@ def check_deployment_contract() -> None:
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
 
     docker_contracts = [
-        (api_dockerfile, "USER respio", "API image must run as non-root user"),
-        (worker_dockerfile, "USER respio", "Worker image must run as non-root user"),
+        (api_dockerfile, "USER mpreply", "API image must run as non-root user"),
+        (worker_dockerfile, "USER mpreply", "Worker image must run as non-root user"),
         (worker_dockerfile, "app.workers.marketplace_sync", "Worker image must load marketplace sync actors"),
-        (scheduler_dockerfile, "USER respio", "Scheduler image must run as non-root user"),
+        (scheduler_dockerfile, "USER mpreply", "Scheduler image must run as non-root user"),
         (scheduler_dockerfile, "app.scheduler.main", "Scheduler image must run the real scheduler module"),
         (web_dockerfile, "USER nextjs", "Web image must run as non-root user"),
         (web_dockerfile, "NEXT_PUBLIC_API_BASE_URL", "Web image must receive public API base URL at build time"),
@@ -559,7 +611,7 @@ def check_deployment_contract() -> None:
     if "--forwarded-allow-ips=*" in api_dockerfile:
         fail("API Dockerfile must not hardcode wildcard proxy-header trust")
 
-    forbidden_production_tokens = ["respio_password", "replace-with-local-dev-secret", "replace-only-in-real-env"]
+    forbidden_production_tokens = ["mpreply_password", "replace-with-local-dev-secret", "replace-only-in-real-env"]
     for token in forbidden_production_tokens:
         if token in production_compose:
             fail(f"Production Compose contains forbidden hardcoded placeholder/secret: {token}")
@@ -631,19 +683,112 @@ def check_payment_foundation_contract() -> None:
             fail(f"Payment foundation contract missing {label}: {token}")
 
 
-def check_generated_artifacts_absent() -> None:
-    forbidden_names = {
-        "node_modules",
-        ".next",
-        ".venv",
-        ".qa-venv",
-        "__pycache__",
-        ".pytest_cache",
-        ".ruff_cache",
-        ".mypy_cache",
-        ".coverage",
-        "coverage.xml",
+
+def check_brand_identity_contract() -> None:
+    legacy_lower = "".join(("res", "pio"))
+    legacy_title = legacy_lower.capitalize()
+    legacy_upper = legacy_lower.upper()
+
+    required_assets = [
+        WEB / "public" / "favicon-96x96.png",
+        WEB / "public" / "favicon.svg",
+        WEB / "public" / "favicon.ico",
+        WEB / "public" / "apple-touch-icon.png",
+        WEB / "public" / "web-app-manifest-192x192.png",
+        WEB / "public" / "web-app-manifest-512x512.png",
+        WEB / "public" / "site.webmanifest",
+        WEB / "public" / "logo" / "logo.avif",
+        WEB / "public" / "logo" / "logo.webp",
+        WEB / "public" / "logo" / "logo-canvas.avif",
+        WEB / "public" / "logo" / "logo-canvas.webp",
+    ]
+    for asset in required_assets:
+        require_file(asset)
+        if asset.is_file() and asset.stat().st_size == 0:
+            fail(f"Brand asset is empty: {asset.relative_to(ROOT)}")
+
+    manifest_path = WEB / "public" / "site.webmanifest"
+    if manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if manifest.get("name") != "MPReply" or manifest.get("short_name") != "MPReply":
+            fail("site.webmanifest must use MPReply for name and short_name")
+
+    site_config = (WEB / "lib" / "site-config.ts").read_text(encoding="utf-8")
+    layout = (WEB / "app" / "layout.tsx").read_text(encoding="utf-8")
+    logo_component = (WEB / "components" / "public-site" / "BrandLogo.tsx").read_text(encoding="utf-8")
+    header = (WEB / "components" / "public-site" / "PublicHeader.tsx").read_text(encoding="utf-8")
+    footer = (WEB / "components" / "public-site" / "PublicShell.tsx").read_text(encoding="utf-8")
+    canvas = (WEB / "components" / "public-site" / "HeroProductFlowCanvas.tsx").read_text(encoding="utf-8")
+    cookies = (API / "app" / "core" / "cookies.py").read_text(encoding="utf-8")
+    api_config = (API / "app" / "core" / "config.py").read_text(encoding="utf-8")
+    web_package = json.loads((WEB / "package.json").read_text(encoding="utf-8"))
+    api_project = (API / "pyproject.toml").read_text(encoding="utf-8")
+
+    required_tokens = {
+        "canonical domain": (site_config, '"https://mpreply.ru"'),
+        "site name": (site_config, 'name: "MPReply"'),
+        "horizontal AVIF logo": (logo_component, 'avif: "/logo/logo.avif"'),
+        "horizontal WebP fallback": (logo_component, 'webp: "/logo/logo.webp"'),
+        "canvas AVIF logo": (logo_component, 'avif: "/logo/logo-canvas.avif"'),
+        "canvas WebP fallback": (logo_component, 'webp: "/logo/logo-canvas.webp"'),
+        "header logo": (header, 'className="public-brand-logo"'),
+        "footer logo": (footer, 'className="public-footer-brand-logo"'),
+        "canvas logo variant": (canvas, 'variant="canvas"'),
+        "favicon PNG": (layout, 'href="/favicon-96x96.png"'),
+        "favicon SVG": (layout, 'href="/favicon.svg"'),
+        "favicon ICO": (layout, 'href="/favicon.ico"'),
+        "Apple touch icon": (layout, 'href="/apple-touch-icon.png"'),
+        "web manifest": (layout, 'href="/site.webmanifest"'),
+        "new access cookie": (cookies, 'ACCESS_COOKIE_NAME = "mpreply_access"'),
+        "new refresh cookie": (cookies, 'REFRESH_COOKIE_NAME = "mpreply_refresh"'),
+        "backend app name": (api_config, 'app_name: str = "MPReply"'),
+        "backend package": (api_project, 'name = "mpreply-api"'),
     }
+    for label, (content, token) in required_tokens.items():
+        if token not in content:
+            fail(f"Brand identity contract missing {label}: {token}")
+
+    if web_package.get("name") != "mpreply-web":
+        fail("apps/web/package.json name must be mpreply-web")
+    if "MPReply Engine" in canvas:
+        fail("Canvas logo must not duplicate the MPReply name with an Engine label")
+
+    text_suffixes = {
+        ".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".py",
+        ".ps1", ".sh", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml",
+    }
+    roots = [
+        ROOT / ".env.example",
+        ROOT / ".github",
+        ROOT / "AGENTS.md",
+        ROOT / "DESIGN.md",
+        ROOT / "PATCH_README.md",
+        ROOT / "PRODUCT.md",
+        ROOT / "README.md",
+        ROOT / "apps",
+        ROOT / "docs",
+        ROOT / "infra",
+        ROOT / "packages",
+        ROOT / "scripts",
+    ]
+    for source_root in roots:
+        paths = [source_root] if source_root.is_file() else source_root.rglob("*")
+        for source in paths:
+            if not source.is_file() or source.suffix.lower() not in text_suffixes:
+                continue
+            if _is_generated_artifact_path(source):
+                continue
+            content = source.read_text(encoding="utf-8", errors="replace")
+            if any(token in content for token in (legacy_lower, legacy_title, legacy_upper)):
+                fail(f"Legacy brand token remains in {source.relative_to(ROOT)}")
+
+    for source_root in (ROOT / "apps", ROOT / "docs", ROOT / "infra", ROOT / "scripts"):
+        for path in source_root.rglob("*"):
+            if legacy_lower in path.name.lower():
+                fail(f"Legacy brand path remains: {path.relative_to(ROOT)}")
+
+def check_generated_artifacts_absent() -> None:
+    forbidden_names = GENERATED_ARTIFACT_PARTS | GENERATED_ARTIFACT_FILES
     paths = _git_tracked_paths()
 
     if paths is None:
@@ -681,6 +826,7 @@ def main() -> int:
     check_seller_settings_audit_contract()
     check_marketplace_scheduler_contract()
     check_payment_foundation_contract()
+    check_brand_identity_contract()
     check_deployment_contract()
     check_generated_artifacts_absent()
 
@@ -690,7 +836,10 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    print("Integrity gate passed: routes, Python/TypeScript imports, migrations, versions, dependency baseline, release gates and deployment contracts are consistent.")
+    print(
+        "Integrity gate passed: routes, Python/TypeScript imports, migrations, versions, "
+        "dependency baseline, brand identity, release gates and deployment contracts are consistent."
+    )
     return 0
 
 

@@ -13,13 +13,13 @@ const heroStyleSource = readFileSync(
   "utf8",
 );
 
-describe("Respio public visual recovery contract", () => {
+describe("MPReply public visual recovery contract", () => {
   it("preserves the approved marketplace Hero copy and CTAs without the old proof pills", () => {
     expect(pageSource).toContain("ИИ для маркетплейсов");
     expect(pageSource).toContain("Автоответы для");
     expect(pageSource).toContain("отзывов, вопросов");
     expect(pageSource).toContain("и чатов");
-    expect(pageSource).toContain("Respio анализирует обращение покупателя");
+    expect(pageSource).toContain("MPReply анализирует обращение покупателя");
     expect(pageSource).toContain("Начать бесплатный тест");
     expect(pageSource).toContain("Посмотреть процесс");
     expect(pageSource).not.toContain("Интеграция за дни, не месяцы");
@@ -42,14 +42,14 @@ describe("Respio public visual recovery contract", () => {
 
 
   it("does not approve the broken 1440px single-column Hero fold", () => {
-    expect(publicStyleSource).toContain("Respio 0.1.85 · Hero visual baseline recovery");
+    expect(publicStyleSource).toContain("MPReply 0.1.85 · Hero visual baseline recovery");
     expect(publicStyleSource).toContain("@media (max-width: 1120px)");
     expect(publicStyleSource).toMatch(/@media \(max-width: 1120px\) \{[\s\S]*?\.home-hero-layout \{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\) !important;/);
     const brokenCollapseIndex = publicStyleSource.search(/@media \(max-width: 1450px\) \{\s*\.home-hero-layout \{\s*grid-template-columns:\s*minmax\(0, 1fr\) !important;/);
-    const recoveryIndex = publicStyleSource.indexOf("Respio 0.1.85 · Hero visual baseline recovery");
+    const recoveryIndex = publicStyleSource.indexOf("MPReply 0.1.85 · Hero visual baseline recovery");
     expect(brokenCollapseIndex).toBeGreaterThanOrEqual(0);
     expect(recoveryIndex).toBeGreaterThan(brokenCollapseIndex);
-    expect(heroStyleSource).toContain("Respio 0.1.85 · compact desktop scene sizes");
+    expect(heroStyleSource).toContain("MPReply 0.1.85 · compact desktop scene sizes");
     expect(heroStyleSource).toMatch(/@media \(max-width: 1500px\) and \(min-width: 1121px\) \{[\s\S]*?\.scene \{[\s\S]*?width:\s*clamp\(43rem, 55vw, 50\.5rem\);/);
   });
 

@@ -301,13 +301,13 @@ export function HeroFlowCanvas() {
       className={styles.scene}
       data-webgl-state={webglState}
       role="img"
-      aria-label="Пять смысловых AI-узлов расположены на пяти отдельных трёхмерных орбитах вокруг Respio AI: вопрос покупателя, товары и каталог, данные о товарах, контекст и правила, готовый ответ"
+      aria-label="Пять смысловых AI-узлов расположены на пяти отдельных трёхмерных орбитах вокруг MPReply AI: вопрос покупателя, товары и каталог, данные о товарах, контекст и правила, готовый ответ"
     >
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
 
       <div className={styles.fallback} aria-hidden="true">
         <div className={styles.fallbackCore}>
-          <span>R</span>
+          <span>MP</span>
         </div>
         <div className={styles.fallbackOrbit} />
       </div>
@@ -317,18 +317,18 @@ export function HeroFlowCanvas() {
         <Image
           ref={coreArtworkRef}
           className={styles.coreArtwork}
-          src="/brand/respio-ai-core-reference.png"
+          src="/favicon-96x96.png"
           alt=""
-          width={300}
-          height={300}
-          sizes="(max-width: 620px) 195px, 300px"
+          width={96}
+          height={96}
+          sizes="(max-width: 620px) 96px, 96px"
           draggable={false}
           priority
           unoptimized
         />
-        <span ref={monogramRef} className={styles.coreMonogram}>R</span>
+        <span ref={monogramRef} className={styles.coreMonogram} aria-hidden="true" />
         <div ref={coreLabelRef} className={styles.coreLabel}>
-          <strong>Respio AI</strong>
+          <strong>MPReply AI</strong>
           <span>AI-ответы для маркетплейсов</span>
         </div>
 

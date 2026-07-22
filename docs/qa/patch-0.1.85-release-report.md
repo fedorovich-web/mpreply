@@ -1,4 +1,4 @@
-# Respio 0.1.85 Hero Visual Recovery Report
+# MPReply 0.1.85 Hero Visual Recovery Report
 
 Patch `0.1.85` fixes the desktop Hero composition exposed by the first local Playwright visual run. It does not approve visual snapshots and does not change pricing, marketplace claims, AI routing, billing, or backend behavior.
 

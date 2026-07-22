@@ -1,6 +1,6 @@
 # ADR 0010 — Live SaaS frontend data plane
 
-Status: accepted  
+Status: accepted
 Version: 0.1.11
 
 ## Context
@@ -56,7 +56,7 @@ The endpoint includes only semi-auto replies in actionable review states:
 `NEXT_PUBLIC_API_BASE_URL` is injected at web build time:
 
 - local: `http://localhost:8000`;
-- production: public API URL such as `https://api.respio.ru`.
+- production: public API URL such as `https://api.mpreply.ru`.
 
 No secret is placed in this variable.
 

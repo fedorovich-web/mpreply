@@ -1,4 +1,4 @@
-# Respio 0.1.100 — marketplace scheduler foundation
+# MPReply 0.1.100 — marketplace scheduler foundation
 
 ## Scope
 

@@ -43,7 +43,7 @@ _CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
         message_types=(MessageType.REVIEW, MessageType.QUESTION),
         polling_enabled=True,
         pagination_strategy="offset",
-        notes="Implemented and covered by the Respio Wildberries adapter contract.",
+        notes="Implemented and covered by the MPReply Wildberries adapter contract.",
     ),
     Marketplace.OZON: MarketplaceCapability(
         marketplace=Marketplace.OZON,
@@ -52,7 +52,7 @@ _CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
         message_types=(),
         polling_enabled=False,
         pagination_strategy="unknown",
-        notes="No production adapter is enabled in Respio yet.",
+        notes="No production adapter is enabled in MPReply yet.",
     ),
     Marketplace.YANDEX_MARKET: MarketplaceCapability(
         marketplace=Marketplace.YANDEX_MARKET,
@@ -61,7 +61,7 @@ _CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
         message_types=(),
         polling_enabled=False,
         pagination_strategy="unknown",
-        notes="No production adapter is enabled in Respio yet.",
+        notes="No production adapter is enabled in MPReply yet.",
     ),
     Marketplace.AVITO: MarketplaceCapability(
         marketplace=Marketplace.AVITO,
@@ -70,7 +70,7 @@ _CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
         message_types=(),
         polling_enabled=False,
         pagination_strategy="unknown",
-        notes="No production adapter is enabled in Respio yet.",
+        notes="No production adapter is enabled in MPReply yet.",
     ),
 }
 

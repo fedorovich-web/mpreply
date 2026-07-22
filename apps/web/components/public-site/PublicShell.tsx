@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { marketplaces } from "../../lib/site-config";
+import { BrandLogo } from "./BrandLogo";
 import { PublicHeader } from "./PublicHeader";
 import { PublicTrialModal } from "./PublicTrialModal";
 
@@ -21,9 +22,12 @@ export function PublicShell({ children }: PublicShellProps) {
       <footer className="public-footer">
         <div className="public-container public-footer-topline">
           <div className="public-footer-brand">
-            <Link className="public-footer-logo" href="/" aria-label="Respio — главная">
-              <span className="public-brand-mark" aria-hidden="true">R</span>
-              <strong>Respio</strong>
+            <Link className="public-footer-logo" href="/" aria-label="MPReply — главная">
+              <BrandLogo
+                className="public-footer-brand-logo"
+                imageClassName="public-footer-brand-logo-image"
+                alt=""
+              />
             </Link>
             <p>
               Автоматические ИИ-ответы на отзывы, вопросы и чаты покупателей с учётом данных товара, правил продавца и настроек согласования.
@@ -37,7 +41,7 @@ export function PublicShell({ children }: PublicShellProps) {
             <Link href="/features">Возможности</Link>
             <Link href="/#models">ИИ-модели</Link>
             <Link href="/pricing">Тарифы</Link>
-            <Link href="/demo">Как работает Respio</Link>
+            <Link href="/demo">Как работает MPReply</Link>
           </div>
           <div>
             <strong>Маркетплейсы</strong>
@@ -58,7 +62,7 @@ export function PublicShell({ children }: PublicShellProps) {
         </div>
 
         <div className="public-container public-footer-bottom">
-          <span>© {new Date().getFullYear()} Respio</span>
+          <span>© {new Date().getFullYear()} MPReply</span>
           <span>Wildberries · Ozon · Яндекс Маркет · Авито</span>
         </div>
       </footer>

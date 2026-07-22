@@ -121,7 +121,7 @@ def test_migration_has_single_revision_and_partial_pending_invite_index() -> Non
 def test_refresh_cookie_is_http_only_and_scoped_to_auth_routes() -> None:
     cookies = (API_ROOT / "app" / "core" / "cookies.py").read_text(encoding="utf-8")
 
-    assert 'REFRESH_COOKIE_NAME = "respio_refresh"' in cookies
+    assert 'REFRESH_COOKIE_NAME = "mpreply_refresh"' in cookies
     assert 'path="/api/auth"' in cookies
     assert "httponly=True" in cookies
 

@@ -2,7 +2,7 @@
 
 ## Scope
 
-Sprint 10 closes the optional human-approval path without changing the product default: Respio remains auto-first.
+Sprint 10 closes the optional human-approval path without changing the product default: MPReply remains auto-first.
 
 Implemented workflow:
 

@@ -1,4 +1,4 @@
-# Respio 0.1.90 — dependency warning audit and public pricing UI recovery
+# MPReply 0.1.90 — dependency warning audit and public pricing UI recovery
 
 ## Scope
 
@@ -11,7 +11,7 @@ No marketplace backend integration, billing entitlement model, AI provider routi
 
 ## Dependency audit
 
-The deprecated packages were not direct Respio dependencies.
+The deprecated packages were not direct MPReply dependencies.
 
 Resolved chain before the patch:
 

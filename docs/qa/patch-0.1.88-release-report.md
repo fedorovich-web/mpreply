@@ -1,4 +1,4 @@
-# Respio 0.1.88 Pricing/Menu Visual Correction Report
+# MPReply 0.1.88 Pricing/Menu Visual Correction Report
 
 Patch `0.1.88` is a focused correction after manual visual review of `0.1.87` pricing, menu and mobile screenshots.
 

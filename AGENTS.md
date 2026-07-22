@@ -1,4 +1,4 @@
-# Respio Agent Instructions
+# MPReply Agent Instructions
 
 These rules apply to AI coding agents and automated contributors.
 
@@ -14,7 +14,7 @@ Read in order:
 
 ## Product truth
 
-Respio is auto-first; manual review is optional. Wildberries is current MVP execution path. Never claim Ozon, Yandex Market or Avito production sending until verified and implemented. Never fabricate customers, logos, testimonials, metrics, prices or capabilities.
+MPReply is auto-first; manual review is optional. Wildberries is current MVP execution path. Never claim Ozon, Yandex Market or Avito production sending until verified and implemented. Never fabricate customers, logos, testimonials, metrics, prices or capabilities.
 
 ## UI rules
 

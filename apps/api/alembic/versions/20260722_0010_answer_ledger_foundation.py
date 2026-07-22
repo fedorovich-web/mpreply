@@ -233,7 +233,7 @@ def upgrade() -> None:
                 expires_at, reference_type, reference_id, idempotency_key, metadata_json, created_at, updated_at
             )
             SELECT
-                md5('respio:trial-grant:' || organization.id::text)::uuid,
+                md5('mpreply:trial-grant:' || organization.id::text)::uuid,
                 organization.id,
                 '{_TRIAL_PACKAGE_ID}'::uuid,
                 'trial',
@@ -259,7 +259,7 @@ def upgrade() -> None:
                 idempotency_key, reason, metadata_json, created_at
             )
             SELECT
-                md5('respio:trial-ledger:' || grant.organization_id::text)::uuid,
+                md5('mpreply:trial-ledger:' || grant.organization_id::text)::uuid,
                 grant.organization_id,
                 grant.id,
                 'grant',

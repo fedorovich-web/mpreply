@@ -1,4 +1,4 @@
-# Respio 0.1.99 — Seller settings and audit read foundation
+# MPReply 0.1.99 — Seller settings and audit read foundation
 
 Дата: 2026-07-22
 

@@ -1,4 +1,4 @@
-# Respio 0.1.30 — native CSS 3D Hero orbital rebuild
+# MPReply 0.1.30 — native CSS 3D Hero orbital rebuild
 
 ## Status
 
@@ -10,13 +10,13 @@ Historical confirmed GREEN baseline remains `0.1.26`. Neither `0.1.28`, `0.1.29`
 
 - removed SVG ellipse/path geometry from the Hero orbit system;
 - rebuilt all five orbit lines as real DOM ellipses transformed in CSS 3D with `perspective`, `rotateX`, `rotateZ` and `transform-style: preserve-3d`;
-- each orbit is rendered as deterministic back/front halves around the central Respio AI core;
+- each orbit is rendered as deterministic back/front halves around the central MPReply AI core;
 - the same plane parameters drive the moving planet projection, so each semantic planet remains attached to its own orbit;
 - five semantic planets remain: `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
 - labels move smoothly outward from the scene center instead of switching sides abruptly;
 - full rotations are deliberately slow and non-identical: 60–76 seconds;
 - animation advances only while the scene is visible, the document is visible and reduced motion is not requested;
-- central Respio AI core rebuilt as a layered matte sphere with upper hemisphere, lower hemisphere, integrated curved equatorial band, `Respio AI` and `AI-ответы для маркетплейсов`;
+- central MPReply AI core rebuilt as a layered matte sphere with upper hemisphere, lower hemisphere, integrated curved equatorial band, `MPReply AI` and `AI-ответы для маркетплейсов`;
 - no WebGL, Three.js, GSAP, Rive, Spline or other heavy runtime added.
 
 ## Relevant gates actually run

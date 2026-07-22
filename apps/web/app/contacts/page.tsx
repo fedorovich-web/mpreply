@@ -8,9 +8,9 @@ import { createPageMetadata } from "../../lib/seo";
 import { siteConfig } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Контакты Respio",
+  title: "Контакты MPReply",
   description:
-    "Свяжитесь с командой Respio по вопросам подключения маркетплейсов, пакетов ответов, тестирования и корпоративных условий.",
+    "Свяжитесь с командой MPReply по вопросам подключения маркетплейсов, пакетов ответов, тестирования и корпоративных условий.",
   path: "/contacts",
 });
 

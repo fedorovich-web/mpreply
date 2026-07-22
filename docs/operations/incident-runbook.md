@@ -47,7 +47,7 @@ For suspected duplicate, unsafe or runaway replies:
 ## Credential incident
 
 1. Revoke the affected external credential at the provider/marketplace.
-2. Rotate the credential in Respio.
+2. Rotate the credential in MPReply.
 3. Review audit and integration events.
 4. Rotate application secrets when exposure scope is uncertain.
 5. Document affected tenants, systems and time window.

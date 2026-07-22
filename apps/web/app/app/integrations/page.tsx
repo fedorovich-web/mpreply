@@ -8,7 +8,7 @@ export default function IntegrationsPage() {
           <p className="eyebrow">Integrations</p>
           <h1>Подключения маркетплейсов и состояние API</h1>
           <p>
-            Respio показывает реальные кабинеты текущей организации и не выдаёт planned marketplace adapters за готовые production-интеграции.
+            MPReply показывает реальные кабинеты текущей организации и не выдаёт planned marketplace adapters за готовые production-интеграции.
           </p>
         </div>
         <div className="app-header-actions">

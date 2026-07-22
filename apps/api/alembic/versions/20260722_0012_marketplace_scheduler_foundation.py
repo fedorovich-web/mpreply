@@ -115,7 +115,7 @@ def upgrade() -> None:
                 updated_at
             )
             SELECT
-                md5('respio:marketplace-sync:' || account.id::text || ':' || stream.name)::uuid,
+                md5('mpreply:marketplace-sync:' || account.id::text || ':' || stream.name)::uuid,
                 account.organization_id,
                 account.id,
                 stream.name,

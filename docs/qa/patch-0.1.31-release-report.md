@@ -1,4 +1,4 @@
-# Respio 0.1.31 — real WebGL Hero orbital scene
+# MPReply 0.1.31 — real WebGL Hero orbital scene
 
 > Final disposition: **REJECTED / BUILD RED + VISUAL RED**. This report is retained only as attempt history. It is not a baseline and is superseded by the `0.1.32` accepted-reference rebuild.
 
@@ -22,8 +22,8 @@ This report does **not** claim user visual acceptance, pixel-perfect GREEN or re
   - `Контекст и правила`;
   - `Готовый ответ`;
 - the same 3D equation generates both every orbit `LineLoop` and its moving planet position, preventing path drift;
-- real WebGL depth testing provides front/back occlusion among orbit lines, semantic planets and the central Respio AI object;
-- central Respio AI object uses separate upper/lower sphere geometry, matte physical materials, a conforming equatorial band, restrained violet/cyan lighting, contact shadow and a subtle halo;
+- real WebGL depth testing provides front/back occlusion among orbit lines, semantic planets and the central MPReply AI object;
+- central MPReply AI object uses separate upper/lower sphere geometry, matte physical materials, a conforming equatorial band, restrained violet/cyan lighting, contact shadow and a subtle halo;
 - five semantic planets use real 3D sphere geometry, physical materials and generated local icon textures;
 - orbit lines use depth-aware per-vertex color so front sections read more strongly while rear sections recede without a postprocessing pipeline;
 - DOM overlay keeps Russian labels crisp and accessible while positions are projected from the actual WebGL scene;
@@ -54,7 +54,7 @@ A standalone Chromium/Playwright QA harness rendered the **same current Three.js
 - five real 3D planet meshes;
 - five intertwined mathematical 3D orbit lines;
 - depth-buffer occlusion;
-- central matte Respio AI sphere and equatorial band;
+- central matte MPReply AI sphere and equatorial band;
 - crisp DOM label overlay projected from WebGL world positions.
 
 This is not equivalent to a full real-application screenshot. The assistant environment's Chromium policy blocks navigation to localhost with `net::ERR_BLOCKED_BY_ADMINISTRATOR`, so real-app browser visual acceptance remains `PENDING` and must be decided from the user's local browser render.

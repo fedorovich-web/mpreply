@@ -4,7 +4,7 @@ Status: accepted for Sprint 9 foundation.
 
 ## Context
 
-Respio had working application code, migrations, a worker and a basic local Compose file, but production deployment still lacked explicit runtime validation, dependency-aware readiness, non-root production images, repeatable migration orchestration, container smoke testing and operational runbooks.
+MPReply had working application code, migrations, a worker and a basic local Compose file, but production deployment still lacked explicit runtime validation, dependency-aware readiness, non-root production images, repeatable migration orchestration, container smoke testing and operational runbooks.
 
 ## Decision
 

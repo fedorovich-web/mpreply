@@ -12,12 +12,12 @@ const heroStyles = readFileSync(
   "utf8",
 );
 
-describe("Respio hero product flow visual contract", () => {
+describe("MPReply hero product flow visual contract", () => {
   it("preserves the approved v50 product-answer scenario and WebP product asset", () => {
     expect(heroSource).toContain("На широкую стопу подойдёт?");
     expect(heroSource).toContain("Кроссовки для ходьбы");
     expect(heroSource).toContain("Лучше взять 41 размер.");
-    expect(heroSource).toContain("/brand/respio-hero-sneakers.webp");
+    expect(heroSource).toContain("/brand/mpreply-hero-sneakers.webp");
     expect(heroSource).not.toContain("SKU 41852");
     expect(heroSource).not.toContain("Фильтр HEPA Pro");
   });
