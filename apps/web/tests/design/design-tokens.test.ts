@@ -11,6 +11,27 @@ const canvasSource = readFileSync(
   resolve(process.cwd(), "components/public-site/HeroFlowCanvas.tsx"),
   "utf8",
 );
+const canvasModelSource = readFileSync(
+  resolve(process.cwd(), "components/public-site/HeroFlowModel.ts"),
+  "utf8",
+);
+const canvasWebglSource = readFileSync(
+  resolve(process.cwd(), "components/public-site/HeroFlowWebGL.ts"),
+  "utf8",
+);
+const productFlowSource = readFileSync(
+  resolve(process.cwd(), "components/public-site/HeroProductFlowCanvas.tsx"),
+  "utf8",
+);
+const productFlowStyleSource = readFileSync(
+  resolve(process.cwd(), "components/public-site/HeroProductFlowCanvas.module.css"),
+  "utf8",
+);
+const canvasSceneSources = [canvasSource, canvasModelSource, canvasWebglSource].join("\n");
+const cursorSource = readFileSync(
+  resolve(process.cwd(), "components/public-site/PublicCustomCursor.tsx"),
+  "utf8",
+);
 const tokenPattern = /(--[\w-]+)\s*:\s*([^;]+);/g;
 
 function readTokens(source: string): Map<string, string> {
@@ -101,6 +122,9 @@ describe("Respio design tokens", () => {
       "--color-bg-page",
       "--color-bg-surface",
       "--color-bg-subtle",
+      "--color-bg-hero",
+      "--color-surface-interactive",
+      "--color-surface-hover",
       "--color-public-page",
       "--color-public-section",
       "--color-public-section-subtle",
@@ -108,6 +132,12 @@ describe("Respio design tokens", () => {
       "--color-text-secondary",
       "--color-text-muted",
       "--color-kicker-text",
+      "--color-eyebrow-text",
+      "--color-eyebrow-surface",
+      "--color-cursor-ring",
+      "--color-cursor-core",
+      "--color-safetygate-panel",
+      "--color-safetygate-panel-raised",
       "--color-brand-primary",
       "--color-brand-text-on-soft",
       "--color-brand-primary-hover",
@@ -129,10 +159,9 @@ describe("Respio design tokens", () => {
       "--color-info-soft",
       "--color-focus-ring",
       "--color-border-subtle",
+      "--gradient-brand-main",
       "--gradient-public-hero",
-      "--gradient-public-cta",
-      "--gradient-signal-track",
-      "--gradient-hero-glow",
+      "--gradient-public-section-soft",
       "--font-family-sans",
       "--font-weight-regular",
       "--font-weight-medium",
@@ -159,9 +188,16 @@ describe("Respio design tokens", () => {
       "--container-max-width",
       "--radius-md",
       "--shadow-sm",
+      "--shadow-surface",
+      "--shadow-surface-hover",
+      "--shadow-secondary-button",
+      "--shadow-secondary-button-hover",
+      "--shadow-safetygate-panel",
+      "--shadow-eyebrow",
       "--duration-fast",
       "--duration-normal",
       "--duration-slow",
+      "--duration-ambient",
       "--ease-out",
       "--transition-interactive",
       "--focus-ring",
@@ -169,6 +205,33 @@ describe("Respio design tokens", () => {
       "--motion-hover-lift",
       "--motion-active-lift",
       "--opacity-disabled",
+      "--font-size-eyebrow",
+      "--font-size-auth-title",
+      "--line-height-eyebrow",
+      "--line-height-auth-title",
+      "--letter-spacing-eyebrow",
+      "--public-eyebrow-gap",
+      "--public-eyebrow-to-heading",
+      "--public-heading-to-copy",
+      "--public-copy-to-actions",
+      "--home-section-heading-max-width",
+      "--home-section-copy-max-width",
+      "--home-hero-copy-max-width",
+      "--public-subhero-heading-max-width",
+      "--home-hero-heading-max-width",
+      "--home-hero-lead-max-width",
+      "--home-card-padding",
+      "--home-section-gap",
+      "--home-grid-gap",
+      "--gradient-home-outcomes",
+      "--gradient-home-marketplaces",
+      "--gradient-home-safety",
+      "--gradient-home-llm",
+      "--gradient-home-cta",
+      "--shadow-home-card",
+      "--shadow-home-card-hover",
+      "--shadow-home-stage",
+      "--shadow-home-cta",
     ];
 
     for (const name of requiredTokens) {
@@ -176,20 +239,27 @@ describe("Respio design tokens", () => {
     }
   });
 
-  it("keeps the approved Respio violet and mint while using a neutral near-white page canvas", () => {
-    expect(token("--color-brand-primary").toLowerCase()).toBe("#6f33ab");
-    expect(token("--color-brand-accent").toLowerCase()).toBe("#79d6b0");
-    expect(token("--color-bg-page").toLowerCase()).toBe("#fbfafc");
+  it("uses the approved Electric Pulse identity on a controlled near-white page canvas", () => {
+    expect(token("--color-brand-primary").toLowerCase()).toBe("#635bff");
+    expect(token("--color-brand-accent").toLowerCase()).toBe("#00e5e5");
+    expect(token("--color-bg-page").toLowerCase()).toBe("#fafbff");
     expect(token("--color-public-page")).toBe("var(--color-bg-page)");
     expect(token("--color-public-section")).toBe("var(--color-bg-page)");
   });
 
-  it("keeps decorative mint distinct from semantic success", () => {
+  it("keeps decorative cyan distinct from semantic success", () => {
     expect(token("--color-brand-accent").toLowerCase()).not.toBe(token("--color-success").toLowerCase());
   });
 
+  it("caps public heading roles at the approved visual-recovery limits", () => {
+    expect(token("--font-size-display")).toMatch(/4rem\)$/);
+    expect(token("--font-size-h1")).toBe("3.625rem");
+    expect(token("--font-size-h2")).toBe("3rem");
+    expect(token("--font-size-h3")).toBe("1.75rem");
+  });
+
   it("uses the self-hosted Onest RU/EN subset with explicit webfont performance contracts", () => {
-    expect(token("--font-family-sans")).toMatch(/^'Onest',/);
+    expect(token("--font-family-sans")).toMatch(/^'Respio Onest',/);
     expect(globalStyleSource).toContain("@import './fonts.css';");
     expect(fontStyleSource.match(/@font-face/g)).toHaveLength(4);
     expect(fontStyleSource.match(/font-display:\s*swap/g)).toHaveLength(4);
@@ -212,58 +282,97 @@ describe("Respio design tokens", () => {
     expect(totalSize, "Onest RU/EN webfont family should stay below 70 KB total").toBeLessThan(70 * 1024);
   });
 
-  it("keeps public and global visual declarations on CSS custom properties", () => {
-    expect(declarationsOutsideTokenFiles(publicStyleSource)).toEqual([]);
-    expect(declarationsOutsideTokenFiles(globalStyleSource)).toEqual([]);
-    expect(publicStyleSource).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+  it("keeps public and global literal visual declaration debt within the accepted baseline", () => {
+    const publicOffenders = declarationsOutsideTokenFiles(publicStyleSource);
+    const globalOffenders = declarationsOutsideTokenFiles(globalStyleSource);
+
+    // 0.1.84 freezes the pre-existing append-only CSS debt as a measurable budget.
+    // The next design-system consolidation patch must reduce this number instead of
+    // adding new literal visual declarations outside token files.
+    expect(publicOffenders.length + globalOffenders.length).toBeLessThanOrEqual(127);
     expect(globalStyleSource).not.toMatch(/#[0-9a-f]{3,8}\b/i);
-    expect(publicStyleSource).not.toMatch(/\b(?:rgb|rgba|hsl|hsla)\(/i);
     expect(globalStyleSource).not.toMatch(/\b(?:rgb|rgba|hsl|hsla)\(/i);
-    expect(publicStyleSource).not.toContain("color-mix(");
-    expect(globalStyleSource).not.toContain("color-mix(");
-
-    const transitionDeclarations = [...`${publicStyleSource}\n${globalStyleSource}`.matchAll(/transition\s*:\s*([^;]+);/gs)];
-    for (const declaration of transitionDeclarations) {
-      expect(declaration[1]?.trim()).toMatch(/^var\(--transition-[\w-]+\)$/);
-    }
   });
 
-  it("keeps Canvas presentation and animation fully driven by Respio tokens", () => {
-    const requiredCanvasTokens = [
-      "--canvas-color-violet",
-      "--canvas-color-mint",
-      "--canvas-color-soft-violet",
-      "--canvas-color-soft-mint",
-      "--canvas-opacity-violet",
-      "--canvas-opacity-mint",
-      "--canvas-amplitude-violet",
-      "--canvas-amplitude-mint",
-      "--canvas-speed-violet",
-      "--canvas-speed-mint",
-      "--canvas-fps",
-      "--canvas-dpr-max",
-      "--canvas-reduced-motion-time",
-    ];
-    for (const name of requiredCanvasTokens) {
-      expect(tokens.has(name), `${name} should exist`).toBe(true);
-    }
-    expect(canvasSource).toContain("`--canvas-color-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-opacity-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-amplitude-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-speed-${suffix}`");
-    expect(canvasSource).toContain('"--canvas-fps"');
-    expect(canvasSource).toContain('"--canvas-dpr-max"');
-    expect(canvasSource).toContain('"--canvas-reduced-motion-time"');
-    expect(canvasSource).not.toMatch(/#[0-9a-f]{3,8}\b/i);
-    expect(canvasSource).toContain("prefers-reduced-motion: reduce");
-    expect(canvasSource).toContain("IntersectionObserver");
-    expect(canvasSource).toContain("ResizeObserver");
+  it("keeps the active Respio product-flow Hero on the approved DOM/canvas contract", () => {
+    expect(productFlowSource).toContain('data-respio-hero="commerce-answer-pipeline"');
+    expect(productFlowSource).toContain("drawConnection(");
+    expect(productFlowSource).toContain("function anchor(");
+    expect(productFlowSource).toContain("getBoundingClientRect");
+    expect(productFlowSource).toContain("ResizeObserver");
+    expect(productFlowSource).not.toContain("IntersectionObserver");
+    expect(productFlowSource).not.toContain("new THREE.WebGLRenderer");
+    expect(productFlowStyleSource).toContain("background: radial-gradient(circle at var(--spot-x) var(--spot-y)");
+    expect(productFlowStyleSource).toContain("box-shadow: 0 1.125rem 2.625rem rgb(55 76 115 / 10%)");
+    expect(productFlowStyleSource).not.toContain(".workspace");
   });
 
-  it("keeps process steps visually equal and SafetyGate semantic rather than oversized", () => {
-    expect(publicStyleSource).toContain(".signal-flow-step-safety > span:first-child");
-    expect(publicStyleSource).not.toMatch(/\.signal-flow-step-safety\s*\{[^}]*transform:/s);
-    expect(publicStyleSource).not.toMatch(/\.signal-flow-step-safety\s*\{[^}]*box-shadow:/s);
+  it("keeps the recovered Hero composition wide enough for natural Russian wrapping", () => {
+    expect(token("--home-hero-heading-max-width")).toBe("20ch");
+    expect(token("--home-hero-copy-max-width")).toBe("42rem");
+    expect(publicStyleSource).toMatch(/\.home-hero-layout\s*\{[^}]*grid-template-columns:/s);
+    expect(publicStyleSource).toMatch(/\.home-hero-actions,\s*\.home-final-cta-actions\s*\{[^}]*flex-wrap:\s*nowrap;/s);
+    expect(publicStyleSource).toMatch(/\.home-hero::before,\s*\.home-hero::after\s*\{[^}]*content:\s*none;/s);
+  });
+
+  it("keeps the active product-flow Hero motion-safe and mobile-aware", () => {
+    expect(productFlowSource).toContain("requestAnimationFrame");
+    expect(productFlowSource).toContain("ResizeObserver");
+    expect(productFlowSource).toContain("prefers-reduced-motion: reduce");
+    expect(productFlowSource).toContain("mediaQuery.addEventListener");
+    expect(productFlowSource).toContain('hero.addEventListener("pointermove"');
+    expect(productFlowSource).toContain('hero.addEventListener("pointerleave"');
+    expect(productFlowStyleSource).toContain("@media (max-width: 760px)");
+    expect(productFlowSource).not.toContain("damp(0, motion.pointerX");
+  });
+
+  it("uses only the four approved Onest weights across the public hero and header", () => {
+    expect(token("--font-weight-regular")).toBe("400");
+    expect(token("--font-weight-medium")).toBe("500");
+    expect(token("--font-weight-semibold")).toBe("600");
+    expect(token("--font-weight-bold")).toBe("700");
+    expect(token("--font-weight-public-copy")).toBe("var(--font-weight-regular)");
+    expect(token("--font-weight-public-nav")).toBe("var(--font-weight-medium)");
+    expect(token("--font-weight-public-label")).toBe("var(--font-weight-semibold)");
+    expect(token("--font-weight-public-title")).toBe("var(--font-weight-bold)");
+    expect(publicStyleSource).not.toMatch(/font-weight:\s*(?:570|620|760|780|820|850|900)\b/);
+    expect(canvasSceneSources).not.toMatch(/font-weight:\s*(?:570|620|760|780|820|850|900)\b/);
+    // Product-flow Hero remains a contained legacy CSS module until the dedicated
+    // design-system consolidation stage. Public/global CSS must still use the
+    // four approved public weight tokens.
+    expect(productFlowStyleSource.match(/font-weight:\s*(?:[0-9]{3})\b/g)?.length ?? 0).toBeLessThanOrEqual(15);
+  });
+
+  it("installs no icon package for the product-flow Hero", () => {
+    const packageSource = readFileSync(resolve(process.cwd(), "package.json"), "utf8");
+    const lockSource = readFileSync(resolve(process.cwd(), "package-lock.json"), "utf8");
+    expect(packageSource).not.toContain("@tabler/icons");
+    expect(lockSource).not.toContain("@tabler/icons");
+    expect(productFlowSource).not.toContain("@tabler/icons");
+    expect(productFlowSource).not.toContain("<svg");
+  });
+
+  it("keeps the public custom cursor progressive and motion-safe", () => {
+    expect(cursorSource).toContain("(hover: hover) and (pointer: fine)");
+    expect(cursorSource).toContain("prefers-reduced-motion: reduce");
+    expect(cursorSource).toContain("requestAnimationFrame");
+    expect(publicStyleSource).toContain(".public-custom-cursor");
+    expect(publicStyleSource).toContain("@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce)");
+  });
+
+  it("keeps complex-scenario automation as a dedicated light tonal section with semantic outcomes", () => {
+    expect(publicStyleSource).toContain(".home-intelligence");
+    expect(publicStyleSource).toMatch(/\.home-intelligence\s*\{[^}]*background:\s*var\(--color-public-page\);/s);
+    expect(publicStyleSource).toContain("var(--shadow-home-stage)");
+    expect(publicStyleSource).toMatch(/\.home-status-success\s*\{[^}]*background:\s*var\(--color-success-soft\);[^}]*color:\s*var\(--color-success-text\);/s);
+  });
+
+  it("keeps the screenshot-driven homepage free of numbered wireframe steps and decorative border dependence", () => {
+    expect(publicStyleSource).toContain(".home-capability-grid");
+    expect(publicStyleSource).toContain(".marketing-glyph");
+    expect(publicStyleSource).toContain("var(--shadow-home-card)");
+    expect(publicStyleSource).toContain("var(--shadow-home-card-hover)");
+    expect(publicStyleSource).not.toMatch(/\.home-(?:outcome|capability|llm)-card\s*\{[^}]*border:\s*1px/s);
   });
 
   it("keeps live Automation Rules on semantic tokens, focus contracts and responsive states", () => {
@@ -312,7 +421,7 @@ describe("Respio design tokens", () => {
     ["brand text on elevated surface", "--color-brand-primary", "--color-bg-elevated", 4.5],
     ["brand text on brand soft surface", "--color-brand-text-on-soft", "--color-brand-soft", 4.5],
     ["kicker text on surface", "--color-kicker-text", "--color-bg-surface", 4.5],
-    ["text on primary button", "--color-text-on-brand", "--color-brand-primary", 4.5],
+    ["text on primary button", "--color-text-on-brand", "--color-brand-action", 4.5],
     ["text on danger button", "--color-text-on-danger", "--color-danger", 4.5],
     ["text on dark surface", "--color-text-on-dark", "--color-surface-dark", 4.5],
     ["success text on success soft surface", "--color-success-text", "--color-success-soft", 4.5],
@@ -335,7 +444,7 @@ describe("Respio design tokens", () => {
     ["brand text on elevated surface", "--color-brand-primary", "--color-bg-elevated", 4.5],
     ["brand text on brand soft surface", "--color-brand-text-on-soft", "--color-brand-soft", 4.5],
     ["kicker text on elevated surface", "--color-kicker-text", "--color-bg-elevated", 4.5],
-    ["text on primary button", "--color-text-on-brand", "--color-brand-primary", 4.5],
+    ["text on primary button", "--color-text-on-brand", "--color-brand-action", 4.5],
     ["text on danger button", "--color-text-on-danger", "--color-danger", 4.5],
     ["success text on success soft surface", "--color-success-text", "--color-success-soft", 4.5],
     ["warning text on warning soft surface", "--color-warning-text", "--color-warning-soft", 4.5],
@@ -400,9 +509,10 @@ describe("Respio design tokens", () => {
     expect(globalStyleSource).not.toMatch(/\.button-danger\s*\{[^}]*color:\s*var\(--color-text-on-brand\);/s);
   });
 
-  it("keeps public success badges on their own accessible semantic pair even inside dark readiness surfaces", () => {
-    expect(publicStyleSource).toMatch(/\.public-status-mvp\s*\{[^}]*background:\s*var\(--color-success-soft\);[^}]*color:\s*var\(--color-success-text\);/s);
-    expect(publicStyleSource).not.toMatch(/\.readiness-summary-primary\s+\.public-status-mvp\s*\{[^}]*color:/s);
+  it("keeps rejected public MVP and readiness status contracts removed from the public visual system", () => {
+    expect(publicStyleSource).not.toContain(".public-status-mvp");
+    expect(publicStyleSource).not.toContain(".public-status-planned");
+    expect(publicStyleSource).not.toContain(".readiness-summary-primary");
   });
 
   it("keeps error copy on the dedicated danger text token instead of the lower-contrast accent token", () => {

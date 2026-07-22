@@ -1,67 +1,67 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { MarketingGlyph } from "../../components/public-site/MarketingGlyph";
 import { PublicShell } from "../../components/public-site/PublicShell";
+import { PublicTrialCta } from "../../components/public-site/PublicTrialCta";
 import { createPageMetadata } from "../../lib/seo";
 import { siteConfig } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Контакты Respio — демо, интеграция и пилот",
+  title: "Контакты Respio",
   description:
-    "Связаться с Respio по вопросам демо, пилота, интеграций маркетплейсов и будущего production-подключения.",
+    "Свяжитесь с командой Respio по вопросам подключения маркетплейсов, пакетов ответов, тестирования и корпоративных условий.",
   path: "/contacts",
 });
 
 export default function ContactsPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-contacts">
+      <section className="public-subhero">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="eyebrow">Контакты</p>
-            <h1>Обсудить демо, интеграцию или пилот Respio</h1>
+            <p className="public-eyebrow">Контакты</p>
+            <h1>Обсудите подключение, объём обращений и правила автоматизации</h1>
             <p className="public-lead">
-              Расскажите, с какими маркетплейсами работаете, какой объём отзывов и вопросов получаете и где сейчас возникает больше всего ручной работы.
+              Расскажите, с какими площадками и объёмом обращений работает команда. Мы поможем выбрать пакет ответов и определить сценарии для бесплатного теста.
             </p>
+            <div className="hero-actions">
+              <PublicTrialCta className="button button-primary" source="contacts-hero">Начать бесплатный тест</PublicTrialCta>
+              {siteConfig.contactEmail ? (
+                <Link className="button button-secondary" href={`mailto:${siteConfig.contactEmail}`}>Написать на почту</Link>
+              ) : null}
+            </div>
           </div>
 
-          <aside className="contact-channel-panel">
-            <span className="panel-kicker">Контактный канал</span>
-            {siteConfig.contactEmail ? (
-              <a className="contact-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-            ) : (
-              <strong>Публичный контактный email появится перед открытым запуском</strong>
-            )}
-            <p>Пока контакт не опубликован, продукт можно изучить через демо и страницы интеграций.</p>
+          <aside className="public-proof-panel-v73">
+            <MarketingGlyph variant="chats" />
+            <h2>Что подготовить к разговору</h2>
+            <ul>
+              <li>Маркетплейсы и количество магазинов</li>
+              <li>Примерный объём обращений и сезонные пики</li>
+              <li>Какие ответы можно публиковать автоматически</li>
+              <li>Где включить согласование в кабинете</li>
+            </ul>
           </aside>
         </div>
       </section>
 
       <div className="public-section">
-        <div className="public-container contact-paths">
-          <article className="contact-path contact-path-primary">
-            <span>01</span>
-            <div>
-              <h2>Посмотреть, как работает автоматизация</h2>
-              <p>Разберите путь обращения через контекст, AI, SafetyGate, правила и очередь отправки.</p>
-            </div>
-            <Link className="button button-primary" href="/demo">Открыть демо</Link>
+        <div className="public-container contact-grid-v73">
+          <article className="public-card contact-card-v73">
+            <MarketingGlyph variant="flow" />
+            <h2>Подключение и пакеты</h2>
+            <p>Подбор пакета, условия теста, несколько магазинов и индивидуальный объём ответов.</p>
           </article>
-          <article className="contact-path">
-            <span>02</span>
-            <div>
-              <h2>Проверить статус интеграции</h2>
-              <p>Узнайте, какая площадка уже входит в MVP-основу, а какая ещё требует проверки API.</p>
-            </div>
-            <Link className="button button-secondary" href="/marketplaces">Статусы интеграций</Link>
+          <article className="public-card contact-card-v73">
+            <MarketingGlyph variant="settings" />
+            <h2>Автопубликация и правила</h2>
+            <p>Автопубликация, стоп-темы, тон бренда, согласование и база знаний продавца.</p>
           </article>
-          <article className="contact-path">
-            <span>03</span>
-            <div>
-              <h2>Изучить возможности продукта</h2>
-              <p>Inbox, SafetyGate, правила, очередь, повторы, usage accounting и журнал действий.</p>
-            </div>
-            <Link className="button button-secondary" href="/features">Все возможности</Link>
+          <article className="public-card contact-card-v73">
+            <MarketingGlyph variant="history" />
+            <h2>Агентства и крупные команды</h2>
+            <p>Много магазинов, роли пользователей, аналитика и отдельный процесс запуска.</p>
           </article>
         </div>
       </div>

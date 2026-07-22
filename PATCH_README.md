@@ -1,10 +1,21 @@
-# Respio patch 0.1.26
+# Respio 0.1.38 WebGL Hero Polish
 
-Project-wide accessibility contrast hardening after the final 0.1.25 GitHub axe failure.
+Установка: распаковать архив в корень проекта `C:\Work\respio` с заменой файлов.
 
-- Fixes the exact Wildberries selected-account success badge failure caused by alpha compositing over the violet active surface.
-- Makes all semantic soft status surfaces opaque so contrast cannot change with parent background.
-- Adds complete dark-theme semantic status overrides with WCAG AA contrast.
-- Fixes one latent Automation Rules error-text misuse (`--color-danger` used as text instead of `--color-danger-text`).
-- Strengthens design-token tests to cover light/dark semantic pairs, on-brand text, all core surfaces and opacity invariants.
-- Synchronizes real version sources to `0.1.26`.
+```powershell
+cd C:\Work\respio\apps\web
+npm ci
+npm run dev
+```
+
+Суть патча:
+
+- плавная реакция на мышь по всей hero-секции;
+- планеты остаются математически привязанными к орбитам;
+- движение сведено к микродрейфу, чтобы не ломать композицию;
+- орбиты стали тоньше и чище;
+- малые планеты и иконки усилены;
+- центральный объект чуть уменьшен;
+- тесты обновлены под WebGL/Tubes/parallax contract.
+
+Статус: build/tests green; visual QA требует проверки в браузере пользователя.

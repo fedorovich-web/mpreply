@@ -25,6 +25,7 @@ from app.models.reply import Reply
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
+from app.services.answer_entitlement_service import AnswerEntitlementService
 from app.services.audit_service import AuditService
 from app.services.automation_rule_service import AutomationRuleService
 from app.services.message_service import MessageService
@@ -60,6 +61,7 @@ class ReplyExecutionService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.audit = AuditService(session)
+        self.entitlements = AnswerEntitlementService(session)
         self.message_service = MessageService(session)
         self.organization_service = OrganizationService(session)
         self.automation_service = AutomationRuleService(session)
@@ -287,6 +289,17 @@ class ReplyExecutionService:
                 await self._mark_quota_blocked(reply=reply, message=message, quota=quota)
                 return ExecuteReplyResult(reply.id, reply.status, False, quota.reason)
 
+        billing_actor_user_id = reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by
+        reservation = await self.entitlements.reserve_for_reply(
+            organization_id=reply.organization_id,
+            reply_id=reply.id,
+            actor_user_id=billing_actor_user_id,
+        )
+        if not reservation.allowed:
+            reason = reservation.reason or "answer_balance_unavailable"
+            await self._mark_entitlement_blocked(reply=reply, message=message, reason=reason)
+            return ExecuteReplyResult(reply.id, reply.status, False, reason)
+
         self._transition_reply(reply, ReplyStatus.SENDING.value)
         self._transition_message(message, MessageStatus.SENDING.value)
         reply.attempt_count += 1
@@ -306,6 +319,12 @@ class ReplyExecutionService:
         if preflight is True:
             reply = await self._get_reply_for_update(reply_id)
             message = await self._get_message(reply.message_id)
+            await self.entitlements.release_for_reply(
+                organization_id=reply.organization_id,
+                reply_id=reply.id,
+                reason="externally_already_answered",
+                actor_user_id=billing_actor_user_id,
+            )
             await self._mark_sent(
                 reply=reply,
                 message=message,
@@ -323,6 +342,11 @@ class ReplyExecutionService:
         reply = await self._get_reply_for_update(reply_id)
         message = await self._get_message(reply.message_id)
         if result.ok:
+            await self.entitlements.settle_for_reply(
+                organization_id=reply.organization_id,
+                reply_id=reply.id,
+                actor_user_id=billing_actor_user_id,
+            )
             await self._mark_sent(
                 reply=reply,
                 message=message,
@@ -528,6 +552,12 @@ class ReplyExecutionService:
         message: CustomerMessage,
         result: AdapterResult,
     ) -> None:
+        await self.entitlements.release_for_reply(
+            organization_id=reply.organization_id,
+            reply_id=reply.id,
+            reason=result.error_code or "retry_pending",
+            actor_user_id=reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by,
+        )
         self._transition_reply(reply, ReplyStatus.RETRY_PENDING.value)
         message_target = (
             MessageStatus.AUTO_REPLY_PENDING.value
@@ -568,6 +598,12 @@ class ReplyExecutionService:
         message: CustomerMessage,
         result: AdapterResult,
     ) -> None:
+        await self.entitlements.release_for_reply(
+            organization_id=reply.organization_id,
+            reply_id=reply.id,
+            reason=result.error_code or "marketplace_error",
+            actor_user_id=reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by,
+        )
         error_code = result.error_code or "marketplace_error"
         if error_code in _BLOCKING_MARKETPLACE_ERRORS:
             reply_target = ReplyStatus.BLOCKED.value
@@ -599,6 +635,12 @@ class ReplyExecutionService:
         await self.session.commit()
 
     async def _mark_final_failure(self, reply: Reply, error_code: str, reason: str) -> None:
+        await self.entitlements.release_for_reply(
+            organization_id=reply.organization_id,
+            reply_id=reply.id,
+            reason=error_code,
+            actor_user_id=reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by,
+        )
         message = await self._get_message(reply.message_id)
         if reply.status != ReplyStatus.FAILED.value:
             self._transition_reply(reply, ReplyStatus.FAILED.value)
@@ -606,6 +648,28 @@ class ReplyExecutionService:
         reply.error_code = error_code
         reply.failed_reason = reason
         reply.next_retry_at = None
+        await self.session.commit()
+
+    async def _mark_entitlement_blocked(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        reason: str,
+    ) -> None:
+        self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+        self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        reply.error_code = reason
+        reply.failed_reason = "Answer balance blocked this send before the marketplace request"
+        reply.next_retry_at = None
+        await self.audit.write(
+            action="answer_balance.publish_blocked",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by,
+            entity_id=str(reply.id),
+            metadata={"reason": reason, "marketplace": message.marketplace},
+        )
         await self.session.commit()
 
     async def _mark_quota_blocked(

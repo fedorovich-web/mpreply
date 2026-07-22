@@ -1,87 +1,103 @@
 import type { Metadata } from "next";
-
+import { MarketingGlyph } from "../../components/public-site/MarketingGlyph";
 import { PublicShell } from "../../components/public-site/PublicShell";
+import { PublicTrialCta } from "../../components/public-site/PublicTrialCta";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Материалы Respio об автоматизации отзывов и вопросов",
+  title: "Материалы об ответах на отзывы и вопросы маркетплейсов",
   description:
-    "Краткие практические разборы Respio: auto-first, SafetyGate, marketplace adapters, повторные попытки, идемпотентность и защита API-ключей.",
+    "Практические материалы Respio: автоматизация ответов, работа с негативом, база знаний, правила автопубликации и контроль качества ИИ.",
   path: "/resources",
 });
 
-const notes = [
+const materials = [
   {
-    number: "01",
-    title: "Auto-first без слепой автоотправки",
-    text: "Автоматический режим имеет смысл только тогда, когда система умеет отличить нормальный случай от исключения. Поэтому перед отправкой Respio проверяет контекст, риск и правила компании.",
-    takeaway: "Автоматизировать норму. Эскалировать исключение.",
+    icon: "reviews" as const,
+    label: "Гайд",
+    title: "Как отвечать на отзывы без шаблонных фраз",
+    text: "Структура сильного ответа, работа с оценкой, повторной покупкой и негативом без лишних обещаний.",
   },
   {
-    number: "02",
-    title: "Почему одного prompt недостаточно",
-    text: "Даже сильная модель не должна самостоятельно решать вопросы о гарантиях, возвратах, компенсациях или недостающих характеристиках товара. Нужны формальные ограничения и причины остановки.",
-    takeaway: "AI готовит ответ; система решает, можно ли его отправлять.",
+    icon: "questions" as const,
+    label: "Чек-лист",
+    title: "Какие данные нужны ИИ для точного ответа о товаре",
+    text: "Характеристики, инструкции, FAQ, ограничения и правила, которые снижают риск выдуманных фактов.",
   },
   {
-    number: "03",
-    title: "Marketplace adapter как архитектурная граница",
-    text: "Wildberries, Ozon, Яндекс Маркет и Авито отличаются авторизацией, payload, ошибками и лимитами. Эти различия должны оставаться внутри отдельного adapter, а не проникать во все сервисы.",
-    takeaway: "Новая интеграция не должна порождать параллельную архитектуру.",
+    icon: "settings" as const,
+    label: "Методика",
+    title: "Как настроить безопасную автопубликацию",
+    text: "Стоп-темы, категории риска, сценарии автопубликации и настройки согласования.",
   },
   {
-    number: "04",
-    title: "Повторная попытка — не то же самое, что дубль",
-    text: "Временная ошибка API может требовать retry. Но повторная задача не должна публиковать второй ответ на то же обращение. Для этого нужны ключи идемпотентности и проверка текущего состояния.",
-    takeaway: "Повторять безопасно, не дублировать действие.",
+    icon: "chats" as const,
+    label: "Практика",
+    title: "Чаты покупателей: где ИИ помогает, а где нужен менеджер",
+    text: "Типовые вопросы, сохранение контекста диалога, эскалация и контроль обещаний продавца.",
   },
   {
-    number: "05",
-    title: "Почему статус должен объяснять, что произошло",
-    text: "Пользователю недостаточно увидеть «ошибка». Важно понять: отправка не началась, ждёт повторной попытки, остановлена SafetyGate или требует ручного решения.",
-    takeaway: "Каждая ошибка должна превращаться в понятное состояние и следующее действие.",
+    icon: "history" as const,
+    label: "Аудит",
+    title: "Какие метрики показывают качество автоматизации",
+    text: "Доля автопубликации, правки, эскалации, скорость ответа и повторяющиеся пробелы в данных.",
   },
   {
-    number: "06",
-    title: "API-ключи не должны попадать во frontend",
-    text: "Marketplace credentials хранятся и используются только на backend, шифруются в базе и не возвращаются в обычные API-ответы или логи в открытом виде.",
-    takeaway: "Секрет нужен интеграции, но не интерфейсу пользователя.",
+    icon: "context" as const,
+    label: "Шаблон",
+    title: "Структура базы знаний продавца",
+    text: "Как хранить информацию о товарах, совместимости, возвратах и ограничениях, чтобы ответы были единообразными.",
   },
-];
+] as const;
 
 export default function ResourcesPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-resources">
+      <section className="public-subhero">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="eyebrow">Материалы</p>
-            <h1>Как устроить автоматизацию ответов без скрытой магии и слепой отправки</h1>
+            <p className="public-eyebrow">База знаний Respio</p>
+            <h1>Практические материалы для автоматизации общения с покупателями</h1>
             <p className="public-lead">
-              Короткие практические разборы архитектуры, риска и операционной надёжности. Без выдуманных кейсов, цифр и неподтверждённых обещаний.
+              Не общие статьи об ИИ, а конкретные правила для отзывов, вопросов, чатов, базы знаний и автоматической публикации.
             </p>
           </div>
-
-          <aside className="resource-intro-panel">
-            <span className="panel-kicker">Редакционный принцип</span>
-            <strong>Сначала полезное содержание — потом поисковый трафик</strong>
-            <p>Материал появляется только тогда, когда действительно отвечает на вопрос продавца или команды поддержки.</p>
+          <aside className="public-proof-panel-v73">
+            <MarketingGlyph variant="context" />
+            <h2>Основные темы</h2>
+            <ul>
+              <li>Ответы на отзывы и негатив</li>
+              <li>Вопросы о товаре и фактология</li>
+              <li>Чаты и настройки согласования</li>
+              <li>Правила автопубликации</li>
+            </ul>
           </aside>
         </div>
       </section>
 
       <div className="public-section">
-        <div className="public-container resource-note-list">
-          {notes.map((note) => (
-            <article className="resource-note" key={note.number}>
-              <span className="resource-note-index">{note.number}</span>
-              <div className="resource-note-copy">
-                <h2>{note.title}</h2>
-                <p>{note.text}</p>
-              </div>
-              <blockquote>{note.takeaway}</blockquote>
-            </article>
-          ))}
+        <div className="public-container">
+          <div className="resource-library-grid resource-library-grid-v73">
+            {materials.map((material) => (
+              <article className="resource-library-card" key={material.title}>
+                <MarketingGlyph variant={material.icon} />
+                <span className="resource-state">{material.label}</span>
+                <h2>{material.title}</h2>
+                <p>{material.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="public-section public-cta-section">
+        <div className="public-container home-final-cta-card public-page-final-cta">
+          <div>
+            <p className="public-eyebrow">Проверить на практике</p>
+            <h2>Примените правила на реальных обращениях</h2>
+            <p>Семь дней и 400 ответов бесплатно.</p>
+          </div>
+          <PublicTrialCta className="button button-primary public-cta-on-dark" source="resources-footer">Начать тест</PublicTrialCta>
         </div>
       </div>
     </PublicShell>

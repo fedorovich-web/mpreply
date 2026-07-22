@@ -97,6 +97,7 @@ _REPLY_TRANSITIONS: dict[str, frozenset[str]] = {
         ReplyStatus.SENT.value,
         ReplyStatus.FAILED.value,
         ReplyStatus.BLOCKED.value,
+        ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
     }),
     ReplyStatus.RETRY_PENDING.value: frozenset({
         ReplyStatus.QUEUED.value,
@@ -104,10 +105,12 @@ _REPLY_TRANSITIONS: dict[str, frozenset[str]] = {
         ReplyStatus.FAILED.value,
         ReplyStatus.BLOCKED.value,
         ReplyStatus.SENT.value,
+        ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
     }),
     ReplyStatus.FAILED.value: frozenset({
         ReplyStatus.QUEUED.value,
         ReplyStatus.SENDING.value,
+        ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
     }),
 }
 

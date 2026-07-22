@@ -1,289 +1,350 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import {
+  CAMERA_FOV,
+  CAMERA_Z,
+  HERO_ORBITS,
+  getHeroOrbitPoint3D,
+  type HeroOrbitPoint3D,
+  type OrbitKey,
+} from "./HeroFlowModel";
+import type { HeroSceneRuntime } from "./HeroFlowWebGL";
+import styles from "./HeroFlowCanvas.module.css";
 
-type FlowLayer = {
-  color: string;
-  alpha: number;
-  amplitude: number;
-  thickness: number;
-  phase: number;
-  speed: number;
-  frequency: number;
-  blur: number;
+export { HERO_ORBITS, getHeroOrbitPoint3D };
+export type { HeroOrbitPoint3D };
+
+type WebGLState = "idle" | "loading" | "ready" | "fallback";
+type HeroWebGLModule = typeof import("./HeroFlowWebGL");
+type LabelSize = { width: number; height: number };
+
+const EMPTY_LABEL_SIZES: Record<OrbitKey, LabelSize> = {
+  question: { width: 100, height: 40 },
+  catalog: { width: 100, height: 40 },
+  data: { width: 100, height: 40 },
+  context: { width: 100, height: 40 },
+  answer: { width: 100, height: 40 },
 };
 
-type CanvasSettings = {
-  transparent: string;
-  glowMultiplier: number;
-  glowOpacity: number;
-  edgeFadeStart: number;
-  edgeFadeEnd: number;
-  dprMax: number;
-  fps: number;
-  reducedMotionTime: number;
-  samplePoints: number;
-  centerOffsetStep: number;
-  harmonicFrequencyRatio: number;
-  harmonicSpeedRatio: number;
-  harmonicAmplitudeRatio: number;
-  envelopeBase: number;
-  envelopeGain: number;
-};
-
-function readCssValue(styles: CSSStyleDeclaration, variable: string): string {
-  return styles.getPropertyValue(variable).trim();
-}
-
-function readCssNumber(styles: CSSStyleDeclaration, variable: string): number {
-  const value = Number.parseFloat(readCssValue(styles, variable));
-  if (!Number.isFinite(value)) {
-    throw new Error(`Invalid numeric canvas token: ${variable}`);
+function supportsWebGL(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    return Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+  } catch {
+    return false;
   }
-  return value;
 }
 
-function createWavePath(
-  width: number,
-  height: number,
-  time: number,
-  layer: FlowLayer,
-  index: number,
-  settings: CanvasSettings,
-): Path2D {
-  const points = Math.max(24, Math.round(settings.samplePoints));
-  const step = width / (points - 1);
-  const center = height * (0.5 + index * settings.centerOffsetStep);
-  const path = new Path2D();
-
-  for (let point = 0; point < points; point += 1) {
-    const x = point * step;
-    const progress = point / (points - 1);
-    const envelope = settings.envelopeBase + Math.sin(progress * Math.PI) * settings.envelopeGain;
-    const primary =
-      Math.sin(progress * Math.PI * layer.frequency + time * layer.speed + layer.phase) *
-      layer.amplitude *
-      envelope;
-    const harmonic =
-      Math.sin(
-        progress * Math.PI * (layer.frequency * settings.harmonicFrequencyRatio) -
-          time * layer.speed * settings.harmonicSpeedRatio +
-          layer.phase * 1.7,
-      ) *
-      layer.amplitude *
-      settings.harmonicAmplitudeRatio;
-    const y = center + primary + harmonic;
-
-    if (point === 0) {
-      path.moveTo(x, y);
-    } else {
-      path.lineTo(x, y);
-    }
-  }
-
-  return path;
+function getPixelRatioCap(): number {
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  if (window.innerWidth <= 620) return 1.15;
+  if (typeof nav.deviceMemory === "number" && nav.deviceMemory <= 4) return 1.2;
+  return 1.5;
 }
 
-function drawRibbon(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  time: number,
-  layer: FlowLayer,
-  index: number,
-  settings: CanvasSettings,
-) {
-  const path = createWavePath(width, height, time, layer, index, settings);
-  const gradient = context.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0, settings.transparent);
-  gradient.addColorStop(settings.edgeFadeStart, layer.color);
-  gradient.addColorStop(0.5, layer.color);
-  gradient.addColorStop(settings.edgeFadeEnd, layer.color);
-  gradient.addColorStop(1, settings.transparent);
-
-  context.save();
-  context.lineCap = "round";
-  context.lineJoin = "round";
-
-  context.globalAlpha = layer.alpha * settings.glowOpacity;
-  context.filter = `blur(${layer.blur * settings.glowMultiplier}px)`;
-  context.lineWidth = layer.thickness * settings.glowMultiplier;
-  context.strokeStyle = gradient;
-  context.stroke(path);
-
-  context.globalAlpha = layer.alpha;
-  context.filter = `blur(${layer.blur}px)`;
-  context.lineWidth = layer.thickness;
-  context.stroke(path);
-  context.restore();
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(Math.max(value, minimum), maximum);
 }
 
-function readCanvasConfiguration(height: number): { layers: FlowLayer[]; settings: CanvasSettings } {
-  const styles = getComputedStyle(document.documentElement);
-  const settings: CanvasSettings = {
-    transparent: readCssValue(styles, "--color-transparent"),
-    glowMultiplier: readCssNumber(styles, "--canvas-glow-multiplier"),
-    glowOpacity: readCssNumber(styles, "--canvas-glow-opacity"),
-    edgeFadeStart: readCssNumber(styles, "--canvas-edge-fade-start"),
-    edgeFadeEnd: readCssNumber(styles, "--canvas-edge-fade-end"),
-    dprMax: readCssNumber(styles, "--canvas-dpr-max"),
-    fps: readCssNumber(styles, "--canvas-fps"),
-    reducedMotionTime: readCssNumber(styles, "--canvas-reduced-motion-time"),
-    samplePoints: readCssNumber(styles, "--canvas-sample-points"),
-    centerOffsetStep: readCssNumber(styles, "--canvas-center-offset-step"),
-    harmonicFrequencyRatio: readCssNumber(styles, "--canvas-harmonic-frequency-ratio"),
-    harmonicSpeedRatio: readCssNumber(styles, "--canvas-harmonic-speed-ratio"),
-    harmonicAmplitudeRatio: readCssNumber(styles, "--canvas-harmonic-amplitude-ratio"),
-    envelopeBase: readCssNumber(styles, "--canvas-envelope-base"),
-    envelopeGain: readCssNumber(styles, "--canvas-envelope-gain"),
-  };
-
-  const layer = (
-    suffix: "violet" | "mint" | "soft-violet" | "soft-mint",
-  ): FlowLayer => ({
-    color: readCssValue(styles, `--canvas-color-${suffix}`),
-    alpha: readCssNumber(styles, `--canvas-opacity-${suffix}`),
-    amplitude: height * readCssNumber(styles, `--canvas-amplitude-${suffix}`),
-    thickness: height * readCssNumber(styles, `--canvas-width-${suffix}`),
-    phase: readCssNumber(styles, `--canvas-phase-${suffix}`),
-    speed: readCssNumber(styles, `--canvas-speed-${suffix}`),
-    frequency: readCssNumber(styles, `--canvas-frequency-${suffix}`),
-    blur: readCssNumber(styles, `--canvas-blur-${suffix}`),
-  });
-
-  return {
-    layers: [layer("violet"), layer("mint"), layer("soft-violet"), layer("soft-mint")],
-    settings,
-  };
+function readPixelToken(element: HTMLElement, token: string, fallback: number): number {
+  const value = Number.parseFloat(getComputedStyle(element).getPropertyValue(token));
+  return Number.isFinite(value) ? value : fallback;
 }
 
 export function HeroFlowCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const shellRef = useRef<HTMLElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const coreLabelRef = useRef<HTMLDivElement | null>(null);
+  const monogramRef = useRef<HTMLSpanElement | null>(null);
+  const coreArtworkRef = useRef<HTMLImageElement | null>(null);
+  const coreShadowRef = useRef<HTMLSpanElement | null>(null);
+  const labelRefs = useRef<Record<OrbitKey, HTMLDivElement | null>>({
+    question: null,
+    catalog: null,
+    data: null,
+    context: null,
+    answer: null,
+  });
+  const [webglState, setWebglState] = useState<WebGLState>("idle");
 
   useEffect(() => {
+    const shell = shellRef.current;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!shell || !canvas) return undefined;
 
-    const context = canvas.getContext("2d", { alpha: true });
-    if (!context) return;
+    let cancelled = false;
+    let runtime: HeroSceneRuntime | null = null;
+    let webglModule: HeroWebGLModule | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+    let visibilityObserver: IntersectionObserver | null = null;
+    let requestedLoad = false;
+    let labelSizes: Record<OrbitKey, LabelSize> = { ...EMPTY_LABEL_SIZES };
 
-    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let reducedMotion = reducedMotionQuery.matches;
-    let animationFrame = 0;
-    let startTime = performance.now();
-    let lastFrameTime = 0;
-    let isVisible = true;
-    let width = 0;
-    let height = 0;
-    let layers: FlowLayer[] = [];
-    let settings: CanvasSettings | null = null;
+    const measureLabels = () => {
+      labelSizes = HERO_ORBITS.reduce<Record<OrbitKey, LabelSize>>(
+        (sizes, orbit) => {
+          const label = labelRefs.current[orbit.key];
+          if (!label) return sizes;
+          sizes[orbit.key] = {
+            width: Math.max(64, label.offsetWidth),
+            height: Math.max(24, label.offsetHeight),
+          };
+          return sizes;
+        },
+        { ...EMPTY_LABEL_SIZES },
+      );
+    };
 
-    const refreshConfiguration = () => {
-      const configuration = readCanvasConfiguration(height);
-      layers = configuration.layers;
-      settings = configuration.settings;
+    const updateDomLabels = () => {
+      if (!runtime || !webglModule) return;
+      const activeRuntime = runtime;
+      activeRuntime.scene.updateMatrixWorld(true);
+      activeRuntime.camera.updateMatrixWorld(true);
+
+      const rect = shell.getBoundingClientRect();
+      const compact = rect.width <= 620;
+      const labelGap = readPixelToken(shell, "--hero-planet-label-gap", compact ? 16 : 24);
+      const edgePadding = compact ? 10 : 18;
+
+      const projectToCss = (
+        object: Parameters<HeroWebGLModule["projectObjectToNdc"]>[0],
+      ) => {
+        if (!webglModule) return { x: 0, y: 0 };
+        const vector = webglModule.projectObjectToNdc(object, activeRuntime.camera);
+        return {
+          x: (vector.x * 0.5 + 0.5) * rect.width,
+          y: (-vector.y * 0.5 + 0.5) * rect.height,
+        };
+      };
+
+      const corePoint = projectToCss(activeRuntime.core);
+      const coreLabel = coreLabelRef.current;
+      const monogram = monogramRef.current;
+      const coreArtwork = coreArtworkRef.current;
+      const coreShadow = coreShadowRef.current;
+
+      if (coreLabel) {
+        coreLabel.style.transform = `translate3d(${Math.round(corePoint.x)}px, ${Math.round(corePoint.y + (compact ? 15 : 24))}px, 0) translate(-50%, -50%)`;
+      }
+      if (monogram) {
+        monogram.style.transform = `translate3d(${Math.round(corePoint.x)}px, ${Math.round(corePoint.y - rect.height * (compact ? 0.116 : 0.142))}px, 0) translate(-50%, -50%)`;
+      }
+      if (coreArtwork) {
+        coreArtwork.style.transform = `translate3d(${Math.round(corePoint.x)}px, ${Math.round(corePoint.y)}px, 0) translate(-50%, -50%)`;
+      }
+      if (coreShadow) {
+        coreShadow.style.transform = `translate3d(${Math.round(corePoint.x)}px, ${Math.round(corePoint.y + (compact ? 85 : 128))}px, 0) translate(-50%, -50%)`;
+      }
+
+      HERO_ORBITS.forEach((orbit) => {
+        const planet = activeRuntime.planets.get(orbit.key);
+        const label = labelRefs.current[orbit.key];
+        if (!planet || !label) return;
+
+        const point = projectToCss(planet);
+        const size = labelSizes[orbit.key];
+        let x = point.x;
+        let y = point.y;
+        let translateX = "-50%";
+        let translateY = "-50%";
+        let textAlign: "left" | "right" | "center" = "center";
+
+        if (orbit.labelSide === "left") {
+          x -= labelGap;
+          translateX = "-100%";
+          textAlign = "right";
+        } else if (orbit.labelSide === "right") {
+          x += labelGap;
+          translateX = "0";
+          textAlign = "left";
+        } else if (orbit.labelSide === "top") {
+          y -= labelGap;
+          translateY = "-100%";
+        } else {
+          y += labelGap;
+          translateY = "0";
+        }
+
+        if (compact) {
+          if (orbit.labelSide === "left") {
+            x = clamp(x, size.width + edgePadding, rect.width - edgePadding);
+          } else if (orbit.labelSide === "right") {
+            x = clamp(x, edgePadding, rect.width - size.width - edgePadding);
+          } else {
+            x = clamp(
+              x,
+              size.width / 2 + edgePadding,
+              rect.width - size.width / 2 - edgePadding,
+            );
+          }
+
+          if (orbit.labelSide === "top") {
+            y = clamp(y, size.height + edgePadding, rect.height - edgePadding);
+          } else if (orbit.labelSide === "bottom") {
+            y = clamp(y, edgePadding, rect.height - size.height - edgePadding);
+          } else {
+            y = clamp(
+              y,
+              size.height / 2 + edgePadding,
+              rect.height - size.height / 2 - edgePadding,
+            );
+          }
+        }
+
+        label.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0) translate(${translateX}, ${translateY})`;
+        label.style.textAlign = textAlign;
+        label.style.justifyContent =
+          orbit.labelSide === "left"
+            ? "flex-end"
+            : orbit.labelSide === "right"
+              ? "flex-start"
+              : "center";
+      });
+    };
+
+    const renderFrame = () => {
+      if (!runtime) return;
+      runtime.scene.updateMatrixWorld(true);
+      runtime.renderer.render(runtime.scene, runtime.camera);
+      updateDomLabels();
     };
 
     const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const currentSettings = settings ?? readCanvasConfiguration(Math.max(1, rect.height)).settings;
-      const dpr = Math.min(window.devicePixelRatio || 1, currentSettings.dprMax);
-      width = Math.max(1, Math.round(rect.width));
-      height = Math.max(1, Math.round(rect.height));
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      refreshConfiguration();
+      if (!runtime) return;
+      const rect = shell.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const compact = rect.width <= 620;
+      runtime.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, getPixelRatioCap()));
+      runtime.renderer.setSize(rect.width, rect.height, false);
+      runtime.camera.aspect = rect.width / rect.height;
+      runtime.camera.fov = compact ? 37 : CAMERA_FOV;
+      runtime.camera.position.set(0, compact ? 0.1 : 0.15, compact ? 16.4 : CAMERA_Z);
+      runtime.camera.lookAt(0, 0, 0);
+      runtime.root.position.set(compact ? 0 : -0.12, compact ? 0.08 : 0.22, 0);
+      runtime.root.scale.setScalar(compact ? 0.8 : 0.86);
+      runtime.parallax.position.set(0, 0, 0);
+      runtime.parallax.rotation.set(0, 0, 0);
+      runtime.camera.updateProjectionMatrix();
+      measureLabels();
+      renderFrame();
     };
 
-    const render = (timestamp: number) => {
-      if (!settings) refreshConfiguration();
-      if (!settings) return;
+    const loadScene = async () => {
+      if (requestedLoad || cancelled) return;
+      requestedLoad = true;
 
-      const frameInterval = 1000 / settings.fps;
-      if (!reducedMotion && timestamp - lastFrameTime < frameInterval) {
-        animationFrame = window.requestAnimationFrame(render);
+      if (!supportsWebGL()) {
+        setWebglState("fallback");
         return;
       }
 
-      lastFrameTime = timestamp;
-      context.clearRect(0, 0, width, height);
-      const elapsed = reducedMotion ? settings.reducedMotionTime : timestamp - startTime;
+      setWebglState("loading");
+      try {
+        const sceneModule = await import("./HeroFlowWebGL");
+        if (cancelled) return;
+        webglModule = sceneModule;
+        runtime = sceneModule.createHeroSceneRuntime(
+          canvas,
+          shell.getBoundingClientRect().width <= 620,
+        );
 
-      layers.forEach((currentLayer, index) => {
-        drawRibbon(context, width, height, elapsed, currentLayer, index - 1.5, settings!);
-      });
+        HERO_ORBITS.forEach((orbit) => {
+          const planet = runtime?.planets.get(orbit.key);
+          if (!planet) return;
+          const point = getHeroOrbitPoint3D(orbit, orbit.phase);
+          planet.position.set(point.x, point.y, point.z);
+        });
 
-      if (!reducedMotion && isVisible && !document.hidden) {
-        animationFrame = window.requestAnimationFrame(render);
+        resize();
+        setWebglState("ready");
+        requestAnimationFrame(() => {
+          measureLabels();
+          renderFrame();
+        });
+
+        resizeObserver = new ResizeObserver(resize);
+        resizeObserver.observe(shell);
+
+        const onContextLost = (event: Event) => {
+          event.preventDefault();
+          setWebglState("fallback");
+        };
+        canvas.addEventListener("webglcontextlost", onContextLost, { once: true });
+      } catch (error) {
+        console.error("Hero WebGL scene failed to initialize", error);
+        setWebglState("fallback");
       }
     };
 
-    const restart = () => {
-      window.cancelAnimationFrame(animationFrame);
-      startTime = performance.now();
-      lastFrameTime = 0;
-      refreshConfiguration();
-      render(startTime);
-    };
-
-    const handleMotionChange = (event: MediaQueryListEvent) => {
-      reducedMotion = event.matches;
-      restart();
-    };
-
-    const resizeObserver = new ResizeObserver(() => {
-      resize();
-      restart();
-    });
-
-    const visibilityObserver = new IntersectionObserver(
+    visibilityObserver = new IntersectionObserver(
       ([entry]) => {
-        isVisible = entry?.isIntersecting ?? true;
-        if (isVisible && !reducedMotion && !document.hidden) {
-          restart();
-        } else {
-          window.cancelAnimationFrame(animationFrame);
-        }
+        if (entry?.isIntersecting) void loadScene();
       },
-      { threshold: 0.01 },
+      { rootMargin: "220px 0px" },
     );
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden && isVisible && !reducedMotion) {
-        restart();
-      } else {
-        window.cancelAnimationFrame(animationFrame);
-      }
-    };
-
-    const themeObserver = new MutationObserver(() => restart());
-
-    resizeObserver.observe(canvas);
-    visibilityObserver.observe(canvas);
-    themeObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    reducedMotionQuery.addEventListener("change", handleMotionChange);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    resize();
-    render(startTime);
+    visibilityObserver.observe(shell);
 
     return () => {
-      window.cancelAnimationFrame(animationFrame);
-      resizeObserver.disconnect();
-      visibilityObserver.disconnect();
-      themeObserver.disconnect();
-      reducedMotionQuery.removeEventListener("change", handleMotionChange);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      cancelled = true;
+      resizeObserver?.disconnect();
+      visibilityObserver?.disconnect();
+      if (runtime && webglModule) webglModule.disposeHeroSceneRuntime(runtime);
     };
   }, []);
 
   return (
-    <div className="hero-flow-canvas" aria-hidden="true">
-      <canvas ref={canvasRef} />
-    </div>
+    <figure
+      ref={shellRef}
+      className={styles.scene}
+      data-webgl-state={webglState}
+      role="img"
+      aria-label="Пять смысловых AI-узлов расположены на пяти отдельных трёхмерных орбитах вокруг Respio AI: вопрос покупателя, товары и каталог, данные о товарах, контекст и правила, готовый ответ"
+    >
+      <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+
+      <div className={styles.fallback} aria-hidden="true">
+        <div className={styles.fallbackCore}>
+          <span>R</span>
+        </div>
+        <div className={styles.fallbackOrbit} />
+      </div>
+
+      <div className={styles.labelLayer} aria-hidden="true">
+        <span ref={coreShadowRef} className={styles.coreGroundShadow} />
+        <Image
+          ref={coreArtworkRef}
+          className={styles.coreArtwork}
+          src="/brand/respio-ai-core-reference.png"
+          alt=""
+          width={300}
+          height={300}
+          sizes="(max-width: 620px) 195px, 300px"
+          draggable={false}
+          priority
+          unoptimized
+        />
+        <span ref={monogramRef} className={styles.coreMonogram}>R</span>
+        <div ref={coreLabelRef} className={styles.coreLabel}>
+          <strong>Respio AI</strong>
+          <span>AI-ответы для маркетплейсов</span>
+        </div>
+
+        {HERO_ORBITS.map((orbit) => (
+          <div
+            key={orbit.key}
+            ref={(node) => {
+              labelRefs.current[orbit.key] = node;
+            }}
+            className={`${styles.planetLabel} ${styles[`label_${orbit.accent}`]}`}
+            data-orbit-label={orbit.key}
+          >
+            {orbit.label}
+          </div>
+        ))}
+      </div>
+    </figure>
   );
 }

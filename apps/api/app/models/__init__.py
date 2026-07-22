@@ -1,4 +1,8 @@
 from app.models.ai_draft import AIDraft
+from app.models.answer_credit_grant import AnswerCreditGrant
+from app.models.answer_ledger_entry import AnswerLedgerEntry
+from app.models.answer_package import AnswerPackage
+from app.models.answer_reservation import AnswerReservation
 from app.models.audit_log import AuditLog
 from app.models.automation_rule import AutomationRule
 from app.models.billing_plan import BillingPlan
@@ -15,6 +19,10 @@ from app.models.user import User
 
 __all__ = [
     "AIDraft",
+    "AnswerCreditGrant",
+    "AnswerLedgerEntry",
+    "AnswerPackage",
+    "AnswerReservation",
     "AuditLog",
     "AutomationRule",
     "BillingPlan",

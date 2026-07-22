@@ -13,6 +13,7 @@ const styleFiles = [
   "styles/theme.css",
   "styles/globals.css",
   "styles/public-site.css",
+  "components/public-site/HeroFlowCanvas.module.css",
 ];
 
 function stripImports(source) {

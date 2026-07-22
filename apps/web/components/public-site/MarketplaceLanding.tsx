@@ -1,153 +1,180 @@
 import Link from "next/link";
 
 import type { MarketplaceConfig } from "../../lib/site-config";
+import { MarketingGlyph } from "./MarketingGlyph";
 import { PublicShell } from "./PublicShell";
+import { PublicTrialCta } from "./PublicTrialCta";
+
+const platformScenarios = {
+  wildberries: [
+    {
+      icon: "reviews" as const,
+      title: "Отзывы с учётом оценки и товара",
+      text: "Respio готовит персональный ответ, учитывает рейтинг и публикует его автоматически по правилам продавца.",
+    },
+    {
+      icon: "questions" as const,
+      title: "Вопросы по карточке товара",
+      text: "Характеристики, комплектация, размер и совместимость проверяются по доступным данным до формирования ответа.",
+    },
+    {
+      icon: "history" as const,
+      title: "История решений по магазину",
+      text: "Команда видит, почему ответ был опубликован автоматически, изменён или отправлен на согласование по настройке.",
+    },
+  ],
+  ozon: [
+    {
+      icon: "reviews" as const,
+      title: "Ответы на отзывы покупателей",
+      text: "Respio учитывает оценку, текст обращения, товар и стиль бренда, затем публикует ответ автоматически по выбранным правилам.",
+    },
+    {
+      icon: "questions" as const,
+      title: "Вопросы о товаре",
+      text: "Система сверяет вопрос с характеристиками и базой знаний, чтобы отвечать по существу и не придумывать отсутствующие данные.",
+    },
+    {
+      icon: "chats" as const,
+      title: "Диалоги с покупателями",
+      text: "Сообщения в чатах обрабатываются с учётом предыдущих реплик и публикуются автоматически, если такой режим выбран продавцом.",
+    },
+  ],
+  "yandex-market": [
+    {
+      icon: "reviews" as const,
+      title: "Отзывы и обратная связь",
+      text: "Отзывы и претензии обрабатываются по правилам продавца: Respio готовит ответ и публикует его автоматически либо отправляет на согласование по настройке.",
+    },
+    {
+      icon: "context" as const,
+      title: "Ответы по данным карточки",
+      text: "Respio использует доступные характеристики, описание и инструкции, чтобы отвечать конкретно по товару.",
+    },
+    {
+      icon: "settings" as const,
+      title: "Правила для категорий",
+      text: "Для разных групп товаров можно настроить отдельный тон, ограничения и режим публикации.",
+    },
+  ],
+  avito: [
+    {
+      icon: "chats" as const,
+      title: "Чаты с сохранением контекста",
+      text: "Respio учитывает предыдущие сообщения и помогает отвечать на вопросы о товаре, условиях и следующем шаге сделки.",
+    },
+    {
+      icon: "reviews" as const,
+      title: "Ответы на отзывы",
+      text: "Система готовит спокойный персональный ответ и не обещает то, что не разрешено правилами продавца.",
+    },
+    {
+      icon: "flow" as const,
+      title: "Передача менеджеру",
+      text: "Торг, претензия или нестандартное условие обрабатываются по выбранному сценарию: автопубликация, ответ для команды или согласование.",
+    },
+  ],
+} as const;
+
+const workflowBenefits = [
+  "Обращение получает тип, риск и следующий шаг",
+  "Ответ строится на доступном контексте товара",
+  "Правила бренда применяются до публикации",
+  "Сценарии согласования задаются в личном кабинете",
+] as const;
 
 type MarketplaceLandingProps = {
   marketplace: MarketplaceConfig;
 };
 
-const implementationChecks = [
-  "Проверить актуальный официальный API и доступные права",
-  "Подтвердить получение отзывов и вопросов в реальном кабинете",
-  "Проверить отправку ответа, статусы модерации и ограничения",
-  "Реализовать нормализацию, ошибки, лимиты и health-check",
-  "Пройти end-to-end тест с реальными credentials без утечки секретов",
-];
-
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
-  const isMvp = marketplace.status === "mvp";
+  const scenarios = platformScenarios[marketplace.key];
 
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-marketplace-detail">
-        <div className="public-container public-subhero-grid">
+      <section className="public-subhero marketplace-detail-hero">
+        <div className="public-container public-subhero-grid marketplace-detail-hero-grid">
           <div className="public-subhero-copy">
-            <span className={`public-status public-status-${marketplace.status}`}>
-              {marketplace.statusLabel}
-            </span>
-            <p className="eyebrow">Respio × {marketplace.name}</p>
-            <h1>
-              {isMvp
-                ? `Автоматические ответы на отзывы и вопросы ${marketplace.name}`
-                : `Интеграция Respio с ${marketplace.name}: текущий статус и план проверки`}
-            </h1>
+            <p className="public-eyebrow">Respio для {marketplace.name}</p>
+            <h1>ИИ-ответы покупателям {marketplace.name} с проверкой данных и риска</h1>
             <p className="public-lead">{marketplace.summary}</p>
             <div className="hero-actions">
-              <Link className="button button-primary" href={isMvp ? "/auth/register?intent=connect-marketplace" : "/contacts"}>
-                {isMvp ? "Подключить маркетплейс" : "Обсудить интеграцию"}
-              </Link>
-              <Link className="button button-secondary" href="/marketplaces">
-                Все маркетплейсы
-              </Link>
+              <PublicTrialCta className="button button-primary" source={`marketplace-${marketplace.key}`}>
+                Начать бесплатный тест
+              </PublicTrialCta>
+              <Link className="button button-secondary" href="/marketplaces">Все маркетплейсы</Link>
             </div>
           </div>
 
-          <aside className={`integration-status-panel integration-status-panel-${marketplace.status}`} aria-label="Статус интеграции">
-            <div className="integration-status-topline">
-              <span className="marketplace-monogram marketplace-monogram-large" aria-hidden="true">{marketplace.shortName}</span>
-              <span className={`public-status public-status-${marketplace.status}`}>{marketplace.statusLabel}</span>
+          <aside className="marketplace-detail-preview" aria-label={`Пример обработки обращения ${marketplace.name}`}>
+            <div className="marketplace-detail-preview-head">
+              <span className="marketplace-public-monogram" aria-hidden="true">{marketplace.shortName}</span>
+              <div>
+                <strong>{marketplace.name}</strong>
+                <small>Вопрос о совместимости товара</small>
+              </div>
             </div>
-            <strong>{isMvp ? "Техническая основа уже существует" : "Production-доступность пока не заявляется"}</strong>
-            <p>
-              {isMvp
-                ? "Перед production-запуском всё равно нужны реальные API credentials, проверка scopes, rate limits и end-to-end тест с конкретным кабинетом."
-                : "Отдельная публичная страница не означает готовую интеграцию. Сначала нужно подтвердить официальный API-контракт и фактический сценарий отправки ответов."}
-            </p>
+            <blockquote>«Подойдёт ли товар к моей модели и что выбрать, если нужна другая комплектация?»</blockquote>
+            <div className="marketplace-detail-preview-result">
+              <span className="home-status home-status-success">Контекст проверен</span>
+              <small>Ответ готов к автоматической публикации · согласование включается настройкой</small>
+            </div>
           </aside>
         </div>
       </section>
 
-      {isMvp ? (
-        <>
-          <section className="public-section">
-            <div className="public-container">
-              <div className="section-heading section-heading-wide">
-                <p className="eyebrow">Что уже входит в MVP-основу</p>
-                <h2>Путь от импорта обращения до контролируемой отправки</h2>
-                <p>Это описание текущей технической реализации, а не обещание production-готовности без проверки реального кабинета.</p>
-              </div>
+      <section className="public-section">
+        <div className="public-container">
+          <div className="section-heading section-heading-wide">
+            <p className="public-eyebrow">Сценарии {marketplace.name}</p>
+            <h2>Автоматизируйте разные обращения, а не только короткие отзывы</h2>
+            <p>
+              Respio использует отдельную логику для каждого типа обращения: готовит ответ, применяет правила продавца и публикует автоматически, если включён такой режим.
+            </p>
+          </div>
 
-              <div className="integration-flow-list" role="group" aria-label="Этапы обработки обращения">
-                {[
-                  ["01", "Получить и нормализовать", "Adapter получает отзывы и вопросы, приводит payload к внутренним моделям и подавляет дубли."],
-                  ["02", "Подготовить ответ", "AI использует необходимый контекст, а система фиксирует модель, токены, задержку и стоимость."],
-                  ["03", "Проверить через SafetyGate", "Рискованные обещания, недостаток контекста и низкая уверенность могут остановить автоотправку."],
-                  ["04", "Применить правила и квоты", "Учитываются тип обращения, рейтинг, ключевые слова, товары, чувствительные темы и лимиты."],
-                  ["05", "Отправить через очередь", "Worker выполняет задачу, временные ошибки могут перейти в retry, результат фиксируется в audit trail."],
-                ].map(([number, title, text]) => (
-                  <article className="integration-flow-row" key={number}>
-                    <span>{number}</span>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
+          <div className="marketplace-public-grid">
+            {scenarios.map((scenario) => (
+              <article className="marketplace-public-card" key={scenario.title}>
+                <MarketingGlyph variant={scenario.icon} />
+                <h3>{scenario.title}</h3>
+                <p>{scenario.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <section className="public-section public-section-muted">
-            <div className="public-container public-two-column public-two-column-balanced">
-              <div>
-                <p className="eyebrow">Что ещё нужно подтвердить перед production</p>
-                <h2>Наличие кода — не то же самое, что проверенная интеграция</h2>
+      <section className="public-section public-section-muted">
+        <div className="public-container public-two-column public-two-column-balanced">
+          <div>
+            <p className="public-eyebrow">Контролируемый процесс</p>
+            <h2>Одни правила качества для {marketplace.name} и других площадок</h2>
+            <p className="public-copy-muted">
+              Настройки бренда, база знаний, правила автопубликации и сценарии согласования работают в общей системе, без пересборки процесса для каждого магазина.
+            </p>
+          </div>
+          <div className="public-benefit-panel" role="list" aria-label={`Этапы работы Respio с ${marketplace.name}`}>
+            {workflowBenefits.map((benefit, index) => (
+              <div className="public-benefit-item" role="listitem" key={benefit}>
+                <span className="public-step-number-v73">{String(index + 1).padStart(2, "0")}</span>
+                <p>{benefit}</p>
               </div>
-              <div className="public-check-list public-check-list-large">
-                <p>Права реального API-ключа и допустимые scopes.</p>
-                <p>Поведение API на реальных отзывах и вопросах.</p>
-                <p>Rate limits, модерация ответа и marketplace-specific ошибки.</p>
-                <p>End-to-end отправка, retry и защита от дублей с конкретным кабинетом.</p>
-              </div>
-            </div>
-          </section>
-        </>
-      ) : (
-        <>
-          <section className="public-section">
-            <div className="public-container">
-              <div className="section-heading section-heading-wide">
-                <p className="eyebrow">До начала реализации</p>
-                <h2>Пять проверок, без которых интеграция не считается готовой</h2>
-                <p>Мы не создаём пустой adapter и не показываем неподтверждённую функцию как доступную пользователю.</p>
-              </div>
-
-              <ol className="integration-checklist">
-                {implementationChecks.map((item, index) => (
-                  <li key={item}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <p>{item}</p>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section>
-
-          <section className="public-section public-section-muted">
-            <div className="public-container public-two-column public-two-column-balanced">
-              <div>
-                <p className="eyebrow">Что уже подготовлено на уровне продукта</p>
-                <h2>Новая площадка должна встроиться в общий pipeline, а не породить параллельную архитектуру</h2>
-              </div>
-              <div className="public-check-list public-check-list-large">
-                <p>Общие внутренние модели сообщений и товаров.</p>
-                <p>SafetyGate и правила автоматизации поверх нормализованного контекста.</p>
-                <p>Очередь, повторы, ключи идемпотентности и журнал событий.</p>
-                <p>Backend-only хранение зашифрованных marketplace credentials.</p>
-              </div>
-            </div>
-          </section>
-        </>
-      )}
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
+        <div className="public-container home-final-cta-card public-page-final-cta">
           <div>
-            <p className="eyebrow">Следующий шаг</p>
-            <h2>{isMvp ? "Посмотрите, как Respio принимает решение об автоматической отправке" : `Нужна интеграция с ${marketplace.name}? Обсудим реальный сценарий и API-доступ`}</h2>
+            <p className="public-eyebrow">Бесплатный тест</p>
+            <h2>Проверьте Respio на обращениях {marketplace.name}</h2>
+            <p>Семь дней, до двух маркетплейсов и 400 ответов бесплатно.</p>
           </div>
-          <Link className="button button-primary button-on-dark" href={isMvp ? "/demo" : "/contacts"}>
-            {isMvp ? "Открыть демо" : "Обсудить интеграцию"}
-          </Link>
+          <PublicTrialCta className="button button-primary" source={`marketplace-${marketplace.key}-footer`}>
+            Начать бесплатный тест
+          </PublicTrialCta>
         </div>
       </section>
     </PublicShell>

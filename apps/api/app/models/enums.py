@@ -53,3 +53,31 @@ class ReplyStatus(StrEnum):
     MANUAL_REVIEW_REQUIRED = "manual_review_required"
     WAITING_REVIEW = "waiting_review"
     APPROVED = "approved"
+
+
+class AnswerPackageKind(StrEnum):
+    TRIAL = "trial"
+    PAID = "paid"
+    CUSTOM = "custom"
+
+
+class AnswerGrantSource(StrEnum):
+    TRIAL = "trial"
+    PURCHASE = "purchase"
+    MANUAL_ADJUSTMENT = "manual_adjustment"
+    REVERSAL = "reversal"
+
+
+class AnswerReservationStatus(StrEnum):
+    ACTIVE = "active"
+    SETTLED = "settled"
+    RELEASED = "released"
+    EXPIRED = "expired"
+
+
+class AnswerLedgerEntryType(StrEnum):
+    GRANT = "grant"
+    RESERVE = "reserve"
+    RELEASE = "release"
+    DEBIT = "debit"
+    REVERSAL = "reversal"

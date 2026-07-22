@@ -46,6 +46,34 @@ class UsageLimitItem(BaseModel):
     allowed: bool
 
 
+class AnswerPackageResponse(BaseModel):
+    id: UUID
+    code: str
+    name: str
+    kind: str
+    answer_count: int | None = Field(default=None, ge=1)
+    price_minor: int | None = Field(default=None, ge=0)
+    currency: str
+    validity_days: int | None = Field(default=None, ge=1)
+    marketplace_limit: int | None = Field(default=None, ge=1)
+    display_order: int
+    is_active: bool
+    metadata_json: dict[str, object]
+
+    model_config = {"from_attributes": True}
+
+
+class AnswerBalanceResponse(BaseModel):
+    organization_id: UUID
+    available: int = Field(ge=0)
+    reserved: int = Field(ge=0)
+    total: int = Field(ge=0)
+    trial_available: int = Field(ge=0)
+    paid_available: int = Field(ge=0)
+    trial_expires_at: datetime | None
+    marketplace_limit: int | None = Field(default=None, ge=0)
+
+
 class BillingOverviewResponse(BaseModel):
     organization_id: UUID
     plan: BillingPlanResponse
@@ -53,4 +81,5 @@ class BillingOverviewResponse(BaseModel):
     usage_period_start: datetime
     usage_period_end: datetime
     usage: list[UsageLimitItem]
+    answer_balance: AnswerBalanceResponse
     pricing_finalized: bool

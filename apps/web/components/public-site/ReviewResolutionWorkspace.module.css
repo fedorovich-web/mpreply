@@ -1,0 +1,964 @@
+.workspace {
+  --review-gap: var(--review-compact-gap);
+  --review-panel-gap: var(--review-compact-gap);
+  --review-padding: var(--review-compact-padding);
+  --review-toolbar-padding-block: var(--space-3);
+  --review-toolbar-padding-inline: var(--space-4);
+  --review-tab-padding-inline: var(--space-4);
+  --review-tab-height: var(--size-touch-target);
+  --review-card-padding: var(--review-compact-padding);
+  --review-card-radius: var(--radius-2xl);
+  --review-row-radius: var(--radius-xl);
+  --review-icon-size: var(--size-touch-target);
+  --review-check-size: var(--space-8);
+  --review-font-small: var(--font-size-body-sm);
+  --review-font-body: var(--font-size-body);
+  --review-font-title: var(--font-size-h3);
+  --review-surface: var(--color-public-surface);
+  --review-surface-soft: var(--color-public-surface-soft);
+  --review-surface-accent: var(--color-public-surface-accent);
+  --review-text: var(--color-text-primary);
+  --review-copy: var(--color-text-secondary);
+  --review-muted: var(--color-text-muted);
+  --review-border: var(--color-border-subtle);
+  --review-brand: var(--color-brand-primary);
+  --review-brand-soft: var(--color-brand-soft);
+  --review-success: var(--color-success-text);
+  --review-success-soft: var(--color-success-soft);
+  --review-warning: var(--color-warning-text);
+  --review-warning-soft: var(--color-warning-soft);
+  --review-danger: var(--color-danger-text);
+  --review-danger-soft: var(--color-danger-soft);
+  --review-shadow: var(--shadow-home-stage);
+  --review-card-shadow: var(--shadow-home-card);
+  --review-hover-shadow: var(--shadow-home-card-hover);
+
+  overflow: hidden;
+  border: var(--border-width-hairline) solid var(--review-border);
+  border-radius: var(--radius-2xl);
+  background: var(--review-surface);
+  box-shadow: var(--review-shadow);
+}
+
+.toolbar {
+  display: flex;
+  min-height: var(--space-10);
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--review-gap);
+  border-bottom: var(--border-width-hairline) solid var(--review-border);
+  background: var(--review-surface-soft);
+  padding: var(--review-toolbar-padding-block) var(--review-toolbar-padding-inline);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.tab {
+  display: inline-flex;
+  min-height: var(--review-tab-height);
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width-hairline) solid var(--review-border);
+  border-radius: var(--radius-pill);
+  background: var(--review-surface);
+  color: var(--review-copy);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-compact);
+  padding: var(--space-0) var(--review-tab-padding-inline);
+  box-shadow: var(--shadow-secondary-button);
+  transition: var(--transition-interactive);
+}
+
+.tab:hover {
+  border-color: var(--color-border-brand-hover);
+  background: var(--color-surface-hover);
+  color: var(--review-text);
+  box-shadow: var(--shadow-secondary-button-hover);
+  transform: var(--transform-hover-lift);
+}
+
+.tab[data-active="true"] {
+  border-color: var(--color-border-brand-strong);
+  background: var(--review-tab-active-bg);
+  color: var(--review-tab-active-color);
+  box-shadow: var(--shadow-secondary-button-hover);
+}
+
+.tab:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-outline-soft);
+  outline-offset: var(--focus-ring-offset-compact);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.74fr) minmax(20rem, 0.9fr) minmax(25rem, 1.08fr);
+  gap: var(--review-panel-gap);
+  padding: var(--review-padding);
+}
+
+.reviewCard,
+.analysisCard,
+.resolutionCard {
+  min-width: var(--space-0);
+  min-height: var(--review-card-min-height);
+  border: var(--border-width-hairline) solid var(--review-border);
+  border-radius: var(--review-card-radius);
+  background: var(--review-surface);
+  padding: var(--review-card-padding);
+  box-shadow: var(--review-card-shadow);
+}
+
+.reviewHead,
+.market,
+.resolutionHead,
+.resolutionFooter {
+  display: flex;
+  align-items: center;
+}
+
+.reviewHead,
+.resolutionHead,
+.resolutionFooter {
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.market {
+  gap: var(--space-3);
+}
+
+.marketLogo {
+  display: grid;
+  width: var(--review-icon-size);
+  height: var(--review-icon-size);
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--color-marketplace-wb-soft);
+  color: var(--color-marketplace-wb);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-bold);
+}
+
+.market strong,
+.market small,
+.product strong,
+.product span {
+  display: block;
+}
+
+.market strong,
+.product strong {
+  color: var(--review-text);
+  font-size: var(--review-font-body);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-compact);
+}
+
+.market small,
+.product span {
+  margin-top: var(--space-1);
+  color: var(--review-muted);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-compact);
+}
+
+.stars {
+  color: var(--color-warning);
+  font-size: var(--review-font-body);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  white-space: nowrap;
+}
+
+.reviewCard blockquote {
+  margin: var(--space-5) var(--space-0) var(--space-0);
+  color: var(--review-text);
+  font-size: var(--review-font-body);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-medium);
+}
+
+.product {
+  margin-top: var(--space-4);
+  border: var(--border-width-hairline) solid var(--review-border);
+  border-radius: var(--review-row-radius);
+  background: var(--review-surface-soft);
+  padding: var(--space-3);
+}
+
+.kicker {
+  margin: var(--space-0);
+  color: var(--color-success-text);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-kicker);
+  line-height: var(--line-height-compact);
+  text-transform: uppercase;
+}
+
+.analysisCard h3,
+.resolutionCard h3 {
+  margin: var(--space-3) var(--space-0) var(--space-0);
+  color: var(--review-text);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-relaxed);
+}
+
+.analysisGrid {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.analysisRow {
+  display: grid;
+  min-height: var(--space-10);
+  grid-template-columns: 7.25rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  border: var(--border-width-hairline) solid var(--review-border);
+  border-radius: var(--review-row-radius);
+  background: var(--review-surface-soft);
+  padding: var(--space-2) var(--space-3);
+}
+
+.analysisRow > span {
+  color: var(--review-muted);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-kicker);
+  line-height: var(--line-height-compact);
+  text-transform: uppercase;
+}
+
+.analysisRow > strong {
+  color: var(--review-copy);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.analysisRow > strong.low,
+.analysisRow > strong.medium,
+.analysisRow > strong.high {
+  width: fit-content;
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-3);
+}
+
+.low {
+  background: var(--review-success-soft);
+  color: var(--review-success) !important;
+}
+
+.medium {
+  background: var(--review-warning-soft);
+  color: var(--review-warning) !important;
+}
+
+.high {
+  background: var(--review-danger-soft);
+  color: var(--review-danger) !important;
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.fact,
+.action {
+  display: grid;
+  min-height: var(--space-10);
+  grid-template-columns: var(--review-check-size) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  border: var(--border-width-hairline) solid var(--review-border);
+  border-radius: var(--review-row-radius);
+  background: var(--review-surface);
+  padding: var(--space-2) var(--space-3);
+}
+
+.fact > span,
+.action > span {
+  display: grid;
+  width: var(--review-check-size);
+  height: var(--review-check-size);
+  place-items: center;
+  border-radius: var(--radius-round);
+  background: var(--review-success-soft);
+  color: var(--review-success);
+  font-size: var(--review-font-body);
+  font-weight: var(--font-weight-bold);
+}
+
+.fact p,
+.action p {
+  margin: var(--space-0);
+  color: var(--review-copy);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.resolutionCard {
+  display: flex;
+  flex-direction: column;
+  border-color: var(--color-border-brand-faint);
+  background: var(--review-surface);
+}
+
+.resolutionHead {
+  align-items: flex-start;
+}
+
+.resolutionState {
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--review-danger-soft);
+  color: var(--review-danger);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-compact);
+  padding: var(--space-2) var(--space-3);
+  white-space: nowrap;
+}
+
+.response {
+  margin-top: var(--space-4);
+  border: var(--border-width-hairline) solid var(--review-border);
+  border-radius: var(--review-row-radius);
+  background: var(--review-surface-soft);
+  color: var(--review-copy);
+  font-size: var(--review-font-body);
+  line-height: var(--line-height-medium);
+  padding: var(--space-4);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.resolutionFooter {
+  align-items: flex-end;
+  margin-top: auto;
+  padding-top: var(--space-5);
+}
+
+.resolutionFooter strong {
+  color: var(--review-danger);
+  font-size: var(--review-font-small);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-compact);
+}
+
+.resolutionFooter strong::before {
+  margin-right: var(--space-2);
+  color: currentColor;
+  content: "●";
+}
+
+.resolutionFooter small {
+  color: var(--review-muted);
+  font-size: var(--review-font-small);
+  line-height: var(--line-height-compact);
+  text-align: right;
+}
+
+@media (max-width: 1180px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewCard,
+  .analysisCard,
+  .resolutionCard {
+    min-height: 0;
+  }
+
+  .resolutionFooter {
+    margin-top: var(--space-4);
+  }
+}
+
+@media (max-width: 680px) {
+  .toolbar {
+    padding: var(--space-3);
+  }
+
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: var(--space-1);
+  }
+
+  .tab {
+    flex: 0 0 auto;
+  }
+
+  .grid {
+    padding: var(--space-3);
+  }
+
+  .reviewCard,
+  .analysisCard,
+  .resolutionCard {
+    border-radius: var(--radius-xl);
+    padding: var(--space-3);
+  }
+
+  .analysisRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewHead,
+  .resolutionHead,
+  .resolutionFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .resolutionFooter small {
+    text-align: left;
+  }
+}
+
+
+/* Respio 0.1.61 · compact review stage and visible tabs */
+.tab {
+  min-height: 2.65rem;
+  font-size: var(--font-size-body);
+}
+
+.tab[data-active="true"] {
+  border-color: transparent;
+}
+
+.reviewCard blockquote {
+  font-size: var(--font-size-body);
+}
+
+.response {
+  line-height: var(--line-height-snug);
+}
+
+.actions {
+  gap: var(--space-2);
+}
+
+.resolutionFooter {
+  padding-top: var(--space-3);
+}
+
+/* Respio 0.1.62 · review workspace rebuild: shadow-only controls, compact cards, no uppercase grid labels */
+.workspace {
+  --review-gap: var(--space-3);
+  --review-panel-gap: var(--space-3);
+  --review-padding: var(--space-4);
+  --review-card-padding: var(--space-4);
+  --review-card-min-height: 17.75rem;
+  --review-card-radius: var(--radius-2xl);
+  --review-row-radius: var(--radius-lg);
+  --review-shadow-border: var(--shadow-review-soft-border);
+  overflow: hidden;
+  border: 0;
+  background: var(--review-surface);
+  box-shadow: var(--shadow-review-shell);
+}
+
+.toolbar {
+  min-height: auto;
+  border: 0;
+  background: var(--review-toolbar-bg);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-review-toolbar-divider);
+}
+
+.tabs {
+  gap: var(--space-3);
+}
+
+.tab {
+  min-height: var(--review-tab-v62-height);
+  border: 0;
+  background: var(--review-tab-bg);
+  color: var(--color-text-secondary);
+  padding: 0 var(--review-tab-v62-padding-inline);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+  box-shadow: var(--shadow-review-tab);
+  transform: translateZ(0);
+}
+
+.tab:hover {
+  border: 0;
+  background: var(--review-tab-hover-bg);
+  box-shadow: var(--shadow-review-tab-hover);
+  transform: translateY(var(--motion-hover-lift));
+}
+
+.tab[data-active="true"] {
+  border: 0;
+  background: var(--review-tab-active-bg);
+  color: var(--review-tab-active-color);
+  box-shadow: var(--shadow-review-tab-active);
+}
+
+.grid {
+  grid-template-columns: minmax(16rem, 0.74fr) minmax(19rem, 0.9fr) minmax(24rem, 1.06fr);
+  gap: var(--review-panel-gap);
+  padding: var(--review-padding);
+}
+
+.reviewCard,
+.analysisCard,
+.resolutionCard {
+  min-height: var(--review-card-min-height);
+  border: 0;
+  background: var(--review-surface);
+  padding: var(--review-card-padding);
+  box-shadow: var(--shadow-review-card);
+}
+
+.marketLogo,
+.product,
+.analysisRow,
+.fact,
+.action,
+.response {
+  border: 0;
+  box-shadow: var(--review-shadow-border);
+}
+
+.reviewCard blockquote {
+  margin-top: var(--space-4);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-snug);
+}
+
+.product {
+  margin-top: var(--space-4);
+  background: var(--review-surface-soft);
+  padding: var(--space-3);
+}
+
+.kicker {
+  color: var(--color-success-text);
+  font-size: var(--font-size-body-sm);
+  letter-spacing: 0;
+  line-height: var(--line-height-compact);
+  text-transform: none;
+}
+
+.analysisCard h3,
+.resolutionCard h3 {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-heading-relaxed);
+}
+
+.analysisGrid {
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.analysisRow {
+  min-height: 3.35rem;
+  grid-template-columns: 7.8rem minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  gap: var(--space-3);
+  background: var(--review-surface-soft);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.analysisRow > span {
+  justify-self: start;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+}
+
+.analysisRow > strong {
+  justify-self: start;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+  text-align: left;
+}
+
+.analysisRow > strong.low,
+.analysisRow > strong.medium,
+.analysisRow > strong.high {
+  border-radius: var(--radius-lg);
+  padding: var(--space-1) var(--space-3);
+  box-shadow: none;
+}
+
+.facts,
+.actions {
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.fact,
+.action {
+  min-height: 3.15rem;
+  border-radius: var(--review-row-radius);
+  padding: var(--space-2) var(--space-3);
+}
+
+.fact p,
+.action p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-snug);
+}
+
+.resolutionState {
+  background: var(--review-success-soft);
+  color: var(--review-success);
+  font-size: var(--font-size-body-sm);
+}
+
+.response {
+  margin-top: var(--space-3);
+  background: var(--review-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-snug);
+  padding: var(--space-3);
+}
+
+.resolutionFooter {
+  align-items: center;
+  padding-top: var(--space-3);
+}
+
+.resolutionFooter strong {
+  color: var(--review-success);
+  font-size: var(--font-size-body-sm);
+}
+
+.resolutionFooter small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body-sm);
+}
+
+@media (max-width: 1180px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Respio 0.1.63 · final review workspace alignment and filled review card */
+.reviewCard {
+  display: flex;
+  min-height: auto;
+  flex-direction: column;
+}
+
+.reviewSignals {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.reviewSignals > div {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  border: 0;
+  border-radius: var(--review-row-radius);
+  background: var(--review-surface-soft);
+  padding: var(--space-2) var(--space-3);
+  box-shadow: var(--review-shadow-border);
+}
+
+.reviewSignals span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-compact);
+}
+
+.reviewSignals strong {
+  justify-self: end;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+  text-align: right;
+}
+
+.analysisRow {
+  grid-template-columns: 8rem minmax(0, 1fr);
+}
+
+.analysisRow > strong {
+  justify-self: end;
+  max-width: 21rem;
+  text-align: right;
+}
+
+.resolutionFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.resolutionFooter small {
+  text-align: right;
+}
+
+@media (max-width: 680px) {
+  .reviewSignals > div,
+  .analysisRow {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewSignals strong,
+  .analysisRow > strong {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .resolutionFooter small {
+    text-align: left;
+  }
+}
+
+
+/* Respio 0.1.63 · remove heavy wrapper feel and keep tabs truly shadow-only */
+.workspace {
+	overflow: visible;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
+.toolbar {
+	border: 0;
+	border-radius: var(--radius-3xl) var(--radius-3xl) 0 0;
+	background: transparent;
+	box-shadow: none;
+	padding-inline: 0;
+}
+
+.tabs {
+	padding: 0;
+}
+
+.tab {
+	border: 0 !important;
+	box-shadow: var(--shadow-review-tab);
+}
+
+.tab:hover,
+.tab[data-active="true"] {
+	border: 0 !important;
+}
+
+.grid {
+	border-radius: var(--radius-3xl);
+	background: var(--color-public-surface);
+	box-shadow: var(--shadow-review-shell);
+}
+
+.reviewCard,
+.analysisCard,
+.resolutionCard {
+	border-radius: var(--radius-2xl);
+}
+
+.reviewSignals {
+	margin-top: auto;
+	padding-top: var(--space-4);
+}
+
+.reviewSignals > div {
+	min-height: 3.1rem;
+}
+
+.analysisRow {
+	min-height: 3.5rem;
+}
+
+@media (max-width: 680px) {
+	.toolbar {
+		padding-inline: 0;
+	}
+
+	.grid {
+		border-radius: var(--radius-2xl);
+	}
+}
+
+
+/* Respio 0.1.65 · remove extra white wrapper, consistent radius, cleaner review layout */
+.workspace {
+	overflow: visible;
+	border: 0 !important;
+	border-radius: 0;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.toolbar {
+	border: 0 !important;
+	border-radius: 0;
+	background: transparent !important;
+	box-shadow: none !important;
+	padding: 0 0 var(--review-v65-toolbar-gap);
+}
+
+.tabs {
+	gap: var(--space-3);
+}
+
+.tab {
+	border: 0 !important;
+	box-shadow: var(--shadow-review-tab);
+}
+
+.tab:hover,
+.tab[data-active="true"] {
+	border: 0 !important;
+}
+
+.grid {
+	gap: var(--review-v65-grid-gap);
+	padding: 0;
+	border-radius: 0;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.reviewCard,
+.analysisCard,
+.resolutionCard {
+	min-height: var(--review-v65-card-min-height);
+	border: 0 !important;
+	border-radius: var(--review-v65-card-radius) !important;
+	background: var(--review-surface);
+	box-shadow: var(--shadow-review-card);
+}
+
+.reviewSignals {
+	margin-top: auto;
+	padding-top: var(--space-4);
+}
+
+.reviewSignals > div,
+.analysisRow,
+.product,
+.fact,
+.action,
+.response {
+	border: 0 !important;
+	box-shadow: var(--review-shadow-border);
+}
+
+.analysisRow {
+	grid-template-columns: 8rem minmax(0, 1fr);
+}
+
+.analysisRow > strong,
+.reviewSignals strong {
+	justify-self: end;
+	max-width: 22rem;
+	text-align: right;
+}
+
+.resolutionFooter {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.resolutionFooter small {
+	text-align: right;
+}
+
+@media (max-width: 1180px) {
+	.reviewCard,
+	.analysisCard,
+	.resolutionCard {
+		min-height: auto;
+	}
+}
+
+@media (max-width: 680px) {
+	.analysisRow,
+	.reviewSignals > div {
+		grid-template-columns: 1fr;
+	}
+
+	.analysisRow > strong,
+	.reviewSignals strong {
+		justify-self: start;
+		text-align: left;
+	}
+
+	.resolutionFooter small {
+		text-align: left;
+	}
+}
+
+
+/* Respio 0.1.68 · visible rounded review cards without extra wrapper */
+.workspace,
+.grid {
+	border: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.reviewCard,
+.analysisCard,
+.resolutionCard {
+	overflow: hidden;
+	border: 0 !important;
+	border-radius: var(--public-card-radius-v68) !important;
+	background: var(--review-surface);
+	box-shadow: var(--public-shadow-card-v68);
+}
+
+.product,
+.analysisRow,
+.response,
+.fact,
+.action,
+.reviewSignals > div {
+	border: 0 !important;
+	border-radius: var(--radius-xl) !important;
+	box-shadow: var(--review-shadow-border);
+}
