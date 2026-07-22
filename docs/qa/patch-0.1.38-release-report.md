@@ -1,4 +1,4 @@
-# Respio 0.1.38 — WebGL Hero Orbit/Mouse Polish
+# MPReply 0.1.38 — WebGL Hero Orbit/Mouse Polish
 
 Дата: 2026-07-16
 
@@ -29,7 +29,7 @@ Browser screenshot в этой среде не удалось создать: с
 
 ## Gates
 
-Выполнено в `/mnt/data/respio_0138_repo/apps/web`:
+Выполнено в `/mnt/data/mpreply_0138_repo/apps/web`:
 
 - `npm ci` — GREEN, 0 vulnerabilities
 - `npm run typecheck` — GREEN
@@ -42,10 +42,10 @@ Browser screenshot в этой среде не удалось создать: с
 
 ## Install
 
-Распаковать архив в `C:\Work\respio` с заменой файлов.
+Распаковать архив в `C:\Work\mpreply` с заменой файлов.
 
 ```powershell
-cd C:\Work\respio\apps\web
+cd C:\Work\mpreply\apps\web
 npm ci
 npm run dev
 ```

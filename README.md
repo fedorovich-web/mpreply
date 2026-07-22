@@ -1,6 +1,6 @@
-# Respio
+# MPReply
 
-Respio is a SaaS platform for AI-assisted and automatic replies to marketplace reviews and questions. The product is auto-first by default: AI prepares a response, SafetyGate evaluates risk, automation rules decide whether to send automatically or require review, and worker-backed execution publishes through marketplace adapters with idempotency and retry controls.
+MPReply is a SaaS platform for AI-assisted and automatic replies to marketplace reviews and questions. The product is auto-first by default: AI prepares a response, SafetyGate evaluates risk, automation rules decide whether to send automatically or require review, and worker-backed execution publishes through marketplace adapters with idempotency and retry controls.
 
 ## Current foundation
 
@@ -61,7 +61,7 @@ This builds and starts PostgreSQL, Redis, migrations, API, worker and web, waits
 ## Manual local Compose
 
 ```powershell
-cd C:\Work\respio
+cd C:\Work\mpreply
 docker compose -f infra\docker\docker-compose.local.yml up --build -d --wait
 ```
 

@@ -6,7 +6,7 @@ Accepted for Sprint 1.
 
 ## Context
 
-Respio is a multi-tenant SaaS. Every business entity must be scoped to an organization/workspace, and every user action that touches tenant data must pass authentication and RBAC checks.
+MPReply is a multi-tenant SaaS. Every business entity must be scoped to an organization/workspace, and every user action that touches tenant data must pass authentication and RBAC checks.
 
 ## Decision
 

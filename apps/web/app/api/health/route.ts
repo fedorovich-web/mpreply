@@ -4,8 +4,8 @@ export function GET() {
   return NextResponse.json(
     {
       status: "ok",
-      app: "respio-web",
-      version: "0.1.102",
+      app: "mpreply-web",
+      version: "0.1.103",
     },
     {
       headers: {

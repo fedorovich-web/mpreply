@@ -1,13 +1,13 @@
-name: respio-local
+name: mpreply-local
 
 x-backend-env: &backend-env
   APP_ENV: local
-  APP_NAME: Respio
-  APP_VERSION: 0.1.102
+  APP_NAME: MPReply
+  APP_VERSION: 0.1.103
   API_BASE_URL: http://localhost:8000
   WEB_APP_URL: http://localhost:3000
   PUBLIC_SITE_URL: http://localhost:3000
-  DATABASE_URL: postgresql+asyncpg://respio:respio_password@postgres:5432/respio
+  DATABASE_URL: postgresql+asyncpg://mpreply:mpreply_password@postgres:5432/mpreply
   REDIS_URL: redis://redis:6379/0
   AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:-local-dev-secret-change-before-production-000000000000}
   AUTH_ACCESS_TOKEN_TTL_MINUTES: "15"
@@ -49,15 +49,15 @@ services:
   postgres:
     image: postgres:18.1-bookworm
     environment:
-      POSTGRES_DB: respio
-      POSTGRES_USER: respio
-      POSTGRES_PASSWORD: respio_password
+      POSTGRES_DB: mpreply
+      POSTGRES_USER: mpreply
+      POSTGRES_PASSWORD: mpreply_password
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U respio -d respio"]
+      test: ["CMD-SHELL", "pg_isready -U mpreply -d mpreply"]
       interval: 5s
       timeout: 5s
       retries: 10

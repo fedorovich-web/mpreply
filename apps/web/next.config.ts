@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   compress: true,
+  allowedDevOrigins: ["localhost", "127.0.0.1"],
   deploymentId: process.env.DEPLOYMENT_VERSION || undefined,
   turbopack: {
     root: appRoot,

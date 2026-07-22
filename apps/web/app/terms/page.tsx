@@ -5,7 +5,7 @@ import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Условия использования",
-  description: "Основные условия использования сервиса Respio.",
+  description: "Основные условия использования сервиса MPReply.",
   path: "/terms",
   noIndex: true,
 });
@@ -23,7 +23,7 @@ export default function TermsPage() {
       <div className="public-container legal-document">
         <section>
           <h2>1. Назначение сервиса</h2>
-          <p>Respio помогает готовить, проверять и публиковать ответы на обращения покупателей в пределах подключённых интеграций и настроенных пользователем правил.</p>
+          <p>MPReply помогает готовить, проверять и публиковать ответы на обращения покупателей в пределах подключённых интеграций и настроенных пользователем правил.</p>
         </section>
         <section>
           <h2>2. Ответственность пользователя</h2>

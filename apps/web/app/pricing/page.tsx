@@ -11,9 +11,9 @@ import { publicPricingPlans, trialOffer } from "../../lib/public-pricing";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Пакеты автоответов Respio — без подписки для маркетплейсов",
+  title: "Пакеты автоответов MPReply — без подписки для маркетплейсов",
   description:
-    "Пакеты автоответов Respio для отзывов, вопросов и чатов маркетплейсов: без подписки, без сгорания баланса, с автопубликацией по правилам продавца.",
+    "Пакеты автоответов MPReply для отзывов, вопросов и чатов маркетплейсов: без подписки, без сгорания баланса, с автопубликацией по правилам продавца.",
   path: "/pricing",
 });
 
@@ -64,7 +64,7 @@ const faq = [
   {
     question: "Что произойдёт, когда баланс закончится?",
     answer:
-      "Автопубликация остановится, но обращения, настройки и история сохранятся. После пополнения Respio продолжит работу без повторного подключения.",
+      "Автопубликация остановится, но обращения, настройки и история сохранятся. После пополнения MPReply продолжит работу без повторного подключения.",
   },
   {
     question: "Как работает бесплатный тест?",
@@ -78,7 +78,7 @@ export default function PricingPage() {
       <section className="public-subhero pricing-page-hero-v82 pricing-page-hero-v86 pricing-page-hero-v87 pricing-page-hero-v88 pricing-page-hero-v89 pricing-page-hero-v90">
         <div className="public-container public-subhero-grid pricing-page-hero-grid-v82 pricing-page-hero-grid-v86 pricing-page-hero-grid-v87 pricing-page-hero-grid-v88 pricing-page-hero-grid-v89 pricing-page-hero-grid-v90">
           <div className="public-subhero-copy pricing-page-hero-copy-v86 pricing-page-hero-copy-v87 pricing-page-hero-copy-v88 pricing-page-hero-copy-v89 pricing-page-hero-copy-v90">
-            <p className="public-eyebrow">Цены Respio</p>
+            <p className="public-eyebrow">Цены MPReply</p>
             <h1>Пакеты автоответов без подписки</h1>
             <p className="public-lead">
               Выберите готовый объём ответов для отзывов, вопросов и чатов маркетплейсов. Баланс не сгорает, автопубликация работает по правилам продавца, а согласование включается только для выбранных сценариев.
@@ -95,7 +95,7 @@ export default function PricingPage() {
             <MarketingGlyph variant="reviews" />
             <p className="public-eyebrow">Бесплатный тест</p>
             <h2>{trialOffer.answerLimit} ответов для проверки сервиса</h2>
-            <p>За 7 дней Respio обработает реальные отзывы, вопросы и чаты: подготовит ответы по карточке товара, применит правила продавца и покажет работу сервиса на реальных обращениях.</p>
+            <p>За 7 дней MPReply обработает реальные отзывы, вопросы и чаты: подготовит ответы по карточке товара, применит правила продавца и покажет работу сервиса на реальных обращениях.</p>
             <ul>
               <li>{trialOffer.durationDays} дней теста</li>
               <li>До {trialOffer.marketplaceLimit} маркетплейсов</li>

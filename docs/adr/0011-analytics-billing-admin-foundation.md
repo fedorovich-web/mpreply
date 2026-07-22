@@ -1,12 +1,12 @@
 # ADR-0011: Analytics, billing-ready schema and internal admin boundary
 
-Status: Accepted  
-Version: 0.1.12  
+Status: Accepted
+Version: 0.1.12
 Date: 2026-07-10
 
 ## Context
 
-Respio already persists customer messages, replies, AI drafts, usage events, integration events and tenant memberships. Sprint 12 must expose useful workspace analytics, introduce a billing-ready data model and add an internal superadmin overview without inventing final commercial prices or weakening tenant isolation.
+MPReply already persists customer messages, replies, AI drafts, usage events, integration events and tenant memberships. Sprint 12 must expose useful workspace analytics, introduce a billing-ready data model and add an internal superadmin overview without inventing final commercial prices or weakening tenant isolation.
 
 ## Decision
 

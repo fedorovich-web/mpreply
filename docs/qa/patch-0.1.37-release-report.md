@@ -1,4 +1,4 @@
-# Respio 0.1.37 — WebGL Hero polish
+# MPReply 0.1.37 — WebGL Hero polish
 
 Date: 2026-07-16
 Status: build/test GREEN, local browser screenshot blocked by Chromium policy in this environment.
@@ -9,7 +9,7 @@ Built from the restored visual baseline `0.1.35` / `0.1.36` state shown by the u
 
 ## User-facing fixes
 
-- Reduced the central Respio AI planet visual size by CSS instead of replacing the visual baseline.
+- Reduced the central MPReply AI planet visual size by CSS instead of replacing the visual baseline.
 - Cleaned the central planet PNG alpha mask to reduce the unwanted left-side haze/ghost shadow and embedded background artifacts.
 - Reduced the scene container from `51rem` to `48.5rem` and slightly reduced scene height.
 - Reduced WebGL root scale from `0.9` to `0.84` on desktop.

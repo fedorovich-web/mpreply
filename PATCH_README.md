@@ -1,9 +1,9 @@
-# Respio 0.1.38 WebGL Hero Polish
+# MPReply 0.1.38 WebGL Hero Polish
 
-Установка: распаковать архив в корень проекта `C:\Work\respio` с заменой файлов.
+Установка: распаковать архив в корень проекта `C:\Work\mpreply` с заменой файлов.
 
 ```powershell
-cd C:\Work\respio\apps\web
+cd C:\Work\mpreply\apps\web
 npm ci
 npm run dev
 ```

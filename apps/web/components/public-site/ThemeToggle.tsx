@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark";
 
-const THEME_EVENT = "respio-themechange";
+const THEME_EVENT = "mpreply-themechange";
 
 function readTheme(): Theme {
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
@@ -22,7 +22,7 @@ export function ThemeToggle() {
 
   const toggleTheme = () => {
     document.documentElement.dataset.theme = nextTheme;
-    window.localStorage.setItem("respio-theme", nextTheme);
+    window.localStorage.setItem("mpreply-theme", nextTheme);
     window.dispatchEvent(new Event(THEME_EVENT));
   };
 

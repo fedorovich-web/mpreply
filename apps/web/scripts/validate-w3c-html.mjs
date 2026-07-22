@@ -133,7 +133,7 @@ let tempDirectory;
 
 try {
   await ensureBuildExists();
-  tempDirectory = await mkdtemp(join(tmpdir(), "respio-w3c-html-"));
+  tempDirectory = await mkdtemp(join(tmpdir(), "mpreply-w3c-html-"));
   server = await startServer();
   await waitForServer();
   await fetchRenderedPages(tempDirectory);

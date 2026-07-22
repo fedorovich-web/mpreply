@@ -14,7 +14,7 @@ export function AdminOverviewWorkspace() {
     enabled: user.is_superadmin,
   });
 
-  if (!user.is_superadmin) return <div className="workspace-inline-state workspace-inline-state-error"><strong>Доступ запрещён</strong><p>Этот раздел доступен только внутреннему superadmin Respio.</p></div>;
+  if (!user.is_superadmin) return <div className="workspace-inline-state workspace-inline-state-error"><strong>Доступ запрещён</strong><p>Этот раздел доступен только внутреннему superadmin MPReply.</p></div>;
   if (overviewQuery.isLoading) return <div className="workspace-inline-state"><strong>Загружаем admin overview</strong><p>Считаем системные показатели.</p></div>;
   if (overviewQuery.error || !overviewQuery.data) return <div className="workspace-inline-state workspace-inline-state-error"><strong>Не удалось загрузить admin overview</strong><p>{overviewQuery.error instanceof Error ? overviewQuery.error.message : "Нет данных"}</p></div>;
 

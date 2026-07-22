@@ -548,7 +548,7 @@ function makeCentralPlanet(
   pearlFaceTexture: THREE.Texture,
 ): { core: THREE.Group; band: THREE.Group } {
   const core = new THREE.Group();
-  core.name = "respio-core";
+  core.name = "mpreply-core";
 
   const halo = makeGlowSprite(haloTexture, 4.9, 0.24, 0x8268ff);
   halo.position.z = -0.62;
@@ -639,7 +639,7 @@ function makeCentralPlanet(
   core.add(makeSurfaceOverlay(topCap, cloudTexture, 0.78));
 
   const band = new THREE.Group();
-  band.name = "respio-core-band";
+  band.name = "mpreply-core-band";
 
   const titleBelt = makeLatheSurface(
     makeSphereProfile(topCutY, separatorY, sphereRadius, 52, 0.012),

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { BrandLogo } from "../public-site/BrandLogo";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const navItems = [
@@ -39,12 +40,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-shell">
       <aside className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="Respio dashboard">
-            <span className="app-logo-mark" aria-hidden="true">R</span>
-            <span>
-              <strong>Respio</strong>
-              <small>Seller AI ops</small>
-            </span>
+          <Link href="/app/dashboard" className="app-logo" aria-label="MPReply dashboard">
+            <BrandLogo
+              className="app-brand-logo"
+              imageClassName="app-brand-logo-image"
+              alt=""
+              priority
+            />
+            <small>Seller AI ops</small>
           </Link>
         </div>
 

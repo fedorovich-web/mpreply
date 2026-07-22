@@ -36,7 +36,7 @@
 - [ ] API image builds.
 - [ ] Worker image builds.
 - [ ] Web standalone image builds.
-- [ ] API and worker run as non-root `respio` user.
+- [ ] API and worker run as non-root `mpreply` user.
 - [ ] Web runs as non-root `nextjs` user.
 - [ ] Local Compose validates.
 - [ ] Production Compose validates with required environment variables.

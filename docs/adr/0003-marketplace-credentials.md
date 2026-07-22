@@ -4,7 +4,7 @@
 Accepted for Sprint 2.
 
 ## Context
-Respio clients connect their own marketplace seller accounts through API keys or other official API credentials. Those secrets must never be stored in plaintext, exposed to the frontend, or written to logs.
+MPReply clients connect their own marketplace seller accounts through API keys or other official API credentials. Those secrets must never be stored in plaintext, exposed to the frontend, or written to logs.
 
 ## Decision
 Sprint 2 adds marketplace account management with backend-only credential encryption and a controlled lifecycle:

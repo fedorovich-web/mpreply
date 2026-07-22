@@ -12,14 +12,16 @@ const heroStyleSource = readFileSync(
   "utf8",
 );
 
-describe("Respio hero product flow scene", () => {
+describe("MPReply hero product flow scene", () => {
   it("uses the accepted DOM/CSS + Canvas commerce answer pipeline", () => {
     expect(pageSource).toContain("HeroProductFlowCanvas");
     expect(pageSource).not.toContain("<HeroFlowCanvas");
-    expect(heroSource).toContain('data-respio-hero="commerce-answer-pipeline"');
+    expect(heroSource).toContain('data-mpreply-hero="commerce-answer-pipeline"');
     expect(heroSource).toContain("Вопрос покупателя");
     expect(heroSource).toContain("Контекст товара");
-    expect(heroSource).toContain("Respio Engine");
+    expect(heroSource).toContain('variant="canvas"');
+    expect(heroSource).toContain('alt="MPReply"');
+    expect(heroSource).not.toContain("MPReply Engine");
     expect(heroSource).toContain("Готовый ответ");
   });
 

@@ -4,8 +4,8 @@ from fastapi import Response
 
 from app.core.config import get_settings
 
-ACCESS_COOKIE_NAME = "respio_access"
-REFRESH_COOKIE_NAME = "respio_refresh"
+ACCESS_COOKIE_NAME = "mpreply_access"
+REFRESH_COOKIE_NAME = "mpreply_refresh"
 
 
 def set_access_cookie(response: Response, token: str) -> None:

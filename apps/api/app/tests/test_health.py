@@ -9,4 +9,4 @@ def test_healthcheck() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["status"] == "ok"
-    assert payload["app"] == "Respio"
+    assert payload["app"] == "MPReply"

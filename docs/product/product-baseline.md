@@ -2,7 +2,7 @@
 
 ## Positioning
 
-Respio automatically answers marketplace reviews and questions through connected marketplace APIs. The default mode is automatic replies with safety checks. Users may switch to semi-automatic mode where AI prepares a draft and a manager confirms sending.
+MPReply automatically answers marketplace reviews and questions through connected marketplace APIs. The default mode is automatic replies with safety checks. Users may switch to semi-automatic mode where AI prepares a draft and a manager confirms sending.
 
 ## Default flow
 
@@ -19,4 +19,4 @@ Connect marketplace API key
 
 ## Safety fallback
 
-If an answer is risky, unsupported, low-confidence or missing product context, Respio does not send it automatically and moves the message to manual review.
+If an answer is risky, unsupported, low-confidence or missing product context, MPReply does not send it automatically and moves the message to manual review.

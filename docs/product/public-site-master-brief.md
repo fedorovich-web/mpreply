@@ -1,8 +1,8 @@
-# Respio public site — master product, marketing and conversion brief
+# MPReply public site — master product, marketing and conversion brief
 
 ## Business objective
 
-Explain Respio clearly enough that a marketplace seller or operator understands within seconds:
+Explain MPReply clearly enough that a marketplace seller or operator understands within seconds:
 
 - the service automates replies to reviews and buyer questions;
 - it works across Wildberries, Ozon, Яндекс Маркет and Авито at launch;
@@ -32,7 +32,7 @@ Core jobs:
 
 ## Target-launch truth versus current engineering truth
 
-The public site describes the fully implemented target launch product. The user will not launch Respio halfway through implementation.
+The public site describes the fully implemented target launch product. The user will not launch MPReply halfway through implementation.
 
 Therefore marketing pages do not show internal roadmap labels such as `MVP`, `planned`, `coming soon`, `readiness`, adapter/runtime status or other implementation-stage terminology.
 
@@ -42,7 +42,7 @@ This does not allow exaggeration. By public launch, every marketplace, model, ca
 
 | Route | Dominant intent | Role |
 |---|---|---|
-| `/` | Understand Respio and its main outcome | Acquisition |
+| `/` | Understand MPReply and its main outcome | Acquisition |
 | `/features` | Evaluate capabilities | Consideration |
 | `/marketplaces` | Understand marketplace coverage | Qualification |
 | `/marketplaces/wildberries` | WB reviews/questions | Search + conversion |
@@ -82,7 +82,7 @@ Do not force originality. Do not copy competitors. Do not write vague AI filler.
 Prefer:
 
 - `Автоматические ответы на отзывы и вопросы на маркетплейсах`;
-- `Respio автоматически работает с вопросами о товаре, негативными отзывами и неоднозначными обращениями, используя доступный контекст и правила бренда`;
+- `MPReply автоматически работает с вопросами о товаре, негативными отзывами и неоднозначными обращениями, используя доступный контекст и правила бренда`;
 - `Отзывы и вопросы с четырёх маркетплейсов — в одном сервисе`.
 
 Avoid:
@@ -160,7 +160,7 @@ Master references: PitchBot AI, ARIA and Relatra. Do not create a collage of man
 
 Use concrete labels that describe the next step:
 
-- `Посмотреть, как работает Respio`;
+- `Посмотреть, как работает MPReply`;
 - `Посмотреть демонстрацию`;
 - `Обсудить подключение`.
 

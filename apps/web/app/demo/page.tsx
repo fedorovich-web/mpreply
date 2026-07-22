@@ -7,9 +7,9 @@ import { createPageMetadata } from "../../lib/seo";
 import { trialOffer } from "../../lib/public-pricing";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Бесплатный тест Respio на 7 дней",
+  title: "Бесплатный тест MPReply на 7 дней",
   description:
-    "Подключите до двух маркетплейсов и бесплатно проверьте Respio на реальных отзывах, вопросах и чатах: 7 дней и 400 ответов.",
+    "Подключите до двух маркетплейсов и бесплатно проверьте MPReply на реальных отзывах, вопросах и чатах: 7 дней и 400 ответов.",
   path: "/demo",
 });
 
@@ -17,7 +17,7 @@ const steps = [
   {
     icon: "flow" as const,
     title: "Подключите до двух маркетплейсов",
-    text: "Выберите магазин и канал, на котором хотите проверить Respio в первую очередь.",
+    text: "Выберите магазин и канал, на котором хотите проверить MPReply в первую очередь.",
   },
   {
     icon: "context" as const,
@@ -43,7 +43,7 @@ export default function DemoPage() {
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
             <p className="public-eyebrow">{trialOffer.title}</p>
-            <h1>Проверьте Respio на своих обращениях, а не на рекламном примере</h1>
+            <h1>Проверьте MPReply на своих обращениях, а не на рекламном примере</h1>
             <p className="public-lead">
               Подключите до двух маркетплейсов, бесплатно обработайте {trialOffer.answerLimit} отзывов, вопросов и сообщений и проверьте автоматическую публикацию по вашим правилам.
             </p>

@@ -4,7 +4,7 @@ Status: accepted for Sprint 6 foundation.
 
 ## Decision
 
-Respio remains auto-first. Organization-level `default_response_mode=auto` is the baseline. A marketplace account may override that mode. Enabled automation rules are evaluated by descending priority and can switch a matching message to `auto` or `semi_auto`.
+MPReply remains auto-first. Organization-level `default_response_mode=auto` is the baseline. A marketplace account may override that mode. Enabled automation rules are evaluated by descending priority and can switch a matching message to `auto` or `semi_auto`.
 
 Every AI-generated draft must pass a deterministic SafetyGate before it becomes eligible for future auto-send.
 

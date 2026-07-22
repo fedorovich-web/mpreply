@@ -14,7 +14,7 @@ import {
   userSchema,
 } from "../../lib/api/schemas";
 
-const ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId";
+const ACTIVE_ORGANIZATION_KEY = "mpreply.activeOrganizationId";
 
 type WorkspaceContextValue = {
   user: User;

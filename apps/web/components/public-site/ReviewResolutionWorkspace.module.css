@@ -442,7 +442,7 @@
 }
 
 
-/* Respio 0.1.61 · compact review stage and visible tabs */
+/* MPReply 0.1.61 · compact review stage and visible tabs */
 .tab {
   min-height: 2.65rem;
   font-size: var(--font-size-body);
@@ -468,7 +468,7 @@
   padding-top: var(--space-3);
 }
 
-/* Respio 0.1.62 · review workspace rebuild: shadow-only controls, compact cards, no uppercase grid labels */
+/* MPReply 0.1.62 · review workspace rebuild: shadow-only controls, compact cards, no uppercase grid labels */
 .workspace {
   --review-gap: var(--space-3);
   --review-panel-gap: var(--space-3);
@@ -675,7 +675,7 @@
 }
 
 
-/* Respio 0.1.63 · final review workspace alignment and filled review card */
+/* MPReply 0.1.63 · final review workspace alignment and filled review card */
 .reviewCard {
   display: flex;
   min-height: auto;
@@ -755,7 +755,7 @@
 }
 
 
-/* Respio 0.1.63 · remove heavy wrapper feel and keep tabs truly shadow-only */
+/* MPReply 0.1.63 · remove heavy wrapper feel and keep tabs truly shadow-only */
 .workspace {
 	overflow: visible;
 	border: 0;
@@ -822,7 +822,7 @@
 }
 
 
-/* Respio 0.1.65 · remove extra white wrapper, consistent radius, cleaner review layout */
+/* MPReply 0.1.65 · remove extra white wrapper, consistent radius, cleaner review layout */
 .workspace {
 	overflow: visible;
 	border: 0 !important;
@@ -934,7 +934,7 @@
 }
 
 
-/* Respio 0.1.68 · visible rounded review cards without extra wrapper */
+/* MPReply 0.1.68 · visible rounded review cards without extra wrapper */
 .workspace,
 .grid {
 	border: 0 !important;

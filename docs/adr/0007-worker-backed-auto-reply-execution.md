@@ -1,12 +1,12 @@
 # ADR-0007 — Worker-backed auto-reply execution
 
-**Status:** Accepted  
-**Version:** 0.1.7  
+**Status:** Accepted
+**Version:** 0.1.7
 **Date:** 2026-07-10
 
 ## Decision
 
-Respio executes marketplace sends outside the request/response process through Dramatiq with Redis as the broker.
+MPReply executes marketplace sends outside the request/response process through Dramatiq with Redis as the broker.
 
 The API performs admission control before enqueueing:
 
@@ -35,7 +35,7 @@ The workflow is designed as **at-least-once processing with application-level id
 
 The idempotency key is derived from organization, marketplace account, marketplace, message type, external message id, and the initial-reply operation. A unique database index prevents two durable reply jobs for the same marketplace message.
 
-Before a Wildberries send, Respio requests the current question/feedback by external id. If the marketplace already has an answer, the reply is marked `sent` locally without a second outbound send.
+Before a Wildberries send, MPReply requests the current question/feedback by external id. If the marketplace already has an answer, the reply is marked `sent` locally without a second outbound send.
 
 This materially reduces duplicate-send risk. It does not claim impossible exactly-once semantics across an external API and a local database transaction.
 

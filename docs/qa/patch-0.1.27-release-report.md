@@ -1,4 +1,4 @@
-# Respio 0.1.27 — Visual Recovery v4 candidate report
+# MPReply 0.1.27 — Visual Recovery v4 candidate report
 
 ## Release status
 
@@ -35,7 +35,7 @@ The rejected v3 orbital tangle was replaced by a smaller, clearer hybrid composi
 
 - 5 exact SVG elliptical orbits;
 - 3 readable inputs: reviews, questions and product data;
-- one Respio AI core;
+- one MPReply AI core;
 - one automatic-answer output;
 - Canvas 2D only for moving particles and output signals;
 - no warped harmonic paths;

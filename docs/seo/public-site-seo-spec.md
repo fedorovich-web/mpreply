@@ -1,4 +1,4 @@
-# Respio public-site SEO and content specification
+# MPReply public-site SEO and content specification
 
 ## Editorial priority
 
@@ -67,14 +67,14 @@ Use patterns as evidence. Never copy wording, composition or block order mechani
 | Route | Dominant intent | Role |
 |---|---|---|
 | `/` | automatic replies to marketplace reviews and questions | Category + conversion |
-| `/features` | evaluate Respio capabilities | Consideration |
+| `/features` | evaluate MPReply capabilities | Consideration |
 | `/marketplaces` | work with reviews/questions across supported marketplaces | Coverage + conversion |
 | `/marketplaces/wildberries` | automatic replies to Wildberries reviews/questions | Search + conversion |
 | `/marketplaces/ozon` | automatic replies to Ozon reviews/questions | Search + conversion |
 | `/marketplaces/yandex-market` | replies to reviews/questions on Яндекс Маркете | Search + conversion |
-| `/marketplaces/avito` | buyer communication on Авито within Respio | Search + conversion |
+| `/marketplaces/avito` | buyer communication on Авито within MPReply | Search + conversion |
 | `/pricing` | pricing/commercial evaluation | Qualification |
-| `/demo` | see how Respio processes an actual customer message | Conversion support |
+| `/demo` | see how MPReply processes an actual customer message | Conversion support |
 | `/resources` | practical marketplace-review knowledge | Authority + discovery |
 | `/contacts` | contact the operator | Trust + conversion |
 
@@ -82,7 +82,7 @@ Use patterns as evidence. Never copy wording, composition or block order mechani
 
 Each public page should answer, in this order where relevant:
 
-1. What does Respio do?
+1. What does MPReply do?
 2. Who is the page for?
 3. Which customer task is automated or simplified?
 4. What is the concrete outcome?
@@ -118,7 +118,7 @@ The target launch uses multiple strong models selected for Russian marketplace r
 - no unverified benchmark claim;
 - no claim that a model is “best” without actual comparative evidence;
 - no invented accuracy percentage, response time or superiority statement;
-- model versions may change as stronger versions appear, but the user-facing workflow remains one Respio product.
+- model versions may change as stronger versions appear, but the user-facing workflow remains one MPReply product.
 
 Before final production selection, benchmark candidates on real Russian scenarios: positive and negative reviews, complaints, product questions, ambiguous requests, long context, tone-of-voice adherence and factuality. Optional human-review scenarios may be benchmarked separately, but they are not the primary automation story.
 
@@ -128,14 +128,14 @@ FAQ exists to answer real objections and long-tail search intent, not to repeat 
 
 Priority questions:
 
-- what exactly Respio automates;
+- what exactly MPReply automates;
 - whether replies can be sent automatically;
 - what context is used;
 - what happens to negative reviews/complaints;
 - how rules and company tone work;
 - supported marketplaces;
 - why multiple AI models are used;
-- how Respio works with complex, negative and ambiguous scenarios;
+- how MPReply works with complex, negative and ambiguous scenarios;
 - how optional manual approval can be configured where the business needs it.
 
 No FAQ markup should be added unless the visible page genuinely contains the questions and answers.

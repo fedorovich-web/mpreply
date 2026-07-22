@@ -78,6 +78,22 @@ function contrastRatio(foreground: string, background: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+function mixHex(
+  foreground: string,
+  background: string,
+  foregroundWeight: number,
+): string {
+  const foregroundRgb = parseHex(foreground);
+  const backgroundRgb = parseHex(background);
+  const channels = foregroundRgb.map((channel, index) =>
+    Math.round(
+      channel * foregroundWeight +
+        (backgroundRgb[index] ?? 0) * (1 - foregroundWeight),
+    ),
+  );
+  return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
 function declarationsOutsideTokenFiles(source: string): string[] {
   const visualProperty =
     /^(?:color|background(?:-color)?|border-color|border-width|box-shadow|text-shadow|fill|stroke|font-family|font-size|font-weight|line-height|letter-spacing|margin(?:-[a-z]+)?|padding(?:-[a-z]+)?|gap|row-gap|column-gap|border-radius|transition(?:-[a-z]+)?|outline|opacity|transform|filter|backdrop-filter)$/;
@@ -116,7 +132,7 @@ function expectOpaqueHexColor(value: string, label: string): void {
   expect(value, `${label} must be an opaque six-digit hex color`).toMatch(/^#[0-9a-f]{6}$/i);
 }
 
-describe("Respio design tokens", () => {
+describe("MPReply design tokens", () => {
   it("contains the complete public visual-system contract", () => {
     const requiredTokens = [
       "--color-bg-page",
@@ -139,6 +155,10 @@ describe("Respio design tokens", () => {
       "--color-safetygate-panel",
       "--color-safetygate-panel-raised",
       "--color-brand-primary",
+      "--color-brand-on-light",
+      "--color-brand-on-light-hover",
+      "--color-public-header-text",
+      "--color-public-header-text-active",
       "--color-brand-text-on-soft",
       "--color-brand-primary-hover",
       "--color-brand-primary-active",
@@ -154,6 +174,11 @@ describe("Respio design tokens", () => {
       "--color-success",
       "--color-success-text",
       "--color-success-soft",
+      "--hero-product-flow-success-soft",
+      "--hero-product-flow-success-text",
+      "--hero-product-flow-warning-soft",
+      "--hero-product-flow-warning-text",
+      "--pricing-pack-volume-text",
       "--color-info",
       "--color-info-text",
       "--color-info-soft",
@@ -259,7 +284,7 @@ describe("Respio design tokens", () => {
   });
 
   it("uses the self-hosted Onest RU/EN subset with explicit webfont performance contracts", () => {
-    expect(token("--font-family-sans")).toMatch(/^'Respio Onest',/);
+    expect(token("--font-family-sans")).toMatch(/^'MPReply Onest',/);
     expect(globalStyleSource).toContain("@import './fonts.css';");
     expect(fontStyleSource.match(/@font-face/g)).toHaveLength(4);
     expect(fontStyleSource.match(/font-display:\s*swap/g)).toHaveLength(4);
@@ -294,8 +319,8 @@ describe("Respio design tokens", () => {
     expect(globalStyleSource).not.toMatch(/\b(?:rgb|rgba|hsl|hsla)\(/i);
   });
 
-  it("keeps the active Respio product-flow Hero on the approved DOM/canvas contract", () => {
-    expect(productFlowSource).toContain('data-respio-hero="commerce-answer-pipeline"');
+  it("keeps the active MPReply product-flow Hero on the approved DOM/canvas contract", () => {
+    expect(productFlowSource).toContain('data-mpreply-hero="commerce-answer-pipeline"');
     expect(productFlowSource).toContain("drawConnection(");
     expect(productFlowSource).toContain("function anchor(");
     expect(productFlowSource).toContain("getBoundingClientRect");
@@ -406,7 +431,88 @@ describe("Respio design tokens", () => {
 
   it("defines dark-theme overrides as custom-property values rather than component hacks", () => {
     expect(themeSource).toMatch(/\[data-theme=['"]dark['"]\]/);
+    expect(publicStyleSource).toContain("var(--color-public-header-text)");
+    expect(publicStyleSource).toContain("var(--color-public-header-text-active)");
+    expect(publicStyleSource).toContain("var(--color-brand-on-light)");
+    expect(publicStyleSource).toContain("var(--pricing-pack-volume-text)");
+    expect(productFlowStyleSource).toContain("var(--hero-product-flow-success-text)");
+    expect(productFlowStyleSource).toContain("var(--hero-product-flow-warning-text)");
     expect(themeSource).not.toMatch(/\.[\w-]+\s*\{/);
+  });
+
+  it("keeps fixed light public surfaces accessible in both themes", () => {
+    const white = token("--color-white");
+    expect(contrastRatio(token("--color-public-header-text"), white)).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(
+      contrastRatio(token("--color-public-header-text-active"), white),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(token("--color-brand-on-light"), white)).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(
+      contrastRatio(token("--color-brand-on-light-hover"), white),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(token("--pricing-pack-volume-text"), "#f3f2ff"),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(token("--color-marketplace-avito"), "#e6f7ff"),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("keeps product-flow semantic badges WCAG AA compliant", () => {
+    expect(
+      contrastRatio(
+        token("--hero-product-flow-success-text"),
+        token("--hero-product-flow-success-soft"),
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(
+        token("--hero-product-flow-warning-text"),
+        token("--hero-product-flow-warning-soft"),
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(
+        darkToken("--hero-product-flow-success-text"),
+        darkToken("--hero-product-flow-success-soft"),
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(
+        darkToken("--hero-product-flow-warning-text"),
+        darkToken("--hero-product-flow-warning-soft"),
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("keeps marketplace badges accessible on dark public surfaces", () => {
+    const darkSurface = darkToken("--color-bg-surface");
+    const cases = [
+      [
+        darkToken("--color-marketplace-wb"),
+        mixHex(darkToken("--color-marketplace-wb"), darkSurface, 0.12),
+      ],
+      [
+        darkToken("--color-marketplace-ozon"),
+        mixHex(darkToken("--color-marketplace-ozon"), darkSurface, 0.1),
+      ],
+      [
+        darkToken("--color-marketplace-yandex"),
+        mixHex("#ffcc00", darkSurface, 0.18),
+      ],
+      [
+        darkToken("--color-marketplace-avito"),
+        mixHex("#00aaff", darkSurface, 0.1),
+      ],
+    ] as const;
+
+    for (const [foreground, background] of cases) {
+      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   it.each([

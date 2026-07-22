@@ -1,4 +1,4 @@
-# Respio UI/UX quality standard
+# MPReply UI/UX quality standard
 
 ## Hierarchy
 

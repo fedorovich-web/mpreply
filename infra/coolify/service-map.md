@@ -4,43 +4,43 @@
 
 Application services:
 
-- `respio-api-staging`
-- `respio-web-staging`
-- `respio-worker-staging`
-- `respio-scheduler-staging`
+- `mpreply-api-staging`
+- `mpreply-web-staging`
+- `mpreply-worker-staging`
+- `mpreply-scheduler-staging`
 - one-shot migration job per deployment
 
 Stateful resources:
 
-- `respio-postgres-staging`
-- `respio-redis-staging`
+- `mpreply-postgres-staging`
+- `mpreply-redis-staging`
 
 ## Production
 
 Application services:
 
-- `respio-api-prod`
-- `respio-web-prod`
-- `respio-worker-prod`
-- `respio-scheduler-prod`
+- `mpreply-api-prod`
+- `mpreply-web-prod`
+- `mpreply-worker-prod`
+- `mpreply-scheduler-prod`
 - one-shot migration job per deployment
 
 Stateful resources:
 
-- `respio-postgres-prod`
-- `respio-redis-prod`
+- `mpreply-postgres-prod`
+- `mpreply-redis-prod`
 
 Provision a dedicated scheduler service from `apps/scheduler/Dockerfile`; it claims due polling states and dispatches marketplace-sync jobs to Dramatiq.
 
 ## Domains
 
-- `respio.ru` -> web
-- `www.respio.ru` -> redirect to `respio.ru`
-- `app.respio.ru` -> web
-- `api.respio.ru` -> api
-- `admin.respio.ru` -> reserved; do not expose until an admin surface exists
-- `status.respio.ru` -> reserved for status tooling
-- `docs.respio.ru` -> reserved for documentation
+- `mpreply.ru` -> web
+- `www.mpreply.ru` -> redirect to `mpreply.ru`
+- `app.mpreply.ru` -> web
+- `api.mpreply.ru` -> api
+- `admin.mpreply.ru` -> reserved; do not expose until an admin surface exists
+- `status.mpreply.ru` -> reserved for status tooling
+- `docs.mpreply.ru` -> reserved for documentation
 
 ## Rules
 

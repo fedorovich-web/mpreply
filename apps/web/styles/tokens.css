@@ -34,6 +34,8 @@
 	--color-brand-action-active: #3730ae;
 	--color-brand-text: #5148d8;
 	--color-brand-text-on-soft: #4b43d1;
+	--color-brand-on-light: #5148d8;
+	--color-brand-on-light-hover: #443bcd;
 	--color-brand-accent: #00e5e5;
 	--color-brand-accent-hover: #00caca;
 	--color-marketplace-wb: #9d22d4;
@@ -42,7 +44,7 @@
 	--color-marketplace-ozon-soft: color-mix(in srgb, var(--color-marketplace-ozon) 10%, var(--color-public-surface));
 	--color-marketplace-yandex: #7f6500;
 	--color-marketplace-yandex-soft: color-mix(in srgb, #ffcc00 18%, var(--color-public-surface));
-	--color-marketplace-avito: #0083c7;
+	--color-marketplace-avito: #006a9f;
 	--color-marketplace-avito-soft: color-mix(in srgb, #00aaff 10%, var(--color-public-surface));
 	--color-brand-violet-light: #a5a0ff;
 	--color-brand-cyan-light: #9cffff;
@@ -85,6 +87,8 @@
 	--color-safetygate-panel: #151b44;
 	--color-safetygate-panel-raised: #1d2454;
 	--color-public-header: rgb(255 255 255 / 92%);
+	--color-public-header-text: #33405a;
+	--color-public-header-text-active: #0d1538;
 	--color-public-footer: var(--color-bg-page);
 	--color-public-header-divider: color-mix(in srgb, var(--color-border-subtle), transparent 24%);
 	--color-public-header-glass: color-mix(in srgb, var(--color-bg-surface), transparent 8%);
@@ -140,7 +144,7 @@
 
 	/* Font families */
 	--font-family-sans:
-		'Respio Onest', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		'MPReply Onest', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	--font-family-mono:
 		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
@@ -485,7 +489,10 @@
 	--hero-product-flow-copy-size: 0.7rem;
 	--hero-product-flow-label-size: 0.64rem;
 	--hero-product-flow-brand-soft: color-mix(in srgb, var(--color-brand-primary) 10%, var(--color-public-surface));
-	--hero-product-flow-success-soft: color-mix(in srgb, var(--color-success) 10%, var(--color-public-surface));
+	--hero-product-flow-success-soft: #eaf9f5;
+	--hero-product-flow-success-text: #087663;
+	--hero-product-flow-warning-soft: #fff9eb;
+	--hero-product-flow-warning-text: #8a5800;
 	--hero-product-flow-kicker-color: #158b78;
 	--hero-product-flow-status-bg: color-mix(in srgb, var(--color-public-surface) 88%, transparent);
 	--hero-product-flow-hint-bg: color-mix(in srgb, var(--color-public-surface) 84%, transparent);
@@ -535,7 +542,7 @@
 	--shadow-hero-product-flow-chip: 0 0.75rem 1.45rem rgb(54 85 112 / 10%);
 	--shadow-hero-product-flow-status: 0 0.85rem 1.9rem rgb(44 57 103 / 6%), inset 0 0 0 1px rgb(92 104 155 / 8%);
 
-	/* Hero canvas · Respio AI Orbital System */
+	/* Hero canvas · MPReply AI Orbital System */
 	--canvas-orbit-count: 5;
 	--canvas-orbit-stroke-width: 1.25;
 	--canvas-orbit-duration-min: 60;
@@ -728,7 +735,7 @@
 	--public-hero-v50-lead-line-height: var(--line-height-copy-tight);
 	--public-hero-v50-actions-margin: var(--space-11);
 
-	/* Respio 0.1.61 · public polish variables */
+	/* MPReply 0.1.61 · public polish variables */
 	--public-nav-font-size: 1rem;
 	--public-nav-item-radius: var(--radius-pill);
 	--public-nav-item-padding-block: 0.625rem;
@@ -770,7 +777,7 @@
 }
 
 :root {
-	/* Respio 0.1.62 · polish tokens */
+	/* MPReply 0.1.62 · polish tokens */
 	--shadow-review-shell: 0 28px 78px rgb(34 31 94 / 10%);
 	--shadow-review-card: inset 0 0 0 1px rgb(92 104 155 / 8%), 0 16px 42px rgb(34 31 94 / 7%);
 	--shadow-review-soft-border: inset 0 0 0 1px rgb(92 104 155 / 10%);
@@ -795,7 +802,7 @@
 }
 
 :root {
-	/* Respio 0.1.63 · site width, updated icon system and review alignment */
+	/* MPReply 0.1.63 · site width, updated icon system and review alignment */
 	--public-header-v63-container-width: min(100% - 5rem, 97.5rem);
 	--public-header-v63-container-width-compact: min(100% - 3.5rem, 90rem);
 	--public-header-v63-container-width-mobile: min(100% - 1.75rem, 90rem);
@@ -811,7 +818,7 @@
 }
 
 :root {
-	/* Respio 0.1.65 · normalized cards/icons/radius */
+	/* MPReply 0.1.65 · normalized cards/icons/radius */
 	--public-card-radius-v65: var(--radius-3xl);
 	--public-card-padding-v65: clamp(var(--space-6), 3vw, var(--space-8));
 	--marketing-glyph-v65-size: clamp(5.25rem, 6.4vw, 7rem);
@@ -826,7 +833,7 @@
 }
 
 :root {
-	/* Respio 0.1.67 · final block radius and equal icon size */
+	/* MPReply 0.1.67 · final block radius and equal icon size */
 	--public-block-radius-v67: 2rem;
 	--public-block-radius-v67-large: 2.25rem;
 	--public-block-icon-size-v67: 5.25rem;
@@ -836,7 +843,7 @@
 }
 
 :root {
-	/* Respio 0.1.68 · equal visible icons, consistent cards and section rhythm */
+	/* MPReply 0.1.68 · equal visible icons, consistent cards and section rhythm */
 	--public-card-radius-v68: 2rem;
 	--public-card-radius-large-v68: 2.25rem;
 	--public-icon-size-v68: 7rem;
@@ -858,7 +865,7 @@
 }
 
 :root {
-	/* Respio 0.1.69 · equal icon pack, softer footer, smooth section transitions */
+	/* MPReply 0.1.69 · equal icon pack, softer footer, smooth section transitions */
 	--public-icon-size-v69: clamp(4.9rem, 5vw, 5.8rem);
 	--public-icon-size-v69-mobile: 4.5rem;
 	--public-icon-card-surface-v69: linear-gradient(180deg, rgb(255 255 255 / 86%), rgb(246 249 255 / 78%));
@@ -880,7 +887,7 @@
 }
 
 :root {
-	/* Respio 0.1.71 · selected blue-purple 3D icon pack */
+	/* MPReply 0.1.71 · selected blue-purple 3D icon pack */
 	--marketing-glyph-size-v71: 7rem;
 	--marketing-glyph-size-mobile-v71: 5.75rem;
 	--public-footer-surface-v71: #e5e9f1;
@@ -892,7 +899,7 @@
 }
 
 :root {
-	/* Respio 0.1.73 · public content architecture, pricing and trial */
+	/* MPReply 0.1.73 · public content architecture, pricing and trial */
 	--public-v73-body-size: 1rem;
 	--public-v73-small-size: 0.875rem;
 	--public-v73-card-radius: 2rem;
@@ -916,7 +923,7 @@
 }
 
 :root {
-	/* Respio 0.1.75 · unified public container and final conversion polish */
+	/* MPReply 0.1.75 · unified public container and final conversion polish */
 	--public-site-container-max-v75: 97.5rem;
 	--public-site-gutter-v75: 2.5rem;
 	--public-site-gutter-compact-v75: 1.75rem;
@@ -945,7 +952,7 @@
 }
 
 :root {
-	/* Respio 0.1.76 · button system, asymmetric model rows and collision-safe Hero */
+	/* MPReply 0.1.76 · button system, asymmetric model rows and collision-safe Hero */
 	--public-v76-button-height: 3.25rem;
 	--public-v76-button-radius: 1rem;
 	--public-v76-button-font-size: 1rem;
@@ -969,7 +976,7 @@
 }
 
 :root {
-	/* Respio 0.1.77 · compact LLM cards and corrected pricing rhythm */
+	/* MPReply 0.1.77 · compact LLM cards and corrected pricing rhythm */
 	--public-v77-model-grid-columns: 20;
 	--public-v77-model-narrow-columns: 9;
 	--public-v77-model-wide-columns: 11;
@@ -986,7 +993,7 @@
 }
 
 :root {
-	/* Respio 0.1.78 · 60/40 model rows and non-expiring answer packs */
+	/* MPReply 0.1.78 · 60/40 model rows and non-expiring answer packs */
 	--public-v78-model-columns: 5;
 	--public-v78-model-wide-span: 3;
 	--public-v78-model-narrow-span: 2;
@@ -1004,7 +1011,7 @@
 }
 
 :root {
-	/* Respio 0.1.79 · compact pricing rhythm and answer-volume calculator */
+	/* MPReply 0.1.79 · compact pricing rhythm and answer-volume calculator */
 	--public-v79-plan-card-gap: 0.85rem;
 	--public-v79-plan-description-min-height: 0rem;
 	--public-v79-calculator-radius: 2rem;
@@ -1020,7 +1027,7 @@
 }
 
 :root {
-	/* Respio 0.1.82 · one pricing design system for home and /pricing */
+	/* MPReply 0.1.82 · one pricing design system for home and /pricing */
 	--pricing-pack-grid-gap: clamp(var(--space-4), 1.8vw, var(--space-6));
 	--pricing-pack-card-radius: var(--public-v73-card-radius);
 	--pricing-pack-card-padding: clamp(var(--space-6), 2vw, var(--space-8));
@@ -1036,6 +1043,7 @@
 	--pricing-pack-price-size: clamp(2.15rem, 2.35vw, 2.85rem);
 	--pricing-pack-currency-size: 1rem;
 	--pricing-pack-volume-bg: var(--color-brand-accent-soft);
+	--pricing-pack-volume-text: #5148d8;
 	--pricing-pack-feature-gap: var(--space-3);
 	--pricing-pack-action-bg: var(--public-v76-button-secondary-bg);
 	--pricing-pack-action-hover: var(--public-v76-button-secondary-hover);
@@ -1049,7 +1057,7 @@
 }
 
 :root {
-	/* Respio 0.1.85 · desktop Hero fold recovery */
+	/* MPReply 0.1.85 · desktop Hero fold recovery */
 	--public-v85-hero-padding: clamp(2.75rem, 4vw, 4.5rem) 0 clamp(3rem, 4.25vw, 5.25rem);
 	--public-v85-hero-gap: clamp(1.5rem, 2.8vw, 3.25rem);
 	--public-v85-hero-min-height: min(42rem, calc(100svh - 8rem));
@@ -1070,7 +1078,7 @@
 }
 
 :root {
-	/* Respio 0.1.86 · pricing rebalance and 2026 navigation system */
+	/* MPReply 0.1.86 · pricing rebalance and 2026 navigation system */
 	--public-v86-none: none;
 	--public-v86-zero: 0;
 	--public-v86-transparent: transparent;
@@ -1179,7 +1187,7 @@
 	--pricing-v86-result-metric-shadow: inset 0 0 0 1px rgb(88 102 150 / 8%);
 	--pricing-v86-result-action-shell-shadow: inset 0 0 0 1px rgb(255 255 255 / 78%);
 
-	/* Respio 0.1.87 · pricing/menu recovery after rejected 0.1.86 visual direction */
+	/* MPReply 0.1.87 · pricing/menu recovery after rejected 0.1.86 visual direction */
 	--public-v87-nav-underline-height: 0.125rem;
 	--public-v87-nav-underline-bg: linear-gradient(
 		90deg,
@@ -1206,7 +1214,7 @@
 }
 
 :root {
-	/* Respio 0.1.88 · pricing/menu correction after manual visual review */
+	/* MPReply 0.1.88 · pricing/menu correction after manual visual review */
 	--public-v88-nav-hover-underline-bg: linear-gradient(
 		90deg,
 		var(--color-brand-accent) 0%,
@@ -1248,7 +1256,7 @@
 	--pricing-v88-final-primary-hover-transform: translateY(-0.08rem);
 	--pricing-v88-mobile-h2-size: clamp(2rem, 8.5vw, 2.5rem);
 	--pricing-v88-mobile-number-size: clamp(2.15rem, 9.5vw, 2.65rem);
-	/* Respio 0.1.89 · pricing/menu/SEO copy correction tokens */
+	/* MPReply 0.1.89 · pricing/menu/SEO copy correction tokens */
 	--pricing-v89-trial-number-size: clamp(1.8rem, 2vw, 2.125rem);
 	--pricing-v89-trial-heading-size: clamp(1.45rem, 1.7vw, 1.75rem);
 	--pricing-v89-result-volume-size: clamp(2.15rem, 2.6vw, 2.7rem);
@@ -1279,7 +1287,7 @@
 }
 
 :root {
-	/* Respio 0.1.90 · strict public typography and visual recovery tokens */
+	/* MPReply 0.1.90 · strict public typography and visual recovery tokens */
 	--public-v90-h1-size: 3.625rem;
 	--public-v90-h2-size: 3rem;
 	--public-v90-h3-size: 1.75rem;
@@ -1308,7 +1316,7 @@
 	--pricing-v90-range-thumb: var(--color-brand-primary);
 	--pricing-v90-result-volume-size: clamp(1.9rem, 2.3vw, 2.35rem);
 	--pricing-v90-dark-cta-bg: #ffffff;
-	--pricing-v90-dark-cta-color: var(--color-brand-primary);
+	--pricing-v90-dark-cta-color: var(--color-brand-on-light);
 	--pricing-v90-dark-cta-hover-bg: color-mix(in srgb, #ffffff 92%, var(--color-brand-accent) 8%);
 
 	--public-v90-nav-underline-hidden: scaleX(0);
@@ -1326,7 +1334,7 @@
 }
 
 :root {
-	/* Respio 0.1.91 · header opacity, compact public headings and pricing polish */
+	/* MPReply 0.1.91 · header opacity, compact public headings and pricing polish */
 	--public-v91-header-bg: #ffffff;
 	--public-v91-header-shadow: 0 0.5rem 1.35rem rgb(23 33 72 / 7%), inset 0 -1px 0 rgb(92 104 155 / 10%);
 	--public-v91-header-shadow-scrolled: 0 0.75rem 1.8rem rgb(23 33 72 / 9%), inset 0 -1px 0 rgb(92 104 155 / 12%);
@@ -1360,7 +1368,7 @@
 }
 
 :root {
-	/* Respio 0.1.92 · unified public hero spacing and compact inner hero panels */
+	/* MPReply 0.1.92 · unified public hero spacing and compact inner hero panels */
 	--public-v92-eyebrow-to-heading-gap: clamp(1.05rem, 1.15vw, 1.35rem);
 	--public-v92-heading-to-copy-gap: clamp(1.05rem, 1.2vw, 1.35rem);
 	--public-v92-copy-to-actions-gap: clamp(1.65rem, 2.2vw, 2.2rem);
@@ -1390,7 +1398,7 @@
 	--public-v92-inherit: inherit;
 }
 
-/* Respio 0.1.93 · public heading and hero spacing contract tokens. */
+/* MPReply 0.1.93 · public heading and hero spacing contract tokens. */
 :root {
 	--public-v93-hero-copy-width: clamp(31rem, 34vw, 36rem);
 	--public-v93-hero-copy-width-compact: clamp(29rem, 35vw, 32rem);
@@ -1420,7 +1428,7 @@
 	--public-v93-close-rotate-backward: rotate(-45deg);
 }
 
-/* Respio 0.1.94 · public spacing, compact hero panels and modal form recovery tokens. */
+/* MPReply 0.1.94 · public spacing, compact hero panels and modal form recovery tokens. */
 :root {
 	--public-v94-eyebrow-to-heading: clamp(1.35rem, 1.55vw, 1.75rem);
 	--public-v94-heading-to-copy: clamp(1.45rem, 1.65vw, 1.9rem);
@@ -1456,7 +1464,7 @@
 	--public-v94-modal-gutter: 2rem;
 }
 
-/* Respio 0.1.95 · final public heading rhythm and trial modal recovery tokens. */
+/* MPReply 0.1.95 · final public heading rhythm and trial modal recovery tokens. */
 :root {
 	--public-v95-eyebrow-to-heading: clamp(1.2rem, 1.45vw, 1.65rem);
 	--public-v95-heading-to-copy: clamp(1.35rem, 1.7vw, 2rem);

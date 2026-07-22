@@ -1,4 +1,4 @@
-# Respio 0.1.87 Pricing/Menu Visual Recovery Report
+# MPReply 0.1.87 Pricing/Menu Visual Recovery Report
 
 Patch `0.1.87` is a focused recovery patch after the 0.1.86 pricing/menu visual direction was rejected during manual screenshot review.
 
@@ -7,7 +7,7 @@ Patch `0.1.87` is a focused recovery patch after the 0.1.86 pricing/menu visual 
 - The 0.1.86 public navigation introduced a visible central rail/background around menu items, but the accepted direction requires a clean menu without a surrounding capsule, border or background.
 - The pricing H1 scale grew beyond the accepted internal-page typography contract and created broken Russian wrapping.
 - The right trial card used an oversized `400 ответов` number and a decorative bottom gradient stripe that competed with the page heading.
-- The calculator range controls used a blue progress stripe that did not match the calmer Respio design system.
+- The calculator range controls used a blue progress stripe that did not match the calmer MPReply design system.
 - Mobile header actions were not force-hidden by the 0.1.86 override layer, causing logo/login/CTA/hamburger collision.
 
 ## Changes

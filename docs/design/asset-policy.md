@@ -1,27 +1,37 @@
-# Respio visual asset policy
+# MPReply visual asset policy
 
-The current `R` in a rounded square is placeholder, not final logo.
+## Production logo assets
 
-## Final logo sources
+| Surface | Primary | Fallback | Intrinsic size |
+|---|---|---|---:|
+| Public header and footer | `/logo/logo.avif` | `/logo/logo.webp` | 249×60 |
+| Hero product-flow Canvas | `/logo/logo-canvas.avif` | `/logo/logo-canvas.webp` | 300×261 |
 
-Editable SVG wordmark, symbol/app icon, monochrome light/dark variants, clearspace/minimum-size guidance. No embedded base64 raster, no unnecessary editor metadata, no casual imitation of marketplace or competitor geometry.
+Both AVIF files must preserve transparency. The WebP files are mandatory fallbacks. Do not inline the files as base64, recreate the mark with CSS, add a background plate or place a second brand label beneath the Canvas logo.
 
-## Export matrix
+## Favicon contract
 
-`public/brand/`: wordmark SVGs, symbol SVGs, 1200×630 OG default. `public/favicon/`: ico, svg, 96×96 PNG, apple-touch-icon, webmanifest. Add platform assets only for real targets.
+The following files live directly in `apps/web/public/`:
 
-## Icons
+- `favicon.svg`;
+- `favicon-96x96.png`;
+- `favicon.ico`;
+- `apple-touch-icon.png`;
+- `web-app-manifest-192x192.png`;
+- `web-app-manifest-512x512.png`;
+- `site.webmanifest`.
 
-One primary family; no emoji; custom icons must match grid/stroke/corners. Marketplace marks are trademarks, not generic UI icons. Do not imply partnership/certification or put them in a fake “trusted by” row.
+The document head must link this exact set, and `site.webmanifest` must expose `MPReply` as both `name` and `short_name`.
 
-## Images/screenshots
+## Rendering requirements
 
-Never expose keys, PII or customer secrets. Show plausible product state without inventing customer evidence. Prefer modern formats, explicit dimensions and responsive sizing.
+- Use `<picture>` with AVIF first and WebP fallback.
+- Provide intrinsic `width` and `height` to prevent layout shift.
+- Preserve aspect ratio with `height: auto` and `object-fit: contain`.
+- Use eager/high-priority loading only for the above-the-fold header and Canvas placements.
+- Keep the wordmark near-black on light surfaces. On the dark footer, render the approved horizontal logo on a restrained light logo surface rather than recoloring the supplied bitmap.
+- Decorative images use empty alt text; linked brand marks rely on an explicit accessible label.
 
-## Alt/OG/fonts
+## General assets
 
-Informative images get purpose-based alt; decorative images empty alt. OG assets must actually exist and make no unsupported claims. Do not redistribute/self-host fonts without license verification.
-
-## Generated imagery
-
-Review factual correctness, trademark mimicry, fake evidence and UI misleadingness. Generated art cannot replace a needed real product screenshot.
+One coherent icon family per surface; no emoji or fake marketplace endorsements. Product screenshots must contain no secrets or personal data. Generated imagery cannot be presented as customer evidence. Every shipped file must have a real runtime consumer or a documented release purpose.

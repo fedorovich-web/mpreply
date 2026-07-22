@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 
+import { BrandLogo } from "./BrandLogo";
+
 const navigation = [
   { href: "/features", label: "Возможности", description: "Автоответы и правила" },
   { href: "/marketplaces", label: "Маркетплейсы", description: "WB, Ozon, ЯМ, Авито" },
@@ -48,9 +50,13 @@ export function PublicHeader() {
   return (
     <header className="public-header public-header-v86 public-header-v87 public-header-v88 public-header-v89 public-header-v90">
       <div className="public-container public-header-inner public-header-inner-v86 public-header-inner-v87 public-header-inner-v88 public-header-inner-v89 public-header-inner-v90">
-        <Link className="public-brand public-brand-v86 public-brand-v87 public-brand-v88 public-brand-v89 public-brand-v90" href="/" aria-label="Respio — главная" onClick={closeMenu}>
-          <span className="public-brand-mark public-brand-mark-v86 public-brand-mark-v87 public-brand-mark-v88 public-brand-mark-v89 public-brand-mark-v90" aria-hidden="true">R</span>
-          <span className="public-brand-copy public-brand-copy-v86 public-brand-copy-v87 public-brand-copy-v88 public-brand-copy-v89 public-brand-copy-v90"><strong>Respio</strong></span>
+        <Link className="public-brand public-brand-v86 public-brand-v87 public-brand-v88 public-brand-v89 public-brand-v90" href="/" aria-label="MPReply — главная" onClick={closeMenu}>
+          <BrandLogo
+            className="public-brand-logo"
+            imageClassName="public-brand-logo-image"
+            alt=""
+            priority
+          />
         </Link>
 
         <nav className="public-nav public-nav-v86 public-nav-v87 public-nav-v88 public-nav-v89 public-nav-v90" aria-label="Основная навигация">
@@ -104,7 +110,7 @@ export function PublicHeader() {
               <div className="public-mobile-menu-panel public-mobile-menu-panel-v86 public-mobile-menu-panel-v87 public-mobile-menu-panel-v88 public-mobile-menu-panel-v89 public-mobile-menu-panel-v90" id={menuId}>
                 <div className="public-mobile-menu-head-v86 public-mobile-menu-head-v87 public-mobile-menu-head-v88 public-mobile-menu-head-v89 public-mobile-menu-head-v90">
                   <div>
-                    <span className="public-mobile-menu-kicker-v86 public-mobile-menu-kicker-v87 public-mobile-menu-kicker-v88 public-mobile-menu-kicker-v89 public-mobile-menu-kicker-v90">Навигация Respio</span>
+                    <span className="public-mobile-menu-kicker-v86 public-mobile-menu-kicker-v87 public-mobile-menu-kicker-v88 public-mobile-menu-kicker-v89 public-mobile-menu-kicker-v90">Навигация MPReply</span>
                     <strong>Быстрый переход</strong>
                   </div>
                   <button className="public-mobile-menu-close-v88 public-mobile-menu-close-v89 public-mobile-menu-close-v90" type="button" aria-label="Закрыть меню" onClick={closeMenu}>

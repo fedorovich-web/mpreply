@@ -19,7 +19,7 @@ describe("Review Resolution Workspace contract", () => {
     expect(componentSource).not.toContain("Review Resolution Workspace");
     expect(componentSource).toContain("01 · Диагностика и проверка");
     expect(componentSource).toContain("02 · Персональный ответ и решение");
-    expect(componentSource).toContain("Что определил Respio");
+    expect(componentSource).toContain("Что определил MPReply");
     expect(stylesSource).toContain(
       "grid-template-columns: minmax(17rem, 0.74fr) minmax(20rem, 0.9fr) minmax(25rem, 1.08fr)",
     );
@@ -36,7 +36,7 @@ describe("Review Resolution Workspace contract", () => {
 
   it("uses the approved heading and remains responsive", () => {
     expect(pageSource).toContain(
-      "Respio готовит точный ответ и выбирает действие по правилам",
+      "MPReply готовит точный ответ и выбирает действие по правилам",
     );
     expect(pageSource).toContain("<ReviewResolutionWorkspace />");
     expect(stylesSource).toContain("@media (max-width: 1180px)");

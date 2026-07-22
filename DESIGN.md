@@ -1,4 +1,4 @@
-# Respio — Design System Direction
+# MPReply — Design System Direction
 
 Status: authoritative current design rules and implementation constraints.
 Version: 0.1.31
@@ -9,7 +9,7 @@ Version: 0.1.31
 
 ## Approved public brand direction · Electric Pulse / Light Orbital Intelligence
 
-The current public-site authority is **light-first**. The default Respio experience is a premium light AI/B2B SaaS environment; dark mode is a first-class secondary theme exposed through the existing theme switcher, not the visual starting point for the product.
+The current public-site authority is **light-first**. The default MPReply experience is a premium light AI/B2B SaaS environment; dark mode is a first-class secondary theme exposed through the existing theme switcher, not the visual starting point for the product.
 
 Approved master references for public art direction:
 - **PitchBot AI** — overall visual maturity, softness, branded light AI environment and coherent system thinking.
@@ -21,7 +21,7 @@ Explicitly excluded as master references:
 - OEME / OEMA.
 - AgentVoice.
 
-These references are inputs, not templates. Respio must retain its own product narrative, original code, Electric Pulse identity, AUTO-FIRST positioning and Respio AI Orbital System signature visual.
+These references are inputs, not templates. MPReply must retain its own product narrative, original code, Electric Pulse identity, AUTO-FIRST positioning and MPReply AI Orbital System signature visual.
 
 Approved public palette:
 - Primary violet: `#635BFF`.
@@ -36,7 +36,7 @@ Approved hero behavior:
 - Desktop H1 must wrap naturally in Russian, normally within 2–4 visual lines; the design must never force a five-to-seven-line heading through an artificially narrow copy column.
 - Desktop hero CTAs remain side by side while they physically fit; stacking starts only at a justified mobile breakpoint.
 - The hero background and Canvas ambient layer form one composition rather than two disconnected panels.
-- The Canvas is the **Respio AI Orbital System**: one central Respio AI planet, five distinct semantic planets and five mathematically exact interwoven elliptical orbits.
+- The Canvas is the **MPReply AI Orbital System**: one central MPReply AI planet, five distinct semantic planets and five mathematically exact interwoven elliptical orbits.
 - Motion must be perceptible but restrained: each semantic planet moves slowly only on its own ellipse, with non-identical 35–47 second periods; no random drift, bouncing or detached nodes.
 - Reduced motion, off-screen pausing, page-visibility pausing, bounded DPR/FPS and mobile complexity reduction are mandatory.
 
@@ -49,15 +49,15 @@ Public component contract:
 - Custom cursor behavior is progressive enhancement for fine-pointer desktop devices only and must disappear for touch/coarse pointer or reduced motion.
 
 Dark public theme:
-- The same content architecture, typography, spacing, component geometry and Respio AI Orbital System semantics are preserved.
+- The same content architecture, typography, spacing, component geometry and MPReply AI Orbital System semantics are preserved.
 - Do not create a separate cyberpunk site or simply invert colors.
 - Narrow auxiliary references may inform specific dark-theme qualities only: Songo for signal/data motion, ZeroDrift for safety/trust language, and NeuraCore for restrained ambient depth.
 
 Dashboard direction:
 - Dashboard UI is operational and denser than the public site; it must not inherit Awwwards-style decorative motion, custom cursor or hero gradients.
-- Primary references by function: Linear for hierarchy and information density, Vercel/Geist for semantic tokens/theme/control states, Resend for inbox/event-log simplicity, plus Respio-specific marketplace/SafetyGate/AUTO-FIRST workflows.
+- Primary references by function: Linear for hierarchy and information density, Vercel/Geist for semantic tokens/theme/control states, Resend for inbox/event-log simplicity, plus MPReply-specific marketplace/SafetyGate/AUTO-FIRST workflows.
 
-Respio should feel like a reliable operating system for marketplace communication: calm, precise, fast, accountable and visually mature. Marketing may be more expressive than the dashboard, but both belong to one family through Onest, semantic tokens, Electric Pulse accents, shared interaction timing and state logic.
+MPReply should feel like a reliable operating system for marketplace communication: calm, precise, fast, accountable and visually mature. Marketing may be more expressive than the dashboard, but both belong to one family through Onest, semantic tokens, Electric Pulse accents, shared interaction timing and state logic.
 
 ## Secondary public routes · 0.1.15
 
@@ -83,10 +83,10 @@ Authorization is visible but never treated as a frontend security boundary: owne
 
 The public visual system is stabilized around shared tokens for typography, surfaces, spacing, motion, buttons, focus states and responsive behavior. Later patches may evolve art direction, but they must not create a second design system or component-local visual scales.
 
-For the current Hero, the approved signature visual is the Respio AI Orbital System:
+For the current Hero, the approved signature visual is the MPReply AI Orbital System:
 
 - SVG owns five exact, distinct, interwoven elliptical orbit paths;
-- HTML/CSS owns the central Respio AI planet and the five semantic planets;
+- HTML/CSS owns the central MPReply AI planet and the five semantic planets;
 - JavaScript computes each planet position from the same ellipse geometry used by SVG, so no planet can visually detach from its orbit;
 - the five semantic roles are `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила` and `Готовый ответ`;
 - reduced motion, viewport pausing, page-visibility pausing and FPS caps remain mandatory.
@@ -143,7 +143,15 @@ One coherent family per surface. No emoji. No mixed outline/fill/duotone systems
 
 ## Logo and brand assets
 
-The current `R` in a rounded square is a placeholder, not the final Respio logo. Final identity must include wordmark, symbol if justified, monochrome/light/dark versions, favicon/app exports, clearspace/minimum-size rules and editable SVG. Do not imitate marketplace identities or competitors.
+The approved MPReply identity uses a cobalt-to-cyan communication/reply symbol and a near-black `MPReply` wordmark. Production placement is fixed:
+
+- header and footer use `/logo/logo.avif` with `/logo/logo.webp` fallback;
+- the Hero product-flow Canvas uses `/logo/logo-canvas.avif` with `/logo/logo-canvas.webp` fallback;
+- the Canvas asset already contains the `MPReply` wordmark, so no `Engine`, monogram or repeated brand label may be rendered below it;
+- favicon and installable-app icons come from the root public favicon/manifest set;
+- preserve intrinsic aspect ratios, transparent backgrounds and the supplied gradient; never recolor the wordmark toward blue.
+
+The old rounded `R` tile is retired and must not return through fallback markup, CSS pseudo-elements, Canvas drawing code, screenshots or documentation.
 
 ## Motion
 
@@ -248,13 +256,13 @@ Patch 0.1.28 remains a local visual-recovery candidate until the user approves r
 - Qipeline, OEME/OEMA and AgentVoice are not master references.
 - Narrow references may be used only for specific mechanisms: ZeroDrift AI (trust/safety), C-SCORE (risk visualization), Songo (signal motion), NeuraCore (ambient motion), Lernium (B2B storytelling) and Guardbase (security communication).
 
-### Hero · Respio AI Orbital System
+### Hero · MPReply AI Orbital System
 
 The approved 0.1.28 Canvas contract is:
 
-- one central matte soft-3D planet with the `Respio AI` title and `AI-ответы для маркетплейсов` descriptor integrated into its equatorial band;
+- one central matte soft-3D planet with the `MPReply AI` title and `AI-ответы для маркетплейсов` descriptor integrated into its equatorial band;
 - exactly five clearly distinguishable semantic planets: `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
-- exactly five distinct mathematical ellipses with different radii, eccentricities and rotations, visually interwoven around the common Respio AI center;
+- exactly five distinct mathematical ellipses with different radii, eccentricities and rotations, visually interwoven around the common MPReply AI center;
 - every small planet belongs to exactly one orbit and is positioned by the same ellipse equation that defines its SVG path;
 - full rotations are deliberately slow and non-identical: 35–47 seconds;
 - labels adapt their side around each moving planet to reduce collisions;
@@ -274,7 +282,7 @@ Do not force uniqueness. Do not copy competitors. Do not invent claims, metrics 
 
 The rejected Hero phrases `Автоответы по умолчанию`, `SafetyGate до отправки`, `Исключения — менеджеру`, `Повторы без дублей` must not return.
 
-`SafetyGate` must not be the primary public automation story. Public copy should first show that Respio automates diverse review/question scenarios. Optional manual approval may be explained later as a configurable control for selected categories, and the internal/product term may be introduced only when it adds customer value.
+`SafetyGate` must not be the primary public automation story. Public copy should first show that MPReply automates diverse review/question scenarios. Optional manual approval may be explained later as a configurable control for selected categories, and the internal/product term may be introduced only when it adds customer value.
 
 ### LLM section
 
@@ -298,7 +306,7 @@ Patch 0.1.29 supersedes the rejected 0.1.28 Hero implementation after the user's
 
 The corrected contract is:
 
-- five independent 3D orbital planes around one Respio AI core;
+- five independent 3D orbital planes around one MPReply AI core;
 - the same 3D projection function drives both each SVG orbit and its moving planet, so the planet cannot drift away from its own path;
 - every orbit is split into back and front depth segments around the central sphere, giving real occlusion instead of five flat ellipses painted on one layer;
 - the central sphere is rendered as a layered matte 3D object with cap, curved equatorial band, lower body shading and restrained violet/cyan depth light;
@@ -319,7 +327,7 @@ The 0.1.30 implementation contract was:
 
 - orbit lines were DOM ellipses transformed as independent CSS 3D planes with `perspective`, `rotateX`, `rotateZ` and `transform-style: preserve-3d`;
 - SVG orbit paths were removed from the Hero scene;
-- every orbit used separate back/front halves around the Respio AI core;
+- every orbit used separate back/front halves around the MPReply AI core;
 - five distinct periods were deliberately slow: 60–76 seconds per full revolution;
 - no WebGL or Three.js runtime was introduced.
 
@@ -327,7 +335,7 @@ The user rejected the real 0.1.30 browser render because the result still read a
 
 ## Real WebGL orbital scene · 0.1.31
 
-Patch 0.1.31 replaces the rejected CSS-3D foundation with a real Three.js/WebGL scene. The accepted composition target remains one central matte Respio AI planet, five semantic planets and five intertwined 3D orbits, rendered with actual camera perspective, lighting and depth-buffer occlusion.
+Patch 0.1.31 replaces the rejected CSS-3D foundation with a real Three.js/WebGL scene. The accepted composition target remains one central matte MPReply AI planet, five semantic planets and five intertwined 3D orbits, rendered with actual camera perspective, lighting and depth-buffer occlusion.
 
 The 0.1.31 implementation contract is:
 
@@ -336,7 +344,7 @@ The 0.1.31 implementation contract is:
 - five independent mathematical 3D ellipses are generated from explicit radii and XYZ rotations;
 - the same 3D equation drives both the `LineLoop` orbit geometry and its moving planet, preventing drift from the assigned path;
 - real WebGL depth testing provides front/back occlusion among orbits, planets and the central sphere;
-- the Respio AI core uses separate upper/lower sphere geometry, a restrained equatorial light band, matte physical materials, contact shadow and limited violet/cyan depth lighting;
+- the MPReply AI core uses separate upper/lower sphere geometry, a restrained equatorial light band, matte physical materials, contact shadow and limited violet/cyan depth lighting;
 - five semantic planets remain `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
 - full rotations are deliberately slow and non-identical, and only active visible time advances motion;
 - animation pauses outside the viewport and while the document is hidden; reduced motion resolves to a static composition;
@@ -354,7 +362,7 @@ The authoritative Hero contract is now:
 
 - exact customer-facing copy: `От вопроса покупателя к готовому ответу — автоматически.`;
 - one real Three.js/WebGL scene with a perspective camera and depth-buffer occlusion;
-- one layered matte Respio AI planet with a separate equatorial band, restrained violet light and contact shadow;
+- one layered matte MPReply AI planet with a separate equatorial band, restrained violet light and contact shadow;
 - exactly five independent spatial `TubeGeometry` orbits and five real semantic planet meshes;
 - fixed semantic labels: `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
 - stable label orientation and bounded projection without side-flipping jumps;

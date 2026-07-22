@@ -6,8 +6,8 @@ import "../styles/globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
   title: {
-    default: "Respio — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
-    template: "%s | Respio",
+    default: "MPReply — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
+    template: "%s | MPReply",
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
@@ -19,13 +19,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ru_RU",
     siteName: siteConfig.name,
-    title: "Respio — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
+    title: "MPReply — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
     description: siteConfig.description,
     url: "/",
   },
   twitter: {
     card: "summary",
-    title: "Respio — ИИ-ответы для маркетплейсов",
+    title: "MPReply — ИИ-ответы для маркетплейсов",
     description: siteConfig.description,
   },
   robots: {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 const themeScript = `
 (() => {
   try {
-    const saved = localStorage.getItem("respio-theme");
+    const saved = localStorage.getItem("mpreply-theme");
     const theme = saved === "dark" || saved === "light" ? saved : "light";
     document.documentElement.dataset.theme = theme;
   } catch {
@@ -49,6 +49,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="MPReply" />
+        <link rel="manifest" href="/site.webmanifest" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>{children}</body>

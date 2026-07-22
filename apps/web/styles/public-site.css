@@ -76,7 +76,7 @@
 	align-items: center;
 	justify-content: center;
 	gap: var(--space-6);
-	color: var(--color-text-secondary);
+	color: var(--color-public-header-text);
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-public-nav);
 	font-variation-settings: normal;
@@ -87,7 +87,10 @@
 	transition: var(--transition-color);
 }
 
-.public-nav a:hover,
+.public-nav a:hover {
+	color: var(--color-public-header-text-active);
+}
+
 .text-link:hover {
 	color: var(--color-brand-primary);
 }
@@ -99,12 +102,12 @@
 }
 
 .button-ghost {
-	color: var(--color-text-secondary);
+	color: var(--color-public-header-text);
 }
 
 .button-ghost:hover {
 	background: var(--color-brand-soft);
-	color: var(--color-brand-text-on-soft);
+	color: var(--color-public-header-text-active);
 }
 
 .public-hero {
@@ -441,7 +444,7 @@
 	}
 }
 
-/* Respio Signal Flow · public brand refresh */
+/* MPReply Signal Flow · public brand refresh */
 .public-root {
 	background: var(--color-bg-page);
 }
@@ -835,7 +838,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Respio 0.1.15 · secondary public routes
+   MPReply 0.1.15 · secondary public routes
    -------------------------------------------------------------------------- */
 
 .public-subhero {
@@ -1540,7 +1543,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Respio 0.1.16 · navigation, theme and public-shell polish
+   MPReply 0.1.16 · navigation, theme and public-shell polish
    -------------------------------------------------------------------------- */
 
 .public-nav a[aria-current='page'] {
@@ -1869,8 +1872,8 @@
 }
 
 /* --------------------------------------------------------------------------
-   Respio 0.1.27 · light-first Visual Recovery final contract
-   PitchBot + ARIA + Relatra principles, Respio-owned Orbital Ribbon Flow.
+   MPReply 0.1.27 · light-first Visual Recovery final contract
+   PitchBot + ARIA + Relatra principles, MPReply-owned Orbital Ribbon Flow.
    -------------------------------------------------------------------------- */
 
 .public-header {
@@ -3398,7 +3401,7 @@
 }
 
 /* ========================================================================== */
-/* Respio 0.1.27 · Visual Recovery v4 · screenshot-driven acceptance contract */
+/* MPReply 0.1.27 · Visual Recovery v4 · screenshot-driven acceptance contract */
 /* ========================================================================== */
 
 .home-hero,
@@ -4123,7 +4126,7 @@
 	}
 }
 
-/* Respio 0.1.54 · approved light hero workspace and review-resolution layout */
+/* MPReply 0.1.54 · approved light hero workspace and review-resolution layout */
 .home-review-resolution-heading {
 	display: grid;
 	grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.8fr);
@@ -4171,7 +4174,7 @@
 	}
 }
 
-/* Respio 0.1.56 · Hero recovery at compact desktop widths. */
+/* MPReply 0.1.56 · Hero recovery at compact desktop widths. */
 .home-hero-layout > * {
 	min-width: 0;
 }
@@ -4192,7 +4195,7 @@
 	}
 }
 
-/* Respio 0.1.59 · Approved v50 Hero / product-flow canvas integration. */
+/* MPReply 0.1.59 · Approved v50 Hero / product-flow canvas integration. */
 .home-hero .public-container {
 	width: min(100% - 5rem, 97.5rem);
 	max-width: none;
@@ -4309,7 +4312,7 @@
 	}
 }
 
-/* Respio 0.1.60 · readable review tabs, vertical headings and full-width FAQ */
+/* MPReply 0.1.60 · readable review tabs, vertical headings and full-width FAQ */
 .home-section-heading h2,
 .home-review-resolution-heading h2,
 .home-final-cta-card h2,
@@ -4457,7 +4460,7 @@
 	}
 }
 
-/* Respio 0.1.61 · public polish pass */
+/* MPReply 0.1.61 · public polish pass */
 .public-nav {
 	font-size: var(--public-nav-font-size);
 	gap: var(--space-2);
@@ -4652,7 +4655,7 @@
 	}
 }
 
-/* Respio 0.1.62 · hard polish: headings vertical, redesigned marketplace block, FAQ +/−, readable CTA */
+/* MPReply 0.1.62 · hard polish: headings vertical, redesigned marketplace block, FAQ +/−, readable CTA */
 .home-review-resolution-heading {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -4914,7 +4917,7 @@
 	}
 }
 
-/* Respio 0.1.63 · header width, CTA copy, final card/icon polish */
+/* MPReply 0.1.63 · header width, CTA copy, final card/icon polish */
 .public-header .public-container,
 .public-header-inner {
 	width: var(--public-header-v63-container-width);
@@ -5120,12 +5123,12 @@
 	}
 }
 
-/* Respio 0.1.63 · hero/header CTA differentiation */
+/* MPReply 0.1.63 · hero/header CTA differentiation */
 .home-hero-actions .button-primary {
 	white-space: nowrap;
 }
 
-/* Respio 0.1.65 · fixed icon placement, sizes and consistent radius */
+/* MPReply 0.1.65 · fixed icon placement, sizes and consistent radius */
 .home-outcome-card,
 .home-capability-card,
 .marketplace-public-card,
@@ -5285,7 +5288,7 @@
 	}
 }
 
-/* Respio 0.1.66 · hard fix: icons left above headings, no 5th card, no right-floating glyphs */
+/* MPReply 0.1.66 · hard fix: icons left above headings, no 5th card, no right-floating glyphs */
 .home-outcome-grid {
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -5365,7 +5368,7 @@
 	}
 }
 
-/* Respio 0.1.67 · restore radius everywhere; equal left-top icons in cards */
+/* MPReply 0.1.67 · restore radius everywhere; equal left-top icons in cards */
 .home-outcome-card,
 .home-capability-card,
 .home-marketplace-hub,
@@ -5507,7 +5510,7 @@
 	}
 }
 
-/* Respio 0.1.68 · icons, radius, alternating sections and dark footer */
+/* MPReply 0.1.68 · icons, radius, alternating sections and dark footer */
 
 /* Alternating backgrounds in the actual homepage order. */
 .home-hero {
@@ -5709,7 +5712,7 @@
 	}
 }
 
-/* Respio 0.1.69 · follow-up corrections requested by user */
+/* MPReply 0.1.69 · follow-up corrections requested by user */
 
 /* Smooth background transitions between sections instead of hard cuts. */
 .home-hero {
@@ -5891,7 +5894,7 @@
 	}
 }
 
-/* Respio 0.1.71 · final blue-purple icon pack integration */
+/* MPReply 0.1.71 · final blue-purple icon pack integration */
 
 /* Every 3D marketing icon uses exactly the same box at each breakpoint. */
 .marketing-glyph,
@@ -6085,7 +6088,7 @@
 	}
 }
 
-/* Respio 0.1.73 · public content architecture, trial and pricing */
+/* MPReply 0.1.73 · public content architecture, trial and pricing */
 .home-hero-trial-note,
 .public-subhero-note {
 	margin: var(--space-4) 0 0;
@@ -6440,9 +6443,30 @@
 	position: fixed;
 	z-index: 1000;
 	inset: 0;
-	display: grid;
-	place-items: center;
 	padding: var(--space-4);
+}
+
+.public-trial-modal-layout {
+	position: relative;
+	display: grid;
+	width: 100%;
+	min-height: 100%;
+	place-items: center;
+}
+
+.public-trial-modal[popover] {
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+}
+
+.public-trial-modal[popover]::backdrop {
+	background: transparent;
 }
 
 .public-trial-modal-backdrop {
@@ -6656,7 +6680,7 @@
 	}
 }
 
-/* Respio 0.1.75 · unified public width, controlled Hero, model masonry and pricing polish */
+/* MPReply 0.1.75 · unified public width, controlled Hero, model masonry and pricing polish */
 
 /* One external grid for Header, Hero, every section and Footer content. */
 .public-root .public-container,
@@ -6912,7 +6936,7 @@
 	}
 }
 
-/* Respio 0.1.76 · coherent buttons, true asymmetric model rows and collision-safe Hero */
+/* MPReply 0.1.76 · coherent buttons, true asymmetric model rows and collision-safe Hero */
 
 /* Links navigate; buttons execute actions. Both must share the same visible interaction system. */
 .public-root :is(a.button, button.button) {
@@ -7094,7 +7118,7 @@
 	}
 }
 
-/* Respio 0.1.77 · compact model grid and corrected pricing vertical rhythm */
+/* MPReply 0.1.77 · compact model grid and corrected pricing vertical rhythm */
 
 /* Keep the requested asymmetric rows, but use a restrained 45/55 split. */
 .home-llm-asymmetric-grid-v76 {
@@ -7177,7 +7201,7 @@
 	}
 }
 
-/* Respio 0.1.78 · exact 60/40 model rows, aligned benefits and answer-pack pricing */
+/* MPReply 0.1.78 · exact 60/40 model rows, aligned benefits and answer-pack pricing */
 
 .home-workflow-step-v73 h3 {
 	white-space: nowrap;
@@ -7297,7 +7321,7 @@
 	}
 }
 
-/* Respio 0.1.79 · compact pricing cards and answer-pack calculator */
+/* MPReply 0.1.79 · compact pricing cards and answer-pack calculator */
 
 .pricing-plan-card-v75 {
 	gap: var(--public-v79-plan-card-gap) !important;
@@ -7523,7 +7547,7 @@
 	}
 }
 
-/* Respio 0.1.82 · shared pricing component and tokens across all public pages */
+/* MPReply 0.1.82 · shared pricing component and tokens across all public pages */
 
 .pricing-pack-grid {
 	display: grid;
@@ -7617,7 +7641,7 @@
 	border-radius: var(--radius-pill);
 	background: var(--pricing-pack-volume-bg);
 	padding: var(--space-2) var(--space-4);
-	color: var(--color-brand-primary);
+	color: var(--pricing-pack-volume-text);
 	font-size: var(--pricing-pack-copy-size);
 	font-weight: var(--font-weight-bold);
 }
@@ -7909,7 +7933,7 @@
 	}
 }
 
-/* Respio 0.1.85 · Hero visual baseline recovery at real desktop widths.
+/* MPReply 0.1.85 · Hero visual baseline recovery at real desktop widths.
    The 0.1.76 cascade collapsed the Hero at 1440px, placing the scene below the
    copy and leaving a broken first fold. Keep the commercial Hero two-column on
    desktop and defer the single-column composition to tablet widths. */
@@ -8006,7 +8030,7 @@
 	}
 }
 
-/* Respio 0.1.86 · pricing visual rebalance and 2026 navigation system.
+/* MPReply 0.1.86 · pricing visual rebalance and 2026 navigation system.
    Evidence-based direction: restrained glass, spatial micro-interaction,
    accessible focus/target states and clearer conversion hierarchy. */
 .public-header-v86 {
@@ -8072,7 +8096,7 @@
 	gap: var(--space-2);
 	border-radius: var(--public-v86-nav-link-radius);
 	padding: var(--public-v86-nav-link-padding);
-	color: var(--color-text-secondary);
+	color: var(--color-public-header-text);
 	text-decoration: none;
 	box-shadow: var(--public-v86-none) !important;
 	transform: var(--public-v86-none) !important;
@@ -8108,7 +8132,7 @@
 .public-nav-v86 .public-nav-link-v86:hover,
 .public-nav-v86 .public-nav-link-v86:focus-visible,
 .public-nav-v86 .public-nav-link-v86[aria-current='page'] {
-	color: var(--color-text-primary) !important;
+	color: var(--color-public-header-text-active) !important;
 }
 
 .public-nav-v86 .public-nav-link-v86:hover::before,
@@ -8144,7 +8168,7 @@
 .public-login-link-v86:hover,
 .public-login-link-v86:focus-visible {
 	background: var(--public-v86-nav-link-hover-bg) !important;
-	color: var(--color-text-primary) !important;
+	color: var(--color-public-header-text-active) !important;
 	box-shadow: var(--public-v86-nav-link-hover-shadow) !important;
 }
 
@@ -8581,7 +8605,7 @@
 	}
 }
 
-/* Respio 0.1.87 · recovery of rejected 0.1.86 pricing/menu direction.
+/* MPReply 0.1.87 · recovery of rejected 0.1.86 pricing/menu direction.
    Scope: remove nav rail background/border feeling, restore strict 58/48/28
    heading scale, calm pricing trial/calculator controls and fix mobile header. */
 .public-header-v87 {
@@ -8647,7 +8671,7 @@
 .public-nav-v87 .public-nav-link-v87:hover,
 .public-nav-v87 .public-nav-link-v87:focus-visible,
 .public-nav-v87 .public-nav-link-v87[aria-current='page'] {
-	color: var(--color-text-primary) !important;
+	color: var(--color-public-header-text-active) !important;
 	transform: var(--public-v87-nav-hover-lift) !important;
 }
 
@@ -8671,7 +8695,7 @@
 .public-login-link-v87:hover,
 .public-login-link-v87:focus-visible {
 	background: var(--public-v86-transparent) !important;
-	color: var(--color-brand-primary) !important;
+	color: var(--color-public-header-text-active) !important;
 	box-shadow: var(--public-v86-none) !important;
 	transform: var(--public-v87-nav-hover-lift);
 }
@@ -8843,7 +8867,7 @@
 	}
 }
 
-/* Respio 0.1.88 · pricing/menu correction after manual visual review.
+/* MPReply 0.1.88 · pricing/menu correction after manual visual review.
    Scope: no nav backgrounds, 58/48/28 type scale, 18px public leads,
    calmer pricing trial/calculator/included sections, readable CTA on blue CTA cards,
    mobile menu close control and body-scroll-safe markup. */
@@ -8912,7 +8936,7 @@
 	min-height: auto !important;
 	padding: var(--space-2) 0 !important;
 	border-radius: var(--public-v86-zero) !important;
-	color: var(--color-text-secondary) !important;
+	color: var(--color-public-header-text) !important;
 }
 
 .public-nav-v88 .public-nav-link-v88::before {
@@ -8931,7 +8955,7 @@
 .public-nav-v88 .public-nav-link-v88:hover,
 .public-nav-v88 .public-nav-link-v88:focus-visible,
 .public-nav-v88 .public-nav-link-v88[aria-current='page'] {
-	color: var(--color-text-primary) !important;
+	color: var(--color-public-header-text-active) !important;
 	transform: var(--public-v88-nav-hover-lift) !important;
 }
 
@@ -9242,7 +9266,7 @@
 	}
 }
 
-/* Respio 0.1.89 · typography, pricing composition, clean nav underline, pages/copy recovery. */
+/* MPReply 0.1.89 · typography, pricing composition, clean nav underline, pages/copy recovery. */
 .public-lead,
 .home-hero-lead,
 .public-subhero-copy .public-lead,
@@ -9614,7 +9638,7 @@
 	}
 }
 
-/* Respio 0.1.90 · dependency-warning audit, typography, pricing and menu recovery. */
+/* MPReply 0.1.90 · dependency-warning audit, typography, pricing and menu recovery. */
 .public-header-v90,
 .public-header-inner-v90,
 .public-nav-rail-v90,
@@ -9641,7 +9665,7 @@
 	padding: var(--space-2) 0 !important;
 	gap: var(--space-2) !important;
 	min-height: auto !important;
-	color: var(--color-text-secondary) !important;
+	color: var(--color-public-header-text) !important;
 	transform: var(--public-v86-none) !important;
 }
 
@@ -9676,7 +9700,7 @@
 .public-nav-v90 .public-nav-link-v90:hover,
 .public-nav-v90 .public-nav-link-v90:focus-visible,
 .public-nav-v90 .public-nav-link-v90[aria-current='page'] {
-	color: var(--color-text-primary) !important;
+	color: var(--color-public-header-text-active) !important;
 }
 
 .public-nav-v90 .public-nav-link-v90:hover .public-nav-link-label-v90::after,
@@ -9780,7 +9804,7 @@
 	padding: var(--public-v86-zero) !important;
 	border-radius: var(--public-v86-zero) !important;
 	background: var(--public-v86-transparent) !important;
-	color: var(--color-brand-primary) !important;
+	color: var(--pricing-pack-volume-text) !important;
 	text-align: left !important;
 }
 
@@ -9991,7 +10015,7 @@
 .public-page-final-cta .button-primary:focus-visible,
 .public-page-final-cta .public-cta-on-dark:focus-visible {
 	background: var(--pricing-v90-dark-cta-hover-bg) !important;
-	color: var(--color-brand-primary-hover) !important;
+	color: var(--color-brand-on-light-hover) !important;
 }
 
 .feature-capability-card,
@@ -10061,7 +10085,7 @@
 	}
 }
 
-/* Respio 0.1.91 · recovery after manual visual review: solid header, compact headings, pricing polish. */
+/* MPReply 0.1.91 · recovery after manual visual review: solid header, compact headings, pricing polish. */
 .public-header-v90 {
 	background: var(--public-v91-header-bg) !important;
 	box-shadow: var(--public-v91-header-shadow) !important;
@@ -10400,7 +10424,7 @@
 .public-page-final-cta .public-cta-on-dark,
 .public-page-final-cta .public-cta-on-dark:hover {
 	background: var(--color-public-surface) !important;
-	color: var(--color-brand-primary) !important;
+	color: var(--color-brand-on-light) !important;
 	box-shadow: var(--pricing-v90-dark-cta-shadow) !important;
 }
 
@@ -10421,7 +10445,7 @@
 	}
 }
 
-/* Respio 0.1.92 · unified hero spacing, inner panel hierarchy and pricing recovery. */
+/* MPReply 0.1.92 · unified hero spacing, inner panel hierarchy and pricing recovery. */
 .home-hero-copy,
 .public-subhero-copy,
 .section-heading,
@@ -10765,7 +10789,7 @@
 	}
 }
 
-/* Respio 0.1.93 · public spacing, hero panels, modal and eyebrow contract recovery. */
+/* MPReply 0.1.93 · public spacing, hero panels, modal and eyebrow contract recovery. */
 :where(.public-main) h2 {
 	font-size: var(--font-size-h2) !important;
 	line-height: var(--line-height-heading) !important;
@@ -10963,10 +10987,13 @@
 }
 
 .public-trial-modal {
-	align-items: start !important;
-	place-items: start center !important;
 	overflow-y: auto !important;
 	padding: var(--public-v93-modal-viewport-padding) !important;
+}
+
+.public-trial-modal-layout {
+	align-items: start !important;
+	place-items: start center !important;
 }
 
 .public-trial-dialog {
@@ -11119,7 +11146,7 @@
 	}
 }
 
-/* Respio 0.1.94 · public hero spacing, lists and trial modal form recovery. */
+/* MPReply 0.1.94 · public hero spacing, lists and trial modal form recovery. */
 :root {
 	--public-eyebrow-to-heading: var(--public-v94-eyebrow-to-heading);
 	--public-heading-to-copy: var(--public-v94-heading-to-copy);
@@ -11442,7 +11469,7 @@
 	}
 }
 
-/* Respio 0.1.95 · final recovery for public heading rhythm, hero lists and trial modal. */
+/* MPReply 0.1.95 · final recovery for public heading rhythm, hero lists and trial modal. */
 .public-eyebrow {
 	align-items: center !important;
 	width: fit-content !important;
@@ -11596,10 +11623,13 @@
 }
 
 .public-trial-modal {
-	align-items: center !important;
-	justify-items: center !important;
 	overflow-y: auto !important;
 	padding: clamp(1rem, 3vh, 2rem) var(--space-4) !important;
+}
+
+.public-trial-modal-layout {
+	align-items: center !important;
+	justify-items: center !important;
 }
 
 .public-trial-dialog,
@@ -11791,7 +11821,7 @@
 	}
 }
 
-/* Respio 0.1.96 · emergency recovery for section rhythm, trial modal and hero collision. */
+/* MPReply 0.1.96 · emergency recovery for section rhythm, trial modal and hero collision. */
 :root {
 	--public-v96-eyebrow-to-heading: clamp(1.45rem, 1.8vw, 2rem);
 	--public-v96-heading-to-copy: clamp(1.65rem, 1.75vw, 1.75rem);
@@ -12003,10 +12033,68 @@
 .home-final-cta-card .home-final-cta-primary:hover,
 .home-final-cta-card .home-final-cta-primary:focus-visible {
 	background: #ffffff !important;
-	color: var(--color-brand-primary) !important;
+	color: var(--color-brand-on-light) !important;
 }
 
-/* Respio 0.1.97 · unit contract recovery: neutral pricing range track */
+/* MPReply 0.1.97 · unit contract recovery: neutral pricing range track */
 .answer-pack-field-v90 input[type="range"] {
         background: var(--pricing-v90-range-track) !important;
+}
+
+/* MPReply 0.1.103 · production brand assets. */
+.public-brand-logo,
+.public-footer-brand-logo {
+	display: block;
+	line-height: 0;
+}
+
+.public-brand-logo {
+	width: clamp(9.25rem, 11vw, 10.75rem);
+	flex: 0 0 auto;
+}
+
+.public-brand-logo-image,
+.public-footer-brand-logo-image {
+	display: block;
+	width: 100%;
+	height: auto;
+	object-fit: contain;
+}
+
+.public-brand-v86,
+.public-brand-v87,
+.public-brand-v88,
+.public-brand-v89,
+.public-brand-v90 {
+	padding-inline: 0 !important;
+}
+
+.public-footer-logo {
+	border-radius: var(--radius-lg);
+	background: var(--color-public-surface);
+	padding: var(--space-3) var(--space-4);
+	box-shadow: var(--shadow-sm);
+}
+
+.public-footer-brand-logo {
+	width: clamp(10rem, 13vw, 12rem);
+}
+
+@media (max-width: 760px) {
+	.public-brand-logo {
+		width: 8.75rem;
+	}
+
+	.public-footer-brand-logo {
+		width: 10rem;
+	}
+}
+
+/* MPReply 0.1.103 · W3C-safe native popover layout. */
+
+/* MPReply 0.1.103 · mobile horizontal scrollport containment. */
+@media (max-width: 760px) {
+	.public-root {
+		overflow-x: clip;
+	}
 }

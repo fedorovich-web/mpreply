@@ -300,7 +300,7 @@ function AutomationRulesWorkspaceContent({
       <section className="automation-detail-grid">
         <article className="ai-panel">
           <p className="eyebrow">Приоритет решений</p>
-          <h2>Как Respio выбирает режим ответа</h2>
+          <h2>Как MPReply выбирает режим ответа</h2>
           <ol className="automation-precedence-list">
             {precedence.map((item, index) => (
               <li key={item}>

@@ -31,4 +31,4 @@ Performance warning below 0.75; accessibility error below 0.90; best-practices e
 
 ## Composio decision
 
-Intentionally omitted. It does not solve the current brand/design/SEO/browser-QA problem and should not sit between Respio and core marketplace adapters without a separate architecture decision.
+Intentionally omitted. It does not solve the current brand/design/SEO/browser-QA problem and should not sit between MPReply and core marketplace adapters without a separate architecture decision.

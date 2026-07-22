@@ -40,10 +40,10 @@ FORWARDED_ALLOW_IPS
 Expected production mapping:
 
 ```text
-respio.ru      -> web
-www.respio.ru  -> redirect to respio.ru
-app.respio.ru  -> web
-api.respio.ru  -> api
+mpreply.ru      -> web
+www.mpreply.ru  -> redirect to mpreply.ru
+app.mpreply.ru  -> web
+api.mpreply.ru  -> api
 ```
 
 Do not expose PostgreSQL or Redis publicly.

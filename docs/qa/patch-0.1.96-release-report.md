@@ -1,4 +1,4 @@
-# Respio 0.1.96 — section spacing and trial modal recovery
+# MPReply 0.1.96 — section spacing and trial modal recovery
 
 ## Scope
 

@@ -23,14 +23,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_env: Literal["local", "staging", "production"] = "local"
-    app_name: str = "Respio"
-    app_version: str = "0.1.102"
+    app_name: str = "MPReply"
+    app_version: str = "0.1.103"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"
     public_site_url: str = "http://localhost:3000"
 
-    database_url: SecretStr = Field(default=SecretStr("postgresql+asyncpg://respio:respio_password@localhost:5432/respio"))
+    database_url: SecretStr = Field(default=SecretStr("postgresql+asyncpg://mpreply:mpreply_password@localhost:5432/mpreply"))
     redis_url: SecretStr = Field(default=SecretStr("redis://localhost:6379/0"))
 
     auth_secret_key: SecretStr = Field(default=SecretStr("replace-with-local-dev-secret-at-least-32-bytes"))

@@ -1,7 +1,7 @@
 [project]
-name = "respio-api"
-version = "0.1.102"
-description = "Respio FastAPI backend"
+name = "mpreply-api"
+version = "0.1.103"
+description = "MPReply FastAPI backend"
 requires-python = ">=3.13,<3.15"
 dependencies = [
   "fastapi[standard]==0.128.0",
