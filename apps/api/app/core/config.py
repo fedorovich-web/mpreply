@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from ipaddress import ip_network
 from typing import Literal, Self
 from urllib.parse import urlparse
 
@@ -23,7 +24,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["local", "staging", "production"] = "local"
     app_name: str = "Respio"
-    app_version: str = "0.1.101"
+    app_version: str = "0.1.102"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"
@@ -45,6 +46,27 @@ class Settings(BaseSettings):
     openrouter_default_model: str = "openai/gpt-5.2"
     openrouter_fallback_model: str = "anthropic/claude-sonnet-4.6"
     openrouter_timeout_seconds: float = 45.0
+
+    payment_provider: Literal["disabled", "yookassa"] = "disabled"
+    payment_return_url: str = "http://localhost:3000/app/billing?payment=return"
+    payment_provider_timeout_seconds: float = Field(default=20.0, gt=0.0, le=60.0)
+    yookassa_shop_id: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))
+    yookassa_secret_key: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))
+    yookassa_api_base_url: str = "https://api.yookassa.ru/v3"
+    payment_webhook_ip_check_enabled: bool = True
+    payment_webhook_max_body_bytes: int = Field(default=65_536, ge=4_096, le=1_048_576)
+    yookassa_webhook_allowed_networks: list[str] = Field(
+        default_factory=lambda: [
+            "185.71.76.0/27",
+            "185.71.77.0/27",
+            "77.75.153.0/25",
+            "77.75.156.11/32",
+            "77.75.156.35/32",
+            "77.75.154.128/25",
+            "2a02:5180::/32",
+        ]
+    )
+    payment_trusted_proxy_networks: list[str] = Field(default_factory=list)
 
     sentry_dsn: str | None = None
     sentry_traces_sample_rate: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -88,6 +110,15 @@ class Settings(BaseSettings):
     def validate_runtime_contract(self) -> Self:
         if self.auth_cookie_samesite == "none" and not self.auth_cookie_secure:
             raise ValueError("AUTH_COOKIE_SAMESITE=none requires AUTH_COOKIE_SECURE=true")
+        for label, networks in (
+            ("YOOKASSA_WEBHOOK_ALLOWED_NETWORKS", self.yookassa_webhook_allowed_networks),
+            ("PAYMENT_TRUSTED_PROXY_NETWORKS", self.payment_trusted_proxy_networks),
+        ):
+            try:
+                for network in networks:
+                    ip_network(network, strict=False)
+            except ValueError as exc:
+                raise ValueError(f"{label} contains an invalid IP network") from exc
 
         if self.app_env != "production":
             return self
@@ -95,6 +126,16 @@ class Settings(BaseSettings):
         self._require_secure_production_secret("AUTH_SECRET_KEY", self.auth_secret_key, min_length=32)
         self._require_secure_production_secret("OPENROUTER_API_KEY", self.openrouter_api_key, min_length=16)
         self._require_valid_fernet_key()
+
+        if self.payment_provider == "yookassa":
+            self._require_secure_production_secret("YOOKASSA_SHOP_ID", self.yookassa_shop_id, min_length=3)
+            self._require_secure_production_secret("YOOKASSA_SECRET_KEY", self.yookassa_secret_key, min_length=16)
+            if urlparse(self.payment_return_url).scheme != "https":
+                raise ValueError("Production requires HTTPS for PAYMENT_RETURN_URL")
+            if urlparse(self.yookassa_api_base_url).scheme != "https":
+                raise ValueError("Production requires HTTPS for YOOKASSA_API_BASE_URL")
+            if self.payment_webhook_ip_check_enabled and not self.yookassa_webhook_allowed_networks:
+                raise ValueError("Production webhook IP validation requires YOOKASSA_WEBHOOK_ALLOWED_NETWORKS")
 
         if not self.auth_cookie_secure:
             raise ValueError("Production requires AUTH_COOKIE_SECURE=true")

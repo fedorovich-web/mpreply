@@ -88,8 +88,26 @@ class AnswerReservationStatus(StrEnum):
 
 
 class AnswerLedgerEntryType(StrEnum):
-    GRANT = "grant"
-    RESERVE = "reserve"
-    RELEASE = "release"
     DEBIT = "debit"
+    GRANT = "grant"
+    RELEASE = "release"
+    RESERVE = "reserve"
     REVERSAL = "reversal"
+    REVOKE = "revoke"
+
+
+class PaymentOrderStatus(StrEnum):
+    CANCELED = "canceled"
+    CREATED = "created"
+    PENDING = "pending"
+    PROVIDER_ERROR = "provider_error"
+    REFUNDED = "refunded"
+    REFUND_REVIEW_REQUIRED = "refund_review_required"
+    SUCCEEDED = "succeeded"
+
+
+class PaymentWebhookStatus(StrEnum):
+    FAILED = "failed"
+    IGNORED = "ignored"
+    PROCESSED = "processed"
+    RECEIVED = "received"

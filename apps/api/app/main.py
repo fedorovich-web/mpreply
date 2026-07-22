@@ -16,6 +16,7 @@ from app.api.marketplace_accounts import router as marketplace_accounts_router
 from app.api.marketplace_capabilities import router as marketplace_capabilities_router
 from app.api.messages import router as messages_router
 from app.api.organizations import router as organizations_router
+from app.api.payments import router as payments_router
 from app.api.replies import router as replies_router
 from app.api.seller_settings import router as seller_settings_router
 from app.api.team import router as team_router
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(automation_rules_router)
     app.include_router(auth_router)
     app.include_router(organizations_router)
+    app.include_router(payments_router)
     app.include_router(seller_settings_router)
     app.include_router(team_router)
     app.include_router(marketplace_capabilities_router)

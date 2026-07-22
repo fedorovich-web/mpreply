@@ -41,6 +41,17 @@ class ReservationDecision:
     reason: str | None = None
 
 
+@dataclass(frozen=True)
+class GrantRevocationDecision:
+    revoked_quantity: int
+    active_reserved_quantity: int
+    consumed_quantity: int
+
+    @property
+    def safe_to_finalize_full_refund(self) -> bool:
+        return self.active_reserved_quantity == 0 and self.consumed_quantity == 0
+
+
 class AnswerEntitlementService:
     @staticmethod
     def ledger_deltas(entry_type: str, quantity: int) -> tuple[int, int]:
@@ -52,11 +63,26 @@ class AnswerEntitlementService:
             AnswerLedgerEntryType.RELEASE.value: (0, quantity),
             AnswerLedgerEntryType.DEBIT.value: (-quantity, 0),
             AnswerLedgerEntryType.REVERSAL.value: (quantity, quantity),
+            AnswerLedgerEntryType.REVOKE.value: (-quantity, -quantity),
         }
         try:
             return mapping[entry_type]
         except KeyError as exc:
             raise ValueError(f"Unsupported answer ledger entry type: {entry_type}") from exc
+
+    @classmethod
+    def release_accounting(
+        cls,
+        *,
+        grant_revoked: bool,
+        quantity: int,
+    ) -> tuple[str, int, int, bool]:
+        if grant_revoked:
+            if quantity <= 0:
+                raise ValueError("Reservation release quantity must be positive")
+            return AnswerLedgerEntryType.REVOKE.value, -quantity, 0, False
+        balance_delta, available_delta = cls.ledger_deltas(AnswerLedgerEntryType.RELEASE.value, quantity)
+        return AnswerLedgerEntryType.RELEASE.value, balance_delta, available_delta, True
 
     @staticmethod
     def validate_grant_contract(*, source_type: str, package_kind: str) -> None:
@@ -179,12 +205,15 @@ class AnswerEntitlementService:
 
     async def get_balance(self, *, organization_id: UUID, now: datetime | None = None) -> AnswerBalance:
         current = now or datetime.now(UTC)
-        eligible_grant = or_(AnswerCreditGrant.expires_at.is_(None), AnswerCreditGrant.expires_at > current)
+        eligible_grant = (
+            AnswerCreditGrant.revoked_at.is_(None),
+            or_(AnswerCreditGrant.expires_at.is_(None), AnswerCreditGrant.expires_at > current),
+        )
 
         async def remaining_for(source_type: str | None = None) -> int:
             stmt = select(func.coalesce(func.sum(AnswerCreditGrant.remaining_quantity), 0)).where(
                 AnswerCreditGrant.organization_id == organization_id,
-                eligible_grant,
+                *eligible_grant,
             )
             if source_type is not None:
                 stmt = stmt.where(AnswerCreditGrant.source_type == source_type)
@@ -199,7 +228,7 @@ class AnswerEntitlementService:
                     AnswerReservation.organization_id == organization_id,
                     AnswerReservation.status == AnswerReservationStatus.ACTIVE.value,
                     AnswerReservation.expires_at <= current,
-                    eligible_grant,
+                    *eligible_grant,
                 )
             )
             if source_type is not None:
@@ -227,7 +256,7 @@ class AnswerEntitlementService:
             select(func.max(AnswerCreditGrant.expires_at)).where(
                 AnswerCreditGrant.organization_id == organization_id,
                 AnswerCreditGrant.source_type == AnswerGrantSource.TRIAL.value,
-                eligible_grant,
+                *eligible_grant,
             )
         )
         trial_expires_at = trial_expiry_result.scalar_one_or_none()
@@ -236,7 +265,7 @@ class AnswerEntitlementService:
             select(func.count(AnswerCreditGrant.id)).where(
                 AnswerCreditGrant.organization_id == organization_id,
                 AnswerCreditGrant.source_type != AnswerGrantSource.TRIAL.value,
-                eligible_grant,
+                *eligible_grant,
             )
         )
         has_paid_grant = int(paid_grant_result.scalar_one()) > 0
@@ -268,6 +297,86 @@ class AnswerEntitlementService:
         )
         return int(count_result.scalar_one()) < balance.marketplace_limit
 
+    async def revoke_purchase_grant(
+        self,
+        *,
+        organization_id: UUID,
+        grant_id: UUID,
+        payment_order_id: UUID,
+        actor_user_id: UUID | None,
+        now: datetime | None = None,
+    ) -> GrantRevocationDecision | None:
+        current = now or datetime.now(UTC)
+        grant_result = await self.session.execute(
+            select(AnswerCreditGrant)
+            .where(
+                AnswerCreditGrant.id == grant_id,
+                AnswerCreditGrant.organization_id == organization_id,
+            )
+            .with_for_update()
+        )
+        grant = grant_result.scalar_one_or_none()
+        if grant is None or grant.source_type != AnswerGrantSource.PURCHASE.value:
+            return None
+        active_reservation_result = await self.session.execute(
+            select(func.coalesce(func.sum(AnswerReservation.quantity), 0)).where(
+                AnswerReservation.grant_id == grant.id,
+                AnswerReservation.status == AnswerReservationStatus.ACTIVE.value,
+            )
+        )
+        active_reserved_quantity = int(active_reservation_result.scalar_one())
+        consumed_quantity = max(
+            grant.original_quantity - grant.remaining_quantity - active_reserved_quantity,
+            0,
+        )
+        revoked_quantity = grant.remaining_quantity
+        if grant.revoked_at is None:
+            grant.revoked_at = current
+            grant.revoke_reason = "payment_refunded"
+            grant.remaining_quantity = 0
+            if revoked_quantity > 0:
+                balance_delta, available_delta = self.ledger_deltas(
+                    AnswerLedgerEntryType.REVOKE.value,
+                    revoked_quantity,
+                )
+                await self._append_ledger(
+                    organization_id=organization_id,
+                    grant_id=grant.id,
+                    reservation_id=None,
+                    reply_id=None,
+                    entry_type=AnswerLedgerEntryType.REVOKE.value,
+                    balance_delta=balance_delta,
+                    available_delta=available_delta,
+                    idempotency_key=f"ledger:payment_refund:{payment_order_id}",
+                    actor_user_id=actor_user_id,
+                    reason="payment_refunded",
+                    metadata={
+                        "payment_order_id": str(payment_order_id),
+                        "revoked_quantity": revoked_quantity,
+                        "active_reserved_quantity": active_reserved_quantity,
+                        "consumed_quantity": consumed_quantity,
+                    },
+                )
+            await self.audit.write(
+                action="answer_balance.purchase_revoked",
+                entity_type="answer_credit_grant",
+                organization_id=organization_id,
+                actor_user_id=actor_user_id,
+                entity_id=str(grant.id),
+                metadata={
+                    "payment_order_id": str(payment_order_id),
+                    "revoked_quantity": revoked_quantity,
+                    "active_reserved_quantity": active_reserved_quantity,
+                    "consumed_quantity": consumed_quantity,
+                },
+            )
+            await self.session.flush()
+        return GrantRevocationDecision(
+            revoked_quantity=revoked_quantity,
+            active_reserved_quantity=active_reserved_quantity,
+            consumed_quantity=consumed_quantity,
+        )
+
     async def reserve_for_reply(
         self,
         *,
@@ -291,6 +400,7 @@ class AnswerEntitlementService:
             select(AnswerCreditGrant)
             .where(
                 AnswerCreditGrant.organization_id == organization_id,
+                AnswerCreditGrant.revoked_at.is_(None),
                 AnswerCreditGrant.remaining_quantity > 0,
                 or_(AnswerCreditGrant.expires_at.is_(None), AnswerCreditGrant.expires_at > current),
             )
@@ -449,27 +559,31 @@ class AnswerEntitlementService:
             select(AnswerCreditGrant).where(AnswerCreditGrant.id == reservation.grant_id).with_for_update()
         )
         grant = grant_result.scalar_one()
-        grant.remaining_quantity += reservation.quantity
+        entry_type, balance_delta, available_delta, restore_grant = self.release_accounting(
+            grant_revoked=grant.revoked_at is not None,
+            quantity=reservation.quantity,
+        )
+        if restore_grant:
+            grant.remaining_quantity += reservation.quantity
         reservation.status = (
             AnswerReservationStatus.EXPIRED.value if expired else AnswerReservationStatus.RELEASED.value
         )
         reservation.released_at = now
         reservation.release_reason = reason
-        balance_delta, available_delta = self.ledger_deltas(
-            AnswerLedgerEntryType.RELEASE.value, reservation.quantity
-        )
+        ledger_reason = "payment_refunded_reserved_release" if not restore_grant else reason
+        idempotency_action = "revoke_reserved" if not restore_grant else "release"
         await self._append_ledger(
             organization_id=organization_id,
             grant_id=grant.id,
             reservation_id=reservation.id,
             reply_id=reservation.reply_id,
-            entry_type=AnswerLedgerEntryType.RELEASE.value,
+            entry_type=entry_type,
             balance_delta=balance_delta,
             available_delta=available_delta,
-            idempotency_key=f"ledger:release:{reservation.reply_id}:{reservation.revision}",
+            idempotency_key=f"ledger:{idempotency_action}:{reservation.reply_id}:{reservation.revision}",
             actor_user_id=actor_user_id,
-            reason=reason,
-            metadata={"expired": expired},
+            reason=ledger_reason,
+            metadata={"expired": expired, "grant_revoked": not restore_grant},
         )
         await self.audit.write(
             action="answer_balance.reservation_released",
@@ -492,6 +606,7 @@ class AnswerEntitlementService:
             .join(AnswerCreditGrant, AnswerCreditGrant.package_id == AnswerPackage.id)
             .where(
                 AnswerCreditGrant.organization_id == organization_id,
+                AnswerCreditGrant.revoked_at.is_(None),
                 AnswerPackage.kind == AnswerPackageKind.TRIAL.value,
                 or_(AnswerCreditGrant.expires_at.is_(None), AnswerCreditGrant.expires_at > now),
             )

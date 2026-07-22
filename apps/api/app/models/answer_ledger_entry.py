@@ -14,7 +14,7 @@ class AnswerLedgerEntry(UUIDPrimaryKeyMixin, Base):
     __table_args__ = (
         UniqueConstraint("organization_id", "idempotency_key", name="uq_answer_ledger_entries_org_idempotency"),
         CheckConstraint(
-            "entry_type IN ('grant', 'reserve', 'release', 'debit', 'reversal')",
+            "entry_type IN ('grant', 'reserve', 'release', 'debit', 'reversal', 'revoke')",
             name="ck_answer_ledger_entries_entry_type",
         ),
         CheckConstraint(
