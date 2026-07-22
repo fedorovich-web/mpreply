@@ -17,6 +17,7 @@ from app.models.user import User
 from app.services.answer_entitlement_service import AnswerEntitlementService
 from app.services.audit_service import AuditService
 from app.services.plan_limit_service import PlanLimitService
+from app.services.seller_settings_service import SellerSettingsService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager", "viewer"}
 
@@ -33,6 +34,7 @@ class OrganizationService:
         self.audit = AuditService(session)
         self.entitlements = AnswerEntitlementService(session)
         self.plan_limits = PlanLimitService(session)
+        self.seller_settings = SellerSettingsService(session)
 
     async def create_organization(self, *, owner: User, name: str, slug: str | None) -> Organization:
         plan_result = await self.session.execute(
@@ -78,6 +80,10 @@ class OrganizationService:
             await self.session.flush()
 
         await self.entitlements.ensure_trial_grant(
+            organization_id=organization.id,
+            actor_user_id=owner.id,
+        )
+        await self.seller_settings.ensure_defaults(
             organization_id=organization.id,
             actor_user_id=owner.id,
         )

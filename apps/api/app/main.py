@@ -7,6 +7,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.api.admin import router as admin_router
 from app.api.ai import router as ai_router
 from app.api.analytics import router as analytics_router
+from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
 from app.api.automation_rules import router as automation_rules_router
 from app.api.billing import router as billing_router
@@ -15,6 +16,7 @@ from app.api.marketplace_accounts import router as marketplace_accounts_router
 from app.api.messages import router as messages_router
 from app.api.organizations import router as organizations_router
 from app.api.replies import router as replies_router
+from app.api.seller_settings import router as seller_settings_router
 from app.core.config import get_settings
 from app.core.lifecycle import application_lifespan
 from app.core.logging import configure_logging
@@ -49,6 +51,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health_router)
+    app.include_router(audit_logs_router)
     app.include_router(admin_router)
     app.include_router(analytics_router)
     app.include_router(billing_router)
@@ -56,6 +59,7 @@ def create_app() -> FastAPI:
     app.include_router(automation_rules_router)
     app.include_router(auth_router)
     app.include_router(organizations_router)
+    app.include_router(seller_settings_router)
     app.include_router(marketplace_accounts_router)
     app.include_router(messages_router)
     app.include_router(replies_router)

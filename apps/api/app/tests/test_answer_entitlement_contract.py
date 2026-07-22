@@ -7,9 +7,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.models  # noqa: F401
-from app.models.base import Base
 from app.automation.state_machine import ensure_reply_transition
 from app.models.answer_reservation import AnswerReservation
+from app.models.base import Base
 from app.models.enums import AnswerLedgerEntryType, AnswerReservationStatus, ReplyStatus
 from app.schemas.billing import AnswerBalanceResponse
 from app.services.answer_entitlement_service import AnswerEntitlementService
@@ -249,6 +249,7 @@ def test_reply_execution_reserves_before_network_and_debits_only_after_success()
 def test_balance_exhaustion_can_move_retryable_replies_to_manual_review(source_status: str) -> None:
     ensure_reply_transition(source_status, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
 
-def test_integrity_contract_tracks_answer_ledger_head() -> None:
+def test_integrity_contract_keeps_answer_ledger_in_migration_chain() -> None:
     integrity_source = (REPOSITORY_ROOT / "scripts" / "check_integrity.py").read_text(encoding="utf-8")
-    assert 'EXPECTED_ALEMBIC_HEAD = "20260722_0010"' in integrity_source
+    assert 'EXPECTED_ALEMBIC_HEAD = "20260722_0011"' in integrity_source
+    assert "20260722_0010_answer_ledger_foundation.py" in integrity_source

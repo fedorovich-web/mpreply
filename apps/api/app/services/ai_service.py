@@ -23,6 +23,7 @@ from app.services.audit_service import AuditService
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
+from app.services.seller_settings_service import SellerSettingsService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
@@ -42,6 +43,7 @@ class AIService:
         self.message_service = MessageService(session)
         self.organization_service = OrganizationService(session)
         self.plan_limits = PlanLimitService(session)
+        self.seller_settings = SellerSettingsService(session)
         self.safety_gate = SafetyGate()
 
     async def generate_draft(
@@ -49,7 +51,7 @@ class AIService:
         *,
         actor: User,
         message_id: UUID,
-        tone: ResponseTone = "neutral",
+        tone: ResponseTone | None = None,
         model: str | None = None,
         temperature: float = 0.3,
         max_tokens: int = 600,
@@ -67,6 +69,15 @@ class AIService:
 
         await self.plan_limits.enforce_ai_draft_limit(organization_id=message.organization_id)
 
+        prompt_settings = await self.seller_settings.get_prompt_settings(
+            organization_id=message.organization_id
+        )
+        resolved_tone, resolved_brand_rules, resolved_knowledge_base = prompt_settings.resolve(
+            tone_override=tone,
+            brand_rules_override=brand_rules,
+            knowledge_base_override=knowledge_base,
+        )
+
         settings = get_settings()
         prompt = build_marketplace_reply_prompt(
             marketplace=message.marketplace,
@@ -74,9 +85,9 @@ class AIService:
             customer_text=message.customer_text,
             rating=message.rating,
             product=self._product_context(product),
-            tone=tone,
-            brand_rules=brand_rules,
-            knowledge_base=knowledge_base,
+            tone=resolved_tone,
+            brand_rules=resolved_brand_rules,
+            knowledge_base=resolved_knowledge_base,
         )
         provider = OpenRouterProvider(
             api_key=settings.openrouter_api_key.get_secret_value(),
@@ -118,7 +129,7 @@ class AIService:
                 message_type=message.type,
                 rating=message.rating,
                 has_product_context=product is not None,
-                model_flags=parsed.safety_flags,
+                model_flags=[*parsed.safety_flags, *prompt_settings.policy_flags(parsed.answer)],
             )
         )
         flags = safety.flags
@@ -160,6 +171,7 @@ class AIService:
                 "safety_decision": safety.decision.value,
                 "safety_flags": flags,
                 "safety_reasons": safety.reasons,
+                "seller_settings_applied": prompt_settings.has_customizations,
             },
         )
         await self.session.flush()
