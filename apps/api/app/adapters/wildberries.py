@@ -19,20 +19,32 @@ class WildberriesAdapter(MarketplaceAdapter):
     def _headers(self, credential: str) -> dict[str, str]:
         return {"Authorization": credential}
 
+    page_size = 50
+
     async def validate_credentials(self, credential: str) -> AdapterResult:
-        return await self.fetch_questions(credential=credential, cursor=None)
+        return await self._get("/ping", credential, params=None)
 
     async def fetch_reviews(self, credential: str, cursor: str | None = None) -> AdapterResult:
-        params: dict[str, str | int] = {"isAnswered": "false", "take": 50, "skip": 0}
-        if cursor:
-            params["skip"] = int(cursor)
-        return await self._get("/api/v1/feedbacks", credential, params=params)
+        offset = self._parse_offset(cursor)
+        if offset is None:
+            return AdapterResult(False, error_code="invalid_cursor", error_message_safe="Stored sync cursor is invalid")
+        result = await self._get(
+            "/api/v1/feedbacks",
+            credential,
+            params={"isAnswered": "false", "take": self.page_size, "skip": offset},
+        )
+        return self._with_next_cursor(result, item_count=len(self.extract_reviews(result.data)), offset=offset)
 
     async def fetch_questions(self, credential: str, cursor: str | None = None) -> AdapterResult:
-        params: dict[str, str | int] = {"isAnswered": "false", "take": 50, "skip": 0}
-        if cursor:
-            params["skip"] = int(cursor)
-        return await self._get("/api/v1/questions", credential, params=params)
+        offset = self._parse_offset(cursor)
+        if offset is None:
+            return AdapterResult(False, error_code="invalid_cursor", error_message_safe="Stored sync cursor is invalid")
+        result = await self._get(
+            "/api/v1/questions",
+            credential,
+            params={"isAnswered": "false", "take": self.page_size, "skip": offset},
+        )
+        return self._with_next_cursor(result, item_count=len(self.extract_questions(result.data)), offset=offset)
 
     async def get_review(self, credential: str, external_id: str) -> AdapterResult:
         return await self._get("/api/v1/feedback", credential, params={"id": external_id})
@@ -61,10 +73,10 @@ class WildberriesAdapter(MarketplaceAdapter):
             return bool(answer.strip())
         return bool(mapping.get("isAnswered"))
 
-    def extract_reviews(self, payload: object) -> list[dict[str, object]]:
+    def extract_reviews(self, payload: object | None) -> list[dict[str, object]]:
         return self._extract_items(payload, keys=("feedbacks", "items", "data"))
 
-    def extract_questions(self, payload: object) -> list[dict[str, object]]:
+    def extract_questions(self, payload: object | None) -> list[dict[str, object]]:
         return self._extract_items(payload, keys=("questions", "items", "data"))
 
     def normalize_review(self, raw: dict[str, object]) -> dict[str, object]:
@@ -107,7 +119,7 @@ class WildberriesAdapter(MarketplaceAdapter):
             },
         }
 
-    async def _get(self, path: str, credential: str, params: dict[str, str | int]) -> AdapterResult:
+    async def _get(self, path: str, credential: str, params: dict[str, str | int] | None) -> AdapterResult:
         try:
             async with httpx.AsyncClient(base_url=self.base_url, timeout=self._timeout) as client:
                 response = await client.get(path, headers=self._headers(credential), params=params)
@@ -142,6 +154,23 @@ class WildberriesAdapter(MarketplaceAdapter):
         if response.is_success:
             return AdapterResult(ok=True, data=self._safe_json(response))
         return self.map_error(response.status_code, self._safe_json(response))
+
+    @classmethod
+    def _with_next_cursor(cls, result: AdapterResult, *, item_count: int, offset: int) -> AdapterResult:
+        if not result.ok:
+            return result
+        next_cursor = str(offset + item_count) if item_count >= cls.page_size else None
+        return AdapterResult(ok=True, data=result.data, next_cursor=next_cursor)
+
+    @staticmethod
+    def _parse_offset(cursor: str | None) -> int | None:
+        if cursor is None or cursor == "":
+            return 0
+        try:
+            offset = int(cursor)
+        except ValueError:
+            return None
+        return offset if offset >= 0 else None
 
     @staticmethod
     def _safe_json(response: httpx.Response) -> object:

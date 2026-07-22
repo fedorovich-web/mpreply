@@ -13,6 +13,7 @@ from app.api.automation_rules import router as automation_rules_router
 from app.api.billing import router as billing_router
 from app.api.health import router as health_router
 from app.api.marketplace_accounts import router as marketplace_accounts_router
+from app.api.marketplace_capabilities import router as marketplace_capabilities_router
 from app.api.messages import router as messages_router
 from app.api.organizations import router as organizations_router
 from app.api.replies import router as replies_router
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(organizations_router)
     app.include_router(seller_settings_router)
+    app.include_router(marketplace_capabilities_router)
     app.include_router(marketplace_accounts_router)
     app.include_router(messages_router)
     app.include_router(replies_router)

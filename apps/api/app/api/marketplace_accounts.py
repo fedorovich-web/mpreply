@@ -17,8 +17,9 @@ from app.schemas.marketplace_account import (
     MarketplaceAccountUpdateRequest,
     MarketplaceAccountValidateResponse,
 )
-from app.schemas.sync import MarketplaceSyncResponse
+from app.schemas.sync import MarketplaceSyncResponse, MarketplaceSyncStateResponse
 from app.services.marketplace_account_service import MarketplaceAccountService
+from app.services.marketplace_scheduler_service import MarketplaceSchedulerService
 from app.services.sync_service import MarketplaceSyncService
 
 router = APIRouter(prefix="/api/marketplace-accounts", tags=["marketplace-accounts"])
@@ -173,3 +174,14 @@ async def request_marketplace_sync(
         error_code=error_code,
         error_message_safe=error_message_safe,
     )
+
+
+@router.get("/{account_id}/sync-states", response_model=list[MarketplaceSyncStateResponse])
+async def list_marketplace_sync_states(
+    account_id: UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[MarketplaceSyncStateResponse]:
+    service = MarketplaceSchedulerService(session)
+    states = await service.list_account_states(actor=current_user, account_id=account_id)
+    return [MarketplaceSyncStateResponse.model_validate(state) for state in states]

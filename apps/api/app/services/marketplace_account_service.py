@@ -7,7 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult
-from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.capabilities import get_marketplace_capability
+from app.adapters.registry import get_marketplace_adapter
 from app.core.config import get_settings
 from app.core.errors import bad_request, forbidden, not_found, payment_required
 from app.core.security import CredentialService
@@ -17,6 +18,7 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.user import User
 from app.services.answer_entitlement_service import AnswerEntitlementService
 from app.services.audit_service import AuditService
+from app.services.marketplace_scheduler_service import MarketplaceSchedulerService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
 
@@ -30,6 +32,7 @@ class MarketplaceAccountService:
         self.audit = AuditService(session)
         self.entitlements = AnswerEntitlementService(session)
         self.organization_service = OrganizationService(session)
+        self.scheduler = MarketplaceSchedulerService(session)
         self.plan_limits = PlanLimitService(session)
         settings = get_settings()
         self.credentials = CredentialService(settings.credentials_encryption_key.get_secret_value())
@@ -50,6 +53,9 @@ class MarketplaceAccountService:
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
+        capability = get_marketplace_capability(marketplace)
+        if not capability.connection_enabled:
+            raise forbidden("Marketplace integration is not enabled yet")
         limit_decision = await self.plan_limits.evaluate_metric(
             organization_id=organization_id,
             metric="marketplace_accounts",
@@ -74,6 +80,7 @@ class MarketplaceAccountService:
         )
         self.session.add(account)
         await self.session.flush()
+        await self.scheduler.ensure_account_states(account=account, activate=False)
         await self.audit.write(
             action="marketplace_account.credentials.created",
             entity_type="marketplace_account",
@@ -138,6 +145,10 @@ class MarketplaceAccountService:
             if status not in {"active", "disabled", "pending_validation"}:
                 raise bad_request("Unsupported marketplace account status")
             account.status = status
+            if status == "active" and account.credentials_status == "valid":
+                await self.scheduler.ensure_account_states(account=account, activate=True)
+            elif status == "disabled":
+                await self.scheduler.pause_account_states(account_id=account.id)
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.updated",
@@ -189,6 +200,7 @@ class MarketplaceAccountService:
         )
         account.credentials_status = "revoked"
         account.status = "disabled"
+        await self.scheduler.pause_account_states(account_id=account.id)
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.revoked",
@@ -224,6 +236,7 @@ class MarketplaceAccountService:
             account.status = "active"
             account.credentials_status = "valid"
             account.scopes_json = {"validated": True, "checked_at": now.isoformat()}
+            await self.scheduler.ensure_account_states(account=account, activate=True, now=now)
             event_status = "success"
             error_code = None
             error_message_safe = None
@@ -282,9 +295,7 @@ class MarketplaceAccountService:
         )
 
     def _adapter_for(self, marketplace: str):
-        if marketplace == Marketplace.WILDBERRIES.value:
-            return WildberriesAdapter()
-        raise forbidden("Marketplace adapter is not enabled yet")
+        return get_marketplace_adapter(marketplace)
 
     async def _write_integration_event(
         self,

@@ -3,7 +3,7 @@ name: respio-local
 x-backend-env: &backend-env
   APP_ENV: local
   APP_NAME: Respio
-  APP_VERSION: 0.1.99
+  APP_VERSION: 0.1.100
   API_BASE_URL: http://localhost:8000
   WEB_APP_URL: http://localhost:3000
   PUBLIC_SITE_URL: http://localhost:3000
@@ -25,6 +25,10 @@ x-backend-env: &backend-env
   READINESS_TIMEOUT_SECONDS: "3.0"
   SECURITY_HEADERS_ENABLED: "true"
   ANSWER_RESERVATION_TTL_SECONDS: "900"
+  MARKETPLACE_SYNC_INTERVAL_SECONDS: "300"
+  SCHEDULER_POLL_INTERVAL_SECONDS: "10"
+  SCHEDULER_CLAIM_LIMIT: "50"
+  SCHEDULER_LEASE_SECONDS: "180"
   FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
   DEPLOYMENT_VERSION: local
 
@@ -98,6 +102,19 @@ services:
     build:
       context: ../..
       dockerfile: apps/worker/Dockerfile
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: apps/scheduler/Dockerfile
     environment: *backend-env
     depends_on:
       migrate:

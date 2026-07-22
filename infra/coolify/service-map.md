@@ -7,6 +7,7 @@ Application services:
 - `respio-api-staging`
 - `respio-web-staging`
 - `respio-worker-staging`
+- `respio-scheduler-staging`
 - one-shot migration job per deployment
 
 Stateful resources:
@@ -21,6 +22,7 @@ Application services:
 - `respio-api-prod`
 - `respio-web-prod`
 - `respio-worker-prod`
+- `respio-scheduler-prod`
 - one-shot migration job per deployment
 
 Stateful resources:
@@ -28,7 +30,7 @@ Stateful resources:
 - `respio-postgres-prod`
 - `respio-redis-prod`
 
-The scheduler placeholder is intentionally excluded until a real scheduler responsibility and implementation exist.
+Provision a dedicated scheduler service from `apps/scheduler/Dockerfile`; it claims due polling states and dispatches marketplace-sync jobs to Dramatiq.
 
 ## Domains
 
