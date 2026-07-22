@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["local", "staging", "production"] = "local"
     app_name: str = "Respio"
-    app_version: str = "0.1.100"
+    app_version: str = "0.1.101"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"
@@ -33,8 +33,9 @@ class Settings(BaseSettings):
     redis_url: SecretStr = Field(default=SecretStr("redis://localhost:6379/0"))
 
     auth_secret_key: SecretStr = Field(default=SecretStr("replace-with-local-dev-secret-at-least-32-bytes"))
-    auth_access_token_ttl_minutes: int = 15
-    auth_refresh_token_ttl_days: int = 30
+    auth_access_token_ttl_minutes: int = Field(default=15, ge=5, le=60)
+    auth_refresh_token_ttl_days: int = Field(default=30, ge=1, le=90)
+    auth_invitation_ttl_hours: int = Field(default=72, ge=1, le=168)
     auth_cookie_secure: bool = False
     auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 

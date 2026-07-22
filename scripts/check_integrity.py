@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.100"
-EXPECTED_ALEMBIC_HEAD = "20260722_0012"
+EXPECTED_VERSION = "0.1.101"
+EXPECTED_ALEMBIC_HEAD = "20260722_0013"
 
 ERRORS: list[str] = []
 
@@ -498,6 +498,14 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.98-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.99-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.100-release-report.md",
+        ROOT / "docs" / "qa" / "patch-0.1.101-release-report.md",
+        API / "alembic" / "versions" / "20260722_0013_team_sessions_security.py",
+        API / "app" / "api" / "team.py",
+        API / "app" / "models" / "auth_session.py",
+        API / "app" / "models" / "organization_invitation.py",
+        API / "app" / "services" / "auth_session_service.py",
+        API / "app" / "services" / "team_service.py",
+        API / "app" / "tests" / "test_team_sessions_security_contract.py",
         ROOT / "vendor" / "npm" / "README.md",
         ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
@@ -530,6 +538,7 @@ def check_deployment_contract() -> None:
         (production_compose, "service_completed_successfully", "Production Compose must gate app startup on migrations"),
         (production_compose, "scheduler:", "Production Compose must include the scheduler service"),
         (production_compose, "AUTH_SECRET_KEY is required", "Production Compose must require AUTH_SECRET_KEY"),
+        (production_compose, "AUTH_INVITATION_TTL_HOURS", "Production Compose must configure invitation expiry"),
         (production_compose, "CREDENTIALS_ENCRYPTION_KEY is required", "Production Compose must require encryption key"),
         (production_compose, "FORWARDED_ALLOW_IPS is required", "Production Compose must require an explicit proxy trust boundary"),
         (production_compose, "NEXT_PUBLIC_API_BASE_URL", "Production Compose must inject the public API URL into the web build"),
