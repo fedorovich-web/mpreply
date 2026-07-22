@@ -14,6 +14,7 @@ from app.models.enums import ResponseMode
 from app.models.organization import Organization, OrganizationUser
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.services.answer_entitlement_service import AnswerEntitlementService
 from app.services.audit_service import AuditService
 from app.services.plan_limit_service import PlanLimitService
 
@@ -30,6 +31,7 @@ class OrganizationService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.audit = AuditService(session)
+        self.entitlements = AnswerEntitlementService(session)
         self.plan_limits = PlanLimitService(session)
 
     async def create_organization(self, *, owner: User, name: str, slug: str | None) -> Organization:
@@ -74,6 +76,11 @@ class OrganizationService:
                 )
             )
             await self.session.flush()
+
+        await self.entitlements.ensure_trial_grant(
+            organization_id=organization.id,
+            actor_user_id=owner.id,
+        )
 
         await self.audit.write(
             action="organization.created",

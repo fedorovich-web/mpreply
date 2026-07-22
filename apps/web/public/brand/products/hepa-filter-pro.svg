@@ -1,0 +1,78 @@
+<svg width="520" height="320" viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="frameA" x1="110" y1="50" x2="340" y2="250" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.55" stop-color="#F1F6FA"/>
+      <stop offset="1" stop-color="#DCE6EE"/>
+    </linearGradient>
+    <linearGradient id="frameB" x1="260" y1="78" x2="455" y2="252" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D9E6EC"/>
+    </linearGradient>
+    <linearGradient id="pleat" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F8FBFC"/>
+      <stop offset="0.5" stop-color="#C9D8DF"/>
+      <stop offset="1" stop-color="#F7FAFC"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#C8D8E2"/>
+      <stop offset="0.5" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#AFC4CF"/>
+    </linearGradient>
+    <filter id="shadow" x="35" y="20" width="450" height="300" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#29415C" flood-opacity="0.18"/>
+    </filter>
+    <filter id="soft" x="0" y="0" width="520" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+  </defs>
+
+  <ellipse cx="268" cy="264" rx="174" ry="27" fill="#8DA9B6" fill-opacity="0.16" filter="url(#soft)"/>
+
+  <g transform="rotate(-8 212 158)">
+    <rect x="82" y="55" width="238" height="188" rx="26" fill="url(#frameA)" stroke="#D2DEE6" stroke-width="6"/>
+    <rect x="102" y="75" width="198" height="148" rx="15" fill="#EEF3F6" stroke="#C6D6DF" stroke-width="3"/>
+    <g opacity="0.98">
+      <path d="M116 89V209" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M132 87V211" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M148 86V212" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M164 85V213" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M180 85V213" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M196 85V213" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M212 85V213" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M228 86V212" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M244 87V211" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M260 88V210" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M276 90V208" stroke="url(#pleat)" stroke-width="8" stroke-linecap="round"/>
+    </g>
+    <rect x="82" y="55" width="238" height="188" rx="26" stroke="url(#edge)" stroke-width="3"/>
+    <rect x="101" y="74" width="200" height="150" rx="16" stroke="#FFFFFF" stroke-opacity="0.72" stroke-width="2"/>
+    <path d="M105 72C147 51 242 47 297 75" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <g transform="rotate(7 345 168)">
+    <rect x="249" y="75" width="190" height="166" rx="24" fill="url(#frameB)" stroke="#D2DEE6" stroke-width="6"/>
+    <rect x="267" y="93" width="154" height="130" rx="14" fill="#EEF3F6" stroke="#C6D6DF" stroke-width="3"/>
+    <g opacity="0.98">
+      <path d="M280 106V210" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M294 104V212" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M308 103V213" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M322 102V214" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M336 102V214" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M350 102V214" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M364 103V213" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M378 104V212" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M392 106V210" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M406 108V208" stroke="url(#pleat)" stroke-width="7" stroke-linecap="round"/>
+    </g>
+    <rect x="249" y="75" width="190" height="166" rx="24" stroke="url(#edge)" stroke-width="3"/>
+    <path d="M270 92C307 74 374 73 416 95" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(359 44)">
+    <rect width="96" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.94"/>
+    <circle cx="18" cy="17" r="7" fill="#1DA894" fill-opacity="0.16"/>
+    <path d="M15 17.2L17.2 19.4L21.5 14.8" stroke="#148672" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="31" y="21" fill="#31506B" font-family="Arial, sans-serif" font-size="12" font-weight="700">2 фильтра</text>
+  </g>
+</svg>

@@ -4,49 +4,175 @@
 
 [data-theme='dark'] {
 	color-scheme: dark;
-	--color-bg-page: #17111d;
-	--color-bg-surface: #211727;
-	--color-bg-elevated: #2a1e31;
-	--color-bg-subtle: #1c1422;
-	--color-bg-brand-soft: #261a2e;
-	--color-text-primary: #fbf8fd;
-	--color-text-secondary: #ded4e3;
-	--color-text-muted: #ab9fb1;
-	--color-kicker-text: #ab9fb1;
-	--color-brand-text-on-soft: #c49be5;
-	--color-border-subtle: #403047;
-	--color-border-strong: #58415f;
-	--color-brand-primary: #ad72dc;
-	--color-brand-primary-hover: #b97de6;
-	--color-brand-primary-active: #c88aed;
-	--color-brand-accent: #7ad9b2;
-	--color-brand-accent-hover: #8be5c0;
-	--color-brand-violet-light: #c49be5;
-	--color-text-on-brand: #211a26;
+	--color-bg-page: #0b1024;
+	--color-bg-hero: #0d132a;
+	--color-bg-surface: #111833;
+	--color-bg-elevated: #17203f;
+	--color-bg-subtle: #0f1630;
+	--color-bg-brand-soft: #1c204f;
+	--color-surface-interactive: #171f3d;
+	--color-surface-hover: #1d2748;
+	--color-surface-active: #242d59;
+	--color-text-primary: #f8faff;
+	--color-text-secondary: #d7ddf0;
+	--color-text-muted: #aab4d0;
+	--color-kicker-text: #b8c0d8;
+	--color-eyebrow-text: #d7d4ff;
+	--color-eyebrow-surface: #222756;
+	--color-eyebrow-dot: #9b96ff;
+	--color-eyebrow-on-dark-text: #f2f0ff;
+	--color-eyebrow-on-dark-surface: #292f67;
+	--color-eyebrow-on-dark-dot: #67f3f3;
+	--color-cursor-ring: rgb(155 150 255 / 38%);
+	--color-cursor-core: #9b96ff;
+	--color-brand-primary: #9b96ff;
+	--color-brand-primary-hover: #aaa6ff;
+	--color-brand-primary-active: #bab7ff;
+	--color-brand-action: #635bff;
+	--color-brand-action-end: #756dff;
+	--color-brand-action-hover: #5148e8;
+	--color-brand-action-hover-end: #635bff;
+	--color-brand-action-active: #443bcd;
+	--color-brand-text: #c4c1ff;
+	--color-brand-text-on-soft: #d0ceff;
+	--color-brand-accent: #35e7e7;
+	--color-brand-accent-hover: #62f1f1;
+	--color-brand-violet-light: #c0bdff;
+	--color-brand-cyan-light: #a8ffff;
+	--color-brand-cyan-soft: #12363f;
+	--color-border-subtle: #293657;
+	--color-border-strong: #3d4d72;
+	--color-text-on-brand: #ffffff;
 	--color-success-text: #75e0a7;
 	--color-success-soft: #053321;
+	--color-home-review-response: #0d2d28;
 	--color-warning-text: #fec84b;
 	--color-warning-soft: #3f2a0a;
+	--shadow-home-review-scenario-active: inset 0 0 0 1px rgb(254 200 75 / 18%);
 	--color-danger-text: #fda29b;
 	--color-danger-soft: #55160c;
 	--color-info-text: #84adff;
 	--color-info-soft: #102a56;
-	--color-brand-mint-light: #a5e9cf;
-	--color-brand-soft: #342340;
-	--color-brand-soft-strong: rgb(168 107 217 / 20%);
+	--color-brand-soft: #202553;
+	--color-brand-soft-strong: rgb(155 150 255 / 22%);
 	--color-surface-muted: var(--color-bg-subtle);
-	--color-surface-dark: #120d16;
-	--color-text-on-dark: #fbf8fd;
+	--color-surface-dark: #070b1c;
+	--color-text-on-dark: #f8faff;
 	--color-public-page: var(--color-bg-page);
 	--color-public-section: var(--color-bg-page);
 	--color-public-section-subtle: var(--color-bg-subtle);
+	--color-public-section-lavender: #141a38;
 	--color-public-surface: var(--color-bg-surface);
-	--color-public-header: rgb(33 23 39 / 92%);
+	--color-public-surface-soft: #121a35;
+	--color-public-surface-accent: #1b2050;
+	--color-safetygate-panel: #111733;
+	--color-safetygate-panel-raised: #1a2146;
+	--color-public-header: rgb(17 24 51 / 90%);
 	--color-public-footer: var(--color-bg-page);
-	--gradient-public-hero: linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-page) 100%);
-	--gradient-public-cta: linear-gradient(135deg, #4c2667 0%, #2b1837 100%);
+	--gradient-public-hero:
+		radial-gradient(circle at 76% 26%, rgb(155 150 255 / 13%), var(--color-transparent) 28%),
+		radial-gradient(circle at 91% 66%, rgb(53 231 231 / 7%), var(--color-transparent) 24%),
+		linear-gradient(180deg, var(--color-bg-hero) 0%, var(--color-bg-page) 100%);
+--gradient-public-section-soft:
+		linear-gradient(180deg, var(--color-public-section-lavender) 0%, var(--color-bg-page) 100%);
+--gradient-brand-action: linear-gradient(110deg, var(--color-brand-action) 0%, var(--color-brand-action-end) 58%, #777fff 100%);
+	--gradient-brand-action-hover: linear-gradient(110deg, var(--color-brand-action-hover) 0%, var(--color-brand-action-hover-end) 64%, #646cff 100%);
+	--shadow-surface-soft: inset 0 0 0 1px rgb(181 190 225 / 8%), 0 8px 24px rgb(1 5 20 / 18%);
+	--shadow-surface: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 18px 48px rgb(1 5 20 / 24%);
+	--shadow-surface-hover: inset 0 0 0 1px rgb(155 150 255 / 22%), 0 24px 58px rgb(1 5 20 / 30%);
+	--shadow-marketplace-hover: inset 0 0 0 1px rgb(155 150 255 / 22%), 0 16px 38px rgb(1 5 20 / 24%);
+	--shadow-public-panel: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 30px 78px rgb(1 5 20 / 34%);
+	--shadow-safetygate-panel: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 32px 96px rgb(1 5 20 / 46%);
+	--shadow-secondary-button: inset 0 0 0 1px rgb(181 190 225 / 16%), inset 0 1px 0 rgb(255 255 255 / 7%), 0 7px 18px rgb(1 5 20 / 20%);
+	--shadow-secondary-button-hover: inset 0 0 0 1px rgb(155 150 255 / 30%), inset 0 1px 0 rgb(255 255 255 / 9%), 0 10px 24px rgb(1 5 20 / 26%);
+	--shadow-eyebrow: inset 0 0 0 1px rgb(155 150 255 / 16%), 0 8px 22px rgb(1 5 20 / 16%);
+	--shadow-header: 0 1px 0 rgb(181 190 225 / 8%), 0 12px 36px rgb(1 5 20 / 16%);
+	--shadow-cursor-halo: 0 0 30px rgb(155 150 255 / 28%);
+	--shadow-proof-row: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 18px 46px rgb(1 5 20 / 20%);
+	--shadow-section-soft: inset 0 1px 0 rgb(181 190 225 / 7%), inset 0 -1px 0 rgb(181 190 225 / 7%);
 	--app-sidebar-bg: var(--color-bg-surface);
-	--app-topbar-bg: rgb(33 23 39 / 86%);
+	--app-topbar-bg: rgb(17 24 51 / 88%);
 	--app-nav-active-bg: var(--color-brand-soft);
 	--app-nav-hover-bg: rgb(255 255 255 / 5%);
+	--gradient-home-outcomes:
+		radial-gradient(circle at 12% 22%, rgb(155 150 255 / 12%), var(--color-transparent) 34%),
+		linear-gradient(180deg, var(--color-bg-page) 0%, var(--color-public-surface-soft) 100%);
+	--gradient-home-marketplaces:
+		radial-gradient(circle at 50% 48%, rgb(155 150 255 / 18%), var(--color-transparent) 38%),
+		radial-gradient(circle at 78% 34%, rgb(53 231 231 / 9%), var(--color-transparent) 30%),
+		linear-gradient(145deg, var(--color-bg-surface) 0%, var(--color-bg-brand-soft) 62%, var(--color-brand-cyan-soft) 100%);
+	--gradient-home-safety:
+		radial-gradient(circle at 90% 18%, rgb(155 150 255 / 16%), var(--color-transparent) 32%),
+		radial-gradient(circle at 8% 88%, rgb(53 231 231 / 8%), var(--color-transparent) 30%),
+		linear-gradient(145deg, var(--color-bg-page) 0%, var(--color-public-section-lavender) 58%, var(--color-brand-cyan-soft) 100%);
+	--gradient-home-llm:
+		radial-gradient(circle at 20% 24%, rgb(155 150 255 / 14%), var(--color-transparent) 30%),
+		radial-gradient(circle at 84% 72%, rgb(53 231 231 / 8%), var(--color-transparent) 28%),
+		linear-gradient(180deg, var(--color-public-surface-soft) 0%, var(--color-bg-page) 100%);
+	--gradient-home-cta:
+		radial-gradient(circle at 14% 20%, rgb(155 150 255 / 20%), var(--color-transparent) 38%),
+		radial-gradient(circle at 88% 72%, rgb(53 231 231 / 13%), var(--color-transparent) 34%),
+		linear-gradient(135deg, #141a38 0%, #171d45 48%, #12363f 100%);
+	--gradient-marketing-glyph:
+		linear-gradient(145deg, var(--color-bg-elevated) 0%, var(--color-bg-brand-soft) 62%, var(--color-brand-cyan-soft) 100%);
+	--gradient-model-glyph:
+		linear-gradient(145deg, var(--color-bg-elevated) 0%, var(--color-bg-brand-soft) 55%, var(--color-brand-cyan-soft) 100%);
+	--shadow-home-card: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 20px 52px rgb(1 5 20 / 22%);
+	--shadow-home-card-hover: inset 0 0 0 1px rgb(155 150 255 / 22%), 0 26px 66px rgb(1 5 20 / 30%);
+	--shadow-home-stage: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 34px 92px rgb(1 5 20 / 36%);
+	--shadow-home-floating: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 20px 46px rgb(1 5 20 / 28%);
+	--shadow-home-cta: inset 0 0 0 1px rgb(155 150 255 / 16%), 0 34px 96px rgb(1 5 20 / 40%);
+	--shadow-marketing-glyph: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 16px 38px rgb(1 5 20 / 26%);
+
+	--hero-product-flow-brand-soft: color-mix(in srgb, var(--color-brand-primary) 18%, var(--color-public-surface));
+	--hero-product-flow-success-soft: color-mix(in srgb, var(--color-success-text) 16%, var(--color-public-surface));
+	--hero-product-flow-evidence-row-bg: color-mix(in srgb, var(--color-public-surface) 88%, var(--color-bg-brand-soft));
+	--hero-product-flow-kicker-color: #75e0d4;
+	--hero-product-flow-halo-opacity: 0.72;
+	--hero-product-flow-workspace-border: rgb(181 190 225 / 10%);
+	--hero-product-flow-toolbar-border: rgb(181 190 225 / 8%);
+	--hero-product-flow-toolbar-bg: linear-gradient(180deg, rgb(23 32 63 / 98%), rgb(20 28 57 / 94%));
+	--hero-product-flow-product-chip: linear-gradient(145deg, var(--color-bg-elevated), color-mix(in srgb, var(--color-brand-accent) 13%, var(--color-bg-elevated)));
+	--gradient-hero-product-flow-workspace:
+		linear-gradient(145deg, rgb(20 28 57 / 99%), rgb(15 22 47 / 98%) 52%, rgb(16 43 48 / 94%));
+	--gradient-hero-product-flow-ambient:
+		radial-gradient(circle at 47% 43%, rgb(155 150 255 / 13%), var(--color-transparent) 35%),
+		radial-gradient(circle at 72% 58%, rgb(53 231 231 / 8%), var(--color-transparent) 31%);
+	--gradient-hero-product-flow-card:
+		linear-gradient(145deg, rgb(23 32 63 / 98%), rgb(17 24 51 / 96%));
+	--gradient-hero-product-flow-product:
+		radial-gradient(circle at 48% 36%, rgb(155 150 255 / 12%), var(--color-transparent) 42%),
+		linear-gradient(145deg, rgb(23 32 63 / 98%), rgb(18 54 63 / 82%));
+	--gradient-hero-product-flow-processor:
+		linear-gradient(160deg, rgb(23 32 63 / 99%), rgb(17 24 51 / 97%));
+	--gradient-hero-product-flow-processor-halo:
+		radial-gradient(circle at 50% 42%, rgb(155 150 255 / 17%), var(--color-transparent) 56%),
+		radial-gradient(circle at 58% 66%, rgb(53 231 231 / 9%), var(--color-transparent) 48%);
+	--gradient-hero-product-flow-answer:
+		linear-gradient(145deg, rgb(23 32 63 / 99%), rgb(18 54 63 / 90%));
+	--shadow-hero-product-flow-workspace:
+		0 2.4rem 5.8rem rgb(1 5 20 / 36%),
+		0 0.3rem 1rem rgb(1 5 20 / 18%);
+	--shadow-hero-product-flow-card:
+		0 0.9rem 2rem rgb(1 5 20 / 22%),
+		0 0.18rem 0.55rem rgb(1 5 20 / 12%);
+	--shadow-hero-product-flow-card-active:
+		0 1.15rem 2.7rem rgb(1 5 20 / 28%),
+		0 0.2rem 0.65rem rgb(1 5 20 / 14%);
+	--shadow-hero-product-flow-answer:
+		0 1.1rem 2.75rem rgb(1 5 20 / 28%),
+		0 0.22rem 0.7rem rgb(1 5 20 / 13%);
+	--shadow-hero-product-flow-answer-active:
+		0 1.45rem 3.4rem rgb(1 5 20 / 35%),
+		0 0.28rem 0.82rem rgb(1 5 20 / 16%);
+	--shadow-hero-product-flow-processor:
+		0 1.25rem 3rem rgb(1 5 20 / 31%),
+		0 0.2rem 0.7rem rgb(1 5 20 / 14%);
+	--shadow-hero-product-flow-processor-active:
+		0 1.65rem 3.8rem rgb(1 5 20 / 39%),
+		0 0.25rem 0.8rem rgb(1 5 20 / 17%);
+	--shadow-hero-product-flow-badge: inset 0 0 0 1px rgb(155 150 255 / 16%);
+	--shadow-hero-product-flow-inset: inset 0 0 0 1px rgb(181 190 225 / 9%);
+	--shadow-hero-product-flow-chip: 0 0.75rem 1.45rem rgb(1 5 20 / 18%);
+
 }

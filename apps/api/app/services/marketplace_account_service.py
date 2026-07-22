@@ -15,6 +15,7 @@ from app.models.enums import Marketplace, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.user import User
+from app.services.answer_entitlement_service import AnswerEntitlementService
 from app.services.audit_service import AuditService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
@@ -27,6 +28,7 @@ class MarketplaceAccountService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.audit = AuditService(session)
+        self.entitlements = AnswerEntitlementService(session)
         self.organization_service = OrganizationService(session)
         self.plan_limits = PlanLimitService(session)
         settings = get_settings()
@@ -54,6 +56,8 @@ class MarketplaceAccountService:
         )
         if not limit_decision.allowed:
             raise payment_required("Marketplace account limit is exhausted for the current plan")
+        if not await self.entitlements.can_connect_marketplace(organization_id=organization_id):
+            raise payment_required("Trial marketplace limit is exhausted; activate a paid answer package")
         encrypted = self.credentials.encrypt(raw_credentials)
         fingerprint = self.credentials.fingerprint(raw_credentials)
         account = MarketplaceAccount(

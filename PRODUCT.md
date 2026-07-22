@@ -1,7 +1,7 @@
 # Respio — Product Context
 
 Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.26
+Version: 0.1.31
 
 ## Product
 
@@ -21,6 +21,16 @@ Respio is a multi-tenant SaaS for marketplace sellers, operators and agencies. I
 - Ozon, Yandex Market and Avito: do not imply production-ready sending until official contracts are verified, adapters implemented and runtime-tested.
 - OpenRouter: backend-only provider abstraction.
 - Existing layers: auth, organizations, RBAC, integrations, Inbox, AI drafts, SafetyGate, automation rules, worker queue, auto replies, manual review, analytics, billing foundation, admin and Docker deployment foundation.
+
+## Public launch target and marketing truth
+
+The public site describes the fully implemented launch product, not an unfinished roadmap. The user will not launch Respio halfway through implementation.
+
+Therefore public marketing pages must not expose `MVP`, `planned`, `coming soon`, `readiness`, adapter/runtime status or other implementation-stage labels. They should naturally describe Respio working with Wildberries, Ozon, Яндекс Маркет and Авито as one launch product.
+
+This does not permit fabricated claims. At launch, every marketplace, model, capability, price, metric, proof point and integration shown publicly must match production reality. Current engineering truth remains authoritative in repository code and this document until target-launch implementation is complete.
+
+The target launch also includes a multi-model LLM stack selected through current technical review and comparative tests on real Russian marketplace scenarios. Model selection prioritizes answer quality for reviews and buyer questions over price, speed or popularity alone.
 
 ## Primary audiences
 
@@ -67,11 +77,13 @@ Calm, competent, concise, specific and operational. Use native Russian, concrete
 
 ## Public-site conversion priorities
 
-1. Make Respio understandable on the first screen.
-2. Explain why it is more than a text generator.
-3. Show auto-first + SafetyGate + human fallback clearly.
-4. Build trust through architecture, security and readiness honesty.
-5. Move qualified visitors toward a real demo/contact/onboarding action.
+1. Explain in 3–5 seconds that Respio automates replies to marketplace reviews and buyer questions.
+2. Show marketplace coverage without public roadmap/readiness labels.
+3. Explain the automation model in plain language: Respio is designed to answer different types of reviews and buyer questions automatically using available product context and company rules; optional manual approval is secondary configuration, not the primary limitation story.
+4. Demonstrate the workflow with believable review/question examples rather than internal architecture diagrams.
+5. Build trust through real product behavior, clear limits and evidence that actually exists.
+6. Support customer intent and SEO with dedicated marketplace/use-case pages, useful FAQs and practical resources.
+7. Present multiple LLM models as a means to improve task fit, not as decorative logos or unsupported superiority claims.
 
 ## Public routes
 
@@ -145,3 +157,41 @@ Patch 0.1.26 closes the remaining Wildberries accessibility failure from GitHub 
 
 The key architectural fix is that text-bearing soft surfaces are no longer translucent. Their computed contrast no longer changes depending on the parent card or selected row underneath. The audit also corrected latent dark-theme issues in kicker text, active navigation, brand-soft labels, processing states and the danger-button text contract. A dedicated dark-theme accessibility suite is now part of the frontend a11y gate.
 
+
+## Visual Recovery · 0.1.28
+
+The current 0.1.28 candidate is a screenshot-driven recovery over the historical 0.1.26 GREEN baseline. It is not final until rendered visual review and user acceptance are complete.
+
+Current public target:
+
+- light-first Electric Pulse visual system;
+- customer-first copy before SEO/marketing polish;
+- no public engineering jargon or incomplete roadmap status;
+- exact hybrid SVG + Canvas + HTML Orbital Ribbon Flow;
+- one unified eyebrow/spacing/button/surface contract;
+- marketplace coverage for Wildberries, Ozon, Яндекс Маркет and Авито presented as the target launch experience;
+- automation across simple, complex, negative and ambiguous scenarios, with optional manual approval described only as secondary configuration when relevant;
+- a multi-model LLM section whose exact model versions must match the selected and connected launch stack;
+- no fabricated metrics, testimonials, logos, benchmarks or unsupported superiority claims.
+
+## Visual Recovery · 0.1.29 orbital correction
+
+The 0.1.28 Hero candidate was visually rejected after real browser review because the coded Canvas did not reproduce the accepted reference: orbit depth read as flat, the central Respio AI object lacked sufficient 3D volume, and moving planets/labels could visibly jump.
+
+The 0.1.29 candidate keeps the accepted product metaphor but rebuilds the implementation foundation: five independent 3D orbital planes, five semantic planets, one central Respio AI core, true front/back orbit occlusion, stable labels and slow pause-safe motion. This remains a visual candidate until explicit user acceptance.
+
+## Visual Recovery · 0.1.30 native CSS 3D orbital rebuild
+
+The 0.1.29 Hero candidate was visually rejected because the orbit system still read as flat projected SVG geometry in the user's real browser. Version 0.1.30 replaced that foundation with native CSS 3D orbital planes, deterministic front/back occlusion, one matte layered Respio AI core, five semantic planets and pause-safe slow motion. No WebGL or Three.js runtime was added in 0.1.30. The user subsequently rejected the real browser render because it still read as pseudo-3D rather than the accepted spatial reference.
+
+## Visual Recovery · 0.1.31 real WebGL orbital scene
+
+The 0.1.31 candidate supersedes the visually rejected 0.1.30 CSS-3D implementation. The Hero scene now uses a lazy-loaded Three.js/WebGL renderer with one central matte Respio AI planet, five semantic 3D planets and five independent mathematical 3D orbits. The same orbit equations generate both each rendered line and the moving planet position, while the WebGL depth buffer provides real front/back occlusion.
+
+The performance contract is strict: the WebGL chunk loads only when the Hero approaches the viewport; device pixel ratio is capped adaptively; no GLTF, HDRI, postprocessing, particle system or physics runtime is used; animation pauses outside the viewport and while the document is hidden; reduced-motion users receive a static resolved state; all geometries, materials, textures and the WebGL context are disposed on unmount. This remains a visual candidate until explicit user browser acceptance.
+
+## Visual Recovery · 0.1.32 authoritative Hero state
+
+The `0.1.27–0.1.31` Hero attempts are rejected and must not be used as visual baselines. Version `0.1.32` restores the accepted customer story and implements the selected orbital metaphor with a real, performance-bounded Three.js/WebGL scene.
+
+The Hero explains the product sequence directly: buyer question → products/catalog → product data → context/rules → ready answer. The text, primary and secondary calls to action, and three trust benefits remain semantic HTML and do not depend on the 3D runtime. The scene is enhancement-only, loads near the viewport, pauses when inactive, respects reduced motion and falls back safely when WebGL is unavailable.

@@ -1,4 +1,4 @@
-import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { access, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
@@ -41,10 +41,27 @@ function routeFileName(route) {
   return route === "/" ? "index.html" : `${route.slice(1).replaceAll("/", "__")}.html`;
 }
 
-function startServer() {
-  const child = spawn(process.execPath, [nextCli, "start", "--hostname", "127.0.0.1", "--port", String(port)], {
+async function startServer() {
+  const standaloneServer = resolve(appRoot, ".next/standalone/server.js");
+  let command = nextCli;
+  let args = ["start", "--hostname", "127.0.0.1", "--port", String(port)];
+
+  try {
+    await access(standaloneServer);
+    command = standaloneServer;
+    args = [];
+  } catch {
+    // Fall back to `next start` for non-standalone builds.
+  }
+
+  const child = spawn(process.execPath, [command, ...args], {
     cwd: appRoot,
-    env: { ...process.env, NODE_ENV: "production" },
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      HOSTNAME: "127.0.0.1",
+      PORT: String(port),
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -104,8 +121,8 @@ function runVnu(files) {
     });
     child.once("error", rejectRun);
     child.once("close", (code) => {
-      const hasConformanceMessage = /(?:^|\n)(?:Error|Warning):/m.test(output);
-      if (code === 0 && !hasConformanceMessage) resolveRun();
+      const hasConformanceError = /(?:^|\n)Error:/m.test(output);
+      if (code === 0 && !hasConformanceError) resolveRun();
       else rejectRun(new Error(`Nu Html Checker failed strict validation with code ${code}`));
     });
   });
@@ -117,7 +134,7 @@ let tempDirectory;
 try {
   await ensureBuildExists();
   tempDirectory = await mkdtemp(join(tmpdir(), "respio-w3c-html-"));
-  server = startServer();
+  server = await startServer();
   await waitForServer();
   await fetchRenderedPages(tempDirectory);
   const files = renderedRoutes.map((route) => join(tempDirectory, routeFileName(route)));

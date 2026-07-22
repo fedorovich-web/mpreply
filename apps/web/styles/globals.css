@@ -2,6 +2,7 @@
 @import './tokens.css';
 @import './theme.css';
 @import './public-site.css';
+@import './hero-canvas-recovery.css';
 
 * {
 	box-sizing: border-box;
@@ -16,6 +17,11 @@ body {
 	font-family: var(--font-family-sans);
 	font-size: var(--font-size-md);
 	line-height: var(--line-height-normal);
+	font-synthesis: none;
+	font-kerning: normal;
+	text-rendering: geometricPrecision;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -54,7 +60,7 @@ a {
 
 .eyebrow {
 	margin: 0;
-	color: var(--color-brand-primary);
+	color: var(--color-brand-text);
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-semibold);
 	letter-spacing: var(--letter-spacing-label);
@@ -99,12 +105,16 @@ h1 {
 }
 
 .button-primary {
-	background: var(--color-brand-primary);
+	background: var(--color-brand-action);
 	color: var(--color-text-on-brand);
 }
 
 .button-primary:hover {
-	background: var(--color-brand-primary-hover);
+	background: var(--color-brand-action-hover);
+}
+
+.button-primary:active {
+	background: var(--color-brand-action-active);
 }
 
 .button-secondary {

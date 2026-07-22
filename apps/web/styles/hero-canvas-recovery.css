@@ -1,0 +1,76 @@
+/* Respio 0.1.97 · Canvas-only recovery.
+   This file intentionally does not change public heading rhythm, eyebrow spacing,
+   typography scale, modal copy, or section margins. It only restores the desktop
+   Hero product-flow scene so it fits inside the fold instead of drifting right. */
+
+@media (min-width: 1121px) {
+  .home-hero {
+    overflow-x: clip;
+  }
+
+  .home-hero-layout {
+    grid-template-columns: minmax(0, clamp(34rem, 38vw, 40rem)) minmax(0, clamp(40rem, 50vw, 52rem)) !important;
+    gap: clamp(2.75rem, 4vw, 5rem) !important;
+    align-items: center !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] {
+    width: min(100%, 56.25rem) !important;
+    max-width: 100% !important;
+    justify-self: start !important;
+    transform: translateX(0) !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] > div {
+    grid-template-columns: minmax(13rem, 0.82fr) minmax(14rem, 0.88fr) minmax(17rem, 1.05fr) !important;
+    gap: clamp(0.75rem, 1.1vw, 1.3rem) !important;
+  }
+}
+
+@media (min-width: 1121px) and (max-width: 1500px) {
+  .home-hero-layout {
+    grid-template-columns: minmax(0, clamp(31rem, 36vw, 35rem)) minmax(0, clamp(38rem, 48vw, 45rem)) !important;
+    gap: clamp(2.5rem, 3.5vw, 4rem) !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] {
+    width: min(100%, 45rem) !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] > div {
+    grid-template-columns: minmax(12rem, 0.82fr) minmax(13rem, 0.88fr) minmax(15.5rem, 1.05fr) !important;
+    gap: clamp(0.625rem, 0.9vw, 1rem) !important;
+  }
+}
+
+@media (min-width: 1121px) and (max-width: 1320px) {
+  .home-hero-layout {
+    grid-template-columns: minmax(0, clamp(28.5rem, 35vw, 32rem)) minmax(0, clamp(35rem, 46vw, 40rem)) !important;
+    gap: clamp(2rem, 3vw, 3rem) !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] {
+    width: min(100%, 40rem) !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] > div {
+    grid-template-columns: minmax(10.5rem, 0.82fr) minmax(11.5rem, 0.88fr) minmax(14rem, 1.05fr) !important;
+    gap: 0.625rem !important;
+  }
+}
+
+@media (min-width: 1121px) and (max-width: 1220px) {
+  .home-hero-layout {
+    grid-template-columns: minmax(0, 29rem) minmax(0, 37rem) !important;
+    gap: 2rem !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] {
+    width: min(100%, 37rem) !important;
+  }
+
+  .home-hero [data-testid="hero-product-flow"] > div {
+    grid-template-columns: minmax(9.75rem, 0.82fr) minmax(10.75rem, 0.88fr) minmax(12.75rem, 1.05fr) !important;
+    gap: 0.5rem !important;
+  }
+}

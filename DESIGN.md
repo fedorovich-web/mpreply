@@ -1,36 +1,69 @@
 # Respio — Design System Direction
 
-Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.26
+Status: authoritative current design rules and implementation constraints.
+Version: 0.1.31
 
 ## Design intent
 
 **Operational clarity. Quiet intelligence. Marketplace confidence.**
 
-## Approved public brand direction · Respio Signal Flow
+## Approved public brand direction · Electric Pulse / Light Orbital Intelligence
 
-The approved public-site direction combines a light-first editorial SaaS layout with a full-width animated ribbon canvas in the hero, visually close in motion language and composition to the Handhold reference while using original Respio code, content and brand colors. The public site must not feel empty or unfinished: keep a complete header/navigation, real product evidence, substantial page structure and a functional footer.
+The current public-site authority is **light-first**. The default Respio experience is a premium light AI/B2B SaaS environment; dark mode is a first-class secondary theme exposed through the existing theme switcher, not the visual starting point for the product.
+
+Approved master references for public art direction:
+- **PitchBot AI** — overall visual maturity, softness, branded light AI environment and coherent system thinking.
+- **ARIA** — light-first AI SaaS atmosphere, soft lavender environment and balance between technological credibility and visual warmth.
+- **Relatra** — AI automation storytelling, workflow presentation and product-first section logic.
+
+Explicitly excluded as master references:
+- Qipeline.
+- OEME / OEMA.
+- AgentVoice.
+
+These references are inputs, not templates. Respio must retain its own product narrative, original code, Electric Pulse identity, AUTO-FIRST positioning and Respio AI Orbital System signature visual.
 
 Approved public palette:
-- Primary violet: `#6F33AB`.
-- Signal mint: `#79D6B0`.
-- Neutral near-white public page background: `#FBFAFC`; subtle/elevated surfaces use centralized semantic background tokens.
-- Deep violet is secondary for selected contrast surfaces and optional dark theme, not the default page background.
-- Status colors remain semantic and separate from the mint brand accent.
+- Primary violet: `#635BFF`.
+- Accent cyan: `#00E5E5`.
+- Main gradient family: `#5148E8` → `#00E5E5`, reserved for small/localized roles where a gradient has a specific compositional function; never use it as a default Hero/section background.
+- Default page canvas: controlled near-white/light-neutral semantic backgrounds.
+- Deep graphite/indigo surfaces are reserved for selected contrast sections and the secondary dark theme.
+- Decorative cyan remains separate from semantic success; text/action colors use dedicated contrast-safe roles.
 
 Approved hero behavior:
-- Large centered headline and supporting copy.
-- Full-width organic animated canvas/ribbon below the copy.
-- Primary CTA: `Подключить маркетплейс`, not a single-marketplace CTA.
-- Complete desktop navigation and accessible mobile menu.
-- Light theme is the default; optional theme switch is allowed.
-- Respect reduced motion and pause canvas animation when off-screen or the page is hidden.
+- Asymmetric two-column desktop composition: product copy first, signature Canvas second.
+- Desktop H1 must wrap naturally in Russian, normally within 2–4 visual lines; the design must never force a five-to-seven-line heading through an artificially narrow copy column.
+- Desktop hero CTAs remain side by side while they physically fit; stacking starts only at a justified mobile breakpoint.
+- The hero background and Canvas ambient layer form one composition rather than two disconnected panels.
+- The Canvas is the **Respio AI Orbital System**: one central Respio AI planet, five distinct semantic planets and five mathematically exact interwoven elliptical orbits.
+- Motion must be perceptible but restrained: each semantic planet moves slowly only on its own ellipse, with non-identical 35–47 second periods; no random drift, bouncing or detached nodes.
+- Reduced motion, off-screen pausing, page-visibility pausing, bounded DPR/FPS and mobile complexity reduction are mandatory.
 
-Respio should feel like a reliable operating system for marketplace communication: calm, precise, fast and accountable. Marketing may be more expressive than the dashboard, but both must belong to one family.
+Public component contract:
+- One public eyebrow system; hero eyebrow is the visual master.
+- Global typography roles and limits: H1 ≤ 64px, H2 ≤ 46px.
+- Decorative borders are not a default styling tool. Prefer semantic background contrast, soft elevation and inset shadow; preserve real borders only for forms, tables, validation, functional separators and other justified structure.
+- Buttons use stable geometry, tokenized hover/active/focus states and compact shadows that cannot overlap adjacent controls.
+- Motion uses explicit property transitions; never `transition: all`.
+- Custom cursor behavior is progressive enhancement for fine-pointer desktop devices only and must disappear for touch/coarse pointer or reduced motion.
+
+Dark public theme:
+- The same content architecture, typography, spacing, component geometry and Respio AI Orbital System semantics are preserved.
+- Do not create a separate cyberpunk site or simply invert colors.
+- Narrow auxiliary references may inform specific dark-theme qualities only: Songo for signal/data motion, ZeroDrift for safety/trust language, and NeuraCore for restrained ambient depth.
+
+Dashboard direction:
+- Dashboard UI is operational and denser than the public site; it must not inherit Awwwards-style decorative motion, custom cursor or hero gradients.
+- Primary references by function: Linear for hierarchy and information density, Vercel/Geist for semantic tokens/theme/control states, Resend for inbox/event-log simplicity, plus Respio-specific marketplace/SafetyGate/AUTO-FIRST workflows.
+
+Respio should feel like a reliable operating system for marketplace communication: calm, precise, fast, accountable and visually mature. Marketing may be more expressive than the dashboard, but both belong to one family through Onest, semantic tokens, Electric Pulse accents, shared interaction timing and state logic.
 
 ## Secondary public routes · 0.1.15
 
-The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resources` and `contacts` routes use the same Signal Flow language as the homepage: editorial hierarchy, restrained violet/mint accents, explicit operational states, fewer card grids and more structured rows/lists. Planned marketplace pages must visually separate roadmap status from an implemented integration and must not use a production-ready headline.
+The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resources` and `contacts` routes use the same approved public language as the homepage: Electric Pulse / Light Orbital Intelligence, customer-first Russian copy, unified typography, shared eyebrow and button contracts, primarily solid tonal surfaces and shadows instead of decorative border grids or generic gradient backgrounds.
+
+The public site describes the target launch product. It must not display internal roadmap labels such as `MVP`, `planned`, `coming soon`, `readiness`, adapter/runtime state or other implementation-stage terminology. Current engineering truth remains documented in `PRODUCT.md` and repository code; public claims must match production reality by launch.
 
 ## Public shell polish · 0.1.16
 
@@ -48,17 +81,17 @@ Authorization is visible but never treated as a frontend security boundary: owne
 
 ## Public visual-system stabilization · 0.1.19
 
-The public site uses self-hosted Onest for Cyrillic and Latin with four production weights: 400, 500, 600 and 700. The optimized WOFF2 family totals 64,972 bytes, down from 114,084 bytes in the supplied source set (about 43% smaller), while retaining required Russian/English letters and product punctuation.
+The public visual system is stabilized around shared tokens for typography, surfaces, spacing, motion, buttons, focus states and responsive behavior. Later patches may evolve art direction, but they must not create a second design system or component-local visual scales.
 
-Reusable visual decisions are centralized in `styles/tokens.css`: brand/semantic colors, backgrounds, gradients, typography roles, font weights, line heights, letter spacing, spacing, layout dimensions, radii, borders, shadows, focus, motion durations/easings and Canvas configuration. Public component CSS must reference these variables instead of introducing local HEX/RGB/HSL colors or one-off transition timing values.
+For the current Hero, the approved signature visual is the Respio AI Orbital System:
 
-The public background system is neutral and continuous: a near-white page foundation, white surfaces and a restrained subtle violet surface token. Alternating section tones are permitted only through semantic background variables and must not create arbitrary beige/white/violet banding.
+- SVG owns five exact, distinct, interwoven elliptical orbit paths;
+- HTML/CSS owns the central Respio AI planet and the five semantic planets;
+- JavaScript computes each planet position from the same ellipse geometry used by SVG, so no planet can visually detach from its orbit;
+- the five semantic roles are `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила` and `Готовый ответ`;
+- reduced motion, viewport pausing, page-visibility pausing and FPS caps remain mandatory.
 
-Hero motion uses a token-driven Canvas ribbon system in Respio violet/mint, with multiple restrained layers, edge fading, reduced-motion support, intersection/visibility pausing, bounded device-pixel ratio and frame-rate control. Visual parameters belong to CSS custom properties so the motion system can be tuned without hardcoded component constants.
-
-Interactive controls share one motion/focus contract. Hover and active feedback must avoid geometry changes such as border-width/padding shifts; use tokenized transform, color and shadow transitions. Process steps remain equal in layout weight, and CTA labels are contextual rather than mechanically repeating the same primary action.
-
-Rendered public HTML is validated route-by-route through Nu HTML Checker, while stylesheet sources are validated through Nu and CSS syntax tooling. Validator findings are fixed in source rather than silenced; current semantic corrections include valid ARIA roles, heading ownership for sections/process steps and removal of wrappers that falsely claimed independent `section`/`article` semantics.
+The public site is light-first. Dark mode is a semantic adaptation of the same component and token system, not a separate cyberpunk redesign.
 
 ## Two visual lanes
 
@@ -122,20 +155,21 @@ Visible labels, recoverable errors, duplicate-submit protection, singular primar
 
 ## Homepage story
 
-1. Category + outcome.
-2. Product mechanism.
-3. Trust/safety model.
-4. Marketplace readiness truth.
-5. Workflow demonstration.
-6. Benefits by audience/JTBD.
-7. Product evidence.
-8. Automation controls.
-9. Analytics/accountability.
-10. Security/integration trust.
-11. Useful FAQ.
-12. Conversion CTA.
+The homepage must tell a customer story, not expose internal architecture:
 
-This is a framework, not permission to force every section onto the page.
+1. Hero: automatic replies to reviews and questions on marketplaces across simple, complex, negative and ambiguous scenarios when sufficient product/company context is available.
+2. Marketplace proof: Wildberries, Ozon, Яндекс Маркет and Авито without roadmap/readiness badges.
+3. Customer outcomes: less repetitive manual work, answers based on concrete context, and one operational workspace across marketplaces.
+4. A concrete question-to-answer example using believable product context and no fabricated metrics.
+5. One workspace for marketplace reviews and questions.
+6. Complex-scenario proof: show that automation is not limited to trivial cases; optional manual approval is secondary configuration, not the primary product story.
+7. Workspace capabilities with meaningful illustrations, not `01/02/03/04` placeholders.
+8. Multi-model LLM section: multiple current models with clear customer-facing roles; exact versions and claims must match the selected and connected launch stack.
+9. Useful FAQ based on real objections and search intent, with one-open-at-a-time stable interaction.
+10. Practical resources/blog entry points.
+11. Light final CTA built on a solid tonal surface, not a generic full-section gradient.
+
+No hero proof strip with unexplained internal terms. No public `MVP`, `planned`, `readiness`, adapter/runtime status, idempotency, retry, queue or similar engineering jargon. No fabricated metrics, testimonials, customer logos, model benchmarks or superiority claims.
 
 ## Accessibility and performance
 
@@ -201,3 +235,132 @@ The corrected contract is systemic rather than selector-specific:
 
 Design-token tests now verify light/dark text/surface pairs, semantic status pairs, brand-soft pairs, on-brand/on-danger button contrast, opacity invariants and CSS usage contracts. A permanent dark-theme axe suite covers representative public and authenticated product surfaces so the same class of regression cannot remain invisible until a later push.
 
+
+## Visual Recovery · 0.1.28
+
+Patch 0.1.28 remains a local visual-recovery candidate until the user approves rendered screenshots and required gates are verified. Historical confirmed GREEN baseline remains 0.1.26.
+
+### Approved art direction
+
+- Light-first public environment.
+- Electric Pulse brand roles: `#635BFF` primary, `#00E5E5` accent and a controlled `#5148E8 → #00E5E5` gradient family.
+- Master references: PitchBot AI, ARIA and Relatra.
+- Qipeline, OEME/OEMA and AgentVoice are not master references.
+- Narrow references may be used only for specific mechanisms: ZeroDrift AI (trust/safety), C-SCORE (risk visualization), Songo (signal motion), NeuraCore (ambient motion), Lernium (B2B storytelling) and Guardbase (security communication).
+
+### Hero · Respio AI Orbital System
+
+The approved 0.1.28 Canvas contract is:
+
+- one central matte soft-3D planet with the `Respio AI` title and `AI-ответы для маркетплейсов` descriptor integrated into its equatorial band;
+- exactly five clearly distinguishable semantic planets: `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
+- exactly five distinct mathematical ellipses with different radii, eccentricities and rotations, visually interwoven around the common Respio AI center;
+- every small planet belongs to exactly one orbit and is positioned by the same ellipse equation that defines its SVG path;
+- full rotations are deliberately slow and non-identical: 35–47 seconds;
+- labels adapt their side around each moving planet to reduce collisions;
+- no bouncing, random drift, detached planets, duplicated orbit geometry or animation of layout properties;
+- `ResizeObserver`, `IntersectionObserver`, page visibility, `prefers-reduced-motion` and FPS capping are required;
+- offscreen or hidden-document animation pauses completely.
+
+### Copy and information architecture
+
+Public copy follows this order of priorities:
+
+1. customer usefulness and clarity;
+2. SEO/search intent;
+3. marketing presentation.
+
+Do not force uniqueness. Do not copy competitors. Do not invent claims, metrics or AI filler. Use concrete, natural Russian grounded in real customer tasks and real product behavior.
+
+The rejected Hero phrases `Автоответы по умолчанию`, `SafetyGate до отправки`, `Исключения — менеджеру`, `Повторы без дублей` must not return.
+
+`SafetyGate` must not be the primary public automation story. Public copy should first show that Respio automates diverse review/question scenarios. Optional manual approval may be explained later as a configurable control for selected categories, and the internal/product term may be introduced only when it adds customer value.
+
+### LLM section
+
+The target-launch public site includes a multi-model LLM section. The product is expected to connect the strongest models selected for Russian marketplace review/question scenarios before public launch. The site may show exact model names and versions only when they are current, intentionally selected and match the connected launch stack. No fabricated benchmark result or unsupported “best in the world” claim is allowed.
+
+### System rules
+
+- One non-uppercase public eyebrow contract with tokenized dot gap and eyebrow-to-heading spacing.
+- H1 desktop maximum 64px; H2 desktop maximum 46px; auth titles use a smaller dedicated token.
+- Desktop Hero CTAs remain in one row while they physically fit.
+- Decorative borders are removed by default in favor of tonal separation, shadows and inset shadows.
+- All visual roles must come from global tokens: colors, backgrounds, solid/tonal surfaces, localized gradients where justified, typography, spacing, containers, radii, shadows, controls, interaction states, motion, Canvas and theme-specific values.
+- Custom cursor remains progressive enhancement for fine pointers only.
+- Required visual-review widths: 1440, 1280, 1024, 768, 430, 390 and 375.
+- No visual candidate is complete without relevant unit/design tests, responsive rendered review and user acceptance.
+
+
+## Hero orbital depth correction · 0.1.29
+
+Patch 0.1.29 supersedes the rejected 0.1.28 Hero implementation after the user's real browser screenshot showed three concrete defects: flat 2D-looking orbit geometry, a visually flat central sphere, and jerky planet motion/label jumps.
+
+The corrected contract is:
+
+- five independent 3D orbital planes around one Respio AI core;
+- the same 3D projection function drives both each SVG orbit and its moving planet, so the planet cannot drift away from its own path;
+- every orbit is split into back and front depth segments around the central sphere, giving real occlusion instead of five flat ellipses painted on one layer;
+- the central sphere is rendered as a layered matte 3D object with cap, curved equatorial band, lower body shading and restrained violet/cyan depth light;
+- motion uses uncapped browser `requestAnimationFrame` instead of an artificial 30 FPS step;
+- only active elapsed time advances the orbital state, so hiding the tab or pausing offscreen cannot produce a jump on resume;
+- label placement is stable per semantic planet instead of changing sides during motion;
+- full rotation periods are deliberately slow and non-identical: 52–68 seconds;
+- reduced motion resolves to a static composed state;
+- no Three.js, WebGL, GSAP, Rive, Spline or other heavy runtime is introduced.
+
+This remains a local visual candidate until the user checks the real browser render. Unit/build/W3C GREEN does not replace visual acceptance.
+
+## Native CSS 3D orbital rebuild · 0.1.30
+
+Patch 0.1.30 superseded the visually rejected 0.1.29 Hero candidate after the user's real browser screenshot showed that projected SVG paths still read as flat 2D lines and the central object did not reproduce the accepted reference.
+
+The 0.1.30 implementation contract was:
+
+- orbit lines were DOM ellipses transformed as independent CSS 3D planes with `perspective`, `rotateX`, `rotateZ` and `transform-style: preserve-3d`;
+- SVG orbit paths were removed from the Hero scene;
+- every orbit used separate back/front halves around the Respio AI core;
+- five distinct periods were deliberately slow: 60–76 seconds per full revolution;
+- no WebGL or Three.js runtime was introduced.
+
+The user rejected the real 0.1.30 browser render because the result still read as pseudo-3D: flat orbit lines, insufficient depth, weak central volume and a composition materially different from the accepted reference.
+
+## Real WebGL orbital scene · 0.1.31
+
+Patch 0.1.31 replaces the rejected CSS-3D foundation with a real Three.js/WebGL scene. The accepted composition target remains one central matte Respio AI planet, five semantic planets and five intertwined 3D orbits, rendered with actual camera perspective, lighting and depth-buffer occlusion.
+
+The 0.1.31 implementation contract is:
+
+- `three` is dynamically imported only when the Hero approaches the viewport;
+- one `PerspectiveCamera` and one transparent `WebGLRenderer` render the scene;
+- five independent mathematical 3D ellipses are generated from explicit radii and XYZ rotations;
+- the same 3D equation drives both the `LineLoop` orbit geometry and its moving planet, preventing drift from the assigned path;
+- real WebGL depth testing provides front/back occlusion among orbits, planets and the central sphere;
+- the Respio AI core uses separate upper/lower sphere geometry, a restrained equatorial light band, matte physical materials, contact shadow and limited violet/cyan depth lighting;
+- five semantic planets remain `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
+- full rotations are deliberately slow and non-identical, and only active visible time advances motion;
+- animation pauses outside the viewport and while the document is hidden; reduced motion resolves to a static composition;
+- adaptive DPR is capped, with a lower cap for mobile and low-memory devices;
+- no GLTF, HDRI, postprocessing pipeline, particle system, physics engine, React Three Fiber or Drei runtime is added;
+- all geometries, materials, textures, renderer resources and the WebGL context are disposed on unmount.
+
+This remains a visual candidate until explicit browser review by the user. Technical GREEN gates and a standalone WebGL QA harness do not replace acceptance of the real application render.
+
+## Visual Recovery · 0.1.32 accepted-reference WebGL rebuild
+
+Version `0.1.32` supersedes the rejected `0.1.27–0.1.31` Hero candidates. Historical confirmed baseline remains `0.1.26`; the new implementation is a separate accepted-reference rebuild rather than a continuation of the rejected `0.1.31` visual result.
+
+The authoritative Hero contract is now:
+
+- exact customer-facing copy: `От вопроса покупателя к готовому ответу — автоматически.`;
+- one real Three.js/WebGL scene with a perspective camera and depth-buffer occlusion;
+- one layered matte Respio AI planet with a separate equatorial band, restrained violet light and contact shadow;
+- exactly five independent spatial `TubeGeometry` orbits and five real semantic planet meshes;
+- fixed semantic labels: `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
+- stable label orientation and bounded projection without side-flipping jumps;
+- distinct full-orbit periods within `90–130 seconds`;
+- adaptive DPR cap, lazy dynamic import, offscreen/page-hidden pause, reduced-motion static mode and complete WebGL disposal;
+- DOM copy and calls to action render independently of WebGL and remain usable with the static fallback;
+- no SVG ellipse, `LineLoop`, CSS-3D substitute, GLTF/HDRI, postprocessing, physics, React Three Fiber or particle runtime.
+
+The gradient brand mark and the single gradient Hero accent are intentional matches to the approved reference and carry explicit Impeccable waivers. Other visual declarations remain controlled through CSS custom properties.

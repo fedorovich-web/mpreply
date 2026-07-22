@@ -5,8 +5,6 @@ export type MarketplaceConfig = {
   name: string;
   shortName: string;
   path: string;
-  status: "mvp" | "planned";
-  statusLabel: string;
   summary: string;
 };
 
@@ -18,14 +16,13 @@ export const siteConfig = {
   origin: configuredOrigin || "https://respio.ru",
   contactEmail: configuredContactEmail,
   description:
-    "Respio автоматизирует ответы на отзывы и вопросы маркетплейсов: AI готовит ответ, SafetyGate проверяет риски, а спорные обращения уходят на ручную проверку.",
+    "Respio автоматически готовит и публикует ИИ-ответы на отзывы, вопросы и чаты маркетплейсов с учётом карточки товара, базы знаний и правил продавца.",
   navigation: [
-    { href: "/#product", label: "Продукт" },
     { href: "/features", label: "Возможности" },
     { href: "/marketplaces", label: "Маркетплейсы" },
-    { href: "/#safetygate", label: "SafetyGate" },
-    { href: "/pricing", label: "Тарифы" },
-    { href: "/resources", label: "Ресурсы" },
+    { href: "/pricing", label: "Цены" },
+    { href: "/blog", label: "Блог" },
+    { href: "/about", label: "О нас" },
   ],
 } as const;
 
@@ -35,40 +32,32 @@ export const marketplaces: MarketplaceConfig[] = [
     name: "Wildberries",
     shortName: "WB",
     path: "/marketplaces/wildberries",
-    status: "mvp",
-    statusLabel: "MVP-интеграция",
     summary:
-      "Импорт отзывов и вопросов, AI-черновики, SafetyGate, правила автоматизации и worker-backed отправка ответов.",
+      "Автоматические ИИ-ответы на отзывы и вопросы покупателей Wildberries с проверкой карточки товара и правил продавца.",
   },
   {
     key: "ozon",
     name: "Ozon",
     shortName: "Ozon",
     path: "/marketplaces/ozon",
-    status: "planned",
-    statusLabel: "Планируется",
     summary:
-      "Интеграция будет включена после финальной проверки актуальных официальных API-контрактов и ограничений отправки ответов.",
+      "Автоматические ИИ-ответы на отзывы, вопросы и чаты Ozon с учётом карточки товара, контекста диалога и правил автопубликации.",
   },
   {
     key: "yandex-market",
     name: "Яндекс Маркет",
-    shortName: "Яндекс Маркет",
+    shortName: "ЯМ",
     path: "/marketplaces/yandex-market",
-    status: "planned",
-    statusLabel: "Планируется",
     summary:
-      "Архитектура адаптера подготовлена; production-подключение будет открыто после проверки API и сценариев публикации ответов.",
+      "ИИ-ответы на отзывы и вопросы Яндекс Маркета с проверкой характеристик товара, базы знаний и ограничений продавца.",
   },
   {
     key: "avito",
     name: "Авито",
-    shortName: "Авито",
+    shortName: "Avito",
     path: "/marketplaces/avito",
-    status: "planned",
-    statusLabel: "Планируется",
     summary:
-      "Поддержка будет включена после подтверждения доступных официальных API-возможностей для нужных сценариев коммуникации.",
+      "Автоматические ИИ-ответы на отзывы и чаты Авито с сохранением контекста диалога и правилами публикации продавца.",
   },
 ];
 
@@ -92,6 +81,8 @@ export const publicRoutes = [
   "/marketplaces/avito",
   "/pricing",
   "/demo",
+  "/blog",
+  "/about",
   "/resources",
   "/privacy",
   "/terms",

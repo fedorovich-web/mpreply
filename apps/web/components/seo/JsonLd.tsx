@@ -1,9 +1,16 @@
+type JsonLdValue = Record<string, unknown> | Array<Record<string, unknown>>;
+
 type JsonLdProps = {
-  data: Record<string, unknown> | Array<Record<string, unknown>>;
+  data: JsonLdValue;
+  id?: string;
 };
 
-export function JsonLd({ data }: JsonLdProps) {
-  const json = JSON.stringify(data).replace(/</g, "\\u003c");
-
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
+export function JsonLd({ data, id = "json-ld" }: JsonLdProps) {
+  return (
+    <script
+      id={id}
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
 }

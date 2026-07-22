@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { marketplaces } from "../../lib/site-config";
 import { PublicHeader } from "./PublicHeader";
+import { PublicTrialModal } from "./PublicTrialModal";
 
 type PublicShellProps = {
   children: ReactNode;
@@ -11,9 +12,7 @@ type PublicShellProps = {
 export function PublicShell({ children }: PublicShellProps) {
   return (
     <div className="public-root">
-      <a className="skip-link" href="#main-content">
-        Перейти к содержимому
-      </a>
+      <a className="skip-link" href="#main-content">Перейти к содержимому</a>
 
       <PublicHeader />
 
@@ -27,7 +26,7 @@ export function PublicShell({ children }: PublicShellProps) {
               <strong>Respio</strong>
             </Link>
             <p>
-              Автоматизирует ответы на отзывы и вопросы маркетплейсов, проверяет рискованные случаи до отправки и оставляет понятную историю действий.
+              Автоматические ИИ-ответы на отзывы, вопросы и чаты покупателей с учётом данных товара, правил продавца и настроек согласования.
             </p>
           </div>
         </div>
@@ -36,22 +35,19 @@ export function PublicShell({ children }: PublicShellProps) {
           <div>
             <strong>Продукт</strong>
             <Link href="/features">Возможности</Link>
-            <Link href="/#safetygate">SafetyGate</Link>
+            <Link href="/#models">ИИ-модели</Link>
             <Link href="/pricing">Тарифы</Link>
             <Link href="/demo">Как работает Respio</Link>
           </div>
           <div>
             <strong>Маркетплейсы</strong>
             {marketplaces.map((marketplace) => (
-              <Link key={marketplace.key} href={marketplace.path}>
-                <span>{marketplace.name}</span>
-                <small>{marketplace.statusLabel}</small>
-              </Link>
+              <Link key={marketplace.key} href={marketplace.path}>{marketplace.name}</Link>
             ))}
           </div>
           <div>
-            <strong>Ресурсы</strong>
-            <Link href="/resources">Материалы</Link>
+            <strong>Материалы</strong>
+            <Link href="/resources">Полезные материалы</Link>
             <Link href="/contacts">Контакты</Link>
           </div>
           <div>
@@ -63,9 +59,11 @@ export function PublicShell({ children }: PublicShellProps) {
 
         <div className="public-container public-footer-bottom">
           <span>© {new Date().getFullYear()} Respio</span>
-          <span>Информация о планируемых интеграциях не означает их текущую production-доступность.</span>
+          <span>Wildberries · Ozon · Яндекс Маркет · Авито</span>
         </div>
       </footer>
+
+      <PublicTrialModal />
     </div>
   );
 }

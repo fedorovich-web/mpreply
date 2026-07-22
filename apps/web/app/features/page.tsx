@@ -1,107 +1,116 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { MarketingGlyph } from "../../components/public-site/MarketingGlyph";
 import { PublicShell } from "../../components/public-site/PublicShell";
+import { PublicTrialCta } from "../../components/public-site/PublicTrialCta";
 import { createPageMetadata } from "../../lib/seo";
+import { trialOffer } from "../../lib/public-pricing";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Возможности Respio — автоматические ответы с контролем риска",
+  title: "Возможности Respio для отзывов, вопросов и чатов",
   description:
-    "Respio объединяет входящие отзывы и вопросы, AI-подготовку ответа, SafetyGate, правила автоматизации, очередь отправки, повторы и журнал действий.",
+    "Автопубликация, ответы по данным товара, работа с негативом, чаты, правила бренда, журнал решений и аналитика для продавцов маркетплейсов.",
   path: "/features",
 });
 
-const capabilityGroups = [
+const capabilities = [
   {
-    number: "01",
-    title: "Собрать обращения в один рабочий поток",
-    text: "Отзывы и вопросы приводятся к единому формату, получают понятный статус и остаются доступны для поиска, фильтрации и дальнейшей обработки.",
-    points: ["Единые состояния сообщений", "Контекст маркетплейса и товара", "Поиск и фильтры без переключения между кабинетами"],
+    icon: "reviews" as const,
+    title: "Персональные ответы на отзывы",
+    text: "Respio учитывает оценку, содержание отзыва, товар, имя покупателя и тон бренда, затем автоматически публикует ответ по правилам продавца.",
   },
   {
-    number: "02",
-    title: "Подготовить ответ с учётом контекста",
-    text: "AI получает только необходимый контекст: данные товара, правила компании и доступные знания. Модель, версия инструкции, расход токенов и задержка фиксируются в системе.",
-    points: ["Товарный контекст", "Правила компании", "Учёт модели, токенов и стоимости"],
+    icon: "questions" as const,
+    title: "Ответы на сложные вопросы о товаре",
+    text: "Система сверяет вопрос с характеристиками, описанием, инструкциями и базой знаний, чтобы отвечать по существу, а не общими формулировками.",
   },
   {
-    number: "03",
-    title: "Остановить риск до внешней отправки",
-    text: "SafetyGate проверяет недостаток контекста, низкую уверенность и рискованные темы. Результат всегда один из трёх: разрешить, отправить человеку или заблокировать.",
-    points: ["Разрешить", "Передать на проверку", "Заблокировать"],
+    icon: "chats" as const,
+    title: "Чаты с покупателями",
+    text: "Respio сохраняет контекст диалога, помогает с выбором товара, совместимостью и типовыми вопросами, затем применяет выбранный режим: автопубликация или согласование.",
   },
   {
-    number: "04",
-    title: "Отправить надёжно и сохранить историю",
-    text: "После правил и квот ответ получает ключ идемпотентности, попадает в очередь, отправляется worker-процессом и фиксирует итог, попытки и ошибки.",
-    points: ["Защита от дублей", "Повтор при временных ошибках", "Журнал значимых действий"],
+    icon: "settings" as const,
+    title: "Правила и ограничения бренда",
+    text: "Задайте тон, длину ответа, стоп-темы, запрещённые обещания и отдельные сценарии автопубликации для разных категорий товаров.",
   },
-];
+  {
+    icon: "context" as const,
+    title: "Контекст конкретного товара",
+    text: "Ответ может учитывать карточку товара, FAQ, инструкции, внутреннюю базу знаний и историю обращения. При нехватке данных Respio не должен додумывать факты.",
+  },
+  {
+    icon: "flow" as const,
+    title: "Единый поток и эскалация",
+    text: "Отзывы, вопросы и чаты попадают в общий список. Для каждого типа обращения задаётся действие: публиковать автоматически, сохранять ответ для команды или отправлять на согласование.",
+  },
+  {
+    icon: "history" as const,
+    title: "Журнал решений",
+    text: "Команда видит исходное обращение, использованные данные, подготовленный ответ, причину автопубликации и историю изменений.",
+  },
+  {
+    icon: "recommendations" as const,
+    title: "Рекомендации и улучшение качества",
+    text: "Respio помогает находить повторяющиеся вопросы, пробелы в карточках товара и сценарии, которые стоит добавить в базу знаний или правила.",
+  },
+] as const;
 
-const consoleRows = [
-  ["Отзыв · 5 звёзд", "Можно отправить", "Правило: автоответ", "Отправлено"],
-  ["Вопрос о гарантии", "Нужна проверка", "Риск: обещание", "На проверке"],
-  ["Негатив · 1 звезда", "Контекст достаточен", "Правило: менеджер", "В очереди"],
-];
+const safetySteps = [
+  "Проверка наличия данных до генерации ответа",
+  "Оценка тональности, риска и чувствительных тем",
+  "Сверка с правилами бренда и ограничениями категории",
+  "Автопубликация только при выполнении заданных условий",
+  "Настраиваемое согласование по выбранным правилам",
+] as const;
 
 export default function FeaturesPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-featured">
+      <section className="public-subhero">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="eyebrow">Возможности Respio</p>
-            <h1>Автоматизация, которая не заканчивается на генерации текста</h1>
+            <p className="public-eyebrow">Возможности Respio</p>
+            <h1>Автоматизация ответов без потери контроля над брендом</h1>
             <p className="public-lead">
-              Respio проводит обращение через контекст, AI, SafetyGate, правила и надёжную очередь отправки. Менеджер подключается только там, где действительно нужен человек.
+              Respio объединяет отзывы, вопросы и чаты, использует данные товара и автоматически публикует ответы по правилам продавца.
             </p>
             <div className="hero-actions">
-              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                Подключить маркетплейс
-              </Link>
-              <Link className="button button-secondary" href="/demo">
-                Посмотреть workflow
-              </Link>
+              <PublicTrialCta className="button button-primary public-cta-on-dark" source="features-hero">
+                Начать бесплатный тест
+              </PublicTrialCta>
+              <Link className="button button-secondary" href="/pricing">Посмотреть пакеты</Link>
             </div>
+            <p className="public-subhero-note">{trialOffer.answerLimit} ответов · до 2 маркетплейсов · бесплатно</p>
           </div>
 
-          <div className="decision-preview" role="group" aria-label="Пример решения SafetyGate">
-            <div className="decision-preview-head">
-              <span className="decision-preview-label">Новое обращение</span>
-              <span className="decision-preview-time">сейчас</span>
-            </div>
-            <div className="decision-preview-message">
-              <strong>«Можно ли вернуть товар после использования?»</strong>
-              <p>Вопрос содержит потенциально рискованное обещание о возврате.</p>
-            </div>
-            <div className="decision-preview-path" role="group" aria-label="Этапы обработки">
-              <span>Контекст найден</span>
-              <span>AI-ответ готов</span>
-              <strong>SafetyGate → на проверку</strong>
-            </div>
-          </div>
+          <aside className="public-proof-panel-v73" aria-label="Что проверяет Respio перед публикацией">
+            <MarketingGlyph variant="settings" />
+            <h2>Что проверяет Respio</h2>
+            <ul>
+              {safetySteps.slice(0, 4).map((step) => <li key={step}>{step}</li>)}
+            </ul>
+          </aside>
         </div>
       </section>
 
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Один операционный контур</p>
-            <h2>Четыре слоя между входящим обращением и опубликованным ответом</h2>
-            <p>Каждый слой отвечает за свою задачу. Marketplace-specific логика не смешивается с AI, правилами и отправкой.</p>
+            <p className="public-eyebrow">Основные сценарии</p>
+            <h2>Восемь возможностей для ежедневной работы продавца</h2>
+            <p>
+              Функции разделены по задачам: Respio автоматически отвечает покупателям, а продавец управляет правилами публикации и согласования.
+            </p>
           </div>
 
-          <div className="capability-stack">
-            {capabilityGroups.map((group) => (
-              <article className="capability-row" key={group.number}>
-                <span className="capability-index">{group.number}</span>
-                <div className="capability-copy">
-                  <h3>{group.title}</h3>
-                  <p>{group.text}</p>
-                </div>
-                <ul className="capability-points">
-                  {group.points.map((point) => <li key={point}>{point}</li>)}
-                </ul>
+          <div className="feature-capability-grid feature-capability-grid-v73">
+            {capabilities.map((capability) => (
+              <article className="feature-capability-card" key={capability.title}>
+                <MarketingGlyph variant={capability.icon} />
+                <h3>{capability.title}</h3>
+                <p>{capability.text}</p>
               </article>
             ))}
           </div>
@@ -109,66 +118,37 @@ export default function FeaturesPage() {
       </section>
 
       <section className="public-section public-section-muted">
-        <div className="public-container public-two-column public-two-column-feature">
-          <div>
-            <p className="eyebrow">Рабочее место менеджера</p>
-            <h2>Видно не только сообщение, но и почему система выбрала именно это действие</h2>
-            <p className="public-copy-muted">
-              Для каждого обращения важны контекст, решение SafetyGate, сработавшее правило, статус отправки и история попыток. Это превращает автоматизацию из «чёрного ящика» в управляемый процесс.
-            </p>
-          </div>
-
-          <div className="product-console" role="group" aria-label="Пример операционного списка Respio">
-            <div className="product-console-head">
-              <div>
-                <span className="operations-live-dot" aria-hidden="true" />
-                <strong>Входящие</strong>
-              </div>
-              <span>3 требуют внимания</span>
-            </div>
-            <div className="product-console-columns" aria-hidden="true">
-              <span>Обращение</span><span>Решение</span><span>Действие</span><span>Статус</span>
-            </div>
-            <div className="product-console-rows">
-              {consoleRows.map(([message, decision, action, status]) => (
-                <div className="product-console-row" key={message}>
-                  <strong>{message}</strong>
-                  <span>{decision}</span>
-                  <span>{action}</span>
-                  <span>{status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section">
         <div className="public-container public-two-column public-two-column-balanced">
           <div>
-            <p className="eyebrow">Auto-first, а не ручное подтверждение по умолчанию</p>
-            <h2>Безопасная рутина проходит автоматически. Исключения остаются человеку.</h2>
+            <p className="public-eyebrow">Безопасность автоматизации</p>
+            <h2>Автопубликация работает по правилам продавца, а не как слепой шаблон</h2>
+            <p className="public-copy-muted">
+              Respio готовит ответ с учётом данных товара и правил бренда. Режим согласования для отдельных сценариев включается в личном кабинете.
+            </p>
           </div>
-          <div className="public-check-list public-check-list-large">
-            <p>Ответ можно отправить автоматически только после SafetyGate, правил и проверки квот.</p>
-            <p>Временные сетевые ошибки не теряют сообщение: задача может перейти в повторную попытку.</p>
-            <p>Повторная постановка одной и той же операции подавляется ключом идемпотентности.</p>
-            <p>Значимые действия пользователя, AI и интеграционных процессов сохраняются в журнале.</p>
+          <div className="public-benefit-panel" role="list">
+            {safetySteps.map((step, index) => (
+              <div className="public-benefit-item" role="listitem" key={step}>
+                <span className="public-step-number-v73">{String(index + 1).padStart(2, "0")}</span>
+                <p>{step}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
+      <div className="public-section public-cta-section">
+        <div className="public-container home-final-cta-card public-page-final-cta">
           <div>
-            <p className="eyebrow">Следующий шаг</p>
-            <h2>Посмотрите полный путь ответа — от входящего отзыва до решения и отправки</h2>
+            <p className="public-eyebrow">Тест на реальных обращениях</p>
+            <h2>Проверьте функции Respio на реальных обращениях</h2>
+            <p>Семь дней, {trialOffer.answerLimit} ответов и все ключевые сценарии Respio бесплатно.</p>
           </div>
-          <Link className="button button-primary button-on-dark" href="/demo">
-            Открыть демо
-          </Link>
+          <PublicTrialCta className="button button-primary public-cta-on-dark" source="features-footer">
+            Начать бесплатный тест
+          </PublicTrialCta>
         </div>
-      </section>
+      </div>
     </PublicShell>
   );
 }
