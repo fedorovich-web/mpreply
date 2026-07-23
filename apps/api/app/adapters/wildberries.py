@@ -33,7 +33,7 @@ class WildberriesAdapter(MarketplaceAdapter):
             credential,
             params={"isAnswered": "false", "take": self.page_size, "skip": offset},
         )
-        return self._with_next_cursor(result, item_count=len(self.extract_reviews(result.data)), offset=offset)
+        return self.with_next_cursor(result, item_count=len(self.extract_reviews(result.data)), offset=offset)
 
     async def fetch_questions(self, credential: str, cursor: str | None = None) -> AdapterResult:
         offset = self._parse_offset(cursor)
@@ -44,7 +44,7 @@ class WildberriesAdapter(MarketplaceAdapter):
             credential,
             params={"isAnswered": "false", "take": self.page_size, "skip": offset},
         )
-        return self._with_next_cursor(result, item_count=len(self.extract_questions(result.data)), offset=offset)
+        return self.with_next_cursor(result, item_count=len(self.extract_questions(result.data)), offset=offset)
 
     async def get_review(self, credential: str, external_id: str) -> AdapterResult:
         return await self._get("/api/v1/feedback", credential, params={"id": external_id})
@@ -156,7 +156,7 @@ class WildberriesAdapter(MarketplaceAdapter):
         return self.map_error(response.status_code, self._safe_json(response))
 
     @classmethod
-    def _with_next_cursor(cls, result: AdapterResult, *, item_count: int, offset: int) -> AdapterResult:
+    def with_next_cursor(cls, result: AdapterResult, *, item_count: int, offset: int) -> AdapterResult:
         if not result.ok:
             return result
         next_cursor = str(offset + item_count) if item_count >= cls.page_size else None

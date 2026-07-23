@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import cast
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -490,4 +489,4 @@ class PaymentService:
         order = result.scalar_one_or_none()
         if order is None:
             raise not_found("Payment order not found")
-        return cast(PaymentOrder, order)
+        return order

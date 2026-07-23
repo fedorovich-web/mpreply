@@ -67,6 +67,18 @@ def _is_generated_artifact_path(path: Path) -> bool:
     )
 
 
+TEXT_SOURCE_SUFFIXES = frozenset(
+    {
+        ".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".py",
+        ".ps1", ".sh", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml",
+    }
+)
+
+
+def _is_text_source(path: Path) -> bool:
+    return path.suffix.lower() in TEXT_SOURCE_SUFFIXES or ".env" in path.name.lower()
+
+
 def _compact_archive_excludes(relative_path: str) -> bool:
     """Return true when a known-forensic compact handoff archive excludes a file.
 
@@ -235,9 +247,22 @@ def check_versions_and_frontend_security_baseline() -> None:
     if f'version: "{EXPECTED_VERSION}"' not in web_health:
         fail(f"Web health route version != {EXPECTED_VERSION}")
 
+    overrides = package.get("overrides", {})
+    if overrides.get("chrome-launcher") != "1.2.1":
+        fail("apps/web/package.json overrides.chrome-launcher must equal 1.2.1")
+    if "@lhci/cli" in overrides:
+        fail("apps/web/package.json must not use the npm-11-incompatible nested @lhci/cli override")
+
+    lock_packages = lock.get("packages", {})
+    root_chrome_launcher = lock_packages.get("node_modules/chrome-launcher", {})
+    if root_chrome_launcher.get("version") != "1.2.1":
+        fail("apps/web/package-lock.json root chrome-launcher must equal 1.2.1")
+    if "node_modules/lighthouse/node_modules/chrome-launcher" in lock_packages:
+        fail("apps/web/package-lock.json must not retain a nested Lighthouse chrome-launcher copy")
+
     expected_dependencies = {
-        ("dependencies", "next"): "16.2.10",
-        ("devDependencies", "eslint-config-next"): "16.2.10",
+        ("dependencies", "next"): "16.2.11",
+        ("devDependencies", "eslint-config-next"): "16.2.11",
         ("devDependencies", "vitest"): "4.1.10",
         ("devDependencies", "@testing-library/react"): "16.3.2",
         ("devDependencies", "@testing-library/jest-dom"): "6.9.1",
@@ -246,11 +271,15 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "@playwright/test"): "1.61.1",
         ("devDependencies", "@axe-core/playwright"): "4.12.1",
         ("devDependencies", "@lhci/cli"): "0.15.1",
+        ("devDependencies", "proxy-agent"): "8.0.2",
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
-        ("overrides", "postcss"): "8.5.10",
+        ("overrides", "postcss"): "8.5.12",
+        ("overrides", "sharp"): "0.35.3",
+        ("overrides", "chrome-launcher"): "1.2.1",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
+        ("overrides", "chrome-launcher"): "1.2.1",
     }
     for (section, name), expected in expected_dependencies.items():
         actual = package.get(section, {}).get(name)
@@ -258,6 +287,7 @@ def check_versions_and_frontend_security_baseline() -> None:
             fail(f"apps/web/package.json {section}.{name} != {expected}; got {actual!r}")
 
     expected_scripts = {
+        "typecheck": "next typegen && tsc --noEmit",
         "test:unit": "vitest run tests/unit --maxWorkers=1",
         "test:design-tokens": "vitest run tests/design",
         "test:frontend": "npm run test:unit && npm run test:design-tokens",
@@ -284,6 +314,8 @@ def check_release_gate_contract() -> None:
         "--pythonpath $VenvPython app",
         "Backend environment smoke test",
         "Backend dependency consistency",
+        "Frontend dependency tree",
+        "& $Npm ls --all",
         "Frontend security audit",
         "& $Npm audit --audit-level=high",
         "Frontend unit tests",
@@ -300,20 +332,35 @@ def check_release_gate_contract() -> None:
         "& $Npm run test:e2e",
         "Frontend accessibility",
         "& $Npm run test:a11y",
+        "Repository tooling tests",
+        "scripts\\tests",
+        "write-release-result.mjs",
+        "project-quality-result.json",
         "Release gate stopped",
     ]
     for token in required_local_tokens:
         if token not in release_gate:
             fail(f"release-gate.ps1 missing required contract: {token}")
 
-    for token in ["& $Docker compose", "--wait", "/health/ready", "/api/health"]:
+    for token in [
+        "& $Docker compose",
+        "--wait",
+        "/health/ready",
+        "/api/health",
+        "write-release-result.mjs",
+        "container-gate-result.json",
+    ]:
         if token not in container_gate:
             fail(f"container-gate.ps1 missing required contract: {token}")
 
     if '--pythonpath "$(command -v python)" app' not in workflow:
         fail("GitHub quality gate Pyright is not bound to the installed Python interpreter")
+    if "npm ls --all" not in workflow:
+        fail("GitHub quality gate does not validate the complete frontend dependency tree")
     if "npm audit --audit-level=high" not in workflow:
         fail("GitHub quality gate does not enforce frontend high/critical audit threshold")
+    if 'python -m unittest discover -s scripts/tests -p "test_*.py"' not in workflow:
+        fail("GitHub quality gate does not run repository tooling regression tests")
     for token in [
         "npm run test:unit",
         "npm run test:design-tokens",
@@ -331,6 +378,32 @@ def check_release_gate_contract() -> None:
         fail("GitHub quality gate does not build production Docker images")
     if '"pyright==' in pyproject:
         fail("Python pyright wrapper must not be installed; project uses official Node-based Pyright via npx")
+
+
+def check_handoff_export_contract() -> None:
+    exporter = (ROOT / "create-mpreply-next-chat-context-v4.mjs").read_text(encoding="utf-8")
+    gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    required_tokens = [
+        '["ls-files", "-z"]',
+        '"status", "--porcelain=v1", "--untracked-files=all"',
+        '"rev-list", "--left-right", "--count"',
+        '"ls-remote", "--heads"',
+        'function runNpm(args, cwd)',
+        'process.env.ComSpec || process.env.COMSPEC || "cmd.exe"',
+        'runNpm(["ls", "--package-lock-only", "--all"]',
+        'project-quality-result.json',
+        'container-gate-result.json',
+        '"result.json"',
+        'scanSecrets(files)',
+        'verifyZip(root, zipPath, archiveBaseName)',
+    ]
+    for token in required_tokens:
+        if token not in exporter:
+            fail(f"Final handoff exporter missing required contract: {token}")
+    if "function walk(" in exporter or "readdirSync(root" in exporter:
+        fail("Final handoff exporter must not build release payload by walking the working tree")
+    if ".handoff/" not in gitignore:
+        fail(".gitignore must exclude generated .handoff release evidence")
 
 
 def check_answer_ledger_contract() -> None:
@@ -480,6 +553,10 @@ def check_deployment_contract() -> None:
         ROOT / "infra" / "docker" / "docker-compose.local.yml",
         ROOT / "infra" / "docker" / "docker-compose.production.yml",
         ROOT / "scripts" / "container-gate.ps1",
+        ROOT / "scripts" / "write-release-result.mjs",
+        ROOT / "scripts" / "tests" / "test_handoff_exporter.py",
+        ROOT / "create-mpreply-next-chat-context-v4.mjs",
+        ROOT / "infra" / "docker" / ".env.ci",
         ROOT / "docs" / "operations" / "backup-restore.md",
         ROOT / "docs" / "operations" / "incident-runbook.md",
         ROOT / "docs" / "operations" / "rollback.md",
@@ -585,6 +662,23 @@ def check_deployment_contract() -> None:
     web_dockerfile = (WEB / "Dockerfile").read_text(encoding="utf-8")
     next_config = (WEB / "next.config.ts").read_text(encoding="utf-8")
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
+    ci_env_path = ROOT / "infra" / "docker" / ".env.ci"
+    require_file(ci_env_path)
+    ci_env = ci_env_path.read_text(encoding="utf-8") if ci_env_path.is_file() else ""
+    required_ci_env_tokens = [
+        "API_BASE_URL=https://api.mpreply.example",
+        "WEB_APP_URL=https://app.mpreply.example",
+        "PUBLIC_SITE_URL=https://mpreply.example",
+        "DATABASE_URL=postgresql+asyncpg://mpreply:",
+        "PAYMENT_RETURN_URL=https://app.mpreply.example/app/billing?payment=return",
+        'CORS_ALLOWED_ORIGINS=["https://app.mpreply.example","https://mpreply.example"]',
+        'ALLOWED_HOSTS=["api.mpreply.example"]',
+        "FORWARDED_ALLOW_IPS=127.0.0.1",
+        "DEPLOYMENT_VERSION=ci",
+    ]
+    for token in required_ci_env_tokens:
+        if token not in ci_env:
+            fail(f"infra/docker/.env.ci missing required CI contract: {token}")
 
     docker_contracts = [
         (api_dockerfile, "USER mpreply", "API image must run as non-root user"),
@@ -765,10 +859,6 @@ def check_brand_identity_contract() -> None:
         if source.is_file() and "MPReply" in source.read_text(encoding="utf-8"):
             fail(f"Visible frontend brand must be written as MP Reply: {source.relative_to(ROOT)}")
 
-    text_suffixes = {
-        ".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".py",
-        ".ps1", ".sh", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml",
-    }
     roots = [
         ROOT / ".env.example",
         ROOT / ".github",
@@ -786,7 +876,7 @@ def check_brand_identity_contract() -> None:
     for source_root in roots:
         paths = [source_root] if source_root.is_file() else source_root.rglob("*")
         for source in paths:
-            if not source.is_file() or source.suffix.lower() not in text_suffixes:
+            if not source.is_file() or not _is_text_source(source):
                 continue
             if _is_generated_artifact_path(source):
                 continue
@@ -804,12 +894,11 @@ def check_generated_artifacts_absent() -> None:
     paths = _git_tracked_paths()
 
     if paths is None:
-        # Without Git metadata this script cannot distinguish tracked release
-        # content from local verification artifacts generated by npm ci, next
-        # build or Python test runs. Archive composition is validated by the
-        # handoff/archive manifest audit; this integrity gate only enforces the
-        # generated-artifact rule when Git can report tracked files.
-        return
+        # A handoff archive has no .git directory, so every file physically
+        # present in the extracted snapshot is release content and must be
+        # checked directly. In a working Git repository we inspect only tracked
+        # paths so normal local caches do not create false positives.
+        paths = [path for path in ROOT.rglob("*") if path.is_file()]
 
     reported: set[Path] = set()
     for path in paths:
@@ -834,6 +923,7 @@ def main() -> int:
     check_lockfile_hygiene()
     check_versions_and_frontend_security_baseline()
     check_release_gate_contract()
+    check_handoff_export_contract()
     check_answer_ledger_contract()
     check_seller_settings_audit_contract()
     check_marketplace_scheduler_contract()

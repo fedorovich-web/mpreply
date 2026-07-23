@@ -259,19 +259,19 @@ def upgrade() -> None:
                 idempotency_key, reason, metadata_json, created_at
             )
             SELECT
-                md5('mpreply:trial-ledger:' || grant.organization_id::text)::uuid,
-                grant.organization_id,
-                grant.id,
+                md5('mpreply:trial-ledger:' || credit_grant.organization_id::text)::uuid,
+                credit_grant.organization_id,
+                credit_grant.id,
                 'grant',
-                grant.original_quantity,
-                grant.original_quantity,
-                'ledger:trial:organization:' || grant.organization_id::text,
+                credit_grant.original_quantity,
+                credit_grant.original_quantity,
+                'ledger:trial:organization:' || credit_grant.organization_id::text,
                 'trial_bootstrap',
                 '{"bootstrap": "migration_20260722_0010"}'::jsonb,
-                grant.created_at
-            FROM answer_credit_grants AS grant
-            WHERE grant.source_type = 'trial'
-              AND grant.idempotency_key = 'trial:organization:' || grant.organization_id::text
+                credit_grant.created_at
+            FROM answer_credit_grants AS credit_grant
+            WHERE credit_grant.source_type = 'trial'
+              AND credit_grant.idempotency_key = 'trial:organization:' || credit_grant.organization_id::text
             ON CONFLICT (organization_id, idempotency_key) DO NOTHING
             """
         )

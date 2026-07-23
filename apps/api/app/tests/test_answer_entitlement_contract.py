@@ -1,12 +1,12 @@
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import cast
+from typing import TypeGuard, cast
 from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import app.models  # noqa: F401
+import app.models as models
 from app.automation.state_machine import ensure_reply_transition
 from app.models.answer_reservation import AnswerReservation
 from app.models.base import Base
@@ -16,6 +16,10 @@ from app.services.answer_entitlement_service import AnswerEntitlementService
 
 API_ROOT = Path(__file__).resolve().parents[2]
 REPOSITORY_ROOT = API_ROOT.parents[1]
+
+
+def _is_object_list(value: object) -> TypeGuard[list[object]]:
+    return isinstance(value, list)
 
 
 class _StubScalars:
@@ -37,7 +41,7 @@ class _StubResult:
         return self.value
 
     def scalars(self) -> _StubScalars:
-        if not isinstance(self.value, list):
+        if not _is_object_list(self.value):
             raise AssertionError("Stub result does not contain a scalar collection")
         return _StubScalars(self.value)
 
@@ -88,6 +92,7 @@ def test_grant_contract_rejects_trial_source_package_mismatches() -> None:
 
 
 def test_answer_ledger_models_have_database_idempotency_guards() -> None:
+    assert models.__name__ == "app.models"
     grants = Base.metadata.tables["answer_credit_grants"]
     reservations = Base.metadata.tables["answer_reservations"]
     ledger = Base.metadata.tables["answer_ledger_entries"]

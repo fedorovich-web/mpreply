@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from typing import cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
@@ -118,10 +119,11 @@ async def process_yookassa_webhook(
         raise bad_request("Webhook payload is not valid JSON") from exc
     if not isinstance(raw_payload, dict):
         raise bad_request("Webhook payload must be an object")
+    payload = cast(dict[str, object], raw_payload)
     peer_ip = request.client.host if request.client is not None else "127.0.0.1"
     try:
         result = await PaymentService(session).process_webhook(
-            payload=raw_payload,
+            payload=payload,
             peer_ip=peer_ip,
             forwarded_for=request.headers.get("x-forwarded-for"),
         )

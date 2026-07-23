@@ -8,6 +8,11 @@ $VenvPython = Join-Path $Root ".venv\Scripts\python.exe"
 $VenvRuff = Join-Path $Root ".venv\Scripts\ruff.exe"
 $VenvPytest = Join-Path $Root ".venv\Scripts\pytest.exe"
 $VenvAlembic = Join-Path $Root ".venv\Scripts\alembic.exe"
+$HandoffDir = Join-Path $Root ".handoff"
+$ResultPath = Join-Path $HandoffDir "project-quality-result.json"
+
+New-Item -ItemType Directory -Force -Path $HandoffDir | Out-Null
+Remove-Item -LiteralPath $ResultPath -Force -ErrorAction SilentlyContinue
 
 function Assert-File([string]$Path, [string]$Label) {
     if (-not (Test-Path $Path)) {
@@ -44,8 +49,18 @@ if ($null -eq $NpmCommand) {
 }
 $Npm = $NpmCommand.Source
 
+$NodeCommand = Get-Command node.exe -ErrorAction SilentlyContinue
+if ($null -eq $NodeCommand) {
+    $NodeCommand = Get-Command node -ErrorAction Stop
+}
+$Node = $NodeCommand.Source
+
 Run-Step "Repository integrity" {
     & $VenvPython (Join-Path $Root "scripts\check_integrity.py")
+}
+
+Run-Step "Repository tooling tests" {
+    & $VenvPython -m unittest discover -s (Join-Path $Root "scripts\tests") -p "test_*.py"
 }
 
 Push-Location $Api
@@ -80,6 +95,9 @@ Push-Location $Web
 try {
     Run-Step "Frontend clean install" {
         & $Npm ci
+    }
+    Run-Step "Frontend dependency tree" {
+        & $Npm ls --all
     }
     Run-Step "Frontend security audit" {
         & $Npm audit --audit-level=high
@@ -119,5 +137,14 @@ finally {
     Pop-Location
 }
 
+Run-Step "Release evidence" {
+    & $Node (Join-Path $Root "scripts\write-release-result.mjs") `
+        --kind=project-quality `
+        --status=PASS `
+        --source=scripts/release-gate.ps1 `
+        --out=.handoff/project-quality-result.json
+}
+
 Write-Host "`nAll release-gate checks passed." -ForegroundColor Green
+Write-Host "Evidence: $ResultPath" -ForegroundColor Green
 Write-Host "Run .\scripts\container-gate.ps1 separately when Docker Desktop is available." -ForegroundColor DarkGray
