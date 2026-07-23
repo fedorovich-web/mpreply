@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-shell">
       <aside className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="MPReply dashboard">
+          <Link href="/app/dashboard" className="app-logo" aria-label="MP Reply dashboard">
             <BrandLogo
               className="app-brand-logo"
               imageClassName="app-brand-logo-image"

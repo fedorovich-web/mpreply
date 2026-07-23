@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BrandLogo } from "./BrandLogo";
 import styles from "./HeroProductFlowCanvas.module.css";
 
 type Point = { x: number; y: number };
@@ -332,8 +331,6 @@ export function HeroProductFlowCanvas() {
       scene.style.setProperty("--e-y", `${(fy * 6.5).toFixed(2)}px`);
       scene.style.setProperty("--a-x", `${(fx * 5.8).toFixed(2)}px`);
       scene.style.setProperty("--a-y", `${(fy * 4.4).toFixed(2)}px`);
-      scene.style.setProperty("--l-x", `${(fx * 10).toFixed(2)}px`);
-      scene.style.setProperty("--l-y", `${(fy * 7.2).toFixed(2)}px`);
 
       drawScene(canvas, scene, refs, now / 1000, pointer.x, pointer.y, pointer.activity, reducedMotion);
       frame = window.requestAnimationFrame(renderFrame);
@@ -374,7 +371,7 @@ export function HeroProductFlowCanvas() {
       data-mpreply-hero="commerce-answer-pipeline"
       data-testid="hero-product-flow"
       role="img"
-      aria-label="Сцена MPReply AI: обращение покупателя, контекст товара, проверка данных и готовый ответ"
+      aria-label="Сцена MP Reply AI: обращение покупателя, контекст товара, проверка данных и готовый ответ"
     >
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
 
@@ -423,13 +420,6 @@ export function HeroProductFlowCanvas() {
 
         <div className={styles.engineWrap}>
           <div ref={(node) => { engineRef.current = node; }} className={`${styles.card} ${styles.engineCard}`}>
-            <BrandLogo
-              variant="canvas"
-              className={styles.logo}
-              imageClassName={styles.logoImage}
-              alt="MPReply"
-              priority
-            />
             <p className={styles.engineTitle}>Сверяет товар, отзывы и правила</p>
 
             <div className={styles.steps}>

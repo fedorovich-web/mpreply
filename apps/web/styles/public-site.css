@@ -12098,3 +12098,118 @@
 		overflow-x: clip;
 	}
 }
+
+/* MP Reply 0.1.103 · user-approved icon scale, workflow imagery and integrated footer. */
+.public-nav-v90 .public-nav-link-v90,
+.public-nav-link-label-v90 {
+	font-size: var(--public-v103-nav-font-size) !important;
+}
+
+.marketplace-public-card .marketing-glyph,
+.feature-capability-card .marketing-glyph,
+.resource-library-card .marketing-glyph,
+.home-outcome-card .marketing-glyph,
+.home-capability-card .marketing-glyph {
+	width: var(--public-v103-card-icon-size) !important;
+	height: var(--public-v103-card-icon-size) !important;
+	min-width: var(--public-v103-card-icon-size) !important;
+	min-height: var(--public-v103-card-icon-size) !important;
+	max-width: var(--public-v103-card-icon-size) !important;
+	max-height: var(--public-v103-card-icon-size) !important;
+}
+
+.home-workflow-step-v73 > .marketing-glyph {
+	width: var(--public-v103-workflow-icon-size) !important;
+	height: var(--public-v103-workflow-icon-size) !important;
+	min-width: var(--public-v103-workflow-icon-size) !important;
+	min-height: var(--public-v103-workflow-icon-size) !important;
+	max-width: var(--public-v103-workflow-icon-size) !important;
+	max-height: var(--public-v103-workflow-icon-size) !important;
+	margin: var(--public-v86-zero) !important;
+}
+
+.public-footer-grid {
+	grid-template-columns: minmax(18rem, 1.35fr) repeat(3, minmax(0, 0.8fr)) !important;
+	gap: var(--public-v103-footer-grid-gap) !important;
+	padding-top: var(--public-v86-zero) !important;
+	border-top: var(--public-v95-zero) !important;
+}
+
+.public-footer-brand {
+	max-width: var(--public-v103-footer-brand-copy-width) !important;
+	align-content: start;
+	gap: var(--space-5) !important;
+}
+
+.public-footer-logo {
+	padding: var(--public-v86-zero) !important;
+	border-radius: var(--public-v86-zero) !important;
+	background: var(--public-v86-transparent) !important;
+	box-shadow: var(--public-v86-none) !important;
+}
+
+.public-footer-brand-logo {
+	width: var(--public-v103-footer-logo-width) !important;
+}
+
+.public-footer-brand p {
+	max-width: var(--public-v103-footer-brand-copy-width) !important;
+}
+
+@media (max-width: 1040px) {
+	.public-footer-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+}
+
+@media (max-width: 720px) {
+	.marketplace-public-card .marketing-glyph,
+	.feature-capability-card .marketing-glyph,
+	.resource-library-card .marketing-glyph,
+	.home-outcome-card .marketing-glyph,
+	.home-capability-card .marketing-glyph {
+		width: var(--public-v103-card-icon-size-mobile) !important;
+		height: var(--public-v103-card-icon-size-mobile) !important;
+		min-width: var(--public-v103-card-icon-size-mobile) !important;
+		min-height: var(--public-v103-card-icon-size-mobile) !important;
+		max-width: var(--public-v103-card-icon-size-mobile) !important;
+		max-height: var(--public-v103-card-icon-size-mobile) !important;
+	}
+
+	.home-workflow-step-v73 > .marketing-glyph {
+		width: var(--public-v103-workflow-icon-size-mobile) !important;
+		height: var(--public-v103-workflow-icon-size-mobile) !important;
+		min-width: var(--public-v103-workflow-icon-size-mobile) !important;
+		min-height: var(--public-v103-workflow-icon-size-mobile) !important;
+		max-width: var(--public-v103-workflow-icon-size-mobile) !important;
+		max-height: var(--public-v103-workflow-icon-size-mobile) !important;
+	}
+
+	.public-footer-grid {
+		grid-template-columns: minmax(0, 1fr) !important;
+	}
+}
+
+/* MP Reply 0.1.103 · full-viewport native popover backdrop. */
+.public-trial-modal[popover] {
+	position: fixed !important;
+	inset: 0 !important;
+	box-sizing: border-box !important;
+	width: 100vw !important;
+	height: 100vh !important;
+	width: 100dvw !important;
+	height: 100dvh !important;
+	max-width: none !important;
+	max-height: none !important;
+	margin: 0 !important;
+}
+
+.public-trial-modal[popover]::backdrop {
+	background: var(--public-v73-modal-backdrop) !important;
+	backdrop-filter: blur(8px);
+}
+
+.public-trial-modal-backdrop {
+	background: transparent !important;
+	backdrop-filter: none !important;
+}

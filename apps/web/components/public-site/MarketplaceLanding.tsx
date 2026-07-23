@@ -10,7 +10,7 @@ const platformScenarios = {
     {
       icon: "reviews" as const,
       title: "Отзывы с учётом оценки и товара",
-      text: "MPReply готовит персональный ответ, учитывает рейтинг и публикует его автоматически по правилам продавца.",
+      text: "Система готовит персональный ответ, учитывает рейтинг и публикует его автоматически по правилам продавца.",
     },
     {
       icon: "questions" as const,
@@ -27,7 +27,7 @@ const platformScenarios = {
     {
       icon: "reviews" as const,
       title: "Ответы на отзывы покупателей",
-      text: "MPReply учитывает оценку, текст обращения, товар и стиль бренда, затем публикует ответ автоматически по выбранным правилам.",
+      text: "Система учитывает оценку, текст обращения, товар и стиль бренда, затем публикует ответ автоматически по выбранным правилам.",
     },
     {
       icon: "questions" as const,
@@ -44,12 +44,12 @@ const platformScenarios = {
     {
       icon: "reviews" as const,
       title: "Отзывы и обратная связь",
-      text: "Отзывы и претензии обрабатываются по правилам продавца: MPReply готовит ответ и публикует его автоматически либо отправляет на согласование по настройке.",
+      text: "Отзывы и претензии обрабатываются по правилам продавца: ответ публикуется автоматически либо отправляется на согласование по настройке.",
     },
     {
       icon: "context" as const,
       title: "Ответы по данным карточки",
-      text: "MPReply использует доступные характеристики, описание и инструкции, чтобы отвечать конкретно по товару.",
+      text: "Система использует доступные характеристики, описание и инструкции, чтобы отвечать конкретно по товару.",
     },
     {
       icon: "settings" as const,
@@ -61,7 +61,7 @@ const platformScenarios = {
     {
       icon: "chats" as const,
       title: "Чаты с сохранением контекста",
-      text: "MPReply учитывает предыдущие сообщения и помогает отвечать на вопросы о товаре, условиях и следующем шаге сделки.",
+      text: "Система учитывает предыдущие сообщения и помогает отвечать на вопросы о товаре, условиях и следующем шаге сделки.",
     },
     {
       icon: "reviews" as const,
@@ -95,7 +95,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       <section className="public-subhero marketplace-detail-hero">
         <div className="public-container public-subhero-grid marketplace-detail-hero-grid">
           <div className="public-subhero-copy">
-            <p className="public-eyebrow">MPReply для {marketplace.name}</p>
+            <p className="public-eyebrow">Автоматизация для {marketplace.name}</p>
             <h1>ИИ-ответы покупателям {marketplace.name} с проверкой данных и риска</h1>
             <p className="public-lead">{marketplace.summary}</p>
             <div className="hero-actions">
@@ -129,7 +129,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <p className="public-eyebrow">Сценарии {marketplace.name}</p>
             <h2>Автоматизируйте разные обращения, а не только короткие отзывы</h2>
             <p>
-              MPReply использует отдельную логику для каждого типа обращения: готовит ответ, применяет правила продавца и публикует автоматически, если включён такой режим.
+              Для каждого типа обращения используется отдельная логика: система готовит ответ, применяет правила продавца и публикует его автоматически, если включён такой режим.
             </p>
           </div>
 
@@ -154,7 +154,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               Настройки бренда, база знаний, правила автопубликации и сценарии согласования работают в общей системе, без пересборки процесса для каждого магазина.
             </p>
           </div>
-          <div className="public-benefit-panel" role="list" aria-label={`Этапы работы MPReply с ${marketplace.name}`}>
+          <div className="public-benefit-panel" role="list" aria-label={`Этапы обработки обращений ${marketplace.name}`}>
             {workflowBenefits.map((benefit, index) => (
               <div className="public-benefit-item" role="listitem" key={benefit}>
                 <span className="public-step-number-v73">{String(index + 1).padStart(2, "0")}</span>
@@ -169,7 +169,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
         <div className="public-container home-final-cta-card public-page-final-cta">
           <div>
             <p className="public-eyebrow">Бесплатный тест</p>
-            <h2>Проверьте MPReply на обращениях {marketplace.name}</h2>
+            <h2>Проверьте автоответы на обращениях {marketplace.name}</h2>
             <p>Семь дней, до двух маркетплейсов и 400 ответов бесплатно.</p>
           </div>
           <PublicTrialCta className="button button-primary" source={`marketplace-${marketplace.key}-footer`}>

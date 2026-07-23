@@ -6,8 +6,8 @@ import "../styles/globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
   title: {
-    default: "MPReply — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
-    template: "%s | MPReply",
+    default: "MP Reply — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
+    template: "%s | MP Reply",
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
@@ -19,13 +19,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ru_RU",
     siteName: siteConfig.name,
-    title: "MPReply — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
+    title: "MP Reply — ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
     description: siteConfig.description,
     url: "/",
   },
   twitter: {
     card: "summary",
-    title: "MPReply — ИИ-ответы для маркетплейсов",
+    title: "MP Reply — ИИ-ответы для маркетплейсов",
     description: siteConfig.description,
   },
   robots: {
@@ -53,7 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-title" content="MPReply" />
+        <meta name="apple-mobile-web-app-title" content="MP Reply" />
         <link rel="manifest" href="/site.webmanifest" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

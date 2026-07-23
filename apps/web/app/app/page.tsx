@@ -5,7 +5,7 @@ export default function AppDashboardPage() {
     <main className="app-page">
       <section className="app-header">
         <p className="eyebrow">Workspace</p>
-        <h1>MPReply workspace</h1>
+        <h1>Рабочее пространство</h1>
         <p>Автоответы включены по умолчанию. Sprint 1 добавляет auth, organizations и RBAC.</p>
       </section>
       <section className="dashboard-cards">

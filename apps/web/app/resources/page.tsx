@@ -7,7 +7,7 @@ import { createPageMetadata } from "../../lib/seo";
 export const metadata: Metadata = createPageMetadata({
   title: "Материалы об ответах на отзывы и вопросы маркетплейсов",
   description:
-    "Практические материалы MPReply: автоматизация ответов, работа с негативом, база знаний, правила автопубликации и контроль качества ИИ.",
+    "Практические материалы об автоматизации ответов: работа с негативом, база знаний, правила автопубликации и контроль качества ИИ.",
   path: "/resources",
 });
 
@@ -56,7 +56,7 @@ export default function ResourcesPage() {
       <section className="public-subhero">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="public-eyebrow">База знаний MPReply</p>
+            <p className="public-eyebrow">База знаний</p>
             <h1>Практические материалы для автоматизации общения с покупателями</h1>
             <p className="public-lead">
               Не общие статьи об ИИ, а конкретные правила для отзывов, вопросов, чатов, базы знаний и автоматической публикации.

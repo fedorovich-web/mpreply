@@ -8,7 +8,7 @@ import { createPageMetadata } from "../../lib/seo";
 import { marketplaces } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "MPReply для Wildberries, Ozon, Яндекс Маркета и Авито",
+  title: "MP Reply для Wildberries, Ozon, Яндекс Маркета и Авито",
   description:
     "Единый рабочий процесс для отзывов, вопросов и чатов покупателей на Wildberries, Ozon, Яндекс Маркете и Авито.",
   path: "/marketplaces",
@@ -21,7 +21,7 @@ const platformDetails = {
   },
   ozon: {
     icon: "questions" as const,
-    text: "Отзывы, вопросы о товарах и сообщения покупателей в едином процессе MPReply.",
+    text: "Отзывы, вопросы о товарах и сообщения покупателей в едином рабочем процессе.",
   },
   "yandex-market": {
     icon: "context" as const,
@@ -42,7 +42,7 @@ export default function MarketplacesPage() {
             <p className="public-eyebrow">Маркетплейсы</p>
             <h1>Отзывы, вопросы и чаты разных площадок — в одном процессе</h1>
             <p className="public-lead">
-              MPReply помогает команде работать по единым правилам, даже когда обращения приходят из нескольких кабинетов и магазинов.
+              Сервис помогает команде работать по единым правилам, даже когда обращения приходят из нескольких кабинетов и магазинов.
             </p>
             <div className="hero-actions">
               <PublicTrialCta className="button button-primary" source="marketplaces-hero">
@@ -70,7 +70,7 @@ export default function MarketplacesPage() {
           <div className="section-heading section-heading-wide">
             <p className="public-eyebrow">Поддерживаемые площадки</p>
             <h2>Выберите маркетплейс и посмотрите сценарии работы</h2>
-            <p>Для каждой площадки сохраняется единая логика MPReply: получить обращение, проверить контекст, подготовить ответ и выбрать действие.</p>
+            <p>Для каждой площадки сохраняется единая логика: получить обращение, проверить контекст, подготовить ответ и выбрать действие.</p>
           </div>
 
           <div className="marketplace-card-grid marketplace-card-grid-v73">
@@ -121,7 +121,7 @@ export default function MarketplacesPage() {
         <div className="public-container home-final-cta-card public-page-final-cta">
           <div>
             <p className="public-eyebrow">Первое подключение</p>
-            <h2>Проверьте MPReply на двух маркетплейсах бесплатно</h2>
+            <h2>Проверьте автоответы на двух маркетплейсах бесплатно</h2>
             <p>Семь дней и 400 ответов бесплатно.</p>
           </div>
           <PublicTrialCta className="button button-primary" source="marketplaces-footer">

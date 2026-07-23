@@ -710,8 +710,8 @@ def check_brand_identity_contract() -> None:
     manifest_path = WEB / "public" / "site.webmanifest"
     if manifest_path.is_file():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest.get("name") != "MPReply" or manifest.get("short_name") != "MPReply":
-            fail("site.webmanifest must use MPReply for name and short_name")
+        if manifest.get("name") != "MP Reply" or manifest.get("short_name") != "MP Reply":
+            fail("site.webmanifest must use MP Reply for name and short_name")
 
     site_config = (WEB / "lib" / "site-config.ts").read_text(encoding="utf-8")
     layout = (WEB / "app" / "layout.tsx").read_text(encoding="utf-8")
@@ -726,14 +726,13 @@ def check_brand_identity_contract() -> None:
 
     required_tokens = {
         "canonical domain": (site_config, '"https://mpreply.ru"'),
-        "site name": (site_config, 'name: "MPReply"'),
+        "site name": (site_config, 'name: "MP Reply"'),
         "horizontal AVIF logo": (logo_component, 'avif: "/logo/logo.avif"'),
         "horizontal WebP fallback": (logo_component, 'webp: "/logo/logo.webp"'),
         "canvas AVIF logo": (logo_component, 'avif: "/logo/logo-canvas.avif"'),
         "canvas WebP fallback": (logo_component, 'webp: "/logo/logo-canvas.webp"'),
         "header logo": (header, 'className="public-brand-logo"'),
         "footer logo": (footer, 'className="public-footer-brand-logo"'),
-        "canvas logo variant": (canvas, 'variant="canvas"'),
         "favicon PNG": (layout, 'href="/favicon-96x96.png"'),
         "favicon SVG": (layout, 'href="/favicon.svg"'),
         "favicon ICO": (layout, 'href="/favicon.ico"'),
@@ -750,8 +749,21 @@ def check_brand_identity_contract() -> None:
 
     if web_package.get("name") != "mpreply-web":
         fail("apps/web/package.json name must be mpreply-web")
-    if "MPReply Engine" in canvas:
-        fail("Canvas logo must not duplicate the MPReply name with an Engine label")
+    if "<BrandLogo" in canvas or 'variant="canvas"' in canvas:
+        fail("Product-flow Canvas must not duplicate the MP Reply logo")
+    if "public-footer-topline" in footer or "<strong>Материалы</strong>" in footer:
+        fail("Footer must integrate brand copy into the main grid without a Materials column")
+
+    visible_brand_sources = [
+        *sorted((WEB / "app").rglob("*.tsx")),
+        *sorted((WEB / "components").rglob("*.tsx")),
+        WEB / "lib" / "site-config.ts",
+        WEB / "lib" / "public-pricing.ts",
+        WEB / "public" / "site.webmanifest",
+    ]
+    for source in visible_brand_sources:
+        if source.is_file() and "MPReply" in source.read_text(encoding="utf-8"):
+            fail(f"Visible frontend brand must be written as MP Reply: {source.relative_to(ROOT)}")
 
     text_suffixes = {
         ".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".py",

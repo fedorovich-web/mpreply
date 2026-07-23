@@ -20,9 +20,9 @@ export function PublicShell({ children }: PublicShellProps) {
       <main id="main-content">{children}</main>
 
       <footer className="public-footer">
-        <div className="public-container public-footer-topline">
+        <div className="public-container public-footer-grid">
           <div className="public-footer-brand">
-            <Link className="public-footer-logo" href="/" aria-label="MPReply — главная">
+            <Link className="public-footer-logo" href="/" aria-label="MP Reply — главная">
               <BrandLogo
                 className="public-footer-brand-logo"
                 imageClassName="public-footer-brand-logo-image"
@@ -33,26 +33,20 @@ export function PublicShell({ children }: PublicShellProps) {
               Автоматические ИИ-ответы на отзывы, вопросы и чаты покупателей с учётом данных товара, правил продавца и настроек согласования.
             </p>
           </div>
-        </div>
 
-        <div className="public-container public-footer-grid">
           <div>
             <strong>Продукт</strong>
             <Link href="/features">Возможности</Link>
             <Link href="/#models">ИИ-модели</Link>
             <Link href="/pricing">Тарифы</Link>
-            <Link href="/demo">Как работает MPReply</Link>
+            <Link href="/demo">Как работает сервис</Link>
+            <Link href="/contacts">Контакты</Link>
           </div>
           <div>
             <strong>Маркетплейсы</strong>
             {marketplaces.map((marketplace) => (
               <Link key={marketplace.key} href={marketplace.path}>{marketplace.name}</Link>
             ))}
-          </div>
-          <div>
-            <strong>Материалы</strong>
-            <Link href="/resources">Полезные материалы</Link>
-            <Link href="/contacts">Контакты</Link>
           </div>
           <div>
             <strong>Документы</strong>
@@ -62,7 +56,7 @@ export function PublicShell({ children }: PublicShellProps) {
         </div>
 
         <div className="public-container public-footer-bottom">
-          <span>© {new Date().getFullYear()} MPReply</span>
+          <span>© {new Date().getFullYear()} MP Reply</span>
           <span>Wildberries · Ozon · Яндекс Маркет · Авито</span>
         </div>
       </footer>
