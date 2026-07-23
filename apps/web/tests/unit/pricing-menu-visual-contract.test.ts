@@ -29,6 +29,26 @@ describe("MPReply pricing and menu visual contract", () => {
     expect(publicStyleSource).toMatch(/\.public-nav-v90 \.public-nav-link-v90\[aria-current='page'\] \.public-nav-link-label-v90::after \{[\s\S]*?transform:\s*var\(--public-v90-nav-underline-visible\);/);
   });
 
+
+  it("uses 16px desktop navigation labels", () => {
+    expect(tokenSource).toContain("--public-v103-nav-font-size: 1rem;");
+    expect(publicStyleSource).toMatch(/\.public-nav-v90 \.public-nav-link-v90,[\s\S]*?font-size:\s*var\(--public-v103-nav-font-size\) !important;/);
+  });
+
+  it("restores large marketing icons and icon-led workflow cards", () => {
+    const homePageSource = readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8");
+    expect(tokenSource).toContain("--public-v103-card-icon-size: clamp(4.75rem, 5vw, 5.5rem);");
+    expect(homePageSource).toContain('<MarketingGlyph variant={step.icon} />');
+    expect(homePageSource).not.toContain('<span>{step.number}</span>');
+    expect(publicStyleSource).toMatch(/\.home-workflow-step-v73 > \.marketing-glyph \{[\s\S]*?width:\s*var\(--public-v103-workflow-icon-size\) !important;/);
+  });
+
+  it("keeps the footer logo unboxed and inside the shared link grid", () => {
+    const shellSource = readFileSync(resolve(process.cwd(), "components/public-site/PublicShell.tsx"), "utf8");
+    expect(shellSource).not.toContain("public-footer-topline");
+    expect(shellSource).not.toContain("<strong>Материалы</strong>");
+    expect(publicStyleSource).toMatch(/\.public-footer-logo \{[\s\S]*?padding:\s*var\(--public-v86-zero\) !important;[\s\S]*?background:\s*var\(--public-v86-transparent\) !important;[\s\S]*?box-shadow:\s*var\(--public-v86-none\) !important;/);
+  });
   it("keeps accepted typography scale and 18px public lead copy", () => {
     expect(tokenSource).toContain("--font-size-h1: 3.625rem;");
     expect(tokenSource).toContain("--font-size-h2: 3rem;");

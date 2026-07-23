@@ -33,7 +33,7 @@ export function BrandLogo({
   variant = "horizontal",
   className,
   imageClassName,
-  alt = "MPReply",
+  alt = "MP Reply",
   priority = false,
   style,
 }: BrandLogoProps) {

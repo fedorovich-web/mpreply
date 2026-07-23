@@ -17,7 +17,7 @@ import { siteConfig } from "../lib/site-config";
 export const metadata: Metadata = createPageMetadata({
   title: "Автоматические ИИ-ответы на отзывы, вопросы и чаты маркетплейсов",
   description:
-    "MPReply автоматически готовит и публикует ИИ-ответы на отзывы, вопросы и чаты маркетплейсов по карточке товара, базе знаний и правилам продавца. 7 дней и 400 ответов бесплатно.",
+    "MP Reply автоматически готовит и публикует ИИ-ответы на отзывы, вопросы и чаты маркетплейсов по карточке товара, базе знаний и правилам продавца. 7 дней и 400 ответов бесплатно.",
   path: "/",
 });
 
@@ -26,7 +26,7 @@ const channels = [
     icon: "reviews" as const,
     title: "Ответы на отзывы",
     description:
-      "MPReply разбирает оценку, текст отзыва, товар и тон бренда, формирует персональный ответ и публикует его автоматически по правилам продавца.",
+      "Система разбирает оценку, текст отзыва, товар и тон бренда, формирует персональный ответ и публикует его автоматически по правилам продавца.",
   },
   {
     icon: "questions" as const,
@@ -38,28 +38,28 @@ const channels = [
     icon: "chats" as const,
     title: "Чаты с покупателями",
     description:
-      "MPReply ведёт диалог с учётом предыдущих сообщений, сохраняет контекст и публикует ответ автоматически, если выбранный продавцом сценарий это разрешает.",
+      "Диалог ведётся с учётом предыдущих сообщений: система сохраняет контекст и публикует ответ автоматически, если выбранный продавцом сценарий это разрешает.",
   },
 ] as const;
 
 const workflowSteps = [
   {
-    number: "01",
+    icon: "flow" as const,
     title: "Принимает обращение",
-    text: "Новый отзыв, вопрос или чат поступает из подключённого маркетплейса в единый поток MPReply.",
+    text: "Новый отзыв, вопрос или чат поступает из подключённого маркетплейса в единый рабочий поток.",
   },
   {
-    number: "02",
+    icon: "questions" as const,
     title: "Понимает запрос",
-    text: "MPReply определяет намерение покупателя, тональность, риск и тип ответа для автоматической обработки.",
+    text: "Система определяет намерение покупателя, тональность, риск и тип ответа для автоматической обработки.",
   },
   {
-    number: "03",
+    icon: "context" as const,
     title: "Проверяет данные",
     text: "Система использует карточку товара, базу знаний, правила продавца и историю переписки.",
   },
   {
-    number: "04",
+    icon: "settings" as const,
     title: "Выбирает действие",
     text: "Готовый ответ публикуется автоматически; ручное согласование включается только для сценариев, которые продавец отметил в настройках.",
   },
@@ -70,7 +70,7 @@ const controls = [
     icon: "settings" as const,
     title: "Правила автопубликации",
     description:
-      "Задайте сценарии, по которым MPReply автоматически публикует ответы; согласование включается отдельно только там, где оно нужно команде.",
+      "Задайте сценарии автоматической публикации; согласование включается отдельно только там, где оно нужно команде.",
   },
   {
     icon: "context" as const,
@@ -126,29 +126,29 @@ const intelligenceRoles = [
 
 const faq = [
   {
-    question: "Что входит в бесплатный тест MPReply?",
+    question: "Что входит в бесплатный тест?",
     answer:
       `Бесплатный тест длится ${trialOffer.durationDays} дней и включает ${trialOffer.answerLimit} ответов для двух маркетплейсов. Можно проверить автоматические ответы на отзывы, вопросы и чаты и настроить, где публиковать сразу, а где включать согласование.`,
   },
   {
-    question: "MPReply может публиковать ответы автоматически?",
+    question: "Можно ли публиковать ответы автоматически?",
     answer:
       "Да. Для каждого сценария задаются правила автопубликации: тип обращения, категория товара, допустимые темы, тон и ограничения бренда. Согласование продавец включает отдельно в личном кабинете.",
   },
   {
-    question: "Какие данные использует MPReply при подготовке ответа?",
+    question: "Какие данные используются при подготовке ответа?",
     answer:
-      "MPReply может учитывать карточку товара, характеристики, описание, инструкции, FAQ, базу знаний продавца, историю обращения и заданные правила бренда. Если данных не хватает, поведение задаётся настройками продавца: подготовить аккуратный ответ, сохранить его или отправить на согласование.",
+      "Сервис может учитывать карточку товара, характеристики, описание, инструкции, FAQ, базу знаний продавца, историю обращения и заданные правила бренда. Если данных не хватает, поведение задаётся настройками продавца: подготовить аккуратный ответ, сохранить его или отправить на согласование.",
   },
   {
-    question: "Подходит ли MPReply для негативных отзывов и претензий?",
+    question: "Подходит ли сервис для негативных отзывов и претензий?",
     answer:
       "Да. Сервис определяет проблему и уровень риска, готовит спокойный ответ и выполняет выбранный сценарий: опубликовать автоматически, запросить данные, объяснить совместимость или отправить на согласование по настройке продавца.",
   },
   {
-    question: "Чем MPReply отличается от шаблонов и ручной работы с ChatGPT?",
+    question: "Чем сервис отличается от шаблонов и ручной работы с ChatGPT?",
     answer:
-      "Шаблон не понимает ситуацию, а ручная работа требует копировать обращение и данные товара. MPReply получает обращение из рабочего потока, подтягивает доступный контекст, применяет правила продавца, сохраняет решение в журнале и контролирует публикацию.",
+      "Шаблон не понимает ситуацию, а ручная работа требует копировать обращение и данные товара. Сервис получает обращение из рабочего потока, подтягивает доступный контекст, применяет правила продавца, сохраняет решение в журнале и контролирует публикацию.",
   },
   {
     question: "Что происходит после окончания бесплатного теста?",
@@ -210,7 +210,7 @@ export default function HomePage() {
               <span className="home-hero-title-line" data-hero-line>и чатов</span>
             </h1>
             <p className="home-hero-lead">
-              MPReply анализирует обращение покупателя, сверяет его с карточкой товара, базой знаний и правилами продавца, готовит точный ответ и публикует его автоматически в разрешённых сценариях.
+              MP Reply анализирует обращение покупателя, сверяет его с карточкой товара, базой знаний и правилами продавца, готовит точный ответ и публикует его автоматически в разрешённых сценариях.
             </p>
             <div className="home-hero-actions">
               <PublicTrialCta className="button button-primary" source="hero">
@@ -235,7 +235,7 @@ export default function HomePage() {
             <p className="public-eyebrow">Три канала общения</p>
             <h2 id="home-outcomes-title">Отзывы, вопросы и чаты — в одном автоматическом потоке</h2>
             <p>
-              MPReply автоматически обрабатывает отзывы, вопросы о товаре и сообщения в чатах, применяя отдельные правила ответа и публикации для каждого канала.
+              Система автоматически обрабатывает отзывы, вопросы о товаре и сообщения в чатах, применяя отдельные правила ответа и публикации для каждого канала.
             </p>
           </div>
           <div className="home-outcome-grid">
@@ -253,7 +253,7 @@ export default function HomePage() {
       <section className="home-section home-example home-review-resolution" aria-labelledby="home-example-title">
         <div className="public-container">
           <div className="home-review-resolution-heading">
-            <h2 id="home-example-title">MPReply готовит точный ответ и выбирает действие по правилам</h2>
+            <h2 id="home-example-title">Точный ответ и действие по правилам продавца</h2>
             <p>
               В рабочем окне видно обращение, проверенный контекст, готовый ответ и итоговое действие: автопубликация, сохранение или согласование по настройке продавца.
             </p>
@@ -266,7 +266,7 @@ export default function HomePage() {
       <section className="home-section home-marketplaces" id="how-it-works" aria-labelledby="home-marketplaces-title">
         <div className="public-container">
           <div className="home-section-heading home-section-heading-centered">
-            <p className="public-eyebrow">Как работает MPReply</p>
+            <p className="public-eyebrow">Как это работает</p>
             <h2 id="home-marketplaces-title">От обращения покупателя до автопубликации — четыре шага</h2>
             <p>
               Сервис принимает обращение, проверяет контекст товара, готовит ответ и публикует его автоматически там, где это разрешено правилами продавца.
@@ -275,8 +275,8 @@ export default function HomePage() {
 
           <div className="home-workflow-v73" role="list" aria-label="Этапы обработки обращения">
             {workflowSteps.map((step) => (
-              <div className="home-workflow-step-v73" role="listitem" key={step.number}>
-                <span>{step.number}</span>
+              <div className="home-workflow-step-v73" role="listitem" key={step.title}>
+                <MarketingGlyph variant={step.icon} />
                 <div>
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
@@ -324,11 +324,11 @@ export default function HomePage() {
             <p className="public-eyebrow">Маршрутизация ИИ</p>
             <h2 id="home-llm-title">ИИ-маршрутизация для точных автоответов</h2>
             <p>
-              MPReply распределяет задачи между генерацией, проверкой инструкций, быстрой обработкой и резервным контролем вместо слепой отправки одного промпта.
+              Система распределяет задачи между генерацией, проверкой инструкций, быстрой обработкой и резервным контролем вместо слепой отправки одного промпта.
             </p>
           </div>
 
-          <div className="home-llm-asymmetric-grid-v76" role="list" aria-label="Роли ИИ-моделей в MPReply">
+          <div className="home-llm-asymmetric-grid-v76" role="list" aria-label="Роли ИИ-моделей">
             {intelligenceRoles.map((model, index) => (
               <div
                 className={`home-llm-card home-llm-card-v75 home-llm-card-v76 home-llm-card-v76-${index + 1}`}
@@ -356,7 +356,7 @@ export default function HomePage() {
       <section className="home-section home-pricing-v73" id="pricing" aria-labelledby="home-pricing-title">
         <div className="public-container">
           <div className="home-section-heading home-section-heading-centered">
-            <p className="public-eyebrow">Тарифы MPReply</p>
+            <p className="public-eyebrow">Тарифы</p>
             <h2 id="home-pricing-title">Пакеты автоответов без подписки и срока сгорания</h2>
             <p>
               Баланс списывается только за опубликованный или отправленный ответ. Черновики, проверка данных, правки и повторная генерация не расходуют пакет.
@@ -366,7 +366,7 @@ export default function HomePage() {
           <article className="home-trial-banner-v73">
             <div>
               <p className="public-eyebrow">{trialOffer.title}</p>
-              <h3>{trialOffer.answerLimit} ответов для полноценной проверки MPReply</h3>
+              <h3>{trialOffer.answerLimit} ответов для полноценной проверки</h3>
               <p>{trialOffer.description}</p>
             </div>
             <PublicTrialCta className="button button-primary home-trial-cta-v74" source="home-pricing-trial">
@@ -387,7 +387,7 @@ export default function HomePage() {
         <div className="public-container home-faq-layout">
           <div className="home-section-heading home-section-heading-left">
             <p className="public-eyebrow">Вопросы и ответы</p>
-            <h2 id="home-faq-title">Что важно знать об автоматических ответах MPReply</h2>
+            <h2 id="home-faq-title">Что важно знать об автоматических ответах</h2>
             <p>
               Как работает автопубликация, какие данные используются, что происходит с негативом и как расходуется пакет ответов.
             </p>
@@ -401,7 +401,7 @@ export default function HomePage() {
           <div className="home-final-cta-card">
             <div>
               <p className="public-eyebrow">Проверка на ваших данных</p>
-              <h2 id="home-final-cta-title">Запустите автоответы MPReply на реальных обращениях</h2>
+              <h2 id="home-final-cta-title">Запустите автоответы на реальных обращениях</h2>
               <p>
                 Подключите до двух маркетплейсов, обработайте {trialOffer.answerLimit} обращений бесплатно и проверьте автоматическую публикацию ответов на отзывах, вопросах и чатах.
               </p>

@@ -19,9 +19,9 @@ describe("MPReply hero product flow scene", () => {
     expect(heroSource).toContain('data-mpreply-hero="commerce-answer-pipeline"');
     expect(heroSource).toContain("Вопрос покупателя");
     expect(heroSource).toContain("Контекст товара");
-    expect(heroSource).toContain('variant="canvas"');
-    expect(heroSource).toContain('alt="MPReply"');
-    expect(heroSource).not.toContain("MPReply Engine");
+    expect(heroSource).not.toContain("<BrandLogo");
+    expect(heroSource).not.toContain('variant="canvas"');
+    expect(heroSource).toContain("Сверяет товар, отзывы и правила");
     expect(heroSource).toContain("Готовый ответ");
   });
 

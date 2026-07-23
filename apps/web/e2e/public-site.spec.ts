@@ -120,8 +120,26 @@ test("trial CTA opens an accessible modal", async ({ page }) => {
   await expect(modal).toBeHidden();
   await expect(trialButton).toHaveAttribute("popovertarget", "mpreply-trial-modal");
   await trialButton.click();
-  const dialog = page.getByRole("dialog", { name: "Проверьте MPReply в работе" });
+  const dialog = page.getByRole("dialog", { name: "Проверьте автоответы на своих обращениях" });
   await expect(dialog).toBeVisible();
+  const viewport = page.viewportSize();
+  const modalBox = await modal.boundingBox();
+  expect(viewport).not.toBeNull();
+  expect(modalBox).not.toBeNull();
+  expect(modalBox?.x ?? 1, "trial overlay starts at the viewport left edge").toBeLessThanOrEqual(1);
+  expect(modalBox?.y ?? 1, "trial overlay starts at the viewport top edge").toBeLessThanOrEqual(1);
+  expect(
+    (modalBox?.x ?? 0) + (modalBox?.width ?? 0),
+    "trial overlay reaches the viewport right edge",
+  ).toBeGreaterThanOrEqual((viewport?.width ?? 0) - 1);
+  expect(
+    (modalBox?.y ?? 0) + (modalBox?.height ?? 0),
+    "trial overlay reaches the viewport bottom edge",
+  ).toBeGreaterThanOrEqual((viewport?.height ?? 0) - 1);
+  const backdropStyle = await modal.evaluate((element) =>
+    window.getComputedStyle(element, "::backdrop").backgroundColor,
+  );
+  expect(backdropStyle).not.toBe("rgba(0, 0, 0, 0)");
   await expect(dialog.getByLabel("Имя")).toBeVisible();
   await expect(dialog.getByLabel("Рабочая почта")).toBeVisible();
   await expect(dialog.getByLabel("Телефон")).toBeVisible();

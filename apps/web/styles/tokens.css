@@ -1509,3 +1509,15 @@
 	--public-v95-hero-copy-width: clamp(31rem, 36vw, 38rem);
 	--public-v95-hero-canvas-width: clamp(32rem, 40vw, 42rem);
 }
+
+:root {
+	/* MP Reply 0.1.103 · user-approved navigation, icon and footer refinement */
+	--public-v103-nav-font-size: 1rem;
+	--public-v103-card-icon-size: clamp(4.75rem, 5vw, 5.5rem);
+	--public-v103-card-icon-size-mobile: 4.5rem;
+	--public-v103-workflow-icon-size: clamp(4.5rem, 4.75vw, 5.25rem);
+	--public-v103-workflow-icon-size-mobile: 4.25rem;
+	--public-v103-footer-logo-width: clamp(10.5rem, 12vw, 12rem);
+	--public-v103-footer-brand-copy-width: 28rem;
+	--public-v103-footer-grid-gap: clamp(var(--space-8), 4vw, var(--space-16));
+}

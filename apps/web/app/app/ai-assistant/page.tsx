@@ -8,7 +8,7 @@ export default function AIAssistantPage() {
           <p className="eyebrow">AI Assistant</p>
           <h1>AI-черновики на реальном контексте обращений</h1>
           <p>
-            MPReply берёт отзыв или вопрос из Inbox, добавляет контекст товара и настройки ответов,
+            Система берёт отзыв или вопрос из Inbox, добавляет контекст товара и настройки ответов,
             генерирует ответ через backend-only OpenRouter и сохраняет confidence, usage и safety flags.
           </p>
         </div>

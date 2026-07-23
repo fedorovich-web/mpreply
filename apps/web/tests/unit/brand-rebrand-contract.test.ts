@@ -21,6 +21,15 @@ const canvasSource = readFileSync(
   resolve(root, "components/public-site/HeroProductFlowCanvas.tsx"),
   "utf8",
 );
+const publicStyleSource = readFileSync(resolve(root, "styles/public-site.css"), "utf8");
+const publicCopySources = {
+  home: readFileSync(resolve(root, "app/page.tsx"), "utf8"),
+  features: readFileSync(resolve(root, "app/features/page.tsx"), "utf8"),
+  marketplaces: readFileSync(resolve(root, "app/marketplaces/page.tsx"), "utf8"),
+  pricing: readFileSync(resolve(root, "app/pricing/page.tsx"), "utf8"),
+  about: readFileSync(resolve(root, "app/about/page.tsx"), "utf8"),
+  demo: readFileSync(resolve(root, "app/demo/page.tsx"), "utf8"),
+};
 
 const requiredAssets = [
   "public/favicon-96x96.png",
@@ -38,7 +47,7 @@ const requiredAssets = [
 
 describe("MPReply production rebrand contract", () => {
   it("uses the new brand and canonical production domain", () => {
-    expect(siteConfigSource).toContain('name: "MPReply"');
+    expect(siteConfigSource).toContain('name: "MP Reply"');
     expect(siteConfigSource).toContain('"https://mpreply.ru"');
     const legacyBrand = ["Res", "pio"].join("");
     const legacyDomain = ["res", "pio", ".ru"].join("");
@@ -69,11 +78,42 @@ describe("MPReply production rebrand contract", () => {
     expect(footerSource).not.toContain(">R<");
   });
 
-  it("uses the supplied canvas logo without a duplicated Engine label", () => {
-    expect(canvasSource).toContain('variant="canvas"');
-    expect(canvasSource).toContain('alt="MPReply"');
-    expect(canvasSource).not.toContain("MPReply Engine");
-    expect(canvasSource).not.toContain(">R<");
+  it("integrates the brand copy into the footer grid without a Materials column", () => {
+    expect(footerSource).not.toContain("public-footer-topline");
+    expect(footerSource).not.toContain("<strong>Материалы</strong>");
+    expect(footerSource).toContain('className="public-container public-footer-grid"');
+    expect(footerSource).toContain('className="public-footer-brand"');
+    expect(footerSource).toContain('<Link href="/contacts">Контакты</Link>');
+  });
+
+  it("does not duplicate the brand logo inside the product-flow Canvas", () => {
+    expect(canvasSource).not.toContain("<BrandLogo");
+    expect(canvasSource).not.toContain('variant="canvas"');
+    expect(canvasSource).not.toContain("styles.logo");
+    expect(canvasSource).toContain("Сверяет товар, отзывы и правила");
+  });
+
+
+  it("keeps the trial backdrop attached to the full viewport", () => {
+    expect(publicStyleSource).toMatch(/\.public-trial-modal\[popover\] \{[\s\S]*?inset:\s*0 !important;[\s\S]*?width:\s*100dvw !important;[\s\S]*?height:\s*100dvh !important;/);
+    expect(publicStyleSource).toMatch(/\.public-trial-modal\[popover\]::backdrop \{[\s\S]*?background:\s*var\(--public-v73-modal-backdrop\) !important;/);
+    expect(publicStyleSource).toMatch(/\.public-trial-modal-backdrop \{[\s\S]*?background:\s*transparent !important;/);
+  });
+
+  it("uses the brand selectively instead of repeating it in every public block", () => {
+    const limits: Record<keyof typeof publicCopySources, number> = {
+      home: 3,
+      features: 1,
+      marketplaces: 1,
+      pricing: 1,
+      about: 3,
+      demo: 1,
+    };
+
+    for (const [page, source] of Object.entries(publicCopySources) as Array<[keyof typeof publicCopySources, string]>) {
+      const mentions = source.match(/MP Reply/g)?.length ?? 0;
+      expect(mentions, `${page} repeats the brand too often`).toBeLessThanOrEqual(limits[page]);
+    }
   });
 
   it("installs the exact favicon and web-app manifest references", () => {
@@ -81,7 +121,7 @@ describe("MPReply production rebrand contract", () => {
     expect(layoutSource).toContain('href="/favicon.svg"');
     expect(layoutSource).toContain('href="/favicon.ico"');
     expect(layoutSource).toContain('href="/apple-touch-icon.png"');
-    expect(layoutSource).toContain('content="MPReply"');
+    expect(layoutSource).toContain('content="MP Reply"');
     expect(layoutSource).toContain('href="/site.webmanifest"');
   });
 });

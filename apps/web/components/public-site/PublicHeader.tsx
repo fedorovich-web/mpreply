@@ -50,7 +50,7 @@ export function PublicHeader() {
   return (
     <header className="public-header public-header-v86 public-header-v87 public-header-v88 public-header-v89 public-header-v90">
       <div className="public-container public-header-inner public-header-inner-v86 public-header-inner-v87 public-header-inner-v88 public-header-inner-v89 public-header-inner-v90">
-        <Link className="public-brand public-brand-v86 public-brand-v87 public-brand-v88 public-brand-v89 public-brand-v90" href="/" aria-label="MPReply — главная" onClick={closeMenu}>
+        <Link className="public-brand public-brand-v86 public-brand-v87 public-brand-v88 public-brand-v89 public-brand-v90" href="/" aria-label="MP Reply — главная" onClick={closeMenu}>
           <BrandLogo
             className="public-brand-logo"
             imageClassName="public-brand-logo-image"
@@ -110,7 +110,7 @@ export function PublicHeader() {
               <div className="public-mobile-menu-panel public-mobile-menu-panel-v86 public-mobile-menu-panel-v87 public-mobile-menu-panel-v88 public-mobile-menu-panel-v89 public-mobile-menu-panel-v90" id={menuId}>
                 <div className="public-mobile-menu-head-v86 public-mobile-menu-head-v87 public-mobile-menu-head-v88 public-mobile-menu-head-v89 public-mobile-menu-head-v90">
                   <div>
-                    <span className="public-mobile-menu-kicker-v86 public-mobile-menu-kicker-v87 public-mobile-menu-kicker-v88 public-mobile-menu-kicker-v89 public-mobile-menu-kicker-v90">Навигация MPReply</span>
+                    <span className="public-mobile-menu-kicker-v86 public-mobile-menu-kicker-v87 public-mobile-menu-kicker-v88 public-mobile-menu-kicker-v89 public-mobile-menu-kicker-v90">Навигация</span>
                     <strong>Быстрый переход</strong>
                   </div>
                   <button className="public-mobile-menu-close-v88 public-mobile-menu-close-v89 public-mobile-menu-close-v90" type="button" aria-label="Закрыть меню" onClick={closeMenu}>

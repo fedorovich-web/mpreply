@@ -129,9 +129,9 @@ export function PublicTrialModal() {
 
           <div className="public-trial-dialog-copy public-trial-dialog-copy-v94 public-trial-dialog-copy-v95 public-trial-dialog-copy-v96">
             <p className="public-eyebrow">{trialOffer.shortLabel}</p>
-            <h2 id={titleId}>Проверьте MPReply в работе</h2>
+            <h2 id={titleId}>Проверьте автоответы на своих обращениях</h2>
             <p id={descriptionId}>
-              Оставьте контакты — откроем тест и покажем, как MPReply готовит автоответы
+              Оставьте контакты — откроем тест и покажем, как система готовит автоответы
               на реальные отзывы, вопросы и чаты по карточке товара, базе знаний и правилам продавца.
             </p>
             <div

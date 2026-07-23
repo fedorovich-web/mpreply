@@ -19,7 +19,7 @@ describe("MPReply public visual recovery contract", () => {
     expect(pageSource).toContain("Автоответы для");
     expect(pageSource).toContain("отзывов, вопросов");
     expect(pageSource).toContain("и чатов");
-    expect(pageSource).toContain("MPReply анализирует обращение покупателя");
+    expect(pageSource).toContain("MP Reply анализирует обращение покупателя");
     expect(pageSource).toContain("Начать бесплатный тест");
     expect(pageSource).toContain("Посмотреть процесс");
     expect(pageSource).not.toContain("Интеграция за дни, не месяцы");

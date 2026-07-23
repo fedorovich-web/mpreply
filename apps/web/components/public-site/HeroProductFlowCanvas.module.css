@@ -9,8 +9,6 @@
   --e-y: 0px;
   --a-x: 0px;
   --a-y: 0px;
-  --l-x: 0px;
-  --l-y: 0px;
   --scene-x: 0px;
   --scene-y: 0px;
   position: relative;
@@ -82,7 +80,10 @@
 .engineCard {
   min-height: 29rem;
   padding: 1.4375rem 1.25rem 1.1875rem;
+  display: flex;
   overflow: hidden;
+  flex-direction: column;
+  justify-content: center;
   border-color: rgb(201 216 255);
   background: linear-gradient(180deg, rgb(251 253 255), rgb(243 247 255));
   transform: translate3d(var(--e-x), var(--e-y), 0);
@@ -207,26 +208,9 @@
   background: var(--hero-product-flow-warning-soft);
 }
 
-.logo {
-  display: block;
-  width: 9.25rem;
-  height: auto;
-  margin: 0 auto 0.75rem;
-  transform: translate3d(var(--l-x), var(--l-y), 0);
-  transition: transform 140ms linear;
-}
-
-.logoImage {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 1rem 1.75rem rgb(47 109 246 / 16%));
-}
-
 .engineTitle {
   max-width: 14.5rem;
-  margin: 0.625rem auto 1.125rem;
+  margin: 0 auto 1.25rem;
   font-size: 1.25rem;
   font-weight: 850;
   line-height: 1.2;
@@ -420,8 +404,7 @@
   .questionCard,
   .productCard,
   .engineCard,
-  .answerCard,
-  .logo {
+  .answerCard {
     min-height: 0;
     transform: none;
   }
@@ -503,9 +486,6 @@
     padding: 1rem;
   }
 
-  .logo {
-    width: 7.75rem;
-  }
 
   .step,
   .proof {

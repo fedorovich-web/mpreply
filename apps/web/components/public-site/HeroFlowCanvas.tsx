@@ -301,7 +301,7 @@ export function HeroFlowCanvas() {
       className={styles.scene}
       data-webgl-state={webglState}
       role="img"
-      aria-label="Пять смысловых AI-узлов расположены на пяти отдельных трёхмерных орбитах вокруг MPReply AI: вопрос покупателя, товары и каталог, данные о товарах, контекст и правила, готовый ответ"
+      aria-label="Пять смысловых AI-узлов расположены на пяти отдельных трёхмерных орбитах вокруг MP Reply AI: вопрос покупателя, товары и каталог, данные о товарах, контекст и правила, готовый ответ"
     >
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
 
@@ -328,7 +328,7 @@ export function HeroFlowCanvas() {
         />
         <span ref={monogramRef} className={styles.coreMonogram} aria-hidden="true" />
         <div ref={coreLabelRef} className={styles.coreLabel}>
-          <strong>MPReply AI</strong>
+          <strong>MP Reply AI</strong>
           <span>AI-ответы для маркетплейсов</span>
         </div>
 

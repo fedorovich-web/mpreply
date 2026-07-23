@@ -39,7 +39,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby={`${mode}-title`}>
-        <p className="eyebrow">{isLogin ? "MPReply workspace" : "MPReply account"}</p>
+        <p className="eyebrow">{isLogin ? "Рабочее пространство" : "Создание аккаунта"}</p>
         <h1 id={`${mode}-title`}>{isLogin ? "Вход" : "Создать аккаунт"}</h1>
         <p className="auth-description">
           {isLogin
