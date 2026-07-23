@@ -180,6 +180,13 @@ def test_prompt_settings_fall_back_to_persisted_knowledge_base_for_blank_overrid
     )[2] == "Persisted"
 
 
+def test_prompt_settings_flag_prohibited_phrase_case_insensitively() -> None:
+    settings = SellerPromptSettings(prohibited_phrases=("точно доставим",))
+
+    assert settings.policy_flags("Мы ТОЧНО ДОСТАВИМ заказ завтра.") == ["seller_prohibited_phrase"]
+    assert settings.policy_flags("Передадим заказ в доставку.") == []
+
+
 def test_audit_cursor_round_trip_is_stable() -> None:
     created_at = datetime(2026, 7, 22, 8, 30, 0, 123456, tzinfo=UTC)
     audit_id = uuid4()

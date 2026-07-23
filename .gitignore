@@ -56,3 +56,7 @@ apps/web/test-results/
 apps/web/blob-report/
 apps/web/.lighthouseci/
 apps/web/lighthouse-report/
+
+# Release evidence and handoff staging
+.handoff/
+apps/web/next-env.d.ts

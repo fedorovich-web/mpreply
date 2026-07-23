@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "design:detect": "impeccable detect app components styles",
     "design:detect:json": "impeccable detect --json app components styles",
     "impeccable:install": "impeccable skills install -y --providers=claude,codex --scope=project",
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.12",
-    "next": "16.2.10",
+    "next": "16.2.11",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "three": "0.185.1",
@@ -49,20 +49,20 @@
     "@types/three": "0.185.1",
     "csstree-validator": "4.0.1",
     "eslint": "9.39.2",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "16.2.11",
     "impeccable": "3.2.1",
     "jsdom": "29.1.1",
+    "proxy-agent": "8.0.2",
     "typescript": "5.9.3",
     "vitest": "4.1.10",
     "vnu-jar": "26.7.11"
   },
   "overrides": {
-    "postcss": "8.5.10",
+    "postcss": "8.5.12",
     "tmp": "0.2.7",
     "uuid": "11.1.1",
-    "@lhci/cli": {
-      "chrome-launcher": "1.2.0"
-    }
+    "chrome-launcher": "1.2.1",
+    "sharp": "0.35.3"
   },
   "engines": {
     "node": ">=22.12.0"

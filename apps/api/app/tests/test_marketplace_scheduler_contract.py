@@ -7,10 +7,10 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Table, UniqueConstraint
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import app.models  # noqa: F401
+import app.models as models
 from app.adapters.base import AdapterResult
 from app.adapters.capabilities import get_marketplace_capability, list_marketplace_capabilities
 from app.adapters.registry import get_marketplace_adapter
@@ -131,17 +131,17 @@ async def test_wildberries_validation_uses_ping_endpoint(monkeypatch: pytest.Mon
 
 
 def test_wildberries_offset_cursor_advances_only_for_full_page() -> None:
-    failed_page = WildberriesAdapter._with_next_cursor(
+    failed_page = WildberriesAdapter.with_next_cursor(
         result=AdapterResult(ok=False, error_code="network_error"),
         item_count=50,
         offset=100,
     )
-    full_page = WildberriesAdapter._with_next_cursor(
+    full_page = WildberriesAdapter.with_next_cursor(
         result=AdapterResult(ok=True, data={}),
         item_count=50,
         offset=100,
     )
-    final_page = WildberriesAdapter._with_next_cursor(
+    final_page = WildberriesAdapter.with_next_cursor(
         result=AdapterResult(ok=True, data={}),
         item_count=12,
         offset=150,
@@ -223,7 +223,9 @@ async def test_scheduler_pauses_existing_states_and_clears_lease() -> None:
 
 
 def test_sync_state_model_has_one_row_per_account_stream() -> None:
-    constraints = MarketplaceSyncState.__table__.constraints
+    assert models.__name__ == "app.models"
+    sync_state_table = cast(Table, MarketplaceSyncState.__table__)
+    constraints = sync_state_table.constraints
     unique_constraints = [constraint for constraint in constraints if isinstance(constraint, UniqueConstraint)]
 
     assert any(

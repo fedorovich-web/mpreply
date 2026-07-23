@@ -67,6 +67,14 @@ class SellerPromptSettings:
         )
         return resolved_tone, resolved_brand_rules, resolved_knowledge_base
 
+    def policy_flags(self, draft_text: str) -> list[str]:
+        normalized_draft = draft_text.casefold()
+        for phrase in self.prohibited_phrases:
+            normalized_phrase = phrase.strip().casefold()
+            if normalized_phrase and normalized_phrase in normalized_draft:
+                return ["seller_prohibited_phrase"]
+        return []
+
 
 class SellerSettingsService:
     def __init__(self, session: AsyncSession) -> None:
