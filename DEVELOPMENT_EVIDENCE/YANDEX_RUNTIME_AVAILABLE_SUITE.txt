@@ -1,0 +1,12 @@
+........................................................................ [ 40%]
+........................................................................ [ 80%]
+....................................                                     [100%]
+180 passed in 0.63s
+
+Excluded because the artifact container lacks project dependencies:
+- app/tests/test_admin_access.py (pwdlib)
+- app/tests/test_auth_crypto.py (pwdlib)
+- app/tests/test_health.py (asyncpg)
+- app/tests/test_health_readiness.py (redis)
+- app/tests/test_manual_reply_routes.py (asyncpg)
+- app/tests/test_team_sessions_security_contract.py (pwdlib)

@@ -11,6 +11,7 @@ Implemented through Sprint 11:
 - Wildberries synchronization and reply execution foundation;
 - Yandex Market Partner API integration for accounts, reviews, questions and replies;
 - client dashboard observability for account health, scopes, scheduler streams, sync jobs and safe integration events;
+- safe Yandex Market runtime verification kit with bounded read checks, optional confirmed write probes and sanitized evidence;
 - operation-aware marketplace sync foundation with bounded cursor pagination;
 - unified Inbox API and dashboard UI;
 - OpenRouter AI draft generation;
@@ -22,7 +23,7 @@ Implemented through Sprint 11:
 - optional semi-automatic manual review workflow: draft editing, optimistic revision checks, SafetyGate re-checks, submit for review, approve/reject, idempotent queueing and marketplace execution;
 - live SaaS frontend data plane for authentication, first-workspace onboarding, organization selection, Inbox and Review Queue.
 
-Wildberries remains the established integration. This 0.1.104 development snapshot also contains a Yandex Market Partner API vertical slice. Ozon and Avito remain disabled until their current official contracts and runtime requirements are implemented and verified. See `DEVELOPMENT_STATUS_0.1.104.md`.
+Wildberries remains the established integration. The 0.1.104 feature branch now contains the Yandex Market Partner API vertical slice and its health dashboard; this development batch adds the runtime-verification kit required before release. Ozon and Avito remain disabled until their current official contracts and runtime requirements are implemented and verified. See `DEVELOPMENT_STATUS_0.1.104.md`.
 
 ## Repository structure
 
@@ -36,6 +37,16 @@ infra/coolify   Coolify deployment mapping and checklist
 docs            ADRs, security, QA, legal and operations runbooks
 scripts         Integrity, release and container gates
 ```
+
+## Yandex Market runtime verification
+
+After applying and verifying the runtime-kit batch, run the default read-only probe with a real seller Api-Key and Business ID:
+
+```powershell
+.\scripts\yandex-market-runtime-probe.ps1
+```
+
+The key is entered through a secure prompt. Evidence is written under ignored `.handoff/` storage and contains no raw credential, full Business ID, cursor, customer text, or provider payload. See `docs/integrations/yandex-market-runtime-verification.md`.
 
 ## Local code verification
 

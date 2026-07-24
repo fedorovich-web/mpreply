@@ -1,13 +1,13 @@
 # MP Reply 0.1.104 development snapshot
 
-This full development copy continues from the verified remote feature commit:
+This full development copy continues from the verified remote feature branch:
 
 - branch: `work/0.1.104-yandex-foundation`;
-- base commit: `ecf0b170060681dd6747d6871a8b44e72c39c6c1`;
+- base commit: `922e1788d99863e2e631addd52d68e07dec3c932`;
 - base release version inside project contracts: `0.1.103`;
 - development target: `0.1.104`.
 
-The snapshot contains the committed Yandex Market foundation plus an uncommitted client-dashboard observability increment. It is not a released build and does not claim external runtime verification.
+The base commit contains the committed Yandex Market foundation and client-dashboard observability increment. This snapshot adds an uncommitted runtime-verification kit. It is not a released build and does not claim that a real seller account has already passed runtime verification.
 
 ## Implemented foundation
 
@@ -31,28 +31,40 @@ The snapshot contains the committed Yandex Market foundation plus an uncommitted
 - encrypted server-side credentials and masked frontend representation;
 - account create, edit, validate, rotate, revoke and manual-sync flows.
 
-### Client dashboard observability increment
+### Client dashboard observability
 
-- generic tenant-scoped account overview endpoint;
+- tenant-scoped account overview endpoint;
 - connection health with explicit reasons;
-- normalized safe scope list;
+- safe normalized scope list;
 - review/question scheduler state;
 - last success, last error and next scheduled run;
-- recent manual sync jobs and counters;
-- recent integration events and user-facing error explanations;
-- recursive removal of credential, token, secret and authorization metadata;
-- failed manual sync is retried through the existing guarded sync endpoint;
-- no schema migration.
+- recent manual sync jobs and integration events;
+- recursive filtering of credential, token, secret, authorization and cursor metadata;
+- failed-sync retry through the existing guarded sync endpoint.
+
+### Runtime-verification kit in this snapshot
+
+- production-adapter smoke probe for a real Yandex Market account;
+- default read-only credential, Business ID, review and question checks;
+- bounded pagination up to five pages;
+- cursor-cycle fail-closed behavior;
+- normalization check without persisting or printing customer content;
+- optional explicitly confirmed review or question write probe;
+- preflight duplicate-response check;
+- post-write visibility result with `pending` support for moderation/propagation delay;
+- sanitized JSON evidence under ignored `.handoff/` storage;
+- PowerShell wrapper that never passes the Api-Key as a command-line argument;
+- no migration and no version bump.
 
 ## Still intentionally incomplete
 
 ### Yandex Market external runtime verification
 
-A real seller Api-Key and Business ID are still required to verify token scopes, account access, provider pagination, comment publication, question-answer publication, moderation delay, ambiguous-timeout reconciliation and actual limit headers.
+A real seller Api-Key and Business ID are still required. The read-only probe must confirm scopes, Business ID access, review pagination, question pagination and normalization. Write publication must be checked separately against a deliberately selected test review or question.
 
 ### Ozon
 
-The common foundation is ready, but the Ozon production adapter remains disabled until the current official field-level contract, credentials model, pagination, statuses, errors and runtime account are verified.
+The common foundation is ready, but the Ozon production adapter remains disabled until a current official field-level Seller API contract, credential model, pagination, reply states, errors and runtime account are available. Third-party API mirrors are not treated as implementation authority.
 
 ### Avito
 
@@ -61,22 +73,19 @@ Avito remains a separate conversation integration: chats, thread cursors, messag
 ## Verification performed on this exact project copy
 
 - Python compileall: PASS;
-- targeted overview/Yandex/scheduler regression matrix: `60 passed`;
-- available backend suite: `174 passed`;
-- changed TypeScript/TSX parser and isolated transpile: PASS;
-- CSS parser: PASS;
-- synthetic exact-scope `git diff --check`: PASS.
+- runtime-probe unit tests: `6 passed`;
+- Yandex adapter and runtime-probe matrix: `18 passed`;
+- available backend suite in the artifact container: `180 passed` (six existing modules excluded because `pwdlib`, `asyncpg` or `redis` are unavailable).
 
-The artifact environment cannot install the complete pinned frontend dependency tree. Exact Windows Ruff, strict Pyright, Vitest, TypeScript typecheck, ESLint, Next.js build, release gate and container gate remain mandatory before the next commit.
+The artifact environment does not contain a real seller credential and cannot claim external runtime success. Exact Windows Ruff 0.14.9, strict Pyright 1.1.411, full pytest, frontend gates, release gate and container gate remain mandatory before commit.
 
 ## Recommended next order
 
-1. Apply this dashboard increment to the existing feature branch.
-2. Run exact Windows release and container gates.
-3. Commit and push the dashboard increment as a second feature commit.
-4. Validate Yandex Market with a test seller account.
-5. Close provider runtime discrepancies.
-6. Implement Ozon from a current official exported contract.
-7. Expand shared account health and reply reconciliation for all marketplaces.
-8. Design Avito as a separate conversation adapter family.
-9. Bump all version contracts only when the release scope is actually closed.
+1. Apply this runtime-kit increment to `922e1788d99863e2e631addd52d68e07dec3c932`.
+2. Run exact Windows Ruff, Pyright, full pytest, release and container gates.
+3. Commit and push the runtime-kit increment.
+4. Run the read-only Yandex Market probe with a real test seller account.
+5. Review the sanitized evidence and close any provider-specific discrepancies.
+6. Run one explicitly approved write probe for a test review or question.
+7. Obtain a current official Ozon Seller API contract before implementing Ozon.
+8. Bump all version contracts only when the agreed release scope and runtime checks are closed.
