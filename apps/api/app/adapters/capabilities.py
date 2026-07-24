@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from app.adapters.base import MarketplaceOperation
-from app.models.enums import Marketplace, MessageType
+from app.models.enums import Marketplace, MarketplaceSyncStream, MessageType
 
 IntegrationStatus = Literal["enabled", "planned"]
 PaginationStrategy = Literal["offset", "page_token", "none", "unknown"]
@@ -24,9 +24,21 @@ class MarketplaceCapability:
     def connection_enabled(self) -> bool:
         return self.integration_status == "enabled" and "validate" in self.operations
 
+    def supports(self, operation: MarketplaceOperation) -> bool:
+        return operation in self.operations
+
+    @property
+    def sync_streams(self) -> tuple[MarketplaceSyncStream, ...]:
+        streams: list[MarketplaceSyncStream] = []
+        if self.supports("fetch_reviews"):
+            streams.append(MarketplaceSyncStream.REVIEWS)
+        if self.supports("fetch_questions"):
+            streams.append(MarketplaceSyncStream.QUESTIONS)
+        return tuple(streams)
+
     @property
     def scheduler_enabled(self) -> bool:
-        return self.connection_enabled and self.polling_enabled
+        return self.connection_enabled and self.polling_enabled and bool(self.sync_streams)
 
 
 _CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
@@ -56,12 +68,18 @@ _CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
     ),
     Marketplace.YANDEX_MARKET: MarketplaceCapability(
         marketplace=Marketplace.YANDEX_MARKET,
-        integration_status="planned",
-        operations=(),
-        message_types=(),
-        polling_enabled=False,
-        pagination_strategy="unknown",
-        notes="No production adapter is enabled in MPReply yet.",
+        integration_status="enabled",
+        operations=(
+            "validate",
+            "fetch_reviews",
+            "fetch_questions",
+            "send_review_reply",
+            "send_question_reply",
+        ),
+        message_types=(MessageType.REVIEW, MessageType.QUESTION),
+        polling_enabled=True,
+        pagination_strategy="page_token",
+        notes="Implemented against the official Yandex Market Partner API OpenAPI contract.",
     ),
     Marketplace.AVITO: MarketplaceCapability(
         marketplace=Marketplace.AVITO,

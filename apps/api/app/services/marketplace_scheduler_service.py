@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.capabilities import get_marketplace_capability, scheduler_marketplaces
 from app.core.config import get_settings
 from app.core.errors import not_found
-from app.models.enums import MarketplaceSyncStateStatus, MarketplaceSyncStream
+from app.models.enums import MarketplaceSyncStateStatus
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.user import User
@@ -54,7 +54,7 @@ class MarketplaceSchedulerService:
         )
         existing = {state.stream: state for state in result.scalars().all()}
         states: list[MarketplaceSyncState] = []
-        for stream in (MarketplaceSyncStream.REVIEWS, MarketplaceSyncStream.QUESTIONS):
+        for stream in capability.sync_streams:
             state = existing.get(stream.value)
             if state is None:
                 state = MarketplaceSyncState(

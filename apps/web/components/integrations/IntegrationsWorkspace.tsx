@@ -14,6 +14,7 @@ const marketplaceCatalog = [
     badge: "MVP adapter",
     description: "Подключение кабинетов, проверка ключа, ручная синхронизация отзывов и вопросов.",
     available: true,
+    href: "/app/integrations/wildberries",
   },
   {
     key: "ozon",
@@ -21,13 +22,15 @@ const marketplaceCatalog = [
     badge: "Planned",
     description: "Production adapter ещё не реализован и не объявляется готовым.",
     available: false,
+    href: null,
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
-    badge: "Planned",
-    description: "Будет подключён отдельным vertical slice после подтверждения API contract.",
-    available: false,
+    badge: "Partner API",
+    description: "Business ID + Api-Key, отзывы, вопросы, ответы, ручная и плановая синхронизация.",
+    available: true,
+    href: "/app/integrations/yandex-market",
   },
   {
     key: "avito",
@@ -35,6 +38,7 @@ const marketplaceCatalog = [
     badge: "Planned",
     description: "Не включается в production до реализации и проверки реального adapter.",
     available: false,
+    href: null,
   },
 ] as const;
 
@@ -50,7 +54,6 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const wildberriesAccounts = accounts.filter((account) => account.marketplace === "wildberries");
   const activeCount = accounts.filter((account) => account.status === "active").length;
   const problemCount = accounts.filter((account) => account.status === "error" || account.error_count > 0).length;
 
@@ -74,7 +77,7 @@ export function IntegrationsWorkspace() {
 
       <div className="integration-catalog-grid" role="list">
         {marketplaceCatalog.map((marketplace) => {
-          const connectedCount = marketplace.key === "wildberries" ? wildberriesAccounts.length : 0;
+          const connectedCount = accounts.filter((account) => account.marketplace === marketplace.key).length;
           const statusLabel = marketplace.available
             ? connectedCount > 0
               ? `${connectedCount} ${accountWord(connectedCount)}`
@@ -94,11 +97,11 @@ export function IntegrationsWorkspace() {
               </div>
               <p>{marketplace.description}</p>
               {marketplace.available ? (
-                <Link className="button button-secondary" href="/app/integrations/wildberries">
+                <Link className="button button-secondary" href={marketplace.href}>
                   {activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin"
                     ? connectedCount > 0
                       ? "Управлять подключениями"
-                      : "Подключить Wildberries"
+                      : `Подключить ${marketplace.name}`
                     : "Просмотреть подключения"}
                 </Link>
               ) : (

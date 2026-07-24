@@ -9,6 +9,8 @@ Implemented through Sprint 11:
 - FastAPI backend with organizations, RBAC and tenant isolation;
 - encrypted marketplace credentials;
 - Wildberries synchronization and reply execution foundation;
+- Yandex Market Partner API integration for accounts, reviews, questions, replies and dashboard management;
+- operation-aware marketplace sync foundation with bounded cursor pagination;
 - unified Inbox API and dashboard UI;
 - OpenRouter AI draft generation;
 - deterministic SafetyGate;
@@ -19,7 +21,7 @@ Implemented through Sprint 11:
 - optional semi-automatic manual review workflow: draft editing, optimistic revision checks, SafetyGate re-checks, submit for review, approve/reject, idempotent queueing and marketplace execution;
 - live SaaS frontend data plane for authentication, first-workspace onboarding, organization selection, Inbox and Review Queue.
 
-Wildberries is the current MVP marketplace integration. Ozon, Yandex Market and Avito remain planned until current official API contracts and production sending capabilities are verified and implemented.
+Wildberries remains the established integration. This 0.1.104 development snapshot also contains a Yandex Market Partner API vertical slice. Ozon and Avito remain disabled until their current official contracts and runtime requirements are implemented and verified. See `DEVELOPMENT_STATUS_0.1.104.md`.
 
 ## Repository structure
 

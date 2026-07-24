@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import select
@@ -24,6 +25,15 @@ from app.services.plan_limit_service import PlanLimitService
 
 _ALLOWED_MANAGE_ROLES = {"owner", "admin"}
 _ALLOWED_READ_ROLES = {"owner", "admin", "manager", "viewer"}
+
+
+def normalize_marketplace_seller_id(marketplace: str, seller_id: str | None) -> str | None:
+    normalized = seller_id.strip() if seller_id else None
+    if marketplace == Marketplace.YANDEX_MARKET.value and (
+        normalized is None or not normalized.isdecimal() or int(normalized) <= 0
+    ):
+        raise bad_request("Yandex Market business ID must be a positive integer")
+    return normalized
 
 
 class MarketplaceAccountService:
@@ -56,6 +66,7 @@ class MarketplaceAccountService:
         capability = get_marketplace_capability(marketplace)
         if not capability.connection_enabled:
             raise forbidden("Marketplace integration is not enabled yet")
+        normalized_seller_id = normalize_marketplace_seller_id(marketplace.value, seller_id)
         limit_decision = await self.plan_limits.evaluate_metric(
             organization_id=organization_id,
             metric="marketplace_accounts",
@@ -70,7 +81,7 @@ class MarketplaceAccountService:
             organization_id=organization_id,
             marketplace=marketplace.value,
             display_name=display_name.strip(),
-            seller_id=seller_id.strip() if seller_id else None,
+            seller_id=normalized_seller_id,
             status="pending_validation",
             credentials_encrypted=encrypted,
             credentials_fingerprint=fingerprint,
@@ -138,7 +149,7 @@ class MarketplaceAccountService:
         if display_name is not None:
             account.display_name = display_name.strip()
         if seller_id is not None:
-            account.seller_id = seller_id.strip() or None
+            account.seller_id = normalize_marketplace_seller_id(account.marketplace, seller_id)
         if default_response_mode is not None:
             account.default_response_mode = default_response_mode.value
         if status is not None:
@@ -229,13 +240,25 @@ class MarketplaceAccountService:
             metadata={"marketplace": account.marketplace},
         )
         adapter = self._adapter_for(account.marketplace)
-        result = await adapter.validate_credentials(credential)
+        result = await adapter.validate_credentials(credential, seller_id=account.seller_id)
         now = datetime.now(UTC)
 
         if result.ok:
             account.status = "active"
             account.credentials_status = "valid"
-            account.scopes_json = {"validated": True, "checked_at": now.isoformat()}
+            payload = result.data
+            result_data = cast(dict[str, object], payload) if isinstance(payload, dict) else {}
+            scopes_value = result_data.get("scopes")
+            scopes = (
+                [scope for scope in cast(list[object], scopes_value) if isinstance(scope, str)]
+                if isinstance(scopes_value, list)
+                else []
+            )
+            account.scopes_json = {
+                "validated": True,
+                "checked_at": now.isoformat(),
+                "scopes": scopes,
+            }
             await self.scheduler.ensure_account_states(account=account, activate=True, now=now)
             event_status = "success"
             error_code = None
