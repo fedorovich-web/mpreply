@@ -39,3 +39,18 @@ Before release, validate with a real test seller account:
 - provider moderation or publication delay;
 - duplicate-send reconciliation after ambiguous timeout;
 - actual resource-limit response headers.
+
+## Client dashboard observability
+
+The account dashboard reads a single tenant-scoped overview endpoint:
+
+- `GET /api/marketplace-accounts/{accountId}/overview`;
+- bounded history: up to 25 sync jobs and 50 integration events;
+- account health derived from credential state, scheduler streams and the latest manual sync;
+- separate state for review and question streams;
+- recent manual sync statistics and safe error messages;
+- recent integration events with recursively filtered metadata;
+- provider scopes returned as a normalized string list;
+- no encrypted credential, raw Api-Key, authorization header or token metadata in the response.
+
+The UI uses the existing manual sync endpoint to retry a failed synchronization. It does not create a second retry path or bypass backend RBAC.

@@ -255,9 +255,57 @@ export const marketplaceSyncSchema = z.object({
   error_message_safe: z.string().nullable(),
 });
 
+export const marketplaceSyncStateSchema = z.object({
+  id: uuidSchema,
+  marketplace_account_id: uuidSchema,
+  stream: z.string().min(1),
+  status: z.string().min(1),
+  next_run_at: timestampSchema.nullable(),
+  last_attempt_at: timestampSchema.nullable(),
+  last_success_at: timestampSchema.nullable(),
+  last_error_at: timestampSchema.nullable(),
+  last_cycle_completed_at: timestampSchema.nullable(),
+  consecutive_failures: z.number().int().nonnegative(),
+});
+
+export const marketplaceSyncJobSummarySchema = z.object({
+  id: uuidSchema,
+  job_type: z.string().min(1),
+  status: z.string().min(1),
+  started_at: timestampSchema.nullable(),
+  finished_at: timestampSchema.nullable(),
+  error_message_safe: z.string().nullable(),
+  stats: z.record(z.string(), z.number().int().nonnegative()),
+  created_at: timestampSchema,
+});
+
+export const marketplaceIntegrationEventSummarySchema = z.object({
+  id: uuidSchema,
+  event_type: z.string().min(1),
+  status: z.string().min(1),
+  error_code: z.string().nullable(),
+  error_message_safe: z.string().nullable(),
+  details: z.record(z.string(), z.unknown()),
+  created_at: timestampSchema,
+});
+
+export const marketplaceAccountOverviewSchema = z.object({
+  account: marketplaceAccountSchema,
+  health_status: z.enum(["healthy", "attention", "error", "disabled"]),
+  health_reasons: z.array(z.string()),
+  scopes: z.array(z.string()),
+  sync_states: z.array(marketplaceSyncStateSchema),
+  recent_jobs: z.array(marketplaceSyncJobSummarySchema),
+  recent_events: z.array(marketplaceIntegrationEventSummarySchema),
+});
+
 export type MarketplaceAccount = z.infer<typeof marketplaceAccountSchema>;
 export type MarketplaceAccountValidate = z.infer<typeof marketplaceAccountValidateSchema>;
 export type MarketplaceAccountAction = z.infer<typeof marketplaceAccountActionSchema>;
+export type MarketplaceAccountOverview = z.infer<typeof marketplaceAccountOverviewSchema>;
+export type MarketplaceSyncState = z.infer<typeof marketplaceSyncStateSchema>;
+export type MarketplaceSyncJobSummary = z.infer<typeof marketplaceSyncJobSummarySchema>;
+export type MarketplaceIntegrationEventSummary = z.infer<typeof marketplaceIntegrationEventSummarySchema>;
 export type MarketplaceSync = z.infer<typeof marketplaceSyncSchema>;
 
 export const messageResponseSchema = z.object({

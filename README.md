@@ -9,7 +9,8 @@ Implemented through Sprint 11:
 - FastAPI backend with organizations, RBAC and tenant isolation;
 - encrypted marketplace credentials;
 - Wildberries synchronization and reply execution foundation;
-- Yandex Market Partner API integration for accounts, reviews, questions, replies and dashboard management;
+- Yandex Market Partner API integration for accounts, reviews, questions and replies;
+- client dashboard observability for account health, scopes, scheduler streams, sync jobs and safe integration events;
 - operation-aware marketplace sync foundation with bounded cursor pagination;
 - unified Inbox API and dashboard UI;
 - OpenRouter AI draft generation;
