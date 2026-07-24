@@ -9,8 +9,8 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import AdapterResult
-from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.registry import get_marketplace_adapter
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
 from app.core.config import get_settings
 from app.core.errors import bad_request, conflict, not_found
@@ -314,6 +314,7 @@ class ReplyExecutionService:
         preflight = await self._preflight_answer_status(
             adapter=adapter,
             credential=credential,
+            seller_id=account.seller_id,
             message=message,
         )
         if preflight is True:
@@ -336,6 +337,7 @@ class ReplyExecutionService:
         result = await self._send_through_adapter(
             adapter=adapter,
             credential=credential,
+            seller_id=account.seller_id,
             message=message,
             reply=reply,
         )
@@ -442,40 +444,47 @@ class ReplyExecutionService:
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _adapter_for(account: MarketplaceAccount) -> WildberriesAdapter:
-        if account.marketplace == "wildberries":
-            return WildberriesAdapter()
-        raise bad_request("Marketplace reply adapter is not enabled yet")
+    def _adapter_for(account: MarketplaceAccount) -> MarketplaceAdapter:
+        return get_marketplace_adapter(account.marketplace)
 
     async def _preflight_answer_status(
         self,
         *,
-        adapter: WildberriesAdapter,
+        adapter: MarketplaceAdapter,
         credential: str,
+        seller_id: str | None,
         message: CustomerMessage,
     ) -> bool | None:
-        if message.type == MessageType.REVIEW.value:
-            result = await adapter.get_review(credential, message.external_id)
-        elif message.type == MessageType.QUESTION.value:
-            result = await adapter.get_question(credential, message.external_id)
-        else:
+        result = await adapter.has_existing_reply(
+            credential=credential,
+            message_type=message.type,
+            external_id=message.external_id,
+            seller_id=seller_id,
+        )
+        payload = result.data
+        if not result.ok or not isinstance(payload, dict):
             return None
-        if not result.ok:
-            return None
-        return adapter.is_already_answered(result.data)
+        result_data = cast(dict[str, object], payload)
+        answered = result_data.get("answered")
+        return answered if isinstance(answered, bool) else None
 
     async def _send_through_adapter(
         self,
         *,
-        adapter: WildberriesAdapter,
+        adapter: MarketplaceAdapter,
         credential: str,
+        seller_id: str | None,
         message: CustomerMessage,
         reply: Reply,
     ) -> AdapterResult:
         if message.type == MessageType.REVIEW.value:
-            return await adapter.send_review_reply(credential, message.external_id, reply.reply_text)
+            return await adapter.send_review_reply(
+                credential, message.external_id, reply.reply_text, seller_id=seller_id
+            )
         if message.type == MessageType.QUESTION.value:
-            return await adapter.send_question_reply(credential, message.external_id, reply.reply_text)
+            return await adapter.send_question_reply(
+                credential, message.external_id, reply.reply_text, seller_id=seller_id
+            )
         return AdapterResult(
             False,
             error_code="unsupported_message_type",
@@ -567,7 +576,12 @@ class ReplyExecutionService:
         self._transition_message(message, message_target)
         reply.error_code = result.error_code
         reply.failed_reason = result.error_message_safe
-        delay_seconds = min(60, 2 ** max(reply.attempt_count - 1, 0))
+        provider_delay = result.retry_after_seconds
+        delay_seconds = (
+            min(max(provider_delay, 1), 3600)
+            if provider_delay is not None
+            else min(60, 2 ** max(reply.attempt_count - 1, 0))
+        )
         reply.next_retry_at = datetime.now(UTC) + timedelta(seconds=delay_seconds)
         await self._write_integration_event(
             reply=reply,

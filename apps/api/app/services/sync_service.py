@@ -8,11 +8,13 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.capabilities import get_marketplace_capability
 from app.adapters.registry import get_marketplace_adapter
 from app.core.config import get_settings
 from app.core.errors import bad_request, not_found
 from app.core.security import CredentialService
+from app.models.enums import MarketplaceSyncStream
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.sync_job import SyncJob
@@ -23,6 +25,7 @@ from app.services.marketplace_ingest_service import MarketplaceMessageIngestServ
 from app.services.organization_service import OrganizationService
 
 _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
+_MAX_MANUAL_SYNC_PAGES_PER_STREAM = 100
 
 
 @dataclass
@@ -41,6 +44,12 @@ class SyncStats:
             "updated_questions": self.updated_questions,
             "skipped": self.skipped,
         }
+
+
+@dataclass(frozen=True)
+class StreamSyncOutcome:
+    error_code: str | None = None
+    error_message_safe: str | None = None
 
 
 class MarketplaceSyncService:
@@ -62,6 +71,9 @@ class MarketplaceSyncService:
         if account.status not in {"active", "pending_validation", "error"}:
             raise bad_request("Marketplace account is not available for sync")
         adapter = self._adapter_for(account.marketplace)
+        capability = get_marketplace_capability(account.marketplace)
+        if not capability.sync_streams:
+            raise bad_request("Marketplace does not support message sync")
         credential = self.credentials.decrypt(account.credentials_encrypted)
         now = datetime.now(UTC)
         job = SyncJob(
@@ -87,61 +99,17 @@ class MarketplaceSyncService:
         error_code: str | None = None
         error_message_safe: str | None = None
         try:
-            reviews_result = await adapter.fetch_reviews(credential=credential)
-            if reviews_result.ok:
-                for raw in adapter.extract_reviews(reviews_result.data):
-                    normalized = adapter.normalize_review(raw)
-                    outcome = await self.ingest.upsert_normalized_message(account, normalized)
-                    if outcome == "created":
-                        stats.imported_reviews += 1
-                    elif outcome == "updated":
-                        stats.updated_reviews += 1
-                    else:
-                        stats.skipped += 1
-                await self._write_integration_event(
+            for stream in capability.sync_streams:
+                outcome = await self._sync_stream_pages(
                     account=account,
-                    event_type="sync.feedbacks",
-                    status="success",
-                    metadata={"count": stats.imported_reviews + stats.updated_reviews},
+                    adapter=adapter,
+                    credential=credential,
+                    stream=stream,
+                    stats=stats,
                 )
-            else:
-                error_code = reviews_result.error_code
-                error_message_safe = reviews_result.error_message_safe
-                await self._write_integration_event(
-                    account=account,
-                    event_type="sync.feedbacks",
-                    status="failed",
-                    error_code=reviews_result.error_code,
-                    error_message_safe=reviews_result.error_message_safe,
-                )
-
-            questions_result = await adapter.fetch_questions(credential=credential)
-            if questions_result.ok:
-                for raw in adapter.extract_questions(questions_result.data):
-                    normalized = adapter.normalize_question(raw)
-                    outcome = await self.ingest.upsert_normalized_message(account, normalized)
-                    if outcome == "created":
-                        stats.imported_questions += 1
-                    elif outcome == "updated":
-                        stats.updated_questions += 1
-                    else:
-                        stats.skipped += 1
-                await self._write_integration_event(
-                    account=account,
-                    event_type="sync.questions",
-                    status="success",
-                    metadata={"count": stats.imported_questions + stats.updated_questions},
-                )
-            else:
-                error_code = error_code or questions_result.error_code
-                error_message_safe = error_message_safe or questions_result.error_message_safe
-                await self._write_integration_event(
-                    account=account,
-                    event_type="sync.questions",
-                    status="failed",
-                    error_code=questions_result.error_code,
-                    error_message_safe=questions_result.error_message_safe,
-                )
+                if outcome.error_code is not None and error_code is None:
+                    error_code = outcome.error_code
+                    error_message_safe = outcome.error_message_safe
 
             if error_code:
                 job.status = "failed"
@@ -198,6 +166,144 @@ class MarketplaceSyncService:
             )
             await self.session.flush()
             return account, stats, "sync_unhandled_error", "Sync failed unexpectedly"
+
+    async def _sync_stream_pages(
+        self,
+        *,
+        account: MarketplaceAccount,
+        adapter: MarketplaceAdapter,
+        credential: str,
+        stream: MarketplaceSyncStream,
+        stats: SyncStats,
+    ) -> StreamSyncOutcome:
+        cursor: str | None = None
+        seen_cursors: set[str] = set()
+        processed_pages = 0
+        event_type = "sync.feedbacks" if stream is MarketplaceSyncStream.REVIEWS else "sync.questions"
+
+        while processed_pages < _MAX_MANUAL_SYNC_PAGES_PER_STREAM:
+            result = await self._fetch_stream(
+                adapter=adapter,
+                stream=stream,
+                credential=credential,
+                cursor=cursor,
+                seller_id=account.seller_id,
+            )
+            processed_pages += 1
+            if not result.ok:
+                await self._write_integration_event(
+                    account=account,
+                    event_type=event_type,
+                    status="failed",
+                    error_code=result.error_code,
+                    error_message_safe=result.error_message_safe,
+                    metadata={"pages_processed": processed_pages, "cursor": cursor},
+                )
+                return StreamSyncOutcome(result.error_code, result.error_message_safe)
+
+            await self._ingest_page(account=account, adapter=adapter, stream=stream, result=result, stats=stats)
+            next_cursor = result.next_cursor
+            if next_cursor is None:
+                await self._write_integration_event(
+                    account=account,
+                    event_type=event_type,
+                    status="success",
+                    metadata={"count": self._stream_total(stats, stream), "pages_processed": processed_pages},
+                )
+                return StreamSyncOutcome()
+            if next_cursor == cursor or next_cursor in seen_cursors:
+                return await self._record_pagination_failure(
+                    account=account,
+                    event_type=event_type,
+                    error_code="sync_cursor_cycle",
+                    error_message_safe="Marketplace pagination cursor repeated",
+                    pages_processed=processed_pages,
+                    cursor=next_cursor,
+                )
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
+
+        return await self._record_pagination_failure(
+            account=account,
+            event_type=event_type,
+            error_code="sync_page_limit_exceeded",
+            error_message_safe="Marketplace pagination exceeded the safe page limit",
+            pages_processed=processed_pages,
+            cursor=cursor,
+        )
+
+    async def _ingest_page(
+        self,
+        *,
+        account: MarketplaceAccount,
+        adapter: MarketplaceAdapter,
+        stream: MarketplaceSyncStream,
+        result: AdapterResult,
+        stats: SyncStats,
+    ) -> None:
+        raw_items = (
+            adapter.extract_reviews(result.data)
+            if stream is MarketplaceSyncStream.REVIEWS
+            else adapter.extract_questions(result.data)
+        )
+        for raw in raw_items:
+            normalized = (
+                adapter.normalize_review(raw)
+                if stream is MarketplaceSyncStream.REVIEWS
+                else adapter.normalize_question(raw)
+            )
+            outcome = await self.ingest.upsert_normalized_message(account, normalized)
+            if outcome == "created":
+                if stream is MarketplaceSyncStream.REVIEWS:
+                    stats.imported_reviews += 1
+                else:
+                    stats.imported_questions += 1
+            elif outcome == "updated":
+                if stream is MarketplaceSyncStream.REVIEWS:
+                    stats.updated_reviews += 1
+                else:
+                    stats.updated_questions += 1
+            else:
+                stats.skipped += 1
+
+    async def _record_pagination_failure(
+        self,
+        *,
+        account: MarketplaceAccount,
+        event_type: str,
+        error_code: str,
+        error_message_safe: str,
+        pages_processed: int,
+        cursor: str | None,
+    ) -> StreamSyncOutcome:
+        await self._write_integration_event(
+            account=account,
+            event_type=event_type,
+            status="failed",
+            error_code=error_code,
+            error_message_safe=error_message_safe,
+            metadata={"pages_processed": pages_processed, "cursor": cursor},
+        )
+        return StreamSyncOutcome(error_code, error_message_safe)
+
+    @staticmethod
+    async def _fetch_stream(
+        *,
+        adapter: MarketplaceAdapter,
+        stream: MarketplaceSyncStream,
+        credential: str,
+        cursor: str | None,
+        seller_id: str | None,
+    ) -> AdapterResult:
+        if stream is MarketplaceSyncStream.REVIEWS:
+            return await adapter.fetch_reviews(credential=credential, cursor=cursor, seller_id=seller_id)
+        return await adapter.fetch_questions(credential=credential, cursor=cursor, seller_id=seller_id)
+
+    @staticmethod
+    def _stream_total(stats: SyncStats, stream: MarketplaceSyncStream) -> int:
+        if stream is MarketplaceSyncStream.REVIEWS:
+            return stats.imported_reviews + stats.updated_reviews
+        return stats.imported_questions + stats.updated_questions
 
     async def _get_account(self, account_id: UUID) -> MarketplaceAccount:
         result = await self.session.execute(select(MarketplaceAccount).where(MarketplaceAccount.id == account_id))

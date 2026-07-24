@@ -1,0 +1,10 @@
+PYRIGHT_REPORTED_PATTERN_AUDIT: PASS
+
+Verified source conditions:
+- no test access to capabilities_module._CAPABILITIES;
+- no untyped `lambda _marketplace` monkeypatch callbacks;
+- _SyncHarness override parameters match base names (`account_id`, `marketplace`);
+- no direct test access to service._sync_stream_pages or service._account;
+- no direct test access to MarketplaceAccountService._normalize_seller_id;
+- no direct test access to ReplyExecutionService protected preflight/send methods;
+- provider payload dictionaries are explicitly cast to dict[str, object].

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationsWorkspace } from "../../components/integrations/IntegrationsWorkspace";
 import { WildberriesIntegrationWorkspace } from "../../components/integrations/WildberriesIntegrationWorkspace";
+import { YandexMarketIntegrationWorkspace } from "../../components/integrations/YandexMarketIntegrationWorkspace";
 import { useWorkspace } from "../../components/workspace/WorkspaceProvider";
 
 vi.mock("../../components/workspace/WorkspaceProvider", () => ({
@@ -88,8 +89,12 @@ describe("IntegrationsWorkspace", () => {
       "href",
       "/app/integrations/wildberries",
     );
-    expect(screen.getAllByText("Пока недоступно")).toHaveLength(3);
-    expect(screen.getAllByText("Без ложного обещания production readiness.")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "Подключить Яндекс Маркет" })).toHaveAttribute(
+      "href",
+      "/app/integrations/yandex-market",
+    );
+    expect(screen.getAllByText("Пока недоступно")).toHaveLength(2);
+    expect(screen.getAllByText("Без ложного обещания production readiness.")).toHaveLength(2);
   });
 });
 
@@ -156,5 +161,61 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.queryByRole("button", { name: "Проверить ключ" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Синхронизировать сейчас" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Отозвать ключ" })).not.toBeInTheDocument();
+  });
+});
+
+describe("YandexMarketIntegrationWorkspace", () => {
+  it("requires Business ID and creates a Yandex Market account", async () => {
+    mockWorkspace("owner");
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            ...account,
+            ...payload,
+            id: "55555555-5555-4555-8555-555555555555",
+            marketplace: "yandex_market",
+            seller_id: payload.seller_id,
+            display_name: payload.display_name,
+            credentials_masked: "sha256:ym01…safe",
+            credentials_status: "pending_validation",
+            status: "pending_validation",
+          }),
+          { status: 201 },
+        );
+      }
+      return new Response(JSON.stringify([]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<YandexMarketIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Яндекс Маркета" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), {
+      target: { value: "Маркет основной" },
+    });
+    fireEvent.change(within(form).getByLabelText("Business ID"), {
+      target: { value: "123456" },
+    });
+    fireEvent.change(within(form).getByLabelText("API-ключ Яндекс Маркета"), {
+      target: { value: "super-secret-market-token" },
+    });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
+    });
+
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(payload).toMatchObject({
+      organization_id: organization.id,
+      marketplace: "yandex_market",
+      display_name: "Маркет основной",
+      seller_id: "123456",
+      credentials: "super-secret-market-token",
+      default_response_mode: "inherit",
+    });
   });
 });

@@ -15,6 +15,7 @@ from app.adapters.base import AdapterResult
 from app.adapters.capabilities import get_marketplace_capability, list_marketplace_capabilities
 from app.adapters.registry import get_marketplace_adapter
 from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.yandex_market import YandexMarketAdapter
 from app.models.base import Base
 from app.models.enums import Marketplace, MarketplaceSyncStateStatus, MarketplaceSyncStream, MessageType
 from app.models.marketplace_account import MarketplaceAccount
@@ -83,15 +84,21 @@ def test_capability_registry_exposes_every_marketplace_once() -> None:
     assert len({capability.marketplace for capability in capabilities}) == len(Marketplace)
 
 
-def test_only_wildberries_is_enabled_in_current_backend() -> None:
+def test_wildberries_and_yandex_market_are_enabled_in_current_backend() -> None:
     enabled = [capability for capability in list_marketplace_capabilities() if capability.connection_enabled]
 
-    assert [capability.marketplace for capability in enabled] == [Marketplace.WILDBERRIES]
-    assert enabled[0].message_types == (MessageType.REVIEW, MessageType.QUESTION)
-    assert enabled[0].scheduler_enabled is True
+    assert [capability.marketplace for capability in enabled] == [
+        Marketplace.WILDBERRIES,
+        Marketplace.YANDEX_MARKET,
+    ]
+    assert all(
+        capability.message_types == (MessageType.REVIEW, MessageType.QUESTION)
+        for capability in enabled
+    )
+    assert all(capability.scheduler_enabled for capability in enabled)
 
 
-@pytest.mark.parametrize("marketplace", [Marketplace.OZON, Marketplace.YANDEX_MARKET, Marketplace.AVITO])
+@pytest.mark.parametrize("marketplace", [Marketplace.OZON, Marketplace.AVITO])
 def test_unimplemented_marketplaces_remain_planned(marketplace: Marketplace) -> None:
     capability = get_marketplace_capability(marketplace)
 
@@ -100,8 +107,9 @@ def test_unimplemented_marketplaces_remain_planned(marketplace: Marketplace) -> 
     assert capability.polling_enabled is False
 
 
-def test_registry_builds_only_the_enabled_adapter() -> None:
+def test_registry_builds_enabled_adapters() -> None:
     assert isinstance(get_marketplace_adapter(Marketplace.WILDBERRIES), WildberriesAdapter)
+    assert isinstance(get_marketplace_adapter(Marketplace.YANDEX_MARKET), YandexMarketAdapter)
 
     with pytest.raises(HTTPException) as exc_info:
         get_marketplace_adapter(Marketplace.OZON)

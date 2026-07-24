@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.capabilities import get_marketplace_capability
 from app.adapters.registry import get_marketplace_adapter
 from app.core.config import get_settings
 from app.core.security import CredentialService
@@ -57,7 +58,13 @@ class ScheduledMarketplaceSyncService:
             or state.lease_expires_at <= now
         ):
             return ScheduledSyncResult(status="stale")
-        if account.status != "active" or account.credentials_status != "valid":
+        capability = get_marketplace_capability(account.marketplace)
+        supported_streams = {stream.value for stream in capability.sync_streams}
+        if (
+            account.status != "active"
+            or account.credentials_status != "valid"
+            or state.stream not in supported_streams
+        ):
             self._pause_state(state)
             await self.session.flush()
             return ScheduledSyncResult(status="paused")
@@ -86,7 +93,13 @@ class ScheduledMarketplaceSyncService:
             metadata={"stream": state.stream, "sync_job_id": str(job.id)},
         )
 
-        fetch_result = await self._fetch(adapter=adapter, stream=state.stream, credential=credential, cursor=cursor_before)
+        fetch_result = await self._fetch(
+            adapter=adapter,
+            stream=state.stream,
+            credential=credential,
+            cursor=cursor_before,
+            seller_id=account.seller_id,
+        )
         if not fetch_result.ok:
             return await self._record_failure(
                 account=account,
@@ -196,7 +209,8 @@ class ScheduledMarketplaceSyncService:
         state.consecutive_failures = int(state.consecutive_failures or 0) + 1
         state.status = MarketplaceSyncStateStatus.ERROR.value
         state.last_error_at = now
-        state.next_run_at = now + timedelta(seconds=retry_delay_seconds(state.consecutive_failures))
+        retry_delay = result.retry_after_seconds or retry_delay_seconds(state.consecutive_failures)
+        state.next_run_at = now + timedelta(seconds=min(max(retry_delay, 1), 3600))
         state.lease_token = None
         state.lease_expires_at = None
         account.last_error_sync_at = now
@@ -247,11 +261,12 @@ class ScheduledMarketplaceSyncService:
         stream: str,
         credential: str,
         cursor: str | None,
+        seller_id: str | None,
     ) -> AdapterResult:
         if stream == MarketplaceSyncStream.REVIEWS.value:
-            return await adapter.fetch_reviews(credential=credential, cursor=cursor)
+            return await adapter.fetch_reviews(credential=credential, cursor=cursor, seller_id=seller_id)
         if stream == MarketplaceSyncStream.QUESTIONS.value:
-            return await adapter.fetch_questions(credential=credential, cursor=cursor)
+            return await adapter.fetch_questions(credential=credential, cursor=cursor, seller_id=seller_id)
         return AdapterResult(False, error_code="unsupported_sync_stream", error_message_safe="Unsupported sync stream")
 
     @staticmethod

@@ -21,10 +21,12 @@ class WildberriesAdapter(MarketplaceAdapter):
 
     page_size = 50
 
-    async def validate_credentials(self, credential: str) -> AdapterResult:
+    async def validate_credentials(self, credential: str, seller_id: str | None = None) -> AdapterResult:
         return await self._get("/ping", credential, params=None)
 
-    async def fetch_reviews(self, credential: str, cursor: str | None = None) -> AdapterResult:
+    async def fetch_reviews(
+        self, credential: str, cursor: str | None = None, seller_id: str | None = None
+    ) -> AdapterResult:
         offset = self._parse_offset(cursor)
         if offset is None:
             return AdapterResult(False, error_code="invalid_cursor", error_message_safe="Stored sync cursor is invalid")
@@ -35,7 +37,9 @@ class WildberriesAdapter(MarketplaceAdapter):
         )
         return self.with_next_cursor(result, item_count=len(self.extract_reviews(result.data)), offset=offset)
 
-    async def fetch_questions(self, credential: str, cursor: str | None = None) -> AdapterResult:
+    async def fetch_questions(
+        self, credential: str, cursor: str | None = None, seller_id: str | None = None
+    ) -> AdapterResult:
         offset = self._parse_offset(cursor)
         if offset is None:
             return AdapterResult(False, error_code="invalid_cursor", error_message_safe="Stored sync cursor is invalid")
@@ -52,13 +56,39 @@ class WildberriesAdapter(MarketplaceAdapter):
     async def get_question(self, credential: str, external_id: str) -> AdapterResult:
         return await self._get("/api/v1/question", credential, params={"id": external_id})
 
-    async def send_review_reply(self, credential: str, external_id: str, reply_text: str) -> AdapterResult:
+    async def send_review_reply(
+        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+    ) -> AdapterResult:
         payload: dict[str, object] = {"id": external_id, "text": reply_text}
         return await self._post("/api/v1/feedbacks/answer", credential, json=payload)
 
-    async def send_question_reply(self, credential: str, external_id: str, reply_text: str) -> AdapterResult:
+    async def send_question_reply(
+        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+    ) -> AdapterResult:
         payload: dict[str, object] = {"id": external_id, "answer": {"text": reply_text}}
         return await self._patch("/api/v1/questions", credential, json=payload)
+
+    async def has_existing_reply(
+        self,
+        credential: str,
+        message_type: str,
+        external_id: str,
+        seller_id: str | None = None,
+    ) -> AdapterResult:
+        result = (
+            await self.get_review(credential, external_id)
+            if message_type == MessageType.REVIEW.value
+            else await self.get_question(credential, external_id)
+            if message_type == MessageType.QUESTION.value
+            else AdapterResult(
+                False,
+                error_code="unsupported_message_type",
+                error_message_safe="Message type is not supported by this marketplace",
+            )
+        )
+        if not result.ok:
+            return result
+        return AdapterResult(ok=True, data={"answered": self.is_already_answered(result.data)})
 
     def is_already_answered(self, payload: object) -> bool:
         data = self._data(payload)
