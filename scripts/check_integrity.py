@@ -274,7 +274,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "proxy-agent"): "8.0.2",
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
-        ("overrides", "postcss"): "8.5.12",
+        ("overrides", "postcss"): "8.5.18",
         ("overrides", "sharp"): "0.35.3",
         ("overrides", "chrome-launcher"): "1.2.1",
         ("overrides", "tmp"): "0.2.7",
