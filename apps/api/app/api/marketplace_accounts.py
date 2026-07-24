@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db_session
@@ -17,7 +17,9 @@ from app.schemas.marketplace_account import (
     MarketplaceAccountUpdateRequest,
     MarketplaceAccountValidateResponse,
 )
+from app.schemas.marketplace_overview import MarketplaceAccountOverviewResponse
 from app.schemas.sync import MarketplaceSyncResponse, MarketplaceSyncStateResponse
+from app.services.marketplace_account_overview_service import MarketplaceAccountOverviewService, extract_account_scopes
 from app.services.marketplace_account_service import MarketplaceAccountService
 from app.services.marketplace_scheduler_service import MarketplaceSchedulerService
 from app.services.sync_service import MarketplaceSyncService
@@ -54,6 +56,23 @@ async def list_marketplace_accounts(
     service = MarketplaceAccountService(session)
     accounts = await service.list_accounts(actor=current_user, organization_id=organization_id)
     return [service.to_response(account) for account in accounts]
+
+
+@router.get("/{account_id}/overview", response_model=MarketplaceAccountOverviewResponse)
+async def get_marketplace_account_overview(
+    account_id: UUID,
+    jobs_limit: int = Query(default=10, ge=1, le=25),
+    events_limit: int = Query(default=20, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> MarketplaceAccountOverviewResponse:
+    service = MarketplaceAccountOverviewService(session)
+    return await service.get_overview(
+        actor=current_user,
+        account_id=account_id,
+        jobs_limit=jobs_limit,
+        events_limit=events_limit,
+    )
 
 
 @router.get("/{account_id}", response_model=MarketplaceAccountResponse)
@@ -100,7 +119,7 @@ async def validate_marketplace_account(
         id=account.id,
         status=account.status,
         credentials_status=account.credentials_status,
-        scopes=list((account.scopes_json or {}).keys()),
+        scopes=extract_account_scopes(account.scopes_json or {}),
         checked_at=datetime.now(UTC),
         error_code=result.error_code,
         error_message_safe=result.error_message_safe,

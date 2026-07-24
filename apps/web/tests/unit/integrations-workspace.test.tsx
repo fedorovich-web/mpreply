@@ -219,3 +219,99 @@ describe("YandexMarketIntegrationWorkspace", () => {
     });
   });
 });
+
+
+describe("Yandex Market integration observability", () => {
+  it("shows health, scopes, stream state and failed sync history without exposing secrets", async () => {
+    mockWorkspace("owner");
+    const yandexAccount = {
+      ...account,
+      marketplace: "yandex_market",
+      display_name: "Маркет основной",
+      seller_id: "123456",
+      scopes_json: { validated: true, scopes: ["COMMUNICATION"] },
+      last_error_sync_at: "2026-07-24T11:00:00Z",
+      error_count: 2,
+    };
+    const overview = {
+      account: yandexAccount,
+      health_status: "error",
+      health_reasons: [
+        "Ошибки синхронизации: reviews.",
+        "Последняя ручная синхронизация завершилась ошибкой.",
+      ],
+      scopes: ["COMMUNICATION"],
+      sync_states: [
+        {
+          id: "66666666-6666-4666-8666-666666666666",
+          marketplace_account_id: yandexAccount.id,
+          stream: "reviews",
+          status: "error",
+          next_run_at: "2026-07-24T12:00:00Z",
+          last_attempt_at: "2026-07-24T11:00:00Z",
+          last_success_at: timestamp,
+          last_error_at: "2026-07-24T11:00:00Z",
+          last_cycle_completed_at: timestamp,
+          consecutive_failures: 2,
+        },
+        {
+          id: "77777777-7777-4777-8777-777777777777",
+          marketplace_account_id: yandexAccount.id,
+          stream: "questions",
+          status: "idle",
+          next_run_at: "2026-07-24T12:05:00Z",
+          last_attempt_at: timestamp,
+          last_success_at: timestamp,
+          last_error_at: null,
+          last_cycle_completed_at: timestamp,
+          consecutive_failures: 0,
+        },
+      ],
+      recent_jobs: [
+        {
+          id: "88888888-8888-4888-8888-888888888888",
+          job_type: "manual_sync",
+          status: "failed",
+          started_at: "2026-07-24T11:00:00Z",
+          finished_at: "2026-07-24T11:01:00Z",
+          error_message_safe: "Marketplace API request failed",
+          stats: { imported_reviews: 3, skipped: 1 },
+          created_at: "2026-07-24T11:00:00Z",
+        },
+      ],
+      recent_events: [
+        {
+          id: "99999999-9999-4999-8999-999999999999",
+          event_type: "sync.feedbacks",
+          status: "failed",
+          error_code: "rate_limited",
+          error_message_safe: "Marketplace API rate limit exceeded",
+          details: { pages_processed: 2 },
+          created_at: "2026-07-24T11:01:00Z",
+        },
+      ],
+    };
+
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes(`/api/marketplace-accounts/${yandexAccount.id}/overview`)) {
+        return new Response(JSON.stringify(overview), { status: 200 });
+      }
+      return new Response(JSON.stringify([yandexAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<YandexMarketIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Маркет основной" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Есть ошибки" })).toBeInTheDocument();
+    expect(screen.getByText("Общение с покупателями")).toBeInTheDocument();
+    expect(screen.getByText("Состояние потоков")).toBeInTheDocument();
+    expect(screen.getByText("Отзывы")).toBeInTheDocument();
+    expect(screen.getByText("История синхронизаций")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
+    expect(screen.getByText(/Яндекс Маркет временно ограничил частоту запросов/)).toBeInTheDocument();
+    expect(screen.queryByText(/must-not-leak|api_key|token/i)).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes("jobs_limit=10"))).toBe(true);
+  });
+});

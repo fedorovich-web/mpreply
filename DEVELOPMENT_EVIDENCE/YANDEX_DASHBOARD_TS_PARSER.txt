@@ -1,0 +1,4 @@
+TypeScript 5.8.3
+/mnt/data/mpreply_0.1.104_yandex_dashboard/apps/web/components/integrations/YandexMarketIntegrationWorkspace.tsx PASS
+/mnt/data/mpreply_0.1.104_yandex_dashboard/apps/web/lib/api/schemas.ts PASS
+/mnt/data/mpreply_0.1.104_yandex_dashboard/apps/web/tests/unit/integrations-workspace.test.tsx PASS

@@ -7,10 +7,15 @@ import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
   marketplaceAccountActionSchema,
   marketplaceAccountListSchema,
+  marketplaceAccountOverviewSchema,
   marketplaceAccountSchema,
   marketplaceAccountValidateSchema,
   marketplaceSyncSchema,
   type MarketplaceAccount,
+  type MarketplaceAccountOverview,
+  type MarketplaceIntegrationEventSummary,
+  type MarketplaceSyncJobSummary,
+  type MarketplaceSyncState,
 } from "../../lib/api/schemas";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
@@ -249,7 +254,22 @@ function AccountDetail({
   const [responseMode, setResponseMode] = useState<ResponseMode>(normalizeResponseMode(account.default_response_mode));
   const [newCredentials, setNewCredentials] = useState("");
   const [localError, setLocalError] = useState<unknown>(null);
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", organizationId] });
+  const overviewQuery = useQuery({
+    queryKey: ["marketplace-account-overview", account.id],
+    queryFn: () =>
+      apiRequest(
+        buildApiQuery(`/api/marketplace-accounts/${account.id}/overview`, { jobs_limit: 10, events_limit: 20 }),
+        marketplaceAccountOverviewSchema,
+      ),
+    staleTime: 15_000,
+  });
+  const invalidate = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", organizationId] }),
+      queryClient.invalidateQueries({ queryKey: ["marketplace-account-overview", account.id] }),
+    ]);
+  };
+  const latestJobFailed = overviewQuery.data?.recent_jobs[0]?.status === "failed";
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -330,12 +350,18 @@ function AccountDetail({
         <StatusBadge account={account} />
       </div>
 
-      <dl className="integration-health-grid">
-        <HealthItem label="Ключ" value={credentialsStatusLabel(account.credentials_status)} />
-        <HealthItem label="Маска" value={account.credentials_masked} />
-        <HealthItem label="Последняя успешная синхронизация" value={formatDateTime(account.last_success_sync_at)} />
-        <HealthItem label="Ошибок" value={String(account.error_count)} />
-      </dl>
+      {overviewQuery.isPending ? (
+        <WorkspaceState title="Загружаем состояние интеграции" description="Получаем потоки, историю синхронизаций и последние события." />
+      ) : overviewQuery.error ? (
+        <WorkspaceState
+          title="Не удалось загрузить состояние интеграции"
+          description={errorMessage(overviewQuery.error)}
+          actionLabel="Повторить"
+          onAction={() => void overviewQuery.refetch()}
+        />
+      ) : overviewQuery.data ? (
+        <AccountOverviewPanel overview={overviewQuery.data} />
+      ) : null}
 
       {canManage ? (
         <>
@@ -391,7 +417,7 @@ function AccountDetail({
               {validateMutation.isPending ? "Проверяем..." : "Проверить ключ"}
             </button>
             <button className="button button-secondary" disabled={busy || account.credentials_status !== "valid"} onClick={() => syncMutation.mutate()} type="button">
-              {syncMutation.isPending ? "Синхронизируем..." : "Синхронизировать сейчас"}
+              {syncMutation.isPending ? "Синхронизируем..." : latestJobFailed ? "Повторить синхронизацию" : "Синхронизировать сейчас"}
             </button>
           </div>
 
@@ -444,6 +470,163 @@ function AccountDetail({
         </div>
       )}
     </div>
+  );
+}
+
+function AccountOverviewPanel({ overview }: { overview: MarketplaceAccountOverview }) {
+  const nextRunAt = earliestDateTime(overview.sync_states.map((state) => state.next_run_at));
+
+  return (
+    <div className="integration-overview-stack">
+      <section className={`integration-health-banner integration-health-banner-${overview.health_status}`} aria-labelledby="ym-health-title">
+        <div>
+          <span className="panel-kicker">Connection health</span>
+          <h3 id="ym-health-title">{healthStatusLabel(overview.health_status)}</h3>
+        </div>
+        <ul>
+          {overview.health_reasons.map((reason) => <li key={reason}>{reason}</li>)}
+        </ul>
+      </section>
+
+      <dl className="integration-health-grid">
+        <HealthItem label="Ключ" value={credentialsStatusLabel(overview.account.credentials_status)} />
+        <HealthItem label="Маска" value={overview.account.credentials_masked} />
+        <HealthItem label="Последняя успешная синхронизация" value={formatDateTime(overview.account.last_success_sync_at)} />
+        <HealthItem label="Последняя ошибка" value={formatDateTime(overview.account.last_error_sync_at)} />
+        <HealthItem label="Следующий плановый запуск" value={formatDateTime(nextRunAt)} />
+        <HealthItem label="Накоплено ошибок" value={String(overview.account.error_count)} />
+      </dl>
+
+      <ScopesPanel scopes={overview.scopes} />
+      <SyncStreamsPanel states={overview.sync_states} />
+      <SyncJobsPanel jobs={overview.recent_jobs} />
+      <IntegrationEventsPanel events={overview.recent_events} />
+    </div>
+  );
+}
+
+function ScopesPanel({ scopes }: { scopes: string[] }) {
+  return (
+    <section className="integration-observability-panel" aria-labelledby="ym-scopes-title">
+      <div className="panel-heading panel-heading-row">
+        <div>
+          <span className="panel-kicker">Permissions</span>
+          <strong id="ym-scopes-title">Разрешения API-ключа</strong>
+        </div>
+        <span className="ui-badge">{scopes.length}</span>
+      </div>
+      {scopes.length > 0 ? (
+        <div className="integration-scope-list" role="list">
+          {scopes.map((scope) => (
+            <span className="ui-badge ui-badge-neutral" key={scope} role="listitem">
+              {scopeLabel(scope)}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="integration-empty-copy">Разрешения появятся после успешной проверки API-ключа.</p>
+      )}
+    </section>
+  );
+}
+
+function SyncStreamsPanel({ states }: { states: MarketplaceSyncState[] }) {
+  return (
+    <section className="integration-observability-panel" aria-labelledby="ym-streams-title">
+      <div className="panel-heading panel-heading-row">
+        <div>
+          <span className="panel-kicker">Scheduler</span>
+          <strong id="ym-streams-title">Состояние потоков</strong>
+        </div>
+        <span className="ui-badge">{states.length}</span>
+      </div>
+      {states.length > 0 ? (
+        <div className="integration-stream-list">
+          {states.map((state) => (
+            <article className="integration-stream-card" key={state.id}>
+              <div className="integration-history-heading">
+                <strong>{streamLabel(state.stream)}</strong>
+                <span className={`ui-badge ${statusTone(state.status)}`}>{streamStatusLabel(state.status)}</span>
+              </div>
+              <dl className="integration-compact-meta">
+                <HealthItem label="Последний успех" value={formatDateTime(state.last_success_at)} />
+                <HealthItem label="Последняя ошибка" value={formatDateTime(state.last_error_at)} />
+                <HealthItem label="Следующий запуск" value={formatDateTime(state.next_run_at)} />
+                <HealthItem label="Ошибок подряд" value={String(state.consecutive_failures)} />
+              </dl>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="integration-empty-copy">Потоки будут созданы после успешной проверки подключения.</p>
+      )}
+    </section>
+  );
+}
+
+function SyncJobsPanel({ jobs }: { jobs: MarketplaceSyncJobSummary[] }) {
+  return (
+    <section className="integration-observability-panel" aria-labelledby="ym-sync-history-title">
+      <div className="panel-heading panel-heading-row">
+        <div>
+          <span className="panel-kicker">Manual sync</span>
+          <strong id="ym-sync-history-title">История синхронизаций</strong>
+        </div>
+        <span className="ui-badge">{jobs.length}</span>
+      </div>
+      {jobs.length > 0 ? (
+        <ol className="integration-history-list">
+          {jobs.map((job) => (
+            <li key={job.id}>
+              <div className="integration-history-heading">
+                <strong>{syncJobLabel(job.job_type)}</strong>
+                <span className={`ui-badge ${statusTone(job.status)}`}>{jobStatusLabel(job.status)}</span>
+              </div>
+              <p>{formatSyncStats(job.stats)}</p>
+              {job.error_message_safe ? <p className="integration-error-copy">{job.error_message_safe}</p> : null}
+              <time dateTime={job.finished_at ?? job.created_at}>{formatDateTime(job.finished_at ?? job.created_at)}</time>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="integration-empty-copy">Ручных синхронизаций ещё не было.</p>
+      )}
+    </section>
+  );
+}
+
+function IntegrationEventsPanel({ events }: { events: MarketplaceIntegrationEventSummary[] }) {
+  return (
+    <section className="integration-observability-panel" aria-labelledby="ym-events-title">
+      <div className="panel-heading panel-heading-row">
+        <div>
+          <span className="panel-kicker">Audit trail</span>
+          <strong id="ym-events-title">События интеграции</strong>
+        </div>
+        <span className="ui-badge">{events.length}</span>
+      </div>
+      {events.length > 0 ? (
+        <ol className="integration-history-list">
+          {events.map((event) => (
+            <li key={event.id}>
+              <div className="integration-history-heading">
+                <strong>{eventTypeLabel(event.event_type)}</strong>
+                <span className={`ui-badge ${statusTone(event.status)}`}>{jobStatusLabel(event.status)}</span>
+              </div>
+              {event.error_message_safe ? (
+                <p className="integration-error-copy">{friendlyIntegrationError(event.error_code, event.error_message_safe)}</p>
+              ) : (
+                <p>{formatEventDetails(event.details)}</p>
+              )}
+              {event.error_code ? <code>{event.error_code}</code> : null}
+              <time dateTime={event.created_at}>{formatDateTime(event.created_at)}</time>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="integration-empty-copy">События появятся после проверки ключа или синхронизации.</p>
+      )}
+    </section>
   );
 }
 
@@ -527,11 +710,136 @@ function credentialsStatusLabel(value: string): string {
   return labels[value] ?? value;
 }
 
+function earliestDateTime(values: Array<string | null>): string | null {
+  let earliest: { value: string; timestamp: number } | null = null;
+  for (const value of values) {
+    if (!value) continue;
+    const timestamp = new Date(value).getTime();
+    if (Number.isNaN(timestamp)) continue;
+    if (!earliest || timestamp < earliest.timestamp) earliest = { value, timestamp };
+  }
+  return earliest?.value ?? null;
+}
+
 function formatDateTime(value: string | null): string {
   if (!value) return "Ещё не было";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function healthStatusLabel(value: MarketplaceAccountOverview["health_status"]): string {
+  const labels: Record<MarketplaceAccountOverview["health_status"], string> = {
+    healthy: "Подключение работает",
+    attention: "Требуется внимание",
+    error: "Есть ошибки",
+    disabled: "Подключение отключено",
+  };
+  return labels[value];
+}
+
+function scopeLabel(value: string): string {
+  const labels: Record<string, string> = {
+    ALL_METHODS: "Все методы",
+    ALL_METHODS_READ_ONLY: "Все методы · только чтение",
+    COMMUNICATION: "Общение с покупателями",
+  };
+  return labels[value] ?? value;
+}
+
+function streamLabel(value: string): string {
+  const labels: Record<string, string> = {
+    reviews: "Отзывы",
+    questions: "Вопросы",
+  };
+  return labels[value] ?? value;
+}
+
+function streamStatusLabel(value: string): string {
+  const labels: Record<string, string> = {
+    idle: "Ожидает запуска",
+    leased: "Выполняется",
+    error: "Ошибка",
+    paused: "Приостановлен",
+  };
+  return labels[value] ?? value;
+}
+
+function jobStatusLabel(value: string): string {
+  const labels: Record<string, string> = {
+    success: "Успешно",
+    failed: "Ошибка",
+    running: "Выполняется",
+    idle: "Ожидает запуска",
+    leased: "Выполняется",
+    error: "Ошибка",
+    paused: "Приостановлен",
+  };
+  return labels[value] ?? value;
+}
+
+function statusTone(value: string): string {
+  if (value === "success" || value === "idle") return "ui-badge-success";
+  if (value === "failed" || value === "error") return "ui-badge-danger";
+  return "ui-badge-warning";
+}
+
+function syncJobLabel(value: string): string {
+  return value === "manual_sync" ? "Ручная синхронизация" : value;
+}
+
+function eventTypeLabel(value: string): string {
+  const labels: Record<string, string> = {
+    "credentials.validate": "Проверка API-ключа",
+    "sync.feedbacks": "Синхронизация отзывов",
+    "sync.questions": "Синхронизация вопросов",
+    "sync.unhandled_error": "Системная ошибка синхронизации",
+  };
+  return labels[value] ?? value;
+}
+
+function formatSyncStats(stats: Record<string, number>): string {
+  const labels: Record<string, string> = {
+    imported_reviews: "новых отзывов",
+    imported_questions: "новых вопросов",
+    updated_reviews: "обновлено отзывов",
+    updated_questions: "обновлено вопросов",
+    skipped: "пропущено",
+  };
+  const parts = Object.entries(stats)
+    .filter(([, value]) => value > 0)
+    .map(([key, value]) => `${labels[key] ?? key}: ${value}`);
+  return parts.length > 0 ? parts.join(" · ") : "Изменений нет";
+}
+
+function formatEventDetails(details: Record<string, unknown>): string {
+  const parts = Object.entries(details)
+    .filter(([, value]) => typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    .slice(0, 4)
+    .map(([key, value]) => `${eventDetailLabel(key)}: ${String(value)}`);
+  return parts.length > 0 ? parts.join(" · ") : "Событие зарегистрировано без дополнительных данных.";
+}
+
+function eventDetailLabel(value: string): string {
+  const labels: Record<string, string> = {
+    count: "обработано",
+    pages_processed: "страниц",
+    error_type: "тип ошибки",
+    credentials_status: "состояние ключа",
+  };
+  return labels[value] ?? value;
+}
+
+function friendlyIntegrationError(code: string | null, fallback: string): string {
+  const labels: Record<string, string> = {
+    invalid_credentials: "API-ключ отклонён. Проверьте ключ и его разрешения.",
+    insufficient_scope: "API-ключу не хватает разрешения «Общение с покупателями».",
+    rate_limited: "Яндекс Маркет временно ограничил частоту запросов. Повторите синхронизацию позже.",
+    sync_cursor_cycle: "Маркет вернул повторяющийся курсор. Синхронизация безопасно остановлена.",
+    sync_page_limit_exceeded: "Синхронизация достигла защитного лимита страниц и была остановлена.",
+    sync_unhandled_error: "Во время синхронизации произошла внутренняя ошибка. Повторите операцию или передайте requestId поддержке.",
+  };
+  return code ? labels[code] ?? fallback : fallback;
 }
 
 function roleLabel(value: string): string {

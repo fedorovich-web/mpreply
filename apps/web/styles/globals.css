@@ -2589,6 +2589,7 @@ h1 {
 	background: var(--app-danger-bg);
 }
 
+
 @media (max-width: 1080px) {
 	.analytics-metric-grid,
 	.admin-overview-grid {
@@ -2866,6 +2867,154 @@ h1 {
 	box-shadow: var(--shadow-sm);
 }
 
+.integration-overview-stack,
+.integration-observability-panel,
+.integration-stream-list {
+	display: grid;
+	gap: var(--space-4);
+}
+
+.integration-health-banner,
+.integration-observability-panel,
+.integration-stream-card,
+.integration-history-list > li {
+	border: var(--border-width-hairline) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	background: var(--color-bg-elevated);
+}
+
+.integration-health-banner {
+	display: grid;
+	grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 1.3fr);
+	gap: var(--space-4);
+	padding: var(--space-4);
+}
+
+.integration-health-banner h3,
+.integration-health-banner ul,
+.integration-history-list,
+.integration-history-list p,
+.integration-empty-copy {
+	margin: 0;
+}
+
+.integration-health-banner > div {
+	display: grid;
+	align-content: start;
+	gap: var(--space-1);
+}
+
+.integration-health-banner ul {
+	display: grid;
+	gap: var(--space-2);
+	padding-left: var(--space-5);
+	color: var(--color-text-secondary);
+	line-height: var(--line-height-relaxed);
+}
+
+.integration-health-banner-healthy {
+	background: var(--app-success-bg);
+}
+
+.integration-health-banner-attention {
+	background: var(--app-warning-bg);
+}
+
+.integration-health-banner-error {
+	border-color: var(--color-danger);
+	background: var(--app-danger-bg);
+}
+
+.integration-health-banner-disabled {
+	background: var(--color-bg-page);
+}
+
+.integration-observability-panel {
+	padding: var(--space-4);
+}
+
+.integration-scope-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.ui-badge-neutral {
+	background: var(--color-bg-page);
+	color: var(--color-text-secondary);
+}
+
+.integration-stream-list {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.integration-stream-card,
+.integration-history-list > li {
+	display: grid;
+	gap: var(--space-3);
+	padding: var(--space-4);
+}
+
+.integration-history-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.integration-compact-meta {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--space-3);
+	margin: 0;
+}
+
+.integration-compact-meta > div {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.integration-compact-meta dt,
+.integration-compact-meta dd {
+	margin: 0;
+}
+
+.integration-compact-meta dt,
+.integration-history-list time,
+.integration-empty-copy {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.integration-compact-meta dd {
+	font-weight: var(--font-weight-semibold);
+}
+
+.integration-history-list {
+	display: grid;
+	gap: var(--space-3);
+	padding: 0;
+	list-style: none;
+}
+
+.integration-history-list p {
+	color: var(--color-text-secondary);
+	line-height: var(--line-height-relaxed);
+}
+
+.integration-history-list code {
+	width: fit-content;
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-page);
+	padding: var(--space-1) var(--space-2);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-xs);
+}
+
+.integration-error-copy {
+	color: var(--color-danger-text);
+}
+
 @media (max-width: 1080px) {
 	.wildberries-layout {
 		grid-template-columns: 1fr;
@@ -2876,12 +3025,16 @@ h1 {
 	.integrations-summary-grid,
 	.integration-catalog-grid,
 	.integration-health-grid,
-	.integration-action-grid {
+	.integration-action-grid,
+	.integration-stream-list,
+	.integration-compact-meta,
+	.integration-health-banner {
 		grid-template-columns: 1fr;
 	}
 
 	.integration-market-card-topline,
 	.integration-detail-heading,
+	.integration-history-heading,
 	.integration-security-strip,
 	.integration-danger-zone {
 		align-items: stretch;
