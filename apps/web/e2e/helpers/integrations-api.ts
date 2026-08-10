@@ -1,4 +1,6 @@
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { fulfillMockApiJson as fulfillJson } from "./mock-api-cors";
 
 export type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
 
@@ -25,18 +27,10 @@ const account = {
   updated_at: timestamp,
 };
 
-export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "owner") {
-  const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
-  const headers = {
-    "access-control-allow-credentials": "true",
-    "access-control-allow-headers": "content-type",
-    "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
-    "access-control-allow-origin": origin,
-    "content-type": "application/json",
-  };
-  const fulfillJson = (route: Route, body: unknown, status = 200) =>
-    route.fulfill({ status, headers, body: JSON.stringify(body) });
-
+export async function mockIntegrationsApi(
+  page: Page,
+  role: OrganizationRole = "owner",
+) {
   await page.route("**/api/auth/me", async (route) => {
     if (route.request().method() === "OPTIONS") return fulfillJson(route, null, 204);
     return fulfillJson(route, {
@@ -52,18 +46,20 @@ export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "
 
   await page.route("**/api/organizations", async (route) => {
     if (route.request().method() === "OPTIONS") return fulfillJson(route, null, 204);
-    return fulfillJson(route, [{
-      id: organizationId,
-      name: "Seller Group",
-      slug: "seller-group",
-      owner_user_id: userId,
-      plan_id: null,
-      default_response_mode: "auto",
-      status: "active",
-      current_user_role: role,
-      created_at: timestamp,
-      updated_at: timestamp,
-    }]);
+    return fulfillJson(route, [
+      {
+        id: organizationId,
+        name: "Seller Group",
+        slug: "seller-group",
+        owner_user_id: userId,
+        plan_id: null,
+        default_response_mode: "auto",
+        status: "active",
+        current_user_role: role,
+        created_at: timestamp,
+        updated_at: timestamp,
+      },
+    ]);
   });
 
   await page.route("**/api/marketplace-accounts**", async (route) => {
@@ -82,20 +78,28 @@ export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "
       });
     }
     if (url.endsWith("/sync")) {
-      return fulfillJson(route, {
-        account_id: accountId,
-        marketplace: "wildberries",
-        status: "success",
-        imported_reviews: 4,
-        imported_questions: 2,
-        updated_reviews: 1,
-        updated_questions: 0,
-        skipped: 0,
-        error_code: null,
-        error_message_safe: null,
-      }, 202);
+      return fulfillJson(
+        route,
+        {
+          account_id: accountId,
+          marketplace: "wildberries",
+          status: "success",
+          imported_reviews: 4,
+          imported_questions: 2,
+          updated_reviews: 1,
+          updated_questions: 0,
+          skipped: 0,
+          error_code: null,
+          error_message_safe: null,
+        },
+        202,
+      );
     }
-    if (method === "POST" && !url.includes("rotate-credentials") && !url.includes("revoke-credentials")) {
+    if (
+      method === "POST" &&
+      !url.includes("rotate-credentials") &&
+      !url.includes("revoke-credentials")
+    ) {
       return fulfillJson(route, account, 201);
     }
     if (method === "GET") return fulfillJson(route, [account]);
