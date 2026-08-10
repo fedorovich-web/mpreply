@@ -27,10 +27,7 @@ const account = {
   updated_at: timestamp,
 };
 
-export async function mockIntegrationsApi(
-  page: Page,
-  role: OrganizationRole = "owner",
-) {
+export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "owner") {
   const origin = resolvePlaywrightBaseURL();
   const headers = {
     "access-control-allow-credentials": "true",
@@ -57,20 +54,18 @@ export async function mockIntegrationsApi(
 
   await page.route("**/api/organizations", async (route) => {
     if (route.request().method() === "OPTIONS") return fulfillJson(route, null, 204);
-    return fulfillJson(route, [
-      {
-        id: organizationId,
-        name: "Seller Group",
-        slug: "seller-group",
-        owner_user_id: userId,
-        plan_id: null,
-        default_response_mode: "auto",
-        status: "active",
-        current_user_role: role,
-        created_at: timestamp,
-        updated_at: timestamp,
-      },
-    ]);
+    return fulfillJson(route, [{
+      id: organizationId,
+      name: "Seller Group",
+      slug: "seller-group",
+      owner_user_id: userId,
+      plan_id: null,
+      default_response_mode: "auto",
+      status: "active",
+      current_user_role: role,
+      created_at: timestamp,
+      updated_at: timestamp,
+    }]);
   });
 
   await page.route("**/api/marketplace-accounts**", async (route) => {
@@ -89,28 +84,20 @@ export async function mockIntegrationsApi(
       });
     }
     if (url.endsWith("/sync")) {
-      return fulfillJson(
-        route,
-        {
-          account_id: accountId,
-          marketplace: "wildberries",
-          status: "success",
-          imported_reviews: 4,
-          imported_questions: 2,
-          updated_reviews: 1,
-          updated_questions: 0,
-          skipped: 0,
-          error_code: null,
-          error_message_safe: null,
-        },
-        202,
-      );
+      return fulfillJson(route, {
+        account_id: accountId,
+        marketplace: "wildberries",
+        status: "success",
+        imported_reviews: 4,
+        imported_questions: 2,
+        updated_reviews: 1,
+        updated_questions: 0,
+        skipped: 0,
+        error_code: null,
+        error_message_safe: null,
+      }, 202);
     }
-    if (
-      method === "POST" &&
-      !url.includes("rotate-credentials") &&
-      !url.includes("revoke-credentials")
-    ) {
+    if (method === "POST" && !url.includes("rotate-credentials") && !url.includes("revoke-credentials")) {
       return fulfillJson(route, account, 201);
     }
     if (method === "GET") return fulfillJson(route, [account]);

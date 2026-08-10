@@ -67,10 +67,7 @@ export function createAutomationRulesMockState() {
   };
 }
 
-export async function mockAutomationRulesApi(
-  page: Page,
-  role: OrganizationRole = "owner",
-) {
+export async function mockAutomationRulesApi(page: Page, role: OrganizationRole = "owner") {
   const origin = resolvePlaywrightBaseURL();
   const state = createAutomationRulesMockState();
   const headers = {

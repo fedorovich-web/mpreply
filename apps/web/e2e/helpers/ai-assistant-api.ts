@@ -76,10 +76,7 @@ const generatedDraft = {
   updated_at: timestamp,
 };
 
-export async function mockAIAssistantApi(
-  page: Page,
-  role: OrganizationRole = "manager",
-) {
+export async function mockAIAssistantApi(page: Page, role: OrganizationRole = "manager") {
   const origin = resolvePlaywrightBaseURL();
   const headers = {
     "access-control-allow-credentials": "true",
