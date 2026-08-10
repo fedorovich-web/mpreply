@@ -123,8 +123,48 @@ jobs:
         run: npm ci
 
       - name: Complete dependency tree
+        shell: bash
         working-directory: apps/web
-        run: npm ls --all
+        run: |
+          set +e
+          npm ls --all --json \
+            > ../../.github/bootstrap/npm-ls-tree.json \
+            2> ../../.github/bootstrap/npm-ls-stderr.txt
+          npm_ls_status=$?
+          set -e
+          export NPM_LS_STATUS="$npm_ls_status"
+          node <<'NODE'
+          const fs = require('node:fs')
+          const path = '../../.github/bootstrap/npm-ls-tree.json'
+          let tree = {}
+          try {
+            tree = JSON.parse(fs.readFileSync(path, 'utf8'))
+          } catch (error) {
+            tree = { parseError: error instanceof Error ? error.message : String(error) }
+          }
+          const report = {
+            exitCode: Number(process.env.NPM_LS_STATUS),
+            problems: Array.isArray(tree.problems) ? tree.problems : [],
+            parseError: tree.parseError || null,
+          }
+          fs.writeFileSync(
+            '../../.github/bootstrap/npm-ls-problems.json',
+            JSON.stringify(report, null, 2) + '\n',
+            'utf8',
+          )
+          NODE
+          rm -f ../../.github/bootstrap/npm-ls-tree.json
+          if [[ "$npm_ls_status" -ne 0 ]]; then
+            git -C ../.. config user.name "github-actions[bot]"
+            git -C ../.. config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C ../.. add -- .github/bootstrap/npm-ls-problems.json
+            git -C ../.. add -- .github/bootstrap/npm-ls-stderr.txt
+            git -C ../.. commit -m "test(security): capture dependency tree failure"
+            git -C ../.. push origin "HEAD:refs/heads/${HEAD_REF}"
+            exit "$npm_ls_status"
+          fi
+          rm -f ../../.github/bootstrap/npm-ls-problems.json
+          rm -f ../../.github/bootstrap/npm-ls-stderr.txt
 
       - name: Frontend unit tests
         working-directory: apps/web
@@ -170,6 +210,8 @@ jobs:
           git rm -f --ignore-unmatch .github/workflows/security-prerequisite-bootstrap.yml
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite.patch
           git rm -f --ignore-unmatch .github/bootstrap/security-bootstrap-trigger.txt
+          git rm -f --ignore-unmatch .github/bootstrap/npm-ls-problems.json
+          git rm -f --ignore-unmatch .github/bootstrap/npm-ls-stderr.txt
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.00
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.01
