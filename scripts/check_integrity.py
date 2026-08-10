@@ -14,6 +14,31 @@ API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.103"
 EXPECTED_ALEMBIC_HEAD = "20260722_0014"
 
+FRONTEND_SECURITY_MINIMUMS: dict[str, dict[int, tuple[int, int, int]]] = {
+    "brace-expansion": {
+        1: (1, 1, 18),
+        2: (2, 1, 4),
+        3: (3, 0, 6),
+        5: (5, 0, 9),
+    },
+    "postcss": {8: (8, 5, 23)},
+    "ip-address": {10: (10, 3, 1)},
+    "js-yaml": {
+        3: (3, 15, 1),
+        4: (4, 3, 1),
+        5: (5, 2, 1),
+    },
+    "nanoid": {
+        3: (3, 3, 17),
+        5: (5, 1, 6),
+    },
+    "undici": {
+        6: (6, 28, 0),
+        7: (7, 29, 0),
+        8: (8, 9, 0),
+    },
+}
+
 ERRORS: list[str] = []
 
 GENERATED_ARTIFACT_PARTS = frozenset(
@@ -77,6 +102,15 @@ TEXT_SOURCE_SUFFIXES = frozenset(
 
 def _is_text_source(path: Path) -> bool:
     return path.suffix.lower() in TEXT_SOURCE_SUFFIXES or ".env" in path.name.lower()
+
+
+def _parse_semver(value: object) -> tuple[int, int, int] | None:
+    if not isinstance(value, str):
+        return None
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", value)
+    if match is None:
+        return None
+    return tuple(int(part) for part in match.groups())
 
 
 def _compact_archive_excludes(relative_path: str) -> bool:
@@ -254,6 +288,32 @@ def check_versions_and_frontend_security_baseline() -> None:
         fail("apps/web/package.json must not use the npm-11-incompatible nested @lhci/cli override")
 
     lock_packages = lock.get("packages", {})
+    for package_name, floors in FRONTEND_SECURITY_MINIMUMS.items():
+        found_versions: list[tuple[str, tuple[int, int, int]]] = []
+        suffix = f"node_modules/{package_name}"
+        for path, metadata in lock_packages.items():
+            if not isinstance(path, str) or not isinstance(metadata, dict):
+                continue
+            if path != suffix and not path.endswith(f"/{suffix}"):
+                continue
+            version = _parse_semver(metadata.get("version"))
+            if version is None:
+                fail(f"{package_name} has a non-semver lock entry at {path}")
+                continue
+            found_versions.append((path, version))
+            floor = floors.get(version[0])
+            if floor is None:
+                fail(
+                    f"{package_name} major {version[0]} has no approved security line at {path}"
+                )
+                continue
+            if version < floor:
+                fail(
+                    f"{package_name} {'.'.join(map(str, version))} at {path} is below "
+                    f"patched floor {'.'.join(map(str, floor))}"
+                )
+        if not found_versions:
+            fail(f"{package_name} is missing from apps/web/package-lock.json")
     root_chrome_launcher = lock_packages.get("node_modules/chrome-launcher", {})
     if root_chrome_launcher.get("version") != "1.2.1":
         fail("apps/web/package-lock.json root chrome-launcher must equal 1.2.1")
@@ -274,7 +334,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "proxy-agent"): "8.0.2",
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
-        ("overrides", "postcss"): "8.5.18",
+        ("overrides", "postcss"): "8.5.23",
         ("overrides", "sharp"): "0.35.3",
         ("overrides", "chrome-launcher"): "1.2.1",
         ("overrides", "tmp"): "0.2.7",
