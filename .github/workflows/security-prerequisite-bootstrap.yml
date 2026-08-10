@@ -26,20 +26,35 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
+
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
+
       - uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
 
-      - name: Apply exact lockfile and integrity patch
+      - name: Pin npm toolchain
         run: |
-          git apply --check .github/bootstrap/security-prerequisite.patch
-          git apply .github/bootstrap/security-prerequisite.patch
+          npm install --global npm@11.17.0
+          test "$(npm --version)" = "11.17.0"
+
+      - name: Generate exact lockfile from reviewed package contract
+        working-directory: apps/web
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Verify generated scope
+        shell: bash
+        run: |
           git diff --check
+          mapfile -t changed < <(git diff --name-only)
+          if [[ ${#changed[@]} -ne 1 || "${changed[0]}" != "apps/web/package-lock.json" ]]; then
+            printf 'Unexpected generated paths:\n%s\n' "${changed[*]}" >&2
+            exit 1
+          fi
 
       - name: Repository tooling regression tests
         run: python -m unittest discover -s scripts/tests -p "test_*.py"
@@ -96,10 +111,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .github/workflows/security-prerequisite-bootstrap.yml
-          git rm .github/bootstrap/security-prerequisite.patch
-          git rm .github/bootstrap/security-bootstrap-trigger.txt
-          git add apps/web/package-lock.json scripts/check_integrity.py
+          git rm -f --ignore-unmatch .github/workflows/security-prerequisite-bootstrap.yml
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite.patch
+          git rm -f --ignore-unmatch .github/bootstrap/security-bootstrap-trigger.txt
+          git add apps/web/package-lock.json
           git diff --cached --check
-          git commit -m "chore(security): finalize brace expansion baseline"
+          git commit -m "chore(security): finalize frontend dependency baseline"
           git push origin "HEAD:refs/heads/${HEAD_REF}"
