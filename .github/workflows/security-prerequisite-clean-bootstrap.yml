@@ -1,0 +1,108 @@
+name: Security prerequisite bootstrap
+
+on:
+  push:
+    branches:
+      - work/0.1.104-security-prerequisite-clean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: security-prerequisite-clean-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: work/0.1.104-security-prerequisite-clean
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.18.0'
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Reconstruct and verify audited payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/bootstrap/security-prerequisite-payload/part-* > /tmp/security-prerequisite-payload.tar.gz
+          echo 'd2fe0088cb7c691458421ed0648a856dff84b7541cd0ca77e74de1c5798adabb  /tmp/security-prerequisite-payload.tar.gz' | sha256sum --check --strict
+          tar -xzf /tmp/security-prerequisite-payload.tar.gz -C .
+          git rm -r -- .github/bootstrap/security-prerequisite-payload .github/workflows/security-prerequisite-clean-bootstrap.yml
+
+      - name: Generate deterministic npm lock
+        working-directory: apps/web
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --global npm@11.17.0
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          test "$(git hash-object package-lock.json)" = '9d8cdd8749b15cadffee886d35dbc5c62e548685'
+
+      - name: Verify dependency graph and security audit
+        working-directory: apps/web
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm ls --all
+          npm audit --audit-level=high
+          npx vitest run tests/unit/brace-expansion-security.test.ts --maxWorkers=1
+
+      - name: Verify repository security contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s scripts/tests -p 'test_*.py'
+          python scripts/check_integrity.py
+
+      - name: Verify exact final scope
+        shell: bash
+        env:
+          BASE_SHA: ffdf1faecd98fa29240fed40c9425e2b14aea5d9
+        run: |
+          set -euo pipefail
+          git diff --check
+          cat > /tmp/expected-paths <<'EOF'
+          DEVELOPMENT_EVIDENCE/FRONTEND_BRACE_EXPANSION_SECURITY_2026-08-03.md
+          apps/web/Dockerfile
+          apps/web/package-lock.json
+          apps/web/package.json
+          apps/web/tests/unit/brace-expansion-security.test.ts
+          apps/web/vendor/npm/README.md
+          apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat.tgz
+          scripts/check_integrity.py
+          scripts/tests/test_brace_expansion_security_baseline.py
+          EOF
+          git diff --name-only "$BASE_SHA" | sort > /tmp/actual-paths
+          sort -o /tmp/expected-paths /tmp/expected-paths
+          diff -u /tmp/expected-paths /tmp/actual-paths
+
+      - name: Commit validated candidate to validation branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            DEVELOPMENT_EVIDENCE/FRONTEND_BRACE_EXPANSION_SECURITY_2026-08-03.md \
+            apps/web/Dockerfile \
+            apps/web/package-lock.json \
+            apps/web/package.json \
+            apps/web/tests/unit/brace-expansion-security.test.ts \
+            apps/web/vendor/npm/README.md \
+            apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat.tgz \
+            scripts/check_integrity.py \
+            scripts/tests/test_brace_expansion_security_baseline.py
+          git diff --cached --check
+          git commit -m 'chore(security): materialize validated prerequisite candidate'
+          git push origin HEAD:refs/heads/work/0.1.104-security-prerequisite-clean
