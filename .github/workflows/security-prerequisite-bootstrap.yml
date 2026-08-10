@@ -1,25 +1,30 @@
 name: Security prerequisite bootstrap
 
 on:
-  push:
+  pull_request:
     branches:
       - work/0.1.104-security-prerequisite
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
-  group: security-prerequisite-bootstrap
+  group: security-prerequisite-bootstrap-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   finalize-lockfile:
-    if: github.actor != 'github-actions[bot]'
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    env:
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: work/0.1.104-security-prerequisite
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
@@ -58,6 +63,10 @@ jobs:
         working-directory: apps/web
         run: npm run test:unit
 
+      - name: Design token tests
+        working-directory: apps/web
+        run: npm run test:design-tokens
+
       - name: Typecheck
         working-directory: apps/web
         run: npm run typecheck
@@ -66,9 +75,21 @@ jobs:
         working-directory: apps/web
         run: npm run lint
 
+      - name: Impeccable design anti-pattern scan
+        working-directory: apps/web
+        run: npm run design:detect
+
+      - name: CSS syntax validation
+        working-directory: apps/web
+        run: npm run validate:css-syntax
+
       - name: Production build
         working-directory: apps/web
         run: npm run build
+
+      - name: W3C HTML and CSS validation
+        working-directory: apps/web
+        run: npm run validate:w3c
 
       - name: Commit validated security baseline
         shell: bash
@@ -80,6 +101,4 @@ jobs:
           git add apps/web/package-lock.json scripts/check_integrity.py
           git diff --cached --check
           git commit -m "chore(security): finalize brace expansion baseline"
-          git push origin HEAD:refs/heads/work/0.1.104-security-prerequisite
-
-# Exact bootstrap trigger commit.
+          git push origin "HEAD:refs/heads/${HEAD_REF}"
