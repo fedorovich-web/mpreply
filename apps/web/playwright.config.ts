@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL =
-  process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3120";
+import { resolvePlaywrightBaseURL } from "./e2e/helpers/playwright-runtime";
+
+const baseURL = resolvePlaywrightBaseURL();
 const webServerURL = new URL(baseURL);
 const webServerPort = webServerURL.port;
 const chromiumExecutablePath =

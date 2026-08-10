@@ -1,5 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 
+import { resolvePlaywrightBaseURL } from "./playwright-runtime";
+
 export type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
 
 export const aiDraftHistoryRoutePattern = /\/api\/ai\/drafts(?:\?.*)?$/;
@@ -75,7 +77,7 @@ const generatedDraft = {
 };
 
 export async function mockAIAssistantApi(page: Page, role: OrganizationRole = "manager") {
-  const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+  const origin = resolvePlaywrightBaseURL();
   const headers = {
     "access-control-allow-credentials": "true",
     "access-control-allow-headers": "content-type",
