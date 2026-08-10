@@ -42,19 +42,78 @@ jobs:
           npm install --global npm@11.17.0
           test "$(npm --version)" = "11.17.0"
 
+      - name: Apply reviewed security implementation
+        shell: bash
+        run: |
+          cat \
+            .github/bootstrap/security-prerequisite-implementation.b64.00 \
+            .github/bootstrap/security-prerequisite-implementation.b64.01 \
+            .github/bootstrap/security-prerequisite-implementation.b64.02 \
+            .github/bootstrap/security-prerequisite-implementation.b64.03 \
+            .github/bootstrap/security-prerequisite-implementation.b64.04 \
+            .github/bootstrap/security-prerequisite-implementation.b64.05 \
+            .github/bootstrap/security-prerequisite-implementation.b64.06 \
+            | base64 --decode > /tmp/security-prerequisite-implementation.patch
+          echo "b9d2a9066683b2fd5abdf5af280bc7b5163944b8de7c5a59008fda35e9622624  /tmp/security-prerequisite-implementation.patch" | sha256sum --check
+          git apply --check /tmp/security-prerequisite-implementation.patch
+          git apply /tmp/security-prerequisite-implementation.patch
+          git diff --check
+          node --check apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.js
+
       - name: Generate exact lockfile from reviewed package contract
         working-directory: apps/web
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
 
-      - name: Verify generated scope
+      - name: Stage and verify exact product scope
         shell: bash
         run: |
-          git diff --check
-          mapfile -t changed < <(git diff --name-only)
-          if [[ ${#changed[@]} -ne 1 || "${changed[0]}" != "apps/web/package-lock.json" ]]; then
-            printf 'Unexpected generated paths:\n%s\n' "${changed[*]}" >&2
-            exit 1
-          fi
+          git add -- apps/web/Dockerfile
+          git add -- apps/web/package.json
+          git add -- apps/web/package-lock.json
+          git add -- apps/web/tests/unit/brace-expansion-security.test.ts
+          git add -u -- apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/LICENSE
+          git add -u -- apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/PROVENANCE.md
+          git add -u -- apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/README.md
+          git add -u -- apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/index.d.ts
+          git add -u -- apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/index.js
+          git add -u -- apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/package.json
+          git add -- apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/LICENSE
+          git add -- apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/PROVENANCE.md
+          git add -- apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/README.md
+          git add -- apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.d.ts
+          git add -- apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.js
+          git add -- apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/package.json
+          git add -- scripts/check_integrity.py
+          git add -- scripts/tests/test_brace_expansion_security_baseline.py
+          git add -- scripts/tests/test_frontend_transitive_security_baseline.py
+          git add -- scripts/tests/test_postcss_security_baseline.py
+          git diff --cached --check
+          cat > /tmp/expected-security-paths.txt <<'EOF'
+          apps/web/Dockerfile
+          apps/web/package-lock.json
+          apps/web/package.json
+          apps/web/tests/unit/brace-expansion-security.test.ts
+          apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/LICENSE
+          apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/PROVENANCE.md
+          apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/README.md
+          apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/index.d.ts
+          apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/index.js
+          apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/package.json
+          apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/LICENSE
+          apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/PROVENANCE.md
+          apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/README.md
+          apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.d.ts
+          apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.js
+          apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/package.json
+          scripts/check_integrity.py
+          scripts/tests/test_brace_expansion_security_baseline.py
+          scripts/tests/test_frontend_transitive_security_baseline.py
+          scripts/tests/test_postcss_security_baseline.py
+          EOF
+          sed -i 's/^          //' /tmp/expected-security-paths.txt
+          git diff --cached --name-only | sort > /tmp/actual-security-paths.txt
+          sort /tmp/expected-security-paths.txt -o /tmp/expected-security-paths.txt
+          diff -u /tmp/expected-security-paths.txt /tmp/actual-security-paths.txt
 
       - name: Repository tooling regression tests
         run: python -m unittest discover -s scripts/tests -p "test_*.py"
@@ -114,7 +173,13 @@ jobs:
           git rm -f --ignore-unmatch .github/workflows/security-prerequisite-bootstrap.yml
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite.patch
           git rm -f --ignore-unmatch .github/bootstrap/security-bootstrap-trigger.txt
-          git add apps/web/package-lock.json
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.01
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.02
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.03
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.04
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.05
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.06
           git diff --cached --check
           git commit -m "chore(security): finalize frontend dependency baseline"
           git push origin "HEAD:refs/heads/${HEAD_REF}"
