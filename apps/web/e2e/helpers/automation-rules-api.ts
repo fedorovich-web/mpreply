@@ -1,5 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 
+import { resolvePlaywrightBaseURL } from "./playwright-runtime";
+
 export type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
@@ -65,8 +67,11 @@ export function createAutomationRulesMockState() {
   };
 }
 
-export async function mockAutomationRulesApi(page: Page, role: OrganizationRole = "owner") {
-  const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+export async function mockAutomationRulesApi(
+  page: Page,
+  role: OrganizationRole = "owner",
+) {
+  const origin = resolvePlaywrightBaseURL();
   const state = createAutomationRulesMockState();
   const headers = {
     "access-control-allow-credentials": "true",
