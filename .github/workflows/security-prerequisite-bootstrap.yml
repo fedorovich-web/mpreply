@@ -1,0 +1,83 @@
+name: Security prerequisite bootstrap
+
+on:
+  push:
+    branches:
+      - work/0.1.104-security-prerequisite
+
+permissions:
+  contents: write
+
+concurrency:
+  group: security-prerequisite-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  finalize-lockfile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: work/0.1.104-security-prerequisite
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Apply exact lockfile and integrity patch
+        run: |
+          git apply --check .github/bootstrap/security-prerequisite.patch
+          git apply .github/bootstrap/security-prerequisite.patch
+          git diff --check
+
+      - name: Repository tooling regression tests
+        run: python -m unittest discover -s scripts/tests -p "test_*.py"
+
+      - name: Repository integrity
+        run: python scripts/check_integrity.py
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Complete dependency tree
+        working-directory: apps/web
+        run: npm ls --all
+
+      - name: Security audit
+        working-directory: apps/web
+        run: npm audit --audit-level=high
+
+      - name: Frontend unit tests
+        working-directory: apps/web
+        run: npm run test:unit
+
+      - name: Typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Production build
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Commit validated security baseline
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/security-prerequisite-bootstrap.yml
+          git rm .github/bootstrap/security-prerequisite.patch
+          git add apps/web/package-lock.json scripts/check_integrity.py
+          git diff --cached --check
+          git commit -m "chore(security): finalize brace expansion baseline"
+          git push origin HEAD:refs/heads/work/0.1.104-security-prerequisite

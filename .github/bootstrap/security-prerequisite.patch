@@ -1,0 +1,172 @@
+diff --git a/apps/web/package-lock.json b/apps/web/package-lock.json
+index e582d4f..6eb93ec 100644
+--- a/apps/web/package-lock.json
++++ b/apps/web/package-lock.json
+@@ -25,6 +25,7 @@
+         "@types/react": "19.2.7",
+         "@types/react-dom": "19.2.3",
+         "@types/three": "0.185.1",
++        "brace-expansion": "file:vendor/npm/brace-expansion-5.0.8-mpreply-compat",
+         "csstree-validator": "4.0.1",
+         "eslint": "9.39.2",
+         "eslint-config-next": "16.2.11",
+@@ -3088,29 +3089,6 @@
+         "typescript": ">=4.8.4 <6.1.0"
+       }
+     },
+-    "node_modules/@typescript-eslint/typescript-estree/node_modules/balanced-match": {
+-      "version": "4.0.4",
+-      "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz",
+-      "integrity": "sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==",
+-      "dev": true,
+-      "license": "MIT",
+-      "engines": {
+-        "node": "18 || 20 || >=22"
+-      }
+-    },
+-    "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion": {
+-      "version": "5.0.7",
+-      "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.7.tgz",
+-      "integrity": "sha512-7oFy703dxfY3/NLxC1fh2SUCQ0H9rmAY+5EpDVfXjUTTs+HEwR2nYaqLv+GWcTsumwxPfiz6CzCNkwXwBUwqCA==",
+-      "dev": true,
+-      "license": "MIT",
+-      "dependencies": {
+-        "balanced-match": "^4.0.2"
+-      },
+-      "engines": {
+-        "node": "18 || 20 || >=22"
+-      }
+-    },
+     "node_modules/@typescript-eslint/typescript-estree/node_modules/minimatch": {
+       "version": "10.2.5",
+       "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.5.tgz",
+@@ -4204,15 +4182,8 @@
+       }
+     },
+     "node_modules/brace-expansion": {
+-      "version": "1.1.16",
+-      "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.16.tgz",
+-      "integrity": "sha512-IDw48K2/2kRkg9LdJxurvq3lV3aBgq0REY89duEqFRthjlPdXHKMj7EnQOXVckxzgisinf3nHfrcE2FufFLXMw==",
+-      "dev": true,
+-      "license": "MIT",
+-      "dependencies": {
+-        "balanced-match": "^1.0.0",
+-        "concat-map": "0.0.1"
+-      }
++      "resolved": "vendor/npm/brace-expansion-5.0.8-mpreply-compat",
++      "link": true
+     },
+     "node_modules/braces": {
+       "version": "3.0.3",
+@@ -4633,13 +4604,6 @@
+       "dev": true,
+       "license": "MIT"
+     },
+-    "node_modules/concat-map": {
+-      "version": "0.0.1",
+-      "resolved": "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz",
+-      "integrity": "sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==",
+-      "dev": true,
+-      "license": "MIT"
+-    },
+     "node_modules/configstore": {
+       "version": "5.0.1",
+       "resolved": "https://registry.npmjs.org/configstore/-/configstore-5.0.1.tgz",
+@@ -12445,6 +12409,18 @@
+       "peerDependencies": {
+         "zod": "^3.25.0 || ^4.0.0"
+       }
++    },
++    "vendor/npm/brace-expansion-5.0.8-mpreply-compat": {
++      "name": "brace-expansion",
++      "version": "5.0.8",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "balanced-match": "^1.0.0"
++      },
++      "engines": {
++        "node": ">=22.12.0"
++      }
+     }
+   }
+ }
+diff --git a/scripts/check_integrity.py b/scripts/check_integrity.py
+index 442ffd0..2ffa974 100644
+--- a/scripts/check_integrity.py
++++ b/scripts/check_integrity.py
+@@ -13,6 +13,8 @@ WEB = ROOT / "apps" / "web"
+ API = ROOT / "apps" / "api"
+ EXPECTED_VERSION = "0.1.103"
+ EXPECTED_ALEMBIC_HEAD = "20260722_0014"
++EXPECTED_BRACE_EXPANSION_VERSION = "5.0.8"
++BRACE_EXPANSION_VENDOR_SPEC = "file:vendor/npm/brace-expansion-5.0.8-mpreply-compat"
+ 
+ ERRORS: list[str] = []
+ 
+@@ -274,6 +276,8 @@ def check_versions_and_frontend_security_baseline() -> None:
+         ("devDependencies", "proxy-agent"): "8.0.2",
+         ("devDependencies", "vnu-jar"): "26.7.11",
+         ("devDependencies", "csstree-validator"): "4.0.1",
++        ("devDependencies", "brace-expansion"): BRACE_EXPANSION_VENDOR_SPEC,
++        ("overrides", "brace-expansion"): "$brace-expansion",
+         ("overrides", "postcss"): "8.5.18",
+         ("overrides", "sharp"): "0.35.3",
+         ("overrides", "chrome-launcher"): "1.2.1",
+@@ -286,6 +290,56 @@ def check_versions_and_frontend_security_baseline() -> None:
+         if actual != expected:
+             fail(f"apps/web/package.json {section}.{name} != {expected}; got {actual!r}")
+ 
++    brace_vendor = WEB / "vendor" / "npm" / "brace-expansion-5.0.8-mpreply-compat"
++    if not brace_vendor.is_dir():
++        fail("Vendored brace-expansion package directory is missing")
++
++    brace_entries = {
++        path: data
++        for path, data in lock_packages.items()
++        if path.endswith("node_modules/brace-expansion") and isinstance(data, dict)
++    }
++    if set(brace_entries) != {"node_modules/brace-expansion"}:
++        fail(f"apps/web/package-lock.json must contain one hoisted brace-expansion entry; got {sorted(brace_entries)}")
++    else:
++        brace_link = brace_entries["node_modules/brace-expansion"]
++        if brace_link.get("link") is not True:
++            fail("apps/web/package-lock.json brace-expansion must be a local package link")
++        if brace_link.get("resolved") != "vendor/npm/brace-expansion-5.0.8-mpreply-compat":
++            fail("apps/web/package-lock.json brace-expansion link points to an unexpected path")
++
++    brace_package = lock_packages.get("vendor/npm/brace-expansion-5.0.8-mpreply-compat")
++    if not isinstance(brace_package, dict):
++        fail("apps/web/package-lock.json is missing the vendored brace-expansion package entry")
++    elif brace_package.get("version") != EXPECTED_BRACE_EXPANSION_VERSION:
++        fail(f"apps/web/package-lock.json brace-expansion != {EXPECTED_BRACE_EXPANSION_VERSION}")
++
++    if brace_vendor.is_dir():
++        package_path = brace_vendor / "package.json"
++        index_path = brace_vendor / "index.js"
++        provenance_path = brace_vendor / "PROVENANCE.md"
++        license_path = brace_vendor / "LICENSE"
++        for required in (package_path, index_path, provenance_path, license_path):
++            require_file(required)
++        if package_path.is_file() and index_path.is_file() and provenance_path.is_file():
++            try:
++                vendor_package = json.loads(package_path.read_text(encoding="utf-8"))
++                vendor_index = index_path.read_text(encoding="utf-8")
++                vendor_provenance = provenance_path.read_text(encoding="utf-8")
++            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
++                fail(f"Cannot validate vendored brace-expansion package: {type(exc).__name__}")
++            else:
++                if vendor_package.get("name") != "brace-expansion":
++                    fail("Vendored brace-expansion package name is invalid")
++                if vendor_package.get("version") != EXPECTED_BRACE_EXPANSION_VERSION:
++                    fail("Vendored brace-expansion package version is not 5.0.8")
++                if "module.exports = expand" not in vendor_index or "module.exports.expand = expand" not in vendor_index:
++                    fail("Vendored brace-expansion package does not expose both legacy and named exports")
++                if "EXPANSION_MAX_LENGTH = 4_000_000" not in vendor_index:
++                    fail("Vendored brace-expansion package does not enforce the bounded expansion contract")
++                if "GHSA-mh99-v99m-4gvg" not in vendor_provenance:
++                    fail("Vendored brace-expansion package provenance does not reference the security advisory")
++
+     expected_scripts = {
+         "typecheck": "next typegen && tsc --noEmit",
+         "test:unit": "vitest run tests/unit --maxWorkers=1",
