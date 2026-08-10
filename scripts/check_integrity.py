@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import sys
+from frontend_transitive_security import check_frontend_transitive_security
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -260,6 +261,8 @@ def check_versions_and_frontend_security_baseline() -> None:
     if "node_modules/lighthouse/node_modules/chrome-launcher" in lock_packages:
         fail("apps/web/package-lock.json must not retain a nested Lighthouse chrome-launcher copy")
 
+    check_frontend_transitive_security(package, lock, fail)
+
     expected_dependencies = {
         ("dependencies", "next"): "16.2.11",
         ("devDependencies", "eslint-config-next"): "16.2.11",
@@ -274,7 +277,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "proxy-agent"): "8.0.2",
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
-        ("overrides", "postcss"): "8.5.18",
+        ("overrides", "postcss"): "8.5.23",
         ("overrides", "sharp"): "0.35.3",
         ("overrides", "chrome-launcher"): "1.2.1",
         ("overrides", "tmp"): "0.2.7",
