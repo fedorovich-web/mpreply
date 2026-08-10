@@ -1,2 +1,3 @@
 Security prerequisite bootstrap trigger for the exact ffdf1fa feature baseline.
 Exact chunked transport retry: 2026-08-10T10:45Z.
+Dependency-tree diagnostic retry: 2026-08-10T11:05Z.
