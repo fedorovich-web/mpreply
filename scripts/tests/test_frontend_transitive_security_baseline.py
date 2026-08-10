@@ -76,7 +76,7 @@ class FrontendTransitiveSecurityBaselineTests(unittest.TestCase):
                     f"{sorted(versions)}",
                 )
 
-    def test_integrity_callback_reports_the_old_dependency_graph(self) -> None:
+    def test_integrity_callback_accepts_the_current_dependency_graph(self) -> None:
         package = json.loads(
             (ROOT / "apps" / "web" / "package.json").read_text(encoding="utf-8")
         )
@@ -87,25 +87,7 @@ class FrontendTransitiveSecurityBaselineTests(unittest.TestCase):
 
         check_frontend_transitive_security(package, lock, errors.append)
 
-        self.assertEqual(
-            sorted(errors),
-            sorted(
-                [
-                    "apps/web/package-lock.json contains vulnerable or unexpected "
-                    "brace-expansion versions: ['1.1.16', '5.0.7']",
-                    "apps/web/package-lock.json contains vulnerable or unexpected "
-                    "ip-address versions: ['10.2.0']",
-                    "apps/web/package-lock.json contains vulnerable or unexpected "
-                    "js-yaml versions: ['3.15.0', '4.3.0']",
-                    "apps/web/package-lock.json contains vulnerable or unexpected "
-                    "nanoid versions: ['3.3.16']",
-                    "apps/web/package-lock.json contains vulnerable or unexpected "
-                    "postcss versions: ['8.5.18']",
-                    "apps/web/package-lock.json contains vulnerable or unexpected "
-                    "undici versions: ['7.28.0']",
-                ]
-            ),
-        )
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":
