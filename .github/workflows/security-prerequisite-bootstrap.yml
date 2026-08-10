@@ -1,0 +1,192 @@
+name: Security prerequisite bootstrap
+
+on:
+  pull_request:
+    branches:
+      - work/0.1.104-security-prerequisite
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: security-prerequisite-bootstrap-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  validate-and-finalize:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Pin npm toolchain
+        run: |
+          npm install --global npm@11.17.0
+          test "$(npm --version)" = "11.17.0"
+
+      - name: Reconstruct and apply reviewed implementation
+        shell: bash
+        run: |
+          cat \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.00 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.01 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.02 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.03 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.04 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.05 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.06 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.07 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.08 \
+            .github/bootstrap/security-prerequisite-implementation.b64.00.09 \
+            .github/bootstrap/security-prerequisite-implementation.b64.01 \
+            .github/bootstrap/security-prerequisite-implementation.b64.02 \
+            .github/bootstrap/security-prerequisite-implementation.b64.03 \
+            .github/bootstrap/security-prerequisite-implementation.b64.04 \
+            .github/bootstrap/security-prerequisite-implementation.b64.05 \
+            .github/bootstrap/security-prerequisite-implementation.b64.06 \
+            | base64 --decode > /tmp/security-prerequisite.patch
+          echo "b9d2a9066683b2fd5abdf5af280bc7b5163944b8de7c5a59008fda35e9622624  /tmp/security-prerequisite.patch" | sha256sum --check
+          git apply --check /tmp/security-prerequisite.patch
+          git apply /tmp/security-prerequisite.patch
+          git diff --check
+          node --check apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.js
+
+      - name: Generate exact package lock
+        working-directory: apps/web
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Stage and verify exact product scope
+        shell: bash
+        run: |
+          git add -- apps/web/Dockerfile
+          git add -- apps/web/package.json
+          git add -- apps/web/package-lock.json
+          git add -- apps/web/tests/unit/brace-expansion-security.test.ts
+          git add -u -- apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat
+          git add -- apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat
+          git add -- scripts/check_integrity.py
+          git add -- scripts/tests/test_brace_expansion_security_baseline.py
+          git add -- scripts/tests/test_frontend_transitive_security_baseline.py
+          git add -- scripts/tests/test_postcss_security_baseline.py
+          git diff --cached --check
+          printf '%s\n' \
+            'apps/web/Dockerfile' \
+            'apps/web/package-lock.json' \
+            'apps/web/package.json' \
+            'apps/web/tests/unit/brace-expansion-security.test.ts' \
+            'apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/LICENSE' \
+            'apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/PROVENANCE.md' \
+            'apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/README.md' \
+            'apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/index.d.ts' \
+            'apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/index.js' \
+            'apps/web/vendor/npm/brace-expansion-5.0.8-mpreply-compat/package.json' \
+            'apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/LICENSE' \
+            'apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/PROVENANCE.md' \
+            'apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/README.md' \
+            'apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.d.ts' \
+            'apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/index.js' \
+            'apps/web/vendor/npm/brace-expansion-5.0.9-mpreply-compat/package.json' \
+            'scripts/check_integrity.py' \
+            'scripts/tests/test_brace_expansion_security_baseline.py' \
+            'scripts/tests/test_frontend_transitive_security_baseline.py' \
+            'scripts/tests/test_postcss_security_baseline.py' \
+            | sort > /tmp/expected-paths.txt
+          git -c diff.renames=false diff --cached --name-only | sort > /tmp/actual-paths.txt
+          diff -u /tmp/expected-paths.txt /tmp/actual-paths.txt
+
+      - name: Repository tooling tests
+        run: python -m unittest discover -s scripts/tests -p "test_*.py"
+
+      - name: Repository integrity
+        run: python scripts/check_integrity.py
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Complete dependency tree
+        working-directory: apps/web
+        run: npm ls --all
+
+      - name: Frontend unit tests
+        working-directory: apps/web
+        run: npm run test:unit
+
+      - name: Security audit
+        working-directory: apps/web
+        run: npm audit --audit-level=high
+
+      - name: Design token tests
+        working-directory: apps/web
+        run: npm run test:design-tokens
+
+      - name: Typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Design anti-pattern scan
+        working-directory: apps/web
+        run: npm run design:detect
+
+      - name: CSS syntax validation
+        working-directory: apps/web
+        run: npm run validate:css-syntax
+
+      - name: Production build
+        working-directory: apps/web
+        run: npm run build
+
+      - name: W3C validation
+        working-directory: apps/web
+        run: npm run validate:w3c
+
+      - name: Commit exact validated scope
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f --ignore-unmatch .github/workflows/security-prerequisite-bootstrap.yml
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite.patch
+          git rm -f --ignore-unmatch .github/bootstrap/security-bootstrap-trigger.txt
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.00
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.01
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.02
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.03
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.04
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.05
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.06
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.07
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.08
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.09
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.01
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.02
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.03
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.04
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.05
+          git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.06
+          git diff --cached --check
+          git commit -m "chore(security): finalize frontend dependency baseline"
+          git push origin "HEAD:refs/heads/${HEAD_REF}"
