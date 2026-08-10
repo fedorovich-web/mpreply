@@ -1,0 +1,22 @@
+{
+  "name": "brace-expansion",
+  "version": "5.0.8",
+  "description": "CVE-2026-14257-bounded brace expansion with legacy CommonJS compatibility",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "type": "commonjs",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "LICENSE",
+    "README.md",
+    "PROVENANCE.md"
+  ],
+  "dependencies": {
+    "balanced-match": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "license": "MIT"
+}
