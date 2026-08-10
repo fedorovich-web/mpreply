@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - work/0.1.104-security-prerequisite-clean
+  pull_request:
+    branches:
+      - develop
 
 permissions:
   contents: write
@@ -14,7 +17,7 @@ concurrency:
 
 jobs:
   materialize:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]' && (github.event_name == 'push' || github.head_ref == 'work/0.1.104-security-prerequisite-clean')
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
