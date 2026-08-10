@@ -1,4 +1,6 @@
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { fulfillMockApiJson as fulfillJson } from "./mock-api-cors";
 
 export type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
 
@@ -65,19 +67,11 @@ export function createAutomationRulesMockState() {
   };
 }
 
-export async function mockAutomationRulesApi(page: Page, role: OrganizationRole = "owner") {
-  const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+export async function mockAutomationRulesApi(
+  page: Page,
+  role: OrganizationRole = "owner",
+) {
   const state = createAutomationRulesMockState();
-  const headers = {
-    "access-control-allow-credentials": "true",
-    "access-control-allow-headers": "content-type",
-    "access-control-allow-methods": "GET,POST,PATCH,DELETE,OPTIONS",
-    "access-control-allow-origin": origin,
-    "content-type": "application/json",
-  };
-
-  const fulfillJson = (route: Route, body: unknown, status = 200) =>
-    route.fulfill({ status, headers, body: JSON.stringify(body) });
 
   await page.route("**/api/auth/me", async (route) => {
     if (route.request().method() === "OPTIONS") return fulfillJson(route, null, 204);
