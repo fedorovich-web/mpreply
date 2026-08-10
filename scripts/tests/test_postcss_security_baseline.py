@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_POSTCSS_VERSION = "8.5.18"
+EXPECTED_POSTCSS_VERSION = "8.5.23"
 
 
 class PostCssSecurityBaselineTests(unittest.TestCase):
@@ -39,11 +39,15 @@ class PostCssSecurityBaselineTests(unittest.TestCase):
         )
 
         self.assertIn(
-            '("overrides", "postcss"): "8.5.18"',
+            '("overrides", "postcss"): "8.5.23"',
             checker,
         )
         self.assertNotIn(
             '("overrides", "postcss"): "8.5.12"',
+            checker,
+        )
+        self.assertNotIn(
+            '("overrides", "postcss"): "8.5.18"',
             checker,
         )
 
