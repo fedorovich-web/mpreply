@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: work/0.1.104-security-current
-          fetch-depth: 2
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -340,14 +340,12 @@ jobs:
           output.write_text("\n".join(lines), encoding="utf-8")
           PY
 
-      - name: Verify exact final scope and commit materialized candidate
+      - name: Commit materialized candidate and verify cumulative exact scope
         shell: bash
         env:
           BASE_SHA: ffdf1faecd98fa29240fed40c9425e2b14aea5d9
         run: |
           set -euo pipefail
-          git rm -- .github/workflows/security-current-materialize.yml
-          git diff --check
           cat > /tmp/expected-paths <<'EOF'
           DEVELOPMENT_EVIDENCE/FRONTEND_DEPENDENCY_SECURITY_2026-08-10.md
           apps/web/package-lock.json
@@ -357,11 +355,10 @@ jobs:
           scripts/tests/test_postcss_security_baseline.py
           EOF
           sort -o /tmp/expected-paths /tmp/expected-paths
-          git diff --name-only "$BASE_SHA" | sort > /tmp/actual-paths
-          diff -u /tmp/expected-paths /tmp/actual-paths
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -- .github/workflows/security-current-materialize.yml
           git add -- \
             DEVELOPMENT_EVIDENCE/FRONTEND_DEPENDENCY_SECURITY_2026-08-10.md \
             apps/web/package-lock.json \
@@ -371,4 +368,8 @@ jobs:
             scripts/tests/test_postcss_security_baseline.py
           git diff --cached --check
           git commit -m 'fix(security): refresh patched frontend dependency lines'
+
+          git diff --check "$BASE_SHA" HEAD
+          git diff --name-only "$BASE_SHA" HEAD | sort > /tmp/actual-paths
+          diff -u /tmp/expected-paths /tmp/actual-paths
           git push origin HEAD:refs/heads/work/0.1.104-security-current
