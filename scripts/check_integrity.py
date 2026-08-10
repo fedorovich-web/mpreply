@@ -13,6 +13,8 @@ WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.103"
 EXPECTED_ALEMBIC_HEAD = "20260722_0014"
+EXPECTED_BRACE_EXPANSION_VERSION = "5.0.9"
+BRACE_EXPANSION_VENDOR_SPEC = "file:vendor/npm/brace-expansion-5.0.9-mpreply-compat"
 
 ERRORS: list[str] = []
 
@@ -274,17 +276,99 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "proxy-agent"): "8.0.2",
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
-        ("overrides", "postcss"): "8.5.18",
+        ("devDependencies", "brace-expansion"): BRACE_EXPANSION_VENDOR_SPEC,
+        ("overrides", "brace-expansion"): "$brace-expansion",
+        ("overrides", "ip-address"): "10.3.1",
+        ("overrides", "nanoid"): "3.3.17",
+        ("overrides", "undici"): "7.29.0",
+        ("overrides", "postcss"): "8.5.23",
         ("overrides", "sharp"): "0.35.3",
         ("overrides", "chrome-launcher"): "1.2.1",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
-        ("overrides", "chrome-launcher"): "1.2.1",
     }
     for (section, name), expected in expected_dependencies.items():
         actual = package.get(section, {}).get(name)
         if actual != expected:
             fail(f"apps/web/package.json {section}.{name} != {expected}; got {actual!r}")
+
+    expected_nested_overrides = {
+        "@eslint/eslintrc": {"js-yaml": "4.3.1"},
+        "@lhci/utils": {"js-yaml": "3.15.1"},
+    }
+    for name, expected in expected_nested_overrides.items():
+        actual = package.get("overrides", {}).get(name)
+        if actual != expected:
+            fail(f"apps/web/package.json overrides.{name} != {expected!r}; got {actual!r}")
+
+    expected_lock_versions = {
+        "ip-address": {"10.3.1"},
+        "js-yaml": {"3.15.1", "4.3.1"},
+        "nanoid": {"3.3.17"},
+        "postcss": {"8.5.23"},
+        "undici": {"7.29.0"},
+    }
+    for dependency_name, expected_versions in expected_lock_versions.items():
+        actual_versions = {
+            str(data.get("version"))
+            for path, data in lock_packages.items()
+            if path.endswith(f"node_modules/{dependency_name}") and isinstance(data, dict)
+        }
+        if actual_versions != expected_versions:
+            fail(
+                f"apps/web/package-lock.json {dependency_name} versions != "
+                f"{sorted(expected_versions)}; got {sorted(actual_versions)}"
+            )
+
+    brace_vendor = WEB / "vendor" / "npm" / "brace-expansion-5.0.9-mpreply-compat"
+    if not brace_vendor.is_dir():
+        fail("Vendored brace-expansion package directory is missing")
+
+    brace_entries = {
+        path: data
+        for path, data in lock_packages.items()
+        if path.endswith("node_modules/brace-expansion") and isinstance(data, dict)
+    }
+    if set(brace_entries) != {"node_modules/brace-expansion"}:
+        fail(f"apps/web/package-lock.json must contain one hoisted brace-expansion entry; got {sorted(brace_entries)}")
+    else:
+        brace_link = brace_entries["node_modules/brace-expansion"]
+        if brace_link.get("link") is not True:
+            fail("apps/web/package-lock.json brace-expansion must be a local package link")
+        if brace_link.get("resolved") != "vendor/npm/brace-expansion-5.0.9-mpreply-compat":
+            fail("apps/web/package-lock.json brace-expansion link points to an unexpected path")
+
+    brace_package = lock_packages.get("vendor/npm/brace-expansion-5.0.9-mpreply-compat")
+    if not isinstance(brace_package, dict):
+        fail("apps/web/package-lock.json is missing the vendored brace-expansion package entry")
+    elif brace_package.get("version") != EXPECTED_BRACE_EXPANSION_VERSION:
+        fail(f"apps/web/package-lock.json brace-expansion != {EXPECTED_BRACE_EXPANSION_VERSION}")
+
+    if brace_vendor.is_dir():
+        package_path = brace_vendor / "package.json"
+        index_path = brace_vendor / "index.js"
+        provenance_path = brace_vendor / "PROVENANCE.md"
+        license_path = brace_vendor / "LICENSE"
+        for required in (package_path, index_path, provenance_path, license_path):
+            require_file(required)
+        if package_path.is_file() and index_path.is_file() and provenance_path.is_file():
+            try:
+                vendor_package = json.loads(package_path.read_text(encoding="utf-8"))
+                vendor_index = index_path.read_text(encoding="utf-8")
+                vendor_provenance = provenance_path.read_text(encoding="utf-8")
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                fail(f"Cannot validate vendored brace-expansion package: {type(exc).__name__}")
+            else:
+                if vendor_package.get("name") != "brace-expansion":
+                    fail("Vendored brace-expansion package name is invalid")
+                if vendor_package.get("version") != EXPECTED_BRACE_EXPANSION_VERSION:
+                    fail("Vendored brace-expansion package version is not 5.0.9")
+                if "module.exports = expand" not in vendor_index or "module.exports.expand = expand" not in vendor_index:
+                    fail("Vendored brace-expansion package does not expose both legacy and named exports")
+                if "EXPANSION_MAX_LENGTH = 4_000_000" not in vendor_index:
+                    fail("Vendored brace-expansion package does not enforce the bounded expansion contract")
+                if "GHSA-mh99-v99m-4gvg" not in vendor_provenance or "GHSA-rgw5-rvv9-x895" not in vendor_provenance:
+                    fail("Vendored brace-expansion package provenance does not reference both security advisories")
 
     expected_scripts = {
         "typecheck": "next typegen && tsc --noEmit",

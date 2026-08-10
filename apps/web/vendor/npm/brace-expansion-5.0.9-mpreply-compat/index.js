@@ -120,7 +120,7 @@ function combine(acc, pre, values, max, maxLength, dropEmpties) {
   return output
 }
 
-function expandSequence(body, isAlphaSequence, max) {
+function expandSequence(body, isAlphaSequence, max, maxLength) {
   const parts = body.split(/\.\./)
   const output = []
   if (parts[0] === undefined || parts[1] === undefined) return output
@@ -139,6 +139,7 @@ function expandSequence(body, isAlphaSequence, max) {
   }
 
   const padded = parts.some(isPadded)
+  let outputLength = 0
 
   for (let current = start; compare(current, end) && output.length < max; current += increment) {
     let value
@@ -155,7 +156,10 @@ function expandSequence(body, isAlphaSequence, max) {
         }
       }
     }
+
+    if (outputLength + value.length > maxLength) break
     output.push(value)
+    outputLength += value.length
   }
 
   return output
@@ -200,6 +204,7 @@ function expandInternal(input, max, maxLength, isTop) {
         isTop = true
         continue
       }
+
       return combine(
         acc,
         pre + '{' + match.body + '}' + match.post,
@@ -217,7 +222,7 @@ function expandInternal(input, max, maxLength, isTop) {
 
     let values
     if (isSequence) {
-      values = expandSequence(match.body, isAlphaSequence, max)
+      values = expandSequence(match.body, isAlphaSequence, max, maxLength)
     } else {
       let commaParts = parseCommaParts(match.body)
       if (commaParts.length === 1 && commaParts[0] !== undefined) {
@@ -237,12 +242,24 @@ function expandInternal(input, max, maxLength, isTop) {
         }
       }
 
+      let dropsEmpties = dropEmpties && !match.post.length && !pre
+      for (let index = 0; dropsEmpties && index < acc.length; index += 1) {
+        if (acc[index]) dropsEmpties = false
+      }
+
       values = []
-      for (let index = 0; index < commaParts.length; index += 1) {
-        values.push.apply(
-          values,
-          expandInternal(commaParts[index], max, maxLength, false),
-        )
+      let valuesLength = 0
+      alternatives: for (let partIndex = 0; partIndex < commaParts.length; partIndex += 1) {
+        const expanded = expandInternal(commaParts[partIndex], max, maxLength, false)
+        for (let valueIndex = 0; valueIndex < expanded.length; valueIndex += 1) {
+          const value = expanded[valueIndex]
+          if (dropsEmpties && !value) continue
+          if (values.length >= max || valuesLength + value.length > maxLength) {
+            break alternatives
+          }
+          values.push(value)
+          valuesLength += value.length
+        }
       }
     }
 

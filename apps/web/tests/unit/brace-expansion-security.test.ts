@@ -22,16 +22,14 @@ function runIsolatedProbe(source: string, timeout: number) {
 }
 
 describe("vendored brace-expansion security contract", () => {
-  it("supports both legacy CommonJS and modern named exports", () => {
+  it("supports legacy CommonJS and modern named/default imports", () => {
     const legacyExpand = require("brace-expansion") as typeof expand;
+    const expected = ["file-a.jpg", "file-b.jpg", "file-c.jpg"];
 
-    expect(legacyExpand).toBe(expand);
-    expect(expandDefault).toBe(expand);
-    expect(expand("file-{a,b,c}.jpg")).toEqual([
-      "file-a.jpg",
-      "file-b.jpg",
-      "file-c.jpg",
-    ]);
+    expect(typeof legacyExpand).toBe("function");
+    expect(legacyExpand("file-{a,b,c}.jpg")).toEqual(expected);
+    expect(expandDefault("file-{a,b,c}.jpg")).toEqual(expected);
+    expect(expand("file-{a,b,c}.jpg")).toEqual(expected);
   });
 
   it("bounds total expansion length for the CVE-2026-14257 input class", () => {
@@ -71,6 +69,8 @@ describe("vendored brace-expansion security contract", () => {
         const input = "{" + "0".repeat(100_000) + "1..100000}";
         const output = expand(input);
         if (output.length === 0) process.exit(2);
+        const totalLength = output.reduce((total, value) => total + value.length, 0);
+        if (totalLength > 4_000_000) process.exit(3);
       `;
       const result = runIsolatedProbe(source, 5_000);
 

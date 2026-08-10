@@ -1,7 +1,7 @@
 {
   "name": "brace-expansion",
-  "version": "5.0.8",
-  "description": "Brace expansion with CVE-2026-14257 bounds and CommonJS v1 compatibility for MPReply tooling",
+  "version": "5.0.9",
+  "description": "Brace expansion with CVE-2026-14257 and CVE-2026-69152 bounds plus CommonJS v1 compatibility for MPReply tooling",
   "main": "index.js",
   "types": "index.d.ts",
   "type": "commonjs",

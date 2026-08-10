@@ -2,7 +2,7 @@ FROM node:24-bookworm-slim AS deps
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-COPY vendor/npm/brace-expansion-5.0.8-mpreply-compat ./vendor/npm/brace-expansion-5.0.8-mpreply-compat
+COPY vendor/npm/brace-expansion-5.0.9-mpreply-compat ./vendor/npm/brace-expansion-5.0.9-mpreply-compat
 RUN npm ci
 
 FROM node:24-bookworm-slim AS builder
