@@ -37,5 +37,11 @@ PostCSS override while preserving all direct framework/tooling versions.
 - typecheck, lint, design scan, CSS syntax, build and W3C validation: PASS;
 - validation workflow run: `31385692550`.
 
+## Full-gate handoff
+
+- materialized candidate commit: `57404b66e1b5618225a554b6160db7cf45605848`;
+- the complete repository Quality Gate was requested from a user-authored branch update after materialization;
+- its backend, frontend and container conclusions are not pre-declared in this evidence.
+
 The repository Quality Gate and container jobs remain authoritative on the
-materialized commit. This evidence contains no credentials or customer data.
+materialized candidate. This evidence contains no credentials or customer data.
