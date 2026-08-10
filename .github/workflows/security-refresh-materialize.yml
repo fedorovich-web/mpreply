@@ -1,0 +1,304 @@
+name: Security refresh materializer
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: security-refresh-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  materialize-and-validate:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'work/0.1.104-security-refresh' &&
+      github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    env:
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      BASE_SHA: ffdf1faecd98fa29240fed40c9425e2b14aea5d9
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.18.0'
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Pin npm toolchain
+        run: |
+          npm install --global npm@11.17.0
+          test "$(npm --version)" = "11.17.0"
+
+      - name: Add security regression tests and verify RED
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > scripts/tests/test_frontend_transitive_security_baseline.py <<'PY'
+          from __future__ import annotations
+
+          import json
+          import unittest
+          from pathlib import Path
+
+          ROOT = Path(__file__).resolve().parents[2]
+
+
+          def _version_tuple(value: str) -> tuple[int, int, int] | None:
+              core = value.split("-", 1)[0]
+              parts = core.split(".")
+              if len(parts) < 3 or not all(part.isdecimal() for part in parts[:3]):
+                  return None
+              return int(parts[0]), int(parts[1]), int(parts[2])
+
+
+          def _is_reviewed_patched_version(package_name: str, version: str) -> bool:
+              parsed = _version_tuple(version)
+              if parsed is None:
+                  return False
+              if package_name == "brace-expansion":
+                  return (parsed[0] == 1 and parsed >= (1, 1, 18)) or (
+                      parsed[0] == 5 and parsed >= (5, 0, 9)
+                  )
+              if package_name == "ip-address":
+                  return parsed[0] == 10 and parsed >= (10, 3, 1)
+              if package_name == "js-yaml":
+                  return (parsed[0] == 3 and parsed >= (3, 15, 1)) or (
+                      parsed[0] == 4 and parsed >= (4, 3, 1)
+                  )
+              if package_name == "nanoid":
+                  return parsed[0] == 3 and parsed >= (3, 3, 17)
+              if package_name == "postcss":
+                  return parsed[0] == 8 and parsed >= (8, 5, 23)
+              if package_name == "undici":
+                  return parsed[0] == 7 and parsed >= (7, 29, 0)
+              return False
+
+
+          SECURITY_PACKAGES = (
+              "brace-expansion",
+              "ip-address",
+              "js-yaml",
+              "nanoid",
+              "postcss",
+              "undici",
+          )
+
+
+          class FrontendTransitiveSecurityBaselineTests(unittest.TestCase):
+              def test_lockfile_resolves_only_reviewed_patched_versions(self) -> None:
+                  package = json.loads(
+                      (ROOT / "apps" / "web" / "package.json").read_text(encoding="utf-8")
+                  )
+                  lock = json.loads(
+                      (ROOT / "apps" / "web" / "package-lock.json").read_text(encoding="utf-8")
+                  )
+                  packages = lock.get("packages", {})
+
+                  self.assertNotIn("brace-expansion", package.get("devDependencies", {}))
+                  self.assertNotIn("brace-expansion", package.get("overrides", {}))
+                  self.assertFalse(
+                      any("vendor/npm/brace-expansion" in path for path in packages),
+                      "brace-expansion must resolve from patched upstream release lines",
+                  )
+
+                  for package_name in SECURITY_PACKAGES:
+                      with self.subTest(package=package_name):
+                          resolved_versions = {
+                              str(data.get("version"))
+                              for path, data in packages.items()
+                              if path.endswith(f"node_modules/{package_name}")
+                              and isinstance(data, dict)
+                              and data.get("version") is not None
+                          }
+                          self.assertTrue(
+                              resolved_versions,
+                              f"{package_name} is absent from lockfile",
+                          )
+                          self.assertTrue(
+                              all(
+                                  _is_reviewed_patched_version(package_name, version)
+                                  for version in resolved_versions
+                              ),
+                              f"{package_name} has vulnerable or unexpected versions: "
+                              f"{sorted(resolved_versions)}",
+                          )
+
+              def test_integrity_checker_enforces_transitive_security_contract(self) -> None:
+                  checker = (ROOT / "scripts" / "check_integrity.py").read_text(
+                      encoding="utf-8"
+                  )
+                  for package_name in SECURITY_PACKAGES:
+                      self.assertIn(f'"{package_name}"', checker)
+                  for floor_tuple in (
+                      "(1, 1, 18)",
+                      "(5, 0, 9)",
+                      "(10, 3, 1)",
+                      "(3, 15, 1)",
+                      "(4, 3, 1)",
+                      "(3, 3, 17)",
+                      "(8, 5, 23)",
+                      "(7, 29, 0)",
+                  ):
+                      self.assertIn(floor_tuple, checker)
+                  self.assertIn(
+                      "must not globally override brace-expansion across incompatible major lines",
+                      checker,
+                  )
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/tests/test_postcss_security_baseline.py")
+          text = path.read_text(encoding="utf-8")
+          old = 'EXPECTED_POSTCSS_VERSION = "8.5.18"'
+          new = 'EXPECTED_POSTCSS_VERSION = "8.5.23"'
+          if old not in text:
+              raise SystemExit("PostCSS baseline marker is missing")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
+
+          set +e
+          python -m unittest discover \
+            -s scripts/tests \
+            -p 'test_frontend_transitive_security_baseline.py' \
+            > /tmp/transitive-red.txt 2>&1
+          transitive_status=$?
+          python -m unittest discover \
+            -s scripts/tests \
+            -p 'test_postcss_security_baseline.py' \
+            > /tmp/postcss-red.txt 2>&1
+          postcss_status=$?
+          set -e
+          cat /tmp/transitive-red.txt
+          cat /tmp/postcss-red.txt
+          if [[ "$transitive_status" -eq 0 || "$postcss_status" -eq 0 ]]; then
+            echo 'Expected both security regression tests to fail before remediation.' >&2
+            exit 1
+          fi
+
+      - name: Apply reviewed security contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          from pathlib import Path
+
+          package_path = Path("apps/web/package.json")
+          package = json.loads(package_path.read_text(encoding="utf-8"))
+          package.get("devDependencies", {}).pop("brace-expansion", None)
+          package.get("overrides", {}).pop("brace-expansion", None)
+          package.setdefault("overrides", {})["postcss"] = "8.5.23"
+          package_path.write_text(
+              json.dumps(package, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+
+          checker_path = Path("scripts/check_integrity.py")
+          checker = checker_path.read_text(encoding="utf-8")
+          old_postcss = '("overrides", "postcss"): "8.5.18",'
+          new_postcss = '("overrides", "postcss"): "8.5.23",'
+          if old_postcss not in checker:
+              raise SystemExit("Integrity PostCSS marker is missing")
+          checker = checker.replace(old_postcss, new_postcss, 1)
+
+          marker = '''    if "node_modules/lighthouse/node_modules/chrome-launcher" in lock_packages:\n        fail("apps/web/package-lock.json must not retain a nested Lighthouse chrome-launcher copy")\n\n'''
+          block = '''    if "brace-expansion" in package.get("devDependencies", {}):\n        fail("apps/web/package.json must not pin brace-expansion directly")\n    if "brace-expansion" in overrides:\n        fail("apps/web/package.json must not globally override brace-expansion across incompatible major lines")\n\n    def numeric_version(value: str) -> tuple[int, int, int] | None:\n        core = value.split("-", 1)[0]\n        parts = core.split(".")\n        if len(parts) < 3 or not all(part.isdecimal() for part in parts[:3]):\n            return None\n        return int(parts[0]), int(parts[1]), int(parts[2])\n\n    def is_reviewed_patched_version(package_name: str, version: str) -> bool:\n        parsed = numeric_version(version)\n        if parsed is None:\n            return False\n        if package_name == "brace-expansion":\n            return (parsed[0] == 1 and parsed >= (1, 1, 18)) or (\n                parsed[0] == 5 and parsed >= (5, 0, 9)\n            )\n        if package_name == "ip-address":\n            return parsed[0] == 10 and parsed >= (10, 3, 1)\n        if package_name == "js-yaml":\n            return (parsed[0] == 3 and parsed >= (3, 15, 1)) or (\n                parsed[0] == 4 and parsed >= (4, 3, 1)\n            )\n        if package_name == "nanoid":\n            return parsed[0] == 3 and parsed >= (3, 3, 17)\n        if package_name == "postcss":\n            return parsed[0] == 8 and parsed >= (8, 5, 23)\n        if package_name == "undici":\n            return parsed[0] == 7 and parsed >= (7, 29, 0)\n        return False\n\n    for package_name in (\n        "brace-expansion",\n        "ip-address",\n        "js-yaml",\n        "nanoid",\n        "postcss",\n        "undici",\n    ):\n        resolved_versions = {\n            str(data.get("version"))\n            for path, data in lock_packages.items()\n            if path.endswith(f"node_modules/{package_name}")\n            and isinstance(data, dict)\n            and data.get("version") is not None\n        }\n        if not resolved_versions:\n            fail(f"apps/web/package-lock.json is missing {package_name}")\n        elif not all(\n            is_reviewed_patched_version(package_name, version)\n            for version in resolved_versions\n        ):\n            fail(\n                f"apps/web/package-lock.json contains vulnerable or unexpected "\n                f"{package_name} versions: {sorted(resolved_versions)}"\n            )\n\n    if any("vendor/npm/brace-expansion" in path for path in lock_packages):\n        fail("apps/web/package-lock.json must not use a vendored brace-expansion package")\n\n'''
+          if marker not in checker:
+              raise SystemExit("Integrity insertion marker is missing")
+          checker_path.write_text(
+              checker.replace(marker, marker + block, 1),
+              encoding="utf-8",
+          )
+          PY
+          git diff --check
+
+      - name: Refresh lockfile within declared dependency ranges
+        working-directory: apps/web
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm audit fix --package-lock-only --ignore-scripts --no-fund
+
+      - name: Verify refreshed dependency graph
+        working-directory: apps/web
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm ls --all
+          npm audit --audit-level=high
+
+      - name: Verify repository security contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s scripts/tests -p 'test_*.py'
+          python scripts/check_integrity.py
+
+      - name: Run frontend static and build gates
+        working-directory: apps/web
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:frontend
+          npm run typecheck
+          npm run lint
+          npm run design:detect
+          npm run validate:css-syntax
+          npm run build
+          npm run validate:w3c
+
+      - name: Verify exact final scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -- .github/workflows/security-refresh-materialize.yml
+          git diff --check
+          cat > /tmp/expected-paths <<'EOF'
+          apps/web/package-lock.json
+          apps/web/package.json
+          scripts/check_integrity.py
+          scripts/tests/test_frontend_transitive_security_baseline.py
+          scripts/tests/test_postcss_security_baseline.py
+          EOF
+          git diff --name-only "$BASE_SHA" | sort > /tmp/actual-paths
+          sort -o /tmp/expected-paths /tmp/expected-paths
+          diff -u /tmp/expected-paths /tmp/actual-paths
+
+      - name: Commit validated candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            apps/web/package-lock.json \
+            apps/web/package.json \
+            scripts/check_integrity.py \
+            scripts/tests/test_frontend_transitive_security_baseline.py \
+            scripts/tests/test_postcss_security_baseline.py
+          git diff --cached --check
+          git commit -m 'fix(security): refresh frontend transitive baseline'
+          git push origin "HEAD:refs/heads/${HEAD_REF}"
