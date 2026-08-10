@@ -131,6 +131,12 @@ jobs:
             > ../../.github/bootstrap/npm-ls-tree.json \
             2> ../../.github/bootstrap/npm-ls-stderr.txt
           npm_ls_status=$?
+          npm ls debug --all --json \
+            > ../../.github/bootstrap/npm-ls-debug.json \
+            2> ../../.github/bootstrap/npm-ls-debug-stderr.txt
+          npm explain debug --json \
+            > ../../.github/bootstrap/npm-explain-debug.json \
+            2> ../../.github/bootstrap/npm-explain-debug-stderr.txt
           set -e
           export NPM_LS_STATUS="$npm_ls_status"
           node <<'NODE'
@@ -159,12 +165,20 @@ jobs:
             git -C ../.. config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git -C ../.. add -- .github/bootstrap/npm-ls-problems.json
             git -C ../.. add -- .github/bootstrap/npm-ls-stderr.txt
-            git -C ../.. commit -m "test(security): capture dependency tree failure"
+            git -C ../.. add -- .github/bootstrap/npm-ls-debug.json
+            git -C ../.. add -- .github/bootstrap/npm-ls-debug-stderr.txt
+            git -C ../.. add -- .github/bootstrap/npm-explain-debug.json
+            git -C ../.. add -- .github/bootstrap/npm-explain-debug-stderr.txt
+            git -C ../.. commit -m "test(security): capture dependency tree ancestry"
             git -C ../.. push origin "HEAD:refs/heads/${HEAD_REF}"
             exit "$npm_ls_status"
           fi
           rm -f ../../.github/bootstrap/npm-ls-problems.json
           rm -f ../../.github/bootstrap/npm-ls-stderr.txt
+          rm -f ../../.github/bootstrap/npm-ls-debug.json
+          rm -f ../../.github/bootstrap/npm-ls-debug-stderr.txt
+          rm -f ../../.github/bootstrap/npm-explain-debug.json
+          rm -f ../../.github/bootstrap/npm-explain-debug-stderr.txt
 
       - name: Frontend unit tests
         working-directory: apps/web
@@ -212,6 +226,10 @@ jobs:
           git rm -f --ignore-unmatch .github/bootstrap/security-bootstrap-trigger.txt
           git rm -f --ignore-unmatch .github/bootstrap/npm-ls-problems.json
           git rm -f --ignore-unmatch .github/bootstrap/npm-ls-stderr.txt
+          git rm -f --ignore-unmatch .github/bootstrap/npm-ls-debug.json
+          git rm -f --ignore-unmatch .github/bootstrap/npm-ls-debug-stderr.txt
+          git rm -f --ignore-unmatch .github/bootstrap/npm-explain-debug.json
+          git rm -f --ignore-unmatch .github/bootstrap/npm-explain-debug-stderr.txt
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.00
           git rm -f --ignore-unmatch .github/bootstrap/security-prerequisite-implementation.b64.00.01
