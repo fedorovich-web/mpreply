@@ -55,13 +55,13 @@ jobs:
         working-directory: apps/web
         run: npm ls --all
 
-      - name: Security audit
-        working-directory: apps/web
-        run: npm audit --audit-level=high
-
       - name: Frontend unit tests
         working-directory: apps/web
         run: npm run test:unit
+
+      - name: Security audit
+        working-directory: apps/web
+        run: npm audit --audit-level=high
 
       - name: Design token tests
         working-directory: apps/web
