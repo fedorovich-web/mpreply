@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from brace_expansion_security import check_brace_expansion_security
+
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
@@ -922,6 +924,7 @@ def main() -> int:
     check_alembic_chain()
     check_lockfile_hygiene()
     check_versions_and_frontend_security_baseline()
+    check_brace_expansion_security(ROOT, fail)
     check_release_gate_contract()
     check_handoff_export_contract()
     check_answer_ledger_contract()
