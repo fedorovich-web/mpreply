@@ -98,6 +98,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/security-prerequisite-bootstrap.yml
           git rm .github/bootstrap/security-prerequisite.patch
+          git rm .github/bootstrap/security-bootstrap-trigger.txt
           git add apps/web/package-lock.json scripts/check_integrity.py
           git diff --cached --check
           git commit -m "chore(security): finalize brace expansion baseline"
