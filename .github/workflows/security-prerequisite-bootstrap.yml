@@ -81,3 +81,5 @@ jobs:
           git diff --cached --check
           git commit -m "chore(security): finalize brace expansion baseline"
           git push origin HEAD:refs/heads/work/0.1.104-security-prerequisite
+
+# Exact bootstrap trigger commit.
