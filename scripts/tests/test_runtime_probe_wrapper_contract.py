@@ -10,6 +10,18 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class RuntimeProbeWrapperContractTests(unittest.TestCase):
+    def test_credentials_are_validated_before_project_python(self) -> None:
+        contracts = {
+            "avito-runtime-probe.ps1": "$AccessToken = $env:AVITO_ACCESS_TOKEN",
+            "ozon-runtime-probe.ps1": "$ApiKey = $env:OZON_API_KEY",
+            "wildberries-runtime-probe.ps1": "$ApiKey = $env:WILDBERRIES_API_KEY",
+            "yandex-market-runtime-probe.ps1": "$ApiKey = $env:YANDEX_MARKET_API_KEY",
+        }
+        for script_name, credential_marker in contracts.items():
+            with self.subTest(script=script_name):
+                source = (ROOT / "scripts" / script_name).read_text(encoding="utf-8")
+                self.assertLess(source.index(credential_marker), source.index("$Python = Join-Path"))
+
     def test_avito_no_prompt_rejects_missing_credentials_before_python_or_evidence(self) -> None:
         env = os.environ.copy()
         for name in (

@@ -53,10 +53,6 @@ if ($ActualRoot -ne $ExpectedRoot) {
     throw "Unexpected Git root: expected=$ExpectedRoot actual=$ActualRoot"
 }
 
-$Python = Join-Path $Repository "apps\api\.venv\Scripts\python.exe"
-if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
-    throw "Project Python not found: $Python"
-}
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
     $OutputPath = Join-Path $Repository ".handoff\avito-runtime-verification.json"
 }
@@ -166,6 +162,11 @@ try {
     )
     if ($Mode -ne "read-only") {
         $Arguments += @("--confirmation", $Confirmation)
+    }
+
+    $Python = Join-Path $Repository "apps\api\.venv\Scripts\python.exe"
+    if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
+        throw "Project Python not found: $Python"
     }
 
     Write-Host "`n=== AVITO RUNTIME PROBE ==="
