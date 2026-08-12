@@ -19,6 +19,8 @@ from app.models.enums import Marketplace, MarketplaceSyncStateStatus, Marketplac
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
+from app.models.sync_job import SyncJob
+from app.models.usage_event import UsageEvent
 from app.services.audit_service import AuditService
 from app.services.avito_chat_ingest_service import AvitoChatIngestResult, AvitoChatIngestService
 from app.services.avito_chat_sync_service import AvitoChatSyncResult, AvitoChatSyncService
@@ -310,6 +312,49 @@ async def test_commit_failure_prevents_provider_read() -> None:
 
 
 @pytest.mark.asyncio
+async def test_post_read_finalization_failure_keeps_durable_zero_offset_and_committed_count() -> None:
+    account = _account()
+    state = _state(
+        account,
+        {
+            "avito_chat_sync": {
+                "schema_version": 1,
+                "chat_offset": 700,
+                "skipped_chat_versions": {},
+            }
+        },
+    )
+    timeline: list[str] = []
+    session = _Session()
+    session.timeline = timeline
+    session.fail_commit_at = 3
+    adapter = _Adapter(
+        chat_pages=[AdapterResult(ok=True, data=[_chat()])],
+        message_pages=[AdapterResult(ok=True, data=[_message()])],
+        timeline=timeline,
+    )
+    ingest = _Ingest(
+        [AvitoChatIngestResult(outcome="created", message_id=uuid4(), can_mark_read=True)],
+        timeline,
+    )
+
+    result = await _service(session, adapter, ingest).sync_batch(
+        account=account, credential="credential", state=state, max_chats=1
+    )
+
+    assert result == AvitoChatSyncResult(
+        status="failed",
+        created=1,
+        has_more=True,
+        error_code="sync_commit_failed",
+        retryable=True,
+    )
+    assert timeline == ["ingest", "commit", "commit", "read", "commit", "rollback"]
+    assert adapter.read_calls == 1
+    assert cast(dict[str, object], state.metadata_json["avito_chat_sync"])["chat_offset"] == 0
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("message_result", "ingest_result", "expected_code"),
     [
@@ -427,11 +472,67 @@ async def test_read_failure_keeps_durable_target_and_retryable_checkpoint() -> N
     assert result.status == "failed"
     assert result.error_code == "network_error"
     assert result.retryable is True
-    assert session.commit_count == 1
+    assert session.commit_count == 2
     assert state.metadata_json == {
         "unrelated": "keep",
         "avito_chat_sync": {"schema_version": 1, "chat_offset": 0, "skipped_chat_versions": {}},
     }
+
+
+@pytest.mark.asyncio
+async def test_provider_error_after_committed_chat_preserves_accumulated_counts() -> None:
+    account = _account()
+    state = _state(account)
+    adapter = _Adapter(
+        chat_pages=[
+            AdapterResult(ok=True, data=[_chat("chat-first")]),
+            AdapterResult(ok=False, error_code="network_error", error_message_safe="Network error"),
+        ],
+        message_pages=[AdapterResult(ok=True, data=[_message()])],
+    )
+    result = await _service(
+        _Session(),
+        adapter,
+        _Ingest([AvitoChatIngestResult(outcome="created", message_id=uuid4(), can_mark_read=True)]),
+    ).sync_batch(account=account, credential="credential", state=state, max_chats=2)
+
+    assert result == AvitoChatSyncResult(
+        status="failed",
+        created=1,
+        error_code="network_error",
+        retryable=True,
+    )
+
+
+@pytest.mark.asyncio
+async def test_pagination_error_after_committed_chat_preserves_accumulated_counts() -> None:
+    account = _account()
+    state = _state(account)
+    adapter = _Adapter(
+        chat_pages=[
+            AdapterResult(ok=True, data=[_chat("chat-first")]),
+            AdapterResult(ok=True, data=[_chat("chat-second")]),
+        ],
+        message_pages=[
+            AdapterResult(ok=True, data=[_message()]),
+            *[
+                AdapterResult(ok=True, data=[_message(index) for index in range(100)])
+                for _ in range(11)
+            ],
+        ],
+    )
+    result = await _service(
+        _Session(),
+        adapter,
+        _Ingest([AvitoChatIngestResult(outcome="created", message_id=uuid4(), can_mark_read=True)]),
+    ).sync_batch(account=account, credential="credential", state=state, max_chats=2)
+
+    assert result == AvitoChatSyncResult(
+        status="paused",
+        created=1,
+        error_code="sync_page_limit_exceeded",
+        retryable=False,
+    )
 
 
 @pytest.mark.asyncio
@@ -580,6 +681,59 @@ async def test_scheduled_chat_sync_processes_one_chat_and_schedules_one_second_c
     ]
     assert safe_metadata
     assert all("chat" not in str(metadata).lower() and "message" not in str(metadata).lower() for metadata in safe_metadata)
+
+
+@pytest.mark.asyncio
+async def test_scheduled_chat_failure_preserves_committed_counts_usage_and_retryability(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    account = _account()
+    state = _state(account)
+    lease_token = uuid4()
+    state.lease_token = lease_token
+    state.lease_expires_at = datetime.now(UTC) + timedelta(minutes=5)
+    session = _Session((state, account))
+    adapter = cast(MarketplaceAdapter, _Adapter(chat_pages=[]))
+    _ScheduledChatSync.calls = []
+    _ScheduledChatSync.result = AvitoChatSyncResult(
+        status="failed",
+        created=2,
+        updated=1,
+        skipped=3,
+        has_more=True,
+        error_code="sync_ingest_failed",
+        retryable=True,
+    )
+    monkeypatch.setattr(scheduled_module, "get_marketplace_capability", _chats_capability)
+    monkeypatch.setattr(scheduled_module, "get_marketplace_adapter", _adapter_lookup(adapter))
+    monkeypatch.setattr(scheduled_module, "AvitoChatSyncService", _ScheduledChatSync)
+
+    result = await _scheduled_service(session).execute(state_id=state.id, lease_token=lease_token)
+
+    assert result.status == "failed"
+    assert result.error_code == "sync_ingest_failed"
+    assert result.retryable is True
+    job = next(value for value in session.added if isinstance(value, SyncJob))
+    assert job.stats_json == {
+        "stream": "chats",
+        "cursor_before": None,
+        "error_code": "sync_ingest_failed",
+        "created": 2,
+        "updated": 1,
+        "skipped": 3,
+        "has_more": True,
+    }
+    usage = next(value for value in session.added if isinstance(value, UsageEvent))
+    assert usage.quantity == 2
+    event = next(value for value in session.added if isinstance(value, IntegrationEvent))
+    assert event.metadata_json == {
+        "sync_job_id": str(job.id),
+        "cursor": None,
+        "created": 2,
+        "updated": 1,
+        "skipped": 3,
+        "has_more": True,
+    }
 
 
 @pytest.mark.asyncio

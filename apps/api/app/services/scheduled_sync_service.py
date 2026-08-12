@@ -439,6 +439,13 @@ class ScheduledMarketplaceSyncService:
                     error_message_safe="Avito chat synchronization failed",
                 ),
                 now=now,
+                count_metadata={
+                    "created": chat_result.created,
+                    "updated": chat_result.updated,
+                    "skipped": chat_result.skipped,
+                    "has_more": chat_result.has_more,
+                },
+                retryable_override=chat_result.retryable,
             )
             await self.session.commit()
             return result
@@ -765,7 +772,10 @@ class ScheduledMarketplaceSyncService:
         job: SyncJob,
         result: AdapterResult,
         now: datetime,
+        count_metadata: dict[str, object] | None = None,
+        retryable_override: bool | None = None,
     ) -> ScheduledSyncResult:
+        safe_counts = count_metadata or {}
         state.consecutive_failures = int(state.consecutive_failures or 0) + 1
         state.last_error_at = now
         if result.error_code in _PAUSING_ERRORS:
@@ -794,14 +804,31 @@ class ScheduledMarketplaceSyncService:
             "stream": state.stream,
             "cursor_before": state.cursor,
             "error_code": result.error_code,
+            **safe_counts,
         }
+        created_count = safe_counts.get("created")
+        if type(created_count) is int and created_count > 0:
+            self.session.add(
+                UsageEvent(
+                    organization_id=account.organization_id,
+                    user_id=None,
+                    event_type="marketplace.messages_imported",
+                    quantity=created_count,
+                    metadata_json={
+                        "marketplace": account.marketplace,
+                        "marketplace_account_id": str(account.id),
+                        "sync_job_id": str(job.id),
+                        "stream": state.stream,
+                    },
+                )
+            )
         await self._write_integration_event(
             account=account,
             event_type=f"sync.{state.stream}.page",
             status="failed",
             error_code=result.error_code,
             error_message_safe=result.error_message_safe,
-            metadata={"sync_job_id": str(job.id), "cursor": state.cursor},
+            metadata={"sync_job_id": str(job.id), "cursor": state.cursor, **safe_counts},
         )
         await self.audit.write(
             action="marketplace_account.scheduled_sync.failed",
@@ -814,6 +841,7 @@ class ScheduledMarketplaceSyncService:
                 "stream": state.stream,
                 "error_code": result.error_code,
                 "consecutive_failures": state.consecutive_failures,
+                **safe_counts,
             },
         )
         await self.session.flush()
@@ -823,7 +851,11 @@ class ScheduledMarketplaceSyncService:
                 if result.error_code in _PAUSING_ERRORS
                 else "failed"
             ),
-            retryable=result.error_code in _RETRYABLE_ERRORS,
+            retryable=(
+                retryable_override
+                if retryable_override is not None
+                else result.error_code in _RETRYABLE_ERRORS
+            ),
             error_code=result.error_code,
         )
 

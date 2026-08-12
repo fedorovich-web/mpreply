@@ -88,7 +88,13 @@ class AvitoChatSyncService:
 
         while processed < max_chats:
             if provider_calls_left <= 0:
-                return _error_result(state, "sync_page_limit_exceeded")
+                return _error_result(
+                    state,
+                    "sync_page_limit_exceeded",
+                    created=created,
+                    updated=updated,
+                    skipped=skipped,
+                )
             provider_calls_left -= 1
             chats_result = await self.adapter.fetch_chats(
                 credential,
@@ -98,14 +104,28 @@ class AvitoChatSyncService:
                 offset=checkpoint.chat_offset,
             )
             if not chats_result.ok:
-                return _error_result(state, chats_result.error_code)
+                return _error_result(
+                    state,
+                    chats_result.error_code,
+                    created=created,
+                    updated=updated,
+                    skipped=skipped,
+                )
             chats = _chat_list(chats_result.data)
             if chats is None:
-                return _error_result(state, "malformed_payload")
+                return _error_result(
+                    state,
+                    "malformed_payload",
+                    created=created,
+                    updated=updated,
+                    skipped=skipped,
+                )
             if not chats:
                 _clear_checkpoint(state)
                 commit_error = await self._commit()
-                return commit_error or AvitoChatSyncResult(
+                if commit_error is not None:
+                    return _with_counts(commit_error, created, updated, skipped)
+                return AvitoChatSyncResult(
                     status="success", created=created, updated=updated, skipped=skipped
                 )
 
@@ -126,7 +146,13 @@ class AvitoChatSyncService:
                 )
                 provider_calls_left -= used_calls
                 if failure is not None:
-                    return _error_result(state, failure.error_code)
+                    return _error_result(
+                        state,
+                        failure.error_code,
+                        created=created,
+                        updated=updated,
+                        skipped=skipped,
+                    )
                 assert messages is not None
                 try:
                     ingest_result = await self.ingest.ingest_turn(
@@ -168,28 +194,37 @@ class AvitoChatSyncService:
                 commit_error = await self._commit()
                 if commit_error is not None:
                     return _with_counts(commit_error, created, updated, skipped)
+                created += _created(ingest_result)
+                updated += _updated(ingest_result)
+                checkpoint.chat_offset = 0
+                checkpoint.skipped_chat_versions.pop(chat.id, None)
+                _store_checkpoint(state, checkpoint)
+                commit_error = await self._commit()
+                if commit_error is not None:
+                    return _with_counts(commit_error, created, updated, skipped)
                 provider_calls_left -= 1
                 if provider_calls_left < 0:
-                    return _error_result(state, "sync_page_limit_exceeded")
+                    return _error_result(
+                        state,
+                        "sync_page_limit_exceeded",
+                        created=created,
+                        updated=updated,
+                        skipped=skipped,
+                    )
                 read_result = await self.adapter.mark_chat_read(
                     credential, account.seller_id, chat.id
                 )
                 if not read_result.ok:
                     return AvitoChatSyncResult(
                         status="failed",
-                        created=created + _created(ingest_result),
-                        updated=updated + _updated(ingest_result),
+                        created=created,
+                        updated=updated,
                         skipped=skipped,
                         has_more=True,
                         error_code=read_result.error_code or "marketplace_error",
                         retryable=(read_result.error_code in _RETRYABLE_ERRORS),
                     )
 
-                created += _created(ingest_result)
-                updated += _updated(ingest_result)
-                checkpoint.chat_offset = 0
-                checkpoint.skipped_chat_versions.pop(chat.id, None)
-                _store_checkpoint(state, checkpoint)
                 commit_error = await self._commit()
                 if commit_error is not None:
                     return _with_counts(commit_error, created, updated, skipped)
@@ -209,11 +244,19 @@ class AvitoChatSyncService:
             if len(chats) < _PAGE_LIMIT:
                 _clear_checkpoint(state)
                 commit_error = await self._commit()
-                return commit_error or AvitoChatSyncResult(
+                if commit_error is not None:
+                    return _with_counts(commit_error, created, updated, skipped)
+                return AvitoChatSyncResult(
                     status="success", created=created, updated=updated, skipped=skipped
                 )
             if checkpoint.chat_offset >= _MAX_OFFSET:
-                return _error_result(state, "sync_page_limit_exceeded")
+                return _error_result(
+                    state,
+                    "sync_page_limit_exceeded",
+                    created=created,
+                    updated=updated,
+                    skipped=skipped,
+                )
             checkpoint.chat_offset += _PAGE_LIMIT
             _store_checkpoint(state, checkpoint)
             commit_error = await self._commit()
@@ -345,13 +388,23 @@ def _pause_state(state: MarketplaceSyncState) -> None:
     state.lease_expires_at = None
 
 
-def _error_result(state: MarketplaceSyncState, error_code: str | None) -> AvitoChatSyncResult:
+def _error_result(
+    state: MarketplaceSyncState,
+    error_code: str | None,
+    *,
+    created: int = 0,
+    updated: int = 0,
+    skipped: int = 0,
+) -> AvitoChatSyncResult:
     normalized = error_code or "marketplace_error"
     status: Literal["failed", "paused"] = "paused" if normalized in _PAUSING_ERRORS else "failed"
     if status == "paused":
         _pause_state(state)
     return AvitoChatSyncResult(
         status=status,
+        created=created,
+        updated=updated,
+        skipped=skipped,
         error_code=normalized,
         retryable=normalized in _RETRYABLE_ERRORS,
     )
