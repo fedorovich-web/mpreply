@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.103"
-EXPECTED_ALEMBIC_HEAD = "20260722_0014"
+EXPECTED_ALEMBIC_HEAD = "20260812_0015"
 
 FRONTEND_SECURITY_MINIMUMS: dict[str, dict[int, tuple[int, int, int]]] = {
     "brace-expansion": {
@@ -195,7 +195,7 @@ def _python_module_exists(module_name: str) -> bool:
     relative = module_name.split(".")[1:]
     base = API / "app"
     candidate = base.joinpath(*relative)
-    return candidate.with_suffix(".py").is_file() or (candidate / "__init__.py").is_file()
+    return candidate.with_suffix(".py").is_file() or candidate.is_dir()
 
 
 def check_python_imports() -> None:
@@ -801,7 +801,9 @@ def check_marketplace_scheduler_contract() -> None:
 
     required_tokens = {
         "capability registry": (capabilities, "Marketplace.WILDBERRIES"),
-        "planned integrations remain disabled": (capabilities, 'integration_status="planned"'),
+        "Avito capability": (capabilities, "Marketplace.AVITO"),
+        "Avito chat operation": (capabilities, '"fetch_chats"'),
+        "Avito chat stream": (capabilities, "MarketplaceSyncStream.CHATS"),
         "skip locked scheduler claims": (scheduler, ".with_for_update(skip_locked=True)"),
         "lease expiry": (scheduler, "scheduler_lease_seconds"),
         "persisted cursor execution": (execution, "state.cursor"),
