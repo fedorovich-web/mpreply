@@ -35,6 +35,13 @@ def normalize_marketplace_seller_id(marketplace: str, seller_id: str | None) -> 
         raise bad_request("Yandex Market business ID must be a positive integer")
     if marketplace == Marketplace.OZON.value and not normalized:
         raise bad_request("Ozon Client ID is required")
+    if marketplace == Marketplace.AVITO.value and (
+        normalized is None
+        or not normalized.isascii()
+        or not normalized.isdecimal()
+        or int(normalized) <= 0
+    ):
+        raise bad_request("Avito user ID must be a positive decimal integer")
     return normalized
 
 
@@ -152,7 +159,7 @@ class MarketplaceAccountService:
             account.display_name = display_name.strip()
         if seller_id is not None:
             normalized_seller_id = normalize_marketplace_seller_id(account.marketplace, seller_id)
-            if account.marketplace == Marketplace.OZON.value and normalized_seller_id != account.seller_id:
+            if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value} and normalized_seller_id != account.seller_id:
                 account.scopes_json = {}
                 account.credentials_status = "pending_validation"
                 account.status = "pending_validation"
@@ -164,7 +171,7 @@ class MarketplaceAccountService:
             if status not in {"active", "disabled", "pending_validation"}:
                 raise bad_request("Unsupported marketplace account status")
             if (
-                account.marketplace == Marketplace.OZON.value
+                account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}
                 and status == "active"
                 and account.credentials_status != "valid"
             ):
@@ -206,7 +213,7 @@ class MarketplaceAccountService:
         account.credentials_last_rotated_at = datetime.now(UTC)
         account.credentials_status = "pending_validation"
         account.status = "pending_validation"
-        if account.marketplace == Marketplace.OZON.value:
+        if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}:
             account.scopes_json = {}
         await self.session.flush()
         await self.audit.write(
@@ -228,6 +235,8 @@ class MarketplaceAccountService:
         )
         account.credentials_status = "revoked"
         account.status = "disabled"
+        if account.marketplace == Marketplace.AVITO.value:
+            account.scopes_json = {}
         await self.scheduler.pause_account_states(account_id=account.id)
         await self.session.flush()
         await self.audit.write(
@@ -271,7 +280,13 @@ class MarketplaceAccountService:
                 if isinstance(scopes_value, list)
                 else []
             )
-            if account.marketplace == Marketplace.OZON.value:
+            if account.marketplace == Marketplace.AVITO.value:
+                account.scopes_json = {
+                    "validated": True,
+                    "checked_at": now.isoformat(),
+                    "scopes": ["fetch_chats"],
+                }
+            elif account.marketplace == Marketplace.OZON.value:
                 expires_at = result_data.get("expires_at")
                 account.scopes_json = {
                     "validated": True,
@@ -295,7 +310,7 @@ class MarketplaceAccountService:
             account.status = "error"
             account.last_error_sync_at = now
             account.error_count = int(account.error_count or 0) + 1
-            if account.marketplace == Marketplace.OZON.value:
+            if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}:
                 account.scopes_json = {}
                 await self.scheduler.pause_account_states(account_id=account.id)
             event_status = "failed"
@@ -333,7 +348,7 @@ class MarketplaceAccountService:
             organization_id=account.organization_id,
             marketplace=account.marketplace,
             display_name=account.display_name,
-            seller_id=None if account.marketplace == Marketplace.OZON.value else account.seller_id,
+            seller_id=None if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value} else account.seller_id,
             status=account.status,
             credentials_masked=self.credentials.mask_fingerprint(account.credentials_fingerprint),
             credentials_status=account.credentials_status,
