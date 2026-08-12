@@ -256,5 +256,5 @@ def test_balance_exhaustion_can_move_retryable_replies_to_manual_review(source_s
 
 def test_integrity_contract_keeps_answer_ledger_in_migration_chain() -> None:
     integrity_source = (REPOSITORY_ROOT / "scripts" / "check_integrity.py").read_text(encoding="utf-8")
-    assert 'EXPECTED_ALEMBIC_HEAD = "20260722_0014"' in integrity_source
+    assert 'EXPECTED_ALEMBIC_HEAD = "20260812_0015"' in integrity_source
     assert "20260722_0010_answer_ledger_foundation.py" in integrity_source
