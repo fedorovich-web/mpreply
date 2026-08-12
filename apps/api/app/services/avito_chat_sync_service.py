@@ -346,6 +346,7 @@ def _load_checkpoint(metadata: dict[str, object]) -> _Checkpoint:
         or type(chat_offset) is not int
         or chat_offset < 0
         or chat_offset > _MAX_OFFSET
+        or chat_offset % _PAGE_LIMIT != 0
         or not isinstance(skipped_raw, dict)
     ):
         raise ValueError("Invalid Avito chat sync checkpoint")

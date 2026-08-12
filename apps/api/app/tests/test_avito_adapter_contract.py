@@ -178,6 +178,74 @@ async def test_avito_fetches_and_strictly_parses_chats_and_messages() -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
+    ("limit", "offset"),
+    [
+        (0, 0),
+        (101, 0),
+        (True, 0),
+        (1.0, 0),
+        (100, -1),
+        (100, 1001),
+        (100, True),
+        (100, 1.0),
+    ],
+)
+async def test_avito_fetch_chats_rejects_invalid_pagination_without_network(
+    limit: object,
+    offset: object,
+) -> None:
+    recorder = _RequestRecorder([])
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.fetch_chats(
+        "synthetic-access-token",
+        "123456",
+        unread_only=True,
+        limit=limit,  # type: ignore[arg-type]
+        offset=offset,  # type: ignore[arg-type]
+    )
+
+    assert result.ok is False
+    assert result.error_code == "invalid_pagination"
+    assert recorder.requests == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("limit", "offset"),
+    [
+        (0, 0),
+        (101, 0),
+        (True, 0),
+        (1.0, 0),
+        (100, -1),
+        (100, 1001),
+        (100, True),
+        (100, 1.0),
+    ],
+)
+async def test_avito_fetch_messages_rejects_invalid_pagination_without_network(
+    limit: object,
+    offset: object,
+) -> None:
+    recorder = _RequestRecorder([])
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.fetch_chat_messages(
+        "synthetic-access-token",
+        "123456",
+        "chat-123",
+        limit=limit,  # type: ignore[arg-type]
+        offset=offset,  # type: ignore[arg-type]
+    )
+
+    assert result.ok is False
+    assert result.error_code == "invalid_pagination"
+    assert recorder.requests == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
     "payload",
     [
         [{"id": "m", "author_id": True, "created": 1, "direction": "in", "is_read": False, "read": None, "type": "text", "content": {"text": "x"}}],

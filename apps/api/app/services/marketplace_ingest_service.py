@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.customer_message import CustomerMessage
-from app.models.enums import MessageType
+from app.models.enums import Marketplace, MessageType
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.product import Product
 
@@ -63,7 +63,11 @@ class MarketplaceMessageIngestService:
         message.customer_text = normalized["customer_text"]
         message.customer_photos_json = normalized.get("customer_photos_json") or []
         message.last_synced_at = now
-        message.metadata_json = self._merge_message_metadata(message.metadata_json, normalized)
+        message.metadata_json = self._merge_message_metadata(
+            message.metadata_json,
+            normalized,
+            marketplace=account.marketplace,
+        )
         await self.session.flush()
         return "updated"
 
@@ -115,10 +119,16 @@ class MarketplaceMessageIngestService:
     def _merge_message_metadata(
         existing: dict[str, object] | None,
         normalized: dict[str, Any],
+        *,
+        marketplace: str,
     ) -> dict[str, object]:
         raw_incoming: object = normalized.get("metadata_json") or {}
         incoming = cast(dict[str, object], raw_incoming) if isinstance(raw_incoming, dict) else {}
-        if normalized.get("type") == MessageType.CHAT.value and "avito_chat_id" in incoming:
+        if (
+            marketplace == Marketplace.AVITO.value
+            and normalized.get("type") == MessageType.CHAT.value
+            and "avito_chat_id" in incoming
+        ):
             retained = {key: value for key, value in (existing or {}).items() if not key.startswith("avito_")}
             return {**retained, **incoming}
         return {**(existing or {}), **incoming}

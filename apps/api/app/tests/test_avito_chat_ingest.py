@@ -17,6 +17,7 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.product import Product
 from app.models.reply import Reply
 from app.services.avito_chat_ingest_service import AvitoChatIngestService
+from app.services.marketplace_ingest_service import MarketplaceMessageIngestService
 
 
 class _Scalars:
@@ -429,6 +430,47 @@ async def test_chat_reingest_replaces_avito_owned_metadata_and_removes_stale_ite
         "avito_source_author_ids": [654321],
         "avito_source_created_unix": [1_700_000_120],
         "avito_inbound_created_unix": 1_700_000_120,
+    }
+
+
+@pytest.mark.asyncio
+async def test_non_avito_chat_update_does_not_apply_avito_owned_metadata_cleanup() -> None:
+    account = _account()
+    account.marketplace = Marketplace.WILDBERRIES.value
+    existing = _stored_message(account, external_id="same-turn")
+    existing.marketplace = Marketplace.WILDBERRIES.value
+    existing.metadata_json = {
+        "avito_legacy_key": "preserve",
+        "existing_key": "keep",
+    }
+    session = _Session([[existing]])
+    service = MarketplaceMessageIngestService(cast(AsyncSession, session))
+
+    outcome = await service.upsert_normalized_message(
+        account,
+        {
+            "external_id": "same-turn",
+            "type": "chat",
+            "status": MessageStatus.NEEDS_REPLY.value,
+            "rating": None,
+            "customer_display_name": "Synthetic customer",
+            "customer_text": "Updated synthetic message",
+            "customer_photos_json": [],
+            "marketplace_created_at": datetime(2026, 8, 12, 8, 30, tzinfo=UTC),
+            "metadata_json": {
+                "avito_chat_id": "foreign-provider-value",
+                "incoming_key": "new",
+            },
+            "product": None,
+        },
+    )
+
+    assert outcome == "updated"
+    assert existing.metadata_json == {
+        "avito_legacy_key": "preserve",
+        "existing_key": "keep",
+        "avito_chat_id": "foreign-provider-value",
+        "incoming_key": "new",
     }
 
 

@@ -255,7 +255,7 @@ async def test_ingestion_commits_before_read_and_resets_offset_after_successful_
         account,
         {
             "unrelated": {"keep": True},
-            "avito_chat_sync": {"schema_version": 1, "chat_offset": 7, "skipped_chat_versions": {}},
+            "avito_chat_sync": {"schema_version": 1, "chat_offset": 700, "skipped_chat_versions": {}},
         },
     )
     timeline: list[str] = []
@@ -279,7 +279,7 @@ async def test_ingestion_commits_before_read_and_resets_offset_after_successful_
     )
 
     assert result == AvitoChatSyncResult(status="success", created=1, has_more=True)
-    assert adapter.chat_calls == [(True, 100, 7)]
+    assert adapter.chat_calls == [(True, 100, 700)]
     assert [offset for _chat_id, _limit, offset in adapter.message_calls] == [0, 100]
     assert timeline.index("ingest") < timeline.index("commit") < timeline.index("read")
     assert state.metadata_json == {
@@ -557,13 +557,44 @@ async def test_invalid_checkpoint_pauses_without_provider_calls() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("chat_offset", [1, 99, 101, 999])
+async def test_non_page_aligned_checkpoint_pauses_without_provider_calls(chat_offset: int) -> None:
+    account = _account()
+    state = _state(
+        account,
+        {
+            "avito_chat_sync": {
+                "schema_version": 1,
+                "chat_offset": chat_offset,
+                "skipped_chat_versions": {},
+            }
+        },
+    )
+    adapter = _Adapter(chat_pages=[AdapterResult(ok=True, data=[])])
+
+    result = await _service(_Session(), adapter, _Ingest([])).sync_batch(
+        account=account,
+        credential="credential",
+        state=state,
+        max_chats=1,
+    )
+
+    assert result == AvitoChatSyncResult(
+        status="paused",
+        error_code="sync_pagination_checkpoint_invalid",
+        retryable=False,
+    )
+    assert adapter.chat_calls == []
+
+
+@pytest.mark.asyncio
 async def test_completion_clears_only_avito_checkpoint() -> None:
     account = _account()
     state = _state(
         account,
         {
             "unrelated": {"keep": True},
-            "avito_chat_sync": {"schema_version": 1, "chat_offset": 3, "skipped_chat_versions": {}},
+            "avito_chat_sync": {"schema_version": 1, "chat_offset": 300, "skipped_chat_versions": {}},
         },
     )
     adapter = _Adapter(chat_pages=[AdapterResult(ok=True, data=[])])
