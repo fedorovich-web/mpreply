@@ -215,6 +215,8 @@ class MarketplaceAccountService:
         account.status = "pending_validation"
         if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}:
             account.scopes_json = {}
+        if account.marketplace == Marketplace.AVITO.value:
+            await self.scheduler.pause_account_states(account_id=account.id)
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.rotated",

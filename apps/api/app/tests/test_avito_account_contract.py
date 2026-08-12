@@ -164,6 +164,7 @@ async def test_avito_identity_change_rotation_and_failed_revalidation_clear_stal
         actor=actor, account_id=account.id, raw_credentials="synthetic-new-token"
     )
     assert rotated.scopes_json == {}
+    assert service.scheduler.paused_account_ids == [account.id, account.id]
 
     account.status = "active"
     account.credentials_status = "valid"
@@ -183,7 +184,7 @@ async def test_avito_identity_change_rotation_and_failed_revalidation_clear_stal
 
     assert result.ok is False
     assert account.scopes_json == {}
-    assert service.scheduler.paused_account_ids == [account.id, account.id, account.id]
+    assert service.scheduler.paused_account_ids == [account.id, account.id, account.id, account.id]
 
 
 def test_avito_account_response_omits_raw_user_id() -> None:

@@ -288,6 +288,63 @@ async def test_avito_mark_read_and_send_text_use_documented_contracts() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("payload", [{"ok": False}, {}, {"ok": "true"}])
+async def test_avito_mark_read_requires_explicit_success(payload: object) -> None:
+    recorder = _RequestRecorder([httpx.Response(200, json=payload)])
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.mark_chat_read("synthetic-access-token", "123456", "chat-123")
+
+    assert result.ok is False
+    assert result.error_code == "malformed_payload"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("chat_id", "encoded_chat_id"),
+    [
+        ("chat/id", "chat%2Fid"),
+        ("..", "%2E%2E"),
+        ("chat?query", "chat%3Fquery"),
+        ("chat#fragment", "chat%23fragment"),
+    ],
+)
+async def test_avito_encodes_reserved_chat_ids_as_single_path_segments(
+    chat_id: str, encoded_chat_id: str
+) -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json=[]),
+            httpx.Response(200, json={"ok": True}),
+            httpx.Response(
+                200,
+                json={
+                    "id": "outbound-123",
+                    "direction": "out",
+                    "type": "text",
+                    "content": {"text": "Synthetic reply"},
+                },
+            ),
+        ]
+    )
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    await adapter.fetch_chat_messages(
+        "synthetic-access-token", "123456", chat_id, limit=100, offset=0
+    )
+    await adapter.mark_chat_read("synthetic-access-token", "123456", chat_id)
+    await adapter.send_chat_message(
+        "synthetic-access-token", "123456", chat_id=chat_id, text="Synthetic reply"
+    )
+
+    assert [request.url.raw_path.split(b"?", 1)[0] for request in recorder.requests] == [
+        f"/messenger/v3/accounts/123456/chats/{encoded_chat_id}/messages/".encode(),
+        f"/messenger/v1/accounts/123456/chats/{encoded_chat_id}/read".encode(),
+        f"/messenger/v1/accounts/123456/chats/{encoded_chat_id}/messages".encode(),
+    ]
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("text", ["", "x" * 1001])
 async def test_avito_send_rejects_text_outside_documented_bounds_before_network(text: str) -> None:
     recorder = _RequestRecorder([])

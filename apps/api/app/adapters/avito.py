@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Literal, cast
+from urllib.parse import quote
 
 import httpx
 
@@ -162,10 +163,11 @@ class AvitoAdapter(MarketplaceAdapter):
             return _invalid_chat_identifier()
         if not _valid_page(limit, offset):
             return _invalid_pagination()
+        path_chat_id = _path_segment(chat_id)
         result = await self._request(
             credential=credential,
             method="GET",
-            path=f"/messenger/v3/accounts/{normalized_user_id}/chats/{chat_id}/messages/",
+            path=f"/messenger/v3/accounts/{normalized_user_id}/chats/{path_chat_id}/messages/",
             params={"limit": limit, "offset": offset},
         )
         if not result.ok:
@@ -184,15 +186,16 @@ class AvitoAdapter(MarketplaceAdapter):
             return _invalid_account_identifier()
         if _required_string(chat_id) is None:
             return _invalid_chat_identifier()
+        path_chat_id = _path_segment(chat_id)
         result = await self._request(
             credential=credential,
             method="POST",
-            path=f"/messenger/v1/accounts/{normalized_user_id}/chats/{chat_id}/read",
+            path=f"/messenger/v1/accounts/{normalized_user_id}/chats/{path_chat_id}/read",
         )
         if not result.ok:
             return result
         payload = _mapping(result.data)
-        if payload is None or type(payload.get("ok")) is not bool:
+        if payload is None or payload.get("ok") is not True:
             return _malformed_payload()
         return AdapterResult(ok=True, data={"ok": payload["ok"]})
 
@@ -224,10 +227,11 @@ class AvitoAdapter(MarketplaceAdapter):
             return _invalid_chat_identifier()
         if not 1 <= len(text) <= 1000:
             return _error("invalid_reply_text", "Avito Messenger text must be between 1 and 1000 characters")
+        path_chat_id = _path_segment(chat_id)
         result = await self._request(
             credential=credential,
             method="POST",
-            path=f"/messenger/v1/accounts/{normalized_user_id}/chats/{chat_id}/messages",
+            path=f"/messenger/v1/accounts/{normalized_user_id}/chats/{path_chat_id}/messages",
             json={"message": {"text": text}, "type": "text"},
         )
         if not result.ok:
@@ -397,6 +401,10 @@ def _positive_decimal_id(value: str | None) -> str | None:
 
 def _required_string(value: object) -> str | None:
     return value if isinstance(value, str) and value.strip() else None
+
+
+def _path_segment(value: str) -> str:
+    return quote(value, safe="").replace(".", "%2E")
 
 
 def _valid_page(limit: int, offset: int) -> bool:
