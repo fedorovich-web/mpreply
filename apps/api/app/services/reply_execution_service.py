@@ -509,10 +509,7 @@ class ReplyExecutionService:
                 False,
                 authorization.error_code,
             )
-        if (
-            account.marketplace != Marketplace.YANDEX_MARKET.value
-            and self._is_outbound_send_ambiguous_error(error_code)
-        ):
+        if not is_yandex_question and self._is_outbound_send_ambiguous_error(error_code):
             self._record_outbound_send_ambiguity(
                 reply=reply,
                 marketplace=message.marketplace,

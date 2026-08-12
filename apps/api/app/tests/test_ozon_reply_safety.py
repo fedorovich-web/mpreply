@@ -21,6 +21,7 @@ class _ContextCapturingAdapter(MarketplaceAdapter):
     def __init__(self, send_result: AdapterResult) -> None:
         self.send_result = send_result
         self.preflight_contexts: list[ProviderMessageContext | None] = []
+        self.review_contexts: list[ProviderMessageContext | None] = []
         self.question_contexts: list[ProviderMessageContext | None] = []
 
     async def validate_credentials(self, credential: str, seller_id: str | None = None) -> AdapterResult:
@@ -57,7 +58,8 @@ class _ContextCapturingAdapter(MarketplaceAdapter):
         *,
         context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
-        raise AssertionError("not used")
+        self.review_contexts.append(context)
+        return self.send_result
 
     async def send_question_reply(
         self,
@@ -70,6 +72,10 @@ class _ContextCapturingAdapter(MarketplaceAdapter):
     ) -> AdapterResult:
         self.question_contexts.append(context)
         return self.send_result
+
+    @property
+    def send_calls(self) -> int:
+        return len(self.review_contexts) + len(self.question_contexts)
 
     async def has_existing_reply(
         self,
@@ -182,14 +188,19 @@ def _reply() -> Reply:
     )
 
 
-def _message(reply: Reply) -> CustomerMessage:
+def _message(
+    reply: Reply,
+    *,
+    marketplace: str = "ozon",
+    message_type: str = "question",
+) -> CustomerMessage:
     return cast(
         CustomerMessage,
         SimpleNamespace(
             id=reply.message_id,
             marketplace_account_id=uuid4(),
-            marketplace="ozon",
-            type="question",
+            marketplace=marketplace,
+            type=message_type,
             external_id="question-1",
             status=MessageStatus.APPROVED.value,
             metadata_json={"ozon_sku": 646399170},
@@ -202,7 +213,7 @@ def _account(message: CustomerMessage) -> MarketplaceAccount:
         MarketplaceAccount,
         SimpleNamespace(
             id=message.marketplace_account_id,
-            marketplace="ozon",
+            marketplace=message.marketplace,
             seller_id="client-123",
             credentials_encrypted="credential",
         ),
@@ -234,12 +245,41 @@ async def test_non_yandex_execution_forwards_persisted_context_to_preflight_and_
 
 
 @pytest.mark.asyncio
-async def test_non_yandex_ambiguous_send_requires_manual_review_without_resend(
+async def test_execution_forwards_persisted_context_to_review_send(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reply = _reply()
-    message = _message(reply)
-    adapter = _ContextCapturingAdapter(AdapterResult(ok=False, error_code="network_timeout"))
+    message = _message(reply, message_type="review")
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"answer_id": "42"}))
+    service = _ExecutionHarness(reply=reply, message=message, account=_account(message))
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    result = await service.execute_reply(reply_id=reply.id)
+
+    assert result.status == ReplyStatus.SENT.value
+    assert adapter.preflight_contexts == [{"ozon_sku": 646399170}]
+    assert adapter.review_contexts == [{"ozon_sku": 646399170}]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("marketplace", "message_type", "error_code"),
+    [
+        ("ozon", "question", "network_timeout"),
+        ("ozon", "question", "network_error"),
+        ("yandex_market", "review", "network_timeout"),
+        ("yandex_market", "review", "network_error"),
+    ],
+)
+async def test_ambiguous_send_requires_manual_review_without_resend(
+    marketplace: str,
+    message_type: str,
+    error_code: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply()
+    message = _message(reply, marketplace=marketplace, message_type=message_type)
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=False, error_code=error_code))
     service = _ExecutionHarness(reply=reply, message=message, account=_account(message))
     monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
 
@@ -255,10 +295,10 @@ async def test_non_yandex_ambiguous_send_requires_manual_review_without_resend(
     marker = reply.metadata_json["outbound_send_ambiguity"]
     assert isinstance(marker, dict)
     assert marker["active"] is True
-    assert marker["marketplace"] == "ozon"
-    assert marker["reason"] == "network_timeout"
+    assert marker["marketplace"] == marketplace
+    assert marker["reason"] == error_code
     assert isinstance(marker["recorded_at"], str)
     assert service.integration_events[-1]["status"] == "blocked"
     assert service.audit.actions == ["manual_reply.outbound_send_ambiguous"]
     assert second_result.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
-    assert len(adapter.question_contexts) == 1
+    assert adapter.send_calls == 1
