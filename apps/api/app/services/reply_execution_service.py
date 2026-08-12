@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
+from app.adapters.conversation import ConversationAdapter
 from app.adapters.registry import get_marketplace_adapter
 from app.adapters.yandex_market import YandexMarketAdapter, YandexQuestionReplyState
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
@@ -331,6 +332,23 @@ class ReplyExecutionService:
 
         message = await self._get_message(reply.message_id)
         account = await self._get_account(message.marketplace_account_id)
+        if (
+            account.marketplace == Marketplace.AVITO.value
+            and (account.status != "active" or account.credentials_status != "valid")
+        ):
+            await self._mark_avito_account_blocked(reply=reply, message=message)
+            return ExecuteReplyResult(reply.id, reply.status, False, "invalid_credentials")
+        if (
+            account.marketplace == Marketplace.AVITO.value
+            and self._has_outbound_send_ambiguity(reply, marketplace=Marketplace.AVITO.value)
+        ):
+            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+            reply.error_code = "outbound_send_ambiguous"
+            reply.failed_reason = "Marketplace reply send outcome is ambiguous; automatic resend is blocked"
+            reply.next_retry_at = None
+            await self.session.commit()
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         if not self._ozon_message_scope_is_allowed(account=account, message=message):
             await self._mark_ozon_scope_blocked(reply=reply, message=message)
             return ExecuteReplyResult(reply.id, reply.status, False, "insufficient_scope")
@@ -515,7 +533,7 @@ class ReplyExecutionService:
         if not is_yandex_question and (
             self._is_outbound_send_ambiguous_error(error_code)
             or (
-                account.marketplace == Marketplace.OZON.value
+                account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}
                 and error_code == "malformed_payload"
             )
         ):
@@ -650,13 +668,41 @@ class ReplyExecutionService:
         seller_id: str | None,
         message: CustomerMessage,
     ) -> PreflightAnswerStatus:
-        result = await adapter.has_existing_reply(
-            credential=credential,
-            message_type=message.type,
-            external_id=message.external_id,
-            seller_id=seller_id,
-            context=self._provider_message_context(message),
-        )
+        if message.type == MessageType.CHAT.value:
+            chat_context = self._avito_chat_reply_context(message)
+            if chat_context is None:
+                return PreflightAnswerStatus(
+                    answered=None,
+                    failure=AdapterResult(
+                        False,
+                        error_code="invalid_chat_context",
+                        error_message_safe="Avito chat reply context is invalid",
+                    ),
+                )
+            if not isinstance(adapter, ConversationAdapter):
+                return PreflightAnswerStatus(
+                    answered=None,
+                    failure=AdapterResult(
+                        False,
+                        error_code="unsupported_message_type",
+                        error_message_safe="Marketplace adapter does not support chat replies",
+                    ),
+                )
+            chat_id, inbound_created_unix = chat_context
+            result = await adapter.has_existing_chat_reply(
+                credential,
+                seller_id or "",
+                chat_id=chat_id,
+                inbound_created_unix=inbound_created_unix,
+            )
+        else:
+            result = await adapter.has_existing_reply(
+                credential=credential,
+                message_type=message.type,
+                external_id=message.external_id,
+                seller_id=seller_id,
+                context=self._provider_message_context(message),
+            )
         if not result.ok:
             return PreflightAnswerStatus(answered=None, failure=result)
         payload = result.data
@@ -784,8 +830,30 @@ class ReplyExecutionService:
         reply.metadata_json = metadata
 
     @staticmethod
+    def _has_outbound_send_ambiguity(reply: Reply, *, marketplace: str) -> bool:
+        marker = _object_mapping(reply.metadata_json.get("outbound_send_ambiguity"))
+        return (
+            marker is not None
+            and marker.get("active") is True
+            and marker.get("marketplace") == marketplace
+        )
+
+    @staticmethod
     def _provider_message_context(message: CustomerMessage) -> ProviderMessageContext:
         return dict(message.metadata_json or {})
+
+    @classmethod
+    def _avito_chat_reply_context(cls, message: CustomerMessage) -> tuple[str, int] | None:
+        context = cls._provider_message_context(message)
+        chat_id = context.get("avito_chat_id")
+        inbound_created_unix = context.get("avito_inbound_created_unix")
+        if (
+            not isinstance(chat_id, str)
+            or not chat_id.strip()
+            or type(inbound_created_unix) is not int
+        ):
+            return None
+        return chat_id, inbound_created_unix
 
     @staticmethod
     def _ozon_message_scope_is_allowed(
@@ -876,11 +944,61 @@ class ReplyExecutionService:
                 seller_id=seller_id,
                 context=self._provider_message_context(message),
             )
+        if message.type == MessageType.CHAT.value:
+            chat_context = self._avito_chat_reply_context(message)
+            if chat_context is None:
+                return AdapterResult(
+                    False,
+                    error_code="invalid_chat_context",
+                    error_message_safe="Avito chat reply context is invalid",
+                )
+            if not isinstance(adapter, ConversationAdapter):
+                return AdapterResult(
+                    False,
+                    error_code="unsupported_message_type",
+                    error_message_safe="Marketplace adapter does not support chat replies",
+                )
+            chat_id, _ = chat_context
+            return await adapter.send_chat_message(
+                credential,
+                seller_id or "",
+                chat_id=chat_id,
+                text=reply.reply_text,
+            )
         return AdapterResult(
             False,
             error_code="unsupported_message_type",
             error_message_safe="Message type cannot be replied to through the marketplace adapter",
         )
+
+    async def _mark_avito_account_blocked(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+    ) -> None:
+        self._transition_reply(reply, ReplyStatus.BLOCKED.value)
+        self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
+        reply.error_code = "invalid_credentials"
+        reply.failed_reason = "Avito account is inactive or credentials are not valid"
+        reply.next_retry_at = None
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="failed",
+            error_code=reply.error_code,
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.failed",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by,
+            entity_id=str(reply.id),
+            metadata={"attempt_count": reply.attempt_count, "error_code": reply.error_code},
+        )
+        await self.session.commit()
 
     async def _mark_sent(
         self,

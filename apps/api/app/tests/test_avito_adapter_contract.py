@@ -422,3 +422,192 @@ async def test_avito_send_rejects_text_outside_documented_bounds_before_network(
     assert result.ok is False
     assert result.error_code == "invalid_reply_text"
     assert recorder.requests == []
+
+
+def _message_payload(
+    *,
+    message_id: str,
+    created: int,
+    direction: str = "in",
+    text: str = "Synthetic text",
+) -> dict[str, object]:
+    return {
+        "id": message_id,
+        "author_id": 42,
+        "created": created,
+        "direction": direction,
+        "is_read": False,
+        "read": None,
+        "type": "text",
+        "content": {"text": text},
+    }
+
+
+@pytest.mark.asyncio
+async def test_avito_chat_reply_preflight_traverses_pages_and_blocks_at_inbound_timestamp() -> None:
+    first_page = [
+        _message_payload(message_id=f"in-{index}", created=1_699_999_000 + index)
+        for index in range(100)
+    ]
+    second_page = [
+        _message_payload(
+            message_id="outbound-at-boundary",
+            created=1_700_000_000,
+            direction="out",
+            text="Existing answer",
+        )
+    ]
+    recorder = _RequestRecorder(
+        [httpx.Response(200, json=first_page), httpx.Response(200, json=second_page)]
+    )
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.has_existing_chat_reply(
+        "synthetic-access-token",
+        "123456",
+        chat_id="chat-123",
+        inbound_created_unix=1_700_000_000,
+    )
+
+    assert result.ok is True
+    assert result.data == {"answered": True}
+    assert [dict(request.url.params) for request in recorder.requests] == [
+        {"limit": "100", "offset": "0"},
+        {"limit": "100", "offset": "100"},
+    ]
+    assert all(request.method == "GET" for request in recorder.requests)
+    assert all(
+        request.url.path == "/messenger/v3/accounts/123456/chats/chat-123/messages/"
+        for request in recorder.requests
+    )
+
+
+@pytest.mark.asyncio
+async def test_avito_chat_reply_preflight_returns_unanswered_only_after_completed_traversal() -> None:
+    first_page = [
+        _message_payload(message_id=f"in-{index}", created=1_699_999_000 + index)
+        for index in range(100)
+    ]
+    recorder = _RequestRecorder(
+        [httpx.Response(200, json=first_page), httpx.Response(200, json=[])]
+    )
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.has_existing_chat_reply(
+        "synthetic-access-token",
+        "123456",
+        chat_id="chat-123",
+        inbound_created_unix=1_700_000_000,
+    )
+
+    assert result.ok is True
+    assert result.data == {"answered": False}
+    assert len(recorder.requests) == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("chat_id", "inbound_created_unix"),
+    [
+        ("", 1_700_000_000),
+        ("chat-123", True),
+        ("chat-123", 1_700_000_000.0),
+    ],
+)
+async def test_avito_chat_reply_preflight_rejects_malformed_context_without_network(
+    chat_id: str,
+    inbound_created_unix: object,
+) -> None:
+    recorder = _RequestRecorder([])
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.has_existing_chat_reply(
+        "synthetic-access-token",
+        "123456",
+        chat_id=chat_id,
+        inbound_created_unix=inbound_created_unix,  # type: ignore[arg-type]
+    )
+
+    assert result.ok is False
+    assert result.error_code == "invalid_chat_context"
+    assert recorder.requests == []
+
+
+@pytest.mark.asyncio
+async def test_avito_chat_reply_preflight_fails_closed_at_bounded_page_exhaustion() -> None:
+    full_page = [
+        _message_payload(message_id=f"in-{index}", created=1_699_999_000 + index)
+        for index in range(100)
+    ]
+    recorder = _RequestRecorder([httpx.Response(200, json=full_page) for _ in range(11)])
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.has_existing_chat_reply(
+        "synthetic-access-token",
+        "123456",
+        chat_id="chat-123",
+        inbound_created_unix=1_700_000_000,
+    )
+
+    assert result.ok is False
+    assert result.error_code == "preflight_page_limit_exceeded"
+    assert len(recorder.requests) == 11
+    assert all(request.method == "GET" for request in recorder.requests)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("length", [1, 1000])
+async def test_avito_send_accepts_documented_text_boundaries_with_exact_body(length: int) -> None:
+    text = "x" * length
+
+    def _response(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url.path == "/messenger/v1/accounts/123456/chats/chat-123/messages"
+        assert json.loads(request.content) == {"message": {"text": text}, "type": "text"}
+        return httpx.Response(
+            200,
+            json={
+                "id": f"outbound-{length}",
+                "created": 1_700_000_001,
+                "direction": "out",
+                "type": "text",
+                "content": {"text": text},
+            },
+        )
+
+    recorder = _RequestRecorder(_response)
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.send_chat_message(
+        "synthetic-access-token", "123456", chat_id="chat-123", text=text
+    )
+
+    assert result.ok is True
+    assert result.data == {"marketplace_reply_id": f"outbound-{length}"}
+    assert len(recorder.requests) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"id": "", "direction": "out", "type": "text", "content": {"text": "Synthetic reply"}},
+        {"id": "out-1", "direction": "in", "type": "text", "content": {"text": "Synthetic reply"}},
+        {"id": "out-1", "direction": "out", "type": "image", "content": {"text": "Synthetic reply"}},
+        {"id": "out-1", "direction": "out", "type": "text", "content": {"text": "Different reply"}},
+    ],
+)
+async def test_avito_send_requires_verifiable_exact_success(payload: object) -> None:
+    recorder = _RequestRecorder([httpx.Response(200, json=payload)])
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.send_chat_message(
+        "synthetic-access-token",
+        "123456",
+        chat_id="chat-123",
+        text="Synthetic reply",
+    )
+
+    assert result.ok is False
+    assert result.error_code == "malformed_payload"
+    assert len(recorder.requests) == 1

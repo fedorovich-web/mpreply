@@ -29,3 +29,18 @@ def test_due_later_retry_uses_persisted_retry_delay(monkeypatch: pytest.MonkeyPa
 
     assert exc_info.value.delay is not None
     assert exc_info.value.delay == 5_000
+
+
+def test_outbound_send_ambiguity_never_requests_broker_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def execute_reply(_: object) -> SimpleNamespace:
+        return SimpleNamespace(
+            retryable=False,
+            retry_at=None,
+            error_code="outbound_send_ambiguous",
+        )
+
+    monkeypatch.setattr(auto_reply, "_execute_reply", execute_reply)
+
+    auto_reply.auto_reply_actor.fn(str(uuid4()))
