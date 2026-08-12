@@ -12,9 +12,17 @@ from app.adapters.base import AdapterResult, MarketplaceAdapter
 from app.adapters.capabilities import get_marketplace_capability
 from app.adapters.registry import get_marketplace_adapter
 from app.adapters.yandex_market import YandexMarketAdapter
+from app.automation.state_machine import ensure_message_transition
 from app.core.config import get_settings
 from app.core.security import CredentialService
-from app.models.enums import Marketplace, MarketplaceSyncStateStatus, MarketplaceSyncStream
+from app.models.customer_message import CustomerMessage
+from app.models.enums import (
+    Marketplace,
+    MarketplaceSyncStateStatus,
+    MarketplaceSyncStream,
+    MessageStatus,
+    MessageType,
+)
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
@@ -202,6 +210,22 @@ class ScheduledMarketplaceSyncService:
             else:
                 state.next_run_at = now + timedelta(seconds=1)
 
+        reconciliation_stats: dict[str, int] = {}
+        if self._should_reconcile_open_yandex_questions(
+            account=account,
+            state=state,
+            page_fetch=page_fetch,
+            next_cursor=next_cursor,
+            next_checkpoint=historical_next_checkpoint,
+        ):
+            reconciliation_stats = await self._reconcile_open_yandex_questions(
+                account=account,
+                adapter=cast(YandexMarketAdapter, adapter),
+                credential=credential,
+                now=now,
+                limit=25,
+            )
+
         account.last_success_sync_at = now
         account.status = "active"
         account.credentials_status = "valid"
@@ -211,6 +235,10 @@ class ScheduledMarketplaceSyncService:
             page_fetch=page_fetch,
             next_checkpoint=historical_next_checkpoint,
         )
+        reconciliation_metadata = {
+            f"reconciliation_{key.lower()}": value
+            for key, value in reconciliation_stats.items()
+        }
         job.status = "success"
         job.finished_at = now
         job.stats_json = {
@@ -221,6 +249,7 @@ class ScheduledMarketplaceSyncService:
             "updated": updated,
             "skipped": skipped,
             **phase_metadata,
+            **reconciliation_metadata,
         }
         if created > 0:
             self.session.add(
@@ -249,6 +278,7 @@ class ScheduledMarketplaceSyncService:
                 "updated": updated,
                 "skipped": skipped,
                 **phase_metadata,
+            **reconciliation_metadata,
             },
         )
         await self.audit.write(
@@ -270,6 +300,7 @@ class ScheduledMarketplaceSyncService:
                     else next_cursor is not None
                 ),
                 **phase_metadata,
+            **reconciliation_metadata,
             },
         )
         await self.session.flush()
@@ -363,6 +394,103 @@ class ScheduledMarketplaceSyncService:
         if next_cursor is None:
             page_checkpoint = advance_yandex_question_window(page_checkpoint)
         return page_checkpoint, None
+
+    @staticmethod
+    def _should_reconcile_open_yandex_questions(
+        *,
+        account: MarketplaceAccount,
+        state: MarketplaceSyncState,
+        page_fetch: ScheduledPageFetch,
+        next_cursor: str | None,
+        next_checkpoint: YandexQuestionBackfillCheckpoint | None,
+    ) -> bool:
+        if (
+            account.marketplace != Marketplace.YANDEX_MARKET.value
+            or state.stream != MarketplaceSyncStream.QUESTIONS.value
+        ):
+            return False
+        if page_fetch.phase == "backfill":
+            return next_checkpoint is not None and next_checkpoint.completed
+        return next_cursor is None
+
+    async def _reconcile_open_yandex_questions(
+        self,
+        *,
+        account: MarketplaceAccount,
+        adapter: YandexMarketAdapter,
+        credential: str,
+        now: datetime,
+        limit: int = 25,
+    ) -> dict[str, int]:
+        cap = min(max(limit, 1), 25)
+        result = await self.session.execute(
+            select(CustomerMessage)
+            .where(
+                CustomerMessage.marketplace_account_id == account.id,
+                CustomerMessage.marketplace == Marketplace.YANDEX_MARKET.value,
+                CustomerMessage.type == MessageType.QUESTION.value,
+                CustomerMessage.status == MessageStatus.NEEDS_REPLY.value,
+            )
+            .order_by(CustomerMessage.marketplace_created_at.asc(), CustomerMessage.id.asc())
+            .limit(cap)
+        )
+        candidates = list(result.scalars().all())
+        stats = {
+            "processed": 0,
+            "ABSENT": 0,
+            "PUBLISHED": 0,
+            "UNMODERATED": 0,
+            "BANNED": 0,
+            "DELETED": 0,
+            "UNKNOWN": 0,
+        }
+        for message in candidates:
+            if stats["processed"] >= cap:
+                break
+            if (
+                message.marketplace_account_id != account.id
+                or message.marketplace != Marketplace.YANDEX_MARKET.value
+                or message.type != MessageType.QUESTION.value
+                or message.status != MessageStatus.NEEDS_REPLY.value
+            ):
+                continue
+            stats["processed"] += 1
+            reconciliation = await adapter.reconcile_question_reply(
+                credential,
+                message.external_id,
+                seller_id=account.seller_id,
+            )
+            state = "UNKNOWN"
+            answer_id: str | None = None
+            if reconciliation.ok and isinstance(reconciliation.data, dict):
+                payload = cast(dict[str, object], reconciliation.data)
+                raw_state = str(payload.get("state") or "UNKNOWN").upper()
+                if raw_state in {
+                    "ABSENT",
+                    "PUBLISHED",
+                    "UNMODERATED",
+                    "BANNED",
+                    "DELETED",
+                    "UNKNOWN",
+                }:
+                    state = raw_state
+                answer_id_value = payload.get("answer_id")
+                answer_id = str(answer_id_value) if answer_id_value is not None else None
+            stats[state] += 1
+            message.metadata_json = {
+                **(message.metadata_json or {}),
+                "yandex_question_reconciliation": {
+                    "state": state,
+                    "answer_id": answer_id,
+                    "checked_at": now.isoformat(),
+                },
+            }
+            if state == "PUBLISHED":
+                ensure_message_transition(message.status, MessageStatus.ANSWERED.value)
+                message.status = MessageStatus.ANSWERED.value
+            if not reconciliation.ok:
+                break
+        return stats
 
     @staticmethod
     def _phase_metadata(

@@ -8,6 +8,7 @@ _MESSAGE_TRANSITIONS: dict[str, frozenset[str]] = {
         MessageStatus.NEEDS_MANUAL_CHECK.value,
         MessageStatus.SAFETY_BLOCKED.value,
         MessageStatus.WAITING_REVIEW.value,
+        MessageStatus.ANSWERED.value,
     }),
     MessageStatus.AI_DRAFT_READY.value: frozenset({
         MessageStatus.AUTO_REPLY_PENDING.value,
