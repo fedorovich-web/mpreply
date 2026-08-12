@@ -339,7 +339,6 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("overrides", "chrome-launcher"): "1.2.1",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
-        ("overrides", "chrome-launcher"): "1.2.1",
     }
     for (section, name), expected in expected_dependencies.items():
         actual = package.get(section, {}).get(name)
@@ -434,7 +433,17 @@ def check_release_gate_contract() -> None:
     ]:
         if token not in workflow:
             fail(f"GitHub quality gate missing frontend design/browser contract: {token}")
-    if "Build production images" not in workflow:
+    required_production_image_builds = [
+        "Build API production image",
+        "docker build -f apps/api/Dockerfile apps/api",
+        "Build worker production image",
+        "docker build -f apps/worker/Dockerfile .",
+        "Build scheduler production image",
+        "docker build -f apps/scheduler/Dockerfile .",
+        "Build web production image",
+        "docker build -f apps/web/Dockerfile apps/web",
+    ]
+    if any(token not in workflow for token in required_production_image_builds):
         fail("GitHub quality gate does not build production Docker images")
     if '"pyright==' in pyproject:
         fail("Python pyright wrapper must not be installed; project uses official Node-based Pyright via npx")
