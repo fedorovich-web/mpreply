@@ -256,11 +256,9 @@ class YandexMarketAdapter(MarketplaceAdapter):
                 return reconciliation
             data = self._mapping(reconciliation.data)
             state = str(data.get("state") or "UNKNOWN").upper()
-            if state == "PUBLISHED":
-                return AdapterResult(ok=True, data={"answered": True, "state": state})
             if state == "ABSENT":
                 return AdapterResult(ok=True, data={"answered": False, "state": state})
-            return AdapterResult(ok=True, data={"answered": None, "state": state})
+            return AdapterResult(ok=True, data={"answered": True, "state": state})
         return AdapterResult(
             False,
             error_code="unsupported_message_type",
