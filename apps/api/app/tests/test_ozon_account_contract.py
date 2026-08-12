@@ -31,10 +31,14 @@ class _Audit:
 
 
 class _Scheduler:
+    def __init__(self) -> None:
+        self.paused_account_ids: list[object] = []
+
     async def ensure_account_states(self, **_: object) -> None:
         return None
 
-    async def pause_account_states(self, **_: object) -> None:
+    async def pause_account_states(self, *, account_id: object) -> None:
+        self.paused_account_ids.append(account_id)
         return None
 
 
@@ -212,6 +216,7 @@ async def test_ozon_rotate_and_validation_failure_clear_stale_scopes() -> None:
 
     assert result.ok is False
     assert account.scopes_json == {}
+    assert service.scheduler.paused_account_ids == [account.id]
 
 
 def test_ozon_account_response_omits_raw_client_id() -> None:

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import app.models as models
 from app.adapters.base import AdapterResult
 from app.adapters.capabilities import get_marketplace_capability, list_marketplace_capabilities
+from app.adapters.ozon import OzonAdapter
 from app.adapters.registry import get_marketplace_adapter
 from app.adapters.wildberries import WildberriesAdapter
 from app.adapters.yandex_market import YandexMarketAdapter
@@ -84,11 +85,12 @@ def test_capability_registry_exposes_every_marketplace_once() -> None:
     assert len({capability.marketplace for capability in capabilities}) == len(Marketplace)
 
 
-def test_wildberries_and_yandex_market_are_enabled_in_current_backend() -> None:
+def test_enabled_marketplaces_expose_complete_reply_execution_contracts() -> None:
     enabled = [capability for capability in list_marketplace_capabilities() if capability.connection_enabled]
 
     assert [capability.marketplace for capability in enabled] == [
         Marketplace.WILDBERRIES,
+        Marketplace.OZON,
         Marketplace.YANDEX_MARKET,
     ]
     assert all(
@@ -98,8 +100,8 @@ def test_wildberries_and_yandex_market_are_enabled_in_current_backend() -> None:
     assert all(capability.scheduler_enabled for capability in enabled)
 
 
-@pytest.mark.parametrize("marketplace", [Marketplace.OZON, Marketplace.AVITO])
-def test_unimplemented_marketplaces_remain_planned(marketplace: Marketplace) -> None:
+def test_avito_remains_planned() -> None:
+    marketplace = Marketplace.AVITO
     capability = get_marketplace_capability(marketplace)
 
     assert capability.integration_status == "planned"
@@ -109,10 +111,11 @@ def test_unimplemented_marketplaces_remain_planned(marketplace: Marketplace) -> 
 
 def test_registry_builds_enabled_adapters() -> None:
     assert isinstance(get_marketplace_adapter(Marketplace.WILDBERRIES), WildberriesAdapter)
+    assert isinstance(get_marketplace_adapter(Marketplace.OZON), OzonAdapter)
     assert isinstance(get_marketplace_adapter(Marketplace.YANDEX_MARKET), YandexMarketAdapter)
 
     with pytest.raises(HTTPException) as exc_info:
-        get_marketplace_adapter(Marketplace.OZON)
+        get_marketplace_adapter(Marketplace.AVITO)
 
     assert exc_info.value.status_code == 403
 
@@ -186,18 +189,39 @@ async def test_scheduler_creates_two_active_stream_states() -> None:
 
 
 @pytest.mark.asyncio
-async def test_scheduler_does_not_create_states_for_planned_adapter() -> None:
-    session = _FakeSession()
+@pytest.mark.parametrize(
+    ("scopes", "expected_active"),
+    [
+        (["fetch_reviews", "send_review_reply"], ["reviews"]),
+        (["fetch_questions", "send_question_reply"], ["questions"]),
+        (
+            ["fetch_reviews", "send_review_reply", "fetch_questions", "send_question_reply"],
+            ["reviews", "questions"],
+        ),
+    ],
+)
+async def test_scheduler_activates_only_ozon_streams_allowed_by_validated_scopes(
+    scopes: list[str],
+    expected_active: list[str],
+) -> None:
+    session = _FakeSession(execute_results=[[]])
     service = MarketplaceSchedulerService(cast(AsyncSession, session))
+    account = _marketplace_account(Marketplace.OZON)
+    account.scopes_json = {"validated": True, "scopes": scopes}
+    now = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
 
     states = await service.ensure_account_states(
-        account=_marketplace_account(Marketplace.OZON),
+        account=account,
         activate=True,
+        now=now,
     )
 
-    assert states == []
-    assert session.execute_count == 0
-    assert session.added == []
+    assert [state.stream for state in states] == ["reviews", "questions"]
+    assert [state.stream for state in states if state.status == MarketplaceSyncStateStatus.IDLE.value] == expected_active
+    assert all(
+        state.next_run_at == now if state.stream in expected_active else state.next_run_at is None
+        for state in states
+    )
 
 
 @pytest.mark.asyncio

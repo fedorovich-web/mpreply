@@ -23,6 +23,7 @@ QUESTION_METHODS = frozenset(
         "/v1/question/answer/create",
     }
 )
+_PREFLIGHT_PAGE_LIMIT = 100
 
 
 class _OzonClient:
@@ -92,6 +93,126 @@ class _OzonClient:
             },
         )
         return _validated_page_result(result, items_key="questions", requested_cursor=cursor)
+
+    async def has_existing_review_reply(
+        self,
+        api_key: str,
+        client_id: str | None,
+        review_id: str,
+    ) -> AdapterResult:
+        normalized_client_id = _normalized_client_id(client_id)
+        if not normalized_client_id:
+            return _invalid_client_id_result()
+        if _required_string(review_id) is None:
+            return _invalid_external_id_result()
+        for page in range(_PREFLIGHT_PAGE_LIMIT):
+            offset = page * 100
+            result = await self._request(
+                api_key=api_key,
+                client_id=normalized_client_id,
+                path="/v1/review/comment/list",
+                json={"review_id": review_id, "limit": 100, "offset": offset, "sort_dir": "ASC"},
+            )
+            if not result.ok:
+                return result
+            comments = _strict_mapping_items(result.data, key="comments")
+            if comments is None:
+                return _malformed_preflight_result()
+            if any(
+                type(comment.get("is_owner")) is not bool
+                or type(comment.get("is_published")) is not bool
+                or type(comment.get("is_rejected")) is not bool
+                for comment in comments
+            ):
+                return _malformed_preflight_result()
+            if any(comment.get("is_owner") is True and comment.get("is_published") is True for comment in comments):
+                return AdapterResult(ok=True, data={"answered": True})
+            if len(comments) < 100:
+                return AdapterResult(ok=True, data={"answered": False})
+        return _preflight_page_limit_result()
+
+    async def has_existing_question_reply(
+        self,
+        api_key: str,
+        client_id: str | None,
+        question_id: str,
+        sku: int,
+    ) -> AdapterResult:
+        normalized_client_id = _normalized_client_id(client_id)
+        if not normalized_client_id:
+            return _invalid_client_id_result()
+        if _required_string(question_id) is None:
+            return _invalid_external_id_result()
+        cursor = ""
+        seen_cursors: set[str] = set()
+        for _ in range(_PREFLIGHT_PAGE_LIMIT):
+            result = await self._request(
+                api_key=api_key,
+                client_id=normalized_client_id,
+                path="/v1/question/answer/list",
+                json={"question_id": question_id, "sku": sku, "last_id": cursor},
+            )
+            if not result.ok:
+                return result
+            page = _mapping(result.data)
+            if page is None:
+                return _malformed_preflight_result()
+            answers = _strict_mapping_items(page, key="answers")
+            next_cursor = page.get("last_id")
+            if answers is None or not isinstance(next_cursor, str):
+                return _malformed_preflight_result()
+            if answers:
+                return AdapterResult(ok=True, data={"answered": True})
+            if not next_cursor.strip():
+                return AdapterResult(ok=True, data={"answered": False})
+            if next_cursor == cursor or next_cursor in seen_cursors:
+                return _preflight_cursor_cycle_result()
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
+        return _preflight_page_limit_result()
+
+    async def send_review_reply(
+        self,
+        api_key: str,
+        client_id: str | None,
+        review_id: str,
+        reply_text: str,
+    ) -> AdapterResult:
+        normalized_client_id = _normalized_client_id(client_id)
+        if not normalized_client_id:
+            return _invalid_client_id_result()
+        if _required_string(review_id) is None:
+            return _invalid_external_id_result()
+        result = await self._request(
+            api_key=api_key,
+            client_id=normalized_client_id,
+            path="/v1/review/comment/create",
+            json={"review_id": review_id, "text": reply_text, "mark_review_as_processed": True},
+        )
+        return _provider_reply_result(result, key="comment_id")
+
+    async def send_question_reply(
+        self,
+        api_key: str,
+        client_id: str | None,
+        question_id: str,
+        sku: int,
+        reply_text: str,
+    ) -> AdapterResult:
+        normalized_client_id = _normalized_client_id(client_id)
+        if not normalized_client_id:
+            return _invalid_client_id_result()
+        if _required_string(question_id) is None:
+            return _invalid_external_id_result()
+        if not 2 <= len(reply_text) <= 3000:
+            return _invalid_reply_text_result()
+        result = await self._request(
+            api_key=api_key,
+            client_id=normalized_client_id,
+            path="/v1/question/answer/create",
+            json={"question_id": question_id, "sku": sku, "text": reply_text},
+        )
+        return _provider_reply_result(result, key="answer_id")
 
     @staticmethod
     def _headers(api_key: str, client_id: str) -> dict[str, str]:
@@ -278,7 +399,8 @@ class OzonAdapter(MarketplaceAdapter):
         *,
         context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
-        return _unsupported_operation()
+        del context
+        return await self._client.send_review_reply(credential, seller_id, external_id, reply_text)
 
     async def send_question_reply(
         self,
@@ -289,7 +411,10 @@ class OzonAdapter(MarketplaceAdapter):
         *,
         context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
-        return _unsupported_operation()
+        sku = _context_sku(context)
+        if sku is None:
+            return _invalid_provider_context_result()
+        return await self._client.send_question_reply(credential, seller_id, external_id, sku, reply_text)
 
     async def has_existing_reply(
         self,
@@ -300,7 +425,18 @@ class OzonAdapter(MarketplaceAdapter):
         *,
         context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
-        return _unsupported_operation()
+        if message_type == MessageType.REVIEW.value:
+            return await self._client.has_existing_review_reply(credential, seller_id, external_id)
+        if message_type == MessageType.QUESTION.value:
+            sku = _context_sku(context)
+            if sku is None:
+                return _invalid_provider_context_result()
+            return await self._client.has_existing_question_reply(credential, seller_id, external_id, sku)
+        return AdapterResult(
+            False,
+            error_code="unsupported_message_type",
+            error_message_safe="Ozon message type is not supported",
+        )
 
     def map_error(self, status_code: int, payload: object | None = None) -> AdapterResult:
         return _OzonClient.map_error(status_code)
@@ -332,6 +468,89 @@ def _malformed_page_result() -> AdapterResult:
         error_code="malformed_payload",
         error_message_safe="Ozon Seller API list response is malformed",
     )
+
+
+def _malformed_preflight_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="malformed_payload",
+        error_message_safe="Ozon Seller API preflight response is malformed",
+    )
+
+
+def _preflight_cursor_cycle_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="preflight_cursor_cycle",
+        error_message_safe="Ozon Seller API preflight cursor repeated",
+    )
+
+
+def _preflight_page_limit_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="preflight_page_limit_exceeded",
+        error_message_safe="Ozon Seller API preflight exceeded the safe page limit",
+    )
+
+
+def _invalid_provider_context_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="invalid_provider_context",
+        error_message_safe="Ozon SKU context is required",
+    )
+
+
+def _invalid_external_id_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="invalid_external_id",
+        error_message_safe="Ozon message ID is required",
+    )
+
+
+def _invalid_reply_text_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="invalid_reply_text",
+        error_message_safe="Ozon question answer text must be between 2 and 3000 characters",
+    )
+
+
+def _strict_mapping_items(value: object, *, key: str) -> list[Mapping[str, object]] | None:
+    mapping = _mapping(value)
+    if mapping is None:
+        return None
+    items = mapping.get(key)
+    if not isinstance(items, list):
+        return None
+    typed_items = cast(list[object], items)
+    mapped_items: list[Mapping[str, object]] = []
+    for item in typed_items:
+        item_mapping = _mapping(item)
+        if item_mapping is None:
+            return None
+        mapped_items.append(item_mapping)
+    return mapped_items
+
+
+def _provider_reply_result(result: AdapterResult, *, key: str) -> AdapterResult:
+    if not result.ok:
+        return result
+    payload = _mapping(result.data)
+    if payload is None:
+        return _malformed_page_result()
+    reply_id = _required_string(payload.get(key))
+    if reply_id is None:
+        return _malformed_page_result()
+    return AdapterResult(ok=True, data={"marketplace_reply_id": reply_id})
+
+
+def _context_sku(context: ProviderMessageContext | None) -> int | None:
+    if context is None:
+        return None
+    return _positive_sku(context.get("ozon_sku"))
 
 
 def _validated_page_result(
@@ -471,14 +690,6 @@ def _parse_timestamp(value: object) -> datetime | None:
     except ValueError:
         return None
     return parsed if parsed.tzinfo is not None else None
-
-
-def _unsupported_operation() -> AdapterResult:
-    return AdapterResult(
-        False,
-        error_code="unsupported_operation",
-        error_message_safe="Ozon operation is not enabled yet",
-    )
 
 
 def _valid_timestamp(value: str) -> bool:

@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.capabilities import get_marketplace_capability, scheduler_marketplaces
+from app.adapters.capabilities import MarketplaceCapability, get_marketplace_capability, scheduler_marketplaces
 from app.core.config import get_settings
 from app.core.errors import not_found
-from app.models.enums import MarketplaceSyncStateStatus
+from app.models.enums import Marketplace, MarketplaceSyncStateStatus, MarketplaceSyncStream
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.user import User
@@ -30,6 +31,25 @@ class MarketplaceSyncLease:
 def retry_delay_seconds(consecutive_failures: int, *, base_seconds: int = 60, maximum_seconds: int = 3600) -> int:
     normalized_failures = max(1, consecutive_failures)
     return min(maximum_seconds, base_seconds * (2 ** (normalized_failures - 1)))
+
+
+def account_sync_streams(
+    account: MarketplaceAccount,
+    capability: MarketplaceCapability,
+) -> tuple[MarketplaceSyncStream, ...]:
+    if account.marketplace != Marketplace.OZON.value:
+        return capability.sync_streams
+    scopes_payload = account.scopes_json or {}
+    raw_scopes = scopes_payload.get("scopes")
+    if scopes_payload.get("validated") is not True or not isinstance(raw_scopes, list):
+        return ()
+    scopes = {scope for scope in cast(list[object], raw_scopes) if isinstance(scope, str)}
+    streams: list[MarketplaceSyncStream] = []
+    if {"fetch_reviews", "send_review_reply"}.issubset(scopes):
+        streams.append(MarketplaceSyncStream.REVIEWS)
+    if {"fetch_questions", "send_question_reply"}.issubset(scopes):
+        streams.append(MarketplaceSyncStream.QUESTIONS)
+    return tuple(streams)
 
 
 class MarketplaceSchedulerService:
@@ -55,6 +75,7 @@ class MarketplaceSchedulerService:
         existing = {state.stream: state for state in result.scalars().all()}
         states: list[MarketplaceSyncState] = []
         for stream in capability.sync_streams:
+            stream_active = activate and stream in account_sync_streams(account, capability)
             state = existing.get(stream.value)
             if state is None:
                 state = MarketplaceSyncState(
@@ -63,16 +84,21 @@ class MarketplaceSchedulerService:
                     stream=stream.value,
                     status=(
                         MarketplaceSyncStateStatus.IDLE.value
-                        if activate
+                        if stream_active
                         else MarketplaceSyncStateStatus.PAUSED.value
                     ),
-                    next_run_at=current_time if activate else None,
+                    next_run_at=current_time if stream_active else None,
                     metadata_json={},
                 )
                 self.session.add(state)
-            elif activate:
+            elif stream_active:
                 state.status = MarketplaceSyncStateStatus.IDLE.value
                 state.next_run_at = state.next_run_at or current_time
+                state.lease_token = None
+                state.lease_expires_at = None
+            elif activate:
+                state.status = MarketplaceSyncStateStatus.PAUSED.value
+                state.next_run_at = None
                 state.lease_token = None
                 state.lease_expires_at = None
             states.append(state)

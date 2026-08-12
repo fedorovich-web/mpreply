@@ -107,8 +107,10 @@ class _Session:
 class _Entitlements:
     def __init__(self) -> None:
         self.release_calls = 0
+        self.reserve_calls = 0
 
     async def reserve_for_reply(self, **_: object) -> SimpleNamespace:
+        self.reserve_calls += 1
         return SimpleNamespace(allowed=True, reason=None)
 
     async def release_for_reply(self, **_: object) -> None:
@@ -216,6 +218,15 @@ def _account(message: CustomerMessage) -> MarketplaceAccount:
             marketplace=message.marketplace,
             seller_id="client-123",
             credentials_encrypted="credential",
+            scopes_json={
+                "validated": True,
+                "scopes": [
+                    "fetch_reviews",
+                    "send_review_reply",
+                    "fetch_questions",
+                    "send_question_reply",
+                ],
+            },
         ),
     )
 
@@ -233,13 +244,14 @@ async def test_non_yandex_execution_forwards_persisted_context_to_preflight_and_
 ) -> None:
     reply = _reply()
     message = _message(reply)
-    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"answer_id": "42"}))
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"marketplace_reply_id": "42"}))
     service = _ExecutionHarness(reply=reply, message=message, account=_account(message))
     monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
 
     result = await service.execute_reply(reply_id=reply.id)
 
     assert result.status == ReplyStatus.SENT.value
+    assert reply.marketplace_reply_id == "42"
     assert adapter.preflight_contexts == [{"ozon_sku": 646399170}]
     assert adapter.question_contexts == [{"ozon_sku": 646399170}]
 
@@ -250,13 +262,14 @@ async def test_execution_forwards_persisted_context_to_review_send(
 ) -> None:
     reply = _reply()
     message = _message(reply, message_type="review")
-    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"answer_id": "42"}))
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"marketplace_reply_id": "42"}))
     service = _ExecutionHarness(reply=reply, message=message, account=_account(message))
     monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
 
     result = await service.execute_reply(reply_id=reply.id)
 
     assert result.status == ReplyStatus.SENT.value
+    assert reply.marketplace_reply_id == "42"
     assert adapter.preflight_contexts == [{"ozon_sku": 646399170}]
     assert adapter.review_contexts == [{"ozon_sku": 646399170}]
 
@@ -301,4 +314,43 @@ async def test_ambiguous_send_requires_manual_review_without_resend(
     assert service.integration_events[-1]["status"] == "blocked"
     assert service.audit.actions == ["manual_reply.outbound_send_ambiguous"]
     assert second_result.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert adapter.send_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_ozon_missing_stream_scope_blocks_before_entitlement_or_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply()
+    message = _message(reply, message_type="question")
+    account = _account(message)
+    account.scopes_json = {"validated": True, "scopes": ["fetch_reviews", "send_review_reply"]}
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"marketplace_reply_id": "answer-1"}))
+    service = _ExecutionHarness(reply=reply, message=message, account=account)
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    result = await service.execute_reply(reply_id=reply.id)
+
+    assert result.status == ReplyStatus.BLOCKED.value
+    assert result.error_code == "insufficient_scope"
+    assert service.entitlements.reserve_calls == 0
+    assert adapter.preflight_contexts == []
+    assert adapter.send_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_ozon_malformed_successful_send_response_requires_manual_review(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply()
+    message = _message(reply)
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=False, error_code="malformed_payload"))
+    service = _ExecutionHarness(reply=reply, message=message, account=_account(message))
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    result = await service.execute_reply(reply_id=reply.id)
+
+    assert result.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert result.retryable is False
+    assert result.error_code == "outbound_send_ambiguous"
     assert adapter.send_calls == 1

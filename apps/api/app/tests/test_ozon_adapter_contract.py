@@ -464,3 +464,186 @@ def test_ozon_extraction_skips_processed_and_malformed_records_without_synthesiz
 
     assert reviews == [valid_review]
     assert questions == [valid_question]
+
+
+@pytest.mark.asyncio
+async def test_review_preflight_pages_official_comments_and_proves_owner_published_answer() -> None:
+    first_page = [
+        {"is_owner": False, "is_published": True, "is_rejected": False}
+        for _ in range(100)
+    ]
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"comments": first_page}),
+            httpx.Response(
+                200,
+                json={"comments": [{"is_owner": True, "is_published": True, "is_rejected": False}]},
+            ),
+        ]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.has_existing_reply(
+        "synthetic-api-key",
+        "review",
+        "review-123",
+        seller_id="client-123",
+    )
+
+    assert result.ok is True
+    assert result.data == {"answered": True}
+    assert [request.url.path for request in recorder.requests] == [
+        "/v1/review/comment/list",
+        "/v1/review/comment/list",
+    ]
+    assert [json.loads(request.content) for request in recorder.requests] == [
+        {"review_id": "review-123", "limit": 100, "offset": 0, "sort_dir": "ASC"},
+        {"review_id": "review-123", "limit": 100, "offset": 100, "sort_dir": "ASC"},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_question_preflight_uses_context_sku_and_last_id_until_exact_answer() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"answers": [], "last_id": "page-2"}),
+            httpx.Response(200, json={"answers": [{"id": "answer-123"}], "last_id": ""}),
+        ]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.has_existing_reply(
+        "synthetic-api-key",
+        "question",
+        "question-123",
+        seller_id="client-123",
+        context={"ozon_sku": 646399170},
+    )
+
+    assert result.ok is True
+    assert result.data == {"answered": True}
+    assert [request.url.path for request in recorder.requests] == [
+        "/v1/question/answer/list",
+        "/v1/question/answer/list",
+    ]
+    assert [json.loads(request.content) for request in recorder.requests] == [
+        {"question_id": "question-123", "sku": 646399170, "last_id": ""},
+        {"question_id": "question-123", "sku": 646399170, "last_id": "page-2"},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_ozon_preflight_rejects_malformed_success_or_missing_sku_without_write() -> None:
+    recorder = _RequestRecorder([httpx.Response(200, json={"comments": ["not-a-comment"]})])
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    malformed = await adapter.has_existing_reply(
+        "synthetic-api-key", "review", "review-123", seller_id="client-123"
+    )
+    missing_sku = await adapter.has_existing_reply(
+        "synthetic-api-key", "question", "question-123", seller_id="client-123", context={}
+    )
+
+    assert malformed.ok is False
+    assert malformed.error_code == "malformed_payload"
+    assert missing_sku.ok is False
+    assert missing_sku.error_code == "invalid_provider_context"
+    assert len(recorder.requests) == 1
+
+
+@pytest.mark.asyncio
+async def test_ozon_preflight_fails_closed_on_non_boolean_comment_or_question_cursor_cycle() -> None:
+    review_adapter = OzonAdapter(
+        transport=httpx.MockTransport(
+            _RequestRecorder(
+                [
+                    httpx.Response(
+                        200,
+                        json={
+                            "comments": [
+                                {"is_owner": "true", "is_published": True, "is_rejected": False}
+                            ]
+                        },
+                    )
+                ]
+            )
+        )
+    )
+    question_adapter = OzonAdapter(
+        transport=httpx.MockTransport(
+            _RequestRecorder(
+                [
+                    httpx.Response(200, json={"answers": [], "last_id": "page-2"}),
+                    httpx.Response(200, json={"answers": [], "last_id": "page-2"}),
+                ]
+            )
+        )
+    )
+
+    malformed_comment = await review_adapter.has_existing_reply(
+        "synthetic-api-key", "review", "review-123", seller_id="client-123"
+    )
+    repeated_cursor = await question_adapter.has_existing_reply(
+        "synthetic-api-key",
+        "question",
+        "question-123",
+        seller_id="client-123",
+        context={"ozon_sku": 646399170},
+    )
+
+    assert malformed_comment.error_code == "malformed_payload"
+    assert repeated_cursor.error_code == "preflight_cursor_cycle"
+
+
+@pytest.mark.asyncio
+async def test_ozon_sends_exact_bodies_and_exposes_provider_reply_ids() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"comment_id": "comment-123"}),
+            httpx.Response(200, json={"answer_id": "answer-123"}),
+        ]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    review = await adapter.send_review_reply(
+        "synthetic-api-key", "review-123", "Seller reply", seller_id="client-123"
+    )
+    question = await adapter.send_question_reply(
+        "synthetic-api-key",
+        "question-123",
+        "Seller reply",
+        seller_id="client-123",
+        context={"ozon_sku": 646399170},
+    )
+
+    assert review.ok is True
+    assert review.data == {"marketplace_reply_id": "comment-123"}
+    assert question.ok is True
+    assert question.data == {"marketplace_reply_id": "answer-123"}
+    assert [request.url.path for request in recorder.requests] == [
+        "/v1/review/comment/create",
+        "/v1/question/answer/create",
+    ]
+    assert [json.loads(request.content) for request in recorder.requests] == [
+        {"review_id": "review-123", "text": "Seller reply", "mark_review_as_processed": True},
+        {"question_id": "question-123", "sku": 646399170, "text": "Seller reply"},
+    ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("reply_text", ["x", "x" * 3001])
+async def test_ozon_question_send_rejects_official_text_bounds_before_network(reply_text: str) -> None:
+    recorder = _RequestRecorder([])
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.send_question_reply(
+        "synthetic-api-key",
+        "question-123",
+        reply_text,
+        seller_id="client-123",
+        context={"ozon_sku": 646399170},
+    )
+
+    assert result.ok is False
+    assert result.error_code == "invalid_reply_text"
+    assert recorder.requests == []

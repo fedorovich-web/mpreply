@@ -297,6 +297,7 @@ class MarketplaceAccountService:
             account.error_count = int(account.error_count or 0) + 1
             if account.marketplace == Marketplace.OZON.value:
                 account.scopes_json = {}
+                await self.scheduler.pause_account_states(account_id=account.id)
             event_status = "failed"
             error_code = result.error_code
             error_message_safe = result.error_message_safe

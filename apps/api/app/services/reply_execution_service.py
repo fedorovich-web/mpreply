@@ -331,6 +331,9 @@ class ReplyExecutionService:
 
         message = await self._get_message(reply.message_id)
         account = await self._get_account(message.marketplace_account_id)
+        if not self._ozon_message_scope_is_allowed(account=account, message=message):
+            await self._mark_ozon_scope_blocked(reply=reply, message=message)
+            return ExecuteReplyResult(reply.id, reply.status, False, "insufficient_scope")
         if reply.mode == ResponseMode.AUTO.value:
             rule = await self._get_rule(reply.automation_rule_id)
             quota = await self._check_quota(message=message, rule=rule)
@@ -509,7 +512,13 @@ class ReplyExecutionService:
                 False,
                 authorization.error_code,
             )
-        if not is_yandex_question and self._is_outbound_send_ambiguous_error(error_code):
+        if not is_yandex_question and (
+            self._is_outbound_send_ambiguous_error(error_code)
+            or (
+                account.marketplace == Marketplace.OZON.value
+                and error_code == "malformed_payload"
+            )
+        ):
             self._record_outbound_send_ambiguity(
                 reply=reply,
                 marketplace=message.marketplace,
@@ -777,6 +786,56 @@ class ReplyExecutionService:
     @staticmethod
     def _provider_message_context(message: CustomerMessage) -> ProviderMessageContext:
         return dict(message.metadata_json or {})
+
+    @staticmethod
+    def _ozon_message_scope_is_allowed(
+        *,
+        account: MarketplaceAccount,
+        message: CustomerMessage,
+    ) -> bool:
+        if account.marketplace != Marketplace.OZON.value:
+            return True
+        scopes_json = _object_mapping(cast(object, getattr(account, "scopes_json", {})))
+        if scopes_json is None or scopes_json.get("validated") is not True:
+            return False
+        raw_scopes = scopes_json.get("scopes")
+        if not isinstance(raw_scopes, list):
+            return False
+        scopes = {scope for scope in cast(list[object], raw_scopes) if isinstance(scope, str)}
+        if message.type == MessageType.REVIEW.value:
+            return {"fetch_reviews", "send_review_reply"}.issubset(scopes)
+        if message.type == MessageType.QUESTION.value:
+            return {"fetch_questions", "send_question_reply"}.issubset(scopes)
+        return False
+
+    async def _mark_ozon_scope_blocked(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+    ) -> None:
+        self._transition_reply(reply, ReplyStatus.BLOCKED.value)
+        self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
+        reply.error_code = "insufficient_scope"
+        reply.failed_reason = "Ozon account scope does not permit this message stream"
+        reply.next_retry_at = None
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="failed",
+            error_code="insufficient_scope",
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.failed",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by,
+            entity_id=str(reply.id),
+            metadata={"attempt_count": reply.attempt_count, "error_code": "insufficient_scope"},
+        )
+        await self.session.commit()
 
     async def _send_through_adapter(
         self,
@@ -1185,9 +1244,19 @@ class ReplyExecutionService:
         data = mapping.get("data")
         if isinstance(data, dict):
             data_mapping = cast(dict[str, object], data)
-            value = data_mapping.get("id") or data_mapping.get("replyId") or data_mapping.get("answerId")
+            value = (
+                data_mapping.get("id")
+                or data_mapping.get("replyId")
+                or data_mapping.get("answerId")
+                or data_mapping.get("marketplace_reply_id")
+            )
             return str(value) if value is not None else None
-        value = mapping.get("id") or mapping.get("replyId") or mapping.get("answerId")
+        value = (
+            mapping.get("id")
+            or mapping.get("replyId")
+            or mapping.get("answerId")
+            or mapping.get("marketplace_reply_id")
+        )
         return str(value) if value is not None else None
 
     @staticmethod

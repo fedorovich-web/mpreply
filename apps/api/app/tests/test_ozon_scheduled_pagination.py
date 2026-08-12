@@ -89,7 +89,10 @@ def _account() -> MarketplaceAccount:
         credentials_fingerprint="fingerprint",
         status="active",
         credentials_status="valid",
-        scopes_json={},
+        scopes_json={
+            "validated": True,
+            "scopes": ["fetch_reviews", "send_review_reply"],
+        },
         default_response_mode="inherit",
         error_count=0,
     )

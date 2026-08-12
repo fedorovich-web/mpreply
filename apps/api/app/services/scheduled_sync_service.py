@@ -30,7 +30,7 @@ from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
 from app.services.audit_service import AuditService
 from app.services.marketplace_ingest_service import MarketplaceMessageIngestService
-from app.services.marketplace_scheduler_service import retry_delay_seconds
+from app.services.marketplace_scheduler_service import account_sync_streams, retry_delay_seconds
 from app.services.yandex_question_sync_policy import (
     YandexQuestionBackfillCheckpoint,
     advance_yandex_question_window,
@@ -148,10 +148,15 @@ class ScheduledMarketplaceSyncService:
             return ScheduledSyncResult(status="stale")
         capability = get_marketplace_capability(account.marketplace)
         supported_streams = {stream.value for stream in capability.sync_streams}
+        account_streams = {
+            stream.value
+            for stream in account_sync_streams(account, capability)
+        }
         if (
             account.status != "active"
             or account.credentials_status != "valid"
             or state.stream not in supported_streams
+            or state.stream not in account_streams
         ):
             self._pause_state(state)
             await self.session.flush()

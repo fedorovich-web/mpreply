@@ -78,7 +78,15 @@ def _account(marketplace: Marketplace = Marketplace.OZON) -> MarketplaceAccount:
         credentials_fingerprint="fingerprint",
         status="active",
         credentials_status="valid",
-        scopes_json={},
+        scopes_json={
+            "validated": True,
+            "scopes": [
+                "fetch_reviews",
+                "send_review_reply",
+                "fetch_questions",
+                "send_question_reply",
+            ],
+        },
         default_response_mode="inherit",
         error_count=0,
     )
@@ -140,7 +148,7 @@ async def test_scheduler_creates_only_capability_supported_streams(monkeypatch: 
 
 
 @pytest.mark.asyncio
-async def test_scheduled_execution_pauses_stream_removed_from_capability(
+async def test_scheduled_execution_pauses_ozon_stream_removed_from_validated_account_scopes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     capability = _capability("validate", "fetch_reviews")
@@ -150,12 +158,16 @@ async def test_scheduled_execution_pauses_stream_removed_from_capability(
 
     monkeypatch.setattr(scheduled_sync_module, "get_marketplace_capability", get_capability)
     account = _account()
+    account.scopes_json = {
+        "validated": True,
+        "scopes": ["fetch_questions", "send_question_reply"],
+    }
     lease_token = uuid4()
     state = MarketplaceSyncState(
         id=uuid4(),
         organization_id=account.organization_id,
         marketplace_account_id=account.id,
-        stream=MarketplaceSyncStream.QUESTIONS.value,
+        stream=MarketplaceSyncStream.REVIEWS.value,
         status=MarketplaceSyncStateStatus.LEASED.value,
         next_run_at=datetime(2026, 7, 24, 12, 0, tzinfo=UTC),
         lease_token=lease_token,
