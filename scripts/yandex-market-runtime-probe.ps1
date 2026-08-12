@@ -8,7 +8,8 @@ param(
     [string]$ReviewId = "",
     [string]$QuestionId = "",
     [string]$ReplyText = "",
-    [string]$Confirmation = ""
+    [string]$Confirmation = "",
+    [switch]$NoPrompt
 )
 
 Set-StrictMode -Version Latest
@@ -53,7 +54,7 @@ if ($ActualRoot -ne $ExpectedRoot) {
     throw "Unexpected Git root: expected=$ExpectedRoot actual=$ActualRoot"
 }
 
-$Python = Join-Path $Repository ".venv\Scripts\python.exe"
+$Python = Join-Path $Repository "apps\api\.venv\Scripts\python.exe"
 if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
     throw "Project Python not found: $Python"
 }
@@ -64,6 +65,9 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
 
 $ApiKey = $env:YANDEX_MARKET_API_KEY
 if ([string]::IsNullOrWhiteSpace($ApiKey)) {
+    if ($NoPrompt) {
+        throw "Yandex Market Api-Key is required"
+    }
     $ApiKey = Read-SecretPlainText -Prompt "Yandex Market Api-Key"
 }
 if ([string]::IsNullOrWhiteSpace($ApiKey)) {
@@ -72,6 +76,9 @@ if ([string]::IsNullOrWhiteSpace($ApiKey)) {
 
 $BusinessId = $env:YANDEX_MARKET_BUSINESS_ID
 if ([string]::IsNullOrWhiteSpace($BusinessId)) {
+    if ($NoPrompt) {
+        throw "Yandex Market Business ID is required"
+    }
     $BusinessId = Read-Host -Prompt "Yandex Market Business ID"
 }
 if ($BusinessId -notmatch "^[1-9][0-9]*$") {
@@ -80,6 +87,9 @@ if ($BusinessId -notmatch "^[1-9][0-9]*$") {
 
 if ($Mode -eq "write-review") {
     if ([string]::IsNullOrWhiteSpace($ReviewId)) {
+        if ($NoPrompt) {
+            throw "Review ID is required in write-review mode"
+        }
         $ReviewId = Read-Host -Prompt "Review ID for write probe"
     }
     if ($ReviewId -notmatch "^[1-9][0-9]*$") {
@@ -89,6 +99,9 @@ if ($Mode -eq "write-review") {
 
 if ($Mode -eq "write-question") {
     if ([string]::IsNullOrWhiteSpace($QuestionId)) {
+        if ($NoPrompt) {
+            throw "Question ID is required in write-question mode"
+        }
         $QuestionId = Read-Host -Prompt "Question ID for write probe"
     }
     if ($QuestionId -notmatch "^[1-9][0-9]*$") {
@@ -98,12 +111,18 @@ if ($Mode -eq "write-question") {
 
 if ($Mode -ne "read-only") {
     if ([string]::IsNullOrWhiteSpace($ReplyText)) {
+        if ($NoPrompt) {
+            throw "Reply text is required in write mode"
+        }
         $ReplyText = Read-Host -Prompt "Reply text for the write probe"
     }
     if ([string]::IsNullOrWhiteSpace($ReplyText)) {
         throw "Reply text is required in write mode"
     }
     if ([string]::IsNullOrWhiteSpace($Confirmation)) {
+        if ($NoPrompt) {
+            throw "Exact write confirmation phrase is required"
+        }
         $Confirmation = Read-Host -Prompt "Type I_UNDERSTAND_YANDEX_MARKET_WRITE"
     }
     if ($Confirmation -ne "I_UNDERSTAND_YANDEX_MARKET_WRITE") {
@@ -116,6 +135,12 @@ $PreviousBusinessId = $env:YANDEX_MARKET_BUSINESS_ID
 $PreviousReviewId = $env:YANDEX_MARKET_REVIEW_ID
 $PreviousQuestionId = $env:YANDEX_MARKET_QUESTION_ID
 $PreviousReplyText = $env:YANDEX_MARKET_REPLY_TEXT
+$PreviousGitSha = $env:MPREPLY_GIT_SHA
+$GitSha = (& git -C $Repository rev-parse HEAD).Trim()
+Assert-LastExitCode "Read Git SHA"
+if ($GitSha -notmatch "^[0-9a-f]{40}$") {
+    throw "Unexpected Git SHA: $GitSha"
+}
 
 try {
     $env:YANDEX_MARKET_API_KEY = $ApiKey
@@ -123,6 +148,7 @@ try {
     $env:YANDEX_MARKET_REVIEW_ID = $ReviewId
     $env:YANDEX_MARKET_QUESTION_ID = $QuestionId
     $env:YANDEX_MARKET_REPLY_TEXT = $ReplyText
+    $env:MPREPLY_GIT_SHA = $GitSha
 
     $Arguments = @(
         "-m",
@@ -164,16 +190,25 @@ try {
     if ($RawEvidence.Contains($BusinessId)) {
         throw "Runtime evidence contains the unmasked Business ID"
     }
+    if (-not [string]::IsNullOrWhiteSpace($ReviewId) -and $RawEvidence.Contains($ReviewId)) {
+        throw "Runtime evidence contains the unmasked Review ID"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($QuestionId) -and $RawEvidence.Contains($QuestionId)) {
+        throw "Runtime evidence contains the unmasked Question ID"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ReplyText) -and $RawEvidence.Contains($ReplyText)) {
+        throw "Runtime evidence contains the reply text"
+    }
 
     $Evidence = $RawEvidence | ConvertFrom-Json
-    if ($Evidence.marketplace -ne "yandex_market") {
+    if ($Evidence.provider -ne "yandex_market") {
         throw "Unexpected marketplace in runtime evidence"
     }
-    if ($Evidence.overall_status -notin @("pass", "pending", "skipped")) {
-        throw "Runtime probe did not pass: $($Evidence.overall_status)"
+    if ($Evidence.status -ne "PASS") {
+        throw "Runtime probe did not pass: $($Evidence.status)"
     }
 
-    Write-Host "`nYANDEX MARKET RUNTIME PROBE: $($Evidence.overall_status.ToString().ToUpperInvariant())" -ForegroundColor Green
+    Write-Host "`nYANDEX MARKET RUNTIME PROBE: $($Evidence.status)" -ForegroundColor Green
     Write-Host "Evidence: $OutputPath"
 }
 finally {
@@ -182,6 +217,8 @@ finally {
     $env:YANDEX_MARKET_REVIEW_ID = $PreviousReviewId
     $env:YANDEX_MARKET_QUESTION_ID = $PreviousQuestionId
     $env:YANDEX_MARKET_REPLY_TEXT = $PreviousReplyText
+    $env:MPREPLY_GIT_SHA = $PreviousGitSha
     $ApiKey = $null
     $ReplyText = $null
+    $GitSha = $null
 }

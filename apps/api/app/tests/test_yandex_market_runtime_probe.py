@@ -9,6 +9,8 @@ import pytest
 from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.tools.yandex_market_runtime_probe import ProbeConfig, run_probe, write_runtime_probe_report
 
+_GIT_SHA = "a" * 40
+
 
 class FakeRuntimeAdapter(MarketplaceAdapter):
     marketplace = "yandex_market"
@@ -144,14 +146,17 @@ async def test_read_only_probe_checks_bounded_pagination_and_never_serializes_se
     )
     config = ProbeConfig(credential="very-secret-api-key", business_id="123456", max_pages=2)
 
-    report = await run_probe(adapter, config)
+    report = await run_probe(adapter, config, git_sha=_GIT_SHA)
     output = tmp_path / "runtime.json"
     write_runtime_probe_report(output, report)
     serialized = output.read_text(encoding="utf-8")
 
-    assert report.overall_status == "pass"
-    assert report.business_id_masked == "masked:6digits"
+    assert report.status == "PASS"
+    assert report.schema_version == 2
+    assert report.provider == "yandex_market"
+    assert report.account_id_masked == "masked:6chars"
     assert report.credential_fingerprint.startswith("sha256:")
+    assert report.git_sha == "a" * 40
     assert adapter.review_calls == [None, "secret-review-cursor"]
     assert adapter.question_calls == [None]
     assert "very-secret-api-key" not in serialized
@@ -183,9 +188,10 @@ async def test_probe_fails_closed_on_cursor_cycle() -> None:
     report = await run_probe(
         adapter,
         ProbeConfig(credential="key", business_id="123", max_pages=3),
+        git_sha=_GIT_SHA,
     )
 
-    assert report.overall_status == "fail"
+    assert report.status == "FAIL"
     review_step = next(step for step in report.steps if step.name == "fetch_reviews")
     assert review_step.error_code == "cursor_cycle"
 
@@ -204,6 +210,21 @@ def test_write_mode_requires_explicit_confirmation_and_target() -> None:
         invalid.validate()
 
 
+def test_protected_yandex_question_id_is_rejected_before_adapter_calls() -> None:
+    protected_question_id = str(27_265_525)
+    config = ProbeConfig(
+        credential="key",
+        business_id="123",
+        mode="write-question",
+        question_id=protected_question_id,
+        reply_text="Synthetic reply",
+        confirmation="I_UNDERSTAND_YANDEX_MARKET_WRITE",
+    )
+
+    with pytest.raises(ValueError, match="protected"):
+        config.validate()
+
+
 @pytest.mark.asyncio
 async def test_write_probe_skips_when_reply_already_exists() -> None:
     adapter = FakeRuntimeAdapter(preflight_results=[AdapterResult(ok=True, data={"answered": True})])
@@ -216,17 +237,17 @@ async def test_write_probe_skips_when_reply_already_exists() -> None:
         confirmation="I_UNDERSTAND_YANDEX_MARKET_WRITE",
     )
 
-    report = await run_probe(adapter, config)
+    report = await run_probe(adapter, config, git_sha=_GIT_SHA)
 
-    assert report.overall_status == "pass"
-    assert report.write_probe_performed is True
-    assert report.write_probe_visible_after_send is True
+    assert report.status == "BLOCKED"
+    assert report.write_attempted is False
+    assert report.write_confirmed is None
     assert adapter.sent == []
-    assert report.steps[-1].status == "skipped"
+    assert report.steps[-1].status == "BLOCKED"
 
 
 @pytest.mark.asyncio
-async def test_write_probe_accepts_pending_moderation_without_duplicate_send() -> None:
+async def test_write_probe_marks_not_yet_visible_send_ambiguous_without_duplicate_send() -> None:
     adapter = FakeRuntimeAdapter(
         preflight_results=[
             AdapterResult(ok=True, data={"answered": False}),
@@ -242,12 +263,103 @@ async def test_write_probe_accepts_pending_moderation_without_duplicate_send() -
         confirmation="I_UNDERSTAND_YANDEX_MARKET_WRITE",
     )
 
-    report = await run_probe(adapter, config)
+    report = await run_probe(adapter, config, git_sha=_GIT_SHA)
 
-    assert report.overall_status == "pending"
-    assert report.write_probe_visible_after_send is False
+    assert report.status == "AMBIGUOUS"
+    assert report.write_attempted is True
+    assert report.write_confirmed is False
     assert adapter.sent == [("review", "88", "runtime probe")]
-    assert report.steps[-1].status == "pending"
+    assert report.steps[-1].status == "AMBIGUOUS"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "error_code",
+    [
+        "network_timeout",
+        "network_error",
+        "rate_limited",
+        "marketplace_unavailable",
+        "marketplace_malformed_response",
+    ],
+)
+async def test_post_send_uncertainty_is_ambiguous_and_never_retried(error_code: str) -> None:
+    adapter = FakeRuntimeAdapter(
+        preflight_results=[AdapterResult(ok=True, data={"answered": False})],
+        send_result=AdapterResult(ok=False, error_code=error_code, error_message_safe="Safe local message"),
+    )
+    config = ProbeConfig(
+        credential="key",
+        business_id="123",
+        mode="write-review",
+        review_id="88",
+        reply_text="Synthetic reply",
+        confirmation="I_UNDERSTAND_YANDEX_MARKET_WRITE",
+    )
+
+    report = await run_probe(adapter, config, git_sha=_GIT_SHA)
+
+    assert report.status == "AMBIGUOUS"
+    assert report.write_attempted is True
+    assert report.write_confirmed is None
+    assert adapter.sent == [("review", "88", "Synthetic reply")]
+
+
+@pytest.mark.asyncio
+async def test_failed_postflight_is_ambiguous_after_one_send() -> None:
+    adapter = FakeRuntimeAdapter(
+        preflight_results=[
+            AdapterResult(ok=True, data={"answered": False}),
+            AdapterResult(ok=False, error_code="rate_limited", error_message_safe="Safe local message"),
+        ]
+    )
+    config = ProbeConfig(
+        credential="key",
+        business_id="123",
+        mode="write-review",
+        review_id="88",
+        reply_text="Synthetic reply",
+        confirmation="I_UNDERSTAND_YANDEX_MARKET_WRITE",
+    )
+
+    report = await run_probe(adapter, config, git_sha=_GIT_SHA)
+
+    assert report.status == "AMBIGUOUS"
+    assert report.write_attempted is True
+    assert report.write_confirmed is None
+    assert adapter.sent == [("review", "88", "Synthetic reply")]
+
+
+@pytest.mark.asyncio
+async def test_write_evidence_excludes_target_and_reply_text(tmp_path: Path) -> None:
+    adapter = FakeRuntimeAdapter(
+        preflight_results=[
+            AdapterResult(ok=True, data={"answered": False}),
+            AdapterResult(ok=True, data={"answered": True}),
+        ]
+    )
+    config = ProbeConfig(
+        credential="key",
+        business_id="123",
+        mode="write-review",
+        review_id="987654321",
+        reply_text="Sensitive synthetic reply",
+        confirmation="I_UNDERSTAND_YANDEX_MARKET_WRITE",
+    )
+
+    report = await run_probe(adapter, config, git_sha=_GIT_SHA)
+    output = tmp_path / "write-runtime.json"
+    write_runtime_probe_report(
+        output,
+        report,
+        forbidden_values=(config.credential, config.business_id, config.review_id or "", config.reply_text or ""),
+    )
+    serialized = output.read_text(encoding="utf-8")
+
+    assert report.status == "PASS"
+    assert report.write_target_fingerprint is not None
+    assert "987654321" not in serialized
+    assert "Sensitive synthetic reply" not in serialized
 
 
 @pytest.mark.asyncio
@@ -270,8 +382,8 @@ async def test_write_probe_is_not_attempted_when_read_contract_fails() -> None:
         confirmation="I_UNDERSTAND_YANDEX_MARKET_WRITE",
     )
 
-    report = await run_probe(adapter, config)
+    report = await run_probe(adapter, config, git_sha=_GIT_SHA)
 
-    assert report.overall_status == "fail"
+    assert report.status == "FAIL"
     assert adapter.sent == []
     assert all(not step.name.startswith("write_") for step in report.steps)
