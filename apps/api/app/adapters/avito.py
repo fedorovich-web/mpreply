@@ -13,6 +13,7 @@ _BASE_URL = "https://api.avito.ru"
 _MAX_RATE_LIMIT_VALUE = 1_000_000
 _PAGE_LIMIT = 100
 _MAX_OFFSET = 1000
+_MESSAGE_KINDS = {"text", "image", "link", "item", "location", "call", "deleted", "voice", "system"}
 
 
 class AvitoAdapter(MarketplaceAdapter):
@@ -195,7 +196,7 @@ class AvitoAdapter(MarketplaceAdapter):
         if not result.ok:
             return result
         payload = _mapping(result.data)
-        if payload is None or payload.get("ok") is not True:
+        if payload is None or set(payload) != {"ok"} or payload.get("ok") is not True:
             return _malformed_payload()
         return AdapterResult(ok=True, data={"ok": payload["ok"]})
 
@@ -369,6 +370,7 @@ def _parse_message(raw: Mapping[str, object]) -> AvitoMessage | None:
         or type(is_read) is not bool
         or (read is not None and type(read) is not int)
         or not isinstance(kind, str)
+        or kind not in _MESSAGE_KINDS
     ):
         return None
     content = _mapping(raw.get("content"))

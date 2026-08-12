@@ -37,6 +37,17 @@ def account_sync_streams(
     account: MarketplaceAccount,
     capability: MarketplaceCapability,
 ) -> tuple[MarketplaceSyncStream, ...]:
+    if account.marketplace == Marketplace.AVITO.value:
+        scopes_payload = account.scopes_json or {}
+        raw_scopes = scopes_payload.get("scopes")
+        if scopes_payload.get("validated") is not True or not isinstance(raw_scopes, list):
+            return ()
+        scopes = {scope for scope in cast(list[object], raw_scopes) if isinstance(scope, str)}
+        return (
+            (MarketplaceSyncStream.CHATS,)
+            if MarketplaceSyncStream.CHATS in capability.sync_streams and "fetch_chats" in scopes
+            else ()
+        )
     if account.marketplace != Marketplace.OZON.value:
         return capability.sync_streams
     scopes_payload = account.scopes_json or {}

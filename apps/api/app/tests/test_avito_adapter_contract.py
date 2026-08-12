@@ -167,7 +167,72 @@ async def test_avito_fetches_and_strictly_parses_chats_and_messages() -> None:
         "/messenger/v2/accounts/123456/chats",
         "/messenger/v3/accounts/123456/chats/chat-123/messages/",
     ]
-    assert recorder.requests[0].url.params["unread_only"] == "true"
+    assert dict(recorder.requests[0].url.params) == {
+        "chat_types": "u2i,u2u,a2u",
+        "unread_only": "true",
+        "limit": "100",
+        "offset": "0",
+    }
+    assert dict(recorder.requests[1].url.params) == {"limit": "100", "offset": "0"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [{"id": "m", "author_id": True, "created": 1, "direction": "in", "is_read": False, "read": None, "type": "text", "content": {"text": "x"}}],
+        [{"id": "m", "author_id": 1, "created": 1.0, "direction": "in", "is_read": False, "read": None, "type": "text", "content": {"text": "x"}}],
+        [{"id": "m", "author_id": 1, "created": 1, "direction": "incoming", "is_read": False, "read": None, "type": "text", "content": {"text": "x"}}],
+        [{"id": "m", "author_id": 1, "created": 1, "direction": "in", "is_read": 0, "read": None, "type": "text", "content": {"text": "x"}}],
+        [{"id": "m", "author_id": 1, "created": 1, "direction": "in", "is_read": False, "read": 1.0, "type": "text", "content": {"text": "x"}}],
+        [{"id": "m", "author_id": 1, "created": 1, "direction": "in", "is_read": False, "read": None, "type": "unknown", "content": {}}],
+    ],
+)
+async def test_avito_rejects_non_exact_message_fields_and_unknown_types(payload: object) -> None:
+    recorder = _RequestRecorder([httpx.Response(200, json=payload)])
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.fetch_chat_messages(
+        "synthetic-access-token", "123456", "chat-123", limit=100, offset=0
+    )
+
+    assert result.ok is False
+    assert result.error_code == "malformed_payload"
+
+
+@pytest.mark.asyncio
+async def test_avito_preserves_documented_unsupported_message_type_for_sync_policy() -> None:
+    payload: list[dict[str, object]] = [
+        {
+            "id": "message-image",
+            "author_id": 42,
+            "created": 1723456791,
+            "direction": "in",
+            "is_read": False,
+            "read": None,
+            "type": "image",
+            "content": dict[str, object](),
+        }
+    ]
+    adapter = AvitoAdapter(transport=httpx.MockTransport(_RequestRecorder([httpx.Response(200, json=payload)])))
+
+    result = await adapter.fetch_chat_messages(
+        "synthetic-access-token", "123456", "chat-123", limit=100, offset=0
+    )
+
+    assert result.ok is True
+    assert result.data == [
+        AvitoMessage(
+            id="message-image",
+            author_id=42,
+            created_unix=1723456791,
+            direction="in",
+            is_read=False,
+            read_unix=None,
+            kind="image",
+            text=None,
+        )
+    ]
 
 
 @pytest.mark.asyncio
@@ -288,7 +353,7 @@ async def test_avito_mark_read_and_send_text_use_documented_contracts() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("payload", [{"ok": False}, {}, {"ok": "true"}])
+@pytest.mark.parametrize("payload", [{"ok": False}, {}, {"ok": "true"}, {"ok": True, "extra": 1}])
 async def test_avito_mark_read_requires_explicit_success(payload: object) -> None:
     recorder = _RequestRecorder([httpx.Response(200, json=payload)])
     adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))

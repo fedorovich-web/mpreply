@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from types import SimpleNamespace
-from typing import cast
+from typing import ClassVar, cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -12,12 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import app.services.sync_service as sync_module
 from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.adapters.capabilities import MarketplaceCapability
+from app.adapters.conversation import ConversationAdapter
 from app.core.security import CredentialService
 from app.models.enums import Marketplace, MarketplaceSyncStream, MessageType
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.avito_chat_sync_service import AvitoChatSyncResult
 from app.services.marketplace_ingest_service import MarketplaceMessageIngestService
 from app.services.organization_service import OrganizationService
 from app.services.sync_service import MarketplaceSyncService, StreamSyncOutcome, SyncStats
@@ -132,6 +135,9 @@ class _FakeSession:
     async def flush(self) -> None:
         self.flush_count += 1
 
+    async def commit(self) -> None:
+        return None
+
 
 class _FakeAudit:
     async def write(self, **_kwargs: object) -> None:
@@ -154,7 +160,13 @@ class _FakeCredentials:
 
 
 class _SyncHarness(MarketplaceSyncService):
-    def __init__(self, *, account: MarketplaceAccount, adapter: MarketplaceAdapter) -> None:
+    def __init__(
+        self,
+        *,
+        account: MarketplaceAccount,
+        adapter: MarketplaceAdapter,
+        chat_state: MarketplaceSyncState | None = None,
+    ) -> None:
         self.session = cast(AsyncSession, _FakeSession())
         self.organization_service = cast(OrganizationService, _FakeOrganizationService())
         self.audit = cast(AuditService, _FakeAudit())
@@ -162,6 +174,7 @@ class _SyncHarness(MarketplaceSyncService):
         self.credentials = cast(CredentialService, _FakeCredentials())
         self._account = account
         self._adapter = adapter
+        self._chat_state = chat_state
         self.events: list[dict[str, object]] = []
 
     @property
@@ -175,6 +188,11 @@ class _SyncHarness(MarketplaceSyncService):
     def _adapter_for(self, marketplace: str) -> MarketplaceAdapter:
         del marketplace
         return self._adapter
+
+    async def _get_chat_sync_state(self, account: MarketplaceAccount) -> MarketplaceSyncState:
+        assert self._chat_state is not None
+        assert account is self._account
+        return self._chat_state
 
     async def sync_stream_pages_for_test(
         self,
@@ -547,3 +565,99 @@ async def test_manual_sync_rejects_capability_without_sync_streams(
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Marketplace does not support message sync"
     assert cast(_FakeSession, service.session).added == []
+
+
+class _FakeConversationAdapter(_FakeAdapter):
+    marketplace = "avito"
+
+    def __init__(self) -> None:
+        super().__init__(review_pages=[])
+
+    async def fetch_chats(
+        self, credential: str, user_id: str, *, unread_only: bool, limit: int, offset: int
+    ) -> AdapterResult:
+        raise AssertionError("dedicated chat sync service owns polling")
+
+    async def fetch_chat_messages(
+        self, credential: str, user_id: str, chat_id: str, *, limit: int, offset: int
+    ) -> AdapterResult:
+        raise AssertionError("dedicated chat sync service owns polling")
+
+    async def mark_chat_read(self, credential: str, user_id: str, chat_id: str) -> AdapterResult:
+        raise AssertionError("dedicated chat sync service owns read state")
+
+    async def has_existing_chat_reply(
+        self, credential: str, user_id: str, *, chat_id: str, inbound_created_unix: int
+    ) -> AdapterResult:
+        raise AssertionError("not used by inbound sync")
+
+    async def send_chat_message(
+        self, credential: str, user_id: str, *, chat_id: str, text: str
+    ) -> AdapterResult:
+        raise AssertionError("not used by inbound sync")
+
+
+class _ManualChatSync:
+    calls: ClassVar[list[dict[str, object]]] = []
+
+    def __init__(self, _session: AsyncSession, *, adapter: ConversationAdapter) -> None:
+        assert isinstance(adapter, ConversationAdapter)
+
+    async def sync_batch(self, **kwargs: object) -> AvitoChatSyncResult:
+        self.calls.append(kwargs)
+        return AvitoChatSyncResult(status="success", created=2, updated=1, skipped=3)
+
+
+def _avito_chat_capability() -> MarketplaceCapability:
+    return MarketplaceCapability(
+        marketplace=Marketplace.AVITO,
+        integration_status="enabled",
+        operations=("validate", "fetch_chats"),
+        message_types=(MessageType.CHAT,),
+        polling_enabled=True,
+        pagination_strategy="offset",
+        notes="test fixture",
+    )
+
+
+@pytest.mark.asyncio
+async def test_manual_avito_sync_dispatches_only_to_chat_service_with_twenty_five_chat_cap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    account = _account()
+    account.marketplace = Marketplace.AVITO.value
+    account.seller_id = "123456"
+    account.scopes_json = {"validated": True, "scopes": ["fetch_chats"]}
+    state = MarketplaceSyncState(
+        id=uuid4(),
+        organization_id=account.organization_id,
+        marketplace_account_id=account.id,
+        stream=MarketplaceSyncStream.CHATS.value,
+        status="idle",
+        consecutive_failures=0,
+        metadata_json={},
+    )
+    adapter = _FakeConversationAdapter()
+    service = _SyncHarness(account=account, adapter=adapter, chat_state=state)
+    _ManualChatSync.calls = []
+    monkeypatch.setattr(
+        sync_module,
+        "get_marketplace_capability",
+        _capability_lookup(_avito_chat_capability()),
+    )
+    monkeypatch.setattr(sync_module, "AvitoChatSyncService", _ManualChatSync)
+
+    _account_result, stats, error_code, error_message = await service.sync_account(
+        actor=cast(User, SimpleNamespace(id=uuid4())),
+        account_id=account.id,
+    )
+
+    assert error_code is None
+    assert error_message is None
+    assert len(_ManualChatSync.calls) == 1
+    assert _ManualChatSync.calls[0]["max_chats"] == 25
+    assert _ManualChatSync.calls[0]["state"] is state
+    assert adapter.calls == []
+    assert stats.imported_chats == 2
+    assert stats.updated_chats == 1
+    assert stats.skipped == 3

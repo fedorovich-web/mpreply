@@ -10,17 +10,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, MarketplaceAdapter
 from app.adapters.capabilities import get_marketplace_capability
+from app.adapters.conversation import ConversationAdapter
 from app.adapters.registry import get_marketplace_adapter
 from app.core.config import get_settings
 from app.core.errors import bad_request, not_found
 from app.core.security import CredentialService
-from app.models.enums import MarketplaceSyncStream
+from app.models.enums import MarketplaceSyncStateStatus, MarketplaceSyncStream
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.avito_chat_sync_service import AvitoChatSyncService
 from app.services.marketplace_ingest_service import MarketplaceMessageIngestService
 from app.services.marketplace_scheduler_service import account_sync_streams
 from app.services.organization_service import OrganizationService
@@ -36,6 +39,8 @@ class SyncStats:
     updated_reviews: int = 0
     updated_questions: int = 0
     skipped: int = 0
+    imported_chats: int = 0
+    updated_chats: int = 0
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -104,18 +109,58 @@ class MarketplaceSyncService:
         stats = SyncStats()
         error_code: str | None = None
         error_message_safe: str | None = None
+        is_chat_sync = streams == (MarketplaceSyncStream.CHATS,)
         try:
-            for stream in streams:
-                outcome = await self._sync_stream_pages(
-                    account=account,
-                    adapter=adapter,
-                    credential=credential,
-                    stream=stream,
-                    stats=stats,
-                )
-                if outcome.error_code is not None and error_code is None:
-                    error_code = outcome.error_code
-                    error_message_safe = outcome.error_message_safe
+            if is_chat_sync:
+                if not isinstance(adapter, ConversationAdapter):
+                    error_code = "unsupported_sync_stream"
+                    error_message_safe = "Marketplace chat synchronization is unavailable"
+                else:
+                    state = await self._get_chat_sync_state(account)
+                    chat_result = await AvitoChatSyncService(
+                        self.session,
+                        adapter=adapter,
+                    ).sync_batch(
+                        account=account,
+                        credential=credential,
+                        state=state,
+                        max_chats=25,
+                    )
+                    stats.imported_chats += chat_result.created
+                    stats.updated_chats += chat_result.updated
+                    stats.skipped += chat_result.skipped
+                    await self._write_integration_event(
+                        account=account,
+                        event_type="sync.chats",
+                        status="success" if chat_result.status == "success" else "failed",
+                        error_code=chat_result.error_code,
+                        error_message_safe=(
+                            None
+                            if chat_result.error_code is None
+                            else "Avito chat synchronization failed"
+                        ),
+                        metadata={
+                            "created": chat_result.created,
+                            "updated": chat_result.updated,
+                            "skipped": chat_result.skipped,
+                            "has_more": chat_result.has_more,
+                        },
+                    )
+                    if chat_result.error_code is not None:
+                        error_code = chat_result.error_code
+                        error_message_safe = "Avito chat synchronization failed"
+            else:
+                for stream in streams:
+                    outcome = await self._sync_stream_pages(
+                        account=account,
+                        adapter=adapter,
+                        credential=credential,
+                        stream=stream,
+                        stats=stats,
+                    )
+                    if outcome.error_code is not None and error_code is None:
+                        error_code = outcome.error_code
+                        error_message_safe = outcome.error_message_safe
 
             if error_code:
                 job.status = "failed"
@@ -128,8 +173,15 @@ class MarketplaceSyncService:
                 account.status = "active"
                 account.credentials_status = "valid"
             job.finished_at = datetime.now(UTC)
-            job.stats_json = stats.as_dict()
-            imported_total = stats.imported_reviews + stats.imported_questions
+            stats_payload = stats.as_dict()
+            if is_chat_sync:
+                stats_payload = {
+                    **stats_payload,
+                    "imported_chats": stats.imported_chats,
+                    "updated_chats": stats.updated_chats,
+                }
+            job.stats_json = stats_payload
+            imported_total = stats.imported_reviews + stats.imported_questions + stats.imported_chats
             if imported_total > 0:
                 self.session.add(
                     UsageEvent(
@@ -143,6 +195,11 @@ class MarketplaceSyncService:
                             "sync_job_id": str(job.id),
                             "imported_reviews": stats.imported_reviews,
                             "imported_questions": stats.imported_questions,
+                            **(
+                                {"imported_chats": stats.imported_chats}
+                                if is_chat_sync
+                                else {}
+                            ),
                         },
                     )
                 )
@@ -152,9 +209,11 @@ class MarketplaceSyncService:
                 organization_id=account.organization_id,
                 actor_user_id=actor.id,
                 entity_id=str(job.id),
-                metadata={"marketplace_account_id": str(account.id), "status": job.status, **stats.as_dict()},
+                metadata={"marketplace_account_id": str(account.id), "status": job.status, **stats_payload},
             )
             await self.session.flush()
+            if is_chat_sync:
+                await self.session.commit()
             return account, stats, error_code, error_message_safe
         except Exception as exc:
             job.status = "failed"
@@ -317,6 +376,29 @@ class MarketplaceSyncService:
         if account is None:
             raise not_found("Marketplace account not found")
         return account
+
+    async def _get_chat_sync_state(self, account: MarketplaceAccount) -> MarketplaceSyncState:
+        result = await self.session.execute(
+            select(MarketplaceSyncState)
+            .where(
+                MarketplaceSyncState.organization_id == account.organization_id,
+                MarketplaceSyncState.marketplace_account_id == account.id,
+                MarketplaceSyncState.stream == MarketplaceSyncStream.CHATS.value,
+            )
+            .with_for_update()
+        )
+        state = result.scalar_one_or_none()
+        if state is None:
+            state = MarketplaceSyncState(
+                organization_id=account.organization_id,
+                marketplace_account_id=account.id,
+                stream=MarketplaceSyncStream.CHATS.value,
+                status=MarketplaceSyncStateStatus.IDLE.value,
+                metadata_json={},
+            )
+            self.session.add(state)
+            await self.session.flush()
+        return state
 
     def _adapter_for(self, marketplace: str) -> MarketplaceAdapter:
         return get_marketplace_adapter(marketplace)

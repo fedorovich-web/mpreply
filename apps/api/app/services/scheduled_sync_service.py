@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, MarketplaceAdapter
 from app.adapters.capabilities import get_marketplace_capability
+from app.adapters.conversation import ConversationAdapter
 from app.adapters.registry import get_marketplace_adapter
 from app.adapters.yandex_market import YandexMarketAdapter
 from app.automation.state_machine import ensure_message_transition
@@ -29,6 +30,7 @@ from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
 from app.services.audit_service import AuditService
+from app.services.avito_chat_sync_service import AvitoChatSyncResult, AvitoChatSyncService
 from app.services.marketplace_ingest_service import MarketplaceMessageIngestService
 from app.services.marketplace_scheduler_service import account_sync_streams, retry_delay_seconds
 from app.services.yandex_question_sync_policy import (
@@ -187,6 +189,19 @@ class ScheduledMarketplaceSyncService:
             entity_id=str(account.id),
             metadata={"stream": state.stream, "sync_job_id": str(job.id)},
         )
+
+        if (
+            account.marketplace == Marketplace.AVITO.value
+            and state.stream == MarketplaceSyncStream.CHATS.value
+        ):
+            return await self._execute_avito_chat_batch(
+                account=account,
+                state=state,
+                job=job,
+                adapter=adapter,
+                credential=credential,
+                now=now,
+            )
 
         page_fetch = await self._fetch_scheduled_page(
             adapter=adapter,
@@ -385,6 +400,120 @@ class ScheduledMarketplaceSyncService:
             },
         )
         await self.session.flush()
+        return ScheduledSyncResult(status="success")
+
+    async def _execute_avito_chat_batch(
+        self,
+        *,
+        account: MarketplaceAccount,
+        state: MarketplaceSyncState,
+        job: SyncJob,
+        adapter: MarketplaceAdapter,
+        credential: str,
+        now: datetime,
+    ) -> ScheduledSyncResult:
+        if not isinstance(adapter, ConversationAdapter):
+            chat_result = AvitoChatSyncResult(
+                status="failed",
+                error_code="unsupported_sync_stream",
+                retryable=False,
+            )
+        else:
+            chat_result = await AvitoChatSyncService(
+                self.session,
+                adapter=adapter,
+            ).sync_batch(
+                account=account,
+                credential=credential,
+                state=state,
+                max_chats=1,
+            )
+        if chat_result.status != "success":
+            result = await self._record_failure(
+                account=account,
+                state=state,
+                job=job,
+                result=AdapterResult(
+                    ok=False,
+                    error_code=chat_result.error_code or "marketplace_error",
+                    error_message_safe="Avito chat synchronization failed",
+                ),
+                now=now,
+            )
+            await self.session.commit()
+            return result
+
+        state.status = MarketplaceSyncStateStatus.IDLE.value
+        state.last_success_at = now
+        state.last_error_at = None
+        state.consecutive_failures = 0
+        state.lease_token = None
+        state.lease_expires_at = None
+        if chat_result.has_more:
+            state.next_run_at = now + timedelta(seconds=1)
+        else:
+            state.last_cycle_completed_at = now
+            state.cycle_started_at = None
+            state.next_run_at = now + timedelta(
+                seconds=self.settings.marketplace_sync_interval_seconds
+            )
+        account.last_success_sync_at = now
+        account.status = "active"
+        account.credentials_status = "valid"
+        job.status = "success"
+        job.finished_at = now
+        job.stats_json = {
+            "stream": state.stream,
+            "created": chat_result.created,
+            "updated": chat_result.updated,
+            "skipped": chat_result.skipped,
+            "has_more": chat_result.has_more,
+        }
+        if chat_result.created > 0:
+            self.session.add(
+                UsageEvent(
+                    organization_id=account.organization_id,
+                    user_id=None,
+                    event_type="marketplace.messages_imported",
+                    quantity=chat_result.created,
+                    metadata_json={
+                        "marketplace": account.marketplace,
+                        "marketplace_account_id": str(account.id),
+                        "sync_job_id": str(job.id),
+                        "stream": state.stream,
+                    },
+                )
+            )
+        safe_counts: dict[str, object] = {
+            "sync_job_id": str(job.id),
+            "created": chat_result.created,
+            "updated": chat_result.updated,
+            "skipped": chat_result.skipped,
+            "has_more": chat_result.has_more,
+        }
+        await self._write_integration_event(
+            account=account,
+            event_type="sync.chats.page",
+            status="success",
+            metadata=safe_counts,
+        )
+        await self.audit.write(
+            action="marketplace_account.scheduled_sync.finished",
+            entity_type="sync_job",
+            organization_id=account.organization_id,
+            actor_user_id=None,
+            entity_id=str(job.id),
+            metadata={
+                "marketplace_account_id": str(account.id),
+                "stream": state.stream,
+                "status": "success",
+                "created": chat_result.created,
+                "updated": chat_result.updated,
+                "skipped": chat_result.skipped,
+                "has_more": chat_result.has_more,
+            },
+        )
+        await self.session.commit()
         return ScheduledSyncResult(status="success")
 
     async def _fetch_scheduled_page(
