@@ -131,19 +131,27 @@ class WildberriesAdapter(MarketplaceAdapter):
             return None
         mapping = cast(dict[str, object], data)
         is_answered = mapping.get("isAnswered")
-        if isinstance(is_answered, bool):
-            return is_answered
+        answered_flag = is_answered if isinstance(is_answered, bool) else None
         if "answer" not in mapping:
-            return None
+            return answered_flag
         answer = mapping.get("answer")
         if answer is None:
-            return False
-        if isinstance(answer, dict):
+            answered = False
+        elif isinstance(answer, dict):
             answer_mapping = cast(dict[str, object], answer)
-            return bool(self._optional_string(answer_mapping.get("text")))
-        if isinstance(answer, str):
-            return bool(answer.strip())
-        return None
+            text = answer_mapping.get("text")
+            if not isinstance(text, str) or not text.strip():
+                return None
+            answered = True
+        elif isinstance(answer, str):
+            if not answer.strip():
+                return None
+            answered = True
+        else:
+            return None
+        if answered_flag is not None and answered_flag is not answered:
+            return None
+        return answered
 
     def extract_reviews(self, payload: object | None) -> list[dict[str, object]]:
         return self._extract_items(payload, keys=("feedbacks", "items", "data"))

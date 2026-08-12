@@ -108,6 +108,36 @@ async def test_review_reply_rejects_text_outside_official_range_before_network(r
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("reply_text", ["xx", "x" * 5000])
+async def test_review_reply_accepts_exact_official_text_boundaries(reply_text: str) -> None:
+    recorder = _RequestRecorder([httpx.Response(204)])
+    adapter = WildberriesAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.send_review_reply("synthetic-key", "review-1", reply_text)
+
+    assert result.ok is True
+    assert len(recorder.requests) == 1
+    assert _json_body(recorder.requests[0]) == {"id": "review-1", "text": reply_text}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("reply_text", ["x", "x" * 5001])
+async def test_question_reply_keeps_officially_unbounded_text_values(reply_text: str) -> None:
+    recorder = _RequestRecorder([httpx.Response(200, json={"data": {}})])
+    adapter = WildberriesAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.send_question_reply("synthetic-key", "question-1", reply_text)
+
+    assert result.ok is True
+    assert len(recorder.requests) == 1
+    assert recorder.requests[0].method == "PATCH"
+    assert _json_body(recorder.requests[0]) == {
+        "id": "question-1",
+        "answer": {"text": reply_text},
+    }
+
+
+@pytest.mark.asyncio
 async def test_rate_limit_preserves_retry_after_seconds() -> None:
     recorder = _RequestRecorder(
         [httpx.Response(429, headers={"Retry-After": "7"}, json={"error": "limit"})]
@@ -127,6 +157,12 @@ async def test_rate_limit_preserves_retry_after_seconds() -> None:
     [
         (MessageType.REVIEW.value, []),
         (MessageType.QUESTION.value, {"data": {"id": "question-1"}}),
+        (MessageType.QUESTION.value, {"data": {"answer": {}}}),
+        (MessageType.QUESTION.value, {"data": {"answer": ""}}),
+        (
+            MessageType.QUESTION.value,
+            {"data": {"isAnswered": False, "answer": {"text": "already answered"}}},
+        ),
     ],
 )
 async def test_malformed_exact_message_response_never_confirms_no_existing_reply(
