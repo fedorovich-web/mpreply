@@ -271,6 +271,7 @@ class ReplyExecutionService:
         if reply.attempt_count >= reply.max_attempts:
             raise conflict("Reply retry limit is exhausted")
         self._transition_reply(reply, ReplyStatus.QUEUED.value)
+        reply.worker_message_id = None
         reply.next_retry_at = None
         reply.error_code = None
         reply.failed_reason = None
