@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from typing import cast
+from datetime import UTC, date, datetime
+from typing import Literal, cast
 
 import httpx
 
 from app.adapters.base import AdapterResult, MarketplaceAdapter
 from app.models.enums import MessageStatus, MessageType
+
+YandexQuestionReplyState = Literal[
+    "ABSENT", "PUBLISHED", "UNMODERATED", "BANNED", "DELETED", "UNKNOWN"
+]
+_KNOWN_QUESTION_REPLY_STATES = frozenset({"PUBLISHED", "UNMODERATED", "BANNED", "DELETED"})
 
 
 class YandexMarketAdapter(MarketplaceAdapter):
@@ -92,6 +97,40 @@ class YandexMarketAdapter(MarketplaceAdapter):
         )
         return self._with_page_token(result)
 
+    async def fetch_questions_window(
+        self,
+        credential: str,
+        *,
+        date_from: date,
+        date_to: date,
+        cursor: str | None = None,
+        seller_id: str | None = None,
+    ) -> AdapterResult:
+        business_id = self._business_id(seller_id)
+        if business_id is None:
+            return self._invalid_business_id()
+        if date_from > date_to:
+            return AdapterResult(
+                False,
+                error_code="invalid_date_window",
+                error_message_safe="Yandex Market question date window is invalid",
+            )
+        params: dict[str, str | int] = {"limit": self.page_size}
+        if cursor:
+            params["pageToken"] = cursor
+        result = await self._request(
+            "POST",
+            f"/v1/businesses/{business_id}/goods-questions",
+            credential,
+            params=params,
+            json={
+                "needAnswer": True,
+                "dateFrom": date_from.isoformat(),
+                "dateTo": date_to.isoformat(),
+            },
+        )
+        return self._with_page_token(result)
+
     async def send_review_reply(
         self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
     ) -> AdapterResult:
@@ -129,6 +168,60 @@ class YandexMarketAdapter(MarketplaceAdapter):
             },
         )
 
+    async def reconcile_question_reply(
+        self,
+        credential: str,
+        external_id: str,
+        seller_id: str | None = None,
+    ) -> AdapterResult:
+        business_id = self._business_id(seller_id)
+        question_id = self._positive_int(external_id)
+        if business_id is None:
+            return self._invalid_business_id()
+        if question_id is None:
+            return self._invalid_external_id("question")
+        result = await self._request(
+            "POST",
+            f"/v1/businesses/{business_id}/goods-questions/answers",
+            credential,
+            params={"limit": self.page_size},
+            json={"questionId": question_id},
+        )
+        if not result.ok:
+            return result
+        answers = self._question_answer_items(result.data)
+        if answers is None:
+            return self._question_reply_state_result("UNKNOWN")
+
+        seller_answers: list[dict[str, object]] = []
+        for answer in answers:
+            author = self._mapping(answer.get("author"))
+            author_type = str(author.get("type") or "").strip().upper()
+            can_modify = answer.get("canModify")
+            if can_modify is True and author_type not in {"", "BUSINESS", "BRAND"}:
+                return self._question_reply_state_result("UNKNOWN")
+            if can_modify is True or author_type in {"BUSINESS", "BRAND"}:
+                seller_answers.append(answer)
+            elif not author_type and can_modify is not False:
+                return self._question_reply_state_result("UNKNOWN")
+
+        if not seller_answers:
+            return self._question_reply_state_result("ABSENT")
+        if len(seller_answers) != 1:
+            return self._question_reply_state_result("UNKNOWN")
+
+        answer = seller_answers[0]
+        answer_id = self._positive_int(answer.get("id"))
+        if answer_id is None:
+            return self._question_reply_state_result("UNKNOWN")
+        state = str(answer.get("status") or "").strip().upper()
+        if state not in _KNOWN_QUESTION_REPLY_STATES:
+            return self._question_reply_state_result("UNKNOWN", answer_id=str(answer_id))
+        return self._question_reply_state_result(
+            cast(YandexQuestionReplyState, state),
+            answer_id=str(answer_id),
+        )
+
     async def has_existing_reply(
         self,
         credential: str,
@@ -151,25 +244,28 @@ class YandexMarketAdapter(MarketplaceAdapter):
                 json={"feedbackId": entity_id},
             )
             items = self._extract_result_items(result.data, "comments") if result.ok else []
-        elif message_type == MessageType.QUESTION.value:
-            result = await self._request(
-                "POST",
-                f"/v1/businesses/{business_id}/goods-questions/answers",
-                credential,
-                params={"limit": self.page_size},
-                json={"questionId": entity_id},
+            if not result.ok:
+                return result
+            answered = any(self._is_business_authored(item) for item in items)
+            return AdapterResult(ok=True, data={"answered": answered})
+        if message_type == MessageType.QUESTION.value:
+            reconciliation = await self.reconcile_question_reply(
+                credential, external_id, seller_id=seller_id
             )
-            items = self._extract_result_items(result.data, "answers") if result.ok else []
-        else:
-            return AdapterResult(
-                False,
-                error_code="unsupported_message_type",
-                error_message_safe="Message type is not supported by Yandex Market",
-            )
-        if not result.ok:
-            return result
-        answered = any(self._is_business_authored(item) for item in items)
-        return AdapterResult(ok=True, data={"answered": answered})
+            if not reconciliation.ok:
+                return reconciliation
+            data = self._mapping(reconciliation.data)
+            state = str(data.get("state") or "UNKNOWN").upper()
+            if state == "PUBLISHED":
+                return AdapterResult(ok=True, data={"answered": True, "state": state})
+            if state == "ABSENT":
+                return AdapterResult(ok=True, data={"answered": False, "state": state})
+            return AdapterResult(ok=True, data={"answered": None, "state": state})
+        return AdapterResult(
+            False,
+            error_code="unsupported_message_type",
+            error_message_safe="Message type is not supported by Yandex Market",
+        )
 
     def extract_reviews(self, payload: object | None) -> list[dict[str, object]]:
         return self._extract_result_items(payload, "feedbacks")
@@ -343,6 +439,30 @@ class YandexMarketAdapter(MarketplaceAdapter):
         if not isinstance(value, list):
             return []
         return [str(item).strip().upper() for item in cast(list[object], value) if str(item).strip()]
+
+    @classmethod
+    def _question_answer_items(
+        cls, payload: object | None
+    ) -> list[dict[str, object]] | None:
+        if not isinstance(payload, dict):
+            return None
+        result = payload.get("result")
+        if not isinstance(result, dict):
+            return None
+        answers = result.get("answers")
+        if not isinstance(answers, list):
+            return None
+        if not all(isinstance(item, dict) for item in answers):
+            return None
+        return [cast(dict[str, object], item) for item in answers]
+
+    @staticmethod
+    def _question_reply_state_result(
+        state: YandexQuestionReplyState,
+        *,
+        answer_id: str | None = None,
+    ) -> AdapterResult:
+        return AdapterResult(ok=True, data={"state": state, "answer_id": answer_id})
 
     @classmethod
     def _is_business_authored(cls, item: dict[str, object]) -> bool:
