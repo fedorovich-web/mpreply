@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.customer_message import CustomerMessage
+from app.models.enums import MessageType
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.product import Product
 
@@ -19,7 +20,11 @@ class MarketplaceMessageIngestService:
         if not normalized.get("external_id") or not normalized.get("customer_text"):
             return "skipped"
         now = datetime.now(UTC)
-        product = await self._upsert_product(account, normalized["product"])
+        product: Product | None
+        if normalized.get("product") is None and normalized.get("type") == MessageType.CHAT.value:
+            product = None
+        else:
+            product = await self._upsert_product(account, normalized["product"])
         result = await self.session.execute(
             select(CustomerMessage).where(
                 CustomerMessage.organization_id == account.organization_id,
@@ -34,7 +39,7 @@ class MarketplaceMessageIngestService:
             message = CustomerMessage(
                 organization_id=account.organization_id,
                 marketplace_account_id=account.id,
-                product_id=product.id,
+                product_id=product.id if product is not None else None,
                 marketplace=account.marketplace,
                 external_id=normalized["external_id"],
                 type=normalized["type"],
@@ -52,7 +57,7 @@ class MarketplaceMessageIngestService:
             self.session.add(message)
             await self.session.flush()
             return "created"
-        message.product_id = product.id
+        message.product_id = product.id if product is not None else None
         message.rating = normalized.get("rating")
         message.customer_display_name = normalized.get("customer_display_name")
         message.customer_text = normalized["customer_text"]

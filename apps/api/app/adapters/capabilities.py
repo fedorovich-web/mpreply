@@ -34,6 +34,8 @@ class MarketplaceCapability:
             streams.append(MarketplaceSyncStream.REVIEWS)
         if self.supports("fetch_questions"):
             streams.append(MarketplaceSyncStream.QUESTIONS)
+        if self.supports("fetch_chats"):
+            streams.append(MarketplaceSyncStream.CHATS)
         return tuple(streams)
 
     @property
@@ -89,12 +91,12 @@ _CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
     ),
     Marketplace.AVITO: MarketplaceCapability(
         marketplace=Marketplace.AVITO,
-        integration_status="planned",
-        operations=(),
-        message_types=(),
-        polling_enabled=False,
-        pagination_strategy="unknown",
-        notes="No production adapter is enabled in MPReply yet.",
+        integration_status="enabled",
+        operations=("validate", "fetch_chats", "send_chat_message"),
+        message_types=(MessageType.CHAT,),
+        polling_enabled=True,
+        pagination_strategy="offset",
+        notes="Implemented against the Avito Messenger conversation contract.",
     ),
 }
 

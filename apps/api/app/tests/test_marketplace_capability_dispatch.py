@@ -113,6 +113,7 @@ def _capability(*operations: str) -> MarketplaceCapability:
             ("validate", "fetch_reviews", "fetch_questions"),
             (MarketplaceSyncStream.REVIEWS, MarketplaceSyncStream.QUESTIONS),
         ),
+        (("validate", "fetch_chats"), (MarketplaceSyncStream.CHATS,)),
         (("validate",), ()),
     ],
 )

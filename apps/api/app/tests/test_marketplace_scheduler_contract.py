@@ -6,11 +6,11 @@ from typing import cast
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException
 from sqlalchemy import Table, UniqueConstraint
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.models as models
+from app.adapters.avito import AvitoAdapter
 from app.adapters.base import AdapterResult
 from app.adapters.capabilities import get_marketplace_capability, list_marketplace_capabilities
 from app.adapters.ozon import OzonAdapter
@@ -92,32 +92,57 @@ def test_enabled_marketplaces_expose_complete_reply_execution_contracts() -> Non
         Marketplace.WILDBERRIES,
         Marketplace.OZON,
         Marketplace.YANDEX_MARKET,
+        Marketplace.AVITO,
     ]
     assert all(
         capability.message_types == (MessageType.REVIEW, MessageType.QUESTION)
         for capability in enabled
+        if capability.marketplace is not Marketplace.AVITO
     )
     assert all(capability.scheduler_enabled for capability in enabled)
 
 
-def test_avito_remains_planned() -> None:
+def test_avito_exposes_only_messenger_capabilities() -> None:
     marketplace = Marketplace.AVITO
     capability = get_marketplace_capability(marketplace)
 
-    assert capability.integration_status == "planned"
-    assert capability.operations == ()
-    assert capability.polling_enabled is False
+    assert capability.integration_status == "enabled"
+    assert capability.operations == ("validate", "fetch_chats", "send_chat_message")
+    assert capability.message_types == (MessageType.CHAT,)
+    assert capability.sync_streams == (MarketplaceSyncStream.CHATS,)
+    assert capability.polling_enabled is True
+    assert capability.pagination_strategy == "offset"
+
+
+def test_existing_marketplace_capabilities_are_unchanged() -> None:
+    expected = {
+        Marketplace.WILDBERRIES: "offset",
+        Marketplace.OZON: "page_token",
+        Marketplace.YANDEX_MARKET: "page_token",
+    }
+
+    for marketplace, pagination_strategy in expected.items():
+        capability = get_marketplace_capability(marketplace)
+        assert capability.operations == (
+            "validate",
+            "fetch_reviews",
+            "fetch_questions",
+            "send_review_reply",
+            "send_question_reply",
+        )
+        assert capability.message_types == (MessageType.REVIEW, MessageType.QUESTION)
+        assert capability.sync_streams == (
+            MarketplaceSyncStream.REVIEWS,
+            MarketplaceSyncStream.QUESTIONS,
+        )
+        assert capability.pagination_strategy == pagination_strategy
 
 
 def test_registry_builds_enabled_adapters() -> None:
     assert isinstance(get_marketplace_adapter(Marketplace.WILDBERRIES), WildberriesAdapter)
     assert isinstance(get_marketplace_adapter(Marketplace.OZON), OzonAdapter)
     assert isinstance(get_marketplace_adapter(Marketplace.YANDEX_MARKET), YandexMarketAdapter)
-
-    with pytest.raises(HTTPException) as exc_info:
-        get_marketplace_adapter(Marketplace.AVITO)
-
-    assert exc_info.value.status_code == 403
+    assert isinstance(get_marketplace_adapter(Marketplace.AVITO), AvitoAdapter)
 
 
 @pytest.mark.asyncio
@@ -268,7 +293,7 @@ def test_sync_state_model_has_one_row_per_account_stream() -> None:
 
 
 def test_sync_state_enums_are_closed() -> None:
-    assert {stream.value for stream in MarketplaceSyncStream} == {"reviews", "questions"}
+    assert {stream.value for stream in MarketplaceSyncStream} == {"reviews", "questions", "chats"}
     assert {status.value for status in MarketplaceSyncStateStatus} == {"idle", "leased", "error", "paused"}
 
 
@@ -297,6 +322,18 @@ def test_scheduler_migration_backfills_two_streams_and_has_single_revision_link(
     assert 'down_revision: str | None = "20260722_0011"' in migration
     assert "CROSS JOIN (VALUES ('reviews'), ('questions'))" in migration
     assert "ON CONFLICT (marketplace_account_id, stream) DO NOTHING" in migration
+
+
+def test_avito_chat_stream_migration_is_reversible() -> None:
+    migration = (
+        API_ROOT / "alembic" / "versions" / "20260812_0015_avito_chat_sync_stream.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'revision: str = "20260812_0015"' in migration
+    assert 'down_revision: str | None = "20260722_0014"' in migration
+    assert migration.count('"ck_marketplace_sync_states_stream"') == 4
+    assert '"stream IN (\'reviews\', \'questions\', \'chats\')"' in migration
+    assert '"stream IN (\'reviews\', \'questions\')"' in migration
 
 
 def test_scheduler_runtime_is_not_a_placeholder() -> None:

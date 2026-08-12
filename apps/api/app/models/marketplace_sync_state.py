@@ -14,7 +14,7 @@ class MarketplaceSyncState(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "marketplace_sync_states"
     __table_args__ = (
         UniqueConstraint("marketplace_account_id", "stream", name="uq_marketplace_sync_states_account_stream"),
-        CheckConstraint("stream IN ('reviews', 'questions')", name="ck_marketplace_sync_states_stream"),
+        CheckConstraint("stream IN ('reviews', 'questions', 'chats')", name="ck_marketplace_sync_states_stream"),
         CheckConstraint(
             "status IN ('idle', 'leased', 'error', 'paused')",
             name="ck_marketplace_sync_states_status",

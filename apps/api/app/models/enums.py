@@ -23,6 +23,7 @@ class MessageType(StrEnum):
 class MarketplaceSyncStream(StrEnum):
     REVIEWS = "reviews"
     QUESTIONS = "questions"
+    CHATS = "chats"
 
 
 class MarketplaceSyncStateStatus(StrEnum):

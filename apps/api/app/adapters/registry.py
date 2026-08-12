@@ -1,3 +1,4 @@
+from app.adapters.avito import AvitoAdapter
 from app.adapters.base import MarketplaceAdapter
 from app.adapters.capabilities import get_marketplace_capability
 from app.adapters.ozon import OzonAdapter
@@ -17,4 +18,6 @@ def get_marketplace_adapter(marketplace: Marketplace | str) -> MarketplaceAdapte
         return OzonAdapter()
     if capability.marketplace is Marketplace.YANDEX_MARKET:
         return YandexMarketAdapter()
+    if capability.marketplace is Marketplace.AVITO:
+        return AvitoAdapter()
     raise forbidden("Marketplace adapter is not enabled yet")

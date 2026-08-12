@@ -96,6 +96,8 @@ MarketplaceOperation = Literal[
     "validate",
     "fetch_reviews",
     "fetch_questions",
+    "fetch_chats",
     "send_review_reply",
     "send_question_reply",
+    "send_chat_message",
 ]
