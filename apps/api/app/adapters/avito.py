@@ -333,7 +333,8 @@ def _parse_chat(raw: Mapping[str, object], user_id: str) -> AvitoChat | None:
             if candidate is None or type(candidate.get("id")) is not int or candidate["id"] == account_user_id:
                 continue
             customer_id = cast(int, candidate["id"])
-            customer_name = candidate.get("name") if isinstance(candidate.get("name"), str) else None
+            name = candidate.get("name")
+            customer_name = name if isinstance(name, str) else None
             break
     return AvitoChat(
         id=chat_id,
@@ -374,7 +375,7 @@ def _parse_message(raw: Mapping[str, object]) -> AvitoMessage | None:
         created_unix=created,
         direction=cast(Literal["in", "out"], direction),
         is_read=is_read,
-        read_unix=cast(int | None, read),
+        read_unix=read,
         kind=kind,
         text=cast(str | None, text),
     )
