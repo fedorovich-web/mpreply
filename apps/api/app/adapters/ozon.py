@@ -350,6 +350,8 @@ def _validated_page_result(
     last_id = page.get("last_id")
     if not isinstance(items, list) or type(has_next) is not bool or not isinstance(last_id, str):
         return _malformed_page_result()
+    if any(_mapping(item) is None for item in cast(list[object], items)):
+        return _malformed_page_result()
     if not has_next:
         return AdapterResult(ok=True, data=result.data)
     if not last_id.strip() or last_id == requested_cursor:

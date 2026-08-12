@@ -44,14 +44,67 @@ _RETRYABLE_ERRORS = {"network_timeout", "network_error", "rate_limited", "market
 _PAUSING_ERRORS = {
     "sync_cursor_cycle",
     "sync_page_limit_exceeded",
+    "sync_pagination_checkpoint_invalid",
     "yandex_backfill_checkpoint_invalid",
 }
+_OZON_PAGINATION_METADATA_KEY = "ozon_pagination"
+_OZON_PAGINATION_SCHEMA_VERSION = 1
+_OZON_SCHEDULED_PAGE_LIMIT = 100
 
 
 def _object_mapping(value: object | None) -> dict[str, object] | None:
     if not isinstance(value, dict):
         return None
     return cast(dict[str, object], value)
+
+
+def _load_ozon_pagination(metadata: dict[str, object]) -> tuple[int, tuple[str, ...]]:
+    raw = metadata.get(_OZON_PAGINATION_METADATA_KEY)
+    if raw is None:
+        return 0, ()
+    if not isinstance(raw, dict):
+        raise ValueError("Invalid Ozon pagination checkpoint")
+    data = cast(dict[str, object], raw)
+    schema_version = data.get("schema_version")
+    page_count = data.get("page_count")
+    seen_raw = data.get("seen_cursors")
+    if (
+        type(schema_version) is not int
+        or schema_version != _OZON_PAGINATION_SCHEMA_VERSION
+        or type(page_count) is not int
+        or page_count < 0
+        or page_count > _OZON_SCHEDULED_PAGE_LIMIT
+        or not isinstance(seen_raw, list)
+    ):
+        raise ValueError("Invalid Ozon pagination checkpoint")
+    seen_values = cast(list[object], seen_raw)
+    if (
+        not all(isinstance(value, str) and value.strip() for value in seen_values)
+        or len(set(cast(list[str], seen_values))) != len(seen_values)
+    ):
+        raise ValueError("Invalid Ozon pagination checkpoint")
+    return page_count, tuple(cast(list[str], seen_values))
+
+
+def _store_ozon_pagination(
+    metadata: dict[str, object],
+    *,
+    page_count: int,
+    seen_cursors: tuple[str, ...],
+) -> dict[str, object]:
+    updated = dict(metadata)
+    updated[_OZON_PAGINATION_METADATA_KEY] = {
+        "schema_version": _OZON_PAGINATION_SCHEMA_VERSION,
+        "page_count": page_count,
+        "seen_cursors": list(seen_cursors),
+    }
+    return updated
+
+
+def _clear_ozon_pagination(metadata: dict[str, object]) -> dict[str, object]:
+    updated = dict(metadata)
+    updated.pop(_OZON_PAGINATION_METADATA_KEY, None)
+    return updated
 
 
 @dataclass(frozen=True)
@@ -109,6 +162,8 @@ class ScheduledMarketplaceSyncService:
         cursor_before = state.cursor
         if state.cycle_started_at is None:
             state.cycle_started_at = now
+            if account.marketplace == Marketplace.OZON.value:
+                state.metadata_json = _clear_ozon_pagination(state.metadata_json or {})
         job = SyncJob(
             organization_id=account.organization_id,
             marketplace_account_id=account.id,
@@ -186,6 +241,19 @@ class ScheduledMarketplaceSyncService:
                 skipped += 1
 
         next_cursor = fetch_result.next_cursor
+        if account.marketplace == Marketplace.OZON.value:
+            pagination_failure = self._record_ozon_pagination_progress(
+                state=state,
+                next_cursor=next_cursor,
+            )
+            if pagination_failure is not None:
+                return await self._record_failure(
+                    account=account,
+                    state=state,
+                    job=job,
+                    result=pagination_failure,
+                    now=now,
+                )
         state.status = MarketplaceSyncStateStatus.IDLE.value
         state.last_success_at = now
         state.last_error_at = None
@@ -210,6 +278,8 @@ class ScheduledMarketplaceSyncService:
             if next_cursor is None:
                 state.last_cycle_completed_at = now
                 state.cycle_started_at = None
+                if account.marketplace == Marketplace.OZON.value:
+                    state.metadata_json = _clear_ozon_pagination(state.metadata_json or {})
                 state.next_run_at = now + timedelta(
                     seconds=self.settings.marketplace_sync_interval_seconds
                 )
@@ -402,6 +472,40 @@ class ScheduledMarketplaceSyncService:
         return page_checkpoint, None
 
     @staticmethod
+    def _record_ozon_pagination_progress(
+        *,
+        state: MarketplaceSyncState,
+        next_cursor: str | None,
+    ) -> AdapterResult | None:
+        try:
+            page_count, seen_cursors = _load_ozon_pagination(state.metadata_json or {})
+        except ValueError:
+            return AdapterResult(
+                False,
+                error_code="sync_pagination_checkpoint_invalid",
+                error_message_safe="Ozon pagination checkpoint is invalid",
+            )
+        next_page_count = page_count + 1
+        if next_page_count > _OZON_SCHEDULED_PAGE_LIMIT:
+            return AdapterResult(
+                False,
+                error_code="sync_page_limit_exceeded",
+                error_message_safe="Ozon pagination exceeded the safe page limit",
+            )
+        if next_cursor is not None and next_cursor in seen_cursors:
+            return AdapterResult(
+                False,
+                error_code="sync_cursor_cycle",
+                error_message_safe="Ozon pagination cursor repeated",
+            )
+        state.metadata_json = _store_ozon_pagination(
+            state.metadata_json or {},
+            page_count=next_page_count,
+            seen_cursors=(*seen_cursors, next_cursor) if next_cursor is not None else seen_cursors,
+        )
+        return None
+
+    @staticmethod
     def _should_reconcile_open_yandex_questions(
         *,
         account: MarketplaceAccount,
@@ -533,6 +637,9 @@ class ScheduledMarketplaceSyncService:
         if result.error_code in _PAUSING_ERRORS:
             state.status = MarketplaceSyncStateStatus.PAUSED.value
             state.next_run_at = None
+            if account.marketplace == Marketplace.OZON.value:
+                state.cycle_started_at = None
+                state.metadata_json = _clear_ozon_pagination(state.metadata_json or {})
         else:
             state.status = MarketplaceSyncStateStatus.ERROR.value
             retry_delay = result.retry_after_seconds or retry_delay_seconds(

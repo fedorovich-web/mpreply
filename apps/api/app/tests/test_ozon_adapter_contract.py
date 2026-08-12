@@ -309,6 +309,32 @@ async def test_review_list_rejects_empty_or_repeated_provider_cursor() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("path", "payload"),
+    [
+        ("reviews", {"reviews": ["not-a-record"], "has_next": False, "last_id": ""}),
+        ("questions", {"questions": ["not-a-record"], "has_next": False, "last_id": ""}),
+    ],
+)
+async def test_list_rejects_non_mapping_page_items_as_malformed_success_payload(
+    path: str,
+    payload: dict[str, object],
+) -> None:
+    adapter = OzonAdapter(
+        transport=httpx.MockTransport(_RequestRecorder([httpx.Response(200, json=payload)]))
+    )
+
+    result = (
+        await adapter.fetch_reviews("synthetic-api-key", seller_id="client-123")
+        if path == "reviews"
+        else await adapter.fetch_questions("synthetic-api-key", seller_id="client-123")
+    )
+
+    assert result.ok is False
+    assert result.error_code == "malformed_payload"
+
+
+@pytest.mark.asyncio
 async def test_question_list_uses_exact_body_and_normalizes_unanswered_records() -> None:
     question = {
         "id": "question-123",
