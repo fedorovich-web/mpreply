@@ -68,7 +68,11 @@ The Ozon Seller API review/question adapter is enabled in this development branc
 
 ### Avito
 
-Avito remains a separate conversation integration: chats, thread cursors, messages, delivery/read states, attachments and webhook or polling semantics.
+The Avito Messenger polling/text adapter is implemented against the supplied official OpenAPI and contract-tested with synthetic transports. It covers read-only account validation, bounded unread-chat and message polling, durable text-turn ingestion before read mutation, exact outbound preflight and guarded text sends.
+
+No live Avito request was used for this implementation. Real access-token validation, provider read mutation and message delivery remain unverified. OAuth token acquisition or refresh, webhooks, media, voice, attachments and other non-text operations remain unsupported.
+
+The supplied chat-list response exposes item context but does not expose the requested `u2i`/`u2u`/`a2u` filter value as a response field. The adapter preserves the documented response fields and does not infer a chat type; automatic product linking from the live adapter path is therefore unverified.
 
 ## Historical verification inherited by this development branch
 

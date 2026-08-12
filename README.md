@@ -11,6 +11,7 @@ Implemented through Sprint 11:
 - Wildberries synchronization and reply execution foundation;
 - Ozon Seller API integration for scoped accounts, reviews, questions and guarded replies;
 - Yandex Market Partner API integration for accounts, reviews, questions and replies;
+- Avito Messenger polling/text adapter for unread chats, guarded read-state updates and guarded text replies, contract-tested with synthetic transports;
 - client dashboard observability for account health, scopes, scheduler streams, sync jobs and safe integration events;
 - safe Yandex Market runtime verification kit with bounded read checks, optional confirmed write probes and sanitized evidence;
 - operation-aware marketplace sync foundation with bounded cursor pagination;
@@ -24,7 +25,7 @@ Implemented through Sprint 11:
 - optional semi-automatic manual review workflow: draft editing, optimistic revision checks, SafetyGate re-checks, submit for review, approve/reject, idempotent queueing and marketplace execution;
 - live SaaS frontend data plane for authentication, first-workspace onboarding, organization selection, Inbox and Review Queue.
 
-Wildberries remains the established integration. The 0.1.104 development branch contains the Yandex Market Partner API vertical slice and the Ozon Seller API review/question vertical. Ozon credential scopes, reads, exact preflight and writes are contract-tested with synthetic transports; no real Ozon account or provider write has been verified. Avito remains disabled until its current official conversation contracts are available and implemented. See `DEVELOPMENT_STATUS_0.1.104.md`.
+Wildberries remains the established integration. The 0.1.104 development branch contains the Yandex Market Partner API vertical slice, the Ozon Seller API review/question vertical and an Avito Messenger polling/text slice. The Avito adapter is contract-tested with synthetic transports only: real access-token validation, provider read mutation and message delivery are unverified. OAuth token lifecycle, webhooks and media remain unsupported. See `DEVELOPMENT_STATUS_0.1.104.md`.
 
 ## Repository structure
 
