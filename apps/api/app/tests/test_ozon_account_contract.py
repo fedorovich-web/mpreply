@@ -168,6 +168,28 @@ async def test_changing_ozon_client_id_invalidates_stale_validation_scopes() -> 
 
 
 @pytest.mark.asyncio
+async def test_changing_ozon_client_id_cannot_reactivate_in_same_update() -> None:
+    account = _account()
+    account.status = "active"
+    account.credentials_status = "valid"
+    account.scopes_json = {"validated": True, "scopes": ["fetch_reviews"]}
+    service = _AccountServiceHarness(account)
+    actor = cast(User, SimpleNamespace(id=uuid4()))
+
+    updated = await service.update_account(
+        actor=actor,
+        account_id=account.id,
+        seller_id="client-456",
+        status="active",
+    )
+
+    assert updated.seller_id == "client-456"
+    assert updated.status == "pending_validation"
+    assert updated.credentials_status == "pending_validation"
+    assert updated.scopes_json == {}
+
+
+@pytest.mark.asyncio
 async def test_ozon_rotate_and_validation_failure_clear_stale_scopes() -> None:
     account = _account()
     account.status = "active"

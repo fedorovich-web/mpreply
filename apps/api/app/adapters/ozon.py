@@ -116,7 +116,7 @@ class _OzonClient:
             parsed = int(value)
         except ValueError:
             return None
-        return max(parsed, 0)
+        return min(max(parsed, 0), 3600)
 
     def _map_response_error(self, response: httpx.Response, payload: object) -> AdapterResult:
         result = self.map_error(response.status_code)

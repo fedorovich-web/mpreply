@@ -76,6 +76,41 @@ async def test_validation_normalizes_question_only_scope() -> None:
 
 
 @pytest.mark.asyncio
+async def test_validation_normalizes_both_complete_streams_even_when_methods_are_split_across_roles() -> None:
+    adapter = OzonAdapter(
+        transport=httpx.MockTransport(
+            _RequestRecorder(
+                [
+                    httpx.Response(
+                        200,
+                        json={
+                            "expires_at": "2026-12-01T00:00:00Z",
+                            "roles": [
+                                {"methods": REVIEW_METHODS[:2]},
+                                {"methods": REVIEW_METHODS[2:] + QUESTION_METHODS},
+                            ],
+                        },
+                    )
+                ]
+            )
+        )
+    )
+
+    result = await adapter.validate_credentials("synthetic-api-key", seller_id="client-123")
+
+    assert result.ok is True
+    assert result.data == {
+        "scopes": [
+            "fetch_reviews",
+            "send_review_reply",
+            "fetch_questions",
+            "send_question_reply",
+        ],
+        "expires_at": "2026-12-01T00:00:00Z",
+    }
+
+
+@pytest.mark.asyncio
 async def test_validation_rejects_missing_client_id_without_network_call() -> None:
     recorder = _RequestRecorder([])
     adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
@@ -89,22 +124,27 @@ async def test_validation_rejects_missing_client_id_without_network_call() -> No
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "payload",
+    ("payload", "expected_error"),
     [
-        {"expires_at": "2026-12-01T00:00:00Z", "roles": []},
-        {"expires_at": "2026-12-01T00:00:00Z", "roles": [{"methods": [REVIEW_METHODS[0]]}]},
-        {"expires_at": "2026-12-01T00:00:00Z", "roles": "not-a-list"},
-        {"roles": [{"methods": REVIEW_METHODS}]},
-        {"expires_at": "not-a-timestamp", "roles": [{"methods": REVIEW_METHODS}]},
+        ({"expires_at": "2026-12-01T00:00:00Z", "roles": []}, "insufficient_scope"),
+        ({"expires_at": "2026-12-01T00:00:00Z", "roles": [{"methods": [REVIEW_METHODS[0]]}]}, "insufficient_scope"),
+        ({"expires_at": "2026-12-01T00:00:00Z", "roles": [{"methods": [method.upper() for method in REVIEW_METHODS]}]}, "insufficient_scope"),
+        ({"expires_at": "2026-12-01T00:00:00Z", "roles": "not-a-list"}, "malformed_payload"),
+        ({"roles": [{"methods": REVIEW_METHODS}]}, "malformed_payload"),
+        ({"expires_at": "not-a-timestamp", "roles": [{"methods": REVIEW_METHODS}]}, "malformed_payload"),
+        ({"expires_at": "2026-12-01T00:00:00Z", "roles": [{"methods": [1]}]}, "malformed_payload"),
     ],
 )
-async def test_validation_rejects_unsupported_or_malformed_roles(payload: dict[str, object]) -> None:
+async def test_validation_distinguishes_unsupported_from_malformed_roles(
+    payload: dict[str, object],
+    expected_error: str,
+) -> None:
     adapter = OzonAdapter(transport=httpx.MockTransport(_RequestRecorder([httpx.Response(200, json=payload)])))
 
     result = await adapter.validate_credentials("synthetic-api-key", seller_id="client-123")
 
     assert result.ok is False
-    assert result.error_code in {"insufficient_scope", "malformed_payload"}
+    assert result.error_code == expected_error
 
 
 @pytest.mark.asyncio
@@ -114,6 +154,10 @@ async def test_validation_rejects_unsupported_or_malformed_roles(payload: dict[s
         (401, {}, "invalid_credentials", None),
         (403, {}, "insufficient_scope", None),
         (429, {"Retry-After": "7"}, "rate_limited", 7),
+        (429, {"Retry-After": "-9"}, "rate_limited", 0),
+        (429, {"Retry-After": "9000"}, "rate_limited", 3600),
+        (429, {"Retry-After": "not-an-int"}, "rate_limited", None),
+        (429, {}, "rate_limited", None),
         (503, {}, "marketplace_unavailable", None),
         (400, {}, "marketplace_error", None),
     ],
@@ -148,3 +192,28 @@ async def test_validation_normalizes_timeout_without_provider_call() -> None:
 
     assert result.ok is False
     assert result.error_code == "network_timeout"
+
+
+@pytest.mark.asyncio
+async def test_validation_normalizes_generic_transport_error() -> None:
+    async def transport_handler(_: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("synthetic connection error")
+
+    adapter = OzonAdapter(transport=httpx.MockTransport(transport_handler))
+
+    result = await adapter.validate_credentials("synthetic-api-key", seller_id="client-123")
+
+    assert result.ok is False
+    assert result.error_code == "network_error"
+
+
+@pytest.mark.asyncio
+async def test_validation_rejects_invalid_json_roles_response() -> None:
+    adapter = OzonAdapter(
+        transport=httpx.MockTransport(_RequestRecorder([httpx.Response(200, text="not json")]))
+    )
+
+    result = await adapter.validate_credentials("synthetic-api-key", seller_id="client-123")
+
+    assert result.ok is False
+    assert result.error_code == "malformed_payload"

@@ -163,7 +163,14 @@ class MarketplaceAccountService:
         if status is not None:
             if status not in {"active", "disabled", "pending_validation"}:
                 raise bad_request("Unsupported marketplace account status")
-            account.status = status
+            if (
+                account.marketplace == Marketplace.OZON.value
+                and status == "active"
+                and account.credentials_status != "valid"
+            ):
+                account.status = "pending_validation"
+            else:
+                account.status = status
             if status == "active" and account.credentials_status == "valid":
                 await self.scheduler.ensure_account_states(account=account, activate=True)
             elif status == "disabled":
