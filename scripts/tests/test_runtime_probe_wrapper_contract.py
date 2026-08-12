@@ -10,6 +10,44 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class RuntimeProbeWrapperContractTests(unittest.TestCase):
+    def test_wildberries_no_prompt_rejects_missing_credentials_before_python_or_evidence(self) -> None:
+        env = os.environ.copy()
+        for name in (
+            "WILDBERRIES_API_KEY",
+            "WILDBERRIES_REVIEW_ID",
+            "WILDBERRIES_QUESTION_ID",
+            "WILDBERRIES_REPLY_TEXT",
+            "MPREPLY_GIT_SHA",
+        ):
+            env.pop(name, None)
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "wildberries.json"
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-File",
+                    str(ROOT / "scripts" / "wildberries-runtime-probe.ps1"),
+                    "-Repository",
+                    str(ROOT),
+                    "-OutputPath",
+                    str(output),
+                    "-NoPrompt",
+                ],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            combined = completed.stdout + completed.stderr
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("Wildberries API key is required", combined)
+            self.assertNotIn("parameter cannot be found", combined.lower())
+            self.assertFalse(output.exists())
+
     def test_yandex_no_prompt_rejects_missing_credentials_before_python_or_evidence(self) -> None:
         env = os.environ.copy()
         for name in (
