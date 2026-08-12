@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from datetime import UTC, datetime
 
 import httpx
 import pytest
@@ -217,3 +218,223 @@ async def test_validation_rejects_invalid_json_roles_response() -> None:
 
     assert result.ok is False
     assert result.error_code == "malformed_payload"
+
+
+@pytest.mark.asyncio
+async def test_review_list_uses_official_cursor_contract_and_normalizes_unprocessed_records() -> None:
+    review = {
+        "id": "review-123",
+        "status": "UNPROCESSED",
+        "text": "Synthetic review",
+        "rating": 2,
+        "published_at": "2026-08-12T10:30:00Z",
+        "sku": 123456,
+    }
+    recorder = _RequestRecorder(
+        [httpx.Response(200, json={"reviews": [review], "has_next": True, "last_id": "next-review"})]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.fetch_reviews("synthetic-api-key", seller_id="client-123")
+
+    assert result.ok is True
+    assert result.next_cursor == "next-review"
+    assert json.loads(recorder.requests[0].content) == {"limit": 100, "sort_dir": "ASC"}
+    extracted = adapter.extract_reviews(result.data)
+    assert extracted == [review]
+    assert adapter.normalize_review(extracted[0]) == {
+        "external_id": "review-123",
+        "type": "review",
+        "status": "needs_reply",
+        "rating": 2,
+        "customer_display_name": None,
+        "customer_text": "Synthetic review",
+        "customer_photos_json": [],
+        "marketplace_created_at": datetime(2026, 8, 12, 10, 30, tzinfo=UTC),
+        "product": {
+            "external_id": "123456",
+            "sku": "123456",
+            "name": None,
+            "brand": None,
+            "category": None,
+            "image_url": None,
+            "product_url": None,
+            "metadata_json": {"ozon_sku": 123456},
+        },
+        "metadata_json": {"source": "ozon.reviews", "ozon_sku": 123456, "ozon_status": "UNPROCESSED"},
+    }
+
+
+@pytest.mark.asyncio
+async def test_review_list_sends_nonempty_cursor_and_rejects_malformed_success_page() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"reviews": [], "has_next": False, "last_id": ""}),
+            httpx.Response(200, json={"reviews": "not-a-list", "has_next": False, "last_id": ""}),
+        ]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    no_cursor = await adapter.fetch_reviews("synthetic-api-key", cursor="current-review", seller_id="client-123")
+    malformed = await adapter.fetch_reviews("synthetic-api-key", seller_id="client-123")
+
+    assert no_cursor.ok is True
+    assert no_cursor.next_cursor is None
+    assert json.loads(recorder.requests[0].content) == {
+        "limit": 100,
+        "sort_dir": "ASC",
+        "last_id": "current-review",
+    }
+    assert malformed.ok is False
+    assert malformed.error_code == "malformed_payload"
+
+
+@pytest.mark.asyncio
+async def test_review_list_rejects_empty_or_repeated_provider_cursor() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"reviews": [], "has_next": True, "last_id": ""}),
+            httpx.Response(200, json={"reviews": [], "has_next": True, "last_id": "current-review"}),
+        ]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    empty_cursor = await adapter.fetch_reviews("synthetic-api-key", seller_id="client-123")
+    repeated_cursor = await adapter.fetch_reviews(
+        "synthetic-api-key", cursor="current-review", seller_id="client-123"
+    )
+
+    assert empty_cursor.error_code == "malformed_payload"
+    assert repeated_cursor.error_code == "malformed_payload"
+
+
+@pytest.mark.asyncio
+async def test_question_list_uses_exact_body_and_normalizes_unanswered_records() -> None:
+    question = {
+        "id": "question-123",
+        "status": "UNPROCESSED",
+        "answers_count": 0,
+        "text": "Synthetic question",
+        "author_name": "Synthetic buyer",
+        "published_at": "2026-08-12T11:30:00Z",
+        "product_url": "https://www.ozon.ru/product/synthetic-123/",
+        "sku": 654321,
+    }
+    recorder = _RequestRecorder(
+        [httpx.Response(200, json={"questions": [question], "has_next": True, "last_id": "next-question"})]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.fetch_questions("synthetic-api-key", seller_id="client-123")
+
+    assert result.ok is True
+    assert result.next_cursor == "next-question"
+    assert json.loads(recorder.requests[0].content) == {
+        "filter": {"status": "ALL"},
+        "limit": 100,
+        "last_id": "",
+        "sort_dir": "ASC",
+    }
+    extracted = adapter.extract_questions(result.data)
+    assert extracted == [question]
+    normalized = adapter.normalize_question(extracted[0])
+    assert normalized["external_id"] == "question-123"
+    assert normalized["type"] == "question"
+    assert normalized["customer_display_name"] == "Synthetic buyer"
+    assert normalized["customer_text"] == "Synthetic question"
+    assert normalized["marketplace_created_at"] == datetime(2026, 8, 12, 11, 30, tzinfo=UTC)
+    assert normalized["product"] == {
+        "external_id": "654321",
+        "sku": "654321",
+        "name": None,
+        "brand": None,
+        "category": None,
+        "image_url": None,
+        "product_url": "https://www.ozon.ru/product/synthetic-123/",
+        "metadata_json": {"ozon_sku": 654321},
+    }
+    assert normalized["metadata_json"] == {
+        "source": "ozon.questions",
+        "ozon_sku": 654321,
+        "ozon_status": "UNPROCESSED",
+    }
+
+
+@pytest.mark.asyncio
+async def test_question_list_sends_cursor_and_rejects_malformed_success_page() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"questions": [], "has_next": False, "last_id": ""}),
+            httpx.Response(200, json={"questions": [], "has_next": "false", "last_id": ""}),
+        ]
+    )
+    adapter = OzonAdapter(transport=httpx.MockTransport(recorder))
+
+    complete = await adapter.fetch_questions("synthetic-api-key", cursor="current-question", seller_id="client-123")
+    malformed = await adapter.fetch_questions("synthetic-api-key", seller_id="client-123")
+
+    assert complete.ok is True
+    assert complete.next_cursor is None
+    assert json.loads(recorder.requests[0].content) == {
+        "filter": {"status": "ALL"},
+        "limit": 100,
+        "last_id": "current-question",
+        "sort_dir": "ASC",
+    }
+    assert malformed.ok is False
+    assert malformed.error_code == "malformed_payload"
+
+
+def test_ozon_extraction_skips_processed_and_malformed_records_without_synthesizing_required_values() -> None:
+    adapter = OzonAdapter()
+    valid_review = {
+        "id": "review-123",
+        "status": "UNPROCESSED",
+        "text": "Synthetic review",
+        "published_at": "2026-08-12T10:30:00Z",
+        "sku": 123456,
+    }
+    valid_question = {
+        "id": "question-123",
+        "status": "UNPROCESSED",
+        "answers_count": 0,
+        "text": "Synthetic question",
+        "published_at": "2026-08-12T11:30:00Z",
+        "sku": 654321,
+    }
+
+    reviews = adapter.extract_reviews(
+        {
+            "reviews": [
+                valid_review,
+                {**valid_review, "status": "PROCESSED"},
+                {**valid_review, "id": ""},
+                {**valid_review, "text": ""},
+                {**valid_review, "published_at": "not-a-date"},
+                {**valid_review, "published_at": "2026-08-12T10:30:00"},
+                {**valid_review, "sku": 0},
+                {**valid_review, "sku": True},
+                {**valid_review, "sku": 123456.0},
+            ]
+        }
+    )
+    questions = adapter.extract_questions(
+        {
+            "questions": [
+                valid_question,
+                {**valid_question, "status": "PROCESSED"},
+                {**valid_question, "answers_count": 1},
+                {**valid_question, "answers_count": False},
+                {**valid_question, "id": ""},
+                {**valid_question, "text": ""},
+                {**valid_question, "published_at": "not-a-date"},
+                {**valid_question, "published_at": "2026-08-12T11:30:00"},
+                {**valid_question, "sku": 0},
+                {**valid_question, "sku": True},
+                {**valid_question, "sku": 654321.0},
+            ]
+        }
+    )
+
+    assert reviews == [valid_review]
+    assert questions == [valid_question]

@@ -7,6 +7,7 @@ from typing import cast
 import httpx
 
 from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
+from app.models.enums import MessageStatus, MessageType
 
 REVIEW_METHODS = frozenset(
     {
@@ -37,13 +38,9 @@ class _OzonClient:
         self._transport = transport
 
     async def validate_credentials(self, api_key: str, client_id: str | None) -> AdapterResult:
-        normalized_client_id = client_id.strip() if client_id else ""
+        normalized_client_id = _normalized_client_id(client_id)
         if not normalized_client_id:
-            return AdapterResult(
-                False,
-                error_code="invalid_account_identifier",
-                error_message_safe="Ozon Client ID is required",
-            )
+            return _invalid_client_id_result()
         result = await self._request(
             api_key=api_key,
             client_id=normalized_client_id,
@@ -53,6 +50,48 @@ class _OzonClient:
         if not result.ok:
             return result
         return self._normalize_roles(result.data)
+
+    async def fetch_reviews(
+        self,
+        api_key: str,
+        client_id: str | None,
+        cursor: str | None,
+    ) -> AdapterResult:
+        normalized_client_id = _normalized_client_id(client_id)
+        if not normalized_client_id:
+            return _invalid_client_id_result()
+        body: dict[str, object] = {"limit": 100, "sort_dir": "ASC"}
+        if cursor:
+            body["last_id"] = cursor
+        result = await self._request(
+            api_key=api_key,
+            client_id=normalized_client_id,
+            path="/v2/review/list",
+            json=body,
+        )
+        return _validated_page_result(result, items_key="reviews", requested_cursor=cursor)
+
+    async def fetch_questions(
+        self,
+        api_key: str,
+        client_id: str | None,
+        cursor: str | None,
+    ) -> AdapterResult:
+        normalized_client_id = _normalized_client_id(client_id)
+        if not normalized_client_id:
+            return _invalid_client_id_result()
+        result = await self._request(
+            api_key=api_key,
+            client_id=normalized_client_id,
+            path="/v1/question/list",
+            json={
+                "filter": {"status": "ALL"},
+                "limit": 100,
+                "last_id": cursor or "",
+                "sort_dir": "ASC",
+            },
+        )
+        return _validated_page_result(result, items_key="questions", requested_cursor=cursor)
 
     @staticmethod
     def _headers(api_key: str, client_id: str) -> dict[str, str]:
@@ -205,24 +244,30 @@ class OzonAdapter(MarketplaceAdapter):
     async def fetch_reviews(
         self, credential: str, cursor: str | None = None, seller_id: str | None = None
     ) -> AdapterResult:
-        return _unsupported_operation()
+        return await self._client.fetch_reviews(credential, seller_id, cursor)
 
     async def fetch_questions(
         self, credential: str, cursor: str | None = None, seller_id: str | None = None
     ) -> AdapterResult:
-        return _unsupported_operation()
+        return await self._client.fetch_questions(credential, seller_id, cursor)
 
     def extract_reviews(self, payload: object | None) -> list[dict[str, object]]:
-        return []
+        return _extract_valid_records(payload, items_key="reviews", is_question=False)
 
     def extract_questions(self, payload: object | None) -> list[dict[str, object]]:
-        return []
+        return _extract_valid_records(payload, items_key="questions", is_question=True)
 
     def normalize_review(self, raw: dict[str, object]) -> dict[str, object]:
-        return raw
+        record = _valid_record(raw, is_question=False)
+        if record is None:
+            return {}
+        return _normalized_message(record, is_question=False)
 
     def normalize_question(self, raw: dict[str, object]) -> dict[str, object]:
-        return raw
+        record = _valid_record(raw, is_question=True)
+        if record is None:
+            return {}
+        return _normalized_message(record, is_question=True)
 
     async def send_review_reply(
         self,
@@ -267,6 +312,163 @@ def _malformed_roles_result() -> AdapterResult:
         error_code="malformed_payload",
         error_message_safe="Ozon Seller API roles response is malformed",
     )
+
+
+def _invalid_client_id_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="invalid_account_identifier",
+        error_message_safe="Ozon Client ID is required",
+    )
+
+
+def _normalized_client_id(value: str | None) -> str:
+    return value.strip() if value else ""
+
+
+def _malformed_page_result() -> AdapterResult:
+    return AdapterResult(
+        False,
+        error_code="malformed_payload",
+        error_message_safe="Ozon Seller API list response is malformed",
+    )
+
+
+def _validated_page_result(
+    result: AdapterResult,
+    *,
+    items_key: str,
+    requested_cursor: str | None,
+) -> AdapterResult:
+    if not result.ok:
+        return result
+    page = _mapping(result.data)
+    if page is None:
+        return _malformed_page_result()
+    items = page.get(items_key)
+    has_next = page.get("has_next")
+    last_id = page.get("last_id")
+    if not isinstance(items, list) or type(has_next) is not bool or not isinstance(last_id, str):
+        return _malformed_page_result()
+    if not has_next:
+        return AdapterResult(ok=True, data=result.data)
+    if not last_id.strip() or last_id == requested_cursor:
+        return _malformed_page_result()
+    return AdapterResult(ok=True, data=result.data, next_cursor=last_id)
+
+
+def _extract_valid_records(
+    payload: object | None,
+    *,
+    items_key: str,
+    is_question: bool,
+) -> list[dict[str, object]]:
+    page = _mapping(payload)
+    if page is None:
+        return []
+    items = page.get(items_key)
+    if not isinstance(items, list):
+        return []
+    records: list[dict[str, object]] = []
+    for item in cast(list[object], items):
+        record = _valid_record(item, is_question=is_question)
+        if record is not None:
+            records.append(record)
+    return records
+
+
+def _valid_record(value: object, *, is_question: bool) -> dict[str, object] | None:
+    record = _mapping(value)
+    if record is None:
+        return None
+    identifier = _required_string(record.get("id"))
+    text = _required_string(record.get("text"))
+    published_at = _parse_timestamp(record.get("published_at"))
+    sku = _positive_sku(record.get("sku"))
+    status = record.get("status")
+    if identifier is None or text is None or published_at is None or sku is None or not isinstance(status, str):
+        return None
+    if is_question:
+        answers_count = record.get("answers_count")
+        if type(answers_count) is not int or answers_count != 0 or status == "PROCESSED":
+            return None
+    elif status != "UNPROCESSED":
+        return None
+    return dict(record)
+
+
+def _normalized_message(record: dict[str, object], *, is_question: bool) -> dict[str, object]:
+    identifier = _required_string(record.get("id"))
+    text = _required_string(record.get("text"))
+    published_at = _parse_timestamp(record.get("published_at"))
+    sku = _positive_sku(record.get("sku"))
+    status = record.get("status")
+    if identifier is None or text is None or published_at is None or sku is None or not isinstance(status, str):
+        return {}
+    product_url = _optional_string(record.get("product_url")) if is_question else None
+    return {
+        "external_id": identifier,
+        "type": MessageType.QUESTION.value if is_question else MessageType.REVIEW.value,
+        "status": MessageStatus.NEEDS_REPLY.value,
+        "rating": None if is_question else _optional_integer(record.get("rating")),
+        "customer_display_name": _optional_string(record.get("author_name")) if is_question else None,
+        "customer_text": text,
+        "customer_photos_json": [],
+        "marketplace_created_at": published_at,
+        "product": {
+            "external_id": str(sku),
+            "sku": str(sku),
+            "name": None,
+            "brand": None,
+            "category": None,
+            "image_url": None,
+            "product_url": product_url,
+            "metadata_json": {"ozon_sku": sku},
+        },
+        "metadata_json": {
+            "source": "ozon.questions" if is_question else "ozon.reviews",
+            "ozon_sku": sku,
+            "ozon_status": status,
+        },
+    }
+
+
+def _mapping(value: object | None) -> Mapping[str, object] | None:
+    if not isinstance(value, Mapping):
+        return None
+    return cast(Mapping[str, object], value)
+
+
+def _required_string(value: object) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return value
+
+
+def _optional_string(value: object) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return value
+
+
+def _optional_integer(value: object) -> int | None:
+    return value if type(value) is int else None
+
+
+def _positive_sku(value: object) -> int | None:
+    if type(value) is not int or value <= 0:
+        return None
+    return value
+
+
+def _parse_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
 
 
 def _unsupported_operation() -> AdapterResult:
