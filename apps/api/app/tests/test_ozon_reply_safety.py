@@ -218,6 +218,8 @@ def _account(message: CustomerMessage) -> MarketplaceAccount:
             marketplace=message.marketplace,
             seller_id="client-123",
             credentials_encrypted="credential",
+            status="active",
+            credentials_status="valid",
             scopes_json={
                 "validated": True,
                 "scopes": [
@@ -333,6 +335,73 @@ async def test_ozon_missing_stream_scope_blocks_before_entitlement_or_provider(
 
     assert result.status == ReplyStatus.BLOCKED.value
     assert result.error_code == "insufficient_scope"
+    assert service.entitlements.reserve_calls == 0
+    assert adapter.preflight_contexts == []
+    assert adapter.send_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_ozon_inactive_account_blocks_before_entitlement_or_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply()
+    message = _message(reply)
+    account = _account(message)
+    account.status = "disabled"
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"marketplace_reply_id": "answer-1"}))
+    service = _ExecutionHarness(reply=reply, message=message, account=account)
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    result = await service.execute_reply(reply_id=reply.id)
+
+    assert result.status == ReplyStatus.BLOCKED.value
+    assert result.error_code == "insufficient_scope"
+    assert service.entitlements.reserve_calls == 0
+    assert adapter.preflight_contexts == []
+    assert adapter.send_calls == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("reply_status", "message_status", "expected_reply_status", "expected_message_status"),
+    [
+        (
+            ReplyStatus.SENDING.value,
+            MessageStatus.SENDING.value,
+            ReplyStatus.BLOCKED.value,
+            MessageStatus.BLOCKED_BY_MARKETPLACE.value,
+        ),
+        (
+            ReplyStatus.FAILED.value,
+            MessageStatus.FAILED.value,
+            ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
+            MessageStatus.NEEDS_MANUAL_CHECK.value,
+        ),
+    ],
+)
+async def test_ozon_scope_revocation_releases_existing_reservation_safely(
+    reply_status: str,
+    message_status: str,
+    expected_reply_status: str,
+    expected_message_status: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply()
+    reply.status = reply_status
+    message = _message(reply)
+    message.status = message_status
+    account = _account(message)
+    account.scopes_json = {"validated": True, "scopes": ["fetch_reviews", "send_review_reply"]}
+    adapter = _ContextCapturingAdapter(AdapterResult(ok=True, data={"marketplace_reply_id": "answer-1"}))
+    service = _ExecutionHarness(reply=reply, message=message, account=account)
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    result = await service.execute_reply(reply_id=reply.id)
+
+    assert result.status == expected_reply_status
+    assert reply.status == expected_reply_status
+    assert message.status == expected_message_status
+    assert service.entitlements.release_calls == 1
     assert service.entitlements.reserve_calls == 0
     assert adapter.preflight_contexts == []
     assert adapter.send_calls == 0

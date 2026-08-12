@@ -795,6 +795,8 @@ class ReplyExecutionService:
     ) -> bool:
         if account.marketplace != Marketplace.OZON.value:
             return True
+        if account.status != "active" or account.credentials_status != "valid":
+            return False
         scopes_json = _object_mapping(cast(object, getattr(account, "scopes_json", {})))
         if scopes_json is None or scopes_json.get("validated") is not True:
             return False
@@ -814,8 +816,20 @@ class ReplyExecutionService:
         reply: Reply,
         message: CustomerMessage,
     ) -> None:
-        self._transition_reply(reply, ReplyStatus.BLOCKED.value)
-        self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
+        billing_actor_user_id = reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by
+        if reply.status in {ReplyStatus.SENDING.value, ReplyStatus.FAILED.value}:
+            await self.entitlements.release_for_reply(
+                organization_id=reply.organization_id,
+                reply_id=reply.id,
+                reason="insufficient_scope",
+                actor_user_id=billing_actor_user_id,
+            )
+        if reply.status == ReplyStatus.FAILED.value:
+            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        else:
+            self._transition_reply(reply, ReplyStatus.BLOCKED.value)
+            self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
         reply.error_code = "insufficient_scope"
         reply.failed_reason = "Ozon account scope does not permit this message stream"
         reply.next_retry_at = None
