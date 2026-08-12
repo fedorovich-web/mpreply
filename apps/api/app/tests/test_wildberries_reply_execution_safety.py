@@ -265,6 +265,10 @@ async def test_wildberries_uncertain_preflight_never_sends_reply(
     assert result.retryable is expected_retryable
     assert result.error_code == expected_error
     assert reply.error_code == expected_error
+    if expected_retryable:
+        assert result.retry_at == reply.next_retry_at
+    else:
+        assert result.retry_at is None
 
 
 @pytest.mark.asyncio

@@ -11,7 +11,8 @@ from app.workers import auto_reply
 
 
 def test_due_later_retry_uses_persisted_retry_delay(monkeypatch: pytest.MonkeyPatch) -> None:
-    retry_at = datetime.now(UTC) + timedelta(seconds=5)
+    now = datetime(2026, 8, 12, 7, 0, tzinfo=UTC)
+    retry_at = now + timedelta(seconds=5)
 
     async def execute_reply(_: object) -> SimpleNamespace:
         return SimpleNamespace(
@@ -21,9 +22,10 @@ def test_due_later_retry_uses_persisted_retry_delay(monkeypatch: pytest.MonkeyPa
         )
 
     monkeypatch.setattr(auto_reply, "_execute_reply", execute_reply)
+    monkeypatch.setattr(auto_reply, "_utc_now", lambda: now)
 
     with pytest.raises(dramatiq.Retry) as exc_info:
         auto_reply.auto_reply_actor.fn(str(uuid4()))
 
     assert exc_info.value.delay is not None
-    assert 4_000 <= exc_info.value.delay <= 5_000
+    assert exc_info.value.delay == 5_000

@@ -452,7 +452,13 @@ class ReplyExecutionService:
                         message=message,
                         result=preflight_error,
                     )
-                return ExecuteReplyResult(reply.id, reply.status, retryable, error_code)
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    retryable,
+                    error_code,
+                    retry_at=reply.next_retry_at if retryable else None,
+                )
 
         result = await self._send_through_adapter(
             adapter=adapter,

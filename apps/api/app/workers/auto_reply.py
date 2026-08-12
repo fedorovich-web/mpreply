@@ -17,6 +17,10 @@ class RetryableReplyExecutionError(RuntimeError):
     pass
 
 
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
 @dramatiq.actor(
     queue_name="auto-replies",
     max_retries=3,
@@ -27,7 +31,7 @@ def auto_reply_actor(reply_id: str) -> None:
     result = asyncio.run(_execute_reply(UUID(reply_id)))
     if result.retryable:
         if result.retry_at is not None:
-            delay = int((result.retry_at - datetime.now(UTC)).total_seconds() * 1000)
+            delay = int((result.retry_at - _utc_now()).total_seconds() * 1000)
             if delay > 0:
                 raise dramatiq.Retry(
                     result.error_code or "retryable_auto_reply_error",
