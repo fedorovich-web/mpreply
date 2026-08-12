@@ -165,6 +165,14 @@ async def test_avito_identity_change_rotation_and_failed_revalidation_clear_stal
     )
     assert rotated.scopes_json == {}
 
+    account.status = "active"
+    account.credentials_status = "valid"
+    account.scopes_json = {"validated": True, "scopes": ["fetch_chats"]}
+    revoked = await service.revoke_credentials(actor=actor, account_id=account.id)
+    assert revoked.status == "disabled"
+    assert revoked.credentials_status == "revoked"
+    assert revoked.scopes_json == {}
+
     class _FailingAdapter(AvitoAdapter):
         async def validate_credentials(self, credential: str, seller_id: str | None = None) -> AdapterResult:
             return AdapterResult(False, error_code="invalid_credentials")
@@ -175,7 +183,7 @@ async def test_avito_identity_change_rotation_and_failed_revalidation_clear_stal
 
     assert result.ok is False
     assert account.scopes_json == {}
-    assert service.scheduler.paused_account_ids == [account.id, account.id]
+    assert service.scheduler.paused_account_ids == [account.id, account.id, account.id]
 
 
 def test_avito_account_response_omits_raw_user_id() -> None:
