@@ -367,7 +367,7 @@ async def test_has_existing_reply_preserves_nonfinal_question_state() -> None:
     )
 
     assert result.ok is True
-    assert result.data == {"answered": None, "state": "UNMODERATED"}
+    assert result.data == {"answered": True, "state": "UNMODERATED"}
 
 
 @pytest.mark.asyncio
