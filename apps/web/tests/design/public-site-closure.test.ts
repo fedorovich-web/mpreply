@@ -21,6 +21,15 @@ describe("public-site design closure", () => {
     }
   });
 
+  it("keeps seller rules concise and the answer as the endpoint", () => {
+    expect(hero).toContain("Правила продавца");
+    expect(hero).toContain("Без неподтверждённых обещаний");
+    expect(hero).toContain("Только по данным");
+    expect(hero).toContain("Ответ готов к публикации");
+    expect(heroCss).toContain(".rulesCard");
+    expect(heroCss).toContain(".answerCard");
+  });
+
   it("pauses ambient Hero animation outside the visible page lifecycle", () => {
     expect(hero).toContain("IntersectionObserver");
     expect(hero).toContain('document.addEventListener("visibilitychange"');
