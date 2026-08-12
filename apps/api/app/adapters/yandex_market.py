@@ -442,17 +442,16 @@ class YandexMarketAdapter(MarketplaceAdapter):
     def _question_answer_items(
         cls, payload: object | None
     ) -> list[dict[str, object]] | None:
-        if not isinstance(payload, dict):
-            return None
-        result = payload.get("result")
-        if not isinstance(result, dict):
+        result = cls._mapping(cls._mapping(payload).get("result"))
+        if not result:
             return None
         answers = result.get("answers")
         if not isinstance(answers, list):
             return None
-        if not all(isinstance(item, dict) for item in answers):
+        items = cast(list[object], answers)
+        if not all(isinstance(item, dict) for item in items):
             return None
-        return [cast(dict[str, object], item) for item in answers]
+        return [cls._mapping(item) for item in items]
 
     @staticmethod
     def _question_reply_state_result(

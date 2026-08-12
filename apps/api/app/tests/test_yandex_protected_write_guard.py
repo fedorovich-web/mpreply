@@ -57,11 +57,14 @@ def test_protected_question_id_is_never_a_literal_write_target() -> None:
 
 def test_automated_tests_do_not_run_real_yandex_runtime_probe() -> None:
     violations: list[str] = []
+    direct_probe_call = "run_" + "probe(YandexMarket" + "Adapter("
+    runtime_probe_cli_call = "_async" + "_main()"
+    runtime_probe_module = "yandex_market_" + "runtime_probe"
     for path in sorted(TEST_ROOT.rglob("test_*.py")):
         source = path.read_text(encoding="utf-8")
-        if "run_probe(YandexMarketAdapter(" in source:
+        if direct_probe_call in source:
             violations.append(f"{path}: direct real-adapter run_probe")
-        if "_async_main()" in source and "yandex_market_runtime_probe" in source:
+        if runtime_probe_cli_call in source and runtime_probe_module in source:
             violations.append(f"{path}: runtime probe CLI execution")
 
     assert violations == []

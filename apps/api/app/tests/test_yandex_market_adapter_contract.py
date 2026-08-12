@@ -272,7 +272,12 @@ async def test_question_reconciliation_maps_seller_owned_answer_state(
                     "status": "OK",
                     "result": {
                         "answers": [
-                            {"id": 281, "status": status, "canModify": True, "author": {}}
+                            {
+                                "id": 281,
+                                "status": status,
+                                "canModify": True,
+                                "author": dict[str, object](),
+                            }
                         ]
                     },
                 },

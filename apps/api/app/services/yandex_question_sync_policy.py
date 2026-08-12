@@ -137,7 +137,10 @@ def load_yandex_question_backfill(
         page_token_raw = data.get("page_token")
         page_token = page_token_raw if isinstance(page_token_raw, str) else None
         seen_raw = data.get("seen_page_tokens", [])
-        if not isinstance(seen_raw, list) or not all(isinstance(item, str) for item in seen_raw):
+        if not isinstance(seen_raw, list):
+            raise ValueError
+        seen_values = cast(list[object], seen_raw)
+        if not all(isinstance(item, str) for item in seen_values):
             raise ValueError
         page_count_raw = data.get("page_count", 0)
         completed_raw = data.get("completed", False)
@@ -159,7 +162,7 @@ def load_yandex_question_backfill(
             horizon_end=horizon_end,
             window=YandexQuestionWindow(start=window_start, end=window_end),
             page_token=page_token,
-            seen_page_tokens=tuple(cast(list[str], seen_raw)),
+            seen_page_tokens=tuple(item for item in seen_values if isinstance(item, str)),
             page_count=page_count_raw,
             completed=completed_raw,
         )

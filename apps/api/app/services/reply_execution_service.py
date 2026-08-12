@@ -50,6 +50,12 @@ _YANDEX_QUESTION_BLOCK_MESSAGES = {
 }
 
 
+def _object_mapping(value: object | None) -> dict[str, object] | None:
+    if not isinstance(value, dict):
+        return None
+    return cast(dict[str, object], value)
+
+
 @dataclass(frozen=True)
 class QueueAutoReplyResult:
     queued: bool
@@ -580,13 +586,13 @@ class ReplyExecutionService:
             message.external_id,
             seller_id=seller_id,
         )
-        if not result.ok or not isinstance(result.data, dict):
+        data = _object_mapping(result.data)
+        if not result.ok or data is None:
             return YandexQuestionWriteAuthorization(
                 state="UNKNOWN",
                 allowed=False,
                 error_code="yandex_question_reconciliation_unknown",
             )
-        data = cast(dict[str, object], result.data)
         raw_state = str(data.get("state") or "UNKNOWN").upper()
         state = cast(
             YandexQuestionReplyState,
@@ -624,9 +630,8 @@ class ReplyExecutionService:
 
     @staticmethod
     def _has_yandex_question_send_ambiguity(reply: Reply) -> bool:
-        metadata = reply.metadata_json if isinstance(reply.metadata_json, dict) else {}
-        marker = metadata.get("yandex_question_send_ambiguity")
-        return isinstance(marker, dict) and marker.get("active") is True
+        marker = _object_mapping(reply.metadata_json.get("yandex_question_send_ambiguity"))
+        return marker is not None and marker.get("active") is True
 
     @staticmethod
     def _is_yandex_question_send_ambiguous_error(error_code: str | None) -> bool:

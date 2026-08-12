@@ -11,7 +11,10 @@ from app.adapters.base import AdapterResult
 from app.adapters.yandex_market import YandexMarketAdapter
 from app.models.customer_message import CustomerMessage
 from app.models.reply import Reply
-from app.services.reply_execution_service import ReplyExecutionService
+from app.services.reply_execution_service import (
+    ReplyExecutionService,
+    YandexQuestionWriteAuthorization,
+)
 
 API_ROOT = Path(__file__).resolve().parents[2]
 
@@ -29,6 +32,41 @@ class _ReconciliationAdapter(YandexMarketAdapter):
     ) -> AdapterResult:
         self.calls.append((credential, external_id, seller_id))
         return self.result
+
+
+class _ReplyExecutionHarness(ReplyExecutionService):
+    async def authorize_yandex_question_write(
+        self,
+        *,
+        adapter: YandexMarketAdapter,
+        credential: str,
+        seller_id: str | None,
+        message: CustomerMessage,
+        reply: Reply,
+    ) -> YandexQuestionWriteAuthorization:
+        return await self._authorize_yandex_question_write(
+            adapter=adapter,
+            credential=credential,
+            seller_id=seller_id,
+            message=message,
+            reply=reply,
+        )
+
+    def is_yandex_question_send_ambiguous_error(self, error_code: str | None) -> bool:
+        return self._is_yandex_question_send_ambiguous_error(error_code)
+
+    def record_yandex_question_send_ambiguity(
+        self,
+        *,
+        reply: Reply,
+        error_code: str,
+        now: datetime,
+    ) -> None:
+        self._record_yandex_question_send_ambiguity(
+            reply=reply,
+            error_code=error_code,
+            now=now,
+        )
 
 
 def _message() -> CustomerMessage:
@@ -59,12 +97,12 @@ async def test_non_absent_yandex_question_states_block_write(
     state: str,
     error_code: str,
 ) -> None:
-    service = object.__new__(ReplyExecutionService)
+    service = object.__new__(_ReplyExecutionHarness)
     adapter = _ReconciliationAdapter(
         AdapterResult(ok=True, data={"state": state, "answer_id": "88"})
     )
 
-    authorization = await service._authorize_yandex_question_write(
+    authorization = await service.authorize_yandex_question_write(
         adapter=adapter,
         credential="key",
         seller_id="99",
@@ -81,12 +119,12 @@ async def test_non_absent_yandex_question_states_block_write(
 
 @pytest.mark.asyncio
 async def test_published_yandex_question_converges_as_external_answer() -> None:
-    service = object.__new__(ReplyExecutionService)
+    service = object.__new__(_ReplyExecutionHarness)
     adapter = _ReconciliationAdapter(
         AdapterResult(ok=True, data={"state": "PUBLISHED", "answer_id": "88"})
     )
 
-    authorization = await service._authorize_yandex_question_write(
+    authorization = await service.authorize_yandex_question_write(
         adapter=adapter,
         credential="key",
         seller_id="99",
@@ -102,12 +140,12 @@ async def test_published_yandex_question_converges_as_external_answer() -> None:
 
 @pytest.mark.asyncio
 async def test_confirmed_absent_yandex_question_allows_write_without_ambiguity() -> None:
-    service = object.__new__(ReplyExecutionService)
+    service = object.__new__(_ReplyExecutionHarness)
     adapter = _ReconciliationAdapter(
         AdapterResult(ok=True, data={"state": "ABSENT", "answer_id": None})
     )
 
-    authorization = await service._authorize_yandex_question_write(
+    authorization = await service.authorize_yandex_question_write(
         adapter=adapter,
         credential="key",
         seller_id="99",
@@ -122,12 +160,12 @@ async def test_confirmed_absent_yandex_question_allows_write_without_ambiguity()
 
 @pytest.mark.asyncio
 async def test_reconciliation_transport_failure_is_unknown_and_blocks_write() -> None:
-    service = object.__new__(ReplyExecutionService)
+    service = object.__new__(_ReplyExecutionHarness)
     adapter = _ReconciliationAdapter(
         AdapterResult(ok=False, error_code="network_timeout")
     )
 
-    authorization = await service._authorize_yandex_question_write(
+    authorization = await service.authorize_yandex_question_write(
         adapter=adapter,
         credential="key",
         seller_id="99",
@@ -142,7 +180,7 @@ async def test_reconciliation_transport_failure_is_unknown_and_blocks_write() ->
 
 @pytest.mark.asyncio
 async def test_absent_does_not_authorize_resend_with_active_ambiguity() -> None:
-    service = object.__new__(ReplyExecutionService)
+    service = object.__new__(_ReplyExecutionHarness)
     adapter = _ReconciliationAdapter(
         AdapterResult(ok=True, data={"state": "ABSENT", "answer_id": None})
     )
@@ -155,7 +193,7 @@ async def test_absent_does_not_authorize_resend_with_active_ambiguity() -> None:
         }
     )
 
-    authorization = await service._authorize_yandex_question_write(
+    authorization = await service.authorize_yandex_question_write(
         adapter=adapter,
         credential="key",
         seller_id="99",
@@ -169,26 +207,26 @@ async def test_absent_does_not_authorize_resend_with_active_ambiguity() -> None:
 
 
 def test_only_unknown_transport_outcomes_create_yandex_send_ambiguity() -> None:
+    service = object.__new__(_ReplyExecutionHarness)
     assert (
-        ReplyExecutionService._is_yandex_question_send_ambiguous_error(
-            "network_timeout"
-        )
+        service.is_yandex_question_send_ambiguous_error("network_timeout")
         is True
     )
     assert (
-        ReplyExecutionService._is_yandex_question_send_ambiguous_error("network_error")
+        service.is_yandex_question_send_ambiguous_error("network_error")
         is True
     )
     assert (
-        ReplyExecutionService._is_yandex_question_send_ambiguous_error("rate_limited")
+        service.is_yandex_question_send_ambiguous_error("rate_limited")
         is False
     )
 
 
 def test_ambiguity_marker_preserves_existing_reply_metadata() -> None:
     reply = _reply({"keep": "value"})
+    service = object.__new__(_ReplyExecutionHarness)
 
-    ReplyExecutionService._record_yandex_question_send_ambiguity(
+    service.record_yandex_question_send_ambiguity(
         reply=reply,
         error_code="network_timeout",
         now=datetime(2026, 8, 12, 7, 0, tzinfo=UTC),

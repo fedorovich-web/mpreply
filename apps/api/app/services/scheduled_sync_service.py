@@ -48,6 +48,12 @@ _PAUSING_ERRORS = {
 }
 
 
+def _object_mapping(value: object | None) -> dict[str, object] | None:
+    if not isinstance(value, dict):
+        return None
+    return cast(dict[str, object], value)
+
+
 @dataclass(frozen=True)
 class ScheduledSyncResult:
     status: Literal["success", "failed", "paused", "stale"]
@@ -462,8 +468,8 @@ class ScheduledMarketplaceSyncService:
             )
             state = "UNKNOWN"
             answer_id: str | None = None
-            if reconciliation.ok and isinstance(reconciliation.data, dict):
-                payload = cast(dict[str, object], reconciliation.data)
+            payload = _object_mapping(reconciliation.data)
+            if reconciliation.ok and payload is not None:
                 raw_state = str(payload.get("state") or "UNKNOWN").upper()
                 if raw_state in {
                     "ABSENT",

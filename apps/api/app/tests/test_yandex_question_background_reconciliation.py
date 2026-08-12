@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -16,6 +17,7 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.services.scheduled_sync_service import ScheduledMarketplaceSyncService, ScheduledPageFetch
 from app.services.yandex_question_sync_policy import (
+    YandexQuestionBackfillCheckpoint,
     advance_yandex_question_window,
     initialize_yandex_question_backfill,
 )
@@ -24,24 +26,24 @@ API_ROOT = Path(__file__).resolve().parents[2]
 
 
 class _Scalars:
-    def __init__(self, values: list[object]) -> None:
-        self.values = values
+    def __init__(self, values: Sequence[object]) -> None:
+        self.values = list(values)
 
     def all(self) -> list[object]:
         return self.values
 
 
 class _Result:
-    def __init__(self, values: list[object]) -> None:
-        self.values = values
+    def __init__(self, values: Sequence[object]) -> None:
+        self.values = list(values)
 
     def scalars(self) -> _Scalars:
         return _Scalars(self.values)
 
 
 class _Session:
-    def __init__(self, values: list[object]) -> None:
-        self.values = values
+    def __init__(self, values: Sequence[object]) -> None:
+        self.values = list(values)
         self.statements: list[object] = []
 
     async def execute(self, statement: object) -> _Result:
@@ -69,6 +71,40 @@ class _Adapter(YandexMarketAdapter):
                 "state": state,
                 "answer_id": f"answer-{external_id}" if state == "PUBLISHED" else None,
             },
+        )
+
+
+class _BackgroundReconciliationHarness(ScheduledMarketplaceSyncService):
+    async def reconcile_open_yandex_questions(
+        self,
+        *,
+        account: MarketplaceAccount,
+        adapter: YandexMarketAdapter,
+        credential: str,
+        now: datetime,
+    ) -> dict[str, int]:
+        return await self._reconcile_open_yandex_questions(
+            account=account,
+            adapter=adapter,
+            credential=credential,
+            now=now,
+        )
+
+    def should_reconcile_open_yandex_questions(
+        self,
+        *,
+        account: MarketplaceAccount,
+        state: MarketplaceSyncState,
+        page_fetch: ScheduledPageFetch,
+        next_cursor: str | None,
+        next_checkpoint: YandexQuestionBackfillCheckpoint | None,
+    ) -> bool:
+        return self._should_reconcile_open_yandex_questions(
+            account=account,
+            state=state,
+            page_fetch=page_fetch,
+            next_cursor=next_cursor,
+            next_checkpoint=next_checkpoint,
         )
 
 
@@ -115,11 +151,11 @@ async def test_reconciliation_filters_local_open_questions_and_caps_at_25() -> N
         _message("answered", account_id=account_id, status="answered"),
         _message("other-account", account_id=uuid4()),
     ]
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_BackgroundReconciliationHarness)
     service.session = cast(AsyncSession, _Session(mixed + eligible))
     adapter = _Adapter({})
 
-    stats = await service._reconcile_open_yandex_questions(
+    stats = await service.reconcile_open_yandex_questions(
         account=_account(account_id),
         adapter=adapter,
         credential="key",
@@ -135,11 +171,11 @@ async def test_reconciliation_filters_local_open_questions_and_caps_at_25() -> N
 async def test_published_reconciliation_marks_local_open_message_answered() -> None:
     account_id = uuid4()
     message = _message("42", account_id=account_id)
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_BackgroundReconciliationHarness)
     service.session = cast(AsyncSession, _Session([message]))
     adapter = _Adapter({"42": "PUBLISHED"})
 
-    stats = await service._reconcile_open_yandex_questions(
+    stats = await service.reconcile_open_yandex_questions(
         account=_account(account_id),
         adapter=adapter,
         credential="key",
@@ -159,11 +195,11 @@ async def test_published_reconciliation_marks_local_open_message_answered() -> N
 async def test_absent_reconciliation_keeps_message_open_and_never_writes() -> None:
     account_id = uuid4()
     message = _message("7", account_id=account_id)
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_BackgroundReconciliationHarness)
     service.session = cast(AsyncSession, _Session([message]))
     adapter = _Adapter({"7": "ABSENT"})
 
-    stats = await service._reconcile_open_yandex_questions(
+    stats = await service.reconcile_open_yandex_questions(
         account=_account(account_id),
         adapter=adapter,
         credential="key",
@@ -196,28 +232,29 @@ def test_reconciliation_runs_only_at_full_yandex_question_cycle_boundary() -> No
         phase="incremental",
     )
 
-    assert ScheduledMarketplaceSyncService._should_reconcile_open_yandex_questions(
+    service = object.__new__(_BackgroundReconciliationHarness)
+    assert service.should_reconcile_open_yandex_questions(
         account=account,
         state=state,
         page_fetch=backfill,
         next_cursor=None,
         next_checkpoint=incomplete,
     ) is False
-    assert ScheduledMarketplaceSyncService._should_reconcile_open_yandex_questions(
+    assert service.should_reconcile_open_yandex_questions(
         account=account,
         state=state,
         page_fetch=backfill,
         next_cursor=None,
         next_checkpoint=completed,
     ) is True
-    assert ScheduledMarketplaceSyncService._should_reconcile_open_yandex_questions(
+    assert service.should_reconcile_open_yandex_questions(
         account=account,
         state=state,
         page_fetch=incremental,
         next_cursor=None,
         next_checkpoint=None,
     ) is True
-    assert ScheduledMarketplaceSyncService._should_reconcile_open_yandex_questions(
+    assert service.should_reconcile_open_yandex_questions(
         account=account,
         state=state,
         page_fetch=incremental,

@@ -11,7 +11,7 @@ from app.adapters.base import AdapterResult
 from app.adapters.yandex_market import YandexMarketAdapter
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
-from app.services.scheduled_sync_service import ScheduledMarketplaceSyncService
+from app.services.scheduled_sync_service import ScheduledMarketplaceSyncService, ScheduledPageFetch
 from app.services.yandex_question_sync_policy import (
     YANDEX_QUESTION_WINDOW_PAGE_LIMIT,
     YandexQuestionBackfillCheckpoint,
@@ -53,6 +53,36 @@ class _RecordingYandexScheduledAdapter(YandexMarketAdapter):
         return AdapterResult(ok=True)
 
 
+class _ScheduledBackfillHarness(ScheduledMarketplaceSyncService):
+    async def fetch_scheduled_page(
+        self,
+        *,
+        adapter: YandexMarketAdapter,
+        account: MarketplaceAccount,
+        state: MarketplaceSyncState,
+        credential: str,
+        now: datetime,
+    ) -> ScheduledPageFetch:
+        return await self._fetch_scheduled_page(
+            adapter=adapter,
+            account=account,
+            state=state,
+            credential=credential,
+            now=now,
+        )
+
+    def prepare_yandex_backfill_progress(
+        self,
+        *,
+        checkpoint: YandexQuestionBackfillCheckpoint,
+        next_cursor: str | None,
+    ) -> tuple[YandexQuestionBackfillCheckpoint | None, AdapterResult | None]:
+        return self._prepare_yandex_backfill_progress(
+            checkpoint=checkpoint,
+            next_cursor=next_cursor,
+        )
+
+
 def _state(
     *, metadata: dict[str, object] | None = None, cursor: str | None = None
 ) -> MarketplaceSyncState:
@@ -84,11 +114,11 @@ def _completed_checkpoint() -> YandexQuestionBackfillCheckpoint:
 
 @pytest.mark.asyncio
 async def test_scheduled_yandex_questions_initialize_frozen_backfill_window() -> None:
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_ScheduledBackfillHarness)
     adapter = _RecordingYandexScheduledAdapter()
     state = _state(cursor="legacy-cursor")
 
-    page = await service._fetch_scheduled_page(
+    page = await service.fetch_scheduled_page(
         adapter=adapter,
         account=_account(),
         state=state,
@@ -108,7 +138,7 @@ async def test_scheduled_yandex_questions_initialize_frozen_backfill_window() ->
 
 @pytest.mark.asyncio
 async def test_scheduled_yandex_questions_resume_frozen_window_at_later_wall_clock() -> None:
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_ScheduledBackfillHarness)
     adapter = _RecordingYandexScheduledAdapter()
     checkpoint = initialize_yandex_question_backfill(
         datetime(2026, 8, 12, 7, 0, tzinfo=UTC)
@@ -116,7 +146,7 @@ async def test_scheduled_yandex_questions_resume_frozen_window_at_later_wall_clo
     checkpoint = record_yandex_question_page(checkpoint, "p2")
     state = _state(metadata=store_yandex_question_backfill({}, checkpoint))
 
-    page = await service._fetch_scheduled_page(
+    page = await service.fetch_scheduled_page(
         adapter=adapter,
         account=_account(),
         state=state,
@@ -132,14 +162,14 @@ async def test_scheduled_yandex_questions_resume_frozen_window_at_later_wall_clo
 
 @pytest.mark.asyncio
 async def test_scheduled_yandex_questions_switch_to_incremental_after_backfill() -> None:
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_ScheduledBackfillHarness)
     adapter = _RecordingYandexScheduledAdapter()
     state = _state(
         metadata=store_yandex_question_backfill({}, _completed_checkpoint()),
         cursor="incremental-p2",
     )
 
-    page = await service._fetch_scheduled_page(
+    page = await service.fetch_scheduled_page(
         adapter=adapter,
         account=_account(),
         state=state,
@@ -154,7 +184,7 @@ async def test_scheduled_yandex_questions_switch_to_incremental_after_backfill()
 
 @pytest.mark.asyncio
 async def test_malformed_yandex_backfill_checkpoint_fails_before_network() -> None:
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_ScheduledBackfillHarness)
     adapter = _RecordingYandexScheduledAdapter()
     state = _state(
         metadata={
@@ -165,7 +195,7 @@ async def test_malformed_yandex_backfill_checkpoint_fails_before_network() -> No
         }
     )
 
-    page = await service._fetch_scheduled_page(
+    page = await service.fetch_scheduled_page(
         adapter=adapter,
         account=_account(),
         state=state,
@@ -195,11 +225,11 @@ async def test_initial_checkpoint_is_persisted_before_first_provider_failure() -
             self.window_calls.append((date_from, date_to, cursor, seller_id))
             return AdapterResult(ok=False, error_code="network_timeout")
 
-    service = object.__new__(ScheduledMarketplaceSyncService)
+    service = object.__new__(_ScheduledBackfillHarness)
     adapter = _FailingAdapter()
     state = _state()
 
-    page = await service._fetch_scheduled_page(
+    page = await service.fetch_scheduled_page(
         adapter=adapter,
         account=_account(),
         state=state,
@@ -219,11 +249,10 @@ def test_yandex_backfill_repeated_token_maps_to_fail_closed_cursor_error() -> No
     )
     checkpoint = record_yandex_question_page(checkpoint, "p2")
 
-    next_checkpoint, failure = (
-        ScheduledMarketplaceSyncService._prepare_yandex_backfill_progress(
-            checkpoint=checkpoint,
-            next_cursor="p2",
-        )
+    service = object.__new__(_ScheduledBackfillHarness)
+    next_checkpoint, failure = service.prepare_yandex_backfill_progress(
+        checkpoint=checkpoint,
+        next_cursor="p2",
     )
 
     assert next_checkpoint is None
@@ -248,11 +277,10 @@ def test_yandex_backfill_page_cap_maps_to_fail_closed_limit_error() -> None:
         completed=False,
     )
 
-    next_checkpoint, failure = (
-        ScheduledMarketplaceSyncService._prepare_yandex_backfill_progress(
-            checkpoint=capped,
-            next_cursor="p101",
-        )
+    service = object.__new__(_ScheduledBackfillHarness)
+    next_checkpoint, failure = service.prepare_yandex_backfill_progress(
+        checkpoint=capped,
+        next_cursor="p101",
     )
 
     assert next_checkpoint is None
@@ -265,11 +293,10 @@ def test_yandex_backfill_final_page_advances_to_older_window() -> None:
         datetime(2026, 8, 12, 7, 0, tzinfo=UTC)
     )
 
-    next_checkpoint, failure = (
-        ScheduledMarketplaceSyncService._prepare_yandex_backfill_progress(
-            checkpoint=checkpoint,
-            next_cursor=None,
-        )
+    service = object.__new__(_ScheduledBackfillHarness)
+    next_checkpoint, failure = service.prepare_yandex_backfill_progress(
+        checkpoint=checkpoint,
+        next_cursor=None,
     )
 
     assert failure is None
