@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from datetime import date
 
 import httpx
 import pytest
@@ -131,6 +132,62 @@ async def test_fetch_questions_uses_need_answer_filter() -> None:
 
 
 @pytest.mark.asyncio
+async def test_fetch_question_window_sends_explicit_dates_and_scopes_page_token() -> None:
+    recorder = RequestRecorder(
+        [
+            response(
+                200,
+                {
+                    "status": "OK",
+                    "result": {
+                        "questions": [],
+                        "paging": {"nextPageToken": "next-question-page"},
+                    },
+                },
+            )
+        ]
+    )
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.fetch_questions_window(
+        "key",
+        seller_id="88",
+        date_from=date(2026, 7, 16),
+        date_to=date(2026, 8, 12),
+        cursor="current-page",
+    )
+
+    assert result.ok is True
+    assert result.next_cursor == "next-question-page"
+    request = recorder.requests[0]
+    assert request.url.path == "/v1/businesses/88/goods-questions"
+    assert request.url.params["limit"] == "50"
+    assert request.url.params["pageToken"] == "current-page"
+    assert request_json(request) == {
+        "needAnswer": True,
+        "dateFrom": "2026-07-16",
+        "dateTo": "2026-08-12",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fetch_question_window_rejects_inverted_dates_before_network() -> None:
+    recorder = RequestRecorder([])
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.fetch_questions_window(
+        "key",
+        seller_id="88",
+        date_from=date(2026, 8, 13),
+        date_to=date(2026, 8, 12),
+    )
+
+    assert result.ok is False
+    assert result.error_code == "invalid_date_window"
+    assert recorder.requests == []
+
+
+@pytest.mark.asyncio
 async def test_send_review_reply_uses_official_comment_contract() -> None:
     recorder = RequestRecorder([response(200, {"status": "OK", "result": {"commentId": 12}})])
     adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
@@ -171,8 +228,8 @@ async def test_preflight_detects_business_authored_reply() -> None:
                     "status": "OK",
                     "result": {
                         "answers": [
-                            {"id": 1, "author": {"type": "USER"}},
-                            {"id": 2, "author": {"type": "BUSINESS"}},
+                            {"id": 1, "status": "PUBLISHED", "author": {"type": "USER"}},
+                            {"id": 2, "status": "PUBLISHED", "author": {"type": "BUSINESS"}},
                         ]
                     },
                 },
@@ -189,8 +246,142 @@ async def test_preflight_detects_business_authored_reply() -> None:
     )
 
     assert result.ok is True
-    assert result.data == {"answered": True}
+    assert result.data == {"answered": True, "state": "PUBLISHED"}
     assert recorder.requests[0].url.path == "/v1/businesses/99/goods-questions/answers"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        ("PUBLISHED", "PUBLISHED"),
+        ("UNMODERATED", "UNMODERATED"),
+        ("BANNED", "BANNED"),
+        ("DELETED", "DELETED"),
+    ],
+)
+async def test_question_reconciliation_maps_seller_owned_answer_state(
+    status: str,
+    expected: str,
+) -> None:
+    recorder = RequestRecorder(
+        [
+            response(
+                200,
+                {
+                    "status": "OK",
+                    "result": {
+                        "answers": [
+                            {"id": 281, "status": status, "canModify": True, "author": {}}
+                        ]
+                    },
+                },
+            )
+        ]
+    )
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.reconcile_question_reply("key", "123", seller_id="99")
+
+    assert result.ok is True
+    assert result.data == {"state": expected, "answer_id": "281"}
+
+
+@pytest.mark.asyncio
+async def test_question_reconciliation_returns_absent_for_valid_empty_answers() -> None:
+    recorder = RequestRecorder([response(200, {"status": "OK", "result": {"answers": []}})])
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.reconcile_question_reply("key", "123", seller_id="99")
+
+    assert result.ok is True
+    assert result.data == {"state": "ABSENT", "answer_id": None}
+
+
+@pytest.mark.asyncio
+async def test_question_reconciliation_returns_unknown_for_ambiguous_ownership() -> None:
+    recorder = RequestRecorder(
+        [
+            response(
+                200,
+                {
+                    "status": "OK",
+                    "result": {"answers": [{"id": 7, "status": "PUBLISHED"}]},
+                },
+            )
+        ]
+    )
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.reconcile_question_reply("key", "123", seller_id="99")
+
+    assert result.ok is True
+    assert result.data == {"state": "UNKNOWN", "answer_id": None}
+
+
+@pytest.mark.asyncio
+async def test_question_reconciliation_returns_unknown_for_unknown_seller_status() -> None:
+    recorder = RequestRecorder(
+        [
+            response(
+                200,
+                {
+                    "status": "OK",
+                    "result": {
+                        "answers": [{"id": 8, "status": "FUTURE_STATE", "canModify": True}]
+                    },
+                },
+            )
+        ]
+    )
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.reconcile_question_reply("key", "123", seller_id="99")
+
+    assert result.ok is True
+    assert result.data == {"state": "UNKNOWN", "answer_id": "8"}
+
+
+@pytest.mark.asyncio
+async def test_has_existing_reply_preserves_nonfinal_question_state() -> None:
+    recorder = RequestRecorder(
+        [
+            response(
+                200,
+                {
+                    "status": "OK",
+                    "result": {
+                        "answers": [{"id": 12, "status": "UNMODERATED", "canModify": True}]
+                    },
+                },
+            )
+        ]
+    )
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.has_existing_reply(
+        "key",
+        MessageType.QUESTION.value,
+        "123",
+        seller_id="99",
+    )
+
+    assert result.ok is True
+    assert result.data == {"answered": None, "state": "UNMODERATED"}
+
+
+@pytest.mark.asyncio
+async def test_question_reconciliation_preserves_timeout_failure() -> None:
+    def timeout(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("timed out", request=request)
+
+    recorder = RequestRecorder([timeout])
+    adapter = YandexMarketAdapter(transport=httpx.MockTransport(recorder))
+
+    result = await adapter.reconcile_question_reply("key", "123", seller_id="99")
+
+    assert result.ok is False
+    assert result.error_code == "network_timeout"
 
 
 @pytest.mark.asyncio
