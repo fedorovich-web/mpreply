@@ -18,7 +18,6 @@ from app.services.marketplace_ingest_service import MarketplaceMessageIngestServ
 
 _TERMINAL_REPLY_STATUSES = {
     ReplyStatus.SENT.value,
-    ReplyStatus.FAILED.value,
     ReplyStatus.BLOCKED.value,
 }
 _ARCHIVABLE_MESSAGE_STATUSES = {
@@ -87,6 +86,14 @@ class AvitoChatIngestService:
             return _skipped(can_mark_read=False)
 
         latest_message, latest_created_at = turn[-1]
+        await self.session.execute(
+            select(MarketplaceAccount.id)
+            .where(
+                MarketplaceAccount.id == account.id,
+                MarketplaceAccount.organization_id == account.organization_id,
+            )
+            .with_for_update()
+        )
         chat_targets = list(
             (
                 await self.session.execute(

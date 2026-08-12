@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import Select
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.conversation import AvitoChat, AvitoMessage
@@ -51,10 +52,25 @@ class _Session:
 
     async def execute(self, statement: object) -> _Result:
         self.statements.append(statement)
+        if "FROM marketplace_accounts" in str(statement):
+            return _Result([])
         if not self.execute_results:
             raise AssertionError("unexpected database query")
         configured = self.execute_results.pop(0)
         values = configured(self) if callable(configured) else configured
+        if values and all(isinstance(value, Reply) for value in values):
+            query_text = str(
+                cast(Select[tuple[object]], statement).compile(
+                    dialect=postgresql.dialect(),
+                    compile_kwargs={"literal_binds": True},
+                )
+            )
+            excluded = query_text.partition("NOT IN")[2]
+            values = [
+                value
+                for value in values
+                if not isinstance(value, Reply) or f"'{value.status}'" not in excluded
+            ]
         return _Result(values)
 
     def add(self, value: object) -> None:
@@ -212,12 +228,26 @@ async def test_ingest_turn_groups_after_latest_outbound_and_persists_exact_conte
     }
     assert older.status == MessageStatus.ARCHIVED.value
     assert foreign.status == MessageStatus.NEEDS_REPLY.value
-    first_query = cast(Select[tuple[CustomerMessage]], session.statements[0])
-    query_text = str(first_query.compile(compile_kwargs={"literal_binds": True}))
+    query_text = next(
+        str(
+            cast(Select[tuple[CustomerMessage]], statement).compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+        for statement in session.statements
+        if "avito_chat_id"
+        in str(
+            cast(Select[tuple[CustomerMessage]], statement).compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+    )
     assert "customer_messages.organization_id" in query_text
     assert "customer_messages.marketplace_account_id" in query_text
-    assert account.organization_id.hex in query_text
-    assert account.id.hex in query_text
+    assert str(account.organization_id) in query_text
+    assert str(account.id) in query_text
 
 
 @pytest.mark.asyncio
@@ -273,7 +303,10 @@ async def test_unsupported_or_malformed_unread_inbound_blocks_ingest_and_read(
 
 
 @pytest.mark.asyncio
-async def test_nonterminal_reply_routes_new_turn_to_manual_review_without_archiving_active_target() -> None:
+@pytest.mark.parametrize("reply_status", [ReplyStatus.QUEUED.value, ReplyStatus.FAILED.value])
+async def test_nonterminal_reply_routes_new_turn_to_manual_review_without_archiving_active_target(
+    reply_status: str,
+) -> None:
     account = _account()
     older = _stored_message(account, external_id="older-turn")
     reply = Reply(
@@ -281,7 +314,7 @@ async def test_nonterminal_reply_routes_new_turn_to_manual_review_without_archiv
         organization_id=account.organization_id,
         message_id=older.id,
         reply_text="Pending synthetic reply",
-        status=ReplyStatus.QUEUED.value,
+        status=reply_status,
         mode=ResponseMode.AUTO.value,
         revision=1,
         attempt_count=0,
@@ -303,6 +336,100 @@ async def test_nonterminal_reply_routes_new_turn_to_manual_review_without_archiv
     assert result.can_mark_read is True
     assert created.status == MessageStatus.NEEDS_MANUAL_CHECK.value
     assert older.status == MessageStatus.NEEDS_REPLY.value
+
+
+@pytest.mark.asyncio
+async def test_account_lock_serializes_chat_snapshots_before_target_lookup() -> None:
+    account = _account()
+    session = _Session(
+        [
+            [],
+            [],
+            [],
+            _current_message,
+            lambda current: cast(list[object], _added_messages(current)),
+            [],
+            [],
+            _current_message,
+        ]
+    )
+    service = AvitoChatIngestService(cast(AsyncSession, session))
+
+    first = await service.ingest_turn(
+        account=account,
+        chat=_chat(),
+        messages=[_message("snapshot-1", 1_700_000_110, text="First snapshot")],
+    )
+    second = await service.ingest_turn(
+        account=account,
+        chat=_chat(),
+        messages=[_message("snapshot-2", 1_700_000_120, text="Second snapshot")],
+    )
+
+    stored = _added_messages(session)
+    assert first.outcome == "created"
+    assert second.outcome == "created"
+    assert [message.status for message in stored] == [
+        MessageStatus.ARCHIVED.value,
+        MessageStatus.NEEDS_REPLY.value,
+    ]
+    statement_sql = [
+        str(
+            cast(Select[tuple[object]], statement).compile(
+                dialect=postgresql.dialect(),
+                compile_kwargs={"literal_binds": True},
+            )
+        )
+        for statement in session.statements
+    ]
+    lock_indexes = [index for index, sql in enumerate(statement_sql) if "FROM marketplace_accounts" in sql]
+    target_indexes = [
+        index
+        for index, sql in enumerate(statement_sql)
+        if "FROM customer_messages" in sql and "avito_chat_id" in sql
+    ]
+    assert len(lock_indexes) == len(target_indexes) == 2
+    assert all(statement_sql[index].endswith("FOR UPDATE") for index in lock_indexes)
+    assert all(lock_index < target_index for lock_index, target_index in zip(lock_indexes, target_indexes, strict=True))
+
+
+@pytest.mark.asyncio
+async def test_chat_reingest_replaces_avito_owned_metadata_and_removes_stale_item_context() -> None:
+    account = _account()
+    existing = _stored_message(account, external_id="same-turn")
+    existing.product_id = uuid4()
+    existing.metadata_json = {
+        "avito_chat_id": "chat-123",
+        "avito_chat_type": "u2i",
+        "avito_source_message_ids": ["same-turn"],
+        "avito_source_author_ids": [654321],
+        "avito_source_created_unix": [1_700_000_110],
+        "avito_inbound_created_unix": 1_700_000_110,
+        "avito_item_id": 987654,
+        "avito_item_title": "Stale item",
+        "avito_item_url": "https://example.invalid/items/987654",
+        "preserved_key": "keep",
+    }
+    session = _Session([[existing], [], [existing], [existing]])
+    service = AvitoChatIngestService(cast(AsyncSession, session))
+
+    result = await service.ingest_turn(
+        account=account,
+        chat=_chat(chat_type="u2u"),
+        messages=[_message("same-turn", 1_700_000_120, text="Updated turn")],
+    )
+
+    assert result.outcome == "updated"
+    assert existing.product_id is None
+    assert existing.metadata_json == {
+        "preserved_key": "keep",
+        "avito_chat_id": "chat-123",
+        "avito_chat_type": "u2u",
+        "avito_source_message_ids": ["same-turn"],
+        "avito_source_author_ids": [654321],
+        "avito_source_created_unix": [1_700_000_120],
+        "avito_inbound_created_unix": 1_700_000_120,
+    }
 
 
 @pytest.mark.asyncio

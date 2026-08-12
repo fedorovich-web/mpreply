@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,7 +63,7 @@ class MarketplaceMessageIngestService:
         message.customer_text = normalized["customer_text"]
         message.customer_photos_json = normalized.get("customer_photos_json") or []
         message.last_synced_at = now
-        message.metadata_json = {**(message.metadata_json or {}), **(normalized.get("metadata_json") or {})}
+        message.metadata_json = self._merge_message_metadata(message.metadata_json, normalized)
         await self.session.flush()
         return "updated"
 
@@ -110,3 +110,15 @@ class MarketplaceMessageIngestService:
         if rating is not None and rating <= 2:
             return "high"
         return "normal"
+
+    @staticmethod
+    def _merge_message_metadata(
+        existing: dict[str, object] | None,
+        normalized: dict[str, Any],
+    ) -> dict[str, object]:
+        raw_incoming: object = normalized.get("metadata_json") or {}
+        incoming = cast(dict[str, object], raw_incoming) if isinstance(raw_incoming, dict) else {}
+        if normalized.get("type") == MessageType.CHAT.value and "avito_chat_id" in incoming:
+            retained = {key: value for key, value in (existing or {}).items() if not key.startswith("avito_")}
+            return {**retained, **incoming}
+        return {**(existing or {}), **incoming}
