@@ -33,6 +33,8 @@ def normalize_marketplace_seller_id(marketplace: str, seller_id: str | None) -> 
         normalized is None or not normalized.isdecimal() or int(normalized) <= 0
     ):
         raise bad_request("Yandex Market business ID must be a positive integer")
+    if marketplace == Marketplace.OZON.value and not normalized:
+        raise bad_request("Ozon Client ID is required")
     return normalized
 
 
@@ -149,7 +151,13 @@ class MarketplaceAccountService:
         if display_name is not None:
             account.display_name = display_name.strip()
         if seller_id is not None:
-            account.seller_id = normalize_marketplace_seller_id(account.marketplace, seller_id)
+            normalized_seller_id = normalize_marketplace_seller_id(account.marketplace, seller_id)
+            if account.marketplace == Marketplace.OZON.value and normalized_seller_id != account.seller_id:
+                account.scopes_json = {}
+                account.credentials_status = "pending_validation"
+                account.status = "pending_validation"
+                await self.scheduler.pause_account_states(account_id=account.id)
+            account.seller_id = normalized_seller_id
         if default_response_mode is not None:
             account.default_response_mode = default_response_mode.value
         if status is not None:
@@ -191,6 +199,8 @@ class MarketplaceAccountService:
         account.credentials_last_rotated_at = datetime.now(UTC)
         account.credentials_status = "pending_validation"
         account.status = "pending_validation"
+        if account.marketplace == Marketplace.OZON.value:
+            account.scopes_json = {}
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.rotated",
@@ -254,11 +264,20 @@ class MarketplaceAccountService:
                 if isinstance(scopes_value, list)
                 else []
             )
-            account.scopes_json = {
-                "validated": True,
-                "checked_at": now.isoformat(),
-                "scopes": scopes,
-            }
+            if account.marketplace == Marketplace.OZON.value:
+                expires_at = result_data.get("expires_at")
+                account.scopes_json = {
+                    "validated": True,
+                    "checked_at": now.isoformat(),
+                    "scopes": scopes,
+                    **({"expires_at": expires_at} if isinstance(expires_at, str) else {}),
+                }
+            else:
+                account.scopes_json = {
+                    "validated": True,
+                    "checked_at": now.isoformat(),
+                    "scopes": scopes,
+                }
             await self.scheduler.ensure_account_states(account=account, activate=True, now=now)
             event_status = "success"
             error_code = None
@@ -269,6 +288,8 @@ class MarketplaceAccountService:
             account.status = "error"
             account.last_error_sync_at = now
             account.error_count = int(account.error_count or 0) + 1
+            if account.marketplace == Marketplace.OZON.value:
+                account.scopes_json = {}
             event_status = "failed"
             error_code = result.error_code
             error_message_safe = result.error_message_safe
@@ -304,7 +325,7 @@ class MarketplaceAccountService:
             organization_id=account.organization_id,
             marketplace=account.marketplace,
             display_name=account.display_name,
-            seller_id=account.seller_id,
+            seller_id=None if account.marketplace == Marketplace.OZON.value else account.seller_id,
             status=account.status,
             credentials_masked=self.credentials.mask_fingerprint(account.credentials_fingerprint),
             credentials_status=account.credentials_status,
