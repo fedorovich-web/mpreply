@@ -320,8 +320,10 @@ async def test_recovery_query_compiles_to_skip_locked_dispatchability_predicates
         )
     )
     assert "FOR UPDATE SKIP LOCKED" in compiled
+    assert "replies.status = 'queued'" in compiled
     assert "replies.worker_message_id IS NULL" in compiled
     assert "replies.attempt_count < replies.max_attempts" in compiled
+    assert "replies.next_retry_at IS NULL OR replies.next_retry_at <=" in compiled
 
 
 def test_all_durable_reply_api_paths_use_safe_dispatch() -> None:
