@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.services.sync_service as sync_module
-from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.adapters.capabilities import MarketplaceCapability
 from app.core.security import CredentialService
 from app.models.enums import Marketplace, MarketplaceSyncStream, MessageType
@@ -72,12 +72,24 @@ class _FakeAdapter(MarketplaceAdapter):
         return False
 
     async def send_review_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         return AdapterResult(ok=True)
 
     async def send_question_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         return AdapterResult(ok=True)
 
@@ -87,6 +99,8 @@ class _FakeAdapter(MarketplaceAdapter):
         message_type: str,
         external_id: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         return AdapterResult(ok=True, data={"answered": False})
 

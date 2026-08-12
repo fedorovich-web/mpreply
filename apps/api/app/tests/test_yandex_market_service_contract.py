@@ -6,7 +6,7 @@ from typing import cast
 import pytest
 from fastapi import HTTPException
 
-from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageType
 from app.models.reply import Reply
@@ -46,13 +46,25 @@ class _ReplyAdapter(MarketplaceAdapter):
         return raw
 
     async def send_review_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         self.calls.append(("review", credential, external_id, reply_text, seller_id))
         return AdapterResult(ok=True)
 
     async def send_question_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         self.calls.append(("question", credential, external_id, reply_text, seller_id))
         return AdapterResult(ok=True)
@@ -63,6 +75,8 @@ class _ReplyAdapter(MarketplaceAdapter):
         message_type: str,
         external_id: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         self.calls.append(("preflight", credential, message_type, external_id, seller_id))
         return AdapterResult(ok=True, data={"answered": True})
@@ -125,7 +139,7 @@ async def test_reply_service_passes_marketplace_account_identifier_to_generic_ad
     adapter = _ReplyAdapter()
     message = cast(
         CustomerMessage,
-        SimpleNamespace(type=MessageType.QUESTION.value, external_id="77"),
+        SimpleNamespace(type=MessageType.QUESTION.value, external_id="77", metadata_json={}),
     )
     reply = cast(Reply, SimpleNamespace(reply_text="Ответ"))
 

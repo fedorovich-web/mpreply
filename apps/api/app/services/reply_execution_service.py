@@ -9,7 +9,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.adapters.registry import get_marketplace_adapter
 from app.adapters.yandex_market import YandexMarketAdapter, YandexQuestionReplyState
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
@@ -41,6 +41,7 @@ _YANDEX_QUESTION_STATES = frozenset(
     {"ABSENT", "PUBLISHED", "UNMODERATED", "BANNED", "DELETED", "UNKNOWN"}
 )
 _YANDEX_AMBIGUOUS_SEND_ERRORS = frozenset({"network_timeout", "network_error"})
+_OUTBOUND_SEND_AMBIGUOUS_ERRORS = frozenset({"network_timeout", "network_error"})
 _YANDEX_QUESTION_BLOCK_MESSAGES = {
     "yandex_question_reply_unmoderated": "Yandex Market question answer is pending moderation",
     "yandex_question_reply_banned": "Yandex Market question answer is banned",
@@ -508,6 +509,27 @@ class ReplyExecutionService:
                 False,
                 authorization.error_code,
             )
+        if (
+            account.marketplace != Marketplace.YANDEX_MARKET.value
+            and self._is_outbound_send_ambiguous_error(error_code)
+        ):
+            self._record_outbound_send_ambiguity(
+                reply=reply,
+                marketplace=message.marketplace,
+                error_code=error_code,
+                now=datetime.now(UTC),
+            )
+            await self._mark_outbound_send_ambiguous(
+                reply=reply,
+                message=message,
+                billing_actor_user_id=billing_actor_user_id,
+            )
+            return ExecuteReplyResult(
+                reply.id,
+                reply.status,
+                False,
+                "outbound_send_ambiguous",
+            )
         retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
         if retryable:
             await self._mark_retry_pending(reply=reply, message=message, result=result)
@@ -627,6 +649,7 @@ class ReplyExecutionService:
             message_type=message.type,
             external_id=message.external_id,
             seller_id=seller_id,
+            context=self._provider_message_context(message),
         )
         if not result.ok:
             return PreflightAnswerStatus(answered=None, failure=result)
@@ -719,6 +742,10 @@ class ReplyExecutionService:
         return error_code in _YANDEX_AMBIGUOUS_SEND_ERRORS
 
     @staticmethod
+    def _is_outbound_send_ambiguous_error(error_code: str | None) -> bool:
+        return error_code in _OUTBOUND_SEND_AMBIGUOUS_ERRORS
+
+    @staticmethod
     def _record_yandex_question_send_ambiguity(
         *,
         reply: Reply,
@@ -733,6 +760,27 @@ class ReplyExecutionService:
         }
         reply.metadata_json = metadata
 
+    @staticmethod
+    def _record_outbound_send_ambiguity(
+        *,
+        reply: Reply,
+        marketplace: str,
+        error_code: str,
+        now: datetime,
+    ) -> None:
+        metadata = dict(reply.metadata_json or {})
+        metadata["outbound_send_ambiguity"] = {
+            "active": True,
+            "marketplace": marketplace,
+            "reason": error_code,
+            "recorded_at": now.isoformat(),
+        }
+        reply.metadata_json = metadata
+
+    @staticmethod
+    def _provider_message_context(message: CustomerMessage) -> ProviderMessageContext:
+        return dict(message.metadata_json or {})
+
     async def _send_through_adapter(
         self,
         *,
@@ -744,11 +792,19 @@ class ReplyExecutionService:
     ) -> AdapterResult:
         if message.type == MessageType.REVIEW.value:
             return await adapter.send_review_reply(
-                credential, message.external_id, reply.reply_text, seller_id=seller_id
+                credential,
+                message.external_id,
+                reply.reply_text,
+                seller_id=seller_id,
+                context=self._provider_message_context(message),
             )
         if message.type == MessageType.QUESTION.value:
             return await adapter.send_question_reply(
-                credential, message.external_id, reply.reply_text, seller_id=seller_id
+                credential,
+                message.external_id,
+                reply.reply_text,
+                seller_id=seller_id,
+                context=self._provider_message_context(message),
             )
         return AdapterResult(
             False,
@@ -870,6 +926,47 @@ class ReplyExecutionService:
                 "state": authorization.state,
                 "error_code": error_code,
                 "ambiguity_active": self._has_yandex_question_send_ambiguity(reply),
+            },
+        )
+        await self.session.commit()
+
+    async def _mark_outbound_send_ambiguous(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        billing_actor_user_id: UUID | None,
+    ) -> None:
+        error_code = "outbound_send_ambiguous"
+        await self.entitlements.release_for_reply(
+            organization_id=reply.organization_id,
+            reply_id=reply.id,
+            reason=error_code,
+            actor_user_id=billing_actor_user_id,
+        )
+        self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+        self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        reply.error_code = error_code
+        reply.failed_reason = "Marketplace reply send outcome is ambiguous; automatic resend is blocked"
+        reply.next_retry_at = None
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="blocked",
+            error_code=error_code,
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.outbound_send_ambiguous",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=billing_actor_user_id,
+            entity_id=str(reply.id),
+            metadata={
+                "message_id": str(message.id),
+                "marketplace": message.marketplace,
+                "error_code": error_code,
             },
         )
         await self.session.commit()

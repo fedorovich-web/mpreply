@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
+
+ProviderMessageContext = Mapping[str, object]
 
 
 @dataclass(frozen=True)
@@ -50,13 +53,25 @@ class MarketplaceAdapter(ABC):
 
     @abstractmethod
     async def send_review_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         raise NotImplementedError
 
     @abstractmethod
     async def send_question_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         raise NotImplementedError
 
@@ -67,6 +82,8 @@ class MarketplaceAdapter(ABC):
         message_type: str,
         external_id: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         raise NotImplementedError
 

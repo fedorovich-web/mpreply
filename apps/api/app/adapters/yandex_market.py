@@ -5,7 +5,7 @@ from typing import Literal, cast
 
 import httpx
 
-from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.models.enums import MessageStatus, MessageType
 
 YandexQuestionReplyState = Literal[
@@ -132,7 +132,13 @@ class YandexMarketAdapter(MarketplaceAdapter):
         return self._with_page_token(result)
 
     async def send_review_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         business_id = self._business_id(seller_id)
         feedback_id = self._positive_int(external_id)
@@ -149,7 +155,13 @@ class YandexMarketAdapter(MarketplaceAdapter):
         )
 
     async def send_question_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         business_id = self._business_id(seller_id)
         question_id = self._positive_int(external_id)
@@ -228,6 +240,8 @@ class YandexMarketAdapter(MarketplaceAdapter):
         message_type: str,
         external_id: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         business_id = self._business_id(seller_id)
         entity_id = self._positive_int(external_id)

@@ -6,7 +6,7 @@ from typing import cast
 
 import pytest
 
-from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.tools.yandex_market_runtime_probe import ProbeConfig, run_probe, write_runtime_probe_report
 
 
@@ -80,6 +80,8 @@ class FakeRuntimeAdapter(MarketplaceAdapter):
         external_id: str,
         reply_text: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         assert credential and seller_id
         self.sent.append(("review", external_id, reply_text))
@@ -91,6 +93,8 @@ class FakeRuntimeAdapter(MarketplaceAdapter):
         external_id: str,
         reply_text: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         assert credential and seller_id
         self.sent.append(("question", external_id, reply_text))
@@ -102,6 +106,8 @@ class FakeRuntimeAdapter(MarketplaceAdapter):
         message_type: str,
         external_id: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         assert credential and message_type and external_id and seller_id
         return self.preflight_results.pop(0)

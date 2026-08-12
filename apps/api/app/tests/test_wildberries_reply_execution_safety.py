@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.models.customer_message import CustomerMessage
 from app.models.enums import MessageStatus, ReplyStatus, ResponseMode
 from app.models.marketplace_account import MarketplaceAccount
@@ -50,13 +50,25 @@ class _PreflightAdapter(MarketplaceAdapter):
         raise AssertionError("not used")
 
     async def send_review_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         self.send_calls += 1
         return AdapterResult(ok=True)
 
     async def send_question_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         raise AssertionError("not used")
 
@@ -66,6 +78,8 @@ class _PreflightAdapter(MarketplaceAdapter):
         message_type: str,
         external_id: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         self.preflight_calls += 1
         return self.preflight_result
@@ -193,6 +207,7 @@ def _message(reply: Reply) -> CustomerMessage:
             type="review",
             external_id="feedback-1",
             status=MessageStatus.APPROVED.value,
+            metadata_json={},
         ),
     )
 

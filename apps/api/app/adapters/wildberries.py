@@ -5,7 +5,7 @@ from typing import cast
 
 import httpx
 
-from app.adapters.base import AdapterResult, MarketplaceAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.models.enums import MessageStatus, MessageType
 
 
@@ -57,13 +57,25 @@ class WildberriesAdapter(MarketplaceAdapter):
         return await self._get("/api/v1/question", credential, params={"id": external_id})
 
     async def send_review_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         payload: dict[str, object] = {"id": external_id, "text": reply_text}
         return await self._post("/api/v1/feedbacks/answer", credential, json=payload)
 
     async def send_question_reply(
-        self, credential: str, external_id: str, reply_text: str, seller_id: str | None = None
+        self,
+        credential: str,
+        external_id: str,
+        reply_text: str,
+        seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         payload: dict[str, object] = {"id": external_id, "answer": {"text": reply_text}}
         return await self._patch("/api/v1/questions", credential, json=payload)
@@ -74,6 +86,8 @@ class WildberriesAdapter(MarketplaceAdapter):
         message_type: str,
         external_id: str,
         seller_id: str | None = None,
+        *,
+        context: ProviderMessageContext | None = None,
     ) -> AdapterResult:
         result = (
             await self.get_review(credential, external_id)
