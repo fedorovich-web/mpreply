@@ -26,6 +26,7 @@ from app.schemas.reply import (
     SafetySummary,
 )
 from app.services.manual_reply_service import ManualReplyService
+from app.services.reply_dispatch_service import dispatch_reply_safely
 from app.services.reply_execution_service import ReplyExecutionService
 from app.workers.auto_reply import enqueue_auto_reply
 
@@ -48,9 +49,10 @@ async def enqueue_automatic_reply(
 
     worker_message_id: str | None = None
     if result.reply is not None and result.queued and not result.duplicate:
-        worker_message_id = enqueue_auto_reply(result.reply.id)
-        result.reply.worker_message_id = worker_message_id
-        await session.commit()
+        worker_message_id = dispatch_reply_safely(reply=result.reply, enqueue=enqueue_auto_reply)
+        if worker_message_id is not None:
+            result.reply.worker_message_id = worker_message_id
+            await session.commit()
     elif result.reply is not None:
         worker_message_id = result.reply.worker_message_id
 
@@ -151,9 +153,10 @@ async def send_approved_manual_reply(
 
     worker_message_id = result.reply.worker_message_id
     if not result.duplicate:
-        worker_message_id = enqueue_auto_reply(result.reply.id)
-        result.reply.worker_message_id = worker_message_id
-        await session.commit()
+        worker_message_id = dispatch_reply_safely(reply=result.reply, enqueue=enqueue_auto_reply)
+        if worker_message_id is not None:
+            result.reply.worker_message_id = worker_message_id
+            await session.commit()
 
     queued = result.reply.status in {
         ReplyStatus.QUEUED.value,
@@ -240,10 +243,10 @@ async def retry_reply(
     service = ReplyExecutionService(session)
     reply = await service.prepare_retry(actor=current_user, reply_id=reply_id)
     await session.commit()
-    worker_message_id = enqueue_auto_reply(reply.id)
-    reply.worker_message_id = worker_message_id
-    reply.status = ReplyStatus.QUEUED.value
-    await session.commit()
+    worker_message_id = dispatch_reply_safely(reply=reply, enqueue=enqueue_auto_reply)
+    if worker_message_id is not None:
+        reply.worker_message_id = worker_message_id
+        await session.commit()
     return ReplyRetryResponse(
         queued=True,
         reply_id=reply.id,
