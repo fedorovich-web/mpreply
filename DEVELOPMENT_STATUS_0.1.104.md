@@ -64,7 +64,7 @@ A real seller Api-Key and Business ID are still required. The read-only probe mu
 
 ### Ozon
 
-The common foundation is ready, but the Ozon production adapter remains disabled until a current official field-level Seller API contract, credential model, pagination, reply states, errors and runtime account are available. Third-party API mirrors are not treated as implementation authority.
+The Ozon Seller API review/question adapter is enabled in this development branch. It validates `Client-Id` and `Api-Key` permissions, activates only account-scoped streams, performs bounded review/question pagination, runs exact read-only preflight before writes and blocks ambiguous outbound results from blind retry. Contract tests use synthetic `httpx.MockTransport` responses only. A real Ozon account, subscription and provider runtime remain unverified.
 
 ### Avito
 
@@ -87,5 +87,6 @@ The artifact environment does not contain a real seller credential and cannot cl
 4. Run the read-only Yandex Market probe with a real test seller account.
 5. Review the sanitized evidence and close any provider-specific discrepancies.
 6. Run one explicitly approved write probe for a test review or question.
-7. Obtain a current official Ozon Seller API contract before implementing Ozon.
-8. Bump all version contracts only when the agreed release scope and runtime checks are closed.
+7. Obtain the current official Avito Messenger API field-level contract before implementing Avito.
+8. Run a separate, explicitly approved Ozon runtime verification with a real test seller account.
+9. Bump all version contracts only when the agreed release scope and runtime checks are closed.
