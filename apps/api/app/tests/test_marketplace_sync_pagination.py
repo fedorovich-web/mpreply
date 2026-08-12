@@ -144,7 +144,11 @@ class _FakeOrganizationService:
 
 
 class _FakeCredentials:
+    def __init__(self) -> None:
+        self.calls = 0
+
     def decrypt(self, value: str) -> str:
+        self.calls += 1
         assert value == "encrypted"
         return "credential"
 
@@ -221,7 +225,15 @@ def _account() -> MarketplaceAccount:
         credentials_fingerprint="fingerprint",
         status="active",
         credentials_status="valid",
-        scopes_json={},
+        scopes_json={
+            "validated": True,
+            "scopes": [
+                "fetch_reviews",
+                "send_review_reply",
+                "fetch_questions",
+                "send_question_reply",
+            ],
+        },
         default_response_mode="inherit",
         error_count=0,
     )
@@ -395,6 +407,83 @@ async def test_manual_sync_dispatches_questions_only_capability(
     assert cast(_FakeIngest, service.ingest).external_ids == ["q1"]
     assert service.events[-1]["event_type"] == "sync.questions"
     assert service.events[-1]["status"] == "success"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("scopes", "review_pages", "question_pages", "expected_calls"),
+    [
+        (
+            ["fetch_reviews", "send_review_reply"],
+            [AdapterResult(ok=True, data=[_review("r1")], next_cursor=None)],
+            [],
+            [("reviews", None)],
+        ),
+        (
+            ["fetch_questions", "send_question_reply"],
+            [],
+            [AdapterResult(ok=True, data=[_question("q1")], next_cursor=None)],
+            [("questions", None)],
+        ),
+    ],
+)
+async def test_manual_sync_ozon_uses_only_validated_account_streams(
+    scopes: list[str],
+    review_pages: list[AdapterResult],
+    question_pages: list[AdapterResult],
+    expected_calls: list[tuple[str, None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    account = _account()
+    account.scopes_json = {"validated": True, "scopes": scopes}
+    adapter = _FakeAdapter(review_pages=review_pages, question_pages=question_pages)
+    service = _SyncHarness(account=account, adapter=adapter)
+    monkeypatch.setattr(
+        sync_module,
+        "get_marketplace_capability",
+        _capability_lookup(_reviews_and_questions_capability()),
+    )
+
+    _result_account, _stats, error_code, error_message = await service.sync_account(
+        actor=cast(User, SimpleNamespace(id=uuid4())),
+        account_id=account.id,
+    )
+
+    assert error_code is None
+    assert error_message is None
+    assert adapter.calls == expected_calls
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "scopes_json",
+    [
+        {},
+        {"validated": True, "scopes": ["fetch_reviews"]},
+    ],
+)
+async def test_manual_sync_ozon_rejects_unvalidated_or_unsupported_stream_before_decrypt(
+    scopes_json: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    account = _account()
+    account.scopes_json = scopes_json
+    adapter = _FakeAdapter(review_pages=[])
+    service = _SyncHarness(account=account, adapter=adapter)
+    monkeypatch.setattr(
+        sync_module,
+        "get_marketplace_capability",
+        _capability_lookup(_reviews_and_questions_capability()),
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.sync_account(actor=cast(User, SimpleNamespace(id=uuid4())), account_id=account.id)
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Marketplace account does not have a validated message sync stream"
+    assert cast(_FakeCredentials, service.credentials).calls == 0
+    assert adapter.calls == []
+    assert cast(_FakeSession, service.session).added == []
 
 
 @pytest.mark.asyncio

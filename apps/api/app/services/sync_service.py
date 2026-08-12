@@ -22,6 +22,7 @@ from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.services.audit_service import AuditService
 from app.services.marketplace_ingest_service import MarketplaceMessageIngestService
+from app.services.marketplace_scheduler_service import account_sync_streams
 from app.services.organization_service import OrganizationService
 
 _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
@@ -70,10 +71,15 @@ class MarketplaceSyncService:
         )
         if account.status not in {"active", "pending_validation", "error"}:
             raise bad_request("Marketplace account is not available for sync")
-        adapter = self._adapter_for(account.marketplace)
         capability = get_marketplace_capability(account.marketplace)
         if not capability.sync_streams:
             raise bad_request("Marketplace does not support message sync")
+        streams = tuple(
+            stream for stream in account_sync_streams(account, capability) if stream in capability.sync_streams
+        )
+        if not streams:
+            raise bad_request("Marketplace account does not have a validated message sync stream")
+        adapter = self._adapter_for(account.marketplace)
         credential = self.credentials.decrypt(account.credentials_encrypted)
         now = datetime.now(UTC)
         job = SyncJob(
@@ -99,7 +105,7 @@ class MarketplaceSyncService:
         error_code: str | None = None
         error_message_safe: str | None = None
         try:
-            for stream in capability.sync_streams:
+            for stream in streams:
                 outcome = await self._sync_stream_pages(
                     account=account,
                     adapter=adapter,
