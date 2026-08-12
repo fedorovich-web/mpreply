@@ -654,6 +654,45 @@ async def test_avito_retryable_read_only_preflight_failure_never_sends(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
+    "error_code",
+    [
+        pytest.param("rate_limited", id="post-429"),
+        pytest.param("marketplace_unavailable", id="post-5xx"),
+    ],
+)
+async def test_avito_post_send_retryable_http_status_is_ambiguous_and_never_resent(
+    error_code: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply()
+    message = _message(reply)
+    adapter = _AvitoConversationAdapter(
+        preflight_result=AdapterResult(ok=True, data={"answered": False}),
+        send_result=AdapterResult(ok=False, error_code=error_code),
+    )
+    service = _ExecutionHarness(reply=reply, message=message, account=_account(message))
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    first = await service.execute_reply(reply_id=reply.id)
+    second = await service.execute_reply(reply_id=reply.id)
+
+    assert first.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert first.error_code == "outbound_send_ambiguous"
+    assert first.retryable is False
+    assert second.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert second.retryable is False
+    assert adapter.events == ["preflight", "send"]
+    assert len(adapter.send_calls) == 1
+    assert service.entitlements.release_calls == 1
+    marker = reply.metadata_json["outbound_send_ambiguity"]
+    assert isinstance(marker, dict)
+    assert marker["active"] is True
+    assert marker["marketplace"] == "avito"
+    assert marker["reason"] == error_code
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
     ("marketplace", "message_type", "expected_review_calls", "expected_question_calls"),
     [
         ("wildberries", "review", 1, 0),

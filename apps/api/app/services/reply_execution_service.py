@@ -538,8 +538,16 @@ class ReplyExecutionService:
         if not is_yandex_question and (
             self._is_outbound_send_ambiguous_error(error_code)
             or (
-                account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}
+                account.marketplace == Marketplace.OZON.value
                 and error_code == "malformed_payload"
+            )
+            or (
+                account.marketplace == Marketplace.AVITO.value
+                and error_code in {
+                    "malformed_payload",
+                    "rate_limited",
+                    "marketplace_unavailable",
+                }
             )
         ):
             self._record_outbound_send_ambiguity(

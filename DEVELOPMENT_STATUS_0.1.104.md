@@ -91,6 +91,6 @@ These figures predate the Ozon implementation and are not current gate evidence.
 4. Run the read-only Yandex Market probe with a real test seller account.
 5. Review the sanitized evidence and close any provider-specific discrepancies.
 6. Run one explicitly approved write probe for a test review or question.
-7. Obtain the current official Avito Messenger API field-level contract before implementing Avito.
+7. Run read-only Avito validation with a real test account, then a separately approved text-send probe; the first official-contract Messenger slice is implemented, but live runtime behavior and production-ready sending remain unverified.
 8. Run a separate, explicitly approved Ozon runtime verification with a real test seller account.
 9. Bump all version contracts only when the agreed release scope and runtime checks are closed.
