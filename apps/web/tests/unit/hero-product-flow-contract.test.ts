@@ -29,7 +29,7 @@ describe("MPReply hero product flow visual contract", () => {
     expect(heroSource).toContain("--q-x");
     expect(heroSource).toContain("--e-x");
     expect(heroStyles).not.toContain("linear-gradient(rgb(86 105 152 / 5%) 1px, transparent 1px)");
-    expect(heroStyles).toContain("background: radial-gradient(circle at var(--spot-x) var(--spot-y)");
+    expect(heroStyles).toContain("background: var(--hero-flow-scene-surface)");
     expect(heroStyles).toContain("transform: translate3d(var(--q-x), var(--q-y), 0)");
     expect(heroStyles).toContain("transform: translate3d(var(--a-x), var(--a-y), 0)");
   });

@@ -541,6 +541,15 @@
 	--shadow-hero-product-flow-inset: inset 0 0 0 1px rgb(92 104 155 / 8%);
 	--shadow-hero-product-flow-chip: 0 0.75rem 1.45rem rgb(54 85 112 / 10%);
 	--shadow-hero-product-flow-status: 0 0.85rem 1.9rem rgb(44 57 103 / 6%), inset 0 0 0 1px rgb(92 104 155 / 8%);
+	--hero-flow-scene-surface: radial-gradient(circle at 50% 48%, rgb(99 91 255 / 7%), var(--color-transparent) 34%);
+	--hero-flow-input-surface: var(--gradient-hero-product-flow-card);
+	--hero-flow-engine-surface: var(--gradient-hero-product-flow-processor);
+	--hero-flow-engine-text: var(--color-text-primary);
+	--hero-flow-answer-surface: var(--gradient-hero-product-flow-answer);
+	--hero-flow-evidence-surface: var(--color-public-surface);
+	--hero-flow-line-input: var(--color-brand-primary);
+	--hero-flow-line-output: var(--color-success);
+	--hero-flow-shadow: var(--shadow-hero-product-flow-card);
 
 	/* Hero canvas · MPReply AI Orbital System */
 	--canvas-orbit-count: 5;

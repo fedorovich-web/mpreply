@@ -12,6 +12,7 @@ import { ReviewResolutionWorkspace } from "../components/public-site/ReviewResol
 import { JsonLd } from "../components/seo/JsonLd";
 import { createPageMetadata } from "../lib/seo";
 import { publicPricingPlans, trialOffer } from "../lib/public-pricing";
+import { publicResources } from "../lib/public-resources";
 import { siteConfig } from "../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
@@ -229,6 +230,21 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="home-section home-marketplace-proof" aria-labelledby="home-marketplace-proof-title">
+        <div className="public-container home-marketplace-proof-layout">
+          <div>
+            <p className="public-eyebrow">Площадки</p>
+            <h2 id="home-marketplace-proof-title">Работайте с обращениями с нескольких площадок</h2>
+          </div>
+          <div className="home-marketplace-proof-list" role="list" aria-label="Поддерживаемые маркетплейсы">
+            <span className="home-marketplace-source home-marketplace-source-wb" role="listitem">WB</span>
+            <span className="home-marketplace-source home-marketplace-source-ozon" role="listitem">OZ</span>
+            <span className="home-marketplace-source home-marketplace-source-ym" role="listitem">ЯМ</span>
+            <span className="home-marketplace-source home-marketplace-source-avito" role="listitem">AV</span>
+          </div>
+        </div>
+      </section>
+
       <section className="home-section home-outcomes" id="product" aria-labelledby="home-outcomes-title">
         <div className="public-container">
           <div className="home-section-heading home-section-heading-centered">
@@ -285,15 +301,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="home-platform-strip-v73" role="region" aria-label="Поддерживаемые маркетплейсы">
-            <strong>Один процесс для нескольких площадок</strong>
-            <div role="list">
-              <span className="home-marketplace-source home-marketplace-source-wb" role="listitem">WB</span>
-              <span className="home-marketplace-source home-marketplace-source-ozon" role="listitem">OZ</span>
-              <span className="home-marketplace-source home-marketplace-source-ym" role="listitem">ЯМ</span>
-              <span className="home-marketplace-source home-marketplace-source-avito" role="listitem">AV</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -380,6 +387,28 @@ export default function HomePage() {
             ))}
           </div>
 
+        </div>
+      </section>
+
+      <section className="home-section home-resources" aria-labelledby="home-resources-title">
+        <div className="public-container">
+          <div className="home-resources-heading">
+            <div className="home-section-heading home-section-heading-left">
+              <p className="public-eyebrow">Практика</p>
+              <h2 id="home-resources-title">Практические материалы для команды продавца</h2>
+            </div>
+            <Link className="button button-secondary" href="/resources">Все материалы</Link>
+          </div>
+          <div className="home-resource-preview">
+            {publicResources.slice(0, 3).map((material) => (
+              <article className="home-resource-card" key={material.title}>
+                <MarketingGlyph variant={material.icon} />
+                <span className="resource-state">{material.label}</span>
+                <h3>{material.title}</h3>
+                <p>{material.text}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -10,12 +10,17 @@ type Particle = { lane: number; offset: number; speed: number; radius: number };
 type SceneRefs = {
   question: HTMLElement | null;
   product: HTMLElement | null;
+  rules: HTMLElement | null;
   engine: HTMLElement | null;
-  proofs: Array<HTMLDivElement | null>;
+  answer: HTMLElement | null;
 };
 
-const PARTICLES: Particle[] = Array.from({ length: 34 }, (_, index) => ({
-  lane: index % 5,
+const PARTICLE_COUNT = 18;
+const FLOW_GLOW_WIDTH = 6;
+const FLOW_LINE_WIDTH = 1.75;
+
+const PARTICLES: Particle[] = Array.from({ length: PARTICLE_COUNT }, (_, index) => ({
+  lane: index % 4,
   offset: (index * 0.137) % 1,
   speed: 0.023 + (index % 6) * 0.0048,
   radius: 1.15 + (index % 3) * 0.3,
@@ -107,14 +112,14 @@ function drawConnection(
   traceCurve(context, curve);
   context.strokeStyle = gradient;
   context.globalAlpha = 0.2 + intensity * 0.08;
-  context.lineWidth = 11.5 + intensity * 1.5;
+  context.lineWidth = FLOW_GLOW_WIDTH + intensity * 1.5;
   context.shadowColor = `rgba(${colorB}, 0.8)`;
   context.shadowBlur = 20 + intensity * 14;
   context.stroke();
 
   traceCurve(context, curve);
   context.globalAlpha = 0.84 + intensity * 0.1;
-  context.lineWidth = 2 + intensity * 0.25;
+  context.lineWidth = FLOW_LINE_WIDTH + intensity * 0.25;
   context.shadowBlur = 8 + intensity * 5;
   context.stroke();
 
@@ -147,9 +152,10 @@ function drawScene(
 ): void {
   const question = refs.question;
   const product = refs.product;
+  const rules = refs.rules;
   const engine = refs.engine;
-  const [proofA, proofB, proofC] = refs.proofs;
-  if (!question || !product || !engine || !proofA || !proofB || !proofC) return;
+  const answer = refs.answer;
+  if (!question || !product || !rules || !engine || !answer) return;
 
   const rect = scene.getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -187,7 +193,7 @@ function drawScene(
   drawConnection(
     context,
     anchor(scene, product, "right", 0.48),
-    anchor(scene, engine, "left", 0.72),
+    anchor(scene, engine, "left", 0.5),
     1,
     COLORS.green,
     COLORS.cyan,
@@ -201,13 +207,13 @@ function drawScene(
 
   drawConnection(
     context,
-    anchor(scene, engine, "right", 0.34),
-    anchor(scene, proofA, "left", 0.5),
+    anchor(scene, rules, "right", 0.52),
+    anchor(scene, engine, "left", 0.72),
     2,
     COLORS.green,
     COLORS.cyan,
     time,
-    -10,
+    12,
     pointerX,
     pointerY,
     intensity,
@@ -216,11 +222,11 @@ function drawScene(
 
   drawConnection(
     context,
-    anchor(scene, engine, "right", 0.54),
-    anchor(scene, proofB, "left", 0.5),
+    anchor(scene, engine, "right", 0.52),
+    anchor(scene, answer, "left", 0.52),
     3,
     COLORS.blue,
-    COLORS.cyan,
+    COLORS.green,
     time,
     0,
     pointerX,
@@ -229,20 +235,6 @@ function drawScene(
     reducedMotion,
   );
 
-  drawConnection(
-    context,
-    anchor(scene, engine, "right", 0.74),
-    anchor(scene, proofC, "left", 0.5),
-    4,
-    COLORS.green,
-    COLORS.cyan,
-    time,
-    10,
-    pointerX,
-    pointerY,
-    intensity,
-    reducedMotion,
-  );
 }
 
 export function HeroProductFlowCanvas() {
@@ -250,10 +242,9 @@ export function HeroProductFlowCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const questionRef = useRef<HTMLElement | null>(null);
   const productRef = useRef<HTMLElement | null>(null);
+  const rulesRef = useRef<HTMLElement | null>(null);
   const engineRef = useRef<HTMLElement | null>(null);
-  const proofOneRef = useRef<HTMLDivElement | null>(null);
-  const proofTwoRef = useRef<HTMLDivElement | null>(null);
-  const proofThreeRef = useRef<HTMLDivElement | null>(null);
+  const answerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -262,16 +253,20 @@ export function HeroProductFlowCanvas() {
 
     const hero = scene.closest<HTMLElement>(".home-hero") ?? scene;
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const compactLayoutQuery = window.matchMedia("(max-width: 1240px)");
     let reducedMotion = mediaQuery.matches;
+    let compactLayout = compactLayoutQuery.matches;
     let frame: number | null = null;
     let cancelled = false;
+    let isVisible = false;
     let lastMove = performance.now();
 
     const refs: SceneRefs = {
       question: questionRef.current,
       product: productRef.current,
+      rules: rulesRef.current,
       engine: engineRef.current,
-      proofs: [proofOneRef.current, proofTwoRef.current, proofThreeRef.current],
+      answer: answerRef.current,
     };
 
     const pointer = {
@@ -284,6 +279,7 @@ export function HeroProductFlowCanvas() {
     };
 
     const resize = () => {
+      if (compactLayout) return;
       drawScene(canvas, scene, refs, performance.now() / 1000, pointer.x, pointer.y, pointer.activity, reducedMotion);
     };
 
@@ -302,8 +298,19 @@ export function HeroProductFlowCanvas() {
       pointer.targetActivity = 0;
     };
 
+    const shouldAnimate = () => !cancelled && isVisible && !document.hidden && !reducedMotion && !compactLayout;
+
+    const stopAnimation = () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = null;
+      scene.dataset.animation = "stopped";
+    };
+
     const renderFrame = (now: number) => {
-      if (cancelled) return;
+      if (!shouldAnimate()) {
+        stopAnimation();
+        return;
+      }
 
       if (now - lastMove > 800) {
         pointer.targetActivity = 0;
@@ -336,30 +343,79 @@ export function HeroProductFlowCanvas() {
       frame = window.requestAnimationFrame(renderFrame);
     };
 
+    const startAnimation = () => {
+      if (frame !== null || !shouldAnimate()) return;
+      frame = window.requestAnimationFrame(renderFrame);
+      scene.dataset.animation = "running";
+    };
+
+    const renderStaticScene = () => {
+      if (compactLayout) return;
+      drawScene(canvas, scene, refs, 0, 0, 0, 0, true);
+    };
+
+    const onCompactLayoutChange = (event: MediaQueryListEvent) => {
+      compactLayout = event.matches;
+      if (compactLayout) {
+        resetPointer();
+        stopAnimation();
+        return;
+      }
+
+      resize();
+      if (reducedMotion) renderStaticScene();
+      else startAnimation();
+    };
+
     const onReducedMotionChange = (event: MediaQueryListEvent) => {
       reducedMotion = event.matches;
-      if (reducedMotion) resetPointer();
+      if (reducedMotion) {
+        resetPointer();
+        stopAnimation();
+        renderStaticScene();
+      } else {
+        startAnimation();
+      }
     };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) stopAnimation();
+      else startAnimation();
+    };
+
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      isVisible = entry?.isIntersecting ?? false;
+      if (isVisible) startAnimation();
+      else stopAnimation();
+    });
 
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(scene);
+    visibilityObserver.observe(scene);
     hero.addEventListener("pointermove", updatePointer, { passive: true });
     hero.addEventListener("pointerenter", updatePointer, { passive: true });
     hero.addEventListener("pointerleave", resetPointer, { passive: true });
     mediaQuery.addEventListener("change", onReducedMotionChange);
+    compactLayoutQuery.addEventListener("change", onCompactLayoutChange);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     scene.dataset.ready = "true";
-    resize();
-    frame = window.requestAnimationFrame(renderFrame);
+    if (!compactLayout) {
+      resize();
+      if (reducedMotion) renderStaticScene();
+    }
 
     return () => {
       cancelled = true;
       if (frame !== null) window.cancelAnimationFrame(frame);
       resizeObserver.disconnect();
+      visibilityObserver.disconnect();
       hero.removeEventListener("pointermove", updatePointer);
       hero.removeEventListener("pointerenter", updatePointer);
       hero.removeEventListener("pointerleave", resetPointer);
       mediaQuery.removeEventListener("change", onReducedMotionChange);
+      compactLayoutQuery.removeEventListener("change", onCompactLayoutChange);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
@@ -368,6 +424,7 @@ export function HeroProductFlowCanvas() {
       ref={sceneRef}
       className={styles.scene}
       data-ready="false"
+      data-animation="stopped"
       data-mpreply-hero="commerce-answer-pipeline"
       data-testid="hero-product-flow"
       role="img"
@@ -375,9 +432,9 @@ export function HeroProductFlowCanvas() {
     >
       <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
 
-      <div className={styles.grid}>
+      <div className={styles.pipelineGrid}>
         <div className={styles.leftColumn}>
-          <div ref={(node) => { questionRef.current = node; }} className={`${styles.card} ${styles.questionCard}`}>
+          <div ref={(node) => { questionRef.current = node; }} className={`${styles.card} ${styles.questionCard}`} data-flow-role="question">
             <div className={styles.kicker}>
               <span className={styles.number}>01</span>
               <span>Вопрос покупателя</span>
@@ -386,7 +443,7 @@ export function HeroProductFlowCanvas() {
             <p className={styles.meta}>Вопрос покупателя · 10:24</p>
           </div>
 
-          <div ref={(node) => { productRef.current = node; }} className={`${styles.card} ${styles.productCard}`}>
+          <div ref={(node) => { productRef.current = node; }} className={`${styles.card} ${styles.productCard}`} data-flow-role="product">
             <div className={styles.cardHead}>
               <div>
                 <div className={styles.kicker}>
@@ -416,10 +473,21 @@ export function HeroProductFlowCanvas() {
               <div className={`${styles.spec} ${styles.specFull}`}>Полнота колодки не указана</div>
             </div>
           </div>
+
+          <div ref={(node) => { rulesRef.current = node; }} className={`${styles.card} ${styles.rulesCard}`} data-flow-role="rules">
+            <div className={styles.kicker}>
+              <span className={styles.number}>03</span>
+              <span>Правила продавца</span>
+            </div>
+            <ul className={styles.rulesList}>
+              <li>Без неподтверждённых обещаний</li>
+              <li>Только по данным</li>
+            </ul>
+          </div>
         </div>
 
         <div className={styles.engineWrap}>
-          <div ref={(node) => { engineRef.current = node; }} className={`${styles.card} ${styles.engineCard}`}>
+          <div ref={(node) => { engineRef.current = node; }} className={`${styles.card} ${styles.engineCard}`} data-flow-role="engine">
             <p className={styles.engineTitle}>Сверяет товар, отзывы и правила</p>
 
             <div className={styles.steps}>
@@ -442,10 +510,9 @@ export function HeroProductFlowCanvas() {
         </div>
 
         <div className={styles.answerWrap}>
-          <div className={`${styles.card} ${styles.answerCard}`}>
+          <div ref={(node) => { answerRef.current = node; }} className={`${styles.card} ${styles.answerCard}`} data-flow-role="answer">
             <div className={styles.answerHead}>
-              <div className={styles.answerLabel}>03 · Готовый ответ</div>
-              <div className={styles.confidence}>95%</div>
+              <div className={styles.answerLabel}>04 · Готовый ответ</div>
             </div>
 
             <p className={styles.cardTitle}>Лучше взять 41 размер.</p>
@@ -454,7 +521,7 @@ export function HeroProductFlowCanvas() {
             </p>
 
             <div className={styles.proofs}>
-              <div ref={(node) => { proofOneRef.current = node; }} className={styles.proof}>
+              <div className={styles.proof}>
                 <div className={styles.tick}>✓</div>
                 <div>
                   <strong>40-й подходит по длине</strong>
@@ -462,7 +529,7 @@ export function HeroProductFlowCanvas() {
                 </div>
               </div>
 
-              <div ref={(node) => { proofTwoRef.current = node; }} className={styles.proof}>
+              <div className={styles.proof}>
                 <div className={styles.tick}>✓</div>
                 <div>
                   <strong>41-й комфортнее для широкой стопы</strong>
@@ -470,7 +537,7 @@ export function HeroProductFlowCanvas() {
                 </div>
               </div>
 
-              <div ref={(node) => { proofThreeRef.current = node; }} className={styles.proof}>
+              <div className={styles.proof}>
                 <div className={styles.tick}>✓</div>
                 <div>
                   <strong>Запас по стельке — около 5 мм</strong>

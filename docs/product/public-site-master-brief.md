@@ -101,28 +101,26 @@ Avoid:
 - lead directly below H1;
 - two CTAs in one row while they fit;
 - marketplace proof after CTAs;
-- signature Orbital Ribbon Flow on the right;
+- signature Product Pipeline on the right;
 - no giant oval background;
 - no unexplained proof strip with `Автоответы по умолчанию / SafetyGate до отправки / Исключения — менеджеру / Повторы без дублей`.
 
-## Orbital Ribbon Flow contract
+## Product Pipeline contract
 
-Use the hybrid renderer:
+Use accessible DOM content with a lightweight Canvas signal layer:
 
-- SVG: exact thin elliptical orbits and branch trajectories;
-- Canvas: moving particles and signal events;
-- HTML: accessible labels.
+- HTML: buyer question, product context, seller rules, processing and ready answer;
+- Canvas: thin input/output paths and restrained signal particles;
+- CSS: semantic surfaces, hierarchy and theme adaptation.
 
 Required visual characteristics:
 
-- varied eccentricity, rotation, opacity and stroke weight;
-- visible but calm motion;
-- AI core;
-- one clear output flow to the ready automatic answer;
-- incoming labels for reviews, questions, negative feedback and product characteristics;
-- violet intelligence around the core;
-- cyan used as a localized signal accent, not a random blob;
-- no warped strips, wave fan, thick hoses or random cyan blob.
+- three clear inputs: buyer question, product context and seller rules;
+- one compact processing node;
+- one dominant ready answer as the endpoint;
+- visible but calm motion that pauses offscreen and while the page is hidden;
+- a static reduced-motion state;
+- no orbital metaphor, WebGL runtime, nested card grid or decorative glow system.
 
 ## LLM policy
 
@@ -221,7 +219,7 @@ A visual candidate is not complete until:
 
 - all 13 screenshot-review defects are addressed;
 - customer-first copy contains no rejected technical/roadmap language;
-- the hybrid Orbital Ribbon Flow replaces the rejected warped-strip Canvas;
+- Product Pipeline is the only current Hero direction;
 - tokens, typography, eyebrows, shadows, gradients and buttons are coherent;
 - relevant unit and design tests are GREEN;
 - typecheck/lint/build/W3C checks are GREEN where applicable;

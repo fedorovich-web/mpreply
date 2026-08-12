@@ -27,7 +27,7 @@ test("public pages emit no uncaught page errors", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-const RESPONSIVE_REVIEW_WIDTHS = [1920, 1600, 1440, 1280, 1024, 768, 430, 390, 375] as const;
+const RESPONSIVE_REVIEW_WIDTHS = [1920, 1600, 1440, 1280, 1240, 1121, 1120, 1024, 901, 900, 768, 430, 390, 375] as const;
 
 async function describeHorizontalOverflow(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
@@ -82,7 +82,32 @@ test("homepage keeps the approved Hero and the new trial/content architecture at
 
     const heading = page.locator(".home-hero-copy h1");
     await expect(heading).toBeVisible();
-    await expect(page.getByTestId("hero-product-flow")).toBeVisible();
+    const productFlow = page.getByTestId("hero-product-flow");
+    await expect(productFlow).toBeVisible();
+
+    const flowRoleBounds = await productFlow.locator("[data-flow-role]").evaluateAll((elements) =>
+      elements.map((element) => {
+        const rect = element.getBoundingClientRect();
+        return { role: element.getAttribute("data-flow-role"), left: rect.left, right: rect.right };
+      }),
+    );
+    for (const bounds of flowRoleBounds) {
+      expect(bounds.left, `${width}px ${bounds.role} must stay inside the viewport`).toBeGreaterThanOrEqual(-1);
+      expect(bounds.right, `${width}px ${bounds.role} must stay inside the viewport`).toBeLessThanOrEqual(width + 1);
+    }
+
+    if (width <= 1240) {
+      const compactLayout = await productFlow.evaluate((element) => {
+        const canvas = element.querySelector("canvas");
+        const grid = canvas?.nextElementSibling;
+        return {
+          canvasDisplay: canvas ? window.getComputedStyle(canvas).display : null,
+          gridColumns: grid ? window.getComputedStyle(grid).gridTemplateColumns.split(" ").length : 0,
+        };
+      });
+      expect(compactLayout.canvasDisplay, `${width}px Canvas must be disabled`).toBe("none");
+      expect(compactLayout.gridColumns, `${width}px Product Pipeline must use one column`).toBe(1);
+    }
 
     if (width >= 1024) {
       const metrics = await heading.evaluate((element) => {
@@ -108,9 +133,30 @@ test("homepage keeps the approved Hero and the new trial/content architecture at
 
     await expect(page.getByRole("button", { name: "Начать бесплатный тест" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Посмотреть процесс" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Работайте с обращениями с нескольких площадок" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Отзывы, вопросы и чаты — в одном автоматическом потоке" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Пакеты автоответов без подписки и срока сгорания" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Практические материалы для команды продавца" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Все материалы" })).toHaveAttribute("href", "/resources");
   }
+});
+
+test("Product Pipeline stops Canvas animation when the layout becomes compact", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const productFlow = page.getByTestId("hero-product-flow");
+  await expect(productFlow).toHaveAttribute("data-animation", "running");
+
+  await page.setViewportSize({ width: 1240, height: 1000 });
+  await expect(productFlow).toHaveAttribute("data-animation", "stopped");
+  await expect(productFlow.locator("canvas")).toBeHidden();
+  const compactGridTemplate = await productFlow.evaluate((element) => {
+    const grid = element.querySelector("canvas")?.nextElementSibling;
+    return grid ? window.getComputedStyle(grid).gridTemplateColumns : "";
+  });
+  expect(compactGridTemplate.split(" "), `Compact grid resolved to ${compactGridTemplate}`).toHaveLength(1);
 });
 
 test("trial CTA opens an accessible modal", async ({ page }) => {

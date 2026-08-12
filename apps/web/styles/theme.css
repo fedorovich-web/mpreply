@@ -182,5 +182,14 @@
 	--shadow-hero-product-flow-badge: inset 0 0 0 1px rgb(155 150 255 / 16%);
 	--shadow-hero-product-flow-inset: inset 0 0 0 1px rgb(181 190 225 / 9%);
 	--shadow-hero-product-flow-chip: 0 0.75rem 1.45rem rgb(1 5 20 / 18%);
+	--hero-flow-scene-surface: radial-gradient(circle at 50% 48%, rgb(155 150 255 / 12%), var(--color-transparent) 36%);
+	--hero-flow-input-surface: var(--gradient-hero-product-flow-card);
+	--hero-flow-engine-surface: var(--gradient-hero-product-flow-processor);
+	--hero-flow-engine-text: var(--color-text-primary);
+	--hero-flow-answer-surface: var(--gradient-hero-product-flow-answer);
+	--hero-flow-evidence-surface: var(--hero-product-flow-evidence-row-bg);
+	--hero-flow-line-input: var(--color-brand-primary);
+	--hero-flow-line-output: var(--color-success);
+	--hero-flow-shadow: var(--shadow-hero-product-flow-card);
 
 }

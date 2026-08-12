@@ -8012,7 +8012,7 @@
 	}
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1240px) {
 	.home-hero-layout {
 		grid-template-columns: minmax(0, 1fr) !important;
 		gap: var(--public-hero-v50-layout-gap-small) !important;
@@ -10040,6 +10040,106 @@
 	max-width: var(--public-v90-card-icon-size) !important;
 	max-height: var(--public-v90-card-icon-size) !important;
 	margin: 0 0 var(--space-1) !important;
+}
+
+/* Product Pipeline closure: compact coverage proof and shared editorial resources. */
+.home-marketplace-proof {
+	display: block;
+	margin-top: 0;
+	padding-block: var(--space-8);
+	background: var(--color-public-section-subtle);
+}
+
+.home-marketplace-proof-layout {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--home-grid-gap);
+	padding: var(--home-card-padding);
+	border-radius: var(--radius-3xl);
+	background: var(--color-public-surface);
+	box-shadow: var(--shadow-home-card);
+}
+
+.home-marketplace-proof-layout h2 {
+	max-width: var(--home-section-copy-max-width);
+	margin: var(--space-3) 0 0;
+	font-size: var(--font-size-h3);
+}
+
+.home-marketplace-proof-list {
+	display: flex;
+	flex: none;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: var(--space-3);
+}
+
+.home-resources {
+	background: var(--color-public-section-subtle);
+}
+
+.home-resources-heading {
+	display: flex;
+	align-items: end;
+	justify-content: space-between;
+	gap: var(--home-grid-gap);
+}
+
+.home-resource-preview {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--home-grid-gap);
+	margin-top: var(--home-section-gap);
+}
+
+.home-resource-card {
+	display: grid;
+	align-content: start;
+	gap: var(--space-4);
+	min-height: var(--size-home-card-min-height);
+	padding: var(--home-card-padding);
+	border-radius: var(--radius-xl);
+	background: var(--color-public-surface);
+	box-shadow: var(--shadow-home-card);
+}
+
+.home-resource-card h3,
+.home-resource-card p {
+	margin: 0;
+}
+
+.home-resource-card h3 {
+	color: var(--color-text-primary);
+	font-size: var(--font-size-h3);
+	line-height: var(--line-height-heading-relaxed);
+}
+
+.home-resource-card p {
+	color: var(--color-text-secondary);
+	line-height: var(--line-height-copy);
+}
+
+@media (max-width: 960px) {
+	.home-resource-preview {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 720px) {
+	.home-marketplace-proof-layout,
+	.home-resources-heading {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.home-marketplace-proof-list {
+		justify-content: flex-start;
+	}
+
+	.home-resource-preview {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 .feature-capability-card h3,
@@ -12212,4 +12312,22 @@
 .public-trial-modal-backdrop {
 	background: transparent !important;
 	backdrop-filter: none !important;
+}
+
+/* Product Pipeline responsive closure must follow all versioned desktop overrides. */
+.home-hero {
+	background: var(--gradient-public-hero) !important;
+}
+
+@media (max-width: 1240px) {
+	.home-hero-layout {
+		grid-template-columns: minmax(0, 1fr) !important;
+		gap: var(--public-hero-v50-layout-gap-small) !important;
+	}
+
+	.home-hero-copy,
+	.home-hero-copy h1,
+	.home-hero-lead {
+		max-width: var(--home-hero-copy-max-width) !important;
+	}
 }

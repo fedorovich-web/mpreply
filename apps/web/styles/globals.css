@@ -2,7 +2,6 @@
 @import './tokens.css';
 @import './theme.css';
 @import './public-site.css';
-@import './hero-canvas-recovery.css';
 
 * {
 	box-sizing: border-box;

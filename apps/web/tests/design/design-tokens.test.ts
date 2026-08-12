@@ -7,18 +7,6 @@ const themeSource = readFileSync(resolve(process.cwd(), "styles/theme.css"), "ut
 const globalStyleSource = readFileSync(resolve(process.cwd(), "styles/globals.css"), "utf8");
 const publicStyleSource = readFileSync(resolve(process.cwd(), "styles/public-site.css"), "utf8");
 const fontStyleSource = readFileSync(resolve(process.cwd(), "styles/fonts.css"), "utf8");
-const canvasSource = readFileSync(
-  resolve(process.cwd(), "components/public-site/HeroFlowCanvas.tsx"),
-  "utf8",
-);
-const canvasModelSource = readFileSync(
-  resolve(process.cwd(), "components/public-site/HeroFlowModel.ts"),
-  "utf8",
-);
-const canvasWebglSource = readFileSync(
-  resolve(process.cwd(), "components/public-site/HeroFlowWebGL.ts"),
-  "utf8",
-);
 const productFlowSource = readFileSync(
   resolve(process.cwd(), "components/public-site/HeroProductFlowCanvas.tsx"),
   "utf8",
@@ -27,7 +15,6 @@ const productFlowStyleSource = readFileSync(
   resolve(process.cwd(), "components/public-site/HeroProductFlowCanvas.module.css"),
   "utf8",
 );
-const canvasSceneSources = [canvasSource, canvasModelSource, canvasWebglSource].join("\n");
 const cursorSource = readFileSync(
   resolve(process.cwd(), "components/public-site/PublicCustomCursor.tsx"),
   "utf8",
@@ -178,6 +165,15 @@ describe("MPReply design tokens", () => {
       "--hero-product-flow-success-text",
       "--hero-product-flow-warning-soft",
       "--hero-product-flow-warning-text",
+      "--hero-flow-scene-surface",
+      "--hero-flow-input-surface",
+      "--hero-flow-engine-surface",
+      "--hero-flow-engine-text",
+      "--hero-flow-answer-surface",
+      "--hero-flow-evidence-surface",
+      "--hero-flow-line-input",
+      "--hero-flow-line-output",
+      "--hero-flow-shadow",
       "--pricing-pack-volume-text",
       "--color-info",
       "--color-info-text",
@@ -325,10 +321,11 @@ describe("MPReply design tokens", () => {
     expect(productFlowSource).toContain("function anchor(");
     expect(productFlowSource).toContain("getBoundingClientRect");
     expect(productFlowSource).toContain("ResizeObserver");
-    expect(productFlowSource).not.toContain("IntersectionObserver");
+    expect(productFlowSource).toContain("IntersectionObserver");
+    expect(productFlowSource).toContain('document.addEventListener("visibilitychange"');
     expect(productFlowSource).not.toContain("new THREE.WebGLRenderer");
-    expect(productFlowStyleSource).toContain("background: radial-gradient(circle at var(--spot-x) var(--spot-y)");
-    expect(productFlowStyleSource).toContain("box-shadow: 0 1.125rem 2.625rem rgb(55 76 115 / 10%)");
+    expect(productFlowStyleSource).toContain("background: var(--hero-flow-scene-surface)");
+    expect(productFlowStyleSource).toContain("box-shadow: var(--hero-flow-shadow)");
     expect(productFlowStyleSource).not.toContain(".workspace");
   });
 
@@ -347,7 +344,9 @@ describe("MPReply design tokens", () => {
     expect(productFlowSource).toContain("mediaQuery.addEventListener");
     expect(productFlowSource).toContain('hero.addEventListener("pointermove"');
     expect(productFlowSource).toContain('hero.addEventListener("pointerleave"');
-    expect(productFlowStyleSource).toContain("@media (max-width: 760px)");
+    expect(productFlowStyleSource).toContain("@media (max-width: 1240px)");
+    expect(productFlowSource).toContain('matchMedia("(max-width: 1240px)")');
+    expect(productFlowSource).toContain("!compactLayout");
     expect(productFlowSource).not.toContain("damp(0, motion.pointerX");
   });
 
@@ -361,10 +360,8 @@ describe("MPReply design tokens", () => {
     expect(token("--font-weight-public-label")).toBe("var(--font-weight-semibold)");
     expect(token("--font-weight-public-title")).toBe("var(--font-weight-bold)");
     expect(publicStyleSource).not.toMatch(/font-weight:\s*(?:570|620|760|780|820|850|900)\b/);
-    expect(canvasSceneSources).not.toMatch(/font-weight:\s*(?:570|620|760|780|820|850|900)\b/);
-    // Product-flow Hero remains a contained legacy CSS module until the dedicated
-    // design-system consolidation stage. Public/global CSS must still use the
-    // four approved public weight tokens.
+    // Product-flow Hero is contained in a CSS module while sharing the four
+    // approved public weight tokens.
     expect(productFlowStyleSource.match(/font-weight:\s*(?:[0-9]{3})\b/g)?.length ?? 0).toBeLessThanOrEqual(15);
   });
 

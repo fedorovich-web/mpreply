@@ -7,7 +7,13 @@ Version: 0.1.31
 
 **Operational clarity. Quiet intelligence. Marketplace confidence.**
 
-## Approved public brand direction · Electric Pulse / Light Orbital Intelligence
+## Current public Hero · Product Pipeline
+
+The production Hero is Product Pipeline: buyer question + product context + seller rules -> AI processing -> verified ready answer. The ready answer is the visual endpoint. The orbital/WebGL Hero is rejected and is not a current production direction.
+
+The scene is light-first and built from accessible DOM content plus a lightweight Canvas signal layer. Motion pauses offscreen and while the document is hidden, and reduced-motion mode renders a static state. Dark mode preserves the same hierarchy through semantic theme tokens.
+
+## Approved public brand direction · Electric Pulse / Product Pipeline
 
 The current public-site authority is **light-first**. The default MPReply experience is a premium light AI/B2B SaaS environment; dark mode is a first-class secondary theme exposed through the existing theme switcher, not the visual starting point for the product.
 
@@ -21,7 +27,7 @@ Explicitly excluded as master references:
 - OEME / OEMA.
 - AgentVoice.
 
-These references are inputs, not templates. MPReply must retain its own product narrative, original code, Electric Pulse identity, AUTO-FIRST positioning and MPReply AI Orbital System signature visual.
+These references are inputs, not templates. MPReply must retain its own product narrative, original code, Electric Pulse identity, AUTO-FIRST positioning and Product Pipeline signature visual.
 
 Approved public palette:
 - Primary violet: `#635BFF`.
@@ -36,8 +42,8 @@ Approved hero behavior:
 - Desktop H1 must wrap naturally in Russian, normally within 2–4 visual lines; the design must never force a five-to-seven-line heading through an artificially narrow copy column.
 - Desktop hero CTAs remain side by side while they physically fit; stacking starts only at a justified mobile breakpoint.
 - The hero background and Canvas ambient layer form one composition rather than two disconnected panels.
-- The Canvas is the **MPReply AI Orbital System**: one central MPReply AI planet, five distinct semantic planets and five mathematically exact interwoven elliptical orbits.
-- Motion must be perceptible but restrained: each semantic planet moves slowly only on its own ellipse, with non-identical 35–47 second periods; no random drift, bouncing or detached nodes.
+- The Canvas connects three explicit inputs — buyer question, product context and seller rules — through a compact processing node to one dominant ready answer.
+- Motion is restrained signal flow rather than decoration; there is no 3D renderer, orbital metaphor or heavy client runtime.
 - Reduced motion, off-screen pausing, page-visibility pausing, bounded DPR/FPS and mobile complexity reduction are mandatory.
 
 Public component contract:
@@ -49,7 +55,7 @@ Public component contract:
 - Custom cursor behavior is progressive enhancement for fine-pointer desktop devices only and must disappear for touch/coarse pointer or reduced motion.
 
 Dark public theme:
-- The same content architecture, typography, spacing, component geometry and MPReply AI Orbital System semantics are preserved.
+- The same content architecture, typography, spacing, component geometry and Product Pipeline semantics are preserved.
 - Do not create a separate cyberpunk site or simply invert colors.
 - Narrow auxiliary references may inform specific dark-theme qualities only: Songo for signal/data motion, ZeroDrift for safety/trust language, and NeuraCore for restrained ambient depth.
 
@@ -61,7 +67,7 @@ MPReply should feel like a reliable operating system for marketplace communicati
 
 ## Secondary public routes · 0.1.15
 
-The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resources` and `contacts` routes use the same approved public language as the homepage: Electric Pulse / Light Orbital Intelligence, customer-first Russian copy, unified typography, shared eyebrow and button contracts, primarily solid tonal surfaces and shadows instead of decorative border grids or generic gradient backgrounds.
+The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resources` and `contacts` routes use the same approved public language as the homepage: Electric Pulse / Product Pipeline, customer-first Russian copy, unified typography, shared eyebrow and button contracts, primarily solid tonal surfaces and shadows instead of decorative border grids or generic gradient backgrounds.
 
 The public site describes the target launch product. It must not display internal roadmap labels such as `MVP`, `planned`, `coming soon`, `readiness`, adapter/runtime state or other implementation-stage terminology. Current engineering truth remains documented in `PRODUCT.md` and repository code; public claims must match production reality by launch.
 
@@ -83,13 +89,7 @@ Authorization is visible but never treated as a frontend security boundary: owne
 
 The public visual system is stabilized around shared tokens for typography, surfaces, spacing, motion, buttons, focus states and responsive behavior. Later patches may evolve art direction, but they must not create a second design system or component-local visual scales.
 
-For the current Hero, the approved signature visual is the MPReply AI Orbital System:
-
-- SVG owns five exact, distinct, interwoven elliptical orbit paths;
-- HTML/CSS owns the central MPReply AI planet and the five semantic planets;
-- JavaScript computes each planet position from the same ellipse geometry used by SVG, so no planet can visually detach from its orbit;
-- the five semantic roles are `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила` and `Готовый ответ`;
-- reduced motion, viewport pausing, page-visibility pausing and FPS caps remain mandatory.
+For the current Hero, the approved signature visual is Product Pipeline: `Вопрос покупателя`, `Контекст товара` and `Правила продавца` flow through a compact verification step to `Готовый ответ`. Reduced motion, viewport pausing and page-visibility pausing remain mandatory.
 
 The public site is light-first. Dark mode is a semantic adaptation of the same component and token system, not a separate cyberpunk redesign.
 
@@ -244,11 +244,11 @@ The corrected contract is systemic rather than selector-specific:
 Design-token tests now verify light/dark text/surface pairs, semantic status pairs, brand-soft pairs, on-brand/on-danger button contrast, opacity invariants and CSS usage contracts. A permanent dark-theme axe suite covers representative public and authenticated product surfaces so the same class of regression cannot remain invisible until a later push.
 
 
-## Visual Recovery · 0.1.28
+## Historical rejected Hero directions · 0.1.28–0.1.32
 
 Patch 0.1.28 remains a local visual-recovery candidate until the user approves rendered screenshots and required gates are verified. Historical confirmed GREEN baseline remains 0.1.26.
 
-### Approved art direction
+### Historical art direction
 
 - Light-first public environment.
 - Electric Pulse brand roles: `#635BFF` primary, `#00E5E5` accent and a controlled `#5148E8 → #00E5E5` gradient family.
@@ -256,9 +256,9 @@ Patch 0.1.28 remains a local visual-recovery candidate until the user approves r
 - Qipeline, OEME/OEMA and AgentVoice are not master references.
 - Narrow references may be used only for specific mechanisms: ZeroDrift AI (trust/safety), C-SCORE (risk visualization), Songo (signal motion), NeuraCore (ambient motion), Lernium (B2B storytelling) and Guardbase (security communication).
 
-### Hero · MPReply AI Orbital System
+### Historical Hero · MPReply AI Orbital System
 
-The approved 0.1.28 Canvas contract is:
+The rejected 0.1.28 Canvas contract was:
 
 - one central matte soft-3D planet with the `MPReply AI` title and `AI-ответы для маркетплейсов` descriptor integrated into its equatorial band;
 - exactly five clearly distinguishable semantic planets: `Вопрос покупателя`, `Товары и каталог`, `Данные о товарах`, `Контекст и правила`, `Готовый ответ`;
@@ -333,7 +333,7 @@ The 0.1.30 implementation contract was:
 
 The user rejected the real 0.1.30 browser render because the result still read as pseudo-3D: flat orbit lines, insufficient depth, weak central volume and a composition materially different from the accepted reference.
 
-## Real WebGL orbital scene · 0.1.31
+## Historical real WebGL orbital scene · 0.1.31
 
 Patch 0.1.31 replaces the rejected CSS-3D foundation with a real Three.js/WebGL scene. The accepted composition target remains one central matte MPReply AI planet, five semantic planets and five intertwined 3D orbits, rendered with actual camera perspective, lighting and depth-buffer occlusion.
 
@@ -354,11 +354,11 @@ The 0.1.31 implementation contract is:
 
 This remains a visual candidate until explicit browser review by the user. Technical GREEN gates and a standalone WebGL QA harness do not replace acceptance of the real application render.
 
-## Visual Recovery · 0.1.32 accepted-reference WebGL rebuild
+## Historical Visual Recovery · 0.1.32 WebGL rebuild
 
-Version `0.1.32` supersedes the rejected `0.1.27–0.1.31` Hero candidates. Historical confirmed baseline remains `0.1.26`; the new implementation is a separate accepted-reference rebuild rather than a continuation of the rejected `0.1.31` visual result.
+Version `0.1.32` once superseded the rejected `0.1.27–0.1.31` Hero candidates. This section is historical and is superseded by the current Product Pipeline contract above.
 
-The authoritative Hero contract is now:
+The historical 0.1.32 Hero contract was:
 
 - exact customer-facing copy: `От вопроса покупателя к готовому ответу — автоматически.`;
 - one real Three.js/WebGL scene with a perspective camera and depth-buffer occlusion;

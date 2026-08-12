@@ -184,14 +184,8 @@ The 0.1.29 candidate keeps the accepted product metaphor but rebuilds the implem
 
 The 0.1.29 Hero candidate was visually rejected because the orbit system still read as flat projected SVG geometry in the user's real browser. Version 0.1.30 replaced that foundation with native CSS 3D orbital planes, deterministic front/back occlusion, one matte layered MPReply AI core, five semantic planets and pause-safe slow motion. No WebGL or Three.js runtime was added in 0.1.30. The user subsequently rejected the real browser render because it still read as pseudo-3D rather than the accepted spatial reference.
 
-## Visual Recovery · 0.1.31 real WebGL orbital scene
+## Historical rejected Hero experiments · 0.1.31–0.1.32
 
-The 0.1.31 candidate supersedes the visually rejected 0.1.30 CSS-3D implementation. The Hero scene now uses a lazy-loaded Three.js/WebGL renderer with one central matte MPReply AI planet, five semantic 3D planets and five independent mathematical 3D orbits. The same orbit equations generate both each rendered line and the moving planet position, while the WebGL depth buffer provides real front/back occlusion.
+The Three.js/WebGL orbital work from `0.1.31–0.1.32` is historical and rejected. It is not a current visual baseline or implementation authority.
 
-The performance contract is strict: the WebGL chunk loads only when the Hero approaches the viewport; device pixel ratio is capped adaptively; no GLTF, HDRI, postprocessing, particle system or physics runtime is used; animation pauses outside the viewport and while the document is hidden; reduced-motion users receive a static resolved state; all geometries, materials, textures and the WebGL context are disposed on unmount. This remains a visual candidate until explicit user browser acceptance.
-
-## Visual Recovery · 0.1.32 authoritative Hero state
-
-The `0.1.27–0.1.31` Hero attempts are rejected and must not be used as visual baselines. Version `0.1.32` restores the accepted customer story and implements the selected orbital metaphor with a real, performance-bounded Three.js/WebGL scene.
-
-The Hero explains the product sequence directly: buyer question → products/catalog → product data → context/rules → ready answer. The text, primary and secondary calls to action, and three trust benefits remain semantic HTML and do not depend on the 3D runtime. The scene is enhancement-only, loads near the viewport, pauses when inactive, respects reduced motion and falls back safely when WebGL is unavailable.
+The current authoritative Hero is the lightweight Product Pipeline defined in `DESIGN.md` and `docs/product/public-site-master-brief.md`: buyer question → product context → seller rules → processing → ready answer. Its semantic HTML cards remain usable without Canvas; Canvas only draws the desktop connection layer and pauses when the scene, page or supported desktop layout is inactive.

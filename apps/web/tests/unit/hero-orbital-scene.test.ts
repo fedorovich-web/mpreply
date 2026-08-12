@@ -59,6 +59,6 @@ describe("MPReply hero product flow scene", () => {
     expect(heroStyleSource).not.toContain(".workspace");
     expect(heroStyleSource).not.toContain("linear-gradient(rgb(86 105 152 / 5%) 1px, transparent 1px)");
     expect(heroStyleSource).toContain("border: 0");
-    expect(heroStyleSource).toContain("background: radial-gradient(circle at var(--spot-x) var(--spot-y)");
+    expect(heroStyleSource).toContain("background: var(--hero-flow-scene-surface)");
   });
 });

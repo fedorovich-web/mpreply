@@ -1,8 +1,8 @@
-# Respio Public Site Design Closure Implementation Plan
+# MPReply Public Site Design Closure Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close the Respio public-site design around the existing Product Pipeline Hero, one coherent homepage story, consistent public-route styling, responsive/dark-mode polish, and removal of the rejected orbital/WebGL Hero path.
+**Goal:** Close the MPReply public-site design around the existing Product Pipeline Hero, one coherent homepage story, consistent public-route styling, responsive/dark-mode polish, and removal of the rejected orbital/WebGL Hero path.
 
 **Architecture:** Keep `HeroProductFlowCanvas` as the single production Hero renderer and evolve it in place: three concrete inputs feed one compact processing node and one dominant answer outcome through lightweight Canvas connections. Keep global visual roles in `styles/tokens.css` / `styles/theme.css`, keep page-level composition in `styles/public-site.css`, and keep Hero-specific geometry in its CSS module. Reuse the existing Playwright public-site/a11y/visual suites instead of creating a parallel QA system.
 

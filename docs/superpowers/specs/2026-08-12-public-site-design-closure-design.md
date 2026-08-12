@@ -1,4 +1,4 @@
-# Respio public site design closure
+# MPReply public site design closure
 
 Date: 2026-08-12  
 Branch: `work/0.1.104-yandex-foundation`  
@@ -81,7 +81,7 @@ It communicates three ideas only:
 - evidence/context verification;
 - rule/risk validation.
 
-Avoid a tall card containing another grid of cards. The node may use a darker or stronger branded tonal treatment if contrast is accessible in both themes, but it must remain part of the Respio system rather than becoming a separate cyberpunk object.
+Avoid a tall card containing another grid of cards. The node may use a darker or stronger branded tonal treatment if contrast is accessible in both themes, but it must remain part of the MPReply system rather than becoming a separate cyberpunk object.
 
 ### 2.6 Final answer
 
@@ -129,7 +129,7 @@ The Hero must explain value before implementation details. Avoid internal terms 
 The homepage is normalized to one deliberate sequence:
 
 1. Hero — product promise plus Product Pipeline 2.0 scene;
-2. marketplace coverage — where Respio works;
+2. marketplace coverage — where MPReply works;
 3. customer outcomes — what repetitive work is removed and what quality is preserved;
 4. concrete question-to-answer proof — deeper product example if needed beyond the Hero summary;
 5. one operational workspace — reviews/questions/chats and daily handling;
@@ -155,7 +155,7 @@ Use a mix of:
 - editorial text + product artifact compositions;
 - deliberately different density between explanatory and conversion sections.
 
-Do not redesign every section into a unique micro-system. All sections remain inside one Respio visual language.
+Do not redesign every section into a unique micro-system. All sections remain inside one MPReply visual language.
 
 ## 6. Public routes
 

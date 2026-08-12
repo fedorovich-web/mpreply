@@ -3,6 +3,7 @@ import { MarketingGlyph } from "../../components/public-site/MarketingGlyph";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { PublicTrialCta } from "../../components/public-site/PublicTrialCta";
 import { createPageMetadata } from "../../lib/seo";
+import { publicResources } from "../../lib/public-resources";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Материалы об ответах на отзывы и вопросы маркетплейсов",
@@ -10,45 +11,6 @@ export const metadata: Metadata = createPageMetadata({
     "Практические материалы об автоматизации ответов: работа с негативом, база знаний, правила автопубликации и контроль качества ИИ.",
   path: "/resources",
 });
-
-const materials = [
-  {
-    icon: "reviews" as const,
-    label: "Гайд",
-    title: "Как отвечать на отзывы без шаблонных фраз",
-    text: "Структура сильного ответа, работа с оценкой, повторной покупкой и негативом без лишних обещаний.",
-  },
-  {
-    icon: "questions" as const,
-    label: "Чек-лист",
-    title: "Какие данные нужны ИИ для точного ответа о товаре",
-    text: "Характеристики, инструкции, FAQ, ограничения и правила, которые снижают риск выдуманных фактов.",
-  },
-  {
-    icon: "settings" as const,
-    label: "Методика",
-    title: "Как настроить безопасную автопубликацию",
-    text: "Стоп-темы, категории риска, сценарии автопубликации и настройки согласования.",
-  },
-  {
-    icon: "chats" as const,
-    label: "Практика",
-    title: "Чаты покупателей: где ИИ помогает, а где нужен менеджер",
-    text: "Типовые вопросы, сохранение контекста диалога, эскалация и контроль обещаний продавца.",
-  },
-  {
-    icon: "history" as const,
-    label: "Аудит",
-    title: "Какие метрики показывают качество автоматизации",
-    text: "Доля автопубликации, правки, эскалации, скорость ответа и повторяющиеся пробелы в данных.",
-  },
-  {
-    icon: "context" as const,
-    label: "Шаблон",
-    title: "Структура базы знаний продавца",
-    text: "Как хранить информацию о товарах, совместимости, возвратах и ограничениях, чтобы ответы были единообразными.",
-  },
-] as const;
 
 export default function ResourcesPage() {
   return (
@@ -78,7 +40,7 @@ export default function ResourcesPage() {
       <div className="public-section">
         <div className="public-container">
           <div className="resource-library-grid resource-library-grid-v73">
-            {materials.map((material) => (
+            {publicResources.map((material) => (
               <article className="resource-library-card" key={material.title}>
                 <MarketingGlyph variant={material.icon} />
                 <span className="resource-state">{material.label}</span>
