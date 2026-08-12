@@ -320,7 +320,22 @@ class ReplyExecutionService:
         ):
             return ExecuteReplyResult(reply.id, reply.status, False, "execution_in_progress")
         if reply.attempt_count >= reply.max_attempts:
-            await self._mark_final_failure(reply, "retry_limit_exhausted", "Retry limit exhausted")
+            message = await self._get_message(reply.message_id)
+            if message.marketplace == Marketplace.AVITO.value:
+                account = await self._get_account(message.marketplace_account_id)
+                avito_guard = await self._guard_avito_execution(
+                    reply=reply,
+                    message=message,
+                    account=account,
+                )
+                if avito_guard is not None:
+                    return avito_guard
+            await self._mark_final_failure(
+                reply=reply,
+                message=message,
+                error_code="retry_limit_exhausted",
+                reason="Retry limit exhausted",
+            )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         if reply.status not in {
             ReplyStatus.QUEUED.value,
@@ -332,23 +347,13 @@ class ReplyExecutionService:
 
         message = await self._get_message(reply.message_id)
         account = await self._get_account(message.marketplace_account_id)
-        if (
-            account.marketplace == Marketplace.AVITO.value
-            and (account.status != "active" or account.credentials_status != "valid")
-        ):
-            await self._mark_avito_account_blocked(reply=reply, message=message)
-            return ExecuteReplyResult(reply.id, reply.status, False, "invalid_credentials")
-        if (
-            account.marketplace == Marketplace.AVITO.value
-            and self._has_outbound_send_ambiguity(reply, marketplace=Marketplace.AVITO.value)
-        ):
-            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
-            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
-            reply.error_code = "outbound_send_ambiguous"
-            reply.failed_reason = "Marketplace reply send outcome is ambiguous; automatic resend is blocked"
-            reply.next_retry_at = None
-            await self.session.commit()
-            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        avito_guard = await self._guard_avito_execution(
+            reply=reply,
+            message=message,
+            account=account,
+        )
+        if avito_guard is not None:
+            return avito_guard
         if not self._ozon_message_scope_is_allowed(account=account, message=message):
             await self._mark_ozon_scope_blocked(reply=reply, message=message)
             return ExecuteReplyResult(reply.id, reply.status, False, "insufficient_scope")
@@ -977,8 +982,20 @@ class ReplyExecutionService:
         reply: Reply,
         message: CustomerMessage,
     ) -> None:
-        self._transition_reply(reply, ReplyStatus.BLOCKED.value)
-        self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
+        billing_actor_user_id = reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by
+        if reply.status in {ReplyStatus.SENDING.value, ReplyStatus.FAILED.value}:
+            await self.entitlements.release_for_reply(
+                organization_id=reply.organization_id,
+                reply_id=reply.id,
+                reason="invalid_credentials",
+                actor_user_id=billing_actor_user_id,
+            )
+        if reply.status == ReplyStatus.FAILED.value:
+            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        else:
+            self._transition_reply(reply, ReplyStatus.BLOCKED.value)
+            self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
         reply.error_code = "invalid_credentials"
         reply.failed_reason = "Avito account is inactive or credentials are not valid"
         reply.next_retry_at = None
@@ -994,11 +1011,33 @@ class ReplyExecutionService:
             action=f"{action_prefix}.failed",
             entity_type="reply",
             organization_id=reply.organization_id,
-            actor_user_id=reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by,
+            actor_user_id=billing_actor_user_id,
             entity_id=str(reply.id),
             metadata={"attempt_count": reply.attempt_count, "error_code": reply.error_code},
         )
         await self.session.commit()
+
+    async def _guard_avito_execution(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        account: MarketplaceAccount,
+    ) -> ExecuteReplyResult | None:
+        if account.marketplace != Marketplace.AVITO.value:
+            return None
+        if self._has_outbound_send_ambiguity(reply, marketplace=Marketplace.AVITO.value):
+            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+            reply.error_code = "outbound_send_ambiguous"
+            reply.failed_reason = "Marketplace reply send outcome is ambiguous; automatic resend is blocked"
+            reply.next_retry_at = None
+            await self.session.commit()
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        if account.status != "active" or account.credentials_status != "valid":
+            await self._mark_avito_account_blocked(reply=reply, message=message)
+            return ExecuteReplyResult(reply.id, reply.status, False, "invalid_credentials")
+        return None
 
     async def _mark_sent(
         self,
@@ -1253,14 +1292,20 @@ class ReplyExecutionService:
         )
         await self.session.commit()
 
-    async def _mark_final_failure(self, reply: Reply, error_code: str, reason: str) -> None:
+    async def _mark_final_failure(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        error_code: str,
+        reason: str,
+    ) -> None:
         await self.entitlements.release_for_reply(
             organization_id=reply.organization_id,
             reply_id=reply.id,
             reason=error_code,
             actor_user_id=reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by,
         )
-        message = await self._get_message(reply.message_id)
         if reply.status != ReplyStatus.FAILED.value:
             self._transition_reply(reply, ReplyStatus.FAILED.value)
         self._transition_message(message, MessageStatus.FAILED.value)

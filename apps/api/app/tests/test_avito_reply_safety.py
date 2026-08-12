@@ -530,6 +530,75 @@ async def test_active_avito_ambiguity_marker_blocks_requeued_execution_before_en
 
 
 @pytest.mark.asyncio
+async def test_active_avito_ambiguity_marker_overrides_exhausted_attempt_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply(
+        metadata={
+            "outbound_send_ambiguity": {
+                "active": True,
+                "marketplace": "avito",
+                "reason": "network_error",
+            }
+        }
+    )
+    reply.attempt_count = reply.max_attempts
+    message = _message(reply)
+    adapter = _AvitoConversationAdapter(
+        preflight_result=AdapterResult(ok=True, data={"answered": False}),
+        send_result=AdapterResult(ok=True, data={"marketplace_reply_id": "must-not-send"}),
+    )
+    service = _ExecutionHarness(reply=reply, message=message, account=_account(message))
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    result = await service.execute_reply(reply_id=reply.id)
+
+    assert result.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert result.error_code == "outbound_send_ambiguous"
+    assert message.status == MessageStatus.NEEDS_MANUAL_CHECK.value
+    assert service.entitlements.reserve_calls == 0
+    assert service.entitlements.release_calls == 0
+    assert adapter.events == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("status", "credentials_status"),
+    [("disabled", "valid"), ("active", "revoked")],
+)
+async def test_invalid_avito_account_moves_failed_retry_to_manual_review_without_provider(
+    status: str,
+    credentials_status: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reply = _reply()
+    reply.status = ReplyStatus.FAILED.value
+    reply.attempt_count = 1
+    message = _message(reply)
+    message.status = MessageStatus.FAILED.value
+    adapter = _AvitoConversationAdapter(
+        preflight_result=AdapterResult(ok=True, data={"answered": False}),
+        send_result=AdapterResult(ok=True, data={"marketplace_reply_id": "must-not-send"}),
+    )
+    service = _ExecutionHarness(
+        reply=reply,
+        message=message,
+        account=_account(message, status=status, credentials_status=credentials_status),
+    )
+    monkeypatch.setattr(reply_execution_service, "get_marketplace_adapter", _adapter_lookup(adapter))
+
+    result = await service.execute_reply(reply_id=reply.id)
+
+    assert result.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert result.error_code == "invalid_credentials"
+    assert message.status == MessageStatus.NEEDS_MANUAL_CHECK.value
+    assert service.entitlements.reserve_calls == 0
+    assert service.entitlements.release_calls == 1
+    assert service.credentials.calls == 0
+    assert adapter.events == []
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("error_code", "expected_status"),
     [
