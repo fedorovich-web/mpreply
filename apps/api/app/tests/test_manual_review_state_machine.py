@@ -28,6 +28,10 @@ def test_rejected_review_returns_to_draft() -> None:
     ensure_message_transition(MessageStatus.WAITING_REVIEW.value, MessageStatus.NEEDS_MANUAL_CHECK.value)
 
 
+def test_needs_reply_can_transition_to_answered_for_external_reconciliation() -> None:
+    ensure_message_transition(MessageStatus.NEEDS_REPLY.value, MessageStatus.ANSWERED.value)
+
+
 def test_invalid_direct_draft_to_sent_transition_is_rejected() -> None:
     with pytest.raises(ValueError, match="Invalid reply transition"):
         ensure_reply_transition(ReplyStatus.DRAFT.value, ReplyStatus.SENT.value)
