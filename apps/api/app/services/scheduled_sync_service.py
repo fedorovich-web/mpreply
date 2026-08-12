@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Literal
+from typing import Literal, cast
 from uuid import UUID
 
 from sqlalchemy import select
@@ -11,9 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.base import AdapterResult, MarketplaceAdapter
 from app.adapters.capabilities import get_marketplace_capability
 from app.adapters.registry import get_marketplace_adapter
+from app.adapters.yandex_market import YandexMarketAdapter
 from app.core.config import get_settings
 from app.core.security import CredentialService
-from app.models.enums import MarketplaceSyncStateStatus, MarketplaceSyncStream
+from app.models.enums import Marketplace, MarketplaceSyncStateStatus, MarketplaceSyncStream
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
@@ -22,8 +23,21 @@ from app.models.usage_event import UsageEvent
 from app.services.audit_service import AuditService
 from app.services.marketplace_ingest_service import MarketplaceMessageIngestService
 from app.services.marketplace_scheduler_service import retry_delay_seconds
+from app.services.yandex_question_sync_policy import (
+    YandexQuestionBackfillCheckpoint,
+    advance_yandex_question_window,
+    initialize_yandex_question_backfill,
+    load_yandex_question_backfill,
+    record_yandex_question_page,
+    store_yandex_question_backfill,
+)
 
 _RETRYABLE_ERRORS = {"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"}
+_PAUSING_ERRORS = {
+    "sync_cursor_cycle",
+    "sync_page_limit_exceeded",
+    "yandex_backfill_checkpoint_invalid",
+}
 
 
 @dataclass(frozen=True)
@@ -31,6 +45,13 @@ class ScheduledSyncResult:
     status: Literal["success", "failed", "paused", "stale"]
     retryable: bool = False
     error_code: str | None = None
+
+
+@dataclass(frozen=True)
+class ScheduledPageFetch:
+    result: AdapterResult
+    phase: Literal["backfill", "incremental"]
+    checkpoint: YandexQuestionBackfillCheckpoint | None = None
 
 
 class ScheduledMarketplaceSyncService:
@@ -93,13 +114,14 @@ class ScheduledMarketplaceSyncService:
             metadata={"stream": state.stream, "sync_job_id": str(job.id)},
         )
 
-        fetch_result = await self._fetch(
+        page_fetch = await self._fetch_scheduled_page(
             adapter=adapter,
-            stream=state.stream,
+            account=account,
+            state=state,
             credential=credential,
-            cursor=cursor_before,
-            seller_id=account.seller_id,
+            now=now,
         )
+        fetch_result = page_fetch.result
         if not fetch_result.ok:
             return await self._record_failure(
                 account=account,
@@ -108,6 +130,33 @@ class ScheduledMarketplaceSyncService:
                 result=fetch_result,
                 now=now,
             )
+
+        historical_next_checkpoint: YandexQuestionBackfillCheckpoint | None = None
+        if page_fetch.phase == "backfill":
+            if page_fetch.checkpoint is None:
+                return await self._record_failure(
+                    account=account,
+                    state=state,
+                    job=job,
+                    result=AdapterResult(
+                        False,
+                        error_code="yandex_backfill_checkpoint_invalid",
+                        error_message_safe="Yandex question backfill checkpoint is invalid",
+                    ),
+                    now=now,
+                )
+            historical_next_checkpoint, pagination_failure = self._prepare_yandex_backfill_progress(
+                checkpoint=page_fetch.checkpoint,
+                next_cursor=fetch_result.next_cursor,
+            )
+            if pagination_failure is not None:
+                return await self._record_failure(
+                    account=account,
+                    state=state,
+                    job=job,
+                    result=pagination_failure,
+                    now=now,
+                )
 
         created = 0
         updated = 0
@@ -123,32 +172,55 @@ class ScheduledMarketplaceSyncService:
                 skipped += 1
 
         next_cursor = fetch_result.next_cursor
-        state.cursor = next_cursor
         state.status = MarketplaceSyncStateStatus.IDLE.value
         state.last_success_at = now
         state.last_error_at = None
         state.consecutive_failures = 0
         state.lease_token = None
         state.lease_expires_at = None
-        if next_cursor is None:
-            state.last_cycle_completed_at = now
-            state.cycle_started_at = None
-            state.next_run_at = now + timedelta(seconds=self.settings.marketplace_sync_interval_seconds)
+        if historical_next_checkpoint is not None:
+            state.cursor = None
+            state.metadata_json = store_yandex_question_backfill(
+                state.metadata_json or {}, historical_next_checkpoint
+            )
+            if historical_next_checkpoint.completed:
+                state.last_cycle_completed_at = now
+                state.cycle_started_at = None
+                state.next_run_at = now + timedelta(
+                    seconds=self.settings.marketplace_sync_interval_seconds
+                )
+            else:
+                state.next_run_at = now + timedelta(seconds=1)
         else:
-            state.next_run_at = now + timedelta(seconds=1)
+            state.cursor = next_cursor
+            if next_cursor is None:
+                state.last_cycle_completed_at = now
+                state.cycle_started_at = None
+                state.next_run_at = now + timedelta(
+                    seconds=self.settings.marketplace_sync_interval_seconds
+                )
+            else:
+                state.next_run_at = now + timedelta(seconds=1)
 
         account.last_success_sync_at = now
         account.status = "active"
         account.credentials_status = "valid"
+        safe_cursor_before = None if page_fetch.phase == "backfill" else cursor_before
+        safe_cursor_after = None if page_fetch.phase == "backfill" else next_cursor
+        phase_metadata = self._phase_metadata(
+            page_fetch=page_fetch,
+            next_checkpoint=historical_next_checkpoint,
+        )
         job.status = "success"
         job.finished_at = now
         job.stats_json = {
             "stream": state.stream,
-            "cursor_before": cursor_before,
-            "cursor_after": next_cursor,
+            "cursor_before": safe_cursor_before,
+            "cursor_after": safe_cursor_after,
             "created": created,
             "updated": updated,
             "skipped": skipped,
+            **phase_metadata,
         }
         if created > 0:
             self.session.add(
@@ -171,11 +243,12 @@ class ScheduledMarketplaceSyncService:
             status="success",
             metadata={
                 "sync_job_id": str(job.id),
-                "cursor_before": cursor_before,
-                "cursor_after": next_cursor,
+                "cursor_before": safe_cursor_before,
+                "cursor_after": safe_cursor_after,
                 "created": created,
                 "updated": updated,
                 "skipped": skipped,
+                **phase_metadata,
             },
         )
         await self.audit.write(
@@ -191,11 +264,126 @@ class ScheduledMarketplaceSyncService:
                 "created": created,
                 "updated": updated,
                 "skipped": skipped,
-                "has_more": next_cursor is not None,
+                "has_more": (
+                    not historical_next_checkpoint.completed
+                    if historical_next_checkpoint is not None
+                    else next_cursor is not None
+                ),
+                **phase_metadata,
             },
         )
         await self.session.flush()
         return ScheduledSyncResult(status="success")
+
+    async def _fetch_scheduled_page(
+        self,
+        *,
+        adapter: MarketplaceAdapter,
+        account: MarketplaceAccount,
+        state: MarketplaceSyncState,
+        credential: str,
+        now: datetime,
+    ) -> ScheduledPageFetch:
+        is_yandex_question = (
+            account.marketplace == Marketplace.YANDEX_MARKET.value
+            and state.stream == MarketplaceSyncStream.QUESTIONS.value
+        )
+        if not is_yandex_question:
+            return ScheduledPageFetch(
+                result=await self._fetch(
+                    adapter=adapter,
+                    stream=state.stream,
+                    credential=credential,
+                    cursor=state.cursor,
+                    seller_id=account.seller_id,
+                ),
+                phase="incremental",
+            )
+        try:
+            checkpoint = load_yandex_question_backfill(state.metadata_json or {})
+        except ValueError:
+            return ScheduledPageFetch(
+                result=AdapterResult(
+                    False,
+                    error_code="yandex_backfill_checkpoint_invalid",
+                    error_message_safe="Yandex question backfill checkpoint is invalid",
+                ),
+                phase="backfill",
+            )
+        if checkpoint is None:
+            checkpoint = initialize_yandex_question_backfill(now)
+            state.metadata_json = store_yandex_question_backfill(
+                state.metadata_json or {}, checkpoint
+            )
+        if checkpoint.completed:
+            return ScheduledPageFetch(
+                result=await self._fetch(
+                    adapter=adapter,
+                    stream=state.stream,
+                    credential=credential,
+                    cursor=state.cursor,
+                    seller_id=account.seller_id,
+                ),
+                phase="incremental",
+            )
+        yandex_adapter = cast(YandexMarketAdapter, adapter)
+        result = await yandex_adapter.fetch_questions_window(
+            credential,
+            date_from=checkpoint.window.start,
+            date_to=checkpoint.window.end,
+            cursor=checkpoint.page_token,
+            seller_id=account.seller_id,
+        )
+        return ScheduledPageFetch(result=result, phase="backfill", checkpoint=checkpoint)
+
+    @staticmethod
+    def _prepare_yandex_backfill_progress(
+        *,
+        checkpoint: YandexQuestionBackfillCheckpoint,
+        next_cursor: str | None,
+    ) -> tuple[YandexQuestionBackfillCheckpoint | None, AdapterResult | None]:
+        try:
+            page_checkpoint = record_yandex_question_page(checkpoint, next_cursor)
+        except ValueError as exc:
+            message = str(exc)
+            if "page token repeated" in message:
+                error_code = "sync_cursor_cycle"
+                safe_message = "Yandex Market question pagination cursor repeated"
+            elif "page limit exceeded" in message:
+                error_code = "sync_page_limit_exceeded"
+                safe_message = "Yandex Market question pagination exceeded the safe page limit"
+            else:
+                error_code = "yandex_backfill_checkpoint_invalid"
+                safe_message = "Yandex question backfill checkpoint is invalid"
+            return None, AdapterResult(
+                False,
+                error_code=error_code,
+                error_message_safe=safe_message,
+            )
+        if next_cursor is None:
+            page_checkpoint = advance_yandex_question_window(page_checkpoint)
+        return page_checkpoint, None
+
+    @staticmethod
+    def _phase_metadata(
+        *,
+        page_fetch: ScheduledPageFetch,
+        next_checkpoint: YandexQuestionBackfillCheckpoint | None,
+    ) -> dict[str, object]:
+        metadata: dict[str, object] = {"sync_phase": page_fetch.phase}
+        if page_fetch.phase != "backfill" or page_fetch.checkpoint is None:
+            return metadata
+        metadata.update(
+            {
+                "window_start": page_fetch.checkpoint.window.start.isoformat(),
+                "window_end": page_fetch.checkpoint.window.end.isoformat(),
+                "window_page_count": page_fetch.checkpoint.page_count + 1,
+                "backfill_completed": bool(
+                    next_checkpoint is not None and next_checkpoint.completed
+                ),
+            }
+        )
+        return metadata
 
     async def _record_failure(
         self,
@@ -207,10 +395,16 @@ class ScheduledMarketplaceSyncService:
         now: datetime,
     ) -> ScheduledSyncResult:
         state.consecutive_failures = int(state.consecutive_failures or 0) + 1
-        state.status = MarketplaceSyncStateStatus.ERROR.value
         state.last_error_at = now
-        retry_delay = result.retry_after_seconds or retry_delay_seconds(state.consecutive_failures)
-        state.next_run_at = now + timedelta(seconds=min(max(retry_delay, 1), 3600))
+        if result.error_code in _PAUSING_ERRORS:
+            state.status = MarketplaceSyncStateStatus.PAUSED.value
+            state.next_run_at = None
+        else:
+            state.status = MarketplaceSyncStateStatus.ERROR.value
+            retry_delay = result.retry_after_seconds or retry_delay_seconds(
+                state.consecutive_failures
+            )
+            state.next_run_at = now + timedelta(seconds=min(max(retry_delay, 1), 3600))
         state.lease_token = None
         state.lease_expires_at = None
         account.last_error_sync_at = now
@@ -249,7 +443,11 @@ class ScheduledMarketplaceSyncService:
         )
         await self.session.flush()
         return ScheduledSyncResult(
-            status="failed",
+            status=(
+                "paused"
+                if result.error_code in _PAUSING_ERRORS
+                else "failed"
+            ),
             retryable=result.error_code in _RETRYABLE_ERRORS,
             error_code=result.error_code,
         )
