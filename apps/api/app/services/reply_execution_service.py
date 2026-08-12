@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, MarketplaceAdapter
 from app.adapters.registry import get_marketplace_adapter
+from app.adapters.yandex_market import YandexMarketAdapter, YandexQuestionReplyState
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
 from app.core.config import get_settings
 from app.core.errors import bad_request, conflict, not_found
@@ -18,7 +19,7 @@ from app.core.security import CredentialService
 from app.models.ai_draft import AIDraft
 from app.models.automation_rule import AutomationRule
 from app.models.customer_message import CustomerMessage
-from app.models.enums import MessageStatus, MessageType, ReplyStatus, ResponseMode
+from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.reply import Reply
@@ -36,6 +37,17 @@ _WRITE_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
 _RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"})
 _BLOCKING_MARKETPLACE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
+_YANDEX_QUESTION_STATES = frozenset(
+    {"ABSENT", "PUBLISHED", "UNMODERATED", "BANNED", "DELETED", "UNKNOWN"}
+)
+_YANDEX_AMBIGUOUS_SEND_ERRORS = frozenset({"network_timeout", "network_error"})
+_YANDEX_QUESTION_BLOCK_MESSAGES = {
+    "yandex_question_reply_unmoderated": "Yandex Market question answer is pending moderation",
+    "yandex_question_reply_banned": "Yandex Market question answer is banned",
+    "yandex_question_reply_deleted": "Yandex Market question answer is deleted and requires manual review",
+    "yandex_question_reconciliation_unknown": "Yandex Market question reply state could not be confirmed",
+    "yandex_question_send_ambiguous": "Yandex Market question send outcome is ambiguous; automatic resend is blocked",
+}
 
 
 @dataclass(frozen=True)
@@ -55,6 +67,15 @@ class ExecuteReplyResult:
     retryable: bool
     error_code: str | None = None
     externally_already_answered: bool = False
+
+
+@dataclass(frozen=True)
+class YandexQuestionWriteAuthorization:
+    state: YandexQuestionReplyState
+    allowed: bool
+    externally_already_answered: bool = False
+    error_code: str | None = None
+    answer_id: str | None = None
 
 
 class ReplyExecutionService:
@@ -311,28 +332,82 @@ class ReplyExecutionService:
 
         credential = self.credentials.decrypt(account.credentials_encrypted)
         adapter = self._adapter_for(account)
-        preflight = await self._preflight_answer_status(
-            adapter=adapter,
-            credential=credential,
-            seller_id=account.seller_id,
-            message=message,
+        is_yandex_question = (
+            account.marketplace == Marketplace.YANDEX_MARKET.value
+            and message.type == MessageType.QUESTION.value
         )
-        if preflight is True:
-            reply = await self._get_reply_for_update(reply_id)
-            message = await self._get_message(reply.message_id)
-            await self.entitlements.release_for_reply(
-                organization_id=reply.organization_id,
-                reply_id=reply.id,
-                reason="externally_already_answered",
-                actor_user_id=billing_actor_user_id,
-            )
-            await self._mark_sent(
-                reply=reply,
+        if is_yandex_question:
+            authorization = await self._authorize_yandex_question_write(
+                adapter=cast(YandexMarketAdapter, adapter),
+                credential=credential,
+                seller_id=account.seller_id,
                 message=message,
-                marketplace_reply_id=None,
-                externally_already_answered=True,
+                reply=reply,
             )
-            return ExecuteReplyResult(reply.id, reply.status, False, externally_already_answered=True)
+            if authorization.externally_already_answered:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                await self.entitlements.release_for_reply(
+                    organization_id=reply.organization_id,
+                    reply_id=reply.id,
+                    reason="externally_already_answered",
+                    actor_user_id=billing_actor_user_id,
+                )
+                await self._mark_sent(
+                    reply=reply,
+                    message=message,
+                    marketplace_reply_id=authorization.answer_id,
+                    externally_already_answered=True,
+                )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    False,
+                    externally_already_answered=True,
+                )
+            if not authorization.allowed:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                await self._mark_yandex_question_write_blocked(
+                    reply=reply,
+                    message=message,
+                    authorization=authorization,
+                    billing_actor_user_id=billing_actor_user_id,
+                )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    False,
+                    authorization.error_code,
+                )
+        else:
+            preflight = await self._preflight_answer_status(
+                adapter=adapter,
+                credential=credential,
+                seller_id=account.seller_id,
+                message=message,
+            )
+            if preflight is True:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                await self.entitlements.release_for_reply(
+                    organization_id=reply.organization_id,
+                    reply_id=reply.id,
+                    reason="externally_already_answered",
+                    actor_user_id=billing_actor_user_id,
+                )
+                await self._mark_sent(
+                    reply=reply,
+                    message=message,
+                    marketplace_reply_id=None,
+                    externally_already_answered=True,
+                )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    False,
+                    externally_already_answered=True,
+                )
 
         result = await self._send_through_adapter(
             adapter=adapter,
@@ -358,6 +433,29 @@ class ReplyExecutionService:
             return ExecuteReplyResult(reply.id, reply.status, False)
 
         error_code = result.error_code or "marketplace_error"
+        if is_yandex_question and self._is_yandex_question_send_ambiguous_error(error_code):
+            self._record_yandex_question_send_ambiguity(
+                reply=reply,
+                error_code=error_code,
+                now=datetime.now(UTC),
+            )
+            authorization = YandexQuestionWriteAuthorization(
+                state="UNKNOWN",
+                allowed=False,
+                error_code="yandex_question_send_ambiguous",
+            )
+            await self._mark_yandex_question_write_blocked(
+                reply=reply,
+                message=message,
+                authorization=authorization,
+                billing_actor_user_id=billing_actor_user_id,
+            )
+            return ExecuteReplyResult(
+                reply.id,
+                reply.status,
+                False,
+                authorization.error_code,
+            )
         retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
         if retryable:
             await self._mark_retry_pending(reply=reply, message=message, result=result)
@@ -468,6 +566,87 @@ class ReplyExecutionService:
         answered = result_data.get("answered")
         return answered if isinstance(answered, bool) else None
 
+    async def _authorize_yandex_question_write(
+        self,
+        *,
+        adapter: YandexMarketAdapter,
+        credential: str,
+        seller_id: str | None,
+        message: CustomerMessage,
+        reply: Reply,
+    ) -> YandexQuestionWriteAuthorization:
+        result = await adapter.reconcile_question_reply(
+            credential,
+            message.external_id,
+            seller_id=seller_id,
+        )
+        if not result.ok or not isinstance(result.data, dict):
+            return YandexQuestionWriteAuthorization(
+                state="UNKNOWN",
+                allowed=False,
+                error_code="yandex_question_reconciliation_unknown",
+            )
+        data = cast(dict[str, object], result.data)
+        raw_state = str(data.get("state") or "UNKNOWN").upper()
+        state = cast(
+            YandexQuestionReplyState,
+            raw_state if raw_state in _YANDEX_QUESTION_STATES else "UNKNOWN",
+        )
+        answer_id_value = data.get("answer_id")
+        answer_id = str(answer_id_value) if answer_id_value is not None else None
+        if state == "PUBLISHED":
+            return YandexQuestionWriteAuthorization(
+                state=state,
+                allowed=False,
+                externally_already_answered=True,
+                answer_id=answer_id,
+            )
+        if state == "ABSENT":
+            if self._has_yandex_question_send_ambiguity(reply):
+                return YandexQuestionWriteAuthorization(
+                    state=state,
+                    allowed=False,
+                    error_code="yandex_question_send_ambiguous",
+                )
+            return YandexQuestionWriteAuthorization(state=state, allowed=True)
+        error_codes = {
+            "UNMODERATED": "yandex_question_reply_unmoderated",
+            "BANNED": "yandex_question_reply_banned",
+            "DELETED": "yandex_question_reply_deleted",
+            "UNKNOWN": "yandex_question_reconciliation_unknown",
+        }
+        return YandexQuestionWriteAuthorization(
+            state=state,
+            allowed=False,
+            error_code=error_codes[state],
+            answer_id=answer_id,
+        )
+
+    @staticmethod
+    def _has_yandex_question_send_ambiguity(reply: Reply) -> bool:
+        metadata = reply.metadata_json if isinstance(reply.metadata_json, dict) else {}
+        marker = metadata.get("yandex_question_send_ambiguity")
+        return isinstance(marker, dict) and marker.get("active") is True
+
+    @staticmethod
+    def _is_yandex_question_send_ambiguous_error(error_code: str | None) -> bool:
+        return error_code in _YANDEX_AMBIGUOUS_SEND_ERRORS
+
+    @staticmethod
+    def _record_yandex_question_send_ambiguity(
+        *,
+        reply: Reply,
+        error_code: str,
+        now: datetime,
+    ) -> None:
+        metadata = dict(reply.metadata_json or {})
+        metadata["yandex_question_send_ambiguity"] = {
+            "active": True,
+            "reason": error_code,
+            "recorded_at": now.isoformat(),
+        }
+        reply.metadata_json = metadata
+
     async def _send_through_adapter(
         self,
         *,
@@ -550,6 +729,61 @@ class ReplyExecutionService:
                 "marketplace": message.marketplace,
                 "attempt_count": reply.attempt_count,
                 "externally_already_answered": externally_already_answered,
+            },
+        )
+        await self.session.commit()
+
+    async def _mark_yandex_question_write_blocked(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        authorization: YandexQuestionWriteAuthorization,
+        billing_actor_user_id: UUID | None,
+    ) -> None:
+        error_code = authorization.error_code or "yandex_question_reconciliation_unknown"
+        await self.entitlements.release_for_reply(
+            organization_id=reply.organization_id,
+            reply_id=reply.id,
+            reason=error_code,
+            actor_user_id=billing_actor_user_id,
+        )
+        self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+        self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        reply.error_code = error_code
+        reply.failed_reason = _YANDEX_QUESTION_BLOCK_MESSAGES.get(
+            error_code,
+            "Yandex Market question send requires manual review",
+        )
+        reply.next_retry_at = None
+        reply.metadata_json = {
+            **(reply.metadata_json or {}),
+            "yandex_question_reconciliation": {
+                "state": authorization.state,
+                "answer_id": authorization.answer_id,
+                "blocked": True,
+                "checked_at": datetime.now(UTC).isoformat(),
+            },
+        }
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="blocked",
+            error_code=error_code,
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.yandex_question_write_blocked",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=billing_actor_user_id,
+            entity_id=str(reply.id),
+            metadata={
+                "message_id": str(message.id),
+                "state": authorization.state,
+                "error_code": error_code,
+                "ambiguity_active": self._has_yandex_question_send_ambiguity(reply),
             },
         )
         await self.session.commit()
