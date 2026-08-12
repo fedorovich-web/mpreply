@@ -486,7 +486,7 @@ class ScheduledMarketplaceSyncService:
                 error_message_safe="Ozon pagination checkpoint is invalid",
             )
         next_page_count = page_count + 1
-        if next_page_count > _OZON_SCHEDULED_PAGE_LIMIT:
+        if next_cursor is not None and next_page_count >= _OZON_SCHEDULED_PAGE_LIMIT:
             return AdapterResult(
                 False,
                 error_code="sync_page_limit_exceeded",

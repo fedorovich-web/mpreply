@@ -193,7 +193,7 @@ async def test_scheduled_ozon_sync_pauses_when_advancing_cursors_exceed_persiste
 ) -> None:
     account = _account()
     state = _state(account)
-    adapter = _OzonPages(["A", "B", "C"])
+    adapter = _OzonPages(["A", "B"])
     service = _service(state, account)
     monkeypatch.setattr(scheduled_module, "get_marketplace_capability", _get_reviews_capability)
     monkeypatch.setattr(scheduled_module, "get_marketplace_adapter", _adapter_lookup(adapter))
@@ -201,13 +201,31 @@ async def test_scheduled_ozon_sync_pauses_when_advancing_cursors_exceed_persiste
 
     first = await _execute_page(service, state)
     second = await _execute_page(service, state)
-    third = await _execute_page(service, state)
+
+    assert first.status == "success"
+    assert second.status == "paused"
+    assert second.error_code == "sync_page_limit_exceeded"
+    assert adapter.calls == [None, "A"]
+
+
+@pytest.mark.asyncio
+async def test_scheduled_ozon_sync_allows_limit_page_only_when_it_completes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    account = _account()
+    state = _state(account)
+    adapter = _OzonPages(["A", None])
+    service = _service(state, account)
+    monkeypatch.setattr(scheduled_module, "get_marketplace_capability", _get_reviews_capability)
+    monkeypatch.setattr(scheduled_module, "get_marketplace_adapter", _adapter_lookup(adapter))
+    monkeypatch.setattr(scheduled_module, "_OZON_SCHEDULED_PAGE_LIMIT", 2)
+
+    first = await _execute_page(service, state)
+    second = await _execute_page(service, state)
 
     assert first.status == "success"
     assert second.status == "success"
-    assert third.status == "paused"
-    assert third.error_code == "sync_page_limit_exceeded"
-    assert adapter.calls == [None, "A", "B"]
+    assert adapter.calls == [None, "A"]
 
 
 @pytest.mark.asyncio
