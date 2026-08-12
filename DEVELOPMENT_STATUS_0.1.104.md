@@ -70,14 +70,14 @@ The Ozon Seller API review/question adapter is enabled in this development branc
 
 Avito remains a separate conversation integration: chats, thread cursors, messages, delivery/read states, attachments and webhook or polling semantics.
 
-## Verification performed on this exact project copy
+## Historical verification inherited by this development branch
 
-- Python compileall: PASS;
-- runtime-probe unit tests: `6 passed`;
-- Yandex adapter and runtime-probe matrix: `18 passed`;
-- available backend suite in the artifact container: `180 passed` (six existing modules excluded because `pwdlib`, `asyncpg` or `redis` are unavailable).
+- Python compileall: PASS at the recorded Yandex runtime-kit snapshot;
+- runtime-probe unit tests at that snapshot: `6 passed`;
+- Yandex adapter and runtime-probe matrix at that snapshot: `18 passed`;
+- backend suite available in the artifact container at that snapshot: `180 passed` (six modules were excluded because `pwdlib`, `asyncpg` or `redis` were unavailable).
 
-The artifact environment does not contain a real seller credential and cannot claim external runtime success. Exact Windows Ruff 0.14.9, strict Pyright 1.1.411, full pytest, frontend gates, release gate and container gate remain mandatory before commit.
+These figures predate the Ozon implementation and are not current gate evidence. The artifact environment does not contain a real seller credential and cannot claim external runtime success. Current strict Pyright, Ruff, full pytest, frontend, release and container gates remain mandatory before completion.
 
 ## Recommended next order
 
