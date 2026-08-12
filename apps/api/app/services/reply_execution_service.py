@@ -73,6 +73,13 @@ class ExecuteReplyResult:
     retryable: bool
     error_code: str | None = None
     externally_already_answered: bool = False
+    retry_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class PreflightAnswerStatus:
+    answered: bool | None
+    failure: AdapterResult | None = None
 
 
 @dataclass(frozen=True)
@@ -289,6 +296,19 @@ class ReplyExecutionService:
         reply = await self._get_reply_for_update(reply_id)
         if reply.status == ReplyStatus.SENT.value:
             return ExecuteReplyResult(reply.id, reply.status, False)
+        now = datetime.now(UTC)
+        if (
+            reply.status == ReplyStatus.RETRY_PENDING.value
+            and reply.next_retry_at is not None
+            and reply.next_retry_at > now
+        ):
+            return ExecuteReplyResult(
+                reply.id,
+                reply.status,
+                True,
+                "retry_not_due",
+                retry_at=reply.next_retry_at,
+            )
         settings = get_settings()
         if (
             reply.status == ReplyStatus.SENDING.value
@@ -387,13 +407,13 @@ class ReplyExecutionService:
                     authorization.error_code,
                 )
         else:
-            preflight = await self._preflight_answer_status(
+            preflight = await self._preflight_answer_state(
                 adapter=adapter,
                 credential=credential,
                 seller_id=account.seller_id,
                 message=message,
             )
-            if preflight is True:
+            if preflight.answered is True:
                 reply = await self._get_reply_for_update(reply_id)
                 message = await self._get_message(reply.message_id)
                 await self.entitlements.release_for_reply(
@@ -414,6 +434,25 @@ class ReplyExecutionService:
                     False,
                     externally_already_answered=True,
                 )
+            if preflight.failure is not None:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                preflight_error = preflight.failure
+                error_code = preflight_error.error_code or "marketplace_error"
+                retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
+                if retryable:
+                    await self._mark_retry_pending(
+                        reply=reply,
+                        message=message,
+                        result=preflight_error,
+                    )
+                else:
+                    await self._mark_terminal_marketplace_failure(
+                        reply=reply,
+                        message=message,
+                        result=preflight_error,
+                    )
+                return ExecuteReplyResult(reply.id, reply.status, retryable, error_code)
 
         result = await self._send_through_adapter(
             adapter=adapter,
@@ -559,18 +598,53 @@ class ReplyExecutionService:
         seller_id: str | None,
         message: CustomerMessage,
     ) -> bool | None:
+        return (
+            await self._preflight_answer_state(
+                adapter=adapter,
+                credential=credential,
+                seller_id=seller_id,
+                message=message,
+            )
+        ).answered
+
+    async def _preflight_answer_state(
+        self,
+        *,
+        adapter: MarketplaceAdapter,
+        credential: str,
+        seller_id: str | None,
+        message: CustomerMessage,
+    ) -> PreflightAnswerStatus:
         result = await adapter.has_existing_reply(
             credential=credential,
             message_type=message.type,
             external_id=message.external_id,
             seller_id=seller_id,
         )
+        if not result.ok:
+            return PreflightAnswerStatus(answered=None, failure=result)
         payload = result.data
-        if not result.ok or not isinstance(payload, dict):
-            return None
+        if not isinstance(payload, dict):
+            return PreflightAnswerStatus(
+                answered=None,
+                failure=AdapterResult(
+                    False,
+                    error_code="marketplace_malformed_response",
+                    error_message_safe="Marketplace preflight response is malformed",
+                ),
+            )
         result_data = cast(dict[str, object], payload)
         answered = result_data.get("answered")
-        return answered if isinstance(answered, bool) else None
+        if isinstance(answered, bool):
+            return PreflightAnswerStatus(answered=answered)
+        return PreflightAnswerStatus(
+            answered=None,
+            failure=AdapterResult(
+                False,
+                error_code="marketplace_malformed_response",
+                error_message_safe="Marketplace preflight response is malformed",
+            ),
+        )
 
     async def _authorize_yandex_question_write(
         self,
