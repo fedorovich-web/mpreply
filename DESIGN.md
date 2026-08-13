@@ -377,6 +377,7 @@ The gradient brand mark and the single gradient Hero accent are intentional matc
 
 The cabinet is an operations-first interface. The primary hierarchy is work requiring a decision, followed by configuration and historical metrics. Grouped navigation separates daily work, automation, marketplaces, results and organization management.
 
+- The first navigation level is `Сводка`, `Отзывы, вопросы и чаты`, `Ответы на проверке`. Secondary groups are `Настройка ответов`, `Маркетплейсы`, `Отчёты` and `Компания`.
 - The desktop sidebar is the stable dark contrast anchor. Its text, borders and interaction states use dedicated semantic aliases; the existing dark-wordmark logo stays on a fixed light brand surface in both themes.
 - Primary work destinations precede grouped configuration routes. The selected destination uses the existing opaque brand-soft surface plus font weight, so selection does not depend on color alone.
 - Use the existing semantic tokens and restrained elevated surfaces; no decorative glass, broad glow or new unregistered visual values.
@@ -386,3 +387,4 @@ The cabinet is an operations-first interface. The primary hierarchy is work requ
 - Team and audit screens do not expose controls or issue protected reads when the current role cannot use them.
 - Audit action names are customer-facing; unknown actions use a neutral fallback and sensitive metadata is never rendered.
 - Desktop uses dense list/detail compositions. At narrow widths every grid collapses to one column, actions become full-width where needed, and horizontal overflow is prohibited.
+- Authenticated visual baselines cover the decision-first dashboard on desktop/mobile plus desktop `Стиль ответов` and `Данные для ответов` views. The fixtures identify themselves as `Демо-магазин`; their values are demonstrative rather than customer metrics.

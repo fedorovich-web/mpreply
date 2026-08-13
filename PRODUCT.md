@@ -26,10 +26,13 @@ MPReply is a multi-tenant SaaS for marketplace sellers, operators and agencies. 
 ## Client workspace · 0.1.104 development target
 
 - The main page prioritizes persisted failures, manual-review work, unanswered messages and account problems before historical metrics.
+- Primary navigation uses customer tasks: `Сводка`, `Отзывы, вопросы и чаты`, `Ответы на проверке`; configuration, marketplaces, reports and company management are separate groups.
 - AI behavior is configured through instruction sets with one active organization default and optional per-account assignment.
 - Factual context is stored as structured text entries scoped to the organization, marketplace account or product. File/PDF ingestion is not implemented and is not shown in the interface.
 - Team, settings and audit surfaces respect backend RBAC before issuing protected requests. Audit metadata is filtered before display.
 - Inbox supports reviews, questions and Avito chats, and keeps supported filters in the URL.
+- Customer-facing labels use `Стиль ответов`, `Данные для ответов`, `Подключённые кабинеты`, `Статистика ответов`, `Тариф` and `История изменений`; internal implementation terms are not used as navigation or section titles.
+- Responsive client-workspace contracts cover 1440, 1280, 1024, 768, 430, 390 and 375 pixel widths with schema-valid local fixtures and no marketplace provider calls.
 
 ## Public launch target and marketing truth
 

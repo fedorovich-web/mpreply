@@ -9,16 +9,30 @@ This full development copy continues from the verified remote feature branch:
 
 ## Client workspace increment in this branch
 
-- grouped authenticated navigation and customer-safe Russian copy;
+- grouped authenticated navigation with primary routes `Сводка`, `Отзывы, вопросы и чаты`, `Ответы на проверке` and customer-safe Russian copy;
+- decision-first dashboard with a continuous summary band and secondary 30-day/tariff context;
 - tenant-scoped AI instruction sets with default and per-account assignment;
 - structured text knowledge scoped to organization, marketplace account or product;
 - prompt generation resolves instruction policy and factual knowledge separately;
 - team, organization settings and filtered append-only audit surfaces;
 - persisted operational attention queue and onboarding checklist;
 - Inbox support for reviews, questions and chats with URL-restorable filters;
+- responsive browser contracts at 1440, 1280, 1024, 768, 430, 390 and 375 pixels, authenticated accessibility coverage and four reviewed visual baselines;
 - unit coverage for RBAC, tenant isolation, validation, prompt separation, SQL parameter binding and frontend workflows.
 
 This increment does not claim live provider verification, release deployment or PDF/file ingestion. Those remain separate gates.
+
+## Client workspace verification · 2026-08-13
+
+- frontend unit tests: `84 passed`;
+- design-token tests: `79 passed`;
+- authenticated/public Chromium E2E: `36 passed`;
+- accessibility: `29 passed`, including authenticated light-theme routes and the dark dashboard;
+- visual regression: `14 passed`, including four authenticated workspace baselines;
+- Impeccable detection, TypeScript, ESLint, CSS syntax, production build and rendered W3C validation: exit `0`;
+- Lighthouse CI processed `/`, `/features`, `/marketplaces` and `/pricing` without assertion failures.
+
+All authenticated workspace browser checks used local schema-valid fixtures. No marketplace provider request, release, deployment or version bump was performed.
 
 The base commit contains the committed Yandex Market foundation and client-dashboard observability increment. This snapshot adds an uncommitted runtime-verification kit. It is not a released build and does not claim that a real seller account has already passed runtime verification.
 
