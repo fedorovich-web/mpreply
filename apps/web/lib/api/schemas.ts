@@ -405,6 +405,18 @@ export const auditLogListSchema = z.object({
   limit: z.number().int().min(1).max(100),
 });
 
+export const dashboardAttentionSchema = z.object({
+  organization_id: uuidSchema,
+  items: z.array(z.object({
+    key: z.enum(["failed", "manual_review", "needs_reply"]),
+    title: z.string(),
+    count: z.number().int().nonnegative(),
+    href: z.string(),
+    severity: z.enum(["danger", "warning", "info"]),
+  })),
+  integration_issues: z.number().int().nonnegative(),
+});
+
 export type TeamMember = z.infer<typeof teamMemberSchema>;
 export type TeamRole = z.infer<typeof teamRoleSchema>;
 export type Invitation = z.infer<typeof invitationSchema>;

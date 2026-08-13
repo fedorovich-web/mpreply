@@ -210,6 +210,120 @@ h1 {
 	}
 }
 
+.attention-panel {
+	display: grid;
+	gap: var(--space-4);
+	border: var(--border-width-hairline) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	background: var(--color-bg-elevated);
+	padding: var(--space-5);
+}
+
+.attention-panel h2,
+.attention-panel p {
+	margin: 0;
+}
+
+.attention-panel.is-error {
+	border-color: var(--color-danger);
+	background: var(--app-danger-bg);
+}
+
+.attention-panel.is-clear {
+	background: var(--color-success-soft);
+}
+
+.attention-list {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--space-3);
+}
+
+.attention-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	border-left: var(--space-1) solid var(--color-info);
+	border-radius: var(--radius-md);
+	background: var(--color-bg-page);
+	padding: var(--space-4);
+}
+
+.attention-row.is-danger {
+	border-left-color: var(--color-danger);
+}
+
+.attention-row.is-warning {
+	border-left-color: var(--color-warning);
+}
+
+.attention-row strong {
+	font-size: var(--font-size-xl);
+}
+
+@media (max-width: 640px) {
+	.attention-list {
+		grid-template-columns: 1fr;
+	}
+}
+
+.onboarding-checklist {
+	display: grid;
+	gap: var(--space-4);
+	border: var(--border-width-hairline) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	background: var(--color-bg-elevated);
+	padding: var(--space-5);
+}
+
+.onboarding-checklist header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.onboarding-checklist h2 {
+	margin: 0;
+}
+
+.onboarding-checklist ol {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--space-3);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.onboarding-checklist li {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.onboarding-checklist li > span {
+	display: grid;
+	place-items: center;
+	width: var(--space-6);
+	height: var(--space-6);
+	border: var(--border-width-hairline) solid var(--color-border-strong);
+	border-radius: var(--radius-full);
+}
+
+.onboarding-checklist li[data-done="true"] > span {
+	border-color: var(--color-success);
+	background: var(--color-success-soft);
+	color: var(--color-success);
+}
+
+@media (max-width: 640px) {
+	.onboarding-checklist ol {
+		grid-template-columns: 1fr;
+	}
+}
+
 .management-workspace,
 .management-panel,
 .management-state {

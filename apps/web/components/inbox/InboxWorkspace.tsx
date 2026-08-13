@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
@@ -15,17 +16,10 @@ import { Badge, type BadgeTone } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
 
 type FilterState = {
-  type: "all" | "review" | "question";
+  type: "all" | "review" | "question" | "chat";
   status: "all" | "needs_reply" | "ai_draft_ready" | "waiting_review" | "failed" | "escalated";
   query: string;
   rating: "all" | "negative" | "positive" | "no_rating";
-};
-
-const defaultFilters: FilterState = {
-  type: "all",
-  status: "all",
-  query: "",
-  rating: "all",
 };
 
 const messageStatusLabels: Record<string, string> = {
@@ -47,6 +41,7 @@ const messageStatusLabels: Record<string, string> = {
 const messageTypeLabels: Record<string, string> = {
   review: "Отзыв",
   question: "Вопрос",
+  chat: "Чат",
 };
 
 const priorityLabels: Record<string, string> = {
@@ -57,9 +52,12 @@ const priorityLabels: Record<string, string> = {
 };
 
 export function InboxWorkspace() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { activeOrganization } = useWorkspace();
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [filters, setFilters] = useState<FilterState>(() => filtersFromSearch(searchParams));
   const [selectedId, setSelectedId] = useState("");
   const deferredQuery = useDeferredValue(filters.query.trim());
 
@@ -115,7 +113,11 @@ export function InboxWorkspace() {
   });
 
   function updateFilter<TKey extends keyof FilterState>(key: TKey, value: FilterState[TKey]) {
-    setFilters((current) => ({ ...current, [key]: value }));
+    setFilters((current) => {
+      const next = { ...current, [key]: value };
+      router.replace(filterUrl(pathname, next), { scroll: false });
+      return next;
+    });
   }
 
   return (
@@ -141,6 +143,7 @@ export function InboxWorkspace() {
           <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>Все</FilterButton>
           <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>Отзывы</FilterButton>
           <FilterButton active={filters.type === "question"} onClick={() => updateFilter("type", "question")}>Вопросы</FilterButton>
+          <FilterButton active={filters.type === "chat"} onClick={() => updateFilter("type", "chat")}>Чаты</FilterButton>
         </FilterGroup>
 
         <FilterGroup label="Статус">
@@ -409,4 +412,26 @@ function formatDate(value: string): string {
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   return error instanceof Error ? error.message : "Неизвестная ошибка";
+}
+
+function filtersFromSearch(search: URLSearchParams): FilterState {
+  const type = search.get("type");
+  const status = search.get("status");
+  const rating = search.get("rating");
+  return {
+    type: type === "review" || type === "question" || type === "chat" ? type : "all",
+    status: status === "needs_reply" || status === "ai_draft_ready" || status === "waiting_review" || status === "failed" || status === "escalated" ? status : "all",
+    rating: rating === "negative" || rating === "positive" || rating === "no_rating" ? rating : "all",
+    query: (search.get("query") ?? "").slice(0, 255),
+  };
+}
+
+function filterUrl(pathname: string, filters: FilterState): string {
+  const search = new URLSearchParams();
+  if (filters.type !== "all") search.set("type", filters.type);
+  if (filters.status !== "all") search.set("status", filters.status);
+  if (filters.rating !== "all") search.set("rating", filters.rating);
+  if (filters.query.trim()) search.set("query", filters.query.trim());
+  const query = search.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
