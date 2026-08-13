@@ -356,6 +356,60 @@ export type KnowledgeEntry = z.infer<typeof knowledgeEntrySchema>;
 export type KnowledgeCategory = z.infer<typeof knowledgeCategorySchema>;
 export type KnowledgeStatus = z.infer<typeof knowledgeStatusSchema>;
 
+export const teamRoleSchema = z.enum(["admin", "manager", "viewer"]);
+export const memberRoleSchema = z.enum(["owner", "admin", "manager", "viewer"]);
+export const teamMemberSchema = z.object({
+  membership_id: uuidSchema,
+  user_id: uuidSchema,
+  email: z.string().email(),
+  name: z.string().nullable(),
+  role: memberRoleSchema,
+  status: z.string(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+export const teamMemberListSchema = z.array(teamMemberSchema);
+export const invitationSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  email: z.string().email(),
+  role: teamRoleSchema,
+  status: z.string(),
+  expires_at: timestampSchema,
+  invited_by_user_id: uuidSchema,
+  accepted_by_user_id: uuidSchema.nullable(),
+  accepted_at: timestampSchema.nullable(),
+  revoked_at: timestampSchema.nullable(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+export const invitationListSchema = z.array(invitationSchema);
+export const invitationCreatedSchema = invitationSchema.extend({ accept_token: z.string().min(32) });
+
+export const auditLogSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  actor_user_id: uuidSchema.nullable(),
+  action: z.string(),
+  entity_type: z.string(),
+  entity_id: z.string().nullable(),
+  ip_address: z.string().nullable(),
+  user_agent: z.string().nullable(),
+  metadata: z.record(z.string(), z.unknown()),
+  created_at: timestampSchema,
+});
+export const auditLogListSchema = z.object({
+  items: z.array(auditLogSchema),
+  next_cursor: z.string().nullable(),
+  has_more: z.boolean(),
+  limit: z.number().int().min(1).max(100),
+});
+
+export type TeamMember = z.infer<typeof teamMemberSchema>;
+export type TeamRole = z.infer<typeof teamRoleSchema>;
+export type Invitation = z.infer<typeof invitationSchema>;
+export type AuditLog = z.infer<typeof auditLogSchema>;
+
 export const messageResponseSchema = z.object({
   message: z.string(),
 });

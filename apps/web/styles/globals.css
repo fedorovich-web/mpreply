@@ -210,6 +210,228 @@ h1 {
 	}
 }
 
+.management-workspace,
+.management-panel,
+.management-state {
+	display: grid;
+	gap: var(--space-5);
+}
+
+.management-panel,
+.management-state,
+.audit-filter,
+.audit-item > div:last-child,
+.management-link-grid > a {
+	border: var(--border-width-hairline) solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	background: var(--color-bg-elevated);
+}
+
+.management-panel,
+.management-state,
+.audit-filter,
+.audit-item > div:last-child {
+	padding: var(--space-5);
+}
+
+.management-panel header,
+.audit-item header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+}
+
+.management-panel h2,
+.management-panel p,
+.management-state h2,
+.management-state p,
+.audit-item h2,
+.audit-item p,
+.audit-filter p,
+.management-link-grid p {
+	margin: 0;
+}
+
+.management-state.is-error {
+	border-color: var(--color-danger);
+	background: var(--app-danger-bg);
+}
+
+.team-invite-form,
+.settings-form,
+.audit-filter {
+	display: grid;
+	grid-template-columns: minmax(14rem, 1.4fr) minmax(12rem, 0.8fr) auto;
+	align-items: end;
+	gap: var(--space-4);
+}
+
+.settings-form {
+	grid-template-columns: repeat(2, minmax(14rem, 1fr));
+}
+
+.settings-form > p,
+.settings-form > button {
+	grid-column: 1 / -1;
+}
+
+.team-invite-form label,
+.settings-form label,
+.audit-filter label {
+	display: grid;
+	gap: var(--space-2);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+}
+
+.team-invite-form input,
+.team-invite-form select,
+.settings-form input,
+.settings-form select,
+.audit-filter select,
+.team-row select,
+.team-invite-link input {
+	width: 100%;
+	border: var(--border-width-hairline) solid var(--color-border-strong);
+	border-radius: var(--radius-md);
+	background: var(--color-bg-page);
+	padding: var(--space-3);
+	color: var(--color-text-primary);
+	font: inherit;
+}
+
+.team-list {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.team-row {
+	display: grid;
+	grid-template-columns: minmax(12rem, 1fr) minmax(10rem, 0.5fr) auto;
+	align-items: center;
+	gap: var(--space-4);
+	border-top: var(--border-width-hairline) solid var(--color-border-subtle);
+	padding: var(--space-4) 0;
+}
+
+.team-row > div,
+.team-row label,
+.team-invite-link {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.team-row span,
+.team-row label,
+.team-guard-note,
+.audit-item time,
+.audit-filter p {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.team-invite-link {
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--space-3);
+}
+
+.team-invite-link p {
+	grid-column: 1 / -1;
+}
+
+.management-link-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--space-4);
+}
+
+.management-link-grid > a {
+	display: grid;
+	gap: var(--space-2);
+	padding: var(--space-5);
+}
+
+.management-link-grid span {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.audit-filter {
+	grid-template-columns: minmax(14rem, 0.5fr) 1fr;
+}
+
+.audit-timeline {
+	display: grid;
+	gap: var(--space-3);
+}
+
+.audit-item {
+	display: grid;
+	grid-template-columns: var(--space-4) minmax(0, 1fr);
+	gap: var(--space-3);
+}
+
+.audit-marker {
+	width: var(--space-3);
+	height: var(--space-3);
+	margin-top: var(--space-5);
+	border-radius: var(--radius-full);
+	background: var(--color-brand-primary);
+}
+
+.audit-item dl {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	margin: var(--space-4) 0 0;
+}
+
+.audit-item dl > div {
+	display: flex;
+	gap: var(--space-1);
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-page);
+	padding: var(--space-2) var(--space-3);
+}
+
+.audit-item dt,
+.audit-item dd {
+	margin: 0;
+}
+
+.audit-item dt {
+	color: var(--color-text-muted);
+}
+
+.audit-more {
+	justify-self: center;
+}
+
+@media (max-width: 860px) {
+	.team-invite-form,
+	.settings-form,
+	.audit-filter,
+	.team-row,
+	.management-link-grid,
+	.team-invite-link {
+		grid-template-columns: 1fr;
+	}
+
+	.management-panel header,
+	.audit-item header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.team-invite-link p,
+	.settings-form > p,
+	.settings-form > button {
+		grid-column: auto;
+	}
+}
+
 .auth-page {
 	display: grid;
 	min-height: 100vh;
