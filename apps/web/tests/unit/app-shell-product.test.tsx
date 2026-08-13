@@ -66,25 +66,28 @@ describe("AppShell customer product navigation", () => {
     renderShell();
 
     for (const label of [
-      "Главная",
-      "Обращения",
-      "Ручная проверка",
-      "Правила",
-      "Наборы AI",
-      "База знаний",
-      "Подключения",
-      "Аналитика",
-      "Команда",
+      "Сводка",
+      "Отзывы, вопросы и чаты",
+      "Ответы на проверке",
+      "Правила автоответов",
+      "Стиль ответов",
+      "Данные для ответов",
+      "Подключённые кабинеты",
+      "Статистика ответов",
+      "Сотрудники",
       "Настройки",
-      "Тариф и лимиты",
-      "Журнал действий",
+      "Тариф",
+      "История изменений",
     ]) {
       expect(screen.getByRole("link", { name: label })).toBeInTheDocument();
     }
 
-    expect(screen.getByRole("navigation", { name: "Работа" })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Автоматизация" })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Управление" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Работа" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Ежедневная работа" })).not.toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Основные разделы" })).toBeInTheDocument();
+    for (const group of ["Настройка ответов", "Маркетплейсы", "Отчёты", "Компания"]) {
+      expect(screen.getByRole("navigation", { name: group })).toBeInTheDocument();
+    }
 
     for (const internalCopy of ["OpenRouter", "MVP adapter", "Следующие спринты", "Seller AI ops", "Auto-first workspace"]) {
       expect(screen.queryByText(internalCopy)).not.toBeInTheDocument();

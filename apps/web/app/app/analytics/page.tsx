@@ -1,5 +1,5 @@
 import { AnalyticsWorkspace } from "../../../components/analytics/AnalyticsWorkspace";
 
 export default function AnalyticsPage() {
-  return <section className="app-page"><section className="app-header"><p className="eyebrow">Analytics</p><h1>Операционная аналитика</h1><p>Реальные показатели по обращениям, ответам, маркетплейсам, товарам и AI usage внутри выбранного workspace.</p></section><AnalyticsWorkspace /></section>;
+  return <section className="app-page"><header className="app-header"><h1>Статистика ответов</h1><p>Сравнивайте поток обращений, отправленные ответы и результаты по маркетплейсам.</p></header><AnalyticsWorkspace /></section>;
 }

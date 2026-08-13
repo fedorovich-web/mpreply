@@ -1,5 +1,5 @@
 import { InstructionSetsWorkspace } from "../../../components/instruction-sets/InstructionSetsWorkspace";
 
 export default function InstructionSetsPage() {
-  return <section className="app-page app-page-wide"><header className="app-header"><p className="eyebrow">Автоматизация</p><h1>Наборы AI</h1><p>Управляйте стилем и ограничениями ответов отдельно для каждого кабинета.</p></header><InstructionSetsWorkspace /></section>;
+  return <section className="app-page app-page-wide"><header className="app-header"><h1>Стиль ответов</h1><p>Настройте тон, подпись и ограничения для ответов покупателям.</p></header><InstructionSetsWorkspace /></section>;
 }

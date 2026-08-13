@@ -7,42 +7,40 @@ import { useEffect, useRef, useState } from "react";
 import { BrandLogo } from "../public-site/BrandLogo";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
+const primaryNavItems = [
+  { href: "/app/dashboard", label: "Сводка" },
+  { href: "/app/inbox", label: "Отзывы, вопросы и чаты" },
+  { href: "/app/review-queue", label: "Ответы на проверке" },
+];
+
 const navGroups = [
   {
-    label: "Работа",
+    label: "Настройка ответов",
     items: [
-      { href: "/app/dashboard", label: "Главная" },
-      { href: "/app/inbox", label: "Обращения" },
-      { href: "/app/review-queue", label: "Ручная проверка" },
-    ],
-  },
-  {
-    label: "Автоматизация",
-    items: [
-      { href: "/app/automation-rules", label: "Правила" },
-      { href: "/app/instruction-sets", label: "Наборы AI" },
-      { href: "/app/knowledge-base", label: "База знаний" },
+      { href: "/app/automation-rules", label: "Правила автоответов" },
+      { href: "/app/instruction-sets", label: "Стиль ответов" },
+      { href: "/app/knowledge-base", label: "Данные для ответов" },
     ],
   },
   {
     label: "Маркетплейсы",
     items: [
-      { href: "/app/integrations", label: "Подключения" },
+      { href: "/app/integrations", label: "Подключённые кабинеты" },
     ],
   },
   {
-    label: "Результаты",
+    label: "Отчёты",
     items: [
-      { href: "/app/analytics", label: "Аналитика" },
+      { href: "/app/analytics", label: "Статистика ответов" },
     ],
   },
   {
-    label: "Управление",
+    label: "Компания",
     items: [
-      { href: "/app/team", label: "Команда" },
+      { href: "/app/team", label: "Сотрудники" },
       { href: "/app/settings", label: "Настройки" },
-      { href: "/app/billing", label: "Тариф и лимиты" },
-      { href: "/app/audit-log", label: "Журнал действий" },
+      { href: "/app/billing", label: "Тариф" },
+      { href: "/app/audit-log", label: "История изменений" },
     ],
   },
 ];
@@ -106,6 +104,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="app-nav-groups">
+          <nav className="app-nav app-nav-primary" aria-label="Основные разделы">
+            {primaryNavItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  aria-current={isActive ? "page" : undefined}
+                  aria-label={item.label}
+                  className={isActive ? "app-nav-link app-nav-link-active" : "app-nav-link"}
+                  href={item.href}
+                  key={item.href}
+                  onClick={() => closeNavigation()}
+                >
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
           {visibleGroups.map((group) => (
             <nav className="app-nav-group" aria-label={group.label} key={group.label}>
               <span className="app-nav-group-label">{group.label}</span>

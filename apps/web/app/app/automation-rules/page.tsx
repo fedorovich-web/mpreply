@@ -3,20 +3,10 @@ import { AutomationRulesWorkspace } from "../../../components/automation-rules/A
 export default function AutomationRulesPage() {
   return (
     <section className="app-page app-page-wide">
-      <section className="app-header app-header-row">
-        <div>
-          <p className="eyebrow">Automation Rules</p>
-          <h1>Автоматические ответы с понятными правилами и SafetyGate</h1>
-          <p>
-            Автоматизация работает в auto-first режиме: подходящие обращения обрабатываются автоматически,
-            а сомнительные случаи переводятся на ручную проверку по детерминированным условиям.
-          </p>
-        </div>
-        <div className="app-header-actions">
-          <span className="status-badge">Auto by default</span>
-          <span className="status-badge">Safety fallback</span>
-        </div>
-      </section>
+      <header className="app-header">
+        <h1>Правила автоответов</h1>
+        <p>Определите, какие обращения MPReply обрабатывает автоматически, а какие передаёт на проверку.</p>
+      </header>
 
       <AutomationRulesWorkspace />
     </section>

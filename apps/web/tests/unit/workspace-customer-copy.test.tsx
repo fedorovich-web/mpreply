@@ -93,8 +93,9 @@ describe("authenticated customer copy", () => {
 
     renderWithWorkspace(<DashboardPage />);
     expect(await screen.findByText("1 842")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Сводка по отзывам и вопросам" })).toBeInTheDocument();
 
-    for (const copy of ["Dashboard", "Live workspace", "Current plan", "manual", "AI drafts", "Billing schema", "usage evaluation", "workspace"]) {
+    for (const copy of ["Операционный центр", "Dashboard", "Live workspace", "Current plan", "manual", "AI drafts", "Billing schema", "usage evaluation", "workspace"]) {
       expect(screen.queryByText(new RegExp(copy, "i"))).not.toBeInTheDocument();
     }
   });
@@ -109,6 +110,7 @@ describe("authenticated customer copy", () => {
 
     renderWithWorkspace(<InboxPage />);
     await waitFor(() => expect(screen.getByText("Нет обращений по выбранным фильтрам")).toBeInTheDocument());
+    expect(screen.getByRole("heading", { level: 1, name: "Отзывы, вопросы и чаты" })).toBeInTheDocument();
 
     expect(screen.queryByText(/GET \/api\/messages/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/backend API/i)).not.toBeInTheDocument();

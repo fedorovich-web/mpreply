@@ -1,3 +1,3 @@
 import { TeamWorkspace } from "../../../components/team/TeamWorkspace";
 
-export default function TeamPage() { return <section className="app-page app-page-wide"><header className="app-header"><p className="eyebrow">Управление</p><h1>Команда</h1><p>Приглашайте сотрудников и управляйте их доступом к организации.</p></header><TeamWorkspace /></section>; }
+export default function TeamPage() { return <section className="app-page app-page-wide"><header className="app-header"><h1>Сотрудники и доступ</h1><p>Приглашайте сотрудников и назначайте им подходящий уровень доступа.</p></header><TeamWorkspace /></section>; }
