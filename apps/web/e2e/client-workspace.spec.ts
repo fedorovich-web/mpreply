@@ -7,6 +7,7 @@ const userId = "22222222-2222-4222-8222-222222222222";
 const timestamp = "2026-08-13T06:00:00Z";
 
 test("owner can open the new customer-management workspaces", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
   const headers = {
     "access-control-allow-credentials": "true",
     "access-control-allow-origin": resolvePlaywrightBaseURL(),
@@ -42,5 +43,9 @@ test("owner can open the new customer-management workspaces", async ({ page }) =
   await expect(page.getByLabel("Название организации")).toHaveValue("Seller Group");
   await page.goto("/app/audit-log", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Действий пока нет" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/app/instruction-sets", { waitUntil: "networkidle" });
+  await expect(page.getByRole("heading", { name: "Основной стиль" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
