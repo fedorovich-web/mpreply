@@ -363,6 +363,7 @@ class MarketplaceAccountService:
             credentials_status=account.credentials_status,
             scopes_json=account.scopes_json or {},
             default_response_mode=account.default_response_mode,
+            ai_instruction_set_id=getattr(account, "ai_instruction_set_id", None),
             last_success_sync_at=getattr(account, "last_success_sync_at", None),
             last_error_sync_at=getattr(account, "last_error_sync_at", None),
             error_count=int(getattr(account, "error_count", 0) or 0),

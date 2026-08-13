@@ -6,6 +6,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.admin import router as admin_router
 from app.api.ai import router as ai_router
+from app.api.ai_instruction_sets import router as ai_instruction_sets_router
 from app.api.analytics import router as analytics_router
 from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(analytics_router)
     app.include_router(billing_router)
     app.include_router(ai_router)
+    app.include_router(ai_instruction_sets_router)
     app.include_router(automation_rules_router)
     app.include_router(auth_router)
     app.include_router(organizations_router)

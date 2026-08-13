@@ -41,6 +41,7 @@ class MarketplaceAccountResponse(BaseModel):
     credentials_status: str
     scopes_json: dict[str, object]
     default_response_mode: str
+    ai_instruction_set_id: UUID | None = None
     last_success_sync_at: datetime | None = None
     last_error_sync_at: datetime | None = None
     error_count: int = 0

@@ -14,6 +14,7 @@ from app.models.enums import ResponseMode
 from app.models.organization import Organization, OrganizationUser
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.services.ai_instruction_set_service import AIInstructionSetService
 from app.services.answer_entitlement_service import AnswerEntitlementService
 from app.services.audit_service import AuditService
 from app.services.plan_limit_service import PlanLimitService
@@ -33,6 +34,7 @@ class OrganizationService:
         self.session = session
         self.audit = AuditService(session)
         self.entitlements = AnswerEntitlementService(session)
+        self.instruction_sets = AIInstructionSetService(session)
         self.plan_limits = PlanLimitService(session)
         self.seller_settings = SellerSettingsService(session)
 
@@ -84,6 +86,10 @@ class OrganizationService:
             actor_user_id=owner.id,
         )
         await self.seller_settings.ensure_defaults(
+            organization_id=organization.id,
+            actor_user_id=owner.id,
+        )
+        await self.instruction_sets.ensure_default(
             organization_id=organization.id,
             actor_user_id=owner.id,
         )

@@ -23,6 +23,12 @@ class MarketplaceAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     credentials_status: Mapped[str] = mapped_column(String(64), default="pending")
     scopes_json: Mapped[dict[str, object]] = mapped_column(JSONB, default=dict)
     default_response_mode: Mapped[str] = mapped_column(String(32), default=ResponseMode.INHERIT.value)
+    ai_instruction_set_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("ai_instruction_sets.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     last_success_sync_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_error_sync_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

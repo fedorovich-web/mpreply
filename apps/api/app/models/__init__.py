@@ -1,4 +1,5 @@
 from app.models.ai_draft import AIDraft
+from app.models.ai_instruction_set import AIInstructionSet
 from app.models.answer_credit_grant import AnswerCreditGrant
 from app.models.answer_ledger_entry import AnswerLedgerEntry
 from app.models.answer_package import AnswerPackage
@@ -26,6 +27,7 @@ from app.models.user import User
 
 __all__ = [
     "AIDraft",
+    "AIInstructionSet",
     "AnswerCreditGrant",
     "AnswerLedgerEntry",
     "AnswerPackage",
