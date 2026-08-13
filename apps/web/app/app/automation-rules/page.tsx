@@ -5,7 +5,7 @@ export default function AutomationRulesPage() {
     <section className="app-page app-page-wide">
       <header className="app-header">
         <h1>Правила автоответов</h1>
-        <p>Определите, какие обращения MPReply обрабатывает автоматически, а какие передаёт на проверку.</p>
+        <p>Определите, какие обращения MP Reply обрабатывает автоматически, а какие передаёт на проверку.</p>
       </header>
 
       <AutomationRulesWorkspace />
