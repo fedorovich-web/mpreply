@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
@@ -52,12 +51,11 @@ const priorityLabels: Record<string, string> = {
 };
 
 export function InboxWorkspace() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { activeOrganization } = useWorkspace();
-  const [filters, setFilters] = useState<FilterState>(() => filtersFromSearch(searchParams));
+  const [filters, setFilters] = useState<FilterState>(() => filtersFromSearch(
+    new URLSearchParams(typeof window === "undefined" ? "" : window.location.search),
+  ));
   const [selectedId, setSelectedId] = useState("");
   const deferredQuery = useDeferredValue(filters.query.trim());
 
@@ -115,7 +113,9 @@ export function InboxWorkspace() {
   function updateFilter<TKey extends keyof FilterState>(key: TKey, value: FilterState[TKey]) {
     setFilters((current) => {
       const next = { ...current, [key]: value };
-      router.replace(filterUrl(pathname, next), { scroll: false });
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", filterUrl(window.location.pathname, next));
+      }
       return next;
     });
   }

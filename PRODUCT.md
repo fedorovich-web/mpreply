@@ -17,10 +17,19 @@ MPReply is a multi-tenant SaaS for marketplace sellers, operators and agencies. 
 
 ## Current implementation truth
 
-- Wildberries: current MVP adapter and real execution path.
-- Ozon, Yandex Market and Avito: do not imply production-ready sending until official contracts are verified, adapters implemented and runtime-tested.
+- Wildberries: implemented execution path; live provider verification remains an operational release gate.
+- Ozon, Yandex Market and Avito: official-contract adapters and guarded execution paths are implemented and covered by synthetic contract tests. Do not imply production-ready sending until each provider is runtime-tested with an authorized seller account.
 - OpenRouter: backend-only provider abstraction.
 - Existing layers: auth, organizations, RBAC, integrations, Inbox, AI drafts, SafetyGate, automation rules, worker queue, auto replies, manual review, analytics, billing foundation, admin and Docker deployment foundation.
+- Client workspace: grouped product navigation, operational attention queue, persisted onboarding, reviews/questions/chats Inbox, AI instruction sets, structured knowledge, team management, organization settings and an append-only audit view.
+
+## Client workspace · 0.1.104 development target
+
+- The main page prioritizes persisted failures, manual-review work, unanswered messages and account problems before historical metrics.
+- AI behavior is configured through instruction sets with one active organization default and optional per-account assignment.
+- Factual context is stored as structured text entries scoped to the organization, marketplace account or product. File/PDF ingestion is not implemented and is not shown in the interface.
+- Team, settings and audit surfaces respect backend RBAC before issuing protected requests. Audit metadata is filtered before display.
+- Inbox supports reviews, questions and Avito chats, and keeps supported filters in the URL.
 
 ## Public launch target and marketing truth
 

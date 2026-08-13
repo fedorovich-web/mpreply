@@ -7,6 +7,19 @@ This full development copy continues from the verified remote feature branch:
 - base release version inside project contracts: `0.1.103`;
 - development target: `0.1.104`.
 
+## Client workspace increment in this branch
+
+- grouped authenticated navigation and customer-safe Russian copy;
+- tenant-scoped AI instruction sets with default and per-account assignment;
+- structured text knowledge scoped to organization, marketplace account or product;
+- prompt generation resolves instruction policy and factual knowledge separately;
+- team, organization settings and filtered append-only audit surfaces;
+- persisted operational attention queue and onboarding checklist;
+- Inbox support for reviews, questions and chats with URL-restorable filters;
+- unit coverage for RBAC, tenant isolation, validation, prompt separation, SQL parameter binding and frontend workflows.
+
+This increment does not claim live provider verification, release deployment or PDF/file ingestion. Those remain separate gates.
+
 The base commit contains the committed Yandex Market foundation and client-dashboard observability increment. This snapshot adds an uncommitted runtime-verification kit. It is not a released build and does not claim that a real seller account has already passed runtime verification.
 
 ## Implemented foundation

@@ -94,7 +94,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         id="app-navigation"
       >
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="MPReply — главная">
+          <Link href="/app/dashboard" className="app-logo" aria-label="MP Reply — главная">
             <BrandLogo
               className="app-brand-logo"
               imageClassName="app-brand-logo-image"

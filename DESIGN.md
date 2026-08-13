@@ -372,3 +372,15 @@ The historical 0.1.32 Hero contract was:
 - no SVG ellipse, `LineLoop`, CSS-3D substitute, GLTF/HDRI, postprocessing, physics, React Three Fiber or particle runtime.
 
 The gradient brand mark and the single gradient Hero accent are intentional matches to the approved reference and carry explicit Impeccable waivers. Other visual declarations remain controlled through CSS custom properties.
+
+## Authenticated client workspace · 0.1.104 development target
+
+The cabinet is an operations-first interface. The primary hierarchy is work requiring a decision, followed by configuration and historical metrics. Grouped navigation separates daily work, automation, marketplaces, results and organization management.
+
+- Use the existing semantic tokens and restrained elevated surfaces; no decorative glass, broad glow or new unregistered visual values.
+- List/detail workspaces keep one clear selection, explicit loading/empty/error/read-only states and guarded destructive actions.
+- AI instruction sets and knowledge are separate concepts: policy controls how to answer, knowledge supplies verified facts.
+- Knowledge entry is structured text. Upload controls are absent until a secure ingestion, extraction and verification contract exists.
+- Team and audit screens do not expose controls or issue protected reads when the current role cannot use them.
+- Audit action names are customer-facing; unknown actions use a neutral fallback and sensitive metadata is never rendered.
+- Desktop uses dense list/detail compositions. At narrow widths every grid collapses to one column, actions become full-width where needed, and horizontal overflow is prohibited.

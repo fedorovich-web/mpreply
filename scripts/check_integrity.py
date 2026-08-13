@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.103"
-EXPECTED_ALEMBIC_HEAD = "20260812_0015"
+EXPECTED_ALEMBIC_HEAD = "20260813_0017"
 
 FRONTEND_SECURITY_MINIMUMS: dict[str, dict[int, tuple[int, int, int]]] = {
     "brace-expansion": {
@@ -562,9 +562,9 @@ def check_seller_settings_audit_contract() -> None:
     route_contracts = {
         "audit router registration": (main, "app.include_router(audit_logs_router)"),
         "seller settings router registration": (main, "app.include_router(seller_settings_router)"),
-        "AI persisted settings resolution": (ai_service, "prompt_settings.resolve"),
+        "AI persisted instruction resolution": (ai_service, "prompt_settings.resolve_policy"),
         "AI deterministic seller policy gate": (ai_service, "prompt_settings.policy_flags"),
-        "AI audit settings marker": (ai_service, '"seller_settings_applied"'),
+        "AI audit instruction marker": (ai_service, '"instruction_set_applied"'),
         "organization defaults": (organization_service, "self.seller_settings.ensure_defaults"),
         "seller settings owner/admin write boundary": (seller_service, '_WRITE_ROLES = {"owner", "admin"}'),
         "audit owner/admin read boundary": (audit_service, '_AUDIT_READ_ROLES = {"owner", "admin"}'),

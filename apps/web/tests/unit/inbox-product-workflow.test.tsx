@@ -5,17 +5,12 @@ import { afterEach, expect, it, vi } from "vitest";
 import { InboxWorkspace } from "../../components/inbox/InboxWorkspace";
 import { useWorkspace } from "../../components/workspace/WorkspaceProvider";
 
-const replace = vi.fn();
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/app/inbox",
-  useRouter: () => ({ replace }),
-  useSearchParams: () => new URLSearchParams("type=chat&status=needs_reply"),
-}));
 vi.mock("../../components/workspace/WorkspaceProvider", () => ({ useWorkspace: vi.fn() }));
 
 afterEach(() => vi.unstubAllGlobals());
 
 it("restores chat filters from URL and synchronizes changes", async () => {
+  window.history.replaceState(null, "", "/app/inbox?type=chat&status=needs_reply");
   vi.mocked(useWorkspace).mockReturnValue({
     user: { id: "22222222-2222-4222-8222-222222222222", email: "owner@example.com", name: "Owner", status: "active", is_superadmin: false, created_at: "2026-08-13T06:00:00Z", updated_at: "2026-08-13T06:00:00Z" },
     organizations: [],
@@ -30,5 +25,5 @@ it("restores chat filters from URL and synchronizes changes", async () => {
   expect(screen.getByRole("button", { name: "Чаты" })).toHaveAttribute("aria-pressed", "true");
   await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => String(input).includes("type=chat"))).toBe(true));
   fireEvent.click(screen.getByRole("button", { name: "Отзывы" }));
-  expect(replace).toHaveBeenCalledWith(expect.stringContaining("type=review"), { scroll: false });
+  expect(window.location.search).toContain("type=review");
 });
