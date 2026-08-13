@@ -750,9 +750,15 @@
 	--marketing-glyph-webp-size: 5.4rem;
 
 	--app-shell-gap: var(--space-6);
-	--app-sidebar-bg: var(--color-bg-surface);
-	--app-topbar-bg: rgb(255 255 255 / 86%);
+	--app-sidebar-bg: var(--color-surface-dark);
+	--app-sidebar-text: var(--color-text-on-dark);
+	--app-sidebar-muted: var(--color-text-on-dark-muted);
+	--app-sidebar-border: var(--color-border-on-dark-soft);
+	--app-sidebar-nav-hover-bg: var(--color-surface-on-dark-soft);
+	--app-brand-surface: var(--color-white);
+	--app-topbar-bg: var(--color-bg-surface);
 	--app-nav-active-bg: var(--color-brand-soft);
+	--app-nav-active-text: var(--color-brand-text-on-soft);
 	--app-nav-hover-bg: rgb(16 24 40 / 4%);
 	--app-card-hover-shadow: 0 16px 36px rgb(16 24 40 / 10%);
 	--app-danger-bg: var(--color-danger-soft);

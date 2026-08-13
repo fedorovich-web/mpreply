@@ -814,7 +814,7 @@ h1 {
 	height: 100vh;
 	grid-template-rows: auto 1fr;
 	gap: var(--space-5);
-	border-right: 1px solid var(--color-border-subtle);
+	border-right: 1px solid var(--app-sidebar-border);
 	background: var(--app-sidebar-bg);
 	padding: var(--space-5);
 	overflow-y: auto;
@@ -824,6 +824,9 @@ h1 {
 	display: flex;
 	align-items: center;
 	min-height: var(--header-height);
+	border-radius: var(--radius-lg);
+	background: var(--app-brand-surface);
+	padding: var(--space-3);
 }
 
 .app-logo {
@@ -850,11 +853,15 @@ h1 {
 }
 
 .app-logo small,
-.app-sidebar-caption,
-.app-upcoming-item,
 .app-topbar-title span,
 .panel-kicker {
 	color: var(--color-kicker-text);
+	font-size: var(--font-size-xs);
+}
+
+.app-sidebar-caption,
+.app-upcoming-item {
+	color: var(--app-sidebar-muted);
 	font-size: var(--font-size-xs);
 }
 
@@ -864,13 +871,18 @@ h1 {
 	align-content: start;
 }
 
+.app-nav-primary {
+	border-bottom: 1px solid var(--app-sidebar-border);
+	padding-bottom: var(--space-5);
+}
+
 .app-nav-group {
 	display: grid;
 	gap: var(--space-2);
 }
 
 .app-nav-group-label {
-	color: var(--color-kicker-text);
+	color: var(--app-sidebar-muted);
 	font-size: var(--font-size-xs);
 	font-weight: var(--font-weight-semibold);
 }
@@ -886,19 +898,19 @@ h1 {
 	min-height: 2.75rem;
 	border-radius: var(--radius-lg);
 	padding: var(--space-2) var(--space-3);
-	color: var(--color-text-secondary);
+	color: var(--app-sidebar-muted);
 	transition: var(--transition-interactive);
 }
 
 .app-nav-link:hover {
-	background: var(--app-nav-hover-bg);
-	color: var(--color-text-primary);
+	background: var(--app-sidebar-nav-hover-bg);
+	color: var(--app-sidebar-text);
 	transform: var(--transform-nav-hover);
 }
 
 .app-nav-link-active {
 	background: var(--app-nav-active-bg);
-	color: var(--color-brand-text-on-soft);
+	color: var(--app-nav-active-text);
 }
 
 .app-nav-link span {
@@ -910,7 +922,7 @@ h1 {
 }
 
 .app-nav-link small {
-	color: var(--color-text-muted);
+	color: var(--app-sidebar-muted);
 }
 
 .app-sidebar-section {
@@ -925,9 +937,9 @@ h1 {
 }
 
 .app-upcoming-item {
-	border: 1px solid var(--color-border-subtle);
+	border: 1px solid var(--app-sidebar-border);
 	border-radius: var(--radius-md);
-	background: var(--color-bg-page);
+	background: var(--app-sidebar-nav-hover-bg);
 	padding: var(--space-2) var(--space-3);
 }
 

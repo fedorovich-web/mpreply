@@ -591,6 +591,22 @@ describe("MPReply design tokens", () => {
     expect(darkToken("--app-nav-active-bg")).toBe("var(--color-brand-soft)");
   });
 
+  it("keeps the client workspace shell on explicit semantic surface roles", () => {
+    expect(token("--app-sidebar-bg")).toBe("var(--color-surface-dark)");
+    expect(token("--app-sidebar-text")).toBe("var(--color-text-on-dark)");
+    expect(token("--app-sidebar-muted")).toBe("var(--color-text-on-dark-muted)");
+    expect(token("--app-sidebar-border")).toBe("var(--color-border-on-dark-soft)");
+    expect(token("--app-sidebar-nav-hover-bg")).toBe("var(--color-surface-on-dark-soft)");
+    expect(token("--app-brand-surface")).toBe("var(--color-white)");
+    expect(token("--app-nav-active-text")).toBe("var(--color-brand-text-on-soft)");
+    expect(token("--app-topbar-bg")).toBe("var(--color-bg-surface)");
+
+    expect(darkToken("--app-sidebar-bg")).toBe("var(--color-surface-dark)");
+    expect(darkToken("--app-sidebar-text")).toBe("var(--color-text-on-dark)");
+    expect(darkToken("--app-sidebar-muted")).toBe("var(--color-text-on-dark-muted)");
+    expect(darkToken("--app-brand-surface")).toBe("var(--color-white)");
+  });
+
   it("uses the dedicated brand text token on all soft brand text surfaces", () => {
     const sources = `${globalStyleSource}\n${publicStyleSource}`;
     const rulePattern = /([^{}]+)\{([^{}]*)\}/gs;

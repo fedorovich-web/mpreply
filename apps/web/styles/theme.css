@@ -94,9 +94,14 @@
 	--shadow-cursor-halo: 0 0 30px rgb(155 150 255 / 28%);
 	--shadow-proof-row: inset 0 0 0 1px rgb(181 190 225 / 9%), 0 18px 46px rgb(1 5 20 / 20%);
 	--shadow-section-soft: inset 0 1px 0 rgb(181 190 225 / 7%), inset 0 -1px 0 rgb(181 190 225 / 7%);
-	--app-sidebar-bg: var(--color-bg-surface);
-	--app-topbar-bg: rgb(17 24 51 / 88%);
+	--app-sidebar-bg: var(--color-surface-dark);
+	--app-sidebar-text: var(--color-text-on-dark);
+	--app-sidebar-muted: var(--color-text-on-dark-muted);
+	--app-sidebar-border: var(--color-border-on-dark-soft);
+	--app-sidebar-nav-hover-bg: var(--color-surface-on-dark-soft);
+	--app-topbar-bg: var(--color-bg-surface);
 	--app-nav-active-bg: var(--color-brand-soft);
+	--app-nav-active-text: var(--color-brand-text-on-soft);
 	--app-nav-hover-bg: rgb(255 255 255 / 5%);
 	--gradient-home-outcomes:
 		radial-gradient(circle at 12% 22%, rgb(155 150 255 / 12%), var(--color-transparent) 34%),

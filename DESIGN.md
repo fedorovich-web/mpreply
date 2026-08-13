@@ -377,6 +377,8 @@ The gradient brand mark and the single gradient Hero accent are intentional matc
 
 The cabinet is an operations-first interface. The primary hierarchy is work requiring a decision, followed by configuration and historical metrics. Grouped navigation separates daily work, automation, marketplaces, results and organization management.
 
+- The desktop sidebar is the stable dark contrast anchor. Its text, borders and interaction states use dedicated semantic aliases; the existing dark-wordmark logo stays on a fixed light brand surface in both themes.
+- Primary work destinations precede grouped configuration routes. The selected destination uses the existing opaque brand-soft surface plus font weight, so selection does not depend on color alone.
 - Use the existing semantic tokens and restrained elevated surfaces; no decorative glass, broad glow or new unregistered visual values.
 - List/detail workspaces keep one clear selection, explicit loading/empty/error/read-only states and guarded destructive actions.
 - AI instruction sets and knowledge are separate concepts: policy controls how to answer, knowledge supplies verified facts.
