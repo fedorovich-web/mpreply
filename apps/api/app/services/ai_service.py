@@ -19,11 +19,12 @@ from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.providers.openrouter import OpenRouterProvider, OpenRouterProviderError
 from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
+from app.services.ai_instruction_set_service import AIInstructionSetService
 from app.services.audit_service import AuditService
+from app.services.knowledge_entry_service import KnowledgeEntryService
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
-from app.services.seller_settings_service import SellerSettingsService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
@@ -43,7 +44,8 @@ class AIService:
         self.message_service = MessageService(session)
         self.organization_service = OrganizationService(session)
         self.plan_limits = PlanLimitService(session)
-        self.seller_settings = SellerSettingsService(session)
+        self.instruction_sets = AIInstructionSetService(session)
+        self.knowledge_entries = KnowledgeEntryService(session)
         self.safety_gate = SafetyGate()
 
     async def generate_draft(
@@ -69,14 +71,20 @@ class AIService:
 
         await self.plan_limits.enforce_ai_draft_limit(organization_id=message.organization_id)
 
-        prompt_settings = await self.seller_settings.get_prompt_settings(
-            organization_id=message.organization_id
+        prompt_settings = await self.instruction_sets.resolve_for_account(
+            organization_id=message.organization_id,
+            marketplace_account_id=message.marketplace_account_id,
         )
-        resolved_tone, resolved_brand_rules, resolved_knowledge_base = prompt_settings.resolve(
+        resolved_tone, resolved_brand_rules = prompt_settings.resolve_policy(
             tone_override=tone,
             brand_rules_override=brand_rules,
-            knowledge_base_override=knowledge_base,
         )
+        structured_knowledge = await self.knowledge_entries.context_for_message(
+            organization_id=message.organization_id,
+            marketplace_account_id=message.marketplace_account_id,
+            product_id=message.product_id,
+        )
+        resolved_knowledge = knowledge_base.strip() if knowledge_base is not None and knowledge_base.strip() else structured_knowledge
 
         settings = get_settings()
         prompt = build_marketplace_reply_prompt(
@@ -86,8 +94,8 @@ class AIService:
             rating=message.rating,
             product=self._product_context(product),
             tone=resolved_tone,
-            brand_rules=resolved_brand_rules,
-            knowledge_base=resolved_knowledge_base,
+            seller_policy=resolved_brand_rules,
+            seller_knowledge=resolved_knowledge,
         )
         provider = OpenRouterProvider(
             api_key=settings.openrouter_api_key.get_secret_value(),
@@ -171,7 +179,7 @@ class AIService:
                 "safety_decision": safety.decision.value,
                 "safety_flags": flags,
                 "safety_reasons": safety.reasons,
-                "seller_settings_applied": prompt_settings.has_customizations,
+                "instruction_set_applied": prompt_settings.has_customizations,
             },
         )
         await self.session.flush()

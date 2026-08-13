@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Literal
 
-PROMPT_VERSION = "marketplace-reply-v1"
+PROMPT_VERSION = "marketplace-reply-v2"
 ResponseTone = Literal["neutral", "friendly", "formal", "apologetic"]
 
 
@@ -46,8 +46,8 @@ def build_marketplace_reply_prompt(
     rating: int | None,
     product: dict[str, Any] | None,
     tone: ResponseTone = "neutral",
-    brand_rules: str | None = None,
-    knowledge_base: str | None = None,
+    seller_policy: str | None = None,
+    seller_knowledge: str | None = None,
 ) -> PromptBundle:
     input_snapshot = {
         "marketplace": marketplace,
@@ -56,8 +56,8 @@ def build_marketplace_reply_prompt(
         "customer_text": customer_text.strip(),
         "product": product or {},
         "tone": tone,
-        "brand_rules": brand_rules or "",
-        "knowledge_base": knowledge_base or "",
+        "seller_policy": seller_policy or "",
+        "seller_knowledge": seller_knowledge or "",
     }
     payload = json.dumps(input_snapshot, ensure_ascii=False, sort_keys=True)
     input_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()

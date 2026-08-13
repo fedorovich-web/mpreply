@@ -10,6 +10,7 @@ from app.models.automation_rule import AutomationRule
 from app.models.billing_plan import BillingPlan
 from app.models.customer_message import CustomerMessage
 from app.models.integration_event import IntegrationEvent
+from app.models.knowledge_entry import KnowledgeEntry
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.organization import Organization, OrganizationUser
@@ -38,6 +39,7 @@ __all__ = [
     "BillingPlan",
     "CustomerMessage",
     "IntegrationEvent",
+    "KnowledgeEntry",
     "MarketplaceAccount",
     "MarketplaceSyncState",
     "Organization",

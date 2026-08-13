@@ -9,6 +9,8 @@ def test_build_marketplace_reply_prompt_hash_is_stable() -> None:
         rating=5,
         product={"name": "Кружка", "brand": "MPReply Test"},
         tone="friendly",
+        seller_policy="Обращаться на Вы.",
+        seller_knowledge="Материал: керамика.",
     )
     second = build_marketplace_reply_prompt(
         marketplace="wildberries",
@@ -17,6 +19,8 @@ def test_build_marketplace_reply_prompt_hash_is_stable() -> None:
         rating=5,
         product={"name": "Кружка", "brand": "MPReply Test"},
         tone="friendly",
+        seller_policy="Обращаться на Вы.",
+        seller_knowledge="Материал: керамика.",
     )
 
     assert first.version == PROMPT_VERSION

@@ -12,9 +12,11 @@ from sqlalchemy.sql.elements import ColumnElement, TextClause
 
 from app.models.audit_log import AuditLog
 from app.models.customer_message import CustomerMessage
+from app.models.knowledge_entry import KnowledgeEntry
 from app.models.organization import OrganizationUser
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.knowledge_entry_service import KnowledgeEntryService
 from app.services.message_service import MessageService
 from app.services.payment_service import PaymentService
 
@@ -47,6 +49,10 @@ class _AuditSession:
     async def execute(self, statement: object) -> object:
         self.statements.append(statement)
         return self.results.pop(0)
+
+
+class _KnowledgeSession(_AuditSession):
+    pass
 
 
 class _PaymentSession:
@@ -136,6 +142,40 @@ async def test_audit_filters_keep_sql_payloads_in_bound_parameters() -> None:
     assert ATTACK not in sql
     assert organization_id in compiled.params.values()
     assert list(compiled.params.values()).count(ATTACK) == 2
+
+
+@pytest.mark.asyncio
+async def test_knowledge_search_keeps_sql_payload_in_bound_parameters() -> None:
+    organization_id = uuid4()
+    actor = User(
+        id=uuid4(),
+        email="owner@example.com",
+        name="Owner",
+        password_hash="hashed",
+        status="active",
+        is_superadmin=False,
+    )
+    membership = OrganizationUser(
+        id=uuid4(),
+        organization_id=organization_id,
+        user_id=actor.id,
+        role="viewer",
+        status="active",
+    )
+    session = _KnowledgeSession(membership)
+
+    await KnowledgeEntryService(cast(AsyncSession, session)).list_for_actor(
+        organization_id=organization_id,
+        actor=actor,
+        search=ATTACK,
+        status=None,
+        category=None,
+    )
+    statement = cast(Select[tuple[KnowledgeEntry]], session.statements[1])
+    compiled = statement.compile(dialect=postgresql.dialect())
+
+    assert ATTACK not in str(compiled)
+    assert f"%{ATTACK}%" in compiled.params.values()
 
 
 @pytest.mark.asyncio

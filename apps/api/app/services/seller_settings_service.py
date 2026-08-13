@@ -67,6 +67,19 @@ class SellerPromptSettings:
         )
         return resolved_tone, resolved_brand_rules, resolved_knowledge_base
 
+    def resolve_policy(
+        self,
+        *,
+        tone_override: ResponseTone | None,
+        brand_rules_override: str | None,
+    ) -> tuple[ResponseTone, str | None]:
+        resolved_tone, resolved_brand_rules, _ = self.resolve(
+            tone_override=tone_override,
+            brand_rules_override=brand_rules_override,
+            knowledge_base_override=None,
+        )
+        return resolved_tone, resolved_brand_rules
+
     def policy_flags(self, draft_text: str) -> list[str]:
         normalized_draft = draft_text.casefold()
         for phrase in self.prohibited_phrases:

@@ -8,6 +8,7 @@ import pytest
 from fastapi import HTTPException
 from pydantic import ValidationError
 
+from app.ai.prompt_strategy import build_marketplace_reply_prompt
 from app.models.audit_log import AuditLog
 from app.models.organization import OrganizationUser
 from app.models.seller_settings import SellerSettings
@@ -187,6 +188,23 @@ def test_prompt_settings_flag_prohibited_phrase_case_insensitively() -> None:
     assert settings.policy_flags("Передадим заказ в доставку.") == []
 
 
+def test_prompt_keeps_seller_policy_separate_from_factual_knowledge() -> None:
+    prompt = build_marketplace_reply_prompt(
+        marketplace="wildberries",
+        message_type="question",
+        customer_text="Как стирать?",
+        rating=None,
+        product=None,
+        tone="neutral",
+        seller_policy="Не обещать сроки.",  # noqa: RUF001
+        seller_knowledge="Стирка при 30 градусах.",
+    )
+
+    assert prompt.input_snapshot["seller_policy"] == "Не обещать сроки."  # noqa: RUF001
+    assert prompt.input_snapshot["seller_knowledge"] == "Стирка при 30 градусах."
+    assert "knowledge_base" not in prompt.input_snapshot
+
+
 def test_audit_cursor_round_trip_is_stable() -> None:
     created_at = datetime(2026, 7, 22, 8, 30, 0, 123456, tzinfo=UTC)
     audit_id = uuid4()
@@ -353,5 +371,5 @@ def test_migration_and_route_contracts_are_present() -> None:
         assert token in migration
     assert "audit_logs_router" in main
     assert "seller_settings_router" in main
-    assert "prompt_settings.resolve" in ai_service
-    assert '"seller_settings_applied"' in ai_service
+    assert "prompt_settings.resolve_policy" in ai_service
+    assert '"instruction_set_applied"' in ai_service
