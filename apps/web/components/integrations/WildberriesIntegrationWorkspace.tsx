@@ -74,8 +74,8 @@ export function WildberriesIntegrationWorkspace() {
   return (
     <section className="wildberries-workspace" aria-label="Управление подключениями Wildberries">
       <div className="integration-security-strip" role="note">
-        <strong>Ключи остаются на backend</strong>
-        <span>После сохранения frontend получает только маску fingerprint, без исходного API-ключа.</span>
+        <strong>API-ключ хранится защищённо</strong>
+        <span>После сохранения в кабинете видна только маска, а не исходный ключ.</span>
       </div>
 
       {!canManage ? (
@@ -95,7 +95,6 @@ export function WildberriesIntegrationWorkspace() {
         <section className="integration-account-panel" aria-labelledby="wb-account-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Accounts</span>
               <strong id="wb-account-list-title">Кабинеты Wildberries</strong>
             </div>
             <span className="ui-badge">{accounts.length}</span>
@@ -146,7 +145,6 @@ export function WildberriesIntegrationWorkspace() {
               }}
             >
               <div className="panel-heading">
-                <span className="panel-kicker">New account</span>
                 <strong>Добавить кабинет</strong>
               </div>
               <label>
@@ -308,18 +306,20 @@ function AccountDetail({
     <div className="integration-detail-stack">
       <div className="integration-detail-heading">
         <div>
-          <span className="panel-kicker">Selected account</span>
           <h2 id="wb-account-detail-title">{account.display_name}</h2>
         </div>
         <StatusBadge account={account} />
       </div>
 
+      <section className="integration-account-health" aria-labelledby="wb-account-health-title">
+        <h3 id="wb-account-health-title">Состояние подключения</h3>
       <dl className="integration-health-grid">
         <HealthItem label="Ключ" value={credentialsStatusLabel(account.credentials_status)} />
         <HealthItem label="Маска" value={account.credentials_masked} />
         <HealthItem label="Последняя успешная синхронизация" value={formatDateTime(account.last_success_sync_at)} />
         <HealthItem label="Ошибок" value={String(account.error_count)} />
       </dl>
+      </section>
 
       {canManage ? (
         <>
@@ -333,7 +333,6 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Settings</span>
               <strong>Настройки кабинета</strong>
             </div>
             <label>
@@ -376,7 +375,6 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Credentials</span>
               <strong>Заменить API-ключ</strong>
             </div>
             <label>
@@ -411,7 +409,7 @@ function AccountDetail({
       ) : (
         <div className="workspace-inline-state">
           <strong>Управление недоступно для этой роли</strong>
-          <p>Backend RBAC остаётся security boundary; интерфейс не показывает write actions для текущего membership.</p>
+          <p>Текущая роль позволяет просматривать состояние, но не менять настройки подключения.</p>
         </div>
       )}
     </div>

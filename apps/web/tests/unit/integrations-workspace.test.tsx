@@ -95,7 +95,7 @@ describe("IntegrationsWorkspace", () => {
       "/app/integrations/yandex-market",
     );
     expect(screen.getAllByText("Пока недоступно")).toHaveLength(2);
-    expect(screen.getAllByText("Без ложного обещания production readiness.")).toHaveLength(2);
+    expect(screen.getAllByText("Подключение пока не поддерживается.")).toHaveLength(2);
   });
 });
 
@@ -306,6 +306,9 @@ describe("Yandex Market integration observability", () => {
 
     expect(await screen.findByRole("heading", { name: "Маркет основной" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Есть ошибки" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Состояние подключения" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Права" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Синхронизация" })).toBeInTheDocument();
     expect(screen.getByText("Общение с покупателями")).toBeInTheDocument();
     expect(screen.getByText("Состояние потоков")).toBeInTheDocument();
     expect(screen.getByText("Отзывы")).toBeInTheDocument();
@@ -313,6 +316,9 @@ describe("Yandex Market integration observability", () => {
     expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
     expect(screen.getByText(/Яндекс Маркет временно ограничил частоту запросов/)).toBeInTheDocument();
     expect(screen.queryByText(/must-not-leak|api_key|token/i)).not.toBeInTheDocument();
+    for (const forbidden of ["Accounts", "New account", "Selected account", "Credentials", "Connection health", "Permissions", "Scheduler", "Manual sync", "Audit trail"]) {
+      expect(screen.queryByText(forbidden)).not.toBeInTheDocument();
+    }
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes("jobs_limit=10"))).toBe(true);
   });
 });

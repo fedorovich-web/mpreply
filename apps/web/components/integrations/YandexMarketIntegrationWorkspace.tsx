@@ -79,8 +79,8 @@ export function YandexMarketIntegrationWorkspace() {
   return (
     <section className="wildberries-workspace yandex-market-workspace" aria-label="Управление подключениями Яндекс Маркета">
       <div className="integration-security-strip" role="note">
-        <strong>Ключи остаются на backend</strong>
-        <span>После сохранения frontend получает только маску fingerprint, без исходного API-ключа.</span>
+        <strong>API-ключ хранится защищённо</strong>
+        <span>После сохранения в кабинете видна только маска, а не исходный ключ.</span>
       </div>
 
       {!canManage ? (
@@ -100,7 +100,6 @@ export function YandexMarketIntegrationWorkspace() {
         <section className="integration-account-panel" aria-labelledby="ym-account-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Accounts</span>
               <strong id="ym-account-list-title">Кабинеты Яндекс Маркета</strong>
             </div>
             <span className="ui-badge">{accounts.length}</span>
@@ -155,7 +154,6 @@ export function YandexMarketIntegrationWorkspace() {
               }}
             >
               <div className="panel-heading">
-                <span className="panel-kicker">New account</span>
                 <strong>Добавить кабинет</strong>
               </div>
               <label>
@@ -344,7 +342,6 @@ function AccountDetail({
     <div className="integration-detail-stack">
       <div className="integration-detail-heading">
         <div>
-          <span className="panel-kicker">Selected account</span>
           <h2 id="ym-account-detail-title">{account.display_name}</h2>
         </div>
         <StatusBadge account={account} />
@@ -377,7 +374,6 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Settings</span>
               <strong>Настройки кабинета</strong>
             </div>
             <label>
@@ -431,7 +427,6 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Credentials</span>
               <strong>Заменить API-ключ</strong>
             </div>
             <label>
@@ -466,7 +461,7 @@ function AccountDetail({
       ) : (
         <div className="workspace-inline-state">
           <strong>Управление недоступно для этой роли</strong>
-          <p>Backend RBAC остаётся security boundary; интерфейс не показывает write actions для текущего membership.</p>
+          <p>Текущая роль позволяет просматривать состояние, но не менять настройки подключения.</p>
         </div>
       )}
     </div>
@@ -478,10 +473,10 @@ function AccountOverviewPanel({ overview }: { overview: MarketplaceAccountOvervi
 
   return (
     <div className="integration-overview-stack">
-      <section className={`integration-health-banner integration-health-banner-${overview.health_status}`} aria-labelledby="ym-health-title">
+      <section className={`integration-health-banner integration-health-banner-${overview.health_status}`} aria-labelledby="ym-health-section-title">
         <div>
-          <span className="panel-kicker">Connection health</span>
-          <h3 id="ym-health-title">{healthStatusLabel(overview.health_status)}</h3>
+          <h3 id="ym-health-section-title">Состояние подключения</h3>
+          <h4 id="ym-health-title">{healthStatusLabel(overview.health_status)}</h4>
         </div>
         <ul>
           {overview.health_reasons.map((reason) => <li key={reason}>{reason}</li>)}
@@ -510,8 +505,8 @@ function ScopesPanel({ scopes }: { scopes: string[] }) {
     <section className="integration-observability-panel" aria-labelledby="ym-scopes-title">
       <div className="panel-heading panel-heading-row">
         <div>
-          <span className="panel-kicker">Permissions</span>
-          <strong id="ym-scopes-title">Разрешения API-ключа</strong>
+          <h3 id="ym-scopes-title">Права</h3>
+          <span>Разрешения API-ключа</span>
         </div>
         <span className="ui-badge">{scopes.length}</span>
       </div>
@@ -535,8 +530,8 @@ function SyncStreamsPanel({ states }: { states: MarketplaceSyncState[] }) {
     <section className="integration-observability-panel" aria-labelledby="ym-streams-title">
       <div className="panel-heading panel-heading-row">
         <div>
-          <span className="panel-kicker">Scheduler</span>
-          <strong id="ym-streams-title">Состояние потоков</strong>
+          <h3 id="ym-streams-title">Синхронизация</h3>
+          <span>Состояние потоков</span>
         </div>
         <span className="ui-badge">{states.length}</span>
       </div>
@@ -569,7 +564,6 @@ function SyncJobsPanel({ jobs }: { jobs: MarketplaceSyncJobSummary[] }) {
     <section className="integration-observability-panel" aria-labelledby="ym-sync-history-title">
       <div className="panel-heading panel-heading-row">
         <div>
-          <span className="panel-kicker">Manual sync</span>
           <strong id="ym-sync-history-title">История синхронизаций</strong>
         </div>
         <span className="ui-badge">{jobs.length}</span>
@@ -600,7 +594,6 @@ function IntegrationEventsPanel({ events }: { events: MarketplaceIntegrationEven
     <section className="integration-observability-panel" aria-labelledby="ym-events-title">
       <div className="panel-heading panel-heading-row">
         <div>
-          <span className="panel-kicker">Audit trail</span>
           <strong id="ym-events-title">События интеграции</strong>
         </div>
         <span className="ui-badge">{events.length}</span>

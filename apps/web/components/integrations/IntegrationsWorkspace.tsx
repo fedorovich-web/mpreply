@@ -11,7 +11,7 @@ const marketplaceCatalog = [
   {
     key: "wildberries",
     name: "Wildberries",
-    badge: "MVP adapter",
+    badge: "Доступно",
     description: "Подключение кабинетов, проверка ключа, ручная синхронизация отзывов и вопросов.",
     available: true,
     href: "/app/integrations/wildberries",
@@ -19,24 +19,24 @@ const marketplaceCatalog = [
   {
     key: "ozon",
     name: "Ozon",
-    badge: "Planned",
-    description: "Production adapter ещё не реализован и не объявляется готовым.",
+    badge: "Недоступно",
+    description: "Подключение Ozon пока недоступно в личном кабинете.",
     available: false,
     href: null,
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
-    badge: "Partner API",
-    description: "Business ID + Api-Key, отзывы, вопросы, ответы, ручная и плановая синхронизация.",
+    badge: "Доступно",
+    description: "Подключение по Business ID и API-ключу, синхронизация отзывов и вопросов.",
     available: true,
     href: "/app/integrations/yandex-market",
   },
   {
     key: "avito",
     name: "Авито",
-    badge: "Planned",
-    description: "Не включается в production до реализации и проверки реального adapter.",
+    badge: "Недоступно",
+    description: "Подключение Авито пока недоступно в личном кабинете.",
     available: false,
     href: null,
   },
@@ -105,7 +105,7 @@ export function IntegrationsWorkspace() {
                     : "Просмотреть подключения"}
                 </Link>
               ) : (
-                <span className="integration-unavailable-note">Без ложного обещания production readiness.</span>
+                <span className="integration-unavailable-note">Подключение пока не поддерживается.</span>
               )}
             </article>
           );

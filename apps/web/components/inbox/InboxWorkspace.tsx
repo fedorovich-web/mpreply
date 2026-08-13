@@ -8,6 +8,7 @@ import {
   customerMessageListSchema,
   customerMessageSchema,
   manualReplyWorkflowSchema,
+  marketplaceAccountListSchema,
   type CustomerMessage,
 } from "../../lib/api/schemas";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
@@ -19,13 +20,14 @@ type FilterState = {
   status: "all" | "needs_reply" | "ai_draft_ready" | "waiting_review" | "failed" | "escalated";
   query: string;
   rating: "all" | "negative" | "positive" | "no_rating";
+  marketplaceAccountId: string;
 };
 
 const messageStatusLabels: Record<string, string> = {
   new: "Новое",
   imported: "Импортировано",
   needs_reply: "Нужен ответ",
-  ai_draft_ready: "AI-черновик готов",
+  ai_draft_ready: "Черновик с ИИ готов",
   waiting_review: "На проверке",
   needs_manual_check: "Нужна ручная проверка",
   approved: "Одобрено",
@@ -59,6 +61,11 @@ export function InboxWorkspace() {
   const [selectedId, setSelectedId] = useState("");
   const deferredQuery = useDeferredValue(filters.query.trim());
 
+  const accountsQuery = useQuery({
+    queryKey: ["marketplace-accounts", activeOrganization.id],
+    queryFn: () => apiRequest(buildApiQuery("/api/marketplace-accounts", { organization_id: activeOrganization.id }), marketplaceAccountListSchema),
+  });
+
   const queryPath = useMemo(() => {
     const ratingMin = filters.rating === "positive" ? 4 : undefined;
     const ratingMax = filters.rating === "negative" ? 3 : undefined;
@@ -66,13 +73,14 @@ export function InboxWorkspace() {
       organization_id: activeOrganization.id,
       type: filters.type === "all" ? undefined : filters.type,
       status: filters.status === "all" ? undefined : filters.status,
+      marketplace_account_id: filters.marketplaceAccountId || undefined,
       rating_min: ratingMin,
       rating_max: ratingMax,
       search: deferredQuery || undefined,
       page: 1,
       page_size: 100,
     });
-  }, [activeOrganization.id, deferredQuery, filters.rating, filters.status, filters.type]);
+  }, [activeOrganization.id, deferredQuery, filters.marketplaceAccountId, filters.rating, filters.status, filters.type]);
 
   const messagesQuery = useQuery({
     queryKey: ["messages", activeOrganization.id, queryPath],
@@ -124,8 +132,8 @@ export function InboxWorkspace() {
     <section className="inbox-workspace" aria-label="Рабочая область обращений">
       <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
         <div className="panel-heading">
-          <span className="panel-kicker">Фильтры</span>
-          <strong>Живая очередь</strong>
+          <strong>Фильтры</strong>
+          <span>Сузьте список по задаче, кабинету или тексту.</span>
         </div>
 
         <label className="field-group">
@@ -139,6 +147,14 @@ export function InboxWorkspace() {
           />
         </label>
 
+        <label className="field-group">
+          <span>Кабинет маркетплейса</span>
+          <select aria-label="Кабинет маркетплейса" onChange={(event) => updateFilter("marketplaceAccountId", event.target.value)} value={filters.marketplaceAccountId}>
+            <option value="">Все кабинеты</option>
+            {(accountsQuery.data ?? []).map((account) => <option key={account.id} value={account.id}>{account.display_name}</option>)}
+          </select>
+        </label>
+
         <FilterGroup label="Тип обращения">
           <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>Все</FilterButton>
           <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>Отзывы</FilterButton>
@@ -149,7 +165,7 @@ export function InboxWorkspace() {
         <FilterGroup label="Статус">
           <FilterButton active={filters.status === "all"} onClick={() => updateFilter("status", "all")}>Все</FilterButton>
           <FilterButton active={filters.status === "needs_reply"} onClick={() => updateFilter("status", "needs_reply")}>Нужен ответ</FilterButton>
-          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>AI готов</FilterButton>
+          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>ИИ готов</FilterButton>
           <FilterButton active={filters.status === "waiting_review"} onClick={() => updateFilter("status", "waiting_review")}>Проверка</FilterButton>
           <FilterButton active={filters.status === "failed"} onClick={() => updateFilter("status", "failed")}>Ошибки</FilterButton>
           <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>Эскалации</FilterButton>
@@ -323,7 +339,7 @@ function MessageDetail({
             disabled={isCreatingDraft}
             maxLength={12000}
             onChange={(event) => setReplyText(event.target.value)}
-            placeholder="Напишите ответ и отправьте его в Review Queue"
+            placeholder="Напишите ответ для проверки"
             value={replyText}
           />
           <button
@@ -422,7 +438,8 @@ function filtersFromSearch(search: URLSearchParams): FilterState {
     type: type === "review" || type === "question" || type === "chat" ? type : "all",
     status: status === "needs_reply" || status === "ai_draft_ready" || status === "waiting_review" || status === "failed" || status === "escalated" ? status : "all",
     rating: rating === "negative" || rating === "positive" || rating === "no_rating" ? rating : "all",
-    query: (search.get("query") ?? "").slice(0, 255),
+    marketplaceAccountId: (search.get("marketplace_account_id") ?? "").slice(0, 64),
+    query: (search.get("search") ?? search.get("query") ?? "").slice(0, 255),
   };
 }
 
@@ -431,7 +448,8 @@ function filterUrl(pathname: string, filters: FilterState): string {
   if (filters.type !== "all") search.set("type", filters.type);
   if (filters.status !== "all") search.set("status", filters.status);
   if (filters.rating !== "all") search.set("rating", filters.rating);
-  if (filters.query.trim()) search.set("query", filters.query.trim());
+  if (filters.marketplaceAccountId) search.set("marketplace_account_id", filters.marketplaceAccountId);
+  if (filters.query.trim()) search.set("search", filters.query.trim());
   const query = search.toString();
   return query ? `${pathname}?${query}` : pathname;
 }
