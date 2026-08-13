@@ -8,6 +8,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    from scripts.check_no_production_comments import find_production_comments
+except ModuleNotFoundError:
+    from check_no_production_comments import find_production_comments
+
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
@@ -986,6 +991,11 @@ def check_generated_artifacts_absent() -> None:
             break
 
 
+def check_production_comments() -> None:
+    for finding in find_production_comments(ROOT):
+        fail(f"Authored production comment: {finding.path}:{finding.line}")
+
+
 def main() -> int:
     check_public_routes()
     check_ts_imports()
@@ -1001,6 +1011,7 @@ def main() -> int:
     check_payment_foundation_contract()
     check_brand_identity_contract()
     check_deployment_contract()
+    check_production_comments()
     check_generated_artifacts_absent()
 
     if ERRORS:

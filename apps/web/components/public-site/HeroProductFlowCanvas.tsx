@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import styles from "./HeroProductFlowCanvas.module.css";
 
@@ -455,13 +456,12 @@ export function HeroProductFlowCanvas() {
             </div>
 
             <div className={styles.photo}>
-              {/* Direct public asset avoids the Next image optimizer path in patch-only deployments. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
+                unoptimized
                 src="/brand/mpreply-hero-sneakers.webp"
                 alt="Белые женские кроссовки"
-                width="780"
-                height="370"
+                width={780}
+                height={370}
                 loading="eager"
                 decoding="async"
               />

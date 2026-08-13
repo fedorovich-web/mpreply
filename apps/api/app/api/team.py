@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,6 +17,7 @@ from app.schemas.team import (
     InvitationCreatedResponse,
     InvitationCreateRequest,
     InvitationResponse,
+    MemberRole,
     TeamMemberResponse,
     TeamMemberRoleUpdateRequest,
 )
@@ -156,7 +158,7 @@ def to_member_response(member: TeamMember) -> TeamMemberResponse:
         user_id=user.id,
         email=user.email,
         name=user.name,
-        role=membership.role,  # type: ignore[arg-type]
+        role=cast(MemberRole, membership.role),
         status=membership.status,
         created_at=membership.created_at,
         updated_at=membership.updated_at,

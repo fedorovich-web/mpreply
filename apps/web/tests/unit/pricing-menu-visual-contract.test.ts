@@ -21,8 +21,6 @@ describe("MPReply pricing and menu visual contract", () => {
     expect(siteConfigSource).toContain('href: "/blog"');
     expect(headerSource).toContain("document.body.style.overflow = \"hidden\"");
     expect(headerSource).not.toContain("href: \"/#product\"");
-    expect(publicStyleSource).toContain("MPReply 0.1.90 · dependency-warning audit, typography, pricing and menu recovery");
-    expect(publicStyleSource).toContain("MPReply 0.1.94 · public hero spacing, lists and trial modal form recovery");
     expect(publicStyleSource).toMatch(/\.public-nav-rail-v90,[\s\S]*?background:\s*var\(--public-v86-transparent\) !important;[\s\S]*?box-shadow:\s*var\(--public-v86-none\) !important;/);
     expect(publicStyleSource).toMatch(/\.public-nav-v90 \.public-nav-link-v90::before \{[\s\S]*?content:\s*none !important;[\s\S]*?display:\s*none !important;/);
     expect(publicStyleSource).toMatch(/\.public-nav-link-label-v90::after \{[\s\S]*?width:\s*100%;[\s\S]*?transform:\s*var\(--public-v90-nav-underline-hidden\);/);
@@ -120,13 +118,11 @@ describe("MPReply pricing and menu visual contract", () => {
     expect(modalSource).toContain("modal.showPopover()");
     expect(modalSource).toContain("document.documentElement.dataset.mpreplyTrialSource");
     expect(modalSource).toContain("delete document.documentElement.dataset.mpreplyTrialSource");
-    expect(publicStyleSource).toContain("MPReply 0.1.94 · public hero spacing, lists and trial modal form recovery");
   });
 
 
 
   it("contains mobile public-page paint overflow without creating a horizontal scrollport", () => {
-    expect(publicStyleSource).toContain("MPReply 0.1.103 · mobile horizontal scrollport containment");
     expect(publicStyleSource).toMatch(
       /@media \(max-width: 760px\) \{[\s\S]*?\.public-root \{[\s\S]*?overflow-x:\s*clip;[\s\S]*?\}/,
     );

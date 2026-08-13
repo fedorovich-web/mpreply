@@ -56,8 +56,6 @@ class ReplyDispatchRecoveryService:
         for reply in result.scalars().all():
             if not self._is_dispatchable(reply=reply, now=current_time):
                 continue
-            # Broker acceptance can precede this transaction's commit. Duplicate execution
-            # remains safe through the existing reply lock, lease, preflight and idempotency checks.
             worker_message_id = dispatch_reply_safely(reply=reply, enqueue=enqueue)
             if worker_message_id is None:
                 continue

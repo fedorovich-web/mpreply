@@ -41,15 +41,13 @@ describe("MPReply public visual recovery contract", () => {
 
 
 
-  it("does not approve the broken 1440px single-column Hero fold", () => {
-    expect(publicStyleSource).toContain("MPReply 0.1.85 · Hero visual baseline recovery");
+  it("keeps the wide Hero two-column layout until the compact breakpoint", () => {
     expect(publicStyleSource).toContain("@media (max-width: 1240px)");
     expect(publicStyleSource).toMatch(/@media \(max-width: 1240px\) \{[\s\S]*?\.home-hero-layout \{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\) !important;/);
     const brokenCollapseIndex = publicStyleSource.search(/@media \(max-width: 1450px\) \{\s*\.home-hero-layout \{\s*grid-template-columns:\s*minmax\(0, 1fr\) !important;/);
-    const recoveryIndex = publicStyleSource.indexOf("MPReply 0.1.85 · Hero visual baseline recovery");
+    const recoveryIndex = publicStyleSource.search(/@media \(max-width: 1240px\) \{[\s\S]*?\.home-hero-layout \{/);
     expect(brokenCollapseIndex).toBeGreaterThanOrEqual(0);
     expect(recoveryIndex).toBeGreaterThan(brokenCollapseIndex);
-    expect(heroStyleSource).toContain("MPReply 0.1.85 · compact desktop scene sizes");
     expect(heroStyleSource).toMatch(/@media \(max-width: 1500px\) and \(min-width: 1241px\) \{[\s\S]*?\.scene \{[\s\S]*?width:\s*clamp\(43rem, 55vw, 50\.5rem\);/);
     expect(heroStyleSource).toContain("grid-template-columns: minmax(0, 0.82fr) minmax(0, 0.88fr) minmax(0, 1.05fr)");
   });

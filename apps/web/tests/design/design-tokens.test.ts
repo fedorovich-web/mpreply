@@ -412,7 +412,7 @@ describe("MPReply design tokens", () => {
   });
 
   it("keeps live integrations on semantic tokens, stable motion and responsive states", () => {
-    const start = globalStyleSource.indexOf("/* Live marketplace integrations workspace */");
+    const start = globalStyleSource.indexOf(".integrations-workspace,");
     expect(start).toBeGreaterThanOrEqual(0);
 
     const integrationStyles = globalStyleSource.slice(start);

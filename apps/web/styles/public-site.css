@@ -444,7 +444,6 @@
 	}
 }
 
-/* MPReply Signal Flow · public brand refresh */
 .public-root {
 	background: var(--color-bg-page);
 }
@@ -689,7 +688,6 @@
 	transition: var(--transition-background-border);
 }
 
-/* Shared live typography/layout rules preserved after removing dead legacy card families. */
 .section-heading p,
 .public-copy-muted,
 .faq-item p,
@@ -836,10 +834,6 @@
 	opacity: var(--opacity-visible);
 	transform: var(--transform-theme-icon-visible);
 }
-
-/* --------------------------------------------------------------------------
-   MPReply 0.1.15 · secondary public routes
-   -------------------------------------------------------------------------- */
 
 .public-subhero {
 	position: relative;
@@ -1542,10 +1536,6 @@
 	}
 }
 
-/* --------------------------------------------------------------------------
-   MPReply 0.1.16 · navigation, theme and public-shell polish
-   -------------------------------------------------------------------------- */
-
 .public-nav a[aria-current='page'] {
 	color: var(--color-brand-primary);
 }
@@ -1871,11 +1861,6 @@
 	}
 }
 
-/* --------------------------------------------------------------------------
-   MPReply 0.1.27 · light-first Visual Recovery final contract
-   PitchBot + ARIA + Relatra principles, MPReply-owned Orbital Ribbon Flow.
-   -------------------------------------------------------------------------- */
-
 .public-header {
 	border-bottom: 0;
 	box-shadow: var(--shadow-header);
@@ -2170,10 +2155,6 @@
 		display: none;
 	}
 }
-
-/* -------------------------------------------------------------------------- */
-/* Screenshot-driven public recovery · 0.1.27 · Light Orbital Intelligence    */
-/* -------------------------------------------------------------------------- */
 
 .public-eyebrow {
 	display: inline-flex;
@@ -3400,10 +3381,6 @@
 	}
 }
 
-/* ========================================================================== */
-/* MPReply 0.1.27 · Visual Recovery v4 · screenshot-driven acceptance contract */
-/* ========================================================================== */
-
 .home-hero,
 .home-section,
 .home-outcomes,
@@ -3428,9 +3405,6 @@
 	background: var(--color-public-section-subtle);
 }
 
-/* Hero orbital system: 5 clean ellipses, 3 input sources, one output. */
-
-/* Soft 3D / clay marketing icons: no decorative dots, no flat outline tile. */
 .marketing-glyph {
 	position: relative;
 	display: grid;
@@ -3489,7 +3463,6 @@
 	stroke: var(--color-marketing-glyph-artwork-accent);
 }
 
-/* Example block: compact, legible, no extra technical decision layer. */
 .home-example-stage {
 	display: grid;
 	gap: var(--space-4);
@@ -3511,7 +3484,6 @@
 	background: var(--color-home-example-reply-surface);
 }
 
-/* Marketplace block: structured rail + live feed, no empty floating-node canvas. */
 .home-marketplace-stage,
 .home-marketplace-nodes,
 .home-marketplace-workspace {
@@ -3679,7 +3651,6 @@
 	font-size: var(--font-size-caption);
 }
 
-/* LLM cards use local provider logos, not generated glyph approximations. */
 .home-llm-grid {
 	display: grid;
 	grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -3733,7 +3704,6 @@
 	display: none;
 }
 
-/* FAQ: fixed-height answer shell prevents page jumps when another question opens. */
 .home-faq-layout {
 	display: grid;
 	grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
@@ -3861,7 +3831,6 @@
 	line-height: var(--line-height-copy);
 }
 
-/* Resources: one dominant editorial feature + two supporting articles. */
 .home-resource-grid {
 	display: none;
 }
@@ -3962,7 +3931,6 @@
 	line-height: var(--line-height-heading-relaxed);
 }
 
-/* Final CTA: actual Electric Pulse gradient and high-contrast buttons. */
 .home-final-cta {
 	padding-top: var(--space-12);
 	background: var(--color-public-page);
@@ -4045,7 +4013,6 @@
 	color: var(--color-text-on-brand);
 }
 
-/* No decorative separators on homepage or directly below its CTA. */
 .home-section + .home-section,
 .home-final-cta + *,
 .public-main:has(.home-hero) .public-footer,
@@ -4126,7 +4093,6 @@
 	}
 }
 
-/* MPReply 0.1.54 · approved light hero workspace and review-resolution layout */
 .home-review-resolution-heading {
 	display: grid;
 	grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.8fr);
@@ -4174,7 +4140,6 @@
 	}
 }
 
-/* MPReply 0.1.56 · Hero recovery at compact desktop widths. */
 .home-hero-layout > * {
 	min-width: 0;
 }
@@ -4195,7 +4160,6 @@
 	}
 }
 
-/* MPReply 0.1.59 · Approved v50 Hero / product-flow canvas integration. */
 .home-hero .public-container {
 	width: min(100% - 5rem, 97.5rem);
 	max-width: none;
@@ -4312,7 +4276,6 @@
 	}
 }
 
-/* MPReply 0.1.60 · readable review tabs, vertical headings and full-width FAQ */
 .home-section-heading h2,
 .home-review-resolution-heading h2,
 .home-final-cta-card h2,
@@ -4460,7 +4423,6 @@
 	}
 }
 
-/* MPReply 0.1.61 · public polish pass */
 .public-nav {
 	font-size: var(--public-nav-font-size);
 	gap: var(--space-2);
@@ -4655,7 +4617,6 @@
 	}
 }
 
-/* MPReply 0.1.62 · hard polish: headings vertical, redesigned marketplace block, FAQ +/−, readable CTA */
 .home-review-resolution-heading {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -4685,7 +4646,6 @@
 	max-width: var(--home-section-copy-max-width);
 }
 
-/* Completely rebuilt marketplace section: no old rail/feed look. */
 .home-marketplace-board {
 	display: grid;
 	grid-template-columns: minmax(18rem, 0.85fr) minmax(0, 1.15fr);
@@ -4803,7 +4763,6 @@
 	line-height: var(--line-height-snug);
 }
 
-/* FAQ icon must be normal plus/minus, not a rotated glyph. */
 .home-faq-layout {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -4862,7 +4821,6 @@
 	box-shadow: inset 0 1px 0 rgb(92 104 155 / 8%);
 }
 
-/* CTA: readable gradient, white text, high-contrast buttons. */
 .home-final-cta-card {
 	background: var(--home-final-cta-readable-bg);
 	color: var(--color-text-on-dark);
@@ -4892,7 +4850,6 @@
 		var(--shadow-home-cta-secondary-button);
 }
 
-/* Header: 16px nav, softer hover, no chevrons/arrows. */
 .public-nav {
 	font-size: var(--font-size-body);
 }
@@ -4917,7 +4874,6 @@
 	}
 }
 
-/* MPReply 0.1.63 · header width, CTA copy, final card/icon polish */
 .public-header .public-container,
 .public-header-inner {
 	width: var(--public-header-v63-container-width);
@@ -5123,12 +5079,10 @@
 	}
 }
 
-/* MPReply 0.1.63 · hero/header CTA differentiation */
 .home-hero-actions .button-primary {
 	white-space: nowrap;
 }
 
-/* MPReply 0.1.65 · fixed icon placement, sizes and consistent radius */
 .home-outcome-card,
 .home-capability-card,
 .marketplace-public-card,
@@ -5199,7 +5153,6 @@
 	filter: none;
 }
 
-/* Marketplace process: no overlay over text, normal icon size */
 .home-marketplace-board {
 	grid-template-columns: minmax(20rem, 0.9fr) minmax(0, 1.1fr);
 	gap: var(--space-6);
@@ -5241,12 +5194,10 @@
 	background: var(--color-public-surface-soft);
 }
 
-/* Final CTA: keep header/hero/final CTA text differentiated */
 .home-hero-actions .button-primary {
 	white-space: nowrap;
 }
 
-/* Responsive icons */
 @media (max-width: 1180px) {
 	.home-outcome-card .marketing-glyph,
 	.home-capability-card .marketing-glyph,
@@ -5288,7 +5239,6 @@
 	}
 }
 
-/* MPReply 0.1.66 · hard fix: icons left above headings, no 5th card, no right-floating glyphs */
 .home-outcome-grid {
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -5336,7 +5286,6 @@
 	margin: 0;
 }
 
-/* Marketplace hub icon must not sit in the middle of text. */
 .home-marketplace-hub .marketing-glyph {
 	position: static !important;
 	inset: auto !important;
@@ -5368,7 +5317,6 @@
 	}
 }
 
-/* MPReply 0.1.67 · restore radius everywhere; equal left-top icons in cards */
 .home-outcome-card,
 .home-capability-card,
 .home-marketplace-hub,
@@ -5456,7 +5404,6 @@
 	margin-top: var(--public-v95-zero) !important;
 }
 
-/* Marketplace hub icon: same size as other block icons, left above heading/text. */
 .home-marketplace-hub {
 	display: flex !important;
 	flex-direction: column !important;
@@ -5510,9 +5457,6 @@
 	}
 }
 
-/* MPReply 0.1.68 · icons, radius, alternating sections and dark footer */
-
-/* Alternating backgrounds in the actual homepage order. */
 .home-hero {
 	background: var(--public-section-soft-v68) !important;
 }
@@ -5545,7 +5489,6 @@
 	background: var(--public-section-white-v68) !important;
 }
 
-/* Consistent rounded cards/blocks. */
 .home-outcome-card,
 .home-capability-card,
 .home-llm-card,
@@ -5585,7 +5528,6 @@
 	box-shadow: var(--public-shadow-card-hover-v68);
 }
 
-/* Equal icon box and equal perceived icon content. */
 .home-outcome-card,
 .home-capability-card {
 	display: flex !important;
@@ -5649,7 +5591,6 @@
 	align-items: flex-start !important;
 }
 
-/* Dark footer without the deleted top border and topline shadow. */
 .public-footer {
 	border-top: 0 !important;
 	background: var(--public-footer-bg-v68) !important;
@@ -5712,9 +5653,6 @@
 	}
 }
 
-/* MPReply 0.1.69 · follow-up corrections requested by user */
-
-/* Smooth background transitions between sections instead of hard cuts. */
 .home-hero {
 	background: linear-gradient(
 		180deg,
@@ -5787,7 +5725,6 @@
 	) !important;
 }
 
-/* Uniform visible icon size and clearer placement above headings on the left. */
 .home-outcome-card .marketing-glyph,
 .home-capability-card .marketing-glyph,
 .home-marketplace-hub .marketing-glyph {
@@ -5814,7 +5751,6 @@
 	opacity: var(--public-v87-opacity-visible) !important;
 }
 
-/* Footer should be soft gray, visually same width language as header/hero container. */
 .public-footer {
 	background: var(--public-v86-transparent) !important;
 	color: var(--public-footer-text-v69) !important;
@@ -5894,9 +5830,6 @@
 	}
 }
 
-/* MPReply 0.1.71 · final blue-purple icon pack integration */
-
-/* Every 3D marketing icon uses exactly the same box at each breakpoint. */
 .marketing-glyph,
 .public-benefit-item .marketing-glyph,
 .home-intelligence-stage .marketing-glyph,
@@ -5957,7 +5890,6 @@
 	opacity: var(--public-v87-opacity-visible) !important;
 }
 
-/* In vertical cards the icon remains on the left, directly above the heading. */
 .home-outcome-card,
 .home-capability-card,
 .marketplace-public-card,
@@ -5977,7 +5909,6 @@
 	margin-bottom: var(--space-4) !important;
 }
 
-/* Keep the rounded card system consistent; only the icon itself has no container. */
 .home-outcome-card,
 .home-capability-card,
 .home-marketplace-hub,
@@ -5991,7 +5922,6 @@
 	border-radius: var(--public-card-radius-v68) !important;
 }
 
-/* Footer surface spans the full viewport; its content follows the exact header/hero width. */
 .public-footer {
 	width: 100%;
 	padding: clamp(var(--space-9), 5vw, var(--space-12)) 0 var(--space-6) !important;
@@ -6088,7 +6018,6 @@
 	}
 }
 
-/* MPReply 0.1.73 · public content architecture, trial and pricing */
 .home-hero-trial-note,
 .public-subhero-note {
 	margin: var(--space-4) 0 0;
@@ -6680,9 +6609,6 @@
 	}
 }
 
-/* MPReply 0.1.75 · unified public width, controlled Hero, model masonry and pricing polish */
-
-/* One external grid for Header, Hero, every section and Footer content. */
 .public-root .public-container,
 .public-header .public-container,
 .public-header-inner,
@@ -6693,7 +6619,6 @@
 	margin-inline: auto !important;
 }
 
-/* Hero: four controlled lines with a dedicated copy column that cannot overlap Canvas. */
 .home-hero-layout {
 	grid-template-columns: minmax(0, var(--public-v75-hero-copy-width)) minmax(0, var(--public-v75-hero-canvas-width));
 	justify-content: space-between;
@@ -6715,7 +6640,6 @@
 	white-space: nowrap;
 }
 
-/* Real two-column masonry: short/long on the left, long/short on the right. */
 .home-llm-masonry-v75 {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6757,7 +6681,6 @@
 	line-height: var(--line-height-copy);
 }
 
-/* Trial CTA must stay clearly visible on the gradient banner. */
 .home-trial-banner-v73 .home-trial-cta-v74 {
 	min-width: 13.5rem;
 	border: var(--public-v95-zero) !important;
@@ -6772,7 +6695,6 @@
 	transform: translateY(-2px);
 }
 
-/* Pricing cards use the same vertical rhythm and button baseline. */
 .pricing-plan-card-v75 {
 	display: flex !important;
 	min-height: 100%;
@@ -6848,7 +6770,6 @@
 	box-shadow: var(--shadow-button-primary) !important;
 }
 
-/* Footer background stays full-width; only its content follows the shared site grid. */
 .public-footer {
 	width: 100%;
 }
@@ -6936,9 +6857,6 @@
 	}
 }
 
-/* MPReply 0.1.76 · coherent buttons, true asymmetric model rows and collision-safe Hero */
-
-/* Links navigate; buttons execute actions. Both must share the same visible interaction system. */
 .public-root :is(a.button, button.button) {
 	display: inline-flex !important;
 	height: var(--public-v76-button-height);
@@ -7005,7 +6923,6 @@
 	box-shadow: var(--shadow-button-highlight-hover), var(--shadow-public-button-hover) !important;
 }
 
-/* Hero desktop geometry matches the actual 56.25rem scene instead of a smaller virtual column. */
 .home-hero-layout {
 	grid-template-columns: minmax(0, var(--public-v76-hero-copy-width)) var(--public-v76-hero-canvas-width) !important;
 	justify-content: space-between;
@@ -7035,7 +6952,6 @@
 	white-space: nowrap;
 }
 
-/* Two horizontal rows: narrow/wide, then wide/narrow. */
 .home-llm-asymmetric-grid-v76 {
 	display: grid;
 	grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -7118,9 +7034,6 @@
 	}
 }
 
-/* MPReply 0.1.77 · compact model grid and corrected pricing vertical rhythm */
-
-/* Keep the requested asymmetric rows, but use a restrained 45/55 split. */
 .home-llm-asymmetric-grid-v76 {
 	grid-template-columns: repeat(var(--public-v77-model-grid-columns), minmax(0, 1fr)) !important;
 	gap: var(--space-5) !important;
@@ -7173,7 +7086,6 @@
 	line-height: 1.45;
 }
 
-/* Prices remain aligned, but the heading reserve no longer creates a large empty band. */
 .pricing-plan-card-v75 {
 	gap: var(--public-v77-plan-card-gap) !important;
 }
@@ -7200,8 +7112,6 @@
 		min-height: auto !important;
 	}
 }
-
-/* MPReply 0.1.78 · exact 60/40 model rows, aligned benefits and answer-pack pricing */
 
 .home-workflow-step-v73 h3 {
 	white-space: nowrap;
@@ -7320,8 +7230,6 @@
 		min-height: auto !important;
 	}
 }
-
-/* MPReply 0.1.79 · compact pricing cards and answer-pack calculator */
 
 .pricing-plan-card-v75 {
 	gap: var(--public-v79-plan-card-gap) !important;
@@ -7547,8 +7455,6 @@
 	}
 }
 
-/* MPReply 0.1.82 · shared pricing component and tokens across all public pages */
-
 .pricing-pack-grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -7674,7 +7580,6 @@
 	line-height: var(--line-height-snug);
 }
 
-/* No min-height or spacer between unit price and description. */
 .pricing-pack-card__description {
 	margin-top: 0;
 }
@@ -7933,10 +7838,6 @@
 	}
 }
 
-/* MPReply 0.1.85 · Hero visual baseline recovery at real desktop widths.
-   The 0.1.76 cascade collapsed the Hero at 1440px, placing the scene below the
-   copy and leaving a broken first fold. Keep the commercial Hero two-column on
-   desktop and defer the single-column composition to tablet widths. */
 .home-hero {
 	padding: var(--public-v85-hero-padding) !important;
 }
@@ -8030,9 +7931,6 @@
 	}
 }
 
-/* MPReply 0.1.86 · pricing visual rebalance and 2026 navigation system.
-   Evidence-based direction: restrained glass, spatial micro-interaction,
-   accessible focus/target states and clearer conversion hierarchy. */
 .public-header-v86 {
 	top: var(--space-3) !important;
 	border-bottom: 0 !important;
@@ -8605,9 +8503,6 @@
 	}
 }
 
-/* MPReply 0.1.87 · recovery of rejected 0.1.86 pricing/menu direction.
-   Scope: remove nav rail background/border feeling, restore strict 58/48/28
-   heading scale, calm pricing trial/calculator controls and fix mobile header. */
 .public-header-v87 {
 	top: 0 !important;
 	border-bottom: 0 !important;
@@ -8867,10 +8762,6 @@
 	}
 }
 
-/* MPReply 0.1.88 · pricing/menu correction after manual visual review.
-   Scope: no nav backgrounds, 58/48/28 type scale, 18px public leads,
-   calmer pricing trial/calculator/included sections, readable CTA on blue CTA cards,
-   mobile menu close control and body-scroll-safe markup. */
 .public-lead,
 .home-hero-lead,
 .public-subhero-copy .public-lead,
@@ -9266,7 +9157,6 @@
 	}
 }
 
-/* MPReply 0.1.89 · typography, pricing composition, clean nav underline, pages/copy recovery. */
 .public-lead,
 .home-hero-lead,
 .public-subhero-copy .public-lead,
@@ -9638,7 +9528,6 @@
 	}
 }
 
-/* MPReply 0.1.90 · dependency-warning audit, typography, pricing and menu recovery. */
 .public-header-v90,
 .public-header-inner-v90,
 .public-nav-rail-v90,
@@ -10042,7 +9931,6 @@
 	margin: 0 0 var(--space-1) !important;
 }
 
-/* Product Pipeline closure: compact coverage proof and shared editorial resources. */
 .home-marketplace-proof {
 	display: block;
 	margin-top: 0;
@@ -10185,7 +10073,6 @@
 	}
 }
 
-/* MPReply 0.1.91 · recovery after manual visual review: solid header, compact headings, pricing polish. */
 .public-header-v90 {
 	background: var(--public-v91-header-bg) !important;
 	box-shadow: var(--public-v91-header-shadow) !important;
@@ -10545,7 +10432,6 @@
 	}
 }
 
-/* MPReply 0.1.92 · unified hero spacing, inner panel hierarchy and pricing recovery. */
 .home-hero-copy,
 .public-subhero-copy,
 .section-heading,
@@ -10889,7 +10775,6 @@
 	}
 }
 
-/* MPReply 0.1.93 · public spacing, hero panels, modal and eyebrow contract recovery. */
 :where(.public-main) h2 {
 	font-size: var(--font-size-h2) !important;
 	line-height: var(--line-height-heading) !important;
@@ -11246,7 +11131,6 @@
 	}
 }
 
-/* MPReply 0.1.94 · public hero spacing, lists and trial modal form recovery. */
 :root {
 	--public-eyebrow-to-heading: var(--public-v94-eyebrow-to-heading);
 	--public-heading-to-copy: var(--public-v94-heading-to-copy);
@@ -11569,7 +11453,6 @@
 	}
 }
 
-/* MPReply 0.1.95 · final recovery for public heading rhythm, hero lists and trial modal. */
 .public-eyebrow {
 	align-items: center !important;
 	width: fit-content !important;
@@ -11921,7 +11804,6 @@
 	}
 }
 
-/* MPReply 0.1.96 · emergency recovery for section rhythm, trial modal and hero collision. */
 :root {
 	--public-v96-eyebrow-to-heading: clamp(1.45rem, 1.8vw, 2rem);
 	--public-v96-heading-to-copy: clamp(1.65rem, 1.75vw, 1.75rem);
@@ -12136,12 +12018,10 @@
 	color: var(--color-brand-on-light) !important;
 }
 
-/* MPReply 0.1.97 · unit contract recovery: neutral pricing range track */
 .answer-pack-field-v90 input[type="range"] {
         background: var(--pricing-v90-range-track) !important;
 }
 
-/* MPReply 0.1.103 · production brand assets. */
 .public-brand-logo,
 .public-footer-brand-logo {
 	display: block;
@@ -12190,16 +12070,12 @@
 	}
 }
 
-/* MPReply 0.1.103 · W3C-safe native popover layout. */
-
-/* MPReply 0.1.103 · mobile horizontal scrollport containment. */
 @media (max-width: 760px) {
 	.public-root {
 		overflow-x: clip;
 	}
 }
 
-/* MP Reply 0.1.103 · user-approved icon scale, workflow imagery and integrated footer. */
 .public-nav-v90 .public-nav-link-v90,
 .public-nav-link-label-v90 {
 	font-size: var(--public-v103-nav-font-size) !important;
@@ -12290,7 +12166,6 @@
 	}
 }
 
-/* MP Reply 0.1.103 · full-viewport native popover backdrop. */
 .public-trial-modal[popover] {
 	position: fixed !important;
 	inset: 0 !important;
@@ -12314,7 +12189,6 @@
 	backdrop-filter: none !important;
 }
 
-/* Product Pipeline responsive closure must follow all versioned desktop overrides. */
 .home-hero {
 	background: var(--gradient-public-hero) !important;
 }

@@ -55,7 +55,7 @@ class SellerPromptSettings:
             brand_sections.append(brand_rules_override.strip())
         if self.prohibited_phrases:
             brand_sections.append(
-                "Не используй фразы: " + "; ".join(self.prohibited_phrases) + "."  # noqa: RUF001
+                "\u041d\u0435 используй фразы: " + "; ".join(self.prohibited_phrases) + "."
             )
         if self.reply_signature:
             brand_sections.append(f"Заверши ответ подписью: {self.reply_signature}")

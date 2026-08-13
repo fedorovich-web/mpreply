@@ -9,7 +9,6 @@ type MarketingGlyphVariant =
   | "settings"
   | "history"
   | "recommendations"
-  // Backward-compatible aliases used by existing public pages.
   | "workspace"
   | "product"
   | "automation"
@@ -28,7 +27,6 @@ const GLYPH_SRC: Record<MarketingGlyphVariant, string> = {
   settings: "/brand/mpreply-icon-pack-1-blue-purple/settings.webp",
   history: "/brand/mpreply-icon-pack-1-blue-purple/history.webp",
   recommendations: "/brand/mpreply-icon-pack-1-blue-purple/recommendations.webp",
-  // Existing page data can keep its semantic names while using the new pack.
   workspace: "/brand/mpreply-icon-pack-1-blue-purple/flow.webp",
   product: "/brand/mpreply-icon-pack-1-blue-purple/context.webp",
   automation: "/brand/mpreply-icon-pack-1-blue-purple/settings.webp",

@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime
 from time import perf_counter
-from typing import Literal
+from typing import Any, Literal, cast
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -91,12 +91,13 @@ async def _check_database(timeout_seconds: float) -> DependencyHealth:
 async def _check_redis(timeout_seconds: float) -> DependencyHealth:
     settings = get_settings()
     started_at = perf_counter()
-    client = Redis.from_url(  # pyright: ignore[reportUnknownMemberType]
-        settings.redis_url.get_secret_value(), decode_responses=True
+    client = cast(
+        Redis,
+        cast(Any, Redis).from_url(settings.redis_url.get_secret_value(), decode_responses=True),
     )
     try:
         async with asyncio.timeout(timeout_seconds):
-            await client.ping()  # pyright: ignore[reportUnknownMemberType]
+            await cast(Any, client).ping()
     except Exception:
         return DependencyHealth(
             status="error",

@@ -426,7 +426,6 @@
 
 }
 
-/* MPReply 0.1.85 · compact desktop scene sizes for the accepted Hero fold. */
 @media (max-width: 1500px) and (min-width: 1241px) {
   .scene {
     width: clamp(43rem, 55vw, 50.5rem);
@@ -466,7 +465,6 @@
   }
 }
 
-/* MPReply 0.1.93 · keep desktop hero scene away from the copy column. */
 @media (max-width: 1380px) and (min-width: 1241px) {
   .scene {
     width: clamp(37rem, 45vw, 42rem);

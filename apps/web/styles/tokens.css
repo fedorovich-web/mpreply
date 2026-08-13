@@ -1,5 +1,5 @@
 :root {
-	/* Electric Pulse brand, neutral and semantic colors */
+
 	--color-transparent: transparent;
 	--color-white: #ffffff;
 	--color-black: #000000;
@@ -76,7 +76,6 @@
 	--color-danger-soft: #fef3f2;
 	--color-info-soft: #eff8ff;
 
-	/* Public-site background system */
 	--color-public-page: var(--color-bg-page);
 	--color-public-section: var(--color-bg-page);
 	--color-public-section-subtle: var(--color-bg-subtle);
@@ -110,7 +109,6 @@
 	--color-border-warning-muted: color-mix(in srgb, var(--color-warning), transparent 72%);
 	--color-border-danger-muted: color-mix(in srgb, var(--color-danger), transparent 72%);
 
-	/* Electric Pulse gradients and decorative effects */
 	--gradient-brand-main: linear-gradient(90deg, #5148e8 25%, #00e5e5 85%);
 	--gradient-public-hero:
 		radial-gradient(circle at 76% 26%, rgb(99 91 255 / 10%), var(--color-transparent) 28%),
@@ -142,26 +140,22 @@
 		radial-gradient(circle at 18% 12%, rgb(99 91 255 / 10%), var(--color-transparent) 32%),
 		linear-gradient(180deg, var(--color-white) 0%, var(--color-bg-page) 100%);
 
-	/* Font families */
 	--font-family-sans:
 		'MPReply Onest', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	--font-family-mono:
 		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-	/* Font weights */
 	--font-weight-regular: 400;
 	--font-weight-medium: 500;
 	--font-weight-semibold: 600;
 	--font-weight-bold: 700;
 
-	/* Public typography roles — only 400 / 500 / 600 / 700 */
 	--font-weight-public-copy: var(--font-weight-regular);
 	--font-weight-public-nav: var(--font-weight-medium);
 	--font-weight-public-label: var(--font-weight-semibold);
 	--font-weight-public-button: var(--font-weight-semibold);
 	--font-weight-public-title: var(--font-weight-bold);
 
-	/* Fluid typography roles · controlled 2026 scale */
 	--font-size-display: clamp(3rem, 4.6vw, 4rem);
 	--font-size-display-tablet: clamp(2.75rem, 7.5vw, 3.65rem);
 	--font-size-display-mobile: clamp(2.35rem, 11vw, 3rem);
@@ -183,7 +177,6 @@
 	--font-size-public-hero-compact: var(--font-size-h1-compact);
 	--font-size-public-section-heading: var(--font-size-h2);
 
-	/* Backward-compatible type scale */
 	--font-size-xs: var(--font-size-caption);
 	--font-size-sm: var(--font-size-body-sm);
 	--font-size-md: var(--font-size-body);
@@ -194,7 +187,6 @@
 	--font-size-4xl: 3.5rem;
 	--font-size-5xl: 4.5rem;
 
-	/* Line-height roles */
 	--line-height-display: 0.96;
 	--line-height-solid: 1;
 	--line-height-title: 1.08;
@@ -210,7 +202,6 @@
 	--line-height-copy: 1.65;
 	--line-height-relaxed: 1.7;
 
-	/* Letter-spacing roles */
 	--letter-spacing-display: -0.04em;
 	--letter-spacing-heading: -0.035em;
 	--letter-spacing-subheading: -0.025em;
@@ -221,7 +212,6 @@
 	--letter-spacing-brand: -0.03em;
 	--letter-spacing-nav: -0.02em;
 
-	/* Spacing scale */
 	--space-0: 0;
 	--space-half: 0.125rem;
 	--space-fine: 0.2rem;
@@ -251,7 +241,6 @@
 	--space-32: 8rem;
 	--space-34: 8.5rem;
 
-	/* Component spacing · semantic rhythm */
 	--public-container-gutter: clamp(var(--space-5), 3vw, var(--space-8));
 	--public-section-spacing: clamp(var(--space-18), 7vw, var(--space-28));
 	--public-hero-padding-start: clamp(var(--space-12), 5vw, var(--space-18));
@@ -271,12 +260,10 @@
 	--public-canvas-mobile-offset: -8%;
 	--public-canvas-mobile-width: 116%;
 
-	/* AI Assistant workspace layout */
 	--ai-workspace-grid-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1.15fr);
 	--ai-workspace-message-max-height: 38rem;
 	--ai-result-copy-min-height: 10rem;
 
-	/* Radius · compact precision */
 	--radius-sm: 0.375rem;
 	--radius-md: 0.625rem;
 	--radius-lg: 0.75rem;
@@ -290,7 +277,6 @@
 	--radius-full: 999px;
 	--radius-pill: var(--radius-full);
 
-	/* Borders and focus */
 	--border-width-hairline: 1px;
 	--border-width-accent: 0.25rem;
 	--focus-ring-width: 3px;
@@ -298,7 +284,6 @@
 	--focus-ring: var(--focus-ring-width) solid var(--color-focus-ring);
 	--focus-ring-offset-compact: 2px;
 
-	/* Shadows · cool Electric Pulse depth */
 	--shadow-xs: 0 1px 2px rgb(13 21 56 / 5%);
 	--shadow-sm: 0 3px 10px rgb(13 21 56 / 8%);
 	--shadow-md: 0 12px 30px rgb(13 21 56 / 10%);
@@ -338,7 +323,6 @@
 	--shadow-workspace-pulse-mid: 0 0 0 var(--space-3) var(--color-transparent);
 	--shadow-workspace-pulse-end: 0 0 0 var(--space-0) var(--color-transparent);
 
-	/* Motion */
 	--duration-instant: 0ms;
 	--duration-fast: 170ms;
 	--duration-normal: 280ms;
@@ -425,7 +409,6 @@
 	--opacity-visible: 1;
 	--opacity-disabled: 0.5;
 
-	/* Layout */
 	--container-max-width: 1320px;
 	--container-content-width: 760px;
 	--container-legal-width: 820px;
@@ -438,7 +421,6 @@
 	--inbox-filter-width: 17rem;
 	--message-detail-width: 28rem;
 
-	/* Public component geometry */
 	--size-brand-mark: 2.5rem;
 	--size-brand-mark-footer: 2.4rem;
 	--size-theme-toggle: 3rem;
@@ -473,7 +455,6 @@
 	--size-cursor-ring: 1.75rem;
 	--size-cursor-core: 0.3rem;
 
-	/* Hero product flow · Grounded Commerce Answer Pipeline */
 	--hero-product-flow-width: 41.25rem;
 	--hero-product-flow-height: clamp(31rem, 36vw, 34rem);
 	--hero-product-flow-perspective: 1250px;
@@ -551,7 +532,6 @@
 	--hero-flow-line-output: var(--color-success);
 	--hero-flow-shadow: var(--shadow-hero-product-flow-card);
 
-	/* Hero canvas · MPReply AI Orbital System */
 	--canvas-orbit-count: 5;
 	--canvas-orbit-stroke-width: 1.25;
 	--canvas-orbit-duration-min: 60;
@@ -637,7 +617,6 @@
 	--color-home-cta-secondary-surface: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
 	--shadow-home-cta-secondary-button: 0 14px 34px color-mix(in srgb, var(--color-text-primary) 18%, transparent);
 
-	/* Screenshot-driven public recovery · 0.1.27 */
 	--font-size-eyebrow: 0.875rem;
 	--font-size-auth-title: clamp(2rem, 4vw, 2.75rem);
 	--line-height-eyebrow: 1.25;
@@ -717,7 +696,6 @@
 	--shadow-home-cta: 0 34px 96px rgb(34 31 94 / 20%);
 	--shadow-marketing-glyph: 0 16px 36px rgb(34 31 94 / 12%);
 
-	/* Public FAQ / review readability · 0.1.60 */
 	--faq-item-answer-padding-block: var(--space-5);
 	--faq-item-answer-padding-inline: var(--space-6);
 	--faq-item-answer-border: var(--border-width-hairline) solid var(--color-border-subtle);
@@ -744,7 +722,6 @@
 	--public-hero-v50-lead-line-height: var(--line-height-copy-tight);
 	--public-hero-v50-actions-margin: var(--space-11);
 
-	/* MPReply 0.1.61 · public polish variables */
 	--public-nav-font-size: 1rem;
 	--public-nav-item-radius: var(--radius-pill);
 	--public-nav-item-padding-block: 0.625rem;
@@ -772,7 +749,6 @@
 	--faq-answer-max-width: 72rem;
 	--marketing-glyph-webp-size: 5.4rem;
 
-	/* Dashboard application tokens */
 	--app-shell-gap: var(--space-6);
 	--app-sidebar-bg: var(--color-bg-surface);
 	--app-topbar-bg: rgb(255 255 255 / 86%);
@@ -786,7 +762,7 @@
 }
 
 :root {
-	/* MPReply 0.1.62 · polish tokens */
+
 	--shadow-review-shell: 0 28px 78px rgb(34 31 94 / 10%);
 	--shadow-review-card: inset 0 0 0 1px rgb(92 104 155 / 8%), 0 16px 42px rgb(34 31 94 / 7%);
 	--shadow-review-soft-border: inset 0 0 0 1px rgb(92 104 155 / 10%);
@@ -811,7 +787,7 @@
 }
 
 :root {
-	/* MPReply 0.1.63 · site width, updated icon system and review alignment */
+
 	--public-header-v63-container-width: min(100% - 5rem, 97.5rem);
 	--public-header-v63-container-width-compact: min(100% - 3.5rem, 90rem);
 	--public-header-v63-container-width-mobile: min(100% - 1.75rem, 90rem);
@@ -827,7 +803,7 @@
 }
 
 :root {
-	/* MPReply 0.1.65 · normalized cards/icons/radius */
+
 	--public-card-radius-v65: var(--radius-3xl);
 	--public-card-padding-v65: clamp(var(--space-6), 3vw, var(--space-8));
 	--marketing-glyph-v65-size: clamp(5.25rem, 6.4vw, 7rem);
@@ -842,7 +818,7 @@
 }
 
 :root {
-	/* MPReply 0.1.67 · final block radius and equal icon size */
+
 	--public-block-radius-v67: 2rem;
 	--public-block-radius-v67-large: 2.25rem;
 	--public-block-icon-size-v67: 5.25rem;
@@ -852,7 +828,7 @@
 }
 
 :root {
-	/* MPReply 0.1.68 · equal visible icons, consistent cards and section rhythm */
+
 	--public-card-radius-v68: 2rem;
 	--public-card-radius-large-v68: 2.25rem;
 	--public-icon-size-v68: 7rem;
@@ -874,7 +850,7 @@
 }
 
 :root {
-	/* MPReply 0.1.69 · equal icon pack, softer footer, smooth section transitions */
+
 	--public-icon-size-v69: clamp(4.9rem, 5vw, 5.8rem);
 	--public-icon-size-v69-mobile: 4.5rem;
 	--public-icon-card-surface-v69: linear-gradient(180deg, rgb(255 255 255 / 86%), rgb(246 249 255 / 78%));
@@ -896,7 +872,7 @@
 }
 
 :root {
-	/* MPReply 0.1.71 · selected blue-purple 3D icon pack */
+
 	--marketing-glyph-size-v71: 7rem;
 	--marketing-glyph-size-mobile-v71: 5.75rem;
 	--public-footer-surface-v71: #e5e9f1;
@@ -908,7 +884,7 @@
 }
 
 :root {
-	/* MPReply 0.1.73 · public content architecture, pricing and trial */
+
 	--public-v73-body-size: 1rem;
 	--public-v73-small-size: 0.875rem;
 	--public-v73-card-radius: 2rem;
@@ -932,7 +908,7 @@
 }
 
 :root {
-	/* MPReply 0.1.75 · unified public container and final conversion polish */
+
 	--public-site-container-max-v75: 97.5rem;
 	--public-site-gutter-v75: 2.5rem;
 	--public-site-gutter-compact-v75: 1.75rem;
@@ -961,7 +937,7 @@
 }
 
 :root {
-	/* MPReply 0.1.76 · button system, asymmetric model rows and collision-safe Hero */
+
 	--public-v76-button-height: 3.25rem;
 	--public-v76-button-radius: 1rem;
 	--public-v76-button-font-size: 1rem;
@@ -985,7 +961,7 @@
 }
 
 :root {
-	/* MPReply 0.1.77 · compact LLM cards and corrected pricing rhythm */
+
 	--public-v77-model-grid-columns: 20;
 	--public-v77-model-narrow-columns: 9;
 	--public-v77-model-wide-columns: 11;
@@ -1002,7 +978,7 @@
 }
 
 :root {
-	/* MPReply 0.1.78 · 60/40 model rows and non-expiring answer packs */
+
 	--public-v78-model-columns: 5;
 	--public-v78-model-wide-span: 3;
 	--public-v78-model-narrow-span: 2;
@@ -1020,7 +996,7 @@
 }
 
 :root {
-	/* MPReply 0.1.79 · compact pricing rhythm and answer-volume calculator */
+
 	--public-v79-plan-card-gap: 0.85rem;
 	--public-v79-plan-description-min-height: 0rem;
 	--public-v79-calculator-radius: 2rem;
@@ -1036,7 +1012,7 @@
 }
 
 :root {
-	/* MPReply 0.1.82 · one pricing design system for home and /pricing */
+
 	--pricing-pack-grid-gap: clamp(var(--space-4), 1.8vw, var(--space-6));
 	--pricing-pack-card-radius: var(--public-v73-card-radius);
 	--pricing-pack-card-padding: clamp(var(--space-6), 2vw, var(--space-8));
@@ -1066,7 +1042,7 @@
 }
 
 :root {
-	/* MPReply 0.1.85 · desktop Hero fold recovery */
+
 	--public-v85-hero-padding: clamp(2.75rem, 4vw, 4.5rem) 0 clamp(3rem, 4.25vw, 5.25rem);
 	--public-v85-hero-gap: clamp(1.5rem, 2.8vw, 3.25rem);
 	--public-v85-hero-min-height: min(42rem, calc(100svh - 8rem));
@@ -1087,7 +1063,7 @@
 }
 
 :root {
-	/* MPReply 0.1.86 · pricing rebalance and 2026 navigation system */
+
 	--public-v86-none: none;
 	--public-v86-zero: 0;
 	--public-v86-transparent: transparent;
@@ -1196,7 +1172,6 @@
 	--pricing-v86-result-metric-shadow: inset 0 0 0 1px rgb(88 102 150 / 8%);
 	--pricing-v86-result-action-shell-shadow: inset 0 0 0 1px rgb(255 255 255 / 78%);
 
-	/* MPReply 0.1.87 · pricing/menu recovery after rejected 0.1.86 visual direction */
 	--public-v87-nav-underline-height: 0.125rem;
 	--public-v87-nav-underline-bg: linear-gradient(
 		90deg,
@@ -1223,7 +1198,7 @@
 }
 
 :root {
-	/* MPReply 0.1.88 · pricing/menu correction after manual visual review */
+
 	--public-v88-nav-hover-underline-bg: linear-gradient(
 		90deg,
 		var(--color-brand-accent) 0%,
@@ -1265,7 +1240,7 @@
 	--pricing-v88-final-primary-hover-transform: translateY(-0.08rem);
 	--pricing-v88-mobile-h2-size: clamp(2rem, 8.5vw, 2.5rem);
 	--pricing-v88-mobile-number-size: clamp(2.15rem, 9.5vw, 2.65rem);
-	/* MPReply 0.1.89 · pricing/menu/SEO copy correction tokens */
+
 	--pricing-v89-trial-number-size: clamp(1.8rem, 2vw, 2.125rem);
 	--pricing-v89-trial-heading-size: clamp(1.45rem, 1.7vw, 1.75rem);
 	--pricing-v89-result-volume-size: clamp(2.15rem, 2.6vw, 2.7rem);
@@ -1296,7 +1271,7 @@
 }
 
 :root {
-	/* MPReply 0.1.90 · strict public typography and visual recovery tokens */
+
 	--public-v90-h1-size: 3.625rem;
 	--public-v90-h2-size: 3rem;
 	--public-v90-h3-size: 1.75rem;
@@ -1343,7 +1318,7 @@
 }
 
 :root {
-	/* MPReply 0.1.91 · header opacity, compact public headings and pricing polish */
+
 	--public-v91-header-bg: #ffffff;
 	--public-v91-header-shadow: 0 0.5rem 1.35rem rgb(23 33 72 / 7%), inset 0 -1px 0 rgb(92 104 155 / 10%);
 	--public-v91-header-shadow-scrolled: 0 0.75rem 1.8rem rgb(23 33 72 / 9%), inset 0 -1px 0 rgb(92 104 155 / 12%);
@@ -1377,7 +1352,7 @@
 }
 
 :root {
-	/* MPReply 0.1.92 · unified public hero spacing and compact inner hero panels */
+
 	--public-v92-eyebrow-to-heading-gap: clamp(1.05rem, 1.15vw, 1.35rem);
 	--public-v92-heading-to-copy-gap: clamp(1.05rem, 1.2vw, 1.35rem);
 	--public-v92-copy-to-actions-gap: clamp(1.65rem, 2.2vw, 2.2rem);
@@ -1407,7 +1382,6 @@
 	--public-v92-inherit: inherit;
 }
 
-/* MPReply 0.1.93 · public heading and hero spacing contract tokens. */
 :root {
 	--public-v93-hero-copy-width: clamp(31rem, 34vw, 36rem);
 	--public-v93-hero-copy-width-compact: clamp(29rem, 35vw, 32rem);
@@ -1437,7 +1411,6 @@
 	--public-v93-close-rotate-backward: rotate(-45deg);
 }
 
-/* MPReply 0.1.94 · public spacing, compact hero panels and modal form recovery tokens. */
 :root {
 	--public-v94-eyebrow-to-heading: clamp(1.35rem, 1.55vw, 1.75rem);
 	--public-v94-heading-to-copy: clamp(1.45rem, 1.65vw, 1.9rem);
@@ -1473,7 +1446,6 @@
 	--public-v94-modal-gutter: 2rem;
 }
 
-/* MPReply 0.1.95 · final public heading rhythm and trial modal recovery tokens. */
 :root {
 	--public-v95-eyebrow-to-heading: clamp(1.2rem, 1.45vw, 1.65rem);
 	--public-v95-heading-to-copy: clamp(1.35rem, 1.7vw, 2rem);
@@ -1520,7 +1492,7 @@
 }
 
 :root {
-	/* MP Reply 0.1.103 · user-approved navigation, icon and footer refinement */
+
 	--public-v103-nav-font-size: 1rem;
 	--public-v103-card-icon-size: clamp(4.75rem, 5vw, 5.5rem);
 	--public-v103-card-icon-size-mobile: 4.5rem;
