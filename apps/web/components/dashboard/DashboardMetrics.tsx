@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { analyticsOverviewSchema, billingOverviewSchema } from "../../lib/api/schemas";
-import { Badge } from "../ui/Badge";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 export function DashboardMetrics() {
@@ -30,26 +29,26 @@ export function DashboardMetrics() {
   const analytics = analyticsQuery.data;
   const billing = billingQuery.data;
   const metrics = [
-    { label: "Обращения · 30 дней", value: formatNumber(analytics.total_messages), helper: `${analytics.new_messages} новых`, badge: "Всего" },
-    { label: "Автоответы", value: formatNumber(analytics.auto_replies_sent), helper: `${analytics.manual_replies_sent} вручную`, badge: "Авто" },
-    { label: "Нужен ответ", value: formatNumber(analytics.unanswered_messages), helper: `${analytics.answered_messages} уже отвечено`, badge: "Очередь" },
-    { label: "Черновики AI", value: formatNumber(analytics.ai_drafts_generated), helper: formatAcceptance(analytics.ai_acceptance_rate), badge: "AI" },
+    { label: "Получено сообщений", value: formatNumber(analytics.total_messages), helper: `${formatNumber(analytics.new_messages)} новых` },
+    { label: "Автоматических ответов", value: formatNumber(analytics.auto_replies_sent), helper: `${formatNumber(analytics.manual_replies_sent)} отправлено вручную` },
+    { label: "Ждут ответа", value: formatNumber(analytics.unanswered_messages), helper: `${formatNumber(analytics.answered_messages)} уже отвечено` },
+    { label: "Ответов подготовлено с ИИ", value: formatNumber(analytics.ai_drafts_generated), helper: formatAcceptance(analytics.ai_acceptance_rate) },
   ];
 
   return (
     <>
-      <section className="dashboard-cards dashboard-cards-4" aria-label="Ключевые показатели">
+      <section className="dashboard-summary-band" aria-label="Краткая сводка">
         {metrics.map((metric) => (
-          <article className="metric-card metric-card-rich" key={metric.label}>
-            <div className="metric-card-header"><span>{metric.label}</span><Badge tone="neutral">{metric.badge}</Badge></div>
+          <div className="dashboard-summary-item" key={metric.label}>
+            <span>{metric.label}</span>
             <strong>{metric.value}</strong><p>{metric.helper}</p>
-          </article>
+          </div>
         ))}
       </section>
 
-      <section className="dashboard-panel-grid" aria-label="Операционные панели">
-        <article className="dashboard-panel">
-          <div className="panel-heading"><span className="panel-kicker">За 30 дней</span><strong>Текущая нагрузка</strong></div>
+      <section className="dashboard-evidence-grid" aria-label="Дополнительная информация">
+        <article className="dashboard-evidence-panel">
+          <div className="panel-heading"><h2>За последние 30 дней</h2><p>Результат работы с обращениями покупателей.</p></div>
           <div className="analytics-summary-list">
             <div className="analytics-summary-row"><span>Отправлено ответов</span><strong>{formatNumber(analytics.replies_sent)}</strong></div>
             <div className="analytics-summary-row"><span>Негативных отзывов</span><strong>{formatNumber(analytics.negative_reviews)}</strong></div>
@@ -58,8 +57,8 @@ export function DashboardMetrics() {
           <Link className="button button-secondary" href="/app/analytics">Открыть аналитику</Link>
         </article>
 
-        <article className="dashboard-panel dashboard-panel-accent">
-          <div className="panel-heading"><span className="panel-kicker">Текущий тариф</span><strong>{billing.plan.name}</strong></div>
+        <article className="dashboard-tariff-panel">
+          <div className="panel-heading"><h2>Тариф</h2><strong>{billing.plan.name}</strong></div>
           <p>{billing.pricing_finalized ? "Стоимость тарифа зафиксирована." : "Стоимость тарифа ещё не опубликована. Доступные лимиты показаны в разделе тарифа."}</p>
           <Link className="button button-secondary" href="/app/billing">Открыть тариф</Link>
         </article>
@@ -69,7 +68,7 @@ export function DashboardMetrics() {
 }
 
 function formatNumber(value: number): string { return new Intl.NumberFormat("ru-RU").format(value); }
-function formatAcceptance(value: number | null): string { return value === null ? "Пока нет отправленных AI-ответов" : `${Math.round(value * 100)}% дошли до отправки`; }
+function formatAcceptance(value: number | null): string { return value === null ? "Пока нет отправленных ответов с ИИ" : `${Math.round(value * 100)}% дошли до отправки`; }
 function formatDuration(value: number | null): string {
   if (value === null) return "—";
   if (value < 60) return `${Math.round(value)} сек`;
