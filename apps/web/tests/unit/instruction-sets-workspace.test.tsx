@@ -109,11 +109,13 @@ describe("InstructionSetsWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByRole("heading", { name: "Основной стиль" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Набор для кабинета Основной кабинет WB")).toHaveValue(instructionSet.id);
-    fireEvent.click(screen.getByRole("button", { name: "Создать набор" }));
-    const form = screen.getByRole("form", { name: "Редактор набора инструкций" });
+    expect(screen.getByRole("heading", { name: "Сохранённые стили" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Стиль ответов для кабинета Основной кабинет WB")).toHaveValue(instructionSet.id);
+    expect(screen.queryByText(/Набор инструкций|SafetyGate|База знаний/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Добавить стиль" }));
+    const form = screen.getByRole("form", { name: "Редактор стиля ответов" });
     fireEvent.change(within(form).getByLabelText("Название"), { target: { value: "Стиль поддержки" } });
-    fireEvent.click(within(form).getByRole("button", { name: "Создать набор" }));
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить стиль" }));
 
     await waitFor(() => expect(fetchMock.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1));
   });
@@ -128,8 +130,8 @@ describe("InstructionSetsWorkspace", () => {
 
     expect(await screen.findByRole("heading", { name: "Основной стиль" })).toBeInTheDocument();
     expect(screen.getByText(/Только просмотр/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Создать набор" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Набор для кабинета Основной кабинет WB")).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Добавить стиль" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Стиль ответов для кабинета Основной кабинет WB")).toBeDisabled();
   });
 
   it("renders a retry action after a safe loading error", async () => {
@@ -138,7 +140,7 @@ describe("InstructionSetsWorkspace", () => {
 
     renderWorkspace();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Не удалось загрузить наборы");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Не удалось загрузить стили ответов");
     expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
   });
 });

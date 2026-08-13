@@ -84,11 +84,12 @@ describe("KnowledgeBaseWorkspace", () => {
 
     expect(await screen.findByRole("heading", { name: "Сроки доставки" })).toBeInTheDocument();
     expect(view.container.querySelector('input[type="file"]')).toBeNull();
-    fireEvent.change(screen.getByRole("searchbox", { name: "Поиск по базе знаний" }), { target: { value: "доставка" } });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Поиск по данным для ответов" }), { target: { value: "доставка" } });
+    expect(screen.queryByText(/База знаний|SafetyGate|Набор инструкций/i)).not.toBeInTheDocument();
     await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => String(input).includes("search=%D0%B4"))).toBe(true));
 
     fireEvent.click(screen.getByRole("button", { name: "Добавить запись" }));
-    const form = screen.getByRole("form", { name: "Редактор записи базы знаний" });
+    const form = screen.getByRole("form", { name: "Редактор данных для ответов" });
     fireEvent.change(within(form).getByLabelText("Заголовок"), { target: { value: "Возврат" } });
     fireEvent.change(within(form).getByLabelText("Проверенные сведения"), { target: { value: "Покупатель оформляет возврат в кабинете маркетплейса." } });
     fireEvent.click(within(form).getByRole("button", { name: "Добавить запись" }));
@@ -114,7 +115,7 @@ describe("KnowledgeBaseWorkspace", () => {
 
     renderWorkspace();
 
-    expect(await screen.findByRole("heading", { name: "База знаний пока пуста" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Проверенных данных пока нет" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Добавить первую запись" })).toBeInTheDocument();
   });
 });

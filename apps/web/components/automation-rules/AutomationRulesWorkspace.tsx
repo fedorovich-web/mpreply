@@ -36,11 +36,11 @@ type RuleEditorState = {
 };
 
 const precedence = [
-  "Режим организации: auto по умолчанию",
-  "Переопределение для конкретного кабинета маркетплейса",
-  "Совпавшее правило с наивысшим приоритетом",
+  "Автоматический режим организации по умолчанию",
+  "Отдельная настройка выбранного кабинета маркетплейса",
+  "Первое подходящее правило по приоритету",
   "Проверка контекста товара и порога уверенности",
-  "SafetyGate перед автоотправкой",
+  "Защитная проверка перед автоматической отправкой",
 ];
 
 const filterLabels: Record<RuleFilter, string> = {
@@ -161,7 +161,7 @@ function AutomationRulesWorkspaceContent({
         <div>
           <p className="automation-toolbar-title">{organizationName}</p>
           <p className="automation-toolbar-copy">
-            Правила применяются по приоритету. SafetyGate остаётся обязательным контрольным слоем.
+            Правила применяются по приоритету. Перед отправкой ответ проверяется по защитным условиям.
           </p>
         </div>
         {canWrite ? (
@@ -170,7 +170,7 @@ function AutomationRulesWorkspaceContent({
           </button>
         ) : (
           <p className="automation-readonly-note" role="status">
-            Только просмотр: изменение правил доступно owner и admin.
+            Только просмотр: изменение правил доступно владельцу и администратору.
           </p>
         )}
       </section>
@@ -286,7 +286,7 @@ function AutomationRulesWorkspaceContent({
             ) : (
               <div className="automation-empty-state">
                 <h2>Выберите правило</h2>
-                <p>Здесь появятся условия, режим, лимиты и настройки SafetyGate.</p>
+                <p>Здесь появятся условия, режим, лимиты и защитные настройки.</p>
               </div>
             )}
           </div>
@@ -312,17 +312,16 @@ function AutomationRulesWorkspaceContent({
         </article>
 
         <article className="ai-panel automation-safety-card">
-          <p className="eyebrow">SafetyGate</p>
-          <h2>Автоответ не отправляется вслепую</h2>
+          <h2>Когда ответ нужно проверить</h2>
           <p>
-            После генерации черновик проходит детерминированную проверку. Низкая уверенность,
+            Перед отправкой система проверяет подготовленный ответ. Низкая уверенность,
             отсутствие товарного контекста, рискованные обещания и чувствительные утверждения
             переводят обращение на ручную проверку или блокируют автоотправку.
           </p>
-          <div className="automation-decision-row" aria-label="Решения SafetyGate">
-            <span className="automation-decision automation-decision-allow">Allow</span>
-            <span className="automation-decision automation-decision-review">Manual review</span>
-            <span className="automation-decision automation-decision-block">Block</span>
+          <div className="automation-decision-row" aria-label="Возможные решения проверки">
+            <span className="automation-decision automation-decision-allow">Отправить</span>
+            <span className="automation-decision automation-decision-review">Проверить вручную</span>
+            <span className="automation-decision automation-decision-block">Не отправлять</span>
           </div>
         </article>
       </section>
@@ -366,7 +365,7 @@ function RuleDetail({
 
       <div className="automation-safety-checklist" aria-label="Защитные условия правила">
         <p className="automation-safety-item" data-active={rule.require_manual_review_on_flags}>
-          Ручная проверка при флагах SafetyGate
+          Ручная проверка при срабатывании защитных условий
         </p>
         <p className="automation-safety-item" data-active={rule.stop_on_missing_product_context}>
           Стоп без контекста товара
@@ -506,8 +505,8 @@ function RuleEditor({
       </div>
 
       <fieldset className="automation-safety-fieldset">
-        <legend>SafetyGate и защитные остановки</legend>
-        <label><input checked={state.requireManualReviewOnFlags} onChange={(e) => set("requireManualReviewOnFlags", e.target.checked)} type="checkbox" /> Ручная проверка при флагах SafetyGate</label>
+        <legend>Проверка перед отправкой</legend>
+        <label><input checked={state.requireManualReviewOnFlags} onChange={(e) => set("requireManualReviewOnFlags", e.target.checked)} type="checkbox" /> Ручная проверка при срабатывании защитных условий</label>
         <label><input checked={state.stopOnMissingProductContext} onChange={(e) => set("stopOnMissingProductContext", e.target.checked)} type="checkbox" /> Остановить автоответ без контекста товара</label>
         <label><input checked={state.stopOnLowConfidence} onChange={(e) => set("stopOnLowConfidence", e.target.checked)} type="checkbox" /> Остановить автоответ при низкой уверенности</label>
         <label><input checked={state.isEnabled} onChange={(e) => set("isEnabled", e.target.checked)} type="checkbox" /> Правило включено</label>

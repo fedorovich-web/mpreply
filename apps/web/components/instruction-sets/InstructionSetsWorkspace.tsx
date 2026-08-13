@@ -111,25 +111,25 @@ function InstructionSetsContent({
 
   const queryError = setsQuery.error ?? accountsQuery.error;
   if (setsQuery.isPending || accountsQuery.isPending) {
-    return <WorkspaceState title="Загружаем наборы" description="Получаем стили ответов и их назначения." />;
+    return <WorkspaceState title="Загружаем стили ответов" description="Получаем сохранённые настройки и связанные кабинеты." />;
   }
   if (queryError) {
-    return <WorkspaceState error title="Не удалось загрузить наборы" description={errorMessage(queryError)} onRetry={() => { void setsQuery.refetch(); void accountsQuery.refetch(); }} />;
+    return <WorkspaceState error title="Не удалось загрузить стили ответов" description={errorMessage(queryError)} onRetry={() => { void setsQuery.refetch(); void accountsQuery.refetch(); }} />;
   }
 
   return (
     <div className="policy-workspace">
       <section className="policy-toolbar">
         <div>
-          <h2>Наборы инструкций</h2>
-          <p>Единый стиль, ограничения и подпись для каждого кабинета маркетплейса.</p>
+          <h2>Сохранённые стили</h2>
+          <p>Тон, правила компании, подпись и запрещённые фразы для ответов.</p>
         </div>
-        {canWrite ? <button className="button button-primary" onClick={() => { setEditor(emptyEditor()); setEditorMode("create"); }} type="button">Создать набор</button> : <p className="policy-readonly" role="status">Только просмотр: изменения доступны владельцу и администратору.</p>}
+        {canWrite ? <button className="button button-primary" onClick={() => { setEditor(emptyEditor()); setEditorMode("create"); }} type="button">Добавить стиль</button> : <p className="policy-readonly" role="status">Только просмотр: изменения доступны владельцу и администратору.</p>}
       </section>
 
       <div className="policy-layout">
-        <section className="policy-list" aria-label="Наборы инструкций">
-          {sets.length === 0 ? <WorkspaceState title="Наборов пока нет" description="Создайте основной набор, чтобы задать безопасный стиль ответов." /> : sets.map((item) => (
+        <section className="policy-list" aria-label="Сохранённые стили ответов">
+          {sets.length === 0 ? <WorkspaceState title="Сохранённых стилей пока нет" description="Добавьте основной стиль ответов для организации." /> : sets.map((item) => (
             <button className="policy-list-item" aria-pressed={selected?.id === item.id} key={item.id} onClick={() => { setSelectedId(item.id); setEditorMode(null); }} type="button">
               <span><strong>{item.name}</strong>{item.is_default ? <small>По умолчанию</small> : null}</span>
               <span>{toneLabels[item.response_tone]} · {item.status === "active" ? "Активен" : "В архиве"}</span>
@@ -142,7 +142,7 @@ function InstructionSetsContent({
             <InstructionSetEditor state={editor} mode={editorMode} pending={saveMutation.isPending} error={saveMutation.error} onChange={setEditor} onCancel={() => setEditorMode(null)} onSubmit={() => saveMutation.mutate()} />
           ) : selected ? (
             <article className="policy-card">
-              <header><div><p className="eyebrow">{selected.is_default ? "Основной набор" : "Набор инструкций"}</p><h2>{selected.name}</h2></div><span className="status-badge">{toneLabels[selected.response_tone]}</span></header>
+              <header><div><p className="eyebrow">{selected.is_default ? "Основной стиль" : "Стиль ответов"}</p><h2>{selected.name}</h2></div><span className="status-badge">{toneLabels[selected.response_tone]}</span></header>
               <dl className="policy-facts">
                 <div><dt>Правила бренда</dt><dd>{selected.brand_rules || "Не заданы"}</dd></div>
                 <div><dt>Подпись</dt><dd>{selected.reply_signature || "Без подписи"}</dd></div>
@@ -155,16 +155,16 @@ function InstructionSetsContent({
               </div> : null}
               {stateMutation.error ? <p className="form-error" role="alert">{errorMessage(stateMutation.error)}</p> : null}
             </article>
-          ) : <WorkspaceState title="Выберите набор" description="Здесь появятся его правила и назначения." />}
+          ) : <WorkspaceState title="Выберите стиль" description="Здесь появятся его тон, правила и подпись." />}
         </section>
       </div>
 
       <section className="policy-assignments" aria-labelledby="instruction-assignments-title">
-        <div><p className="eyebrow">Назначения</p><h2 id="instruction-assignments-title">Кабинеты маркетплейсов</h2></div>
+        <div><h2 id="instruction-assignments-title">Какой стиль используется в кабинете</h2><p>Для каждого подключения можно выбрать свой стиль ответов.</p></div>
         {accounts.length === 0 ? <p>Сначала подключите кабинет маркетплейса.</p> : accounts.map((account) => (
-          <label key={account.id}>Набор для кабинета {account.display_name}
-            <select aria-label={`Набор для кабинета ${account.display_name}`} disabled={!canWrite || assignmentMutation.isPending} value={account.ai_instruction_set_id ?? ""} onChange={(event) => assignmentMutation.mutate({ accountId: account.id, instructionSetId: event.target.value || null })}>
-              <option value="">Основной набор организации</option>
+          <label key={account.id}>Стиль ответов для кабинета {account.display_name}
+            <select aria-label={`Стиль ответов для кабинета ${account.display_name}`} disabled={!canWrite || assignmentMutation.isPending} value={account.ai_instruction_set_id ?? ""} onChange={(event) => assignmentMutation.mutate({ accountId: account.id, instructionSetId: event.target.value || null })}>
+              <option value="">Основной стиль организации</option>
               {sets.filter((item) => item.status === "active").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </select>
           </label>
@@ -177,8 +177,8 @@ function InstructionSetsContent({
 
 function InstructionSetEditor({ state, mode, pending, error, onChange, onCancel, onSubmit }: { state: EditorState; mode: "create" | "edit"; pending: boolean; error: unknown; onChange: (value: EditorState) => void; onCancel: () => void; onSubmit: () => void }) {
   const set = <K extends keyof EditorState>(key: K, value: EditorState[K]) => onChange({ ...state, [key]: value });
-  return <form aria-label="Редактор набора инструкций" className="policy-editor" onSubmit={(event) => { event.preventDefault(); if (!pending) onSubmit(); }}>
-    <h2>{mode === "create" ? "Новый набор" : "Редактирование набора"}</h2>
+  return <form aria-label="Редактор стиля ответов" className="policy-editor" onSubmit={(event) => { event.preventDefault(); if (!pending) onSubmit(); }}>
+    <h2>{mode === "create" ? "Новый стиль ответов" : "Редактирование стиля"}</h2>
     <label>Название<input maxLength={120} minLength={2} required value={state.name} onChange={(event) => set("name", event.target.value)} /></label>
     <label>Тон ответа<select value={state.responseTone} onChange={(event) => set("responseTone", event.target.value as InstructionTone)}>{Object.entries(toneLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     <label>Правила бренда<textarea maxLength={2000} rows={5} value={state.brandRules} onChange={(event) => set("brandRules", event.target.value)} /></label>
@@ -186,7 +186,7 @@ function InstructionSetEditor({ state, mode, pending, error, onChange, onCancel,
     <label>Запрещённые фразы<textarea aria-describedby="prohibited-help" rows={4} value={state.prohibitedPhrases} onChange={(event) => set("prohibitedPhrases", event.target.value)} /></label>
     <p id="prohibited-help" className="field-help">Одна фраза на строку.</p>
     {error ? <p className="form-error" role="alert">{errorMessage(error)}</p> : null}
-    <div className="policy-actions"><button className="button button-primary" disabled={pending || state.name.trim().length < 2} type="submit">{pending ? "Сохраняем..." : mode === "create" ? "Создать набор" : "Сохранить"}</button><button className="button button-secondary" disabled={pending} onClick={onCancel} type="button">Отмена</button></div>
+    <div className="policy-actions"><button className="button button-primary" disabled={pending || state.name.trim().length < 2} type="submit">{pending ? "Сохраняем..." : mode === "create" ? "Добавить стиль" : "Сохранить"}</button><button className="button button-secondary" disabled={pending} onClick={onCancel} type="button">Отмена</button></div>
   </form>;
 }
 

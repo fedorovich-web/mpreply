@@ -3533,15 +3533,18 @@ h1 {
 	gap: var(--space-5);
 }
 
-.policy-toolbar,
-.policy-assignments,
-.knowledge-filters,
-.policy-card,
-.policy-editor,
-.policy-state {
+.policy-editor {
 	border: var(--border-width-hairline) solid var(--color-border-subtle);
 	border-radius: var(--radius-lg);
 	background: var(--color-bg-elevated);
+}
+
+.policy-assignments,
+.knowledge-filters,
+.policy-card,
+.policy-state {
+	border-radius: var(--radius-lg);
+	background: var(--color-bg-subtle);
 }
 
 .policy-toolbar {
@@ -3549,7 +3552,7 @@ h1 {
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--space-4);
-	padding: var(--space-5);
+	padding: 0 0 var(--space-2);
 }
 
 .policy-toolbar h2,
@@ -3599,17 +3602,22 @@ h1 {
 	display: grid;
 	gap: var(--space-2);
 	width: 100%;
-	border: var(--border-width-hairline) solid var(--color-border-subtle);
+	border: 0;
+	border-left: var(--space-1) solid var(--color-transparent);
 	border-radius: var(--radius-md);
-	background: var(--color-bg-elevated);
+	background: var(--color-transparent);
 	padding: var(--space-4);
 	color: var(--color-text-primary);
 	text-align: left;
 	cursor: pointer;
 }
 
+.policy-list-item:hover {
+	background: var(--color-surface-hover);
+}
+
 .policy-list-item[aria-pressed="true"] {
-	border-color: var(--color-brand-primary);
+	border-left-color: var(--color-brand-primary);
 	background: var(--color-bg-brand-soft);
 }
 
@@ -3698,7 +3706,7 @@ h1 {
 }
 
 .policy-state.is-error {
-	border-color: var(--color-danger);
+	border-left: var(--space-1) solid var(--color-danger);
 	background: var(--app-danger-bg);
 }
 

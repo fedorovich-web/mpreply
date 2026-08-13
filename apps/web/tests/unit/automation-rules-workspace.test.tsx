@@ -105,6 +105,8 @@ describe("AutomationRulesWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByRole("heading", { name: "Balanced auto" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Когда ответ нужно проверить" })).toBeInTheDocument();
+    expect(screen.queryByText(/SafetyGate/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Создать правило" }));
 
     const editor = screen.getByRole("form", { name: "Редактор правила автоматизации" });
