@@ -20,6 +20,16 @@ test("dashboard mobile visual baseline", async ({ page }) => {
   await expect(page).toHaveScreenshot("dashboard-mobile.png");
 });
 
+test("dashboard mobile navigation visual baseline", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockClientWorkspaceApi(page);
+  await page.goto("/app/dashboard", { waitUntil: "networkidle" });
+  await hideDevelopmentChrome(page);
+  await page.getByRole("button", { name: "Открыть навигацию" }).click();
+  await expect(page).toHaveScreenshot("dashboard-mobile-navigation.png");
+});
+
 for (const pageCase of [
   { name: "reply-style-desktop.png", path: "/app/instruction-sets" },
   { name: "reply-data-desktop.png", path: "/app/knowledge-base" },

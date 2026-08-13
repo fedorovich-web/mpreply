@@ -144,6 +144,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </nav>
           ))}
         </div>
+
+        <div className="app-sidebar-account" aria-label="Аккаунт">
+          {organizations.length > 1 ? (
+            <label className="workspace-selector app-sidebar-workspace-selector">
+              <span className="sr-only">Выбрать организацию в меню</span>
+              <select
+                aria-label="Выбрать организацию в меню"
+                onChange={(event) => setActiveOrganizationId(event.target.value)}
+                value={activeOrganization.id}
+              >
+                {organizations.map((organization) => (
+                  <option key={organization.id} value={organization.id}>{organization.name}</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          <div className="app-sidebar-account-user">
+            <span className="app-status-dot" aria-hidden="true" />
+            <span>
+              <strong>{user.name || user.email}</strong>
+              {user.name ? <small>{user.email}</small> : null}
+            </span>
+          </div>
+
+          <button
+            className="button button-secondary button-compact"
+            disabled={isLoggingOut}
+            onClick={() => void logout()}
+            type="button"
+          >
+            {isLoggingOut ? "Выходим..." : "Выйти"}
+          </button>
+        </div>
       </aside>
 
       {isOpen ? (
@@ -157,20 +191,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="app-workspace">
         <header className="app-topbar">
-          <button
-            aria-expanded={isOpen}
-            aria-controls="app-navigation"
-            aria-label="Открыть навигацию"
-            className="app-menu-button"
-            onClick={() => setIsOpen((value) => !value)}
-            ref={menuButtonRef}
-            type="button"
-          >
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-            <span aria-hidden="true" />
-          </button>
-
           <div className="app-topbar-title">
             <span>Операционный кабинет</span>
             <strong>{activeOrganization.name}</strong>
@@ -209,6 +229,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {isLoggingOut ? "Выходим..." : "Выйти"}
             </button>
           </div>
+
+          <button
+            aria-expanded={isOpen}
+            aria-controls="app-navigation"
+            aria-label="Открыть навигацию"
+            className="app-menu-button"
+            onClick={() => setIsOpen((value) => !value)}
+            ref={menuButtonRef}
+            type="button"
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </button>
         </header>
 
         <main className="app-main">{children}</main>

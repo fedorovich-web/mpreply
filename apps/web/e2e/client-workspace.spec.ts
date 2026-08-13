@@ -43,3 +43,26 @@ test("viewer sees read-only customer boundaries", async ({ page }) => {
   await page.goto("/app/settings", { waitUntil: "networkidle" });
   await expect(page.getByLabel("Название организации")).toBeDisabled();
 });
+
+test("mobile navigation opens from the right and keeps account actions inside", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockClientWorkspaceApi(page);
+  await page.goto("/app/dashboard", { waitUntil: "networkidle" });
+
+  const menuButton = page.getByRole("button", { name: "Открыть навигацию" });
+  await expect(menuButton).toBeVisible();
+  await menuButton.click();
+
+  const navigation = page.getByRole("complementary", { name: "Основная навигация" });
+  await expect(navigation).toHaveClass(/app-sidebar-open/);
+  await expect(navigation.getByText("Владелец", { exact: true })).toBeVisible();
+  await expect(navigation.getByText("owner@example.com", { exact: true })).toBeVisible();
+  await expect(navigation.getByRole("button", { name: "Выйти" })).toBeVisible();
+  await expect(page.locator(".app-topbar-controls")).toBeHidden();
+
+  await expect.poll(async () => {
+    const box = await navigation.boundingBox();
+    return Math.round(Math.abs((box?.x ?? 0) + (box?.width ?? 0) - 390));
+  }).toBe(0);
+});

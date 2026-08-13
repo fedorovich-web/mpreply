@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppShell } from "../../components/app-shell/AppShell";
@@ -119,5 +119,15 @@ describe("AppShell customer product navigation", () => {
 
     expect(trigger).toHaveAttribute("aria-expanded", "false");
     expect(document.body.style.overflow).toBe("");
+  });
+
+  it("keeps the account and logout action inside the mobile navigation", () => {
+    renderShell();
+    fireEvent.click(screen.getByRole("button", { name: "Открыть навигацию" }));
+
+    const navigation = screen.getByRole("complementary", { name: "Основная навигация" });
+    expect(within(navigation).getByText("Владелец")).toBeInTheDocument();
+    expect(within(navigation).getByText("owner@example.com")).toBeInTheDocument();
+    expect(within(navigation).getByRole("button", { name: "Выйти" })).toBeInTheDocument();
   });
 });

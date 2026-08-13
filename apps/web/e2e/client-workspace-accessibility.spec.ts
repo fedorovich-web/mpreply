@@ -36,3 +36,12 @@ test("dark dashboard has no blocking accessibility violations", async ({ page })
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expectNoBlockingViolations(page);
 });
+
+test("open mobile navigation has no blocking accessibility violations", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockClientWorkspaceApi(page);
+  await page.goto("/app/dashboard", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Открыть навигацию" }).click();
+  await expect(page.getByRole("complementary", { name: "Основная навигация" })).toHaveClass(/app-sidebar-open/);
+  await expectNoBlockingViolations(page);
+});
