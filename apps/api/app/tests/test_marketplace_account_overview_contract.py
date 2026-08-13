@@ -46,9 +46,12 @@ def test_sensitive_integration_metadata_is_removed_recursively() -> None:
         {
             "pages_processed": 2,
             api_key_name: "sensitive-value",
+            "client_id": "must-not-expose-client-id",
             "nested": {
                 token_name: "sensitive-value",
                 "cursor": "next-page",
+                "seller_id": "must-not-expose-seller-id",
+                "provider_body": "must-not-expose-provider-body",
             },
             "items": ["reviews", 3, {secret_name: "sensitive-value"}],
         }

@@ -20,7 +20,17 @@ from app.schemas.marketplace_overview import (
 )
 from app.services.marketplace_account_service import MarketplaceAccountService
 
-_SENSITIVE_METADATA_PARTS = ("credential", "secret", "token", "api_key", "authorization", "cursor")
+_SENSITIVE_METADATA_PARTS = (
+    "credential",
+    "secret",
+    "token",
+    "api_key",
+    "authorization",
+    "cursor",
+    "client_id",
+    "seller_id",
+    "provider_body",
+)
 
 
 def extract_account_scopes(scopes_json: Mapping[str, object]) -> list[str]:
