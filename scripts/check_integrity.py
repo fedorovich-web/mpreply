@@ -10,8 +10,10 @@ from pathlib import Path
 
 try:
     from scripts.check_no_production_comments import find_production_comments
+    from scripts.check_sql_injection_safety import find_unsafe_sql_construction
 except ModuleNotFoundError:
     from check_no_production_comments import find_production_comments
+    from check_sql_injection_safety import find_unsafe_sql_construction
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
@@ -996,6 +998,11 @@ def check_production_comments() -> None:
         fail(f"Authored production comment: {finding.path}:{finding.line}")
 
 
+def check_sql_construction_safety() -> None:
+    for finding in find_unsafe_sql_construction(ROOT):
+        fail(f"Dynamic SQL construction: {finding.path}:{finding.line} ({finding.operation})")
+
+
 def main() -> int:
     check_public_routes()
     check_ts_imports()
@@ -1012,6 +1019,7 @@ def main() -> int:
     check_brand_identity_contract()
     check_deployment_contract()
     check_production_comments()
+    check_sql_construction_safety()
     check_generated_artifacts_absent()
 
     if ERRORS:
