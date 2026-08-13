@@ -44,6 +44,16 @@ for (const pageCase of [
   });
 }
 
+test("Ozon integration desktop visual baseline", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await mockClientWorkspaceApi(page, "owner", { includeOzon: true });
+  await page.goto("/app/integrations/ozon", { waitUntil: "networkidle" });
+  await expect(page.getByRole("heading", { name: "Основной Ozon" })).toBeVisible();
+  await hideDevelopmentChrome(page);
+  await expect(page).toHaveScreenshot("ozon-integration-desktop.png", { fullPage: true });
+});
+
 async function hideDevelopmentChrome(page: import("@playwright/test").Page) {
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 }

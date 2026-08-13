@@ -66,3 +66,25 @@ test("mobile navigation opens from the right and keeps account actions inside", 
     return Math.round(Math.abs((box?.x ?? 0) + (box?.width ?? 0) - 390));
   }).toBe(0);
 });
+
+test("Ozon integration shows safe permissions and fits desktop and mobile", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockClientWorkspaceApi(page, "owner", { includeOzon: true });
+  await page.goto("/app/integrations/ozon", { waitUntil: "networkidle" });
+
+  await expect(page.getByRole("heading", { name: "Основной Ozon" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Есть ошибки" })).toBeVisible();
+  await expect(page.getByText("Отзывы и ответы на отзывы")).toBeVisible();
+  await expect(page.getByText("Вопросы и ответы на вопросы")).toBeVisible();
+  await expect(page.getByText("Срок действия ключа")).toBeVisible();
+  await expect(page.getByText(/Client ID хранится защищённо и не отображается/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Повторить синхронизацию" })).toBeVisible();
+  await expect(page.getByText(/Ozon временно ограничил частоту запросов/)).toBeVisible();
+  await expect(page.getByText("rate_limited")).toHaveCount(0);
+  await expect(page.getByText("Ozon Seller API rate limit exceeded")).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

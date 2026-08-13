@@ -19,10 +19,10 @@ const marketplaceCatalog = [
   {
     key: "ozon",
     name: "Ozon",
-    badge: "Недоступно",
-    description: "Подключение Ozon пока недоступно в личном кабинете.",
-    available: false,
-    href: null,
+    badge: "Доступно",
+    description: "Подключение по Client ID и API-ключу, синхронизация отзывов и вопросов.",
+    available: true,
+    href: "/app/integrations/ozon",
   },
   {
     key: "yandex_market",

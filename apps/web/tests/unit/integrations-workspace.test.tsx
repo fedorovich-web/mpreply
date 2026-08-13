@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationsWorkspace } from "../../components/integrations/IntegrationsWorkspace";
+import { OzonIntegrationWorkspace } from "../../components/integrations/OzonIntegrationWorkspace";
 import { WildberriesIntegrationWorkspace } from "../../components/integrations/WildberriesIntegrationWorkspace";
 import { YandexMarketIntegrationWorkspace } from "../../components/integrations/YandexMarketIntegrationWorkspace";
 import { useWorkspace } from "../../components/workspace/WorkspaceProvider";
@@ -79,7 +80,7 @@ function renderWithQueryClient(component: React.ReactNode) {
 }
 
 describe("IntegrationsWorkspace", () => {
-  it("loads real marketplace accounts and keeps unsupported adapters explicit", async () => {
+  it("loads real marketplace accounts and exposes the implemented Ozon route", async () => {
     mockWorkspace("owner");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
 
@@ -94,8 +95,389 @@ describe("IntegrationsWorkspace", () => {
       "href",
       "/app/integrations/yandex-market",
     );
-    expect(screen.getAllByText("Пока недоступно")).toHaveLength(2);
-    expect(screen.getAllByText("Подключение пока не поддерживается.")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Подключить Ozon" })).toHaveAttribute(
+      "href",
+      "/app/integrations/ozon",
+    );
+    expect(screen.getAllByText("Пока недоступно")).toHaveLength(1);
+    expect(screen.getAllByText("Подключение пока не поддерживается.")).toHaveLength(1);
+  });
+});
+
+describe("OzonIntegrationWorkspace", () => {
+  it("requires Client ID and API key and creates the exact Ozon account payload", async () => {
+    mockWorkspace("owner");
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            ...account,
+            ...payload,
+            id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            marketplace: "ozon",
+            display_name: payload.display_name,
+            seller_id: null,
+            credentials_masked: "sha256:oz01…safe",
+            credentials_status: "pending_validation",
+            status: "pending_validation",
+          }),
+          { status: 201 },
+        );
+      }
+      return new Response(JSON.stringify([]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Ozon" });
+    const submit = within(form).getByRole("button", { name: "Добавить кабинет" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), {
+      target: { value: "Ozon основной" },
+    });
+    expect(submit).toBeDisabled();
+
+    fireEvent.change(within(form).getByLabelText("Client ID"), {
+      target: { value: "client-123" },
+    });
+    expect(submit).toBeDisabled();
+
+    fireEvent.change(within(form).getByLabelText("API-ключ Ozon"), {
+      target: { value: "synthetic-ozon-api-key" },
+    });
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
+    });
+
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    expect(JSON.parse(String(postCall?.[1]?.body))).toEqual({
+      organization_id: organization.id,
+      marketplace: "ozon",
+      display_name: "Ozon основной",
+      seller_id: "client-123",
+      credentials: "synthetic-ozon-api-key",
+      default_response_mode: "inherit",
+    });
+  });
+
+  it.each(["manager", "viewer"] as const)("keeps %s membership read-only without credential or mutation controls", async (role) => {
+    mockWorkspace(role);
+    const ozonAccount = {
+      ...account,
+      marketplace: "ozon",
+      display_name: "Ozon основной",
+      seller_id: null,
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input) => {
+      if (String(input).includes(`/api/marketplace-accounts/${ozonAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: ozonAccount,
+          health_status: "attention",
+          health_reasons: ["Требуется проверка подключения."],
+          scopes: [],
+          sync_states: [],
+          recent_jobs: [],
+          recent_events: [],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([ozonAccount]), { status: 200 });
+    }));
+
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Ozon основной" })).toBeInTheDocument();
+    expect(screen.getByText(/Только просмотр/)).toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "Новое подключение Ozon" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Проверить ключ" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Синхронизировать сейчас" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Отозвать ключ" })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    {
+      name: "review-only",
+      scopes: ["fetch_reviews", "send_review_reply"],
+      expected: ["Отзывы и ответы на отзывы"],
+      missing: "Вопросы и ответы на вопросы",
+    },
+    {
+      name: "question-only",
+      scopes: ["fetch_questions", "send_question_reply"],
+      expected: ["Вопросы и ответы на вопросы"],
+      missing: "Отзывы и ответы на отзывы",
+    },
+    {
+      name: "reviews and questions",
+      scopes: ["fetch_reviews", "send_review_reply", "fetch_questions", "send_question_reply"],
+      expected: ["Отзывы и ответы на отзывы", "Вопросы и ответы на вопросы"],
+      missing: null,
+    },
+  ])("groups $name permissions and shows the API key expiry", async ({ scopes, expected, missing }) => {
+    mockWorkspace("owner");
+    const ozonAccount = {
+      ...account,
+      marketplace: "ozon",
+      display_name: "Ozon основной",
+      seller_id: null,
+      scopes_json: {
+        validated: true,
+        scopes,
+        expires_at: "2026-12-01T00:00:00Z",
+      },
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input) => {
+      if (String(input).includes(`/api/marketplace-accounts/${ozonAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: ozonAccount,
+          health_status: "healthy",
+          health_reasons: ["Подключение работает."],
+          scopes,
+          sync_states: [],
+          recent_jobs: [],
+          recent_events: [],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([ozonAccount]), { status: 200 });
+    }));
+
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Ozon основной" })).toBeInTheDocument();
+    expect(await screen.findByText(expected[0])).toBeInTheDocument();
+    for (const label of expected.slice(1)) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    if (missing) expect(screen.queryByText(missing)).not.toBeInTheDocument();
+    expect(screen.getByText("Срок действия ключа")).toBeInTheDocument();
+    expect(screen.getByText(/1 дек\. 2026 г\./)).toBeInTheDocument();
+  });
+
+  it("shows safe failed history and hides Client ID, API key and provider bodies", async () => {
+    mockWorkspace("owner");
+    const ozonAccount = {
+      ...account,
+      marketplace: "ozon",
+      display_name: "Ozon основной",
+      seller_id: null,
+      scopes_json: {
+        validated: true,
+        scopes: ["fetch_reviews", "send_review_reply"],
+        expires_at: "2026-12-01T00:00:00Z",
+        client_id: "must-not-leak-client-id",
+        api_key: "must-not-leak-api-key",
+      },
+      last_error_sync_at: "2026-08-13T10:00:00Z",
+      error_count: 1,
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input) => {
+      if (String(input).includes(`/api/marketplace-accounts/${ozonAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: ozonAccount,
+          health_status: "error",
+          health_reasons: ["Последняя ручная синхронизация завершилась ошибкой."],
+          scopes: ["fetch_reviews", "send_review_reply"],
+          sync_states: [],
+          recent_jobs: [{
+            id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+            job_type: "manual_sync",
+            status: "failed",
+            started_at: "2026-08-13T10:00:00Z",
+            finished_at: "2026-08-13T10:01:00Z",
+            error_message_safe: "Не удалось завершить синхронизацию Ozon.",
+            stats: { imported_reviews: 2 },
+            created_at: "2026-08-13T10:00:00Z",
+          }],
+          recent_events: [{
+            id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+            event_type: "sync.feedbacks",
+            status: "failed",
+            error_code: "rate_limited",
+            error_message_safe: "must-not-leak-provider-error-body",
+            details: {
+              pages_processed: 2,
+              provider_body: "must-not-leak-provider-body",
+              api_key: "must-not-leak-event-api-key",
+            },
+            created_at: "2026-08-13T10:01:00Z",
+          }],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([ozonAccount]), { status: 200 });
+    }));
+
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    expect(await screen.findByText("Не удалось завершить синхронизацию Ozon.")).toBeInTheDocument();
+    expect(screen.getByText(/Ozon временно ограничил частоту запросов/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
+    expect(screen.getByText(/Client ID хранится защищённо и не отображается/)).toBeInTheDocument();
+    expect(screen.queryByText(/must-not-leak/)).not.toBeInTheDocument();
+    expect(screen.queryByText("rate_limited")).not.toBeInTheDocument();
+  });
+
+  it("shows a validated empty permission set as an account problem", async () => {
+    mockWorkspace("owner");
+    const ozonAccount = {
+      ...account,
+      marketplace: "ozon",
+      display_name: "Ozon без прав",
+      seller_id: null,
+      status: "error",
+      scopes_json: { validated: true, scopes: [] },
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input) => {
+      if (String(input).includes(`/api/marketplace-accounts/${ozonAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: ozonAccount,
+          health_status: "error",
+          health_reasons: ["API-ключу не хватает прав для работы MPReply."],
+          scopes: [],
+          sync_states: [],
+          recent_jobs: [],
+          recent_events: [],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([ozonAccount]), { status: 200 });
+    }));
+
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    expect(await screen.findByText("Проверка завершена, но у API-ключа нет прав на отзывы или вопросы Ozon.")).toBeInTheDocument();
+    expect(screen.queryByText("Разрешения появятся после успешной проверки API-ключа.")).not.toBeInTheDocument();
+  });
+
+  it("maps validation and synchronization errors to Ozon customer copy", async () => {
+    mockWorkspace("owner");
+    const ozonAccount = {
+      ...account,
+      marketplace: "ozon",
+      display_name: "Ozon основной",
+      seller_id: null,
+      scopes_json: { validated: true, scopes: ["fetch_reviews", "send_review_reply"] },
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (init?.method === "POST" && url.endsWith("/validate")) {
+        return new Response(JSON.stringify({
+          id: ozonAccount.id,
+          status: "error",
+          credentials_status: "invalid_credentials",
+          scopes: [],
+          checked_at: timestamp,
+          error_code: "invalid_credentials",
+          error_message_safe: "Ozon API key is invalid",
+        }), { status: 200 });
+      }
+      if (init?.method === "POST" && url.endsWith("/sync")) {
+        return new Response(JSON.stringify({
+          account_id: ozonAccount.id,
+          marketplace: "ozon",
+          status: "failed",
+          imported_reviews: 0,
+          imported_questions: 0,
+          updated_reviews: 0,
+          updated_questions: 0,
+          skipped: 0,
+          error_code: "rate_limited",
+          error_message_safe: "Ozon Seller API rate limit exceeded",
+        }), { status: 202 });
+      }
+      if (url.includes(`/api/marketplace-accounts/${ozonAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: ozonAccount,
+          health_status: "healthy",
+          health_reasons: ["Подключение работает."],
+          scopes: ["fetch_reviews", "send_review_reply"],
+          sync_states: [],
+          recent_jobs: [],
+          recent_events: [],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([ozonAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    await screen.findByRole("heading", { name: "Ozon основной" });
+    fireEvent.click(screen.getByRole("button", { name: "Проверить ключ" }));
+    expect(await screen.findByText("Client ID или API-ключ отклонён. Проверьте данные подключения.")).toBeInTheDocument();
+    expect(screen.queryByText("Ozon API key is invalid")).not.toBeInTheDocument();
+
+    const syncButton = screen.getByRole("button", { name: "Синхронизировать сейчас" });
+    await waitFor(() => expect(syncButton).toBeEnabled());
+    fireEvent.click(syncButton);
+    expect(await screen.findByText("Ozon временно ограничил частоту запросов. Повторите синхронизацию позже.")).toBeInTheDocument();
+    expect(screen.queryByText("Ozon Seller API rate limit exceeded")).not.toBeInTheDocument();
+  });
+
+  it("replaces Client ID separately and rotates only the API key", async () => {
+    mockWorkspace("owner");
+    const ozonAccount = {
+      ...account,
+      marketplace: "ozon",
+      display_name: "Ozon основной",
+      seller_id: null,
+      scopes_json: { validated: true, scopes: ["fetch_reviews", "send_review_reply"] },
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (init?.method === "PATCH") {
+        return new Response(JSON.stringify({ ...ozonAccount, ...JSON.parse(String(init.body)), seller_id: null }), { status: 200 });
+      }
+      if (init?.method === "POST" && url.includes("rotate-credentials")) {
+        return new Response(JSON.stringify({
+          id: ozonAccount.id,
+          status: "pending_validation",
+          credentials_status: "pending_validation",
+          credentials_masked: "sha256:rotated…safe",
+          message: "Credentials rotated.",
+        }), { status: 200 });
+      }
+      if (url.includes(`/api/marketplace-accounts/${ozonAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: ozonAccount,
+          health_status: "healthy",
+          health_reasons: ["Подключение работает."],
+          scopes: ["fetch_reviews", "send_review_reply"],
+          sync_states: [],
+          recent_jobs: [],
+          recent_events: [],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([ozonAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    const clientIdForm = await screen.findByRole("form", { name: "Замена Client ID Ozon" });
+    fireEvent.change(within(clientIdForm).getByLabelText("Новый Client ID"), {
+      target: { value: "client-456" },
+    });
+    fireEvent.click(within(clientIdForm).getByRole("button", { name: "Заменить Client ID" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(true);
+    });
+    const patchCall = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH");
+    expect(JSON.parse(String(patchCall?.[1]?.body))).toEqual({ seller_id: "client-456" });
+
+    const rotationForm = screen.getByRole("form", { name: "Замена API-ключа Ozon" });
+    fireEvent.change(within(rotationForm).getByLabelText("Новый API-ключ"), {
+      target: { value: "synthetic-rotated-api-key" },
+    });
+    fireEvent.click(within(rotationForm).getByRole("button", { name: "Заменить ключ" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).includes("rotate-credentials") && init?.method === "POST")).toBe(true);
+    });
+    const rotateCall = fetchMock.mock.calls.find(([input, init]) => String(input).includes("rotate-credentials") && init?.method === "POST");
+    expect(JSON.parse(String(rotateCall?.[1]?.body))).toEqual({ credentials: "synthetic-rotated-api-key" });
   });
 });
 

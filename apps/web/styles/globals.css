@@ -3348,6 +3348,10 @@ h1 {
 	padding-top: var(--space-5);
 }
 
+.integration-create-form {
+	grid-template-columns: minmax(0, 1fr);
+}
+
 .integration-health-grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -8,6 +8,7 @@ const organizationId = "11111111-1111-4111-8111-111111111111";
 const userId = "22222222-2222-4222-8222-222222222222";
 const instructionSetId = "33333333-3333-4333-8333-333333333333";
 const accountId = "44444444-4444-4444-8444-444444444444";
+const ozonAccountId = "88888888-8888-4888-8888-888888888888";
 const timestamp = "2026-08-13T06:00:00Z";
 const period = { start: "2026-07-15T00:00:00Z", end: "2026-08-13T23:59:59Z", days: 30 };
 
@@ -56,6 +57,82 @@ const accountFixture = {
   updated_at: timestamp,
 };
 
+const ozonAccountFixture = {
+  id: ozonAccountId,
+  organization_id: organizationId,
+  marketplace: "ozon",
+  display_name: "Основной Ozon",
+  seller_id: null,
+  status: "active",
+  credentials_masked: "sha256:ozon…safe",
+  credentials_status: "valid",
+  scopes_json: {
+    validated: true,
+    checked_at: timestamp,
+    scopes: ["fetch_reviews", "send_review_reply", "fetch_questions", "send_question_reply"],
+    expires_at: "2026-12-01T00:00:00Z",
+  },
+  default_response_mode: "auto",
+  ai_instruction_set_id: instructionSetId,
+  last_success_sync_at: timestamp,
+  last_error_sync_at: "2026-08-13T07:00:00Z",
+  error_count: 1,
+  created_at: timestamp,
+  updated_at: timestamp,
+};
+
+const ozonOverviewFixture = {
+  account: ozonAccountFixture,
+  health_status: "error",
+  health_reasons: ["Последняя ручная синхронизация завершилась ошибкой."],
+  scopes: ["fetch_reviews", "send_review_reply", "fetch_questions", "send_question_reply"],
+  sync_states: [
+    {
+      id: "99999999-9999-4999-8999-999999999999",
+      marketplace_account_id: ozonAccountId,
+      stream: "reviews",
+      status: "error",
+      next_run_at: "2026-08-13T08:00:00Z",
+      last_attempt_at: "2026-08-13T07:00:00Z",
+      last_success_at: timestamp,
+      last_error_at: "2026-08-13T07:00:00Z",
+      last_cycle_completed_at: timestamp,
+      consecutive_failures: 1,
+    },
+    {
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      marketplace_account_id: ozonAccountId,
+      stream: "questions",
+      status: "idle",
+      next_run_at: "2026-08-13T08:05:00Z",
+      last_attempt_at: timestamp,
+      last_success_at: timestamp,
+      last_error_at: null,
+      last_cycle_completed_at: timestamp,
+      consecutive_failures: 0,
+    },
+  ],
+  recent_jobs: [{
+    id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    job_type: "manual_sync",
+    status: "failed",
+    started_at: "2026-08-13T07:00:00Z",
+    finished_at: "2026-08-13T07:01:00Z",
+    error_message_safe: "Не удалось завершить синхронизацию Ozon.",
+    stats: { imported_reviews: 2, skipped: 1 },
+    created_at: "2026-08-13T07:00:00Z",
+  }],
+  recent_events: [{
+    id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    event_type: "sync.feedbacks",
+    status: "failed",
+    error_code: "rate_limited",
+    error_message_safe: "Ozon Seller API rate limit exceeded",
+    details: { pages_processed: 2 },
+    created_at: "2026-08-13T07:01:00Z",
+  }],
+};
+
 const analyticsFixture = {
   period,
   total_messages: 1842,
@@ -94,7 +171,11 @@ const billingFixture = {
   pricing_finalized: false,
 };
 
-export async function mockClientWorkspaceApi(page: Page, role: ClientWorkspaceRole = "owner"): Promise<void> {
+export async function mockClientWorkspaceApi(
+  page: Page,
+  role: ClientWorkspaceRole = "owner",
+  options: { includeOzon?: boolean } = {},
+): Promise<void> {
   const headers = {
     "access-control-allow-credentials": "true",
     "access-control-allow-headers": "content-type",
@@ -118,7 +199,8 @@ export async function mockClientWorkspaceApi(page: Page, role: ClientWorkspaceRo
     ["/api/auth/me", userFixture],
     ["/api/organizations", [organization]],
     [`/api/organizations/${organizationId}`, organization],
-    ["/api/marketplace-accounts", [accountFixture]],
+    ["/api/marketplace-accounts", options.includeOzon ? [accountFixture, ozonAccountFixture] : [accountFixture]],
+    [`/api/marketplace-accounts/${ozonAccountId}/overview`, ozonOverviewFixture],
     ["/api/messages", { items: [], total: 0, page: 1, page_size: 100 }],
     ["/api/dashboard/attention", {
       organization_id: organizationId,
