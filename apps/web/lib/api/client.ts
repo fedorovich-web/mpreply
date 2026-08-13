@@ -26,7 +26,12 @@ export async function apiRequest<T>(
   options: ApiRequestOptions = {},
 ): Promise<T> {
   const headers = new Headers(options.headers);
+  const method = (options.method ?? "GET").toUpperCase();
   let body: BodyInit | undefined;
+
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    headers.set("X-CSRF-Token", "1");
+  }
 
   if (options.body !== undefined) {
     headers.set("Content-Type", "application/json");
@@ -35,6 +40,7 @@ export async function apiRequest<T>(
 
   const response = await fetch(`${API_BASE_URL}${normalizePath(path)}`, {
     ...options,
+    method,
     body,
     credentials: "include",
     headers,

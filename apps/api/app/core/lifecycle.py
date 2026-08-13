@@ -9,7 +9,12 @@ from redis.asyncio import Redis
 
 from app.core.config import get_settings
 from app.db.session import engine
-from app.services.auth_rate_limit_service import AuthRateLimiter, RateLimitRedisClient, RedisFixedWindowStore
+from app.services.auth_rate_limit_service import (
+    AuthRateLimiter,
+    AuthRateLimitPolicy,
+    RateLimitRedisClient,
+    RedisFixedWindowStore,
+)
 
 
 @asynccontextmanager
@@ -24,9 +29,21 @@ async def application_lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app.state.auth_rate_limiter = AuthRateLimiter(
         store=RedisFixedWindowStore(cast(RateLimitRedisClient, redis_client)) if redis_client is not None else None,
         enabled=settings.rate_limit_enabled,
-        account_limit=settings.auth_login_account_limit,
-        ip_limit=settings.auth_login_ip_limit,
-        window_seconds=settings.auth_login_rate_limit_window_seconds,
+        login_policy=AuthRateLimitPolicy(
+            subject_limit=settings.auth_login_account_limit,
+            ip_limit=settings.auth_login_ip_limit,
+            window_seconds=settings.auth_login_rate_limit_window_seconds,
+        ),
+        registration_policy=AuthRateLimitPolicy(
+            subject_limit=settings.auth_registration_account_limit,
+            ip_limit=settings.auth_registration_ip_limit,
+            window_seconds=settings.auth_registration_rate_limit_window_seconds,
+        ),
+        refresh_policy=AuthRateLimitPolicy(
+            subject_limit=settings.auth_refresh_token_limit,
+            ip_limit=settings.auth_refresh_ip_limit,
+            window_seconds=settings.auth_refresh_rate_limit_window_seconds,
+        ),
     )
     try:
         yield

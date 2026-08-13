@@ -47,6 +47,19 @@ describe("apiRequest", () => {
       body: JSON.stringify({ value: 42 }),
     });
     expect(new Headers(request?.headers).get("content-type")).toBe("application/json");
+    expect(new Headers(request?.headers).get("x-csrf-token")).toBe("1");
+  });
+
+  it("does not send the CSRF header on safe requests", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await apiRequest("/api/example", z.object({ ok: z.boolean() }));
+
+    const request = fetchMock.mock.calls[0]?.[1];
+    expect(new Headers(request?.headers).has("x-csrf-token")).toBe(false);
   });
 
   it("preserves API status and request ID on backend errors", async () => {

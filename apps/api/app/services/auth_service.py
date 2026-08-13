@@ -28,7 +28,7 @@ class AuthService:
             await self.session.flush()
         except IntegrityError as exc:
             await self.session.rollback()
-            raise bad_request("User with this email already exists") from exc
+            raise bad_request("Unable to register with provided credentials") from exc
 
         await self.audit.write(
             action="auth.user.registered",

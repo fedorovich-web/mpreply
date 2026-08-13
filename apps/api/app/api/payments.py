@@ -29,7 +29,7 @@ async def _read_limited_body(request: Request, *, maximum_bytes: int) -> bytes:
             raise bad_request("Webhook Content-Length is invalid")
         if declared_length > maximum_bytes:
             raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
                 detail="Webhook payload is too large",
             )
 
@@ -38,7 +38,7 @@ async def _read_limited_body(request: Request, *, maximum_bytes: int) -> bytes:
         body.extend(chunk)
         if len(body) > maximum_bytes:
             raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
                 detail="Webhook payload is too large",
             )
     return bytes(body)

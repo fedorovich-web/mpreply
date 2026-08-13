@@ -209,7 +209,7 @@ def test_payment_routes_are_registered_without_public_ui_changes() -> None:
     assert '@router.post("/payment-orders"' in api
     assert "async def _read_limited_body" in api
     assert "request.stream()" in api
-    assert "HTTP_413_REQUEST_ENTITY_TOO_LARGE" in api
+    assert "HTTP_413_CONTENT_TOO_LARGE" in api
 
 
 def test_migration_extends_append_only_ledger_and_creates_payment_tables() -> None:

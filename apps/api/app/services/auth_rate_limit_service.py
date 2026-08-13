@@ -28,6 +28,13 @@ class RateLimitDecision:
     retry_after_seconds: int
 
 
+@dataclass(frozen=True)
+class AuthRateLimitPolicy:
+    subject_limit: int
+    ip_limit: int
+    window_seconds: int
+
+
 class RateLimitStore(Protocol):
     async def consume(self, *, key: str, limit: int, window_seconds: int) -> RateLimitDecision: ...
 
@@ -64,34 +71,69 @@ class AuthRateLimiter:
         *,
         store: RateLimitStore | None,
         enabled: bool,
-        account_limit: int,
-        ip_limit: int,
-        window_seconds: int,
+        login_policy: AuthRateLimitPolicy,
+        registration_policy: AuthRateLimitPolicy,
+        refresh_policy: AuthRateLimitPolicy,
     ) -> None:
         self.store = store
         self.enabled = enabled
-        self.account_limit = account_limit
-        self.ip_limit = ip_limit
-        self.window_seconds = window_seconds
+        self.login_policy = login_policy
+        self.registration_policy = registration_policy
+        self.refresh_policy = refresh_policy
 
     async def enforce_login(self, *, email: str, client_ip: str | None) -> None:
+        await self._enforce(
+            action="login",
+            subject_dimension="account",
+            subject=email.strip().lower(),
+            client_ip=client_ip,
+            policy=self.login_policy,
+        )
+
+    async def enforce_registration(self, *, email: str, client_ip: str | None) -> None:
+        await self._enforce(
+            action="register",
+            subject_dimension="account",
+            subject=email.strip().lower(),
+            client_ip=client_ip,
+            policy=self.registration_policy,
+        )
+
+    async def enforce_refresh(self, *, refresh_token: str, client_ip: str | None) -> None:
+        await self._enforce(
+            action="refresh",
+            subject_dimension="token",
+            subject=refresh_token,
+            client_ip=client_ip,
+            policy=self.refresh_policy,
+        )
+
+    async def _enforce(
+        self,
+        *,
+        action: str,
+        subject_dimension: str,
+        subject: str,
+        client_ip: str | None,
+        policy: AuthRateLimitPolicy,
+    ) -> None:
         if not self.enabled:
             return
         if self.store is None:
             raise self._unavailable()
-        account_key = self._bucket_key("account", email.strip().lower())
-        ip_key = self._bucket_key("ip", client_ip or "unknown")
+        subject_key = self._bucket_key(action, subject_dimension, subject)
+        ip_key = self._bucket_key(action, "ip", client_ip or "unknown")
         try:
             decisions = await asyncio.gather(
                 self.store.consume(
-                    key=account_key,
-                    limit=self.account_limit,
-                    window_seconds=self.window_seconds,
+                    key=subject_key,
+                    limit=policy.subject_limit,
+                    window_seconds=policy.window_seconds,
                 ),
                 self.store.consume(
                     key=ip_key,
-                    limit=self.ip_limit,
-                    window_seconds=self.window_seconds,
+                    limit=policy.ip_limit,
+                    window_seconds=policy.window_seconds,
                 ),
             )
         except (RateLimitStoreError, RedisError) as exc:
@@ -106,9 +148,9 @@ class AuthRateLimiter:
             )
 
     @staticmethod
-    def _bucket_key(dimension: str, subject: str) -> str:
+    def _bucket_key(action: str, dimension: str, subject: str) -> str:
         digest = hashlib.sha256(subject.encode("utf-8")).hexdigest()
-        return f"mpreply:rate-limit:auth-login:{dimension}:{digest}"
+        return f"mpreply:rate-limit:auth-{action}:{dimension}:{digest}"
 
     @staticmethod
     def _unavailable() -> HTTPException:

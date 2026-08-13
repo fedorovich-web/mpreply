@@ -24,7 +24,7 @@ The change does not add dependencies, database migrations, provider calls, capab
 
 ### CSRF
 
-Every `POST`, `PUT`, `PATCH`, and `DELETE` request below `/api/` must carry exactly `X-CSRF-Token: 1`. Safe methods and CORS preflight remain unaffected. The exact path `/api/payments/webhooks/yookassa` is exempt because it is a non-browser provider callback with its own request and network validation.
+Every `POST`, `PUT`, `PATCH`, and `DELETE` request below `/api/` must carry exactly `X-CSRF-Token: 1`. Safe methods and CORS preflight remain unaffected. The exact path `/api/billing/webhooks/yookassa` is exempt because it is a non-browser provider callback with its own request and network validation.
 
 The shared web API client adds the header automatically for unsafe methods. It does not add it to safe methods. The mechanism relies on credentialed CORS preflight plus the existing exact production origin allowlist, matching the OWASP custom-request-header pattern for AJAX APIs.
 
@@ -59,6 +59,6 @@ A unique-email conflict rolls back the session and returns `400` with a generic 
 
 ## References
 
-- OWASP Authentication Cheat Sheet, Login Throttling
-- OWASP Cross-Site Request Forgery Prevention Cheat Sheet, Custom Request Headers
-- OWASP REST Security Cheat Sheet, `429 Too Many Requests`
+- [OWASP Authentication Cheat Sheet, Login Throttling](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html#login-throttling)
+- [OWASP Cross-Site Request Forgery Prevention Cheat Sheet, Custom Request Headers](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#custom-request-headers)
+- [OWASP REST Security Cheat Sheet, `429 Too Many Requests`](https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html)

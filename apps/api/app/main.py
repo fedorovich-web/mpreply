@@ -23,7 +23,7 @@ from app.api.team import router as team_router
 from app.core.config import get_settings
 from app.core.lifecycle import application_lifespan
 from app.core.logging import configure_logging
-from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
+from app.core.middleware import CsrfProtectionMiddleware, RequestContextMiddleware, SecurityHeadersMiddleware
 from app.core.observability import configure_observability
 
 
@@ -41,9 +41,10 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
+    app.add_middleware(CsrfProtectionMiddleware)
+    app.add_middleware(RequestContextMiddleware)
     if settings.security_headers_enabled:
         app.add_middleware(SecurityHeadersMiddleware, production=settings.app_env == "production")
-    app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

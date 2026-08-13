@@ -7,10 +7,12 @@ from uuid import uuid4
 import structlog
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp
 
 _REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
+_CSRF_UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+_CSRF_EXEMPT_PATHS = frozenset({"/api/billing/webhooks/yookassa"})
 logger = structlog.get_logger(__name__)
 
 
@@ -56,3 +58,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if self._production:
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response
+
+
+class CsrfProtectionMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if (
+            request.method in _CSRF_UNSAFE_METHODS
+            and request.url.path.startswith("/api/")
+            and request.url.path not in _CSRF_EXEMPT_PATHS
+            and request.headers.get("X-CSRF-Token") != "1"
+        ):
+            return JSONResponse(status_code=403, content={"detail": "CSRF validation failed"})
+        return await call_next(request)

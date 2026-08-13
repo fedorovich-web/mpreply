@@ -26,6 +26,16 @@ class IntegrityQualityGateContractTests(unittest.TestCase):
 
         self.assertIn('RATE_LIMIT_ENABLED: "true"', compose)
 
+    def test_auth_security_contract_is_complete(self) -> None:
+        previous_errors = list(check_integrity.ERRORS)
+        check_integrity.ERRORS.clear()
+        try:
+            check_integrity.check_auth_security_contract()
+
+            self.assertEqual(check_integrity.ERRORS, [])
+        finally:
+            check_integrity.ERRORS[:] = previous_errors
+
 
 if __name__ == "__main__":
     unittest.main()

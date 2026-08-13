@@ -74,4 +74,4 @@ Trade-offs:
 
 - frontend availability now depends on API reachability after login;
 - the dashboard still has other demo/foundation screens that must be wired in later sprints;
-- CSRF hardening remains a separate security item for the final production pass.
+- Cookie-authenticated API writes require the shared `X-CSRF-Token` custom-header contract; the provider webhook keeps its separate verification path.

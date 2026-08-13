@@ -60,8 +60,13 @@ async def register(
     payload: RegisterRequest,
     response: Response,
     request: Request,
+    rate_limiter: AuthRateLimiter = Depends(get_auth_rate_limiter),
     session: AsyncSession = Depends(get_db_session),
 ) -> AuthSessionResponse:
+    await rate_limiter.enforce_registration(
+        email=str(payload.email),
+        client_ip=request.client.host if request.client is not None else None,
+    )
     service = AuthService(session)
     user = await service.register_user(email=str(payload.email), password=payload.password, name=payload.name)
     await _set_new_session(response=response, request=request, session=session, user=user)
@@ -93,10 +98,15 @@ async def refresh(
     response: Response,
     request: Request,
     refresh_cookie: str | None = Cookie(default=None, alias=REFRESH_COOKIE_NAME),
+    rate_limiter: AuthRateLimiter = Depends(get_auth_rate_limiter),
     session: AsyncSession = Depends(get_db_session),
 ) -> AuthSessionResponse:
     if not refresh_cookie:
         raise unauthorized("Refresh session required")
+    await rate_limiter.enforce_refresh(
+        refresh_token=refresh_cookie,
+        client_ip=request.client.host if request.client is not None else None,
+    )
     settings = get_settings()
     ip_address, user_agent = _client_metadata(request)
     try:

@@ -76,6 +76,12 @@ class Settings(BaseSettings):
     auth_login_account_limit: int = Field(default=20, ge=5, le=100)
     auth_login_ip_limit: int = Field(default=100, ge=10, le=1000)
     auth_login_rate_limit_window_seconds: int = Field(default=900, ge=60, le=86400)
+    auth_registration_account_limit: int = Field(default=5, ge=1, le=100)
+    auth_registration_ip_limit: int = Field(default=20, ge=5, le=1000)
+    auth_registration_rate_limit_window_seconds: int = Field(default=3600, ge=60, le=86400)
+    auth_refresh_token_limit: int = Field(default=120, ge=10, le=1000)
+    auth_refresh_ip_limit: int = Field(default=600, ge=50, le=5000)
+    auth_refresh_rate_limit_window_seconds: int = Field(default=900, ge=60, le=86400)
     ai_daily_cost_limit_default: float = 5.00
     auto_reply_daily_limit_default: int = 100
     auto_reply_max_attempts: int = 4

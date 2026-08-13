@@ -712,6 +712,7 @@ def check_deployment_contract() -> None:
         API / "app" / "services" / "auth_rate_limit_service.py",
         API / "app" / "dependencies" / "rate_limit.py",
         API / "app" / "tests" / "test_auth_rate_limit.py",
+        API / "app" / "tests" / "test_csrf_protection.py",
         API / "app" / "services" / "team_service.py",
         API / "app" / "tests" / "test_team_sessions_security_contract.py",
         API / "alembic" / "versions" / "20260722_0014_payment_foundation.py",
@@ -1007,6 +1008,33 @@ def check_sql_construction_safety() -> None:
         fail(f"Dynamic SQL construction: {finding.path}:{finding.line} ({finding.operation})")
 
 
+def check_auth_security_contract() -> None:
+    middleware = (API / "app" / "core" / "middleware.py").read_text(encoding="utf-8")
+    main_source = (API / "app" / "main.py").read_text(encoding="utf-8")
+    auth_source = (API / "app" / "api" / "auth.py").read_text(encoding="utf-8")
+    web_client = (WEB / "lib" / "api" / "client.ts").read_text(encoding="utf-8")
+    production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
+
+    contracts = [
+        (middleware, "class CsrfProtectionMiddleware", "API must define CSRF protection middleware"),
+        (middleware, 'request.headers.get("X-CSRF-Token") != "1"', "API must enforce the CSRF header value"),
+        (middleware, '"/api/billing/webhooks/yookassa"', "CSRF exemption must name the exact provider webhook"),
+        (main_source, "app.add_middleware(CsrfProtectionMiddleware)", "API must register CSRF protection middleware"),
+        (auth_source, "enforce_registration", "Registration must enforce distributed rate limiting"),
+        (auth_source, "enforce_refresh", "Refresh must enforce distributed rate limiting"),
+        (web_client, 'headers.set("X-CSRF-Token", "1")', "Web API client must send the CSRF header"),
+        (production_compose, "AUTH_REGISTRATION_ACCOUNT_LIMIT", "Production Compose must configure registration throttling"),
+        (production_compose, "AUTH_REGISTRATION_IP_LIMIT", "Production Compose must configure registration IP throttling"),
+        (production_compose, "AUTH_REGISTRATION_RATE_LIMIT_WINDOW_SECONDS", "Production Compose must configure registration window"),
+        (production_compose, "AUTH_REFRESH_TOKEN_LIMIT", "Production Compose must configure refresh-token throttling"),
+        (production_compose, "AUTH_REFRESH_IP_LIMIT", "Production Compose must configure refresh IP throttling"),
+        (production_compose, "AUTH_REFRESH_RATE_LIMIT_WINDOW_SECONDS", "Production Compose must configure refresh window"),
+    ]
+    for content, token, message in contracts:
+        if token not in content:
+            fail(message)
+
+
 def main() -> int:
     check_public_routes()
     check_ts_imports()
@@ -1024,6 +1052,7 @@ def main() -> int:
     check_deployment_contract()
     check_production_comments()
     check_sql_construction_safety()
+    check_auth_security_contract()
     check_generated_artifacts_absent()
 
     if ERRORS:
