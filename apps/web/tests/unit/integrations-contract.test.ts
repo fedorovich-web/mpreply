@@ -19,6 +19,7 @@ const account = {
   credentials_status: "valid",
   scopes_json: { validated: true },
   default_response_mode: "inherit",
+  ai_instruction_set_id: null,
   last_success_sync_at: timestamp,
   last_error_sync_at: null,
   error_count: 0,

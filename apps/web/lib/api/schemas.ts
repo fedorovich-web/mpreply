@@ -215,6 +215,7 @@ export const marketplaceAccountSchema = z.object({
   credentials_status: z.string().min(1),
   scopes_json: z.record(z.string(), z.unknown()),
   default_response_mode: z.string().min(1),
+  ai_instruction_set_id: uuidSchema.nullable(),
   last_success_sync_at: timestampSchema.nullable(),
   last_error_sync_at: timestampSchema.nullable(),
   error_count: z.number().int().nonnegative(),
@@ -308,6 +309,53 @@ export type MarketplaceSyncJobSummary = z.infer<typeof marketplaceSyncJobSummary
 export type MarketplaceIntegrationEventSummary = z.infer<typeof marketplaceIntegrationEventSummarySchema>;
 export type MarketplaceSync = z.infer<typeof marketplaceSyncSchema>;
 
+export const instructionToneSchema = z.enum(["neutral", "friendly", "formal", "apologetic"]);
+export const instructionSetStatusSchema = z.enum(["active", "archived"]);
+export const aiInstructionSetSchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  name: z.string().min(2).max(120),
+  response_tone: instructionToneSchema,
+  brand_rules: z.string().nullable(),
+  reply_signature: z.string().nullable(),
+  prohibited_phrases: z.array(z.string()),
+  status: instructionSetStatusSchema,
+  is_default: z.boolean(),
+  created_by: uuidSchema.nullable(),
+  updated_by: uuidSchema.nullable(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+export const aiInstructionSetListSchema = z.array(aiInstructionSetSchema);
+export const aiInstructionSetAssignmentSchema = z.object({
+  marketplace_account_id: uuidSchema,
+  instruction_set_id: uuidSchema.nullable(),
+});
+
+export const knowledgeCategorySchema = z.enum(["company", "delivery", "returns", "warranty", "product", "other"]);
+export const knowledgeStatusSchema = z.enum(["draft", "active", "archived"]);
+export const knowledgeEntrySchema = z.object({
+  id: uuidSchema,
+  organization_id: uuidSchema,
+  marketplace_account_id: uuidSchema.nullable(),
+  product_id: uuidSchema.nullable(),
+  category: knowledgeCategorySchema,
+  title: z.string().min(1).max(160),
+  content: z.string().min(1).max(12000),
+  status: knowledgeStatusSchema,
+  created_by: uuidSchema.nullable(),
+  updated_by: uuidSchema.nullable(),
+  created_at: timestampSchema,
+  updated_at: timestampSchema,
+});
+export const knowledgeEntryListSchema = z.array(knowledgeEntrySchema);
+
+export type AIInstructionSet = z.infer<typeof aiInstructionSetSchema>;
+export type InstructionTone = z.infer<typeof instructionToneSchema>;
+export type KnowledgeEntry = z.infer<typeof knowledgeEntrySchema>;
+export type KnowledgeCategory = z.infer<typeof knowledgeCategorySchema>;
+export type KnowledgeStatus = z.infer<typeof knowledgeStatusSchema>;
+
 export const messageResponseSchema = z.object({
   message: z.string(),
 });
@@ -317,6 +365,7 @@ export type Organization = z.infer<typeof organizationSchema>;
 export type AutomationRule = z.infer<typeof automationRuleSchema>;
 export type AutomationRuleList = z.infer<typeof automationRuleListSchema>;
 export type CustomerMessage = z.infer<typeof customerMessageSchema>;
+export type ProductSummary = z.infer<typeof productSummarySchema>;
 export type CustomerMessageList = z.infer<typeof customerMessageListSchema>;
 export type AIDraft = z.infer<typeof aiDraftSchema>;
 export type AIDraftList = z.infer<typeof aiDraftListSchema>;
