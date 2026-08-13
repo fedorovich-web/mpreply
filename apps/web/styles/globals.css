@@ -476,11 +476,12 @@ h1 {
 	top: 0;
 	display: grid;
 	height: 100vh;
-	grid-template-rows: auto auto 1fr;
+	grid-template-rows: auto 1fr;
 	gap: var(--space-5);
 	border-right: 1px solid var(--color-border-subtle);
 	background: var(--app-sidebar-bg);
 	padding: var(--space-5);
+	overflow-y: auto;
 }
 
 .app-sidebar-brand {
@@ -521,16 +522,34 @@ h1 {
 	font-size: var(--font-size-xs);
 }
 
-.app-nav {
+.app-nav-groups {
+	display: grid;
+	gap: var(--space-5);
+	align-content: start;
+}
+
+.app-nav-group {
 	display: grid;
 	gap: var(--space-2);
 }
 
-.app-nav-link {
+.app-nav-group-label {
+	color: var(--color-kicker-text);
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-semibold);
+}
+
+.app-nav {
 	display: grid;
 	gap: var(--space-1);
+}
+
+.app-nav-link {
+	display: flex;
+	align-items: center;
+	min-height: 2.75rem;
 	border-radius: var(--radius-lg);
-	padding: var(--space-3) var(--space-4);
+	padding: var(--space-2) var(--space-3);
 	color: var(--color-text-secondary);
 	transition: var(--transition-interactive);
 }
@@ -548,6 +567,10 @@ h1 {
 
 .app-nav-link span {
 	font-weight: var(--font-weight-semibold);
+}
+
+.app-sidebar-backdrop {
+	display: none;
 }
 
 .app-nav-link small {
@@ -640,6 +663,14 @@ h1 {
 .app-shell .app-page {
 	min-height: calc(100vh - var(--header-height));
 	padding: var(--space-8);
+}
+
+.app-shell .app-page h1 {
+	max-width: 28ch;
+	font-size: clamp(2rem, 3vw, 2.5rem);
+	letter-spacing: -0.03em;
+	overflow-wrap: anywhere;
+	text-wrap: balance;
 }
 
 .app-page-wide {
@@ -1023,6 +1054,19 @@ h1 {
 		transform: var(--transform-mobile-menu-open);
 	}
 
+	.app-sidebar-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 20;
+		display: block;
+		width: 100%;
+		height: 100%;
+		border: 0;
+		border-radius: 0;
+		background: var(--color-overlay-dark);
+		padding: 0;
+	}
+
 	.app-menu-button {
 		display: inline-block;
 	}
@@ -1037,6 +1081,11 @@ h1 {
 
 	.app-shell .app-page {
 		padding: var(--space-5);
+	}
+
+	.app-shell .app-page h1 {
+		max-width: 100%;
+		font-size: clamp(1.75rem, 8vw, 2rem);
 	}
 
 	.app-header-row {

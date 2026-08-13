@@ -20,20 +20,20 @@ export function DashboardMetrics() {
   });
 
   if (analyticsQuery.isLoading || billingQuery.isLoading) {
-    return <div className="workspace-inline-state"><strong>Загружаем dashboard</strong><p>Получаем live metrics и текущий plan usage.</p></div>;
+    return <div className="workspace-inline-state"><strong>Обновляем показатели</strong><p>Собираем текущие данные по кабинету.</p></div>;
   }
   if (analyticsQuery.error || billingQuery.error || !analyticsQuery.data || !billingQuery.data) {
     const error = analyticsQuery.error ?? billingQuery.error;
-    return <div className="workspace-inline-state workspace-inline-state-error"><strong>Dashboard недоступен</strong><p>{error instanceof Error ? error.message : "Нет данных"}</p></div>;
+    return <div className="workspace-inline-state workspace-inline-state-error"><strong>Не удалось загрузить показатели</strong><p>{error instanceof Error ? error.message : "Нет данных"}</p></div>;
   }
 
   const analytics = analyticsQuery.data;
   const billing = billingQuery.data;
   const metrics = [
-    { label: "Обращения · 30 дней", value: formatNumber(analytics.total_messages), helper: `${analytics.new_messages} новых`, badge: "live" },
-    { label: "Автоответы", value: formatNumber(analytics.auto_replies_sent), helper: `${analytics.manual_replies_sent} manual`, badge: "auto" },
-    { label: "Нужен ответ", value: formatNumber(analytics.unanswered_messages), helper: `${analytics.answered_messages} уже отвечено`, badge: "queue" },
-    { label: "AI drafts", value: formatNumber(analytics.ai_drafts_generated), helper: formatAcceptance(analytics.ai_acceptance_rate), badge: "AI" },
+    { label: "Обращения · 30 дней", value: formatNumber(analytics.total_messages), helper: `${analytics.new_messages} новых`, badge: "Всего" },
+    { label: "Автоответы", value: formatNumber(analytics.auto_replies_sent), helper: `${analytics.manual_replies_sent} вручную`, badge: "Авто" },
+    { label: "Нужен ответ", value: formatNumber(analytics.unanswered_messages), helper: `${analytics.answered_messages} уже отвечено`, badge: "Очередь" },
+    { label: "Черновики AI", value: formatNumber(analytics.ai_drafts_generated), helper: formatAcceptance(analytics.ai_acceptance_rate), badge: "AI" },
   ];
 
   return (
@@ -49,7 +49,7 @@ export function DashboardMetrics() {
 
       <section className="dashboard-panel-grid" aria-label="Операционные панели">
         <article className="dashboard-panel">
-          <div className="panel-heading"><span className="panel-kicker">Live workspace</span><strong>Текущая нагрузка</strong></div>
+          <div className="panel-heading"><span className="panel-kicker">За 30 дней</span><strong>Текущая нагрузка</strong></div>
           <div className="analytics-summary-list">
             <div className="analytics-summary-row"><span>Отправлено ответов</span><strong>{formatNumber(analytics.replies_sent)}</strong></div>
             <div className="analytics-summary-row"><span>Негативных отзывов</span><strong>{formatNumber(analytics.negative_reviews)}</strong></div>
@@ -59,9 +59,9 @@ export function DashboardMetrics() {
         </article>
 
         <article className="dashboard-panel dashboard-panel-accent">
-          <div className="panel-heading"><span className="panel-kicker">Current plan</span><strong>{billing.plan.name}</strong></div>
-          <p>{billing.pricing_finalized ? "Коммерческая цена зафиксирована." : "Коммерческая цена пока не зафиксирована. Billing schema и usage evaluation уже работают."}</p>
-          <Link className="button button-secondary" href="/app/billing">Тариф и usage</Link>
+          <div className="panel-heading"><span className="panel-kicker">Текущий тариф</span><strong>{billing.plan.name}</strong></div>
+          <p>{billing.pricing_finalized ? "Стоимость тарифа зафиксирована." : "Стоимость тарифа ещё не опубликована. Доступные лимиты показаны в разделе тарифа."}</p>
+          <Link className="button button-secondary" href="/app/billing">Открыть тариф</Link>
         </article>
       </section>
     </>

@@ -119,7 +119,7 @@ export function InboxWorkspace() {
   }
 
   return (
-    <section className="inbox-workspace" aria-label="Рабочая область Inbox">
+    <section className="inbox-workspace" aria-label="Рабочая область обращений">
       <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
         <div className="panel-heading">
           <span className="panel-kicker">Фильтры</span>
@@ -172,10 +172,10 @@ export function InboxWorkspace() {
         </div>
 
         {messagesQuery.isPending ? (
-          <InboxState title="Загружаем обращения" description="Получаем данные из GET /api/messages." />
+          <InboxState title="Загружаем обращения" description="Получаем свежие данные по выбранным фильтрам." />
         ) : messagesQuery.error ? (
           <InboxState
-            title="Не удалось загрузить Inbox"
+            title="Не удалось загрузить обращения"
             description={errorMessage(messagesQuery.error)}
             actionLabel="Повторить"
             onAction={() => void messagesQuery.refetch()}
@@ -193,7 +193,7 @@ export function InboxWorkspace() {
           </div>
         ) : (
           <EmptyState
-            description="Измените фильтры или синхронизируйте маркетплейс. Этот список уже загружается из backend API."
+            description="Измените фильтры или запустите синхронизацию в разделе подключений."
             title="Нет обращений по выбранным фильтрам"
           />
         )}

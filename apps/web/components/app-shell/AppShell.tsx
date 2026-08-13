@@ -2,28 +2,55 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BrandLogo } from "../public-site/BrandLogo";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
-const navItems = [
-  { href: "/app/dashboard", label: "Dashboard", description: "Сводка" },
-  { href: "/app/inbox", label: "Inbox", description: "Отзывы и вопросы" },
-  { href: "/app/review-queue", label: "Review Queue", description: "Ручная проверка" },
-  { href: "/app/ai-assistant", label: "AI Assistant", description: "OpenRouter" },
-  { href: "/app/automation-rules", label: "Automation Rules", description: "Auto + SafetyGate" },
-  { href: "/app/integrations", label: "Integrations", description: "API-ключи" },
-  { href: "/app/integrations/wildberries", label: "Wildberries", description: "MVP adapter" },
-  { href: "/app/analytics", label: "Analytics", description: "Метрики и AI usage" },
-  { href: "/app/billing", label: "Billing", description: "Тариф и лимиты" },
+const navGroups = [
+  {
+    label: "Работа",
+    items: [
+      { href: "/app/dashboard", label: "Главная" },
+      { href: "/app/inbox", label: "Обращения" },
+      { href: "/app/review-queue", label: "Ручная проверка" },
+    ],
+  },
+  {
+    label: "Автоматизация",
+    items: [
+      { href: "/app/automation-rules", label: "Правила" },
+      { href: "/app/instruction-sets", label: "Наборы AI" },
+      { href: "/app/knowledge-base", label: "База знаний" },
+    ],
+  },
+  {
+    label: "Маркетплейсы",
+    items: [
+      { href: "/app/integrations", label: "Подключения" },
+    ],
+  },
+  {
+    label: "Результаты",
+    items: [
+      { href: "/app/analytics", label: "Аналитика" },
+    ],
+  },
+  {
+    label: "Управление",
+    items: [
+      { href: "/app/team", label: "Команда" },
+      { href: "/app/settings", label: "Настройки" },
+      { href: "/app/billing", label: "Тариф и лимиты" },
+      { href: "/app/audit-log", label: "Журнал действий" },
+    ],
+  },
 ];
-
-const upcomingItems = ["Templates", "Knowledge Base", "Team", "Settings", "Audit Log"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const {
     user,
     organizations,
@@ -32,60 +59,96 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     logout,
     isLoggingOut,
   } = useWorkspace();
-  const visibleNavItems = user.is_superadmin
-    ? [...navItems, { href: "/app/admin", label: "Admin", description: "Internal overview" }]
-    : navItems;
+  const visibleGroups = user.is_superadmin
+    ? [...navGroups, { label: "Система", items: [{ href: "/app/admin", label: "Администрирование" }] }]
+    : navGroups;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  function closeNavigation(restoreFocus = false) {
+    setIsOpen(false);
+    if (restoreFocus) menuButtonRef.current?.focus();
+  }
 
   return (
     <div className="app-shell">
-      <aside className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
+      <aside
+        className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"}
+        aria-label="Основная навигация"
+        id="app-navigation"
+      >
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="MP Reply dashboard">
+          <Link href="/app/dashboard" className="app-logo" aria-label="MPReply — главная">
             <BrandLogo
               className="app-brand-logo"
               imageClassName="app-brand-logo-image"
               alt=""
               priority
             />
-            <small>Seller AI ops</small>
+            <small>Ответы на маркетплейсах</small>
           </Link>
         </div>
 
-        <nav className="app-nav" aria-label="Разделы dashboard">
-          {visibleNavItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link
-                aria-current={isActive ? "page" : undefined}
-                className={isActive ? "app-nav-link app-nav-link-active" : "app-nav-link"}
-                href={item.href}
-                key={item.href}
-                onClick={() => setIsOpen(false)}
-              >
-                <span>{item.label}</span>
-                <small>{item.description}</small>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="app-sidebar-section" aria-label="Следующие разделы">
-          <span className="app-sidebar-caption">Следующие спринты</span>
-          <div className="app-upcoming-list">
-            {upcomingItems.map((item) => (
-              <span className="app-upcoming-item" key={item}>{item}</span>
-            ))}
-          </div>
+        <div className="app-nav-groups">
+          {visibleGroups.map((group) => (
+            <nav className="app-nav-group" aria-label={group.label} key={group.label}>
+              <span className="app-nav-group-label">{group.label}</span>
+              <div className="app-nav">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      aria-current={isActive ? "page" : undefined}
+                      aria-label={item.label}
+                      className={isActive ? "app-nav-link app-nav-link-active" : "app-nav-link"}
+                      href={item.href}
+                      key={item.href}
+                      onClick={() => closeNavigation()}
+                    >
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+          ))}
         </div>
       </aside>
+
+      {isOpen ? (
+        <button
+          aria-label="Закрыть навигацию"
+          className="app-sidebar-backdrop"
+          onClick={() => closeNavigation(true)}
+          type="button"
+        />
+      ) : null}
 
       <div className="app-workspace">
         <header className="app-topbar">
           <button
             aria-expanded={isOpen}
-            aria-label="Открыть меню dashboard"
+            aria-controls="app-navigation"
+            aria-label="Открыть навигацию"
             className="app-menu-button"
             onClick={() => setIsOpen((value) => !value)}
+            ref={menuButtonRef}
             type="button"
           >
             <span aria-hidden="true" />
@@ -94,7 +157,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="app-topbar-title">
-            <span>Auto-first workspace</span>
+            <span>Операционный кабинет</span>
             <strong>{activeOrganization.name}</strong>
           </div>
 
