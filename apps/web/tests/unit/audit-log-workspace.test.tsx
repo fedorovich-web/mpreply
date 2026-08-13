@@ -33,6 +33,8 @@ describe("AuditLogWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByText("Изменена роль сотрудника")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Стили ответов" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Данные для ответов" })).toBeInTheDocument();
     expect(screen.queryByText("never-render")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Показать ещё" }));
     await waitFor(() => expect(screen.getByText("Другое действие")).toBeInTheDocument());

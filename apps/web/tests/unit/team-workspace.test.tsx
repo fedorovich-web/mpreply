@@ -36,6 +36,7 @@ describe("TeamWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByText("owner@example.com")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Сотрудники" })).toBeInTheDocument();
     expect(screen.getByText("manager@example.com")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Email сотрудника"), { target: { value: "new@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Отправить приглашение" }));
@@ -49,7 +50,7 @@ describe("TeamWorkspace", () => {
     vi.stubGlobal("fetch", fetchMock);
     renderWorkspace();
 
-    expect(screen.getByRole("heading", { name: "Управление командой недоступно" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Список сотрудников недоступен" })).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

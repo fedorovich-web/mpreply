@@ -32,6 +32,7 @@ describe("SettingsWorkspace", () => {
     renderWorkspace("owner", fetchMock);
 
     const name = await screen.findByLabelText("Название организации");
+    expect(screen.queryByRole("link", { name: /Наборы AI|База знаний|Правила/ })).not.toBeInTheDocument();
     fireEvent.change(name, { target: { value: "Seller Operations" } });
     fireEvent.change(screen.getByLabelText("Режим ответов по умолчанию"), { target: { value: "semi_auto" } });
     fireEvent.click(screen.getByRole("button", { name: "Сохранить настройки" }));
