@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from scripts import check_integrity
 
@@ -18,6 +19,12 @@ class IntegrityQualityGateContractTests(unittest.TestCase):
             )
         finally:
             check_integrity.ERRORS[:] = previous_errors
+
+    def test_production_compose_enables_application_rate_limiting(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        compose = (root / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
+
+        self.assertIn('RATE_LIMIT_ENABLED: "true"', compose)
 
 
 if __name__ == "__main__":

@@ -17,10 +17,12 @@ from app.core.cookies import (
 from app.core.errors import not_found, unauthorized
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
+from app.dependencies.rate_limit import get_auth_rate_limiter
 from app.models.user import User
 from app.schemas.auth import AuthSessionResponse, LoginRequest, RegisterRequest, UserResponse
 from app.schemas.common import MessageResponse
 from app.schemas.session import AuthSessionInfo
+from app.services.auth_rate_limit_service import AuthRateLimiter
 from app.services.auth_service import AuthService
 from app.services.auth_session_service import AuthSessionService
 
@@ -72,8 +74,13 @@ async def login(
     payload: LoginRequest,
     response: Response,
     request: Request,
+    rate_limiter: AuthRateLimiter = Depends(get_auth_rate_limiter),
     session: AsyncSession = Depends(get_db_session),
 ) -> AuthSessionResponse:
+    await rate_limiter.enforce_login(
+        email=str(payload.email),
+        client_ip=request.client.host if request.client is not None else None,
+    )
     service = AuthService(session)
     user = await service.authenticate_user(email=str(payload.email), password=payload.password)
     await _set_new_session(response=response, request=request, session=session, user=user)

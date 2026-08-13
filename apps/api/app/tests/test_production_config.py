@@ -18,6 +18,7 @@ def _production_settings(**overrides: object) -> Settings:
         "openrouter_api_key": SecretStr("sk-or-v1-production-test-key"),
         "auth_cookie_secure": True,
         "auth_cookie_samesite": "lax",
+        "rate_limit_enabled": True,
         "cors_allowed_origins": ["https://app.mpreply.ru", "https://mpreply.ru"],
         "allowed_hosts": ["api.mpreply.ru"],
     }
@@ -30,6 +31,7 @@ def test_valid_production_settings_pass() -> None:
 
     assert settings.app_env == "production"
     assert settings.auth_cookie_secure is True
+    assert settings.rate_limit_enabled is True
 
 
 def test_production_rejects_placeholder_secret() -> None:
@@ -40,6 +42,11 @@ def test_production_rejects_placeholder_secret() -> None:
 def test_production_rejects_insecure_cookie() -> None:
     with pytest.raises(ValidationError, match="AUTH_COOKIE_SECURE"):
         _production_settings(auth_cookie_secure=False)
+
+
+def test_production_requires_rate_limiting() -> None:
+    with pytest.raises(ValidationError, match="RATE_LIMIT_ENABLED"):
+        _production_settings(rate_limit_enabled=False)
 
 
 def test_production_rejects_http_origin() -> None:

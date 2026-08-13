@@ -73,6 +73,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     rate_limit_enabled: bool = False
+    auth_login_account_limit: int = Field(default=20, ge=5, le=100)
+    auth_login_ip_limit: int = Field(default=100, ge=10, le=1000)
+    auth_login_rate_limit_window_seconds: int = Field(default=900, ge=60, le=86400)
     ai_daily_cost_limit_default: float = 5.00
     auto_reply_daily_limit_default: int = 100
     auto_reply_max_attempts: int = 4
@@ -126,6 +129,9 @@ class Settings(BaseSettings):
         self._require_secure_production_secret("AUTH_SECRET_KEY", self.auth_secret_key, min_length=32)
         self._require_secure_production_secret("OPENROUTER_API_KEY", self.openrouter_api_key, min_length=16)
         self._require_valid_fernet_key()
+
+        if not self.rate_limit_enabled:
+            raise ValueError("Production requires RATE_LIMIT_ENABLED=true")
 
         if self.payment_provider == "yookassa":
             self._require_secure_production_secret("YOOKASSA_SHOP_ID", self.yookassa_shop_id, min_length=3)

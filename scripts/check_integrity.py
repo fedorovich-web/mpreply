@@ -709,6 +709,9 @@ def check_deployment_contract() -> None:
         API / "app" / "models" / "auth_session.py",
         API / "app" / "models" / "organization_invitation.py",
         API / "app" / "services" / "auth_session_service.py",
+        API / "app" / "services" / "auth_rate_limit_service.py",
+        API / "app" / "dependencies" / "rate_limit.py",
+        API / "app" / "tests" / "test_auth_rate_limit.py",
         API / "app" / "services" / "team_service.py",
         API / "app" / "tests" / "test_team_sessions_security_contract.py",
         API / "alembic" / "versions" / "20260722_0014_payment_foundation.py",
@@ -772,6 +775,7 @@ def check_deployment_contract() -> None:
         (production_compose, "AUTH_INVITATION_TTL_HOURS", "Production Compose must configure invitation expiry"),
         (production_compose, "CREDENTIALS_ENCRYPTION_KEY is required", "Production Compose must require encryption key"),
         (production_compose, "FORWARDED_ALLOW_IPS is required", "Production Compose must require an explicit proxy trust boundary"),
+        (production_compose, 'RATE_LIMIT_ENABLED: "true"', "Production Compose must enable application rate limiting"),
         (production_compose, "NEXT_PUBLIC_API_BASE_URL", "Production Compose must inject the public API URL into the web build"),
     ]
     for content, token, message in docker_contracts:

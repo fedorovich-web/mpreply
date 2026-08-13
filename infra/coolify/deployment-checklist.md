@@ -31,6 +31,7 @@ CORS_ALLOWED_ORIGINS
 ALLOWED_HOSTS
 DEPLOYMENT_VERSION
 FORWARDED_ALLOW_IPS
+RATE_LIMIT_ENABLED
 ```
 
 `CORS_ALLOWED_ORIGINS` and `ALLOWED_HOSTS` use JSON arrays.
@@ -85,6 +86,7 @@ Use readiness, not liveness, to decide whether the API should receive traffic.
 - explicit `ALLOWED_HOSTS`;
 - explicit CORS origins;
 - no wildcard host/CORS configuration;
+- Redis-backed authentication rate limiting enabled;
 - marketplace credentials remain backend-only and encrypted;
 - no `.env`, secrets or internal package-registry URLs in images or repository.
 
