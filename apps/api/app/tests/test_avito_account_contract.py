@@ -64,7 +64,10 @@ class _AvitoAccountAdapter(AvitoAdapter):
     async def validate_credentials(self, credential: str, seller_id: str | None = None) -> AdapterResult:
         assert credential == "synthetic-access-token"
         assert seller_id == "123456"
-        return AdapterResult(ok=True, data={"scopes": ["must-not-persist"]})
+        return AdapterResult(
+            ok=True,
+            data={"scopes": ["must-not-persist"], "authentication": "client_credentials"},
+        )
 
 
 class _AccountServiceHarness(MarketplaceAccountService):
@@ -140,7 +143,9 @@ async def test_avito_validation_persists_only_safe_read_scope(monkeypatch: pytes
         "validated": True,
         "checked_at": "2026-08-12T07:00:00+00:00",
         "scopes": ["fetch_chats"],
+        "authentication": "client_credentials",
     }
+    assert "synthetic-access-token" not in repr(validated.scopes_json)
 
 
 @pytest.mark.asyncio

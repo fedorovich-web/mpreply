@@ -59,6 +59,8 @@ Evidence: `.handoff/ozon-runtime-verification.json`.
 
 ### 4. Avito
 
+The production account credential accepts either a pre-obtained access token or the exact encrypted JSON value `{"client_id":"<CLIENT_ID>","client_secret":"<CLIENT_SECRET>"}`. Client credentials are exchanged through the official OAuth 2 token endpoint. The current certification wrapper deliberately continues to require a separately obtained `AVITO_ACCESS_TOKEN`; this keeps the live probe read/write arming surface independent from stored production credentials and does not constitute a live OAuth verification.
+
 ```powershell
 pwsh -NoProfile -File scripts/avito-runtime-probe.ps1 -Mode read-only -MaxPages 2
 ```

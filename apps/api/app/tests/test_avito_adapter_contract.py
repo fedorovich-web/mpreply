@@ -40,9 +40,109 @@ async def test_validate_credentials_uses_documented_read_only_chat_request() -> 
     result = await adapter.validate_credentials("synthetic-access-token", seller_id="123456")
 
     assert result.ok is True
-    assert result.data == {"scopes": ["fetch_chats"]}
+    assert result.data == {"scopes": ["fetch_chats"], "authentication": "access_token"}
     assert isinstance(adapter, ConversationAdapter)
     assert len(recorder.requests) == 1
+
+
+@pytest.mark.asyncio
+async def test_client_credentials_obtain_bearer_token_before_chat_validation() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(
+                200,
+                json={"access_token": "resolved-token", "expires_in": 86400, "token_type": "Bearer"},
+            ),
+            httpx.Response(200, json={"chats": []}),
+        ]
+    )
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+    credential = json.dumps({"client_id": "client-123", "client_secret": "synthetic-secret"})
+
+    result = await adapter.validate_credentials(credential, seller_id="123456")
+
+    assert result.ok is True
+    assert result.data == {"scopes": ["fetch_chats"], "authentication": "client_credentials"}
+    assert [request.url.path for request in recorder.requests] == [
+        "/token/",
+        "/messenger/v2/accounts/123456/chats",
+    ]
+    assert recorder.requests[1].headers["Authorization"] == "Bearer resolved-token"
+    assert "synthetic-secret" not in repr(result)
+
+
+@pytest.mark.asyncio
+async def test_client_credentials_reuse_cached_token_across_reads() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(
+                200,
+                json={"access_token": "resolved-token", "expires_in": 86400, "token_type": "Bearer"},
+            ),
+            httpx.Response(200, json={"chats": []}),
+            httpx.Response(200, json={"chats": []}),
+        ]
+    )
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+    credential = json.dumps({"client_id": "client-123", "client_secret": "synthetic-secret"})
+
+    first = await adapter.fetch_chats(credential, "123456", unread_only=True, limit=100, offset=0)
+    second = await adapter.fetch_chats(credential, "123456", unread_only=True, limit=100, offset=0)
+
+    assert first.ok is True
+    assert second.ok is True
+    assert [request.url.path for request in recorder.requests].count("/token/") == 1
+    assert [request.url.path for request in recorder.requests].count("/messenger/v2/accounts/123456/chats") == 2
+
+
+@pytest.mark.asyncio
+async def test_client_credentials_refresh_once_after_read_auth_failure() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"access_token": "expired-token", "expires_in": 86400, "token_type": "Bearer"}),
+            httpx.Response(401, json={"error": "invalid_token"}),
+            httpx.Response(200, json={"access_token": "fresh-token", "expires_in": 86400, "token_type": "Bearer"}),
+            httpx.Response(200, json={"chats": []}),
+        ]
+    )
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+    credential = json.dumps({"client_id": "client-123", "client_secret": "synthetic-secret"})
+
+    result = await adapter.fetch_chats(credential, "123456", unread_only=True, limit=100, offset=0)
+
+    assert result.ok is True
+    assert [request.url.path for request in recorder.requests] == [
+        "/token/",
+        "/messenger/v2/accounts/123456/chats",
+        "/token/",
+        "/messenger/v2/accounts/123456/chats",
+    ]
+    assert [
+        request.headers["Authorization"]
+        for request in recorder.requests
+        if request.url.path.startswith("/messenger/")
+    ] == ["Bearer expired-token", "Bearer fresh-token"]
+
+
+@pytest.mark.asyncio
+async def test_client_credentials_never_repeat_chat_post_after_auth_failure() -> None:
+    recorder = _RequestRecorder(
+        [
+            httpx.Response(200, json={"access_token": "expired-token", "expires_in": 86400, "token_type": "Bearer"}),
+            httpx.Response(401, json={"error": "invalid_token"}),
+        ]
+    )
+    adapter = AvitoAdapter(transport=httpx.MockTransport(recorder))
+    credential = json.dumps({"client_id": "client-123", "client_secret": "synthetic-secret"})
+
+    result = await adapter.send_chat_message(credential, "123456", chat_id="chat-77", text="Synthetic reply")
+
+    assert result.ok is False
+    assert result.error_code == "invalid_credentials"
+    assert [request.url.path for request in recorder.requests] == [
+        "/token/",
+        "/messenger/v1/accounts/123456/chats/chat-77/messages",
+    ]
 
 
 @pytest.mark.asyncio

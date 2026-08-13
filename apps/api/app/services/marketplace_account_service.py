@@ -283,10 +283,17 @@ class MarketplaceAccountService:
                 else []
             )
             if account.marketplace == Marketplace.AVITO.value:
+                authentication_value = result_data.get("authentication")
+                authentication = (
+                    authentication_value
+                    if authentication_value in {"client_credentials", "access_token"}
+                    else None
+                )
                 account.scopes_json = {
                     "validated": True,
                     "checked_at": now.isoformat(),
                     "scopes": ["fetch_chats"],
+                    **({"authentication": authentication} if authentication is not None else {}),
                 }
             elif account.marketplace == Marketplace.OZON.value:
                 expires_at = result_data.get("expires_at")

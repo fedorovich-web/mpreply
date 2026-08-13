@@ -68,9 +68,9 @@ The Ozon Seller API review/question adapter is enabled in this development branc
 
 ### Avito
 
-The Avito Messenger polling/text adapter is implemented against the supplied official OpenAPI and contract-tested with synthetic transports. It covers read-only account validation, bounded unread-chat and message polling, durable text-turn ingestion before read mutation, exact outbound preflight and guarded text sends.
+The Avito Messenger polling/text adapter is implemented against the supplied official OpenAPI and contract-tested with synthetic transports. It covers read-only account validation, bounded unread-chat and message polling, durable text-turn ingestion before read mutation, exact outbound preflight and guarded text sends. The production credential path also supports the official OAuth 2 client-credentials flow through `POST https://api.avito.ru/token/`: an Avito credential can be supplied as the exact JSON object `{"client_id":"...","client_secret":"..."}`. The encrypted credential remains opaque to shared account storage, resolved Bearer tokens are cached only in process memory until an early expiry, read-only calls may refresh once after an authentication failure, and provider POST requests are never repeated.
 
-No live Avito request was used for this implementation. Real access-token validation, provider read mutation and message delivery remain unverified. OAuth token acquisition or refresh, webhooks, media, voice, attachments and other non-text operations remain unsupported.
+No live Avito request was used for this implementation. Real client-credentials token acquisition, access-token validation, provider read mutation and message delivery remain unverified. Existing pre-obtained access-token credentials remain supported for migration, but cannot be refreshed. Authorization-code delegation, refresh-token persistence, webhooks, media, voice, attachments and other non-text operations remain unsupported.
 
 The supplied chat-list response exposes item context but does not expose the requested `u2i`/`u2u`/`a2u` filter value as a response field. The adapter preserves the documented response fields and does not infer a chat type; automatic product linking from the live adapter path is therefore unverified.
 

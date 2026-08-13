@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 import httpx
 
+from app.adapters.avito_auth import AvitoCredentialResolver, AvitoResolvedCredential
 from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
 from app.adapters.conversation import AvitoChat, AvitoMessage
 
@@ -23,25 +24,37 @@ class AvitoAdapter(MarketplaceAdapter):
         self,
         timeout_seconds: float = 10.0,
         transport: httpx.AsyncBaseTransport | None = None,
+        credential_resolver: AvitoCredentialResolver | None = None,
     ) -> None:
         self._timeout = httpx.Timeout(timeout_seconds)
         self._transport = transport
+        self._credential_resolver = credential_resolver or AvitoCredentialResolver(
+            timeout_seconds=timeout_seconds,
+            transport=transport,
+        )
 
     async def validate_credentials(self, credential: str, seller_id: str | None = None) -> AdapterResult:
         user_id = _positive_decimal_id(seller_id)
         if user_id is None:
             return _invalid_account_identifier()
+        resolved = await self._credential_resolver.resolve(credential)
+        if isinstance(resolved, AdapterResult):
+            return resolved
         result = await self._request(
             credential=credential,
             method="GET",
             path=f"/messenger/v2/accounts/{user_id}/chats",
             params={"limit": 1, "offset": 0, "unread_only": "false", "chat_types": "u2i,u2u,a2u"},
+            resolved=resolved,
         )
         if not result.ok:
             return result
         if _chat_mappings(result.data) is None:
             return _malformed_payload()
-        return AdapterResult(ok=True, data={"scopes": ["fetch_chats"]})
+        return AdapterResult(
+            ok=True,
+            data={"scopes": ["fetch_chats"], "authentication": resolved.authentication},
+        )
 
     async def fetch_reviews(
         self, credential: str, cursor: str | None = None, seller_id: str | None = None
@@ -258,25 +271,37 @@ class AvitoAdapter(MarketplaceAdapter):
         path: str,
         params: dict[str, int | str] | None = None,
         json: dict[str, object] | None = None,
+        resolved: AvitoResolvedCredential | None = None,
     ) -> AdapterResult:
-        try:
-            async with httpx.AsyncClient(
-                base_url=_BASE_URL,
-                timeout=self._timeout,
-                follow_redirects=False,
-                transport=self._transport,
-            ) as client:
-                response = await client.request(
-                    method,
-                    path,
-                    headers={"Authorization": f"Bearer {_access_token(credential)}", "Accept": "application/json"},
+        active = resolved or await self._credential_resolver.resolve(credential)
+        if isinstance(active, AdapterResult):
+            return active
+        response = await self._send_request(
+            access_token=active.access_token,
+            method=method,
+            path=path,
+            params=params,
+            json=json,
+        )
+        if isinstance(response, AdapterResult):
+            return response
+        if response.status_code in {401, 403}:
+            self._credential_resolver.invalidate(credential)
+            if method == "GET" and active.authentication == "client_credentials":
+                refreshed = await self._credential_resolver.resolve(credential)
+                if isinstance(refreshed, AdapterResult):
+                    return refreshed
+                response = await self._send_request(
+                    access_token=refreshed.access_token,
+                    method=method,
+                    path=path,
                     params=params,
                     json=json,
                 )
-        except httpx.TimeoutException:
-            return _error("network_timeout", "Avito Messenger request timed out")
-        except httpx.RequestError:
-            return _error("network_error", "Avito Messenger network error")
+                if isinstance(response, AdapterResult):
+                    return response
+                if response.status_code in {401, 403}:
+                    self._credential_resolver.invalidate(credential)
         if not response.is_success:
             result = self.map_error(response.status_code)
             rate_limit_data = _rate_limit_data(response.headers)
@@ -293,6 +318,35 @@ class AvitoAdapter(MarketplaceAdapter):
         except ValueError:
             return _malformed_payload()
         return AdapterResult(ok=True, data=payload)
+
+    async def _send_request(
+        self,
+        *,
+        access_token: str,
+        method: Literal["GET", "POST"],
+        path: str,
+        params: dict[str, int | str] | None,
+        json: dict[str, object] | None,
+    ) -> httpx.Response | AdapterResult:
+        try:
+            async with httpx.AsyncClient(
+                base_url=_BASE_URL,
+                timeout=self._timeout,
+                follow_redirects=False,
+                transport=self._transport,
+            ) as client:
+                response = await client.request(
+                    method,
+                    path,
+                    headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
+                    params=params,
+                    json=json,
+                )
+        except httpx.TimeoutException:
+            return _error("network_timeout", "Avito Messenger request timed out")
+        except httpx.RequestError:
+            return _error("network_error", "Avito Messenger network error")
+        return response
 
 
 def _mapping(value: object) -> Mapping[str, object] | None:
@@ -385,13 +439,6 @@ def _parse_message(raw: Mapping[str, object]) -> AvitoMessage | None:
         kind=kind,
         text=cast(str | None, text),
     )
-
-
-def _access_token(value: str) -> str:
-    normalized = value.strip()
-    if normalized.lower().startswith("bearer "):
-        return normalized[7:].strip()
-    return normalized
 
 
 def _positive_decimal_id(value: str | None) -> str | None:
