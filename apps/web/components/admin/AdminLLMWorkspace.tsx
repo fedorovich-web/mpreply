@@ -160,7 +160,7 @@ export function AdminLLMWorkspace() {
 
         <div className="admin-llm-section">
           <div className="admin-llm-heading">
-            <div><h2>Inference-ключ</h2><p>Используйте обычный API-ключ OpenRouter. Management и provisioning keys отклоняются.</p></div>
+            <div><h2>API-ключ OpenRouter</h2><p>Используйте обычный ключ для генерации. Ключи управления и создания других ключей не принимаются.</p></div>
           </div>
           <div className="admin-llm-key-row">
             <label className="admin-llm-field">
