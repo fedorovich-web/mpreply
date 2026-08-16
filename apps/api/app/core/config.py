@@ -133,7 +133,6 @@ class Settings(BaseSettings):
             return self
 
         self._require_secure_production_secret("AUTH_SECRET_KEY", self.auth_secret_key, min_length=32)
-        self._require_secure_production_secret("OPENROUTER_API_KEY", self.openrouter_api_key, min_length=16)
         self._require_valid_fernet_key()
 
         if not self.rate_limit_enabled:

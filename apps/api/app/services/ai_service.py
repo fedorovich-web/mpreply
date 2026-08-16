@@ -1,33 +1,56 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, cast
+from typing import Any, Protocol, cast
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.prompt_strategy import ResponseTone, build_marketplace_reply_prompt
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.core.errors import bad_request, not_found
 from app.models.ai_draft import AIDraft
 from app.models.customer_message import CustomerMessage
 from app.models.product import Product
 from app.models.usage_event import UsageEvent
 from app.models.user import User
-from app.providers.openrouter import OpenRouterProvider, OpenRouterProviderError
-from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
+from app.providers.openrouter import LLMCompletion, OpenRouterProvider, OpenRouterProviderError
+from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput, SafetyResult
 from app.services.ai_instruction_set_service import AIInstructionSetService
 from app.services.audit_service import AuditService
 from app.services.knowledge_entry_service import KnowledgeEntryService
+from app.services.llm_configuration_service import LLMConfigurationService
+from app.services.llm_route_resolver import LLMConfigurationError, LLMRouteResolver, LLMRuntimeConfiguration
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
+from app.services.seller_settings_service import SellerPromptSettings
 
 _ALLOWED_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
+_TRANSIENT_PROVIDER_ERRORS = {
+    "openrouter_rate_limited",
+    "openrouter_unavailable",
+    "openrouter_timeout",
+    "openrouter_network_error",
+}
+_QUALITY_RETRY_FLAGS = {
+    "low_confidence",
+    "risky_promise",
+    "medical_or_legal_claim",
+    "unclear_customer_issue",
+    "needs_manual_review",
+    "sensitive_topic",
+    "seller_prohibited_phrase",
+    "unsafe_instruction",
+    "personal_data_exposure",
+    "policy_violation",
+}
 
 
 @dataclass(frozen=True)
@@ -37,16 +60,96 @@ class ParsedModelOutput:
     safety_flags: list[str]
 
 
+@dataclass(frozen=True)
+class GenerationCandidate:
+    completion: LLMCompletion
+    parsed: ParsedModelOutput
+    safety: SafetyResult
+
+
+class _RuntimeConfiguration(Protocol):
+    async def resolve_runtime(self) -> LLMRuntimeConfiguration: ...
+
+
+class _CompletionClient(Protocol):
+    async def complete(
+        self,
+        *,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.3,
+        max_tokens: int = 600,
+        provider_order: list[str] | None = None,
+        allow_fallbacks: bool = True,
+    ) -> LLMCompletion: ...
+
+
+class _MessageReader(Protocol):
+    async def get_message(self, *, actor: User, message_id: UUID) -> tuple[CustomerMessage, Product | None]: ...
+
+
+class _OrganizationAuthorizer(Protocol):
+    async def require_membership_role(
+        self,
+        *,
+        organization_id: UUID,
+        user_id: UUID,
+        allowed_roles: set[str],
+    ) -> object: ...
+
+
+class _PlanLimits(Protocol):
+    async def enforce_ai_draft_limit(self, *, organization_id: UUID) -> None: ...
+
+
+class _InstructionResolver(Protocol):
+    async def resolve_for_account(
+        self,
+        *,
+        organization_id: UUID,
+        marketplace_account_id: UUID | None,
+    ) -> SellerPromptSettings: ...
+
+
+class _KnowledgeResolver(Protocol):
+    async def context_for_message(
+        self,
+        *,
+        organization_id: UUID,
+        marketplace_account_id: UUID | None,
+        product_id: UUID | None,
+    ) -> str | None: ...
+
+
 class AIService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        *,
+        configuration_service: _RuntimeConfiguration | None = None,
+        provider_factory: Callable[[str], _CompletionClient] | None = None,
+        message_service: _MessageReader | None = None,
+        organization_service: _OrganizationAuthorizer | None = None,
+        plan_limits: _PlanLimits | None = None,
+        instruction_sets: _InstructionResolver | None = None,
+        knowledge_entries: _KnowledgeResolver | None = None,
+        safety_gate: SafetyGate | None = None,
+        settings: Settings | None = None,
+    ) -> None:
         self.session = session
         self.audit = AuditService(session)
-        self.message_service = MessageService(session)
-        self.organization_service = OrganizationService(session)
-        self.plan_limits = PlanLimitService(session)
-        self.instruction_sets = AIInstructionSetService(session)
-        self.knowledge_entries = KnowledgeEntryService(session)
-        self.safety_gate = SafetyGate()
+        self.settings = settings or get_settings()
+        self.configuration_service = configuration_service or LLMConfigurationService(
+            session,
+            settings=self.settings,
+        )
+        self.provider_factory = provider_factory or self._default_provider
+        self.message_service = message_service or MessageService(session)
+        self.organization_service = organization_service or OrganizationService(session)
+        self.plan_limits = plan_limits or PlanLimitService(session)
+        self.instruction_sets = instruction_sets or AIInstructionSetService(session)
+        self.knowledge_entries = knowledge_entries or KnowledgeEntryService(session)
+        self.safety_gate = safety_gate or SafetyGate()
 
     async def generate_draft(
         self,
@@ -54,7 +157,6 @@ class AIService:
         actor: User,
         message_id: UUID,
         tone: ResponseTone | None = None,
-        model: str | None = None,
         temperature: float = 0.3,
         max_tokens: int = 600,
         brand_rules: str | None = None,
@@ -86,7 +188,6 @@ class AIService:
         )
         resolved_knowledge = knowledge_base.strip() if knowledge_base is not None and knowledge_base.strip() else structured_knowledge
 
-        settings = get_settings()
         prompt = build_marketplace_reply_prompt(
             marketplace=message.marketplace,
             message_type=message.type,
@@ -97,14 +198,20 @@ class AIService:
             seller_policy=resolved_brand_rules,
             seller_knowledge=resolved_knowledge,
         )
-        provider = OpenRouterProvider(
-            api_key=settings.openrouter_api_key.get_secret_value(),
-            base_url=settings.openrouter_base_url,
-            site_url=settings.public_site_url,
-            app_title=settings.app_name,
-            timeout_seconds=settings.openrouter_timeout_seconds,
+        try:
+            runtime = await self.configuration_service.resolve_runtime()
+        except LLMConfigurationError as exc:
+            await self._write_failure_audit(actor=actor, message=message, error_code=exc.error_code)
+            raise bad_request("AI provider is not configured") from exc
+
+        provider = self.provider_factory(runtime.api_key)
+        selected_model = LLMRouteResolver.select_model(
+            runtime.routes,
+            message_type=message.type,
+            rating=message.rating,
         )
-        selected_model = model or settings.openrouter_default_model
+        used_fallback = False
+        attempted_models = [selected_model]
         try:
             completion = await provider.complete(
                 model=selected_model,
@@ -113,34 +220,76 @@ class AIService:
                 max_tokens=max_tokens,
             )
         except OpenRouterProviderError as exc:
-            if selected_model != settings.openrouter_fallback_model and exc.error_code in {
-                "openrouter_rate_limited",
-                "openrouter_unavailable",
-                "openrouter_timeout",
-                "openrouter_network_error",
-            }:
-                completion = await provider.complete(
-                    model=settings.openrouter_fallback_model,
-                    messages=prompt.messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
+            if selected_model != runtime.routes.fallback_model and exc.error_code in _TRANSIENT_PROVIDER_ERRORS:
+                used_fallback = True
+                attempted_models.append(runtime.routes.fallback_model)
+                try:
+                    completion = await provider.complete(
+                        model=runtime.routes.fallback_model,
+                        messages=prompt.messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    )
+                except OpenRouterProviderError as fallback_exc:
+                    await self._write_failure_audit(
+                        actor=actor,
+                        message=message,
+                        error_code=fallback_exc.error_code,
+                    )
+                    raise bad_request(str(fallback_exc)) from fallback_exc
             else:
                 await self._write_failure_audit(actor=actor, message=message, error_code=exc.error_code)
                 raise bad_request(str(exc)) from exc
 
-        parsed = self._parse_model_output(completion.text)
-        safety = self.safety_gate.evaluate(
-            SafetyInput(
-                draft_text=parsed.answer,
-                confidence_score=parsed.confidence_score,
-                message_type=message.type,
-                rating=message.rating,
-                has_product_context=product is not None,
-                model_flags=[*parsed.safety_flags, *prompt_settings.policy_flags(parsed.answer)],
-            )
+        first_candidate = self._candidate(
+            completion=completion,
+            message=message,
+            product=product,
+            prompt_settings=prompt_settings,
         )
+        successful_completions = [completion]
+        selected_candidate = first_candidate
+        if (
+            not used_fallback
+            and selected_model != runtime.routes.safety_retry_model
+            and set(first_candidate.safety.flags).intersection(_QUALITY_RETRY_FLAGS)
+        ):
+            attempted_models.append(runtime.routes.safety_retry_model)
+            try:
+                retry_completion = await provider.complete(
+                    model=runtime.routes.safety_retry_model,
+                    messages=prompt.messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                successful_completions.append(retry_completion)
+                retry_candidate = self._candidate(
+                    completion=retry_completion,
+                    message=message,
+                    product=product,
+                    prompt_settings=prompt_settings,
+                )
+                selected_candidate = self._select_candidate(first_candidate, retry_candidate)
+            except (HTTPException, OpenRouterProviderError):
+                selected_candidate = first_candidate
+
+        completion = selected_candidate.completion
+        parsed = selected_candidate.parsed
+        safety = selected_candidate.safety
         flags = safety.flags
+        tokens_input = self._sum_optional_int(
+            [item.usage.prompt_tokens for item in successful_completions]
+        )
+        tokens_output = self._sum_optional_int(
+            [item.usage.completion_tokens for item in successful_completions]
+        )
+        total_tokens = self._sum_optional_int(
+            [item.usage.total_tokens for item in successful_completions]
+        )
+        cost_estimate = self._sum_optional_decimal(
+            [item.usage.cost for item in successful_completions]
+        )
+        latency_ms = sum(item.latency_ms for item in successful_completions)
         draft = AIDraft(
             organization_id=message.organization_id,
             message_id=message.id,
@@ -149,10 +298,10 @@ class AIService:
             prompt_version=prompt.version,
             prompt_input_hash=prompt.input_hash,
             draft_text=parsed.answer,
-            tokens_input=completion.usage.prompt_tokens,
-            tokens_output=completion.usage.completion_tokens,
-            latency_ms=completion.latency_ms,
-            cost_estimate=completion.usage.cost,
+            tokens_input=tokens_input,
+            tokens_output=tokens_output,
+            latency_ms=latency_ms,
+            cost_estimate=cost_estimate,
             confidence_score=parsed.confidence_score,
             safety_flags_json=flags,
             created_by=actor.id,
@@ -164,7 +313,7 @@ class AIService:
             SafetyDecision.BLOCK: "safety_blocked",
         }
         message.status = status_by_decision[safety.decision]
-        await self._write_usage(actor=actor, message=message, draft=draft, total_tokens=completion.usage.total_tokens)
+        await self._write_usage(actor=actor, message=message, draft=draft, total_tokens=total_tokens)
         await self.audit.write(
             action="ai_draft.generated",
             entity_type="ai_draft",
@@ -175,7 +324,8 @@ class AIService:
                 "provider": "openrouter",
                 "model": completion.model,
                 "prompt_version": prompt.version,
-                "latency_ms": completion.latency_ms,
+                "latency_ms": latency_ms,
+                "attempt_count": len(attempted_models),
                 "safety_decision": safety.decision.value,
                 "safety_flags": flags,
                 "safety_reasons": safety.reasons,
@@ -184,6 +334,57 @@ class AIService:
         )
         await self.session.flush()
         return draft
+
+    def _candidate(
+        self,
+        *,
+        completion: LLMCompletion,
+        message: CustomerMessage,
+        product: Product | None,
+        prompt_settings: SellerPromptSettings,
+    ) -> GenerationCandidate:
+        parsed = self._parse_model_output(completion.text)
+        safety = self.safety_gate.evaluate(
+            SafetyInput(
+                draft_text=parsed.answer,
+                confidence_score=parsed.confidence_score,
+                message_type=message.type,
+                rating=message.rating,
+                has_product_context=product is not None,
+                model_flags=[*parsed.safety_flags, *prompt_settings.policy_flags(parsed.answer)],
+            )
+        )
+        return GenerationCandidate(completion=completion, parsed=parsed, safety=safety)
+
+    @staticmethod
+    def _select_candidate(first: GenerationCandidate, second: GenerationCandidate) -> GenerationCandidate:
+        decision_rank = {
+            SafetyDecision.BLOCK: 0,
+            SafetyDecision.MANUAL_REVIEW: 1,
+            SafetyDecision.ALLOW: 2,
+        }
+        first_rank = (decision_rank[first.safety.decision], first.parsed.confidence_score)
+        second_rank = (decision_rank[second.safety.decision], second.parsed.confidence_score)
+        return second if second_rank > first_rank else first
+
+    @staticmethod
+    def _sum_optional_int(values: list[int | None]) -> int | None:
+        present = [value for value in values if value is not None]
+        return sum(present) if present else None
+
+    @staticmethod
+    def _sum_optional_decimal(values: list[Decimal | None]) -> Decimal | None:
+        present = [value for value in values if value is not None]
+        return sum(present, start=Decimal(0)) if present else None
+
+    def _default_provider(self, api_key: str) -> OpenRouterProvider:
+        return OpenRouterProvider(
+            api_key=api_key,
+            base_url=self.settings.openrouter_base_url,
+            site_url=self.settings.public_site_url,
+            app_title=self.settings.app_name,
+            timeout_seconds=self.settings.openrouter_timeout_seconds,
+        )
 
     async def list_drafts(
         self,

@@ -14,7 +14,6 @@ class AIDraftGenerateRequest(BaseModel):
 
     message_id: UUID
     tone: AIDraftTone | None = None
-    model: str | None = Field(default=None, max_length=255)
     temperature: float = Field(default=0.3, ge=0.0, le=1.2)
     max_tokens: int = Field(default=600, ge=120, le=1500)
     brand_rules: str | None = Field(default=None, max_length=2000)
