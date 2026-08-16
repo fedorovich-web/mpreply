@@ -919,7 +919,7 @@ function formatSyncStats(stats: Record<string, number>): string {
 
 function formatEventDetails(details: Record<string, unknown>): string {
   const parts = Object.entries(details)
-    .filter(([key, value]) => !isSensitiveMetadataKey(key) && (typeof value === "string" || typeof value === "number" || typeof value === "boolean"))
+    .filter(([key, value]) => isAllowedEventDetailKey(key) && (typeof value === "string" || typeof value === "number" || typeof value === "boolean"))
     .slice(0, 4)
     .map(([key, value]) => `${eventDetailLabel(key)}: ${String(value)}`);
   return parts.length > 0 ? parts.join(" · ") : "Событие зарегистрировано без дополнительных данных.";
@@ -944,10 +944,8 @@ function safeMetadataString(metadata: Record<string, unknown>, key: string): str
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
-function isSensitiveMetadataKey(key: string): boolean {
-  const normalized = key.toLowerCase();
-  return ["credential", "secret", "token", "api_key", "authorization", "provider_body", "client_id", "seller_id", "cursor"]
-    .some((part) => normalized.includes(part));
+function isAllowedEventDetailKey(key: string): boolean {
+  return ["count", "pages_processed", "error_type", "credentials_status"].includes(key.toLowerCase());
 }
 
 function roleLabel(value: string): string {

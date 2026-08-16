@@ -616,6 +616,22 @@ describe("OzonIntegrationWorkspace", () => {
               api_key: "must-not-leak-event-api-key",
             },
             created_at: "2026-08-13T10:01:00Z",
+          }, {
+            id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+            event_type: "sync.feedbacks",
+            status: "success",
+            error_code: null,
+            error_message_safe: null,
+            details: {
+              count: 3,
+              pages_processed: 2,
+              customer_text: "must-not-leak-customer-text",
+              message: "must-not-leak-message",
+              content: "must-not-leak-content",
+              raw_response: "must-not-leak-raw-response",
+              response_body: "must-not-leak-response-body",
+            },
+            created_at: "2026-08-13T10:02:00Z",
           }],
         }), { status: 200 });
       }
@@ -629,6 +645,7 @@ describe("OzonIntegrationWorkspace", () => {
     expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
     expect(screen.getByText(/Client ID хранится защищённо и не отображается/)).toBeInTheDocument();
     expect(screen.queryByText(/must-not-leak/)).not.toBeInTheDocument();
+    expect(screen.getByText("обработано: 3 · страниц: 2")).toBeInTheDocument();
     expect(screen.queryByText("rate_limited")).not.toBeInTheDocument();
   });
 
