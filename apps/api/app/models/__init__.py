@@ -11,6 +11,7 @@ from app.models.billing_plan import BillingPlan
 from app.models.customer_message import CustomerMessage
 from app.models.integration_event import IntegrationEvent
 from app.models.knowledge_entry import KnowledgeEntry
+from app.models.llm_provider_setting import LLMProviderSetting
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.organization import Organization, OrganizationUser
@@ -40,6 +41,7 @@ __all__ = [
     "CustomerMessage",
     "IntegrationEvent",
     "KnowledgeEntry",
+    "LLMProviderSetting",
     "MarketplaceAccount",
     "MarketplaceSyncState",
     "Organization",

@@ -109,7 +109,7 @@ def test_admin_llm_update_rejects_partial_routes_and_extra_fields() -> None:
 Run from `apps/api`:
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_llm_provider_settings_contract.py -q
+.\.venv\Scripts\python.exe -m pytest app/tests/test_llm_provider_settings_contract.py -q
 ```
 
 Expected: collection fails because the model and schemas do not exist.
@@ -183,10 +183,12 @@ Define safe configuration/catalog response models with `Literal` state/source va
 - [ ] **Step 6: Run focused tests and static checks**
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_llm_provider_settings_contract.py -q
-..\..\.venv\Scripts\ruff.exe check app/models/llm_provider_setting.py app/schemas/llm_admin.py app/tests/test_llm_provider_settings_contract.py alembic/versions/20260816_0018_llm_provider_settings.py
-..\..\.venv\Scripts\python.exe ..\..\scripts\check_integrity.py
-..\..\.venv\Scripts\alembic.exe heads
+.\.venv\Scripts\python.exe -m pytest app/tests/test_llm_provider_settings_contract.py -q
+.\.venv\Scripts\ruff.exe check app/models/llm_provider_setting.py app/schemas/llm_admin.py app/tests/test_llm_provider_settings_contract.py alembic/versions/20260816_0018_llm_provider_settings.py
+.\.venv\Scripts\alembic.exe heads
+Set-Location ..\..
+apps\api\.venv\Scripts\python.exe scripts/check_integrity.py
+Set-Location apps\api
 ```
 
 Expected: focused tests pass, Ruff exits `0`, integrity exits `0`, Alembic prints only `20260816_0018 (head)`.
@@ -230,7 +232,7 @@ Also test 401 mapping, management/provisioning metadata, non-object `data`, inva
 - [ ] **Step 2: Run provider tests and confirm RED**
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_openrouter_provider.py -q
+.\.venv\Scripts\python.exe -m pytest app/tests/test_openrouter_provider.py -q
 ```
 
 Expected: fails because transport injection and catalog methods are missing.
@@ -273,8 +275,8 @@ class OpenRouterModel:
 - [ ] **Step 5: Run focused provider verification**
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_openrouter_provider.py -q
-..\..\.venv\Scripts\ruff.exe check app/providers/openrouter.py app/tests/test_openrouter_provider.py
+.\.venv\Scripts\python.exe -m pytest app/tests/test_openrouter_provider.py -q
+.\.venv\Scripts\ruff.exe check app/providers/openrouter.py app/tests/test_openrouter_provider.py
 ```
 
 Expected: all tests pass and no live request occurs.
@@ -327,7 +329,7 @@ Cover no-row environment bootstrap, database precedence, explicit disabled overr
 - [ ] **Step 2: Run service tests and confirm RED**
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_llm_configuration_service.py app/tests/test_admin_llm_api.py -q
+.\.venv\Scripts\python.exe -m pytest app/tests/test_llm_configuration_service.py app/tests/test_admin_llm_api.py -q
 ```
 
 Expected: collection fails because the service and router do not exist.
@@ -417,8 +419,8 @@ Test that a non-superadmin receives 403 and provider factory/decrypt spies have 
 - [ ] **Step 7: Run the focused configuration/API gate**
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_llm_provider_settings_contract.py app/tests/test_openrouter_provider.py app/tests/test_llm_configuration_service.py app/tests/test_admin_llm_api.py app/tests/test_admin_access.py -q
-..\..\.venv\Scripts\ruff.exe check app/api/admin_llm.py app/services/llm_configuration_service.py app/services/llm_route_resolver.py app/tests/test_llm_configuration_service.py app/tests/test_admin_llm_api.py
+.\.venv\Scripts\python.exe -m pytest app/tests/test_llm_provider_settings_contract.py app/tests/test_openrouter_provider.py app/tests/test_llm_configuration_service.py app/tests/test_admin_llm_api.py app/tests/test_admin_access.py -q
+.\.venv\Scripts\ruff.exe check app/api/admin_llm.py app/services/llm_configuration_service.py app/services/llm_route_resolver.py app/tests/test_llm_configuration_service.py app/tests/test_admin_llm_api.py
 ```
 
 Expected: all focused tests pass and Ruff exits `0`.
@@ -466,7 +468,7 @@ Also test ordinary review/question/chat routes, missing-context-only no retry, t
 - [ ] **Step 2: Run routing tests and confirm RED**
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_ai_model_routing.py -q
+.\.venv\Scripts\python.exe -m pytest app/tests/test_ai_model_routing.py -q
 ```
 
 Expected: fails because the request still accepts model and AIService uses environment models directly.
@@ -530,8 +532,8 @@ Do not add prompt, reply or customer content.
 - [ ] **Step 7: Run focused AI and safety tests**
 
 ```powershell
-..\..\.venv\Scripts\pytest.exe app/tests/test_ai_model_routing.py app/tests/test_openrouter_provider.py app/tests/test_manual_reply_safety.py app/tests/test_plan_limits.py -q
-..\..\.venv\Scripts\ruff.exe check app/services/ai_service.py app/schemas/ai.py app/api/ai.py app/tests/test_ai_model_routing.py
+.\.venv\Scripts\python.exe -m pytest app/tests/test_ai_model_routing.py app/tests/test_openrouter_provider.py app/tests/test_manual_reply_safety.py app/tests/test_plan_limits.py -q
+.\.venv\Scripts\ruff.exe check app/services/ai_service.py app/schemas/ai.py app/api/ai.py app/tests/test_ai_model_routing.py
 ```
 
 Expected: all pass with every fake provider call count at two or less.
@@ -762,14 +764,14 @@ Expected: only the approved OpenRouter spec/plan/implementation/test files plus 
 From repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\check_integrity.py
+apps\api\.venv\Scripts\python.exe scripts\check_integrity.py
 Set-Location apps\api
-..\..\.venv\Scripts\pytest.exe -q
-..\..\.venv\Scripts\ruff.exe check app alembic
-npx --yes pyright@1.1.411 --pythonpath ..\..\.venv\Scripts\python.exe app
-..\..\.venv\Scripts\python.exe -m pip check
-..\..\.venv\Scripts\python.exe -m compileall -q app alembic
-..\..\.venv\Scripts\alembic.exe heads
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\ruff.exe check app alembic
+npx --yes pyright@1.1.411 --pythonpath .\.venv\Scripts\python.exe app
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m compileall -q app alembic
+.\.venv\Scripts\alembic.exe heads
 Set-Location ..\..
 ```
 

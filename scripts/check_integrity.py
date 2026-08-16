@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.103"
-EXPECTED_ALEMBIC_HEAD = "20260813_0017"
+EXPECTED_ALEMBIC_HEAD = "20260816_0018"
 
 FRONTEND_SECURITY_MINIMUMS: dict[str, dict[int, tuple[int, int, int]]] = {
     "brace-expansion": {
