@@ -617,6 +617,14 @@ describe("OzonIntegrationWorkspace", () => {
             },
             created_at: "2026-08-13T10:01:00Z",
           }, {
+            id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+            event_type: "sync.questions.page",
+            status: "failed",
+            error_code: "sync_pagination_checkpoint_invalid",
+            error_message_safe: "must-not-leak-ozon-checkpoint-copy",
+            details: { pages_processed: 1 },
+            created_at: "2026-08-13T10:01:30Z",
+          }, {
             id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
             event_type: "sync.feedbacks",
             status: "success",
@@ -644,6 +652,7 @@ describe("OzonIntegrationWorkspace", () => {
     expect(screen.getByText(/Ozon временно ограничил частоту запросов/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
     expect(screen.getByText(/Client ID хранится защищённо и не отображается/)).toBeInTheDocument();
+    expect(screen.getByText("Синхронизация остановлена из-за некорректной точки продолжения. Повторите запуск.")).toBeInTheDocument();
     expect(screen.queryByText(/must-not-leak/)).not.toBeInTheDocument();
     expect(screen.getByText("обработано: 3 · страниц: 2")).toBeInTheDocument();
     expect(screen.queryByText("rate_limited")).not.toBeInTheDocument();
@@ -1002,6 +1011,15 @@ describe("Yandex Market integration observability", () => {
           details: { pages_processed: 2 },
           created_at: "2026-07-24T11:01:00Z",
         },
+        {
+          id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          event_type: "sync.questions.page",
+          status: "failed",
+          error_code: "yandex_backfill_checkpoint_invalid",
+          error_message_safe: "must-not-leak-yandex-checkpoint-copy",
+          details: { pages_processed: 1 },
+          created_at: "2026-07-24T11:02:00Z",
+        },
       ],
     };
 
@@ -1027,6 +1045,7 @@ describe("Yandex Market integration observability", () => {
     expect(screen.getByText("История синхронизаций")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
     expect(screen.getByText(/Яндекс Маркет временно ограничил частоту запросов/)).toBeInTheDocument();
+    expect(screen.getByText("Синхронизация остановлена из-за некорректной точки продолжения. Повторите запуск.")).toBeInTheDocument();
     expect(screen.queryByText(/must-not-leak|api_key|token/i)).not.toBeInTheDocument();
     for (const forbidden of ["Accounts", "New account", "Selected account", "Credentials", "Connection health", "Permissions", "Scheduler", "Manual sync", "Audit trail"]) {
       expect(screen.queryByText(forbidden)).not.toBeInTheDocument();
