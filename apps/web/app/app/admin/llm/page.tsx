@@ -6,7 +6,7 @@ export default function AdminLLMPage() {
       <section className="app-header">
         <p className="eyebrow">Системная конфигурация</p>
         <h1>Модели AI</h1>
-        <p>Единый ключ OpenRouter и маршруты моделей для шести сценариев генерации MPReply.</p>
+        <p>Единый ключ OpenRouter и маршруты моделей для шести сценариев генерации MP Reply.</p>
       </section>
       <AdminLLMWorkspace />
     </section>

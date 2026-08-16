@@ -327,10 +327,13 @@ def _bounded_string(value: object, *, max_length: int) -> str | None:
 
 
 def _string_tuple(value: object) -> tuple[str, ...] | None:
-    if not isinstance(value, list) or len(value) > 16:
+    if not isinstance(value, list):
+        return None
+    items = cast(list[object], value)
+    if len(items) > 16:
         return None
     normalized: list[str] = []
-    for item in cast(list[object], value):
+    for item in items:
         parsed = _bounded_string(item, max_length=32)
         if parsed is None:
             return None

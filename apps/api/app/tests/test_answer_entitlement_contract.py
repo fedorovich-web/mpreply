@@ -259,6 +259,6 @@ def test_integrity_contract_keeps_answer_ledger_in_migration_chain() -> None:
     instruction_sets_migration = (
         REPOSITORY_ROOT / "apps" / "api" / "alembic" / "versions" / "20260813_0016_ai_instruction_sets.py"
     ).read_text(encoding="utf-8")
-    assert 'EXPECTED_ALEMBIC_HEAD = "20260813_0017"' in integrity_source
+    assert 'EXPECTED_ALEMBIC_HEAD = "20260816_0018"' in integrity_source
     assert 'down_revision: str | None = "20260812_0015"' in instruction_sets_migration
     assert "20260722_0010_answer_ledger_foundation.py" in integrity_source
