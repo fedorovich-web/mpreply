@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 
 import { apiRequest } from "../../lib/api/client";
 import { adminOverviewSchema } from "../../lib/api/schemas";
@@ -28,7 +29,7 @@ export function AdminOverviewWorkspace() {
     ["Integration failures · 24ч", data.integration_failures_24h, `${data.replies_failed_24h} failed replies`],
   ] as const;
 
-  return <section className="admin-overview-grid">{metrics.map(([label, value, helper]) => <article className="analytics-metric" key={label}><span>{label}</span><strong>{typeof value === "number" ? new Intl.NumberFormat("ru-RU").format(value) : value}</strong><p>{helper}</p></article>)}</section>;
+  return <section className="admin-overview-workspace"><div className="admin-overview-actions"><Link className="button button-secondary" href="/app/admin/llm">Настроить модели AI</Link></div><section className="admin-overview-grid">{metrics.map(([label, value, helper]) => <article className="analytics-metric" key={label}><span>{label}</span><strong>{typeof value === "number" ? new Intl.NumberFormat("ru-RU").format(value) : value}</strong><p>{helper}</p></article>)}</section></section>;
 }
 
 function formatUsd(value: number): string { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 4 }).format(value); }
