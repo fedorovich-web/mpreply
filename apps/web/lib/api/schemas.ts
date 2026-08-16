@@ -575,6 +575,43 @@ export const adminOverviewSchema = z.object({
   replies_failed_24h: z.number().int().nonnegative(),
 });
 
+export const llmModelRoutesSchema = z.object({
+  review_model: z.string().min(1).max(255),
+  negative_review_model: z.string().min(1).max(255),
+  question_model: z.string().min(1).max(255),
+  chat_model: z.string().min(1).max(255),
+  safety_retry_model: z.string().min(1).max(255),
+  fallback_model: z.string().min(1).max(255),
+}).strict();
+
+export const openRouterConfigurationSchema = z.object({
+  provider: z.literal("openrouter"),
+  state: z.enum(["active", "disabled", "unconfigured"]),
+  source: z.enum(["database", "environment", "none"]),
+  enabled: z.boolean(),
+  credential_fingerprint_masked: z.string().max(32).nullable(),
+  validated_at: timestampSchema.nullable(),
+  updated_at: timestampSchema.nullable(),
+  routes: llmModelRoutesSchema.nullable(),
+}).strict();
+
+export const openRouterCatalogModelSchema = z.object({
+  id: z.string().min(1).max(255),
+  name: z.string().min(1).max(255),
+  input_modalities: z.array(z.string()).max(16),
+  output_modalities: z.array(z.string()).max(16),
+  context_length: z.number().int().positive().nullable(),
+  prompt_price: z.union([z.string(), z.number()]).nullable(),
+  completion_price: z.union([z.string(), z.number()]).nullable(),
+  expiration_date: timestampSchema.nullable(),
+}).strict();
+
+export const openRouterCatalogSchema = z.object({
+  provider: z.literal("openrouter"),
+  validated_at: timestampSchema,
+  items: z.array(openRouterCatalogModelSchema).max(2000),
+}).strict();
+
 export type AnalyticsOverview = z.infer<typeof analyticsOverviewSchema>;
 export type MessageAnalytics = z.infer<typeof messageAnalyticsSchema>;
 export type MarketplaceAnalytics = z.infer<typeof marketplaceAnalyticsSchema>;
@@ -583,3 +620,6 @@ export type TeamAnalytics = z.infer<typeof teamAnalyticsSchema>;
 export type AIUsageAnalytics = z.infer<typeof aiUsageAnalyticsSchema>;
 export type BillingOverview = z.infer<typeof billingOverviewSchema>;
 export type AdminOverview = z.infer<typeof adminOverviewSchema>;
+export type LLMModelRoutes = z.infer<typeof llmModelRoutesSchema>;
+export type OpenRouterConfiguration = z.infer<typeof openRouterConfigurationSchema>;
+export type OpenRouterCatalog = z.infer<typeof openRouterCatalogSchema>;

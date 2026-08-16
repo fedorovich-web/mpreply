@@ -58,7 +58,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     isLoggingOut,
   } = useWorkspace();
   const visibleGroups = user.is_superadmin
-    ? [...navGroups, { label: "Система", items: [{ href: "/app/admin", label: "Администрирование" }] }]
+    ? [...navGroups, { label: "Система", items: [
+      { href: "/app/admin", label: "Обзор системы" },
+      { href: "/app/admin/llm", label: "Модели AI" },
+    ] }]
     : navGroups;
 
   useEffect(() => {
@@ -126,7 +129,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="app-nav-group-label">{group.label}</span>
               <div className="app-nav">
                 {group.items.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  const isActive = pathname === item.href
+                    || (item.href !== "/app/admin" && pathname.startsWith(`${item.href}/`));
                   return (
                     <Link
                       aria-current={isActive ? "page" : undefined}
