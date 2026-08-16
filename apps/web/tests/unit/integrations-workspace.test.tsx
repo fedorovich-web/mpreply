@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationsWorkspace } from "../../components/integrations/IntegrationsWorkspace";
+import { AvitoIntegrationWorkspace } from "../../components/integrations/AvitoIntegrationWorkspace";
 import { OzonIntegrationWorkspace } from "../../components/integrations/OzonIntegrationWorkspace";
 import { WildberriesIntegrationWorkspace } from "../../components/integrations/WildberriesIntegrationWorkspace";
 import { YandexMarketIntegrationWorkspace } from "../../components/integrations/YandexMarketIntegrationWorkspace";
@@ -80,7 +81,7 @@ function renderWithQueryClient(component: React.ReactNode) {
 }
 
 describe("IntegrationsWorkspace", () => {
-  it("loads real marketplace accounts and exposes the implemented Ozon route", async () => {
+  it("loads real marketplace accounts and exposes every implemented marketplace route", async () => {
     mockWorkspace("owner");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
 
@@ -99,8 +100,287 @@ describe("IntegrationsWorkspace", () => {
       "href",
       "/app/integrations/ozon",
     );
-    expect(screen.getAllByText("Пока недоступно")).toHaveLength(1);
-    expect(screen.getAllByText("Подключение пока не поддерживается.")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Подключить Авито" })).toHaveAttribute(
+      "href",
+      "/app/integrations/avito",
+    );
+    expect(screen.queryByText("Пока недоступно")).not.toBeInTheDocument();
+    expect(screen.queryByText("Подключение пока не поддерживается.")).not.toBeInTheDocument();
+  });
+});
+
+describe("AvitoIntegrationWorkspace", () => {
+  it("requires Avito user ID and client credentials and submits the exact opaque credential payload", async () => {
+    mockWorkspace("owner");
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            ...account,
+            ...payload,
+            id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+            marketplace: "avito",
+            display_name: payload.display_name,
+            seller_id: null,
+            credentials_masked: "sha256:av01…safe",
+            credentials_status: "pending_validation",
+            status: "pending_validation",
+          }),
+          { status: 201 },
+        );
+      }
+      return new Response(JSON.stringify([]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<AvitoIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Авито" });
+    const submit = within(form).getByRole("button", { name: "Добавить кабинет" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), {
+      target: { value: "Авито основной" },
+    });
+    fireEvent.change(within(form).getByLabelText("ID пользователя Авито"), {
+      target: { value: "123456" },
+    });
+    fireEvent.change(within(form).getByLabelText("Client ID"), {
+      target: { value: "client-123" },
+    });
+    expect(submit).toBeDisabled();
+
+    const clientSecretInput = within(form).getByLabelText("Client Secret");
+    fireEvent.change(clientSecretInput, { target: { value: "synthetic-secret" } });
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
+    });
+
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    expect(JSON.parse(String(postCall?.[1]?.body))).toEqual({
+      organization_id: organization.id,
+      marketplace: "avito",
+      display_name: "Авито основной",
+      seller_id: "123456",
+      credentials: '{"client_id":"client-123","client_secret":"synthetic-secret"}',
+      default_response_mode: "inherit",
+    });
+    await waitFor(() => {
+      expect(within(form).getByLabelText("Client ID")).toHaveValue("");
+      expect(clientSecretInput).toHaveValue("");
+    });
+  });
+
+  it("shows chat access, authentication and safe failed history without exposing Avito secrets", async () => {
+    mockWorkspace("owner");
+    const avitoAccount = {
+      ...account,
+      marketplace: "avito",
+      display_name: "Авито основной",
+      seller_id: null,
+      scopes_json: {
+        validated: true,
+        checked_at: timestamp,
+        scopes: ["fetch_chats"],
+        authentication: "client_credentials",
+        client_id: "must-not-leak-client-id",
+        client_secret: "must-not-leak-client-secret",
+        access_token: "must-not-leak-access-token",
+      },
+      last_error_sync_at: "2026-08-13T10:00:00Z",
+      error_count: 1,
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input) => {
+      if (String(input).includes(`/api/marketplace-accounts/${avitoAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: avitoAccount,
+          health_status: "error",
+          health_reasons: ["Последняя синхронизация чатов завершилась ошибкой."],
+          scopes: ["fetch_chats"],
+          sync_states: [{
+            id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+            marketplace_account_id: avitoAccount.id,
+            stream: "chats",
+            status: "error",
+            next_run_at: "2026-08-13T11:00:00Z",
+            last_attempt_at: "2026-08-13T10:00:00Z",
+            last_success_at: timestamp,
+            last_error_at: "2026-08-13T10:00:00Z",
+            last_cycle_completed_at: timestamp,
+            consecutive_failures: 1,
+          }],
+          recent_jobs: [{
+            id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+            job_type: "manual_sync",
+            status: "failed",
+            started_at: "2026-08-13T10:00:00Z",
+            finished_at: "2026-08-13T10:01:00Z",
+            error_message_safe: "Не удалось завершить синхронизацию чатов.",
+            stats: { imported_chats: 2 },
+            created_at: "2026-08-13T10:00:00Z",
+          }],
+          recent_events: [{
+            id: "12121212-1212-4212-8212-121212121212",
+            event_type: "sync.chats",
+            status: "failed",
+            error_code: "rate_limited",
+            error_message_safe: "must-not-leak-provider-error-body",
+            details: {
+              pages_processed: 2,
+              provider_body: "must-not-leak-provider-body",
+              client_id: "must-not-leak-event-client-id",
+              client_secret: "must-not-leak-event-client-secret",
+              access_token: "must-not-leak-event-access-token",
+              seller_id: "must-not-leak-user-id",
+              cursor: "must-not-leak-cursor",
+              context: {
+                count: 3,
+                seller_id: "must-not-leak-nested-user-id",
+                provider_body: "must-not-leak-nested-provider-body",
+              },
+            },
+            created_at: "2026-08-13T10:01:00Z",
+          }, {
+            id: "13131313-1313-4313-8313-131313131313",
+            event_type: "sync.chats",
+            status: "success",
+            error_code: null,
+            error_message_safe: null,
+            details: {
+              context: {
+                count: 3,
+                seller_id: "must-not-leak-nested-user-id",
+                provider_body: "must-not-leak-nested-provider-body",
+              },
+            },
+            created_at: "2026-08-13T10:02:00Z",
+          }],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([avitoAccount]), { status: 200 });
+    }));
+
+    renderWithQueryClient(<AvitoIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Авито основной" })).toBeInTheDocument();
+    expect(await screen.findByText("Доступ к чатам")).toBeInTheDocument();
+    expect(screen.getByText("Client ID и Client Secret")).toBeInTheDocument();
+    expect(screen.getByText("Синхронизация чатов")).toBeInTheDocument();
+    expect(screen.getByText("Не удалось завершить синхронизацию чатов.")).toBeInTheDocument();
+    expect(screen.getByText(/Авито временно ограничил частоту запросов/)).toBeInTheDocument();
+    expect(screen.getByText("обработано: 3")).toBeInTheDocument();
+    expect(screen.getByText(/ID пользователя Авито хранится защищённо и не отображается/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
+    expect(screen.queryByText(/must-not-leak/)).not.toBeInTheDocument();
+    expect(screen.queryByText("rate_limited")).not.toBeInTheDocument();
+  });
+
+  it("replaces the hidden Avito user ID and rotates only encoded client credentials", async () => {
+    mockWorkspace("owner");
+    const avitoAccount = {
+      ...account,
+      marketplace: "avito",
+      display_name: "Авито основной",
+      seller_id: null,
+      scopes_json: { validated: true, scopes: ["fetch_chats"], authentication: "client_credentials" },
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (init?.method === "PATCH") {
+        return new Response(JSON.stringify({ ...avitoAccount, ...JSON.parse(String(init.body)), seller_id: null }), { status: 200 });
+      }
+      if (init?.method === "POST" && url.includes("rotate-credentials")) {
+        return new Response(JSON.stringify({
+          id: avitoAccount.id,
+          status: "pending_validation",
+          credentials_status: "pending_validation",
+          credentials_masked: "sha256:rotated…safe",
+          message: "Credentials rotated.",
+        }), { status: 200 });
+      }
+      if (url.includes(`/api/marketplace-accounts/${avitoAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: avitoAccount,
+          health_status: "healthy",
+          health_reasons: ["Подключение работает."],
+          scopes: ["fetch_chats"],
+          sync_states: [],
+          recent_jobs: [],
+          recent_events: [],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([avitoAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<AvitoIntegrationWorkspace />);
+    await screen.findByRole("heading", { name: "Авито основной" });
+
+    const userIdForm = screen.getByRole("form", { name: "Замена ID пользователя Авито" });
+    fireEvent.change(within(userIdForm).getByLabelText("Новый ID пользователя Авито"), {
+      target: { value: "654321" },
+    });
+    fireEvent.click(within(userIdForm).getByRole("button", { name: "Заменить ID" }));
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(true);
+    });
+    const patchCall = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH");
+    expect(JSON.parse(String(patchCall?.[1]?.body))).toEqual({ seller_id: "654321" });
+
+    const rotationForm = screen.getByRole("form", { name: "Замена данных доступа Авито" });
+    fireEvent.change(within(rotationForm).getByLabelText("Новый Client ID"), {
+      target: { value: "client-new" },
+    });
+    const newSecretInput = within(rotationForm).getByLabelText("Новый Client Secret");
+    fireEvent.change(newSecretInput, { target: { value: "synthetic-new-secret" } });
+    fireEvent.click(within(rotationForm).getByRole("button", { name: "Заменить данные доступа" }));
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input]) => String(input).includes("rotate-credentials"))).toBe(true);
+    });
+    const rotateCall = fetchMock.mock.calls.find(([input]) => String(input).includes("rotate-credentials"));
+    expect(JSON.parse(String(rotateCall?.[1]?.body))).toEqual({
+      credentials: '{"client_id":"client-new","client_secret":"synthetic-new-secret"}',
+    });
+    await waitFor(() => {
+      expect(within(rotationForm).getByLabelText("Новый Client ID")).toHaveValue("");
+      expect(newSecretInput).toHaveValue("");
+    });
+  });
+
+  it.each(["manager", "viewer"] as const)("keeps Avito %s membership read-only", async (role) => {
+    mockWorkspace(role);
+    const avitoAccount = {
+      ...account,
+      marketplace: "avito",
+      display_name: "Авито основной",
+      seller_id: null,
+      scopes_json: { validated: true, scopes: ["fetch_chats"], authentication: "client_credentials" },
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input) => {
+      if (String(input).includes(`/api/marketplace-accounts/${avitoAccount.id}/overview`)) {
+        return new Response(JSON.stringify({
+          account: avitoAccount,
+          health_status: "healthy",
+          health_reasons: ["Подключение работает."],
+          scopes: ["fetch_chats"],
+          sync_states: [],
+          recent_jobs: [],
+          recent_events: [],
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify([avitoAccount]), { status: 200 });
+    }));
+
+    renderWithQueryClient(<AvitoIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Авито основной" })).toBeInTheDocument();
+    expect(screen.getByText(/Только просмотр/)).toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "Новое подключение Авито" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Проверить подключение" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Синхронизировать сейчас" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Отозвать доступ" })).not.toBeInTheDocument();
   });
 });
 

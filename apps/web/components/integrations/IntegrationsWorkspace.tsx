@@ -35,10 +35,10 @@ const marketplaceCatalog = [
   {
     key: "avito",
     name: "Авито",
-    badge: "Недоступно",
-    description: "Подключение Авито пока недоступно в личном кабинете.",
-    available: false,
-    href: null,
+    badge: "Доступно",
+    description: "Подключение по Client ID и Client Secret, синхронизация чатов Авито.",
+    available: true,
+    href: "/app/integrations/avito",
   },
 ] as const;
 
