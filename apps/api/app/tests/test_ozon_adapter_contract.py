@@ -228,7 +228,7 @@ async def test_review_list_uses_official_cursor_contract_and_normalizes_unproces
         "text": "Synthetic review",
         "rating": 2,
         "published_at": "2026-08-12T10:30:00Z",
-        "sku": 123456,
+        "sku": "148591503",
     }
     recorder = _RequestRecorder(
         [httpx.Response(200, json={"reviews": [review], "has_next": True, "last_id": "next-review"})]
@@ -252,16 +252,16 @@ async def test_review_list_uses_official_cursor_contract_and_normalizes_unproces
         "customer_photos_json": [],
         "marketplace_created_at": datetime(2026, 8, 12, 10, 30, tzinfo=UTC),
         "product": {
-            "external_id": "123456",
-            "sku": "123456",
+            "external_id": "148591503",
+            "sku": "148591503",
             "name": None,
             "brand": None,
             "category": None,
             "image_url": None,
             "product_url": None,
-            "metadata_json": {"ozon_sku": 123456},
+            "metadata_json": {"ozon_sku": 148591503},
         },
-        "metadata_json": {"source": "ozon.reviews", "ozon_sku": 123456, "ozon_status": "UNPROCESSED"},
+        "metadata_json": {"source": "ozon.reviews", "ozon_sku": 148591503, "ozon_status": "UNPROCESSED"},
     }
 
 
@@ -441,6 +441,10 @@ def test_ozon_extraction_skips_processed_and_malformed_records_without_synthesiz
                 {**valid_review, "sku": 0},
                 {**valid_review, "sku": True},
                 {**valid_review, "sku": 123456.0},
+                {**valid_review, "sku": "0"},
+                {**valid_review, "sku": "-1"},
+                {**valid_review, "sku": "123456.0"},
+                {**valid_review, "sku": ""},
             ]
         }
     )

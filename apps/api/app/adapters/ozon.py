@@ -605,7 +605,7 @@ def _valid_record(value: object, *, is_question: bool) -> dict[str, object] | No
     identifier = _required_string(record.get("id"))
     text = _required_string(record.get("text"))
     published_at = _parse_timestamp(record.get("published_at"))
-    sku = _positive_sku(record.get("sku"))
+    sku = _record_sku(record.get("sku"), is_question=is_question)
     status = record.get("status")
     if identifier is None or text is None or published_at is None or sku is None or not isinstance(status, str):
         return None
@@ -622,7 +622,7 @@ def _normalized_message(record: dict[str, object], *, is_question: bool) -> dict
     identifier = _required_string(record.get("id"))
     text = _required_string(record.get("text"))
     published_at = _parse_timestamp(record.get("published_at"))
-    sku = _positive_sku(record.get("sku"))
+    sku = _record_sku(record.get("sku"), is_question=is_question)
     status = record.get("status")
     if identifier is None or text is None or published_at is None or sku is None or not isinstance(status, str):
         return {}
@@ -680,6 +680,16 @@ def _positive_sku(value: object) -> int | None:
     if type(value) is not int or value <= 0:
         return None
     return value
+
+
+def _record_sku(value: object, *, is_question: bool) -> int | None:
+    sku = _positive_sku(value)
+    if sku is not None or is_question:
+        return sku
+    if not isinstance(value, str) or not value.isascii() or not value.isdigit():
+        return None
+    parsed = int(value)
+    return parsed if parsed > 0 else None
 
 
 def _parse_timestamp(value: object) -> datetime | None:
