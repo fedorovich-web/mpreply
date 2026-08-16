@@ -3,7 +3,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { mockClientWorkspaceApi } from "./helpers/client-workspace-api";
 
-const routes = ["/app/dashboard", "/app/inbox", "/app/instruction-sets", "/app/knowledge-base", "/app/integrations/ozon"] as const;
+const routes = [
+  "/app/dashboard",
+  "/app/inbox",
+  "/app/instruction-sets",
+  "/app/knowledge-base",
+  "/app/integrations/ozon",
+  "/app/integrations/avito",
+] as const;
 
 async function expectNoBlockingViolations(page: Page) {
   const result = await new AxeBuilder({ page })
@@ -20,7 +27,10 @@ async function expectNoBlockingViolations(page: Page) {
 
 for (const route of routes) {
   test(`${route} has no blocking accessibility violations`, async ({ page }) => {
-    await mockClientWorkspaceApi(page, "owner", { includeOzon: route === "/app/integrations/ozon" });
+    await mockClientWorkspaceApi(page, "owner", {
+      includeOzon: route === "/app/integrations/ozon",
+      includeAvito: route === "/app/integrations/avito",
+    });
     await page.goto(route, { waitUntil: "networkidle" });
     await expectNoBlockingViolations(page);
   });

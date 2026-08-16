@@ -9,6 +9,7 @@ const userId = "22222222-2222-4222-8222-222222222222";
 const instructionSetId = "33333333-3333-4333-8333-333333333333";
 const accountId = "44444444-4444-4444-8444-444444444444";
 const ozonAccountId = "88888888-8888-4888-8888-888888888888";
+const avitoAccountId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const timestamp = "2026-08-13T06:00:00Z";
 const period = { start: "2026-07-15T00:00:00Z", end: "2026-08-13T23:59:59Z", days: 30 };
 
@@ -133,6 +134,73 @@ const ozonOverviewFixture = {
   }],
 };
 
+const avitoAccountFixture = {
+  id: avitoAccountId,
+  organization_id: organizationId,
+  marketplace: "avito",
+  display_name: "Основной Авито",
+  seller_id: null,
+  status: "active",
+  credentials_masked: "sha256:avito…safe",
+  credentials_status: "valid",
+  scopes_json: {
+    validated: true,
+    checked_at: timestamp,
+    scopes: ["fetch_chats"],
+    authentication: "client_credentials",
+  },
+  default_response_mode: "auto",
+  ai_instruction_set_id: instructionSetId,
+  last_success_sync_at: timestamp,
+  last_error_sync_at: "2026-08-13T07:00:00Z",
+  error_count: 1,
+  created_at: timestamp,
+  updated_at: timestamp,
+};
+
+const avitoOverviewFixture = {
+  account: avitoAccountFixture,
+  health_status: "error",
+  health_reasons: ["Последняя синхронизация чатов завершилась ошибкой."],
+  scopes: ["fetch_chats"],
+  sync_states: [{
+    id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+    marketplace_account_id: avitoAccountId,
+    stream: "chats",
+    status: "error",
+    next_run_at: "2026-08-13T08:00:00Z",
+    last_attempt_at: "2026-08-13T07:00:00Z",
+    last_success_at: timestamp,
+    last_error_at: "2026-08-13T07:00:00Z",
+    last_cycle_completed_at: timestamp,
+    consecutive_failures: 1,
+  }],
+  recent_jobs: [{
+    id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+    job_type: "manual_sync",
+    status: "failed",
+    started_at: "2026-08-13T07:00:00Z",
+    finished_at: "2026-08-13T07:01:00Z",
+    error_message_safe: "Не удалось завершить синхронизацию чатов.",
+    stats: { imported_chats: 2 },
+    created_at: "2026-08-13T07:00:00Z",
+  }],
+  recent_events: [{
+    id: "12121212-1212-4212-8212-121212121212",
+    event_type: "sync.chats",
+    status: "failed",
+    error_code: "rate_limited",
+    error_message_safe: "must-not-render-avito-provider-error",
+    details: {
+      pages_processed: 2,
+      provider_body: "must-not-render-avito-provider-body",
+      client_id: "must-not-render-avito-client-id",
+      seller_id: "must-not-render-avito-user-id",
+    },
+    created_at: "2026-08-13T07:01:00Z",
+  }],
+};
+
 const analyticsFixture = {
   period,
   total_messages: 1842,
@@ -174,7 +242,7 @@ const billingFixture = {
 export async function mockClientWorkspaceApi(
   page: Page,
   role: ClientWorkspaceRole = "owner",
-  options: { includeOzon?: boolean } = {},
+  options: { includeOzon?: boolean; includeAvito?: boolean } = {},
 ): Promise<void> {
   const headers = {
     "access-control-allow-credentials": "true",
@@ -195,12 +263,18 @@ export async function mockClientWorkspaceApi(
     created_at: timestamp,
     updated_at: timestamp,
   };
+  const marketplaceAccounts = [
+    accountFixture,
+    ...(options.includeOzon ? [ozonAccountFixture] : []),
+    ...(options.includeAvito ? [avitoAccountFixture] : []),
+  ];
   const exactResponses = new Map<string, unknown>([
     ["/api/auth/me", userFixture],
     ["/api/organizations", [organization]],
     [`/api/organizations/${organizationId}`, organization],
-    ["/api/marketplace-accounts", options.includeOzon ? [accountFixture, ozonAccountFixture] : [accountFixture]],
+    ["/api/marketplace-accounts", marketplaceAccounts],
     [`/api/marketplace-accounts/${ozonAccountId}/overview`, ozonOverviewFixture],
+    [`/api/marketplace-accounts/${avitoAccountId}/overview`, avitoOverviewFixture],
     ["/api/messages", { items: [], total: 0, page: 1, page_size: 100 }],
     ["/api/dashboard/attention", {
       organization_id: organizationId,

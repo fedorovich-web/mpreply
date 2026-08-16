@@ -54,6 +54,16 @@ test("Ozon integration desktop visual baseline", async ({ page }) => {
   await expect(page).toHaveScreenshot("ozon-integration-desktop.png", { fullPage: true });
 });
 
+test("Avito integration desktop visual baseline", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockClientWorkspaceApi(page, "owner", { includeAvito: true });
+  await page.goto("/app/integrations/avito", { waitUntil: "networkidle" });
+  await expect(page.getByRole("heading", { name: "Основной Авито" })).toBeVisible();
+  await hideDevelopmentChrome(page);
+  await expect(page).toHaveScreenshot("avito-integration-desktop.png", { fullPage: true });
+});
+
 async function hideDevelopmentChrome(page: import("@playwright/test").Page) {
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 }

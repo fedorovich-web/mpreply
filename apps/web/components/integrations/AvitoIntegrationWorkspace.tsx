@@ -76,49 +76,103 @@ export function AvitoIntegrationWorkspace() {
     displayName.trim().length >= 2 && validUserId && clientId.trim().length > 0 && clientSecret.trim().length > 0;
 
   return (
-    <section className="integrations-workspace avito-workspace" aria-label="Подключения Авито">
-      <div className="integration-layout">
-        <aside className="integration-list-panel" aria-label="Кабинеты Авито">
-          <div className="integration-panel-heading">
-            <div>
-              <span>Подключения</span>
-              <h2>Кабинеты Авито</h2>
-            </div>
+    <section className="wildberries-workspace avito-workspace" aria-label="Подключения Авито">
+      <div className="integration-security-strip" role="note">
+        <strong>Данные доступа хранятся защищённо</strong>
+        <span>После сохранения в кабинете видна только маска, а не Client ID, Client Secret или ID пользователя.</span>
+      </div>
+
+      {!canManage ? (
+        <div className="workspace-inline-state">
+          <strong>Только просмотр</strong>
+          <p>Изменять подключения могут владелец и администратор организации.</p>
+        </div>
+      ) : null}
+
+      {notice ? <p className="integration-notice integration-notice-success" role="status">{notice}</p> : null}
+
+      <div className="wildberries-layout">
+        <section className="integration-account-panel" aria-labelledby="avito-account-list-title">
+          <div className="panel-heading panel-heading-row">
+            <strong id="avito-account-list-title">Кабинеты Авито</strong>
             <span className="ui-badge">{accounts.length}</span>
           </div>
 
-          {accountsQuery.isPending ? <p className="integration-empty">Загружаем подключения…</p> : null}
-          {accountsQuery.error ? (
-            <div className="workspace-inline-state workspace-inline-state-error" role="alert">
-              <strong>Не удалось загрузить подключения</strong>
-              <p>{errorMessage(accountsQuery.error)}</p>
-              <button className="button button-secondary button-compact" onClick={() => void accountsQuery.refetch()} type="button">
-                Повторить
-              </button>
+          {accountsQuery.isPending ? (
+            <WorkspaceState title="Загружаем подключения" description="Получаем кабинеты текущей организации." />
+          ) : accountsQuery.error ? (
+            <WorkspaceState
+              title="Не удалось загрузить подключения"
+              description={errorMessage(accountsQuery.error)}
+              actionLabel="Повторить"
+              onAction={() => void accountsQuery.refetch()}
+            />
+          ) : accounts.length === 0 ? (
+            <WorkspaceState title="Подключений пока нет" description="После подключения здесь появятся состояние и безопасные действия." />
+          ) : (
+            <div className="integration-account-list" role="list">
+              {accounts.map((candidate) => (
+                <div key={candidate.id} role="listitem">
+                  <button
+                    aria-pressed={candidate.id === effectiveSelectedId}
+                    className={`integration-account-button${candidate.id === effectiveSelectedId ? " integration-account-button-active" : ""}`}
+                    onClick={() => setSelectedId(candidate.id)}
+                    type="button"
+                  >
+                    <span>
+                      <strong>{candidate.display_name}</strong>
+                      <small>{candidate.credentials_masked}</small>
+                    </span>
+                    <span className={`ui-badge ${accountStatusTone(candidate)}`}>{accountStatusLabel(candidate)}</span>
+                  </button>
+                </div>
+              ))}
             </div>
-          ) : null}
-          {!accountsQuery.isPending && !accountsQuery.error && accounts.length === 0 ? (
-            <p className="integration-empty">Подключений Авито пока нет.</p>
-          ) : null}
-          <div className="integration-account-list">
-            {accounts.map((candidate) => (
-              <button
-                className={`integration-account-row ${candidate.id === effectiveSelectedId ? "integration-account-row-active" : ""}`}
-                key={candidate.id}
-                onClick={() => setSelectedId(candidate.id)}
-                type="button"
-              >
-                <span>
-                  <strong>{candidate.display_name}</strong>
-                  <small>{candidate.credentials_masked}</small>
-                </span>
-                <span className="ui-badge">{accountStatusLabel(candidate)}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
+          )}
 
-        <div className="integration-detail-panel">
+          {canManage ? (
+            <form
+              aria-label="Новое подключение Авито"
+              className="settings-form integration-create-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (canSubmit) createMutation.mutate();
+              }}
+            >
+              <div className="panel-heading"><strong>Добавить кабинет</strong></div>
+              <label>
+                Название подключения
+                <input maxLength={255} minLength={2} onChange={(event) => setDisplayName(event.target.value)} placeholder="Например, основной кабинет Авито" required value={displayName} />
+              </label>
+              <label>
+                ID пользователя Авито
+                <input inputMode="numeric" maxLength={255} onChange={(event) => setUserId(event.target.value)} pattern="[1-9][0-9]*" placeholder="Числовой ID пользователя" required value={userId} />
+              </label>
+              <label>
+                Client ID
+                <input autoComplete="off" onChange={(event) => setClientId(event.target.value)} required type="password" value={clientId} />
+              </label>
+              <label>
+                Client Secret
+                <input autoComplete="new-password" onChange={(event) => setClientSecret(event.target.value)} required type="password" value={clientSecret} />
+              </label>
+              <label>
+                Режим ответов
+                <select onChange={(event) => setResponseMode(event.target.value as ResponseMode)} value={responseMode}>
+                  <option value="inherit">Наследовать настройки организации</option>
+                  <option value="auto">Автоматический</option>
+                  <option value="semi_auto">С подтверждением</option>
+                </select>
+              </label>
+              {createMutation.error ? <p className="form-error" role="alert">{errorMessage(createMutation.error)}</p> : null}
+              <button className="button button-primary" disabled={!canSubmit || createMutation.isPending} type="submit">
+                {createMutation.isPending ? "Добавляем…" : "Добавить кабинет"}
+              </button>
+            </form>
+          ) : null}
+        </section>
+
+        <section className="integration-account-detail" aria-labelledby="avito-account-detail-title">
           {selectedAccount ? (
             <AvitoAccountDetail
               account={selectedAccount}
@@ -128,91 +182,9 @@ export function AvitoIntegrationWorkspace() {
               organizationId={activeOrganization.id}
             />
           ) : (
-            <section className="integration-detail-placeholder">
-              <span className="ui-badge">Авито</span>
-              <h2>Выберите кабинет</h2>
-              <p>После подключения здесь появятся состояние, синхронизация чатов и история операций.</p>
-            </section>
+            <WorkspaceState title="Кабинет не выбран" description="Выберите кабинет слева или создайте новое подключение." />
           )}
-
-          {canManage ? (
-            <form
-              aria-label="Новое подключение Авито"
-              className="integration-create-form"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (canSubmit) createMutation.mutate();
-              }}
-            >
-              <div className="integration-panel-heading">
-                <div>
-                  <span>Новое подключение</span>
-                  <h2>Добавить кабинет</h2>
-                </div>
-              </div>
-              <label>
-                Название подключения
-                <input
-                  maxLength={255}
-                  onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="Например, основной кабинет Авито"
-                  required
-                  value={displayName}
-                />
-              </label>
-              <label>
-                ID пользователя Авито
-                <input
-                  inputMode="numeric"
-                  maxLength={255}
-                  onChange={(event) => setUserId(event.target.value)}
-                  pattern="[1-9][0-9]*"
-                  placeholder="Числовой ID пользователя"
-                  required
-                  value={userId}
-                />
-              </label>
-              <label>
-                Client ID
-                <input
-                  autoComplete="off"
-                  onChange={(event) => setClientId(event.target.value)}
-                  required
-                  type="password"
-                  value={clientId}
-                />
-              </label>
-              <label>
-                Client Secret
-                <input
-                  autoComplete="new-password"
-                  onChange={(event) => setClientSecret(event.target.value)}
-                  required
-                  type="password"
-                  value={clientSecret}
-                />
-              </label>
-              <label>
-                Режим ответов
-                <select onChange={(event) => setResponseMode(event.target.value as ResponseMode)} value={responseMode}>
-                  <option value="inherit">Как в организации</option>
-                  <option value="auto">Автоматически</option>
-                  <option value="semi_auto">После проверки</option>
-                </select>
-              </label>
-              <button className="button button-primary" disabled={!canSubmit || createMutation.isPending} type="submit">
-                {createMutation.isPending ? "Добавляем…" : "Добавить кабинет"}
-              </button>
-              {createMutation.error ? <p className="form-error" role="alert">{errorMessage(createMutation.error)}</p> : null}
-              {notice ? <p className="form-success" role="status">{notice}</p> : null}
-            </form>
-          ) : selectedAccount ? null : (
-            <div className="workspace-inline-state">
-              <strong>Только просмотр</strong>
-              <p>Изменять подключения могут владелец и администратор организации.</p>
-            </div>
-          )}
-        </div>
+        </section>
       </div>
     </section>
   );
@@ -470,12 +442,7 @@ function AvitoAccountDetail({
           </div>
           {mutationError ? <p className="form-error" role="alert">{errorMessage(mutationError)}</p> : null}
         </>
-      ) : (
-        <div className="workspace-inline-state">
-          <strong>Только просмотр</strong>
-          <p>Текущая роль позволяет видеть состояние, но не менять подключение.</p>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

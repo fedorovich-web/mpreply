@@ -88,3 +88,25 @@ test("Ozon integration shows safe permissions and fits desktop and mobile", asyn
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test("Avito integration shows safe chat access and fits desktop and mobile", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockClientWorkspaceApi(page, "owner", { includeAvito: true });
+  await page.goto("/app/integrations/avito", { waitUntil: "networkidle" });
+
+  await expect(page.getByRole("heading", { name: "Основной Авито" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Есть ошибки" })).toBeVisible();
+  await expect(page.getByText("Доступ к чатам")).toBeVisible();
+  await expect(page.getByText("Client ID и Client Secret", { exact: true })).toBeVisible();
+  await expect(page.getByText("Синхронизация чатов", { exact: true })).toBeVisible();
+  await expect(page.getByText(/ID пользователя Авито хранится защищённо и не отображается/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Повторить синхронизацию" })).toBeVisible();
+  await expect(page.getByText(/Авито временно ограничил частоту запросов/)).toBeVisible();
+  await expect(page.getByText(/must-not-render-avito/)).toHaveCount(0);
+  await expect(page.getByText("rate_limited")).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
