@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.admin import router as admin_router
+from app.api.admin_llm import router as admin_llm_router
 from app.api.ai import router as ai_router
 from app.api.ai_instruction_sets import router as ai_instruction_sets_router
 from app.api.analytics import router as analytics_router
@@ -52,7 +53,7 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Organization-Id", "X-Request-ID"],
         expose_headers=["X-Request-ID"],
     )
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(audit_logs_router)
     app.include_router(admin_router)
+    app.include_router(admin_llm_router)
     app.include_router(analytics_router)
     app.include_router(billing_router)
     app.include_router(dashboard_router)
