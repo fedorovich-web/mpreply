@@ -64,6 +64,7 @@ export function AvitoIntegrationWorkspace() {
       }),
     onSuccess: (created) => {
       setSelectedId(created.id);
+      setUserId("");
       setClientId("");
       setClientSecret("");
       setNotice("Подключение создано. Перед синхронизацией проверьте данные Авито.");
@@ -574,6 +575,8 @@ function IntegrationEventsPanel({ events }: { events: MarketplaceIntegrationEven
               </div>
               {event.error_code ? (
                 <p className="integration-error-copy">{friendlyAvitoError(event.error_code)}</p>
+              ) : event.status === "failed" && event.error_message_safe ? (
+                <p className="integration-error-copy">{event.error_message_safe}</p>
               ) : (
                 <p>{formatEventDetails(event.details)}</p>
               )}
@@ -720,8 +723,7 @@ function collectSafeEventDetails(value: Record<string, unknown>, parts: string[]
   if (depth > 2 || parts.length >= 4) return;
   for (const [key, candidate] of Object.entries(value)) {
     if (parts.length >= 4) return;
-    if (isSensitiveMetadataKey(key)) continue;
-    if (isDisplayableMetadataValue(candidate)) {
+    if (isDisplayableMetadataValue(candidate) && isAllowedEventDetailKey(key)) {
       parts.push(`${eventDetailLabel(key)}: ${String(candidate)}`);
       continue;
     }
@@ -750,7 +752,8 @@ function friendlyAvitoError(code: string): string {
     network_timeout: "Авито не ответил вовремя. Повторите операцию позже.",
     network_error: "Не удалось связаться с Авито. Повторите операцию позже.",
     malformed_payload: "Авито вернул ответ в неожиданном формате.",
-    pagination_error: "Не удалось продолжить загрузку следующей страницы чатов.",
+    sync_page_limit_exceeded: "Синхронизация достигла защитного лимита страниц и была остановлена.",
+    sync_pagination_checkpoint_invalid: "Синхронизация остановлена из-за некорректной точки продолжения. Повторите запуск.",
   };
   return labels[code] ?? "Операция Авито завершилась ошибкой. Повторите попытку или проверьте подключение.";
 }
@@ -768,10 +771,8 @@ function isPlainMetadataRecord(value: unknown): value is Record<string, unknown>
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isSensitiveMetadataKey(key: string): boolean {
-  const normalized = key.toLowerCase();
-  return ["credential", "secret", "token", "api_key", "authorization", "provider_body", "client_id", "seller_id", "cursor"]
-    .some((part) => normalized.includes(part));
+function isAllowedEventDetailKey(key: string): boolean {
+  return ["count", "pages_processed", "error_type", "credentials_status"].includes(key.toLowerCase());
 }
 
 function errorMessage(error: unknown): string {

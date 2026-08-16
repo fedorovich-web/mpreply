@@ -89,6 +89,29 @@ test("Ozon integration shows safe permissions and fits desktop and mobile", asyn
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test("Avito owner creates a connection without retaining submitted identifiers", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockClientWorkspaceApi(page, "owner", { enableAvitoMutations: true });
+  await page.goto("/app/integrations/avito", { waitUntil: "networkidle" });
+
+  const form = page.getByRole("form", { name: "Новое подключение Авито" });
+  await form.getByLabel("Название подключения").fill("Авито E2E");
+  await form.getByLabel("ID пользователя Авито").fill("123456");
+  await form.getByLabel("Client ID").fill("synthetic-client-id");
+  await form.getByLabel("Client Secret").fill("synthetic-client-secret");
+
+  const createResponse = page.waitForResponse((response) =>
+    response.request().method() === "POST" && new URL(response.url()).pathname === "/api/marketplace-accounts",
+  );
+  await form.getByRole("button", { name: "Добавить кабинет" }).click();
+  expect((await createResponse).status()).toBe(201);
+
+  await expect(page.getByRole("heading", { name: "Авито E2E" })).toBeVisible();
+  await expect(form.getByLabel("ID пользователя Авито")).toHaveValue("");
+  await expect(form.getByLabel("Client ID")).toHaveValue("");
+  await expect(form.getByLabel("Client Secret")).toHaveValue("");
+});
+
 test("Avito integration shows safe chat access and fits desktop and mobile", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 1000 });

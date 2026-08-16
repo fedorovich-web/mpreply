@@ -149,6 +149,12 @@ class _FakeOrganizationService:
         return None
 
 
+class _ManagerOrganizationService:
+    async def require_membership_role(self, *, allowed_roles: set[str], **_kwargs: object) -> None:
+        if "manager" not in allowed_roles:
+            raise HTTPException(status_code=403, detail="You do not have permission to perform this action")
+
+
 class _FakeCredentials:
     def __init__(self) -> None:
         self.calls = 0
@@ -266,6 +272,22 @@ def _review(external_id: str) -> dict[str, object]:
         "marketplace_created_at": None,
         "product": {"external_id": f"product-{external_id}"},
     }
+
+
+@pytest.mark.asyncio
+async def test_manual_avito_sync_rejects_manager_before_credential_decrypt() -> None:
+    account = _account()
+    account.marketplace = Marketplace.AVITO.value
+    service = _SyncHarness(account=account, adapter=_FakeConversationAdapter())
+    service.organization_service = cast(OrganizationService, _ManagerOrganizationService())
+    actor = cast(User, SimpleNamespace(id=uuid4()))
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.sync_account(actor=actor, account_id=account.id)
+
+    assert exc_info.value.status_code == 403
+    assert cast(_FakeCredentials, service.credentials).calls == 0
+    assert cast(_FakeSession, service.session).added == []
 
 
 def _capability_lookup(

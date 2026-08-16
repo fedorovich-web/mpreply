@@ -10,6 +10,7 @@ const instructionSetId = "33333333-3333-4333-8333-333333333333";
 const accountId = "44444444-4444-4444-8444-444444444444";
 const ozonAccountId = "88888888-8888-4888-8888-888888888888";
 const avitoAccountId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const createdAvitoAccountId = "34343434-3434-4434-8434-343434343434";
 const timestamp = "2026-08-13T06:00:00Z";
 const period = { start: "2026-07-15T00:00:00Z", end: "2026-08-13T23:59:59Z", days: 30 };
 
@@ -242,7 +243,7 @@ const billingFixture = {
 export async function mockClientWorkspaceApi(
   page: Page,
   role: ClientWorkspaceRole = "owner",
-  options: { includeOzon?: boolean; includeAvito?: boolean } = {},
+  options: { includeOzon?: boolean; includeAvito?: boolean; enableAvitoMutations?: boolean } = {},
 ): Promise<void> {
   const headers = {
     "access-control-allow-credentials": "true",
@@ -268,6 +269,7 @@ export async function mockClientWorkspaceApi(
     ...(options.includeOzon ? [ozonAccountFixture] : []),
     ...(options.includeAvito ? [avitoAccountFixture] : []),
   ];
+  let createdAvitoAccount: Record<string, unknown> | null = null;
   const exactResponses = new Map<string, unknown>([
     ["/api/auth/me", userFixture],
     ["/api/organizations", [organization]],
@@ -287,9 +289,44 @@ export async function mockClientWorkspaceApi(
   ]);
 
   await page.route("**/api/**", async (route) => {
-    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
-    const path = new URL(route.request().url()).pathname;
-    const body = exactResponses.get(path)
+    const request = route.request();
+    const method = request.method();
+    if (method === "OPTIONS") return route.fulfill({ status: 204, headers });
+    const path = new URL(request.url()).pathname;
+    if (method !== "GET") {
+      if (options.enableAvitoMutations && method === "POST" && path === "/api/marketplace-accounts") {
+        const payload = request.postDataJSON() as Record<string, unknown>;
+        if (payload.marketplace === "avito") {
+          createdAvitoAccount = {
+            ...avitoAccountFixture,
+            id: createdAvitoAccountId,
+            display_name: String(payload.display_name),
+            status: "pending_validation",
+            credentials_status: "pending_validation",
+            scopes_json: {},
+            default_response_mode: String(payload.default_response_mode),
+            last_success_sync_at: null,
+            last_error_sync_at: null,
+            error_count: 0,
+          };
+          return fulfillJson(route, createdAvitoAccount, headers, 201);
+        }
+      }
+      return fulfillJson(route, { detail: "Unexpected client-workspace test mutation" }, headers, 500);
+    }
+    const body = path === "/api/marketplace-accounts"
+      ? [...marketplaceAccounts, ...(createdAvitoAccount ? [createdAvitoAccount] : [])]
+      : path === `/api/marketplace-accounts/${createdAvitoAccountId}/overview` && createdAvitoAccount
+        ? {
+            account: createdAvitoAccount,
+            health_status: "attention",
+            health_reasons: ["Подключение ожидает проверки."],
+            scopes: [],
+            sync_states: [],
+            recent_jobs: [],
+            recent_events: [],
+          }
+        : exactResponses.get(path)
       ?? (path.endsWith("/instruction-sets") ? [instructionSetFixture] : undefined)
       ?? (path.endsWith("/knowledge-entries") ? [{
         id: "55555555-5555-4555-8555-555555555555",

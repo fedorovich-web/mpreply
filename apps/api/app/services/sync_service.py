@@ -15,7 +15,7 @@ from app.adapters.registry import get_marketplace_adapter
 from app.core.config import get_settings
 from app.core.errors import bad_request, not_found
 from app.core.security import CredentialService
-from app.models.enums import MarketplaceSyncStateStatus, MarketplaceSyncStream
+from app.models.enums import Marketplace, MarketplaceSyncStateStatus, MarketplaceSyncStream
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
@@ -29,6 +29,7 @@ from app.services.marketplace_scheduler_service import account_sync_streams
 from app.services.organization_service import OrganizationService
 
 _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
+_ALLOWED_AVITO_SYNC_ROLES = {"owner", "admin"}
 _MAX_MANUAL_SYNC_PAGES_PER_STREAM = 100
 
 
@@ -72,7 +73,11 @@ class MarketplaceSyncService:
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
-            allowed_roles=_ALLOWED_SYNC_ROLES,
+            allowed_roles=(
+                _ALLOWED_AVITO_SYNC_ROLES
+                if account.marketplace == Marketplace.AVITO.value
+                else _ALLOWED_SYNC_ROLES
+            ),
         )
         if account.status not in {"active", "pending_validation", "error"}:
             raise bad_request("Marketplace account is not available for sync")

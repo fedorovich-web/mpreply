@@ -168,6 +168,7 @@ describe("AvitoIntegrationWorkspace", () => {
       default_response_mode: "inherit",
     });
     await waitFor(() => {
+      expect(within(form).getByLabelText("ID пользователя Авито")).toHaveValue("");
       expect(within(form).getByLabelText("Client ID")).toHaveValue("");
       expect(clientSecretInput).toHaveValue("");
     });
@@ -254,8 +255,37 @@ describe("AvitoIntegrationWorkspace", () => {
                 seller_id: "must-not-leak-nested-user-id",
                 provider_body: "must-not-leak-nested-provider-body",
               },
+              message: "must-not-leak-customer-message",
+              text: "must-not-leak-customer-text",
+              content: "must-not-leak-customer-content",
+              response_body: "must-not-leak-response-body",
+              raw_response: "must-not-leak-raw-response",
             },
             created_at: "2026-08-13T10:02:00Z",
+          }, {
+            id: "14141414-1414-4414-8414-141414141414",
+            event_type: "sync.chats",
+            status: "failed",
+            error_code: "sync_page_limit_exceeded",
+            error_message_safe: "must-not-leak-page-limit-provider-copy",
+            details: {},
+            created_at: "2026-08-13T10:03:00Z",
+          }, {
+            id: "15151515-1515-4515-8515-151515151515",
+            event_type: "sync.chats",
+            status: "failed",
+            error_code: "sync_pagination_checkpoint_invalid",
+            error_message_safe: "must-not-leak-checkpoint-provider-copy",
+            details: {},
+            created_at: "2026-08-13T10:04:00Z",
+          }, {
+            id: "16161616-1616-4616-8616-161616161616",
+            event_type: "sync.chats",
+            status: "failed",
+            error_code: null,
+            error_message_safe: "Безопасное описание сбоя синхронизации.",
+            details: { count: 1 },
+            created_at: "2026-08-13T10:05:00Z",
           }],
         }), { status: 200 });
       }
@@ -270,7 +300,10 @@ describe("AvitoIntegrationWorkspace", () => {
     expect(screen.getByText("Синхронизация чатов")).toBeInTheDocument();
     expect(screen.getByText("Не удалось завершить синхронизацию чатов.")).toBeInTheDocument();
     expect(screen.getByText(/Авито временно ограничил частоту запросов/)).toBeInTheDocument();
-    expect(screen.getByText("обработано: 3")).toBeInTheDocument();
+    expect(screen.getByText(/обработано: 3/)).toBeInTheDocument();
+    expect(screen.getByText(/достигла защитного лимита страниц/)).toBeInTheDocument();
+    expect(screen.getByText(/некорректной точки продолжения/)).toBeInTheDocument();
+    expect(screen.getByText("Безопасное описание сбоя синхронизации.")).toBeInTheDocument();
     expect(screen.getByText(/ID пользователя Авито хранится защищённо и не отображается/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Повторить синхронизацию" })).toBeInTheDocument();
     expect(screen.queryByText(/must-not-leak/)).not.toBeInTheDocument();
