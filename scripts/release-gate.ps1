@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
 $Api = Join-Path $Root "apps\api"
+$Cms = Join-Path $Root "apps\cms"
 $Web = Join-Path $Root "apps\web"
 $VenvCandidates = @(
     Join-Path $Root ".venv"
@@ -111,6 +112,34 @@ try {
     }
     Run-Step "Alembic heads" {
         & $VenvAlembic heads
+    }
+}
+finally {
+    Pop-Location
+}
+
+Push-Location $Cms
+try {
+    Run-Step "CMS clean install" {
+        & $Npm ci
+    }
+    Run-Step "CMS dependency tree" {
+        & $Npm ls --all
+    }
+    Run-Step "CMS production dependency audit" {
+        & $Npm audit --omit=dev --audit-level=high
+    }
+    Run-Step "CMS unit tests" {
+        & $Npm test
+    }
+    Run-Step "CMS typecheck" {
+        & $Npm run typecheck
+    }
+    Run-Step "CMS lint" {
+        & $Npm run lint
+    }
+    Run-Step "CMS production build" {
+        & $Npm run build
     }
 }
 finally {

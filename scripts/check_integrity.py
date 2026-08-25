@@ -371,6 +371,47 @@ def check_versions_and_frontend_security_baseline() -> None:
             fail(f"apps/web/package.json scripts.{name} != {expected!r}; got {actual!r}")
 
 
+def cms_quality_contract_errors(release_gate: str, workflow: str) -> list[str]:
+    errors: list[str] = []
+    required_local_tokens = [
+        '$Cms = Join-Path $Root "apps\\cms"',
+        'Run-Step "CMS clean install"',
+        'Run-Step "CMS dependency tree"',
+        'Run-Step "CMS production dependency audit"',
+        'Run-Step "CMS unit tests"',
+        'Run-Step "CMS typecheck"',
+        'Run-Step "CMS lint"',
+        'Run-Step "CMS production build"',
+    ]
+    if any(token not in release_gate for token in required_local_tokens):
+        errors.append("Local release gate does not validate the CMS application")
+
+    required_workflow_tokens = [
+        "    cms:",
+        "cache-dependency-path: apps/cms/package-lock.json",
+        "CMS production dependency audit",
+        "CMS unit tests",
+        "CMS typecheck",
+        "CMS lint",
+        "CMS production build",
+    ]
+    if any(token not in workflow for token in required_workflow_tokens):
+        errors.append("GitHub quality gate does not validate the CMS application")
+
+    required_cms_image_builds = [
+        "Build CMS migration image",
+        "docker build --target migrator -f apps/cms/Dockerfile apps/cms",
+        "Build CMS production image",
+        "docker build --target runner -f apps/cms/Dockerfile apps/cms",
+    ]
+    if any(token not in workflow for token in required_cms_image_builds):
+        errors.append("GitHub quality gate does not build CMS production images")
+
+    if "needs: [backend, frontend, cms]" not in workflow:
+        errors.append("GitHub container gate is not blocked by CMS validation")
+    return errors
+
+
 def check_release_gate_contract() -> None:
     release_gate = (ROOT / "scripts" / "release-gate.ps1").read_text(encoding="utf-8")
     container_gate = (ROOT / "scripts" / "container-gate.ps1").read_text(encoding="utf-8")
@@ -408,6 +449,9 @@ def check_release_gate_contract() -> None:
     for token in required_local_tokens:
         if token not in release_gate:
             fail(f"release-gate.ps1 missing required contract: {token}")
+
+    for message in cms_quality_contract_errors(release_gate, workflow):
+        fail(message)
 
     for token in [
         "& $Docker compose",

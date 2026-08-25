@@ -58,7 +58,7 @@ From PowerShell in the repository root:
 .\scripts\release-gate.ps1
 ```
 
-The code gate checks repository integrity, backend imports/dependencies, Ruff, Pyright strict mode, tests, compileall, Alembic head, frontend clean install, security audit, TypeScript, ESLint and production build.
+The code gate checks repository integrity; backend imports, dependencies, Ruff, Pyright, tests, compileall and Alembic head; editorial CMS dependencies, production audit, tests, TypeScript, ESLint and production build; and the complete frontend quality suite.
 
 ## Local container verification
 

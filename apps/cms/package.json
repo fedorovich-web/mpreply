@@ -34,7 +34,8 @@
     "eslint": "9.39.2",
     "eslint-config-next": "16.2.11",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "yaml": "2.9.0"
   },
   "overrides": {
     "dompurify": "3.4.14",

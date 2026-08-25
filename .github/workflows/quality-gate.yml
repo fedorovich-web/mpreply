@@ -113,9 +113,40 @@ jobs:
               working-directory: apps/web
               run: npm run lighthouse
 
+    cms:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: '22'
+                  cache: npm
+                  cache-dependency-path: apps/cms/package-lock.json
+            - name: Install CMS dependencies
+              working-directory: apps/cms
+              run: npm ci
+            - name: CMS dependency tree
+              working-directory: apps/cms
+              run: npm ls --all
+            - name: CMS production dependency audit
+              working-directory: apps/cms
+              run: npm audit --omit=dev --audit-level=high
+            - name: CMS unit tests
+              working-directory: apps/cms
+              run: npm test
+            - name: CMS typecheck
+              working-directory: apps/cms
+              run: npm run typecheck
+            - name: CMS lint
+              working-directory: apps/cms
+              run: npm run lint
+            - name: CMS production build
+              working-directory: apps/cms
+              run: npm run build
+
     containers:
         runs-on: ubuntu-latest
-        needs: [backend, frontend]
+        needs: [backend, frontend, cms]
         steps:
             - uses: actions/checkout@v7
             - name: Validate production Compose
@@ -128,3 +159,7 @@ jobs:
               run: docker build -f apps/scheduler/Dockerfile .
             - name: Build web production image
               run: docker build -f apps/web/Dockerfile apps/web
+            - name: Build CMS migration image
+              run: docker build --target migrator -f apps/cms/Dockerfile apps/cms
+            - name: Build CMS production image
+              run: docker build --target runner -f apps/cms/Dockerfile apps/cms
