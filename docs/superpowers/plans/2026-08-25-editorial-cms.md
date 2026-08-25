@@ -155,4 +155,3 @@ await expect(verifyRevalidationRequest(tamperedRequest)).resolves.toBe(false);
 - [ ] **Step 4: Run `git diff --check`, inspect tracked files for secrets and review the complete diff**
 - [ ] **Step 5: Recheck authoritative DNS for `app`, `api` and `cms`; perform no server mutation**
 - [ ] **Step 6: Push the existing branch only after every local gate is green; do not deploy or merge**
-
