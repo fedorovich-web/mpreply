@@ -4,10 +4,20 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Api = Join-Path $Root "apps\api"
 $Web = Join-Path $Root "apps\web"
-$VenvPython = Join-Path $Root ".venv\Scripts\python.exe"
-$VenvRuff = Join-Path $Root ".venv\Scripts\ruff.exe"
-$VenvPytest = Join-Path $Root ".venv\Scripts\pytest.exe"
-$VenvAlembic = Join-Path $Root ".venv\Scripts\alembic.exe"
+$VenvCandidates = @(
+    Join-Path $Root ".venv"
+    Join-Path $Api ".venv"
+)
+$VenvRoot = $VenvCandidates |
+    Where-Object { Test-Path -LiteralPath (Join-Path $_ "Scripts\python.exe") } |
+    Select-Object -First 1
+if ($null -eq $VenvRoot) {
+    throw "Python virtual environment not found. Checked: $($VenvCandidates -join ', ')"
+}
+$VenvPython = Join-Path $VenvRoot "Scripts\python.exe"
+$VenvRuff = Join-Path $VenvRoot "Scripts\ruff.exe"
+$VenvPytest = Join-Path $VenvRoot "Scripts\pytest.exe"
+$VenvAlembic = Join-Path $VenvRoot "Scripts\alembic.exe"
 $HandoffDir = Join-Path $Root ".handoff"
 $ResultPath = Join-Path $HandoffDir "project-quality-result.json"
 
@@ -36,6 +46,17 @@ Assert-File $VenvPython "Python virtual environment"
 Assert-File $VenvRuff "Ruff executable"
 Assert-File $VenvPytest "Pytest executable"
 Assert-File $VenvAlembic "Alembic executable"
+
+& $VenvPython -c "import importlib.util; raise SystemExit(0 if importlib.util.find_spec('pip') else 1)"
+$VenvHasPip = $LASTEXITCODE -eq 0
+$Uv = $null
+if (-not $VenvHasPip) {
+    $UvCommand = Get-Command uv.exe -ErrorAction SilentlyContinue
+    if ($null -eq $UvCommand) {
+        $UvCommand = Get-Command uv -ErrorAction Stop
+    }
+    $Uv = $UvCommand.Source
+}
 
 $NpxCommand = Get-Command npx.cmd -ErrorAction SilentlyContinue
 if ($null -eq $NpxCommand) {
@@ -69,7 +90,12 @@ try {
         & $VenvPython -c "import fastapi, pydantic, sqlalchemy, httpx, dramatiq, redis, pytest; print('Backend imports OK')"
     }
     Run-Step "Backend dependency consistency" {
-        & $VenvPython -m pip check
+        if ($VenvHasPip) {
+            & $VenvPython -m pip check
+        }
+        else {
+            & $Uv pip check --python $VenvPython
+        }
     }
     Run-Step "Backend Ruff" {
         & $VenvRuff check app alembic
@@ -78,7 +104,7 @@ try {
         & $Npx --yes pyright@1.1.411 --pythonpath $VenvPython app
     }
     Run-Step "Backend tests" {
-        & $VenvPytest -q
+        & $VenvPython -m pytest -q
     }
     Run-Step "Backend compileall" {
         & $VenvPython -m compileall -q app alembic

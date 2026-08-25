@@ -9,7 +9,7 @@ export function CMSContentError({ reset }: { reset: () => void }) {
         <div className="public-container cms-content-error" role="alert">
           <p className="public-eyebrow">Материал временно недоступен</p>
           <h1>Не удалось загрузить публикацию</h1>
-          <p>Попробуйте ещё раз. Остальные разделы MPReply продолжают работать.</p>
+          <p>Попробуйте ещё раз. Остальные разделы MP Reply продолжают работать.</p>
           <button className="button button-primary" type="button" onClick={reset}>
             Повторить
           </button>

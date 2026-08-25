@@ -46,7 +46,7 @@ export default async function ResourceDetailPage({ params }: PageProps) {
         <div className="public-container home-final-cta-card public-page-final-cta">
           <div>
             <p className="public-eyebrow">Применить материал</p>
-            <h2>Настройте правила ответов в MPReply</h2>
+            <h2>Настройте правила ответов в MP Reply</h2>
             <p>Используйте данные о товарах и правила продавца в автоматических ответах.</p>
           </div>
           <PublicTrialCta className="button button-primary public-cta-on-dark" source="resource-article-footer">

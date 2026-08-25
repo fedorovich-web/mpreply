@@ -7,6 +7,17 @@ from scripts import check_integrity
 
 
 class IntegrityQualityGateContractTests(unittest.TestCase):
+    def test_release_gate_accepts_api_local_virtual_environment_fallback(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        release_gate = (root / "scripts" / "release-gate.ps1").read_text(encoding="utf-8")
+
+        self.assertIn('$VenvCandidates = @(', release_gate)
+        self.assertIn('Join-Path $Root ".venv"', release_gate)
+        self.assertIn('Join-Path $Api ".venv"', release_gate)
+        self.assertIn('$VenvHasPip', release_gate)
+        self.assertIn('& $Uv pip check --python $VenvPython', release_gate)
+        self.assertIn('& $VenvPython -m pytest -q', release_gate)
+
     def test_quality_gate_accepts_explicit_production_image_builds(self) -> None:
         previous_errors = list(check_integrity.ERRORS)
         check_integrity.ERRORS.clear()

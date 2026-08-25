@@ -43,7 +43,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
           <div>
             <p className="public-eyebrow">Применить на практике</p>
             <h2>Настройте ответы на обращениях своих покупателей</h2>
-            <p>Проверьте работу MPReply на отзывах, вопросах и чатах.</p>
+            <p>Проверьте работу MP Reply на отзывах, вопросах и чатах.</p>
           </div>
           <PublicTrialCta className="button button-primary public-cta-on-dark" source="blog-article-footer">
             Начать бесплатный тест

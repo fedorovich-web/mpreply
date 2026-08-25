@@ -7,7 +7,7 @@ import type { CMSContentDetail } from "../../lib/cms/schema";
 
 const content = {
   _status: "published",
-  authorName: "Редакция MPReply",
+  authorName: "Редакция MP Reply",
   body: {
     root: {
       children: [{ type: "paragraph", children: [{ type: "text", text: "Содержание материала", format: 0 }] }],
