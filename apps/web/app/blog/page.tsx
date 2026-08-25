@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 
+import { CMSContentCard } from "../../components/public-site/CMSContentCard";
 import { MarketingGlyph } from "../../components/public-site/MarketingGlyph";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { PublicTrialCta } from "../../components/public-site/PublicTrialCta";
 import { createPageMetadata } from "../../lib/seo";
+import { listPublishedContent } from "../../lib/cms/client";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Блог MP Reply — автоматические ответы на отзывы и вопросы маркетплейсов",
@@ -39,7 +43,18 @@ const posts = [
   },
 ] as const;
 
-export default function BlogPage() {
+async function loadBlogContent() {
+  try {
+    return { items: await listPublishedContent("article"), unavailable: false };
+  } catch {
+    return { items: null, unavailable: true };
+  }
+}
+
+export default async function BlogPage() {
+  const cms = await loadBlogContent();
+  const useStaticFallback = cms.items === null && !cms.unavailable;
+
   return (
     <PublicShell>
       <section className="public-subhero blog-page-hero-v89">
@@ -71,15 +86,21 @@ export default function BlogPage() {
             <h2 id="blog-list-title">Гайды для продавцов маркетплейсов</h2>
             <p>Публикации помогают настроить правила ответов, подготовить базу знаний и понять, какие обращения можно автоматизировать первыми.</p>
           </header>
+          {cms.unavailable ? (
+            <p className="cms-content-list-notice" role="status">Материалы временно недоступны. Попробуйте обновить страницу позже.</p>
+          ) : null}
           <div className="resource-library-grid resource-library-grid-v73">
-            {posts.map((post) => (
+            {cms.items?.map((post) => (
+              <CMSContentCard content={post} headingLevel={3} key={post.id} />
+            ))}
+            {useStaticFallback ? posts.map((post) => (
               <article className="resource-library-card" key={post.title}>
                 <MarketingGlyph variant={post.icon} />
                 <span className="resource-state">{post.label}</span>
                 <h3>{post.title}</h3>
                 <p>{post.text}</p>
               </article>
-            ))}
+            )) : null}
           </div>
         </div>
       </section>

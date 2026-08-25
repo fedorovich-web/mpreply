@@ -44,9 +44,11 @@ export async function POST(request: Request) {
     "cms:content",
     "cms:sitemap",
     `cms:content:${payload.kind}`,
+    `cms:slug:${payload.slug}`,
     `cms:slug:${payload.kind}:${payload.slug}`,
   ]);
   if (payload.previousSlug) {
+    tags.add(`cms:slug:${payload.previousSlug}`);
     tags.add(`cms:slug:${payload.kind}:${payload.previousSlug}`);
   }
   for (const tag of tags) {

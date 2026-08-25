@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { CMSContentCard } from "../../components/public-site/CMSContentCard";
 import { MarketingGlyph } from "../../components/public-site/MarketingGlyph";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { PublicTrialCta } from "../../components/public-site/PublicTrialCta";
 import { createPageMetadata } from "../../lib/seo";
+import { listPublishedContent } from "../../lib/cms/client";
+
+export const dynamic = "force-dynamic";
 import { publicResources } from "../../lib/public-resources";
 
 export const metadata: Metadata = createPageMetadata({
@@ -12,7 +16,22 @@ export const metadata: Metadata = createPageMetadata({
   path: "/resources",
 });
 
-export default function ResourcesPage() {
+async function loadResourcesContent() {
+  try {
+    const items = await listPublishedContent();
+    return {
+      items: items?.filter((item) => item.kind !== "article") ?? null,
+      unavailable: false,
+    };
+  } catch {
+    return { items: null, unavailable: true };
+  }
+}
+
+export default async function ResourcesPage() {
+  const cms = await loadResourcesContent();
+  const useStaticFallback = cms.items === null && !cms.unavailable;
+
   return (
     <PublicShell>
       <section className="public-subhero">
@@ -39,15 +58,21 @@ export default function ResourcesPage() {
 
       <div className="public-section">
         <div className="public-container">
+          {cms.unavailable ? (
+            <p className="cms-content-list-notice" role="status">Материалы временно недоступны. Попробуйте обновить страницу позже.</p>
+          ) : null}
           <div className="resource-library-grid resource-library-grid-v73">
-            {publicResources.map((material) => (
+            {cms.items?.map((material) => (
+              <CMSContentCard content={material} headingLevel={2} key={material.id} />
+            ))}
+            {useStaticFallback ? publicResources.map((material) => (
               <article className="resource-library-card" key={material.title}>
                 <MarketingGlyph variant={material.icon} />
                 <span className="resource-state">{material.label}</span>
                 <h2>{material.title}</h2>
                 <p>{material.text}</p>
               </article>
-            ))}
+            )) : null}
           </div>
         </div>
       </div>

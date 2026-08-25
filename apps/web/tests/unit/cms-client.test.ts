@@ -54,6 +54,22 @@ describe("CMS server client", () => {
     await expect(client.getPublishedContent("article", "missing")).rejects.toBeInstanceOf(CMSNotFoundError);
   });
 
+  it("loads a resource slug without guessing its editorial kind", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    fetcher.mockResolvedValue(
+      Response.json({
+        docs: [{ ...publishedDocument, kind: "guide" }],
+        totalDocs: 1,
+      }),
+    );
+    const client = createCMSClient(config, fetcher);
+
+    await expect(client.getPublishedContent(undefined, "negative-review-guide")).resolves.toMatchObject({
+      kind: "guide",
+    });
+    expect(String(fetcher.mock.calls[0][0])).not.toContain("where%5Bkind%5D");
+  });
+
   it("classifies transport failures without exposing provider details", async () => {
     const client = createCMSClient(config, async () => {
       throw new Error("database hostname and internal stack");

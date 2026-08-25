@@ -20,7 +20,7 @@ const categorySchema = z.object({
 const coverSchema = z.object({
   alt: z.string().min(1).max(240),
   height: z.number().int().positive().nullable().optional(),
-  url: z.string().min(1).max(500),
+  url: z.string().regex(/^\/api\/media\/file\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/),
   width: z.number().int().positive().nullable().optional(),
 });
 

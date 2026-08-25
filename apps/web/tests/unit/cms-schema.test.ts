@@ -78,6 +78,15 @@ describe("CMS response projection", () => {
     expect(() => parseContentDetail({ ...providerDocument, _status: "draft" })).toThrow();
   });
 
+  it("rejects cover URLs outside the Payload media-file route", () => {
+    expect(() =>
+      parseContentDetail({
+        ...providerDocument,
+        cover: { ...providerDocument.cover, url: "https://attacker.example/image.webp" },
+      }),
+    ).toThrow();
+  });
+
   it("projects a bounded list response", () => {
     const list = parseContentList({ docs: [providerDocument], totalDocs: 1, providerDebug: true });
 

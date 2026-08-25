@@ -90,15 +90,17 @@ export function createCMSClient(config: CMSRuntimeConfig, fetcher: CMSFetch = fe
   }
 
   return {
-    async getPublishedContent(kind: CMSContentKind, slug: string): Promise<CMSContentDetail> {
-      cmsContentKindSchema.parse(kind);
+    async getPublishedContent(kind: CMSContentKind | undefined, slug: string): Promise<CMSContentDetail> {
+      if (kind) {
+        cmsContentKindSchema.parse(kind);
+      }
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
         throw new CMSNotFoundError();
       }
       const response = await request(createContentQuery(kind, slug), [
         "cms:content",
-        `cms:content:${kind}`,
-        `cms:slug:${kind}:${slug}`,
+        ...(kind ? [`cms:content:${kind}`, `cms:slug:${kind}:${slug}`] : []),
+        `cms:slug:${slug}`,
       ]);
       let summaries: CMSContentSummary[];
       try {
@@ -124,6 +126,7 @@ export function createCMSClient(config: CMSRuntimeConfig, fetcher: CMSFetch = fe
       }
       const response = await request(createContentQuery(kind), [
         "cms:content",
+        "cms:sitemap",
         ...(kind ? [`cms:content:${kind}`] : []),
       ]);
       try {
@@ -145,7 +148,7 @@ export async function listPublishedContent(kind?: CMSContentKind): Promise<CMSCo
   return client ? client.listPublishedContent(kind) : null;
 }
 
-export async function getPublishedContent(kind: CMSContentKind, slug: string): Promise<CMSContentDetail> {
+export async function getPublishedContent(kind: CMSContentKind | undefined, slug: string): Promise<CMSContentDetail> {
   const client = getCMSClient();
   if (!client) {
     throw new CMSUnavailableError("CMS is not configured");
