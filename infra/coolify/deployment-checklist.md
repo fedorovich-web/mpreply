@@ -11,10 +11,12 @@ Required application services:
 - `worker` — Dramatiq auto-reply and marketplace-sync execution;
 - `scheduler` — database-backed marketplace polling dispatcher;
 - `migrate` — one-shot Alembic migration job per deployment.
+- `cms` — Payload editorial administration and content API;
+- `cms-migrate` — one-shot Payload migration job per deployment.
 
 ## 2. External stateful services
 
-Provision PostgreSQL and Redis as separate resources. Store their connection URLs only as server-side secrets.
+Provision the application PostgreSQL, CMS PostgreSQL and Redis as separate resources. Store their connection URLs only as server-side secrets. Do not reuse a database user between the application and CMS.
 
 Required production variables include:
 
@@ -24,9 +26,16 @@ WEB_APP_URL
 PUBLIC_SITE_URL
 DATABASE_URL
 REDIS_URL
+CMS_DATABASE_URL
+CMS_PUBLIC_URL
+CMS_API_URL
+CMS_READ_TOKEN
+CMS_REVALIDATION_URL
+CMS_REVALIDATION_SECRET
+CMS_REQUEST_TIMEOUT_MS
+PAYLOAD_SECRET
 AUTH_SECRET_KEY
 CREDENTIALS_ENCRYPTION_KEY
-OPENROUTER_API_KEY
 CORS_ALLOWED_ORIGINS
 ALLOWED_HOSTS
 DEPLOYMENT_VERSION
@@ -45,6 +54,8 @@ AUTH_REFRESH_RATE_LIMIT_WINDOW_SECONDS
 
 `CORS_ALLOWED_ORIGINS` and `ALLOWED_HOSTS` use JSON arrays.
 
+`OPENROUTER_API_KEY` is an optional first-start bootstrap value. The service administrator can store the provider key and select models in the database-backed LLM settings; leave the environment variable empty after that configuration is verified.
+
 ## 3. Domains
 
 Expected production mapping:
@@ -54,9 +65,10 @@ mpreply.ru      -> web
 www.mpreply.ru  -> redirect to mpreply.ru
 app.mpreply.ru  -> web
 api.mpreply.ru  -> api
+cms.mpreply.ru  -> cms
 ```
 
-Do not expose PostgreSQL or Redis publicly.
+Do not expose PostgreSQL, Redis or the CMS container port publicly. Route the CMS only through Coolify TLS on `cms.mpreply.ru`.
 
 ## 4. Health checks
 
@@ -73,19 +85,24 @@ Web:
 /api/health
 ```
 
+CMS:
+
+```text
+/api/health
+```
+
 Use readiness, not liveness, to decide whether the API should receive traffic.
 
 ## 5. Deployment order
 
-1. PostgreSQL and Redis available.
-2. Run migration job.
-3. Start API.
-4. Verify API readiness.
-5. Start worker.
-6. Start scheduler.
-7. Start web.
-8. Run smoke tests.
-9. Only then enable or resume automatic reply execution.
+1. Application PostgreSQL, CMS PostgreSQL and Redis available in staging.
+2. Run the application and CMS migration jobs in staging.
+3. Start and verify the staging API and CMS readiness endpoints.
+4. Create a CMS service user, store its token as `CMS_READ_TOKEN` for web, and verify that it can read only published content.
+5. Start worker, scheduler and web; verify draft, approval, publish, media and webhook revalidation flows.
+6. Complete database and CMS-media restore drills in staging.
+7. Repeat the same ordered deployment in production.
+8. Run production smoke tests before enabling or resuming automatic reply execution.
 
 ## 6. Security checks
 
@@ -98,7 +115,10 @@ Use readiness, not liveness, to decide whether the API should receive traffic.
 - Redis-backed authentication rate limiting enabled;
 - marketplace credentials remain backend-only and encrypted;
 - no `.env`, secrets or internal package-registry URLs in images or repository.
+- CMS service user has no admin UI access and no create, update, delete or draft-read permission;
+- CMS and web share only the revalidation secret and the read-only service token;
+- CMS media volume is writable only by the non-root CMS process.
 
 ## 7. Pre-launch blockers
 
-Do not call the system production-ready until legal review, tested backups/restores, alerting, real domains/TLS, staging verification and incident ownership are complete.
+Do not call the system production-ready until legal review, tested application/CMS database and media restores, alerting, real domains/TLS, staging verification and incident ownership are complete.

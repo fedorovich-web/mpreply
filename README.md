@@ -89,6 +89,16 @@ http://localhost:8000/health/ready
 http://localhost:3000/api/health
 ```
 
+The editorial CMS is an isolated application in `apps/cms`. It manages blog, resource and editorial SEO content only; marketplace operations and client data remain in the main application. For local development, provision the CMS PostgreSQL database, copy placeholder values from `apps/cms/.env.example` into an untracked environment file, then run:
+
+```powershell
+cd apps\cms
+npm ci
+npm run dev
+```
+
+CMS readiness is exposed at `http://localhost:3001/api/health`. Production uses a separate CMS database, a persistent media volume and the `cms.mpreply.ru` domain.
+
 Stop the stack:
 
 ```powershell
@@ -97,7 +107,7 @@ docker compose -f infra\docker\docker-compose.local.yml down
 
 ## Production deployment
 
-Production Compose expects PostgreSQL and Redis as external stateful services and requires explicit secrets and origin/host configuration. See:
+Production Compose expects application PostgreSQL, CMS PostgreSQL and Redis as external stateful services and requires explicit secrets and origin/host configuration. See:
 
 - `infra/docker/docker-compose.production.yml`
 - `infra/coolify/deployment-checklist.md`

@@ -43,7 +43,7 @@ docker compose -f infra\docker\docker-compose.local.yml down -v
 
 ## Production/Coolify
 
-`docker-compose.production.yml` contains only application services and expects PostgreSQL and Redis to be provisioned separately. Required secrets and environment values are validated explicitly.
+`docker-compose.production.yml` contains stateless application services plus named CMS media/cache volumes. It expects application PostgreSQL, CMS PostgreSQL and Redis to be provisioned separately. No database, Redis or CMS internal port is published. Required secrets and environment values are validated explicitly.
 
 Use:
 

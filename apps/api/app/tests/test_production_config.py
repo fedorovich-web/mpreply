@@ -34,10 +34,13 @@ def test_valid_production_settings_pass() -> None:
     assert settings.rate_limit_enabled is True
 
 
-def test_production_can_boot_without_environment_openrouter_key_for_admin_configuration() -> None:
-    settings = _production_settings(openrouter_api_key=SecretStr("replace-only-in-real-env"))
+@pytest.mark.parametrize("environment_key", ["", "replace-only-in-real-env"])
+def test_production_can_boot_without_environment_openrouter_key_for_admin_configuration(
+    environment_key: str,
+) -> None:
+    settings = _production_settings(openrouter_api_key=SecretStr(environment_key))
 
-    assert settings.openrouter_api_key.get_secret_value() == "replace-only-in-real-env"
+    assert settings.openrouter_api_key.get_secret_value() == environment_key
 
 
 def test_production_rejects_placeholder_secret() -> None:

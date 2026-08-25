@@ -5,5 +5,11 @@ import nextTs from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([".next/**", "src/payload-types.ts", "src/app/(payload)/admin/importMap.js", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "src/migrations/**",
+    "src/payload-types.ts",
+    "src/app/(payload)/admin/importMap.js",
+    "next-env.d.ts",
+  ]),
 ]);

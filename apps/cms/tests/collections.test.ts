@@ -23,6 +23,7 @@ describe("CMS collection contracts", () => {
   it("accepts only raster editorial image formats", () => {
     expect(Media.upload).toMatchObject({
       mimeTypes: ["image/jpeg", "image/png", "image/webp", "image/avif"],
+      staticDir: "uploads",
     });
   });
 
