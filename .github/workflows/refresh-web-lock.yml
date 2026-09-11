@@ -1,4 +1,4 @@
-name: Refresh web lockfile
+name: Finalize migration metadata
 
 on:
   push:
@@ -9,67 +9,103 @@ permissions:
   contents: write
 
 jobs:
-  refresh-lock:
+  finalize:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           ref: chore/groq-provider-migration
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      - name: Use current npm CLI
-        run: npm install --global npm@12.0.2
-      - name: Synchronize release metadata and gate baselines
+
+      - name: Synchronize Groq and Dokploy references
         shell: python
         run: |
           from pathlib import Path
 
           replacements = {
-              ".env.example": [("APP_VERSION=0.1.26", "APP_VERSION=0.1.27")],
-              "apps/api/pyproject.toml": [("version = \"0.1.26\"", "version = \"0.1.27\"")],
-              "apps/api/app/core/config.py": [("app_version: str = \"0.1.26\"", "app_version: str = \"0.1.27\"")],
-              "apps/web/app/api/health/route.ts": [("version: \"0.1.26\"", "version: \"0.1.27\"")],
-              "infra/docker/docker-compose.local.yml": [("APP_VERSION: 0.1.26", "APP_VERSION: 0.1.27")],
-              "infra/docker/docker-compose.production.yml": [("APP_VERSION: 0.1.26", "APP_VERSION: 0.1.27")],
-              "infra/coolify/.env.production.example": [("APP_VERSION=0.1.26", "APP_VERSION=0.1.27")],
-              "PRODUCT.md": [("Version: 0.1.26", "Version: 0.1.27")],
-              "DESIGN.md": [("Version: 0.1.26", "Version: 0.1.27")],
+              "README.md": [
+                  ("OpenRouter AI draft generation", "Groq/Qwen 3.8 AI draft generation"),
+                  ("infra/coolify   Coolify deployment mapping and checklist", "infra/dokploy   Dokploy deployment mapping and checklist"),
+                  ("infra/coolify/deployment-checklist.md", "infra/dokploy/deployment-checklist.md"),
+              ],
+              "infra/docker/README.md": [
+                  ("## Production/Coolify", "## Production/Dokploy"),
+                  ("infra/coolify/.env.production.example", "infra/dokploy/.env.production.example"),
+                  ("infra/coolify/deployment-checklist.md", "infra/dokploy/deployment-checklist.md"),
+              ],
+              "docs/adr/0001-architecture-baseline.md": [
+                  ("OpenRouter is called only from the backend through a provider abstraction.", "Groq is called only from the backend through a provider abstraction; the pinned MVP model is `qwen/qwen3.8-27b`."),
+                  ("Deployment target is Docker + Coolify.", "Deployment target is Docker Compose + Dokploy."),
+              ],
+              "docs/adr/0002-auth-rbac-foundation.md": [
+                  ("OpenRouter keys", "Groq keys"),
+              ],
+              "docs/security/credentials.md": [
+                  ("OpenRouter API key", "Groq API key"),
+                  ("sent to OpenRouter", "sent to Groq"),
+              ],
+              "docs/operations/incident-runbook.md": [
+                  ("marketplace/OpenRouter credentials", "marketplace/Groq credentials"),
+              ],
+              "docs/product/public-site-master-brief.md": [
+                  ("OpenRouter is backend-only.", "Groq/Qwen 3.8 is backend-only; the browser never receives the provider key."),
+              ],
+              "apps/web/app/app/ai-assistant/page.tsx": [
+                  ("backend-only OpenRouter", "backend-only Groq/Qwen 3.8"),
+                  (">OpenRouter backend-only<", ">Groq backend-only<"),
+              ],
+              "apps/web/tests/unit/ai-assistant-contract.test.ts": [
+                  ('provider: "openrouter"', 'provider: "groq"'),
+                  ('model: "openai/gpt-5.2"', 'model: "qwen/qwen3.8-27b"'),
+                  ('toBe("openrouter")', 'toBe("groq")'),
+              ],
+              "apps/web/tests/unit/ai-assistant-workspace.test.tsx": [
+                  ('provider: "openrouter"', 'provider: "groq"'),
+                  ('model: "openai/gpt-5.2"', 'model: "qwen/qwen3.8-27b"'),
+              ],
+              "apps/web/e2e/helpers/ai-assistant-api.ts": [
+                  ('provider: "openrouter"', 'provider: "groq"'),
+                  ('model: "openai/gpt-5.2"', 'model: "qwen/qwen3.8-27b"'),
+              ],
+              "PRODUCT.md": [
+                  ("- OpenRouter: backend-only provider abstraction.", "- Groq: backend-only provider; MVP model is `qwen/qwen3.8-27b` with strict structured output and reasoning disabled for reply generation."),
+                  ("backend-only OpenRouter flow", "backend-only Groq/Qwen 3.8 flow"),
+                  ("OpenRouter API key", "Groq API key"),
+              ],
+              "docs/qa/sprint-9-release-report.md": [
+                  ("Coolify deployment checklist", "Dokploy deployment checklist"),
+              ],
               "scripts/check_integrity.py": [
-                  ("EXPECTED_VERSION = \"0.1.26\"", "EXPECTED_VERSION = \"0.1.27\""),
-                  ("(\"dependencies\", \"next\"): \"16.2.10\"", "(\"dependencies\", \"next\"): \"16.3.4\""),
-                  ("(\"devDependencies\", \"eslint-config-next\"): \"16.2.10\"", "(\"devDependencies\", \"eslint-config-next\"): \"16.3.4\""),
-                  ("(\"devDependencies\", \"vitest\"): \"4.1.10\"", "(\"devDependencies\", \"vitest\"): \"4.1.11\""),
-                  ("(\"overrides\", \"postcss\"): \"8.5.10\"", "(\"overrides\", \"postcss\"): \"8.5.28\""),
-                  ("& $Npm audit --audit-level=high", "& $Npm audit --omit=dev --audit-level=high"),
-                  ("npm audit --audit-level=high", "npm audit --omit=dev --audit-level=high"),
+                  ('coolify_env = (ROOT / "infra" / "coolify" / ".env.production.example").read_text(encoding="utf-8")', 'dokploy_env = (ROOT / "infra" / "dokploy" / ".env.production.example").read_text(encoding="utf-8")'),
+                  ('("Coolify env example", coolify_env)', '("Dokploy env example", dokploy_env)'),
+                  ('ROOT / "infra" / "coolify" / "deployment-checklist.md"', 'ROOT / "infra" / "dokploy" / "deployment-checklist.md"'),
               ],
           }
+
+          changed = []
           for filename, pairs in replacements.items():
               path = Path(filename)
               text = path.read_text(encoding="utf-8")
+              original = text
               for old, new in pairs:
-                  if old not in text:
-                      raise SystemExit(f"Expected token not found in {filename}: {old}")
                   text = text.replace(old, new)
-              path.write_text(text, encoding="utf-8")
-      - name: Refresh lockfile from pinned package manifest
-        working-directory: apps/web
-        run: npm install --package-lock-only --ignore-scripts
-      - name: Verify production dependency audit
-        working-directory: apps/web
-        run: npm audit --omit=dev --audit-level=high
-      - name: Commit generated synchronization
+              if text != original:
+                  path.write_text(text, encoding="utf-8")
+                  changed.append(filename)
+
+          print("Updated:", ", ".join(changed) if changed else "none")
+
+      - name: Verify repository integrity after synchronization
+        run: python scripts/check_integrity.py
+
+      - name: Commit synchronized references
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .env.example apps/api/pyproject.toml apps/api/app/core/config.py apps/web/app/api/health/route.ts apps/web/package-lock.json infra/docker/docker-compose.local.yml infra/docker/docker-compose.production.yml infra/coolify/.env.production.example PRODUCT.md DESIGN.md scripts/check_integrity.py
+          git add README.md PRODUCT.md infra/docker/README.md docs/adr/0001-architecture-baseline.md docs/adr/0002-auth-rbac-foundation.md docs/security/credentials.md docs/operations/incident-runbook.md docs/product/public-site-master-brief.md docs/qa/sprint-9-release-report.md apps/web/app/app/ai-assistant/page.tsx apps/web/tests/unit/ai-assistant-contract.test.ts apps/web/tests/unit/ai-assistant-workspace.test.tsx apps/web/e2e/helpers/ai-assistant-api.ts scripts/check_integrity.py
           if git diff --cached --quiet; then
             echo "No synchronization changes to commit."
             exit 0
           fi
-          git commit -m "chore: synchronize 0.1.27 dependency baseline"
+          git commit -m "chore: align Groq and Dokploy source of truth"
           git push origin HEAD:chore/groq-provider-migration
