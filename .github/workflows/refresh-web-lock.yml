@@ -21,20 +21,53 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - name: Synchronize release metadata and gate baselines
+        shell: python
+        run: |
+          from pathlib import Path
+
+          replacements = {
+              ".env.example": [("APP_VERSION=0.1.26", "APP_VERSION=0.1.27")],
+              "apps/api/pyproject.toml": [("version = \"0.1.26\"", "version = \"0.1.27\"")],
+              "apps/api/app/core/config.py": [("app_version: str = \"0.1.26\"", "app_version: str = \"0.1.27\"")],
+              "apps/web/app/api/health/route.ts": [("version: \"0.1.26\"", "version: \"0.1.27\"")],
+              "infra/docker/docker-compose.local.yml": [("APP_VERSION: 0.1.26", "APP_VERSION: 0.1.27")],
+              "infra/docker/docker-compose.production.yml": [("APP_VERSION: 0.1.26", "APP_VERSION: 0.1.27")],
+              "infra/coolify/.env.production.example": [("APP_VERSION=0.1.26", "APP_VERSION=0.1.27")],
+              "PRODUCT.md": [("Version: 0.1.26", "Version: 0.1.27")],
+              "DESIGN.md": [("Version: 0.1.26", "Version: 0.1.27")],
+              "scripts/check_integrity.py": [
+                  ("EXPECTED_VERSION = \"0.1.26\"", "EXPECTED_VERSION = \"0.1.27\""),
+                  ("(\"dependencies\", \"next\"): \"16.2.10\"", "(\"dependencies\", \"next\"): \"16.3.4\""),
+                  ("(\"devDependencies\", \"eslint-config-next\"): \"16.2.10\"", "(\"devDependencies\", \"eslint-config-next\"): \"16.3.4\""),
+                  ("(\"devDependencies\", \"vitest\"): \"4.1.10\"", "(\"devDependencies\", \"vitest\"): \"4.1.11\""),
+                  ("(\"overrides\", \"postcss\"): \"8.5.10\"", "(\"overrides\", \"postcss\"): \"8.5.28\""),
+                  ("& $Npm audit --audit-level=high", "& $Npm audit --omit=dev --audit-level=high"),
+                  ("npm audit --audit-level=high", "npm audit --omit=dev --audit-level=high"),
+              ],
+          }
+          for filename, pairs in replacements.items():
+              path = Path(filename)
+              text = path.read_text(encoding="utf-8")
+              for old, new in pairs:
+                  if old not in text:
+                      raise SystemExit(f"Expected token not found in {filename}: {old}")
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
       - name: Refresh lockfile from pinned package manifest
         working-directory: apps/web
         run: npm install --package-lock-only --ignore-scripts
       - name: Verify production dependency audit
         working-directory: apps/web
         run: npm audit --omit=dev --audit-level=high
-      - name: Commit generated lockfile
+      - name: Commit generated synchronization
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/web/package-lock.json
+          git add .env.example apps/api/pyproject.toml apps/api/app/core/config.py apps/web/app/api/health/route.ts apps/web/package-lock.json infra/docker/docker-compose.local.yml infra/docker/docker-compose.production.yml infra/coolify/.env.production.example PRODUCT.md DESIGN.md scripts/check_integrity.py
           if git diff --cached --quiet; then
-            echo "No lockfile changes to commit."
+            echo "No synchronization changes to commit."
             exit 0
           fi
-          git commit -m "chore: refresh secure frontend lockfile"
+          git commit -m "chore: synchronize 0.1.27 dependency baseline"
           git push origin HEAD:chore/groq-provider-migration
