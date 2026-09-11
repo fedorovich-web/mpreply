@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from typing import Protocol, cast
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from fastapi import HTTPException, Request, status
 from redis.asyncio import Redis
@@ -10,14 +10,37 @@ from redis.exceptions import RedisError
 from app.core.config import get_settings
 
 
-class _RedisFromUrl(Protocol):
-    def __call__(self, url: str, *, decode_responses: bool) -> Redis: ...
-
-
 def _redis_from_url(url: str) -> Redis:
-    """Adapt redis-py's partially typed classmethod to our concrete contract."""
-    factory = cast(_RedisFromUrl, Redis.from_url)
-    return factory(url, decode_responses=True)
+    parsed = urlsplit(url)
+    if parsed.scheme not in {"redis", "rediss"}:
+        raise ValueError("REDIS_URL must use redis:// or rediss://")
+    if parsed.hostname is None:
+        raise ValueError("REDIS_URL must include a host")
+
+    query = parse_qs(parsed.query, strict_parsing=True) if parsed.query else {}
+    unsupported = set(query) - {"db"}
+    if unsupported:
+        names = ", ".join(sorted(unsupported))
+        raise ValueError(f"Unsupported REDIS_URL query parameters: {names}")
+
+    path_db = parsed.path.removeprefix("/")
+    db_value = query.get("db", [path_db or "0"])[0]
+    try:
+        db = int(db_value)
+    except ValueError as exc:
+        raise ValueError("REDIS_URL database must be an integer") from exc
+    if db < 0:
+        raise ValueError("REDIS_URL database must be non-negative")
+
+    return Redis(
+        host=parsed.hostname,
+        port=parsed.port or 6379,
+        db=db,
+        username=unquote(parsed.username) if parsed.username else None,
+        password=unquote(parsed.password) if parsed.password else None,
+        ssl=parsed.scheme == "rediss",
+        decode_responses=True,
+    )
 
 
 def _rate_limit_key(*, scope: str, identifier: str) -> str:
