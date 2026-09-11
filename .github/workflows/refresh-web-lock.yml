@@ -21,6 +21,8 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - name: Use current npm CLI
+        run: npm install --global npm@12.0.2
       - name: Synchronize release metadata and gate baselines
         shell: python
         run: |
