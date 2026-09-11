@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import random
 import time
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import cast
 
 import httpx
+
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_MAX_RETRY_DELAY_SECONDS = 8.0
 
 
 @dataclass(frozen=True)
@@ -40,11 +45,15 @@ class GroqProvider:
         api_key: str,
         base_url: str = "https://api.groq.com/openai/v1",
         timeout_seconds: float = 45.0,
+        max_attempts: int = 3,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
+        if not 1 <= max_attempts <= 5:
+            raise ValueError("max_attempts must be between 1 and 5")
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
+        self.max_attempts = max_attempts
         self.transport = transport
 
     async def complete(
@@ -67,16 +76,26 @@ class GroqProvider:
         }
 
         async with httpx.AsyncClient(timeout=self.timeout_seconds, transport=self.transport) as client:
-            try:
-                response = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=self._headers(),
-                    json=payload,
-                )
-            except httpx.TimeoutException as exc:
-                raise GroqProviderError("Groq request timed out", error_code="groq_timeout") from exc
-            except httpx.HTTPError as exc:
-                raise GroqProviderError("Groq network error", error_code="groq_network_error") from exc
+            response: httpx.Response | None = None
+            for attempt in range(1, self.max_attempts + 1):
+                try:
+                    response = await client.post(
+                        f"{self.base_url}/chat/completions",
+                        headers=self._headers(),
+                        json=payload,
+                    )
+                except httpx.TimeoutException as exc:
+                    raise GroqProviderError("Groq request timed out", error_code="groq_timeout") from exc
+                except httpx.HTTPError as exc:
+                    raise GroqProviderError("Groq network error", error_code="groq_network_error") from exc
+
+                if response.status_code not in _RETRYABLE_STATUS_CODES or attempt >= self.max_attempts:
+                    break
+
+                await asyncio.sleep(self._retry_delay_seconds(response=response, attempt=attempt))
+
+        if response is None:  # pragma: no cover - defensive invariant
+            raise GroqProviderError("Groq request did not produce a response", error_code="groq_network_error")
 
         latency_ms = int((time.perf_counter() - started_at) * 1000)
         data = self._safe_json(response)
@@ -124,6 +143,21 @@ class GroqProvider:
                 },
             },
         }
+
+    @staticmethod
+    def _retry_delay_seconds(*, response: httpx.Response, attempt: int) -> float:
+        retry_after = response.headers.get("Retry-After")
+        if retry_after is not None:
+            try:
+                parsed = float(retry_after)
+            except ValueError:
+                parsed = -1.0
+            if parsed >= 0:
+                return min(parsed, _MAX_RETRY_DELAY_SECONDS)
+
+        exponential = 0.5 * (2 ** (attempt - 1))
+        jitter = random.uniform(0.0, 0.25)
+        return min(exponential + jitter, _MAX_RETRY_DELAY_SECONDS)
 
     @staticmethod
     def _safe_json(response: httpx.Response) -> dict[str, object]:
