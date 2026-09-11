@@ -45,7 +45,10 @@ ignore = ["B008"]
 
 [tool.ruff.lint.per-file-ignores]
 "app/ai/prompt_strategy.py" = ["RUF001"]
+"app/api/auth.py" = ["RUF001"]
 "app/safety/safety_gate.py" = ["RUF001"]
+"app/services/transactional_email.py" = ["RUF001"]
+"app/tests/test_auth_email_flows.py" = ["RUF001"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
