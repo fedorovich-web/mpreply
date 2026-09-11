@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from typing import cast
 
 import httpx
 import pytest
@@ -14,8 +15,9 @@ async def test_complete_uses_non_reasoning_strict_json_schema() -> None:
     captured_payload: dict[str, object] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
-        payload = json.loads(request.content.decode("utf-8"))
-        captured_payload.update(payload)
+        payload: object = json.loads(request.content.decode("utf-8"))
+        assert isinstance(payload, dict)
+        captured_payload.update(cast(dict[str, object], payload))
         return httpx.Response(
             200,
             request=request,
@@ -60,16 +62,22 @@ async def test_complete_uses_non_reasoning_strict_json_schema() -> None:
     assert completion.text
     assert captured_payload["max_completion_tokens"] == 600
     assert captured_payload["reasoning_effort"] == "none"
-    response_format = captured_payload["response_format"]
-    assert isinstance(response_format, dict)
+    response_format_value = captured_payload["response_format"]
+    assert isinstance(response_format_value, dict)
+    response_format = cast(dict[str, object], response_format_value)
     assert response_format["type"] == "json_schema"
-    json_schema = response_format["json_schema"]
-    assert isinstance(json_schema, dict)
+    json_schema_value = response_format["json_schema"]
+    assert isinstance(json_schema_value, dict)
+    json_schema = cast(dict[str, object], json_schema_value)
     assert json_schema["strict"] is True
-    schema = json_schema["schema"]
-    assert isinstance(schema, dict)
+    schema_value = json_schema["schema"]
+    assert isinstance(schema_value, dict)
+    schema = cast(dict[str, object], schema_value)
     assert schema["additionalProperties"] is False
-    assert set(schema["required"]) == {"answer", "confidence_score", "safety_flags"}
+    required_value = schema["required"]
+    assert isinstance(required_value, list)
+    required = cast(list[object], required_value)
+    assert {str(item) for item in required} == {"answer", "confidence_score", "safety_flags"}
 
 
 def test_extract_usage_from_groq_payload() -> None:
