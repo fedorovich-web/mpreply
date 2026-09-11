@@ -1,5 +1,6 @@
 from app.models.ai_draft import AIDraft
 from app.models.audit_log import AuditLog
+from app.models.auth_session import AuthSession
 from app.models.auth_token import AuthToken
 from app.models.automation_rule import AutomationRule
 from app.models.billing_plan import BillingPlan
@@ -17,6 +18,7 @@ from app.models.user import User
 __all__ = [
     "AIDraft",
     "AuditLog",
+    "AuthSession",
     "AuthToken",
     "AutomationRule",
     "BillingPlan",
