@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ApiError, apiRequest } from "../../lib/api/client";
 import { messageResponseSchema } from "../../lib/api/auth-schemas";
+import { AuthShell } from "./AuthShell";
 
 type AuthEmailMode = "forgot-password" | "resend-verification" | "reset-password" | "verify-email";
 
@@ -166,15 +167,14 @@ function VerifyEmailAction() {
 
 function AuthCard({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (
-    <main className="auth-page">
-      <section className="auth-card" aria-labelledby="auth-email-title">
-        <p className="eyebrow">MPReply account</p>
-        <h1 id="auth-email-title">{title}</h1>
-        <p className="auth-description">{description}</p>
-        <div className="auth-form">{children}</div>
-        <p className="auth-footer"><Link href="/auth/login">Вернуться ко входу</Link></p>
-      </section>
-    </main>
+    <AuthShell
+      description={description}
+      eyebrow="MPReply account"
+      footer={<p className="auth-footer"><Link href="/auth/login">Вернуться ко входу</Link></p>}
+      title={title}
+    >
+      <div className="auth-form">{children}</div>
+    </AuthShell>
   );
 }
 
