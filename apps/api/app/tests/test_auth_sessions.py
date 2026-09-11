@@ -16,6 +16,10 @@ from app.services.session_service import SessionError, SessionService
 SessionFixture = tuple[AsyncSession, User]
 
 
+def _utc(value: datetime) -> datetime:
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
 @pytest.fixture
 async def session_fixture() -> AsyncIterator[SessionFixture]:
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
@@ -86,7 +90,8 @@ async def test_refresh_rotation_revokes_old_token_and_rejects_replay(
         .all()
     )
     assert len(sessions) == 2
-    assert sessions[0].revoked_at == now
+    assert sessions[0].revoked_at is not None
+    assert _utc(sessions[0].revoked_at) == now
     assert sessions[1].revoked_at is None
 
     with pytest.raises(SessionError, match="invalid_refresh_session"):
