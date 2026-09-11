@@ -163,7 +163,7 @@ def check_versions_and_frontend_security_baseline() -> None:
     expected_dependencies = {
         ("dependencies", "next"): "16.3.4",
         ("devDependencies", "eslint-config-next"): "16.3.4",
-        ("devDependencies", "vitest"): "4.1.11",
+        ("devDependencies", "vitest"): "5.0.0",
         ("devDependencies", "@testing-library/react"): "16.3.2",
         ("devDependencies", "@testing-library/jest-dom"): "6.9.1",
         ("devDependencies", "jsdom"): "29.1.1",
