@@ -79,6 +79,7 @@ jobs:
                   ('coolify_env = (ROOT / "infra" / "coolify" / ".env.production.example").read_text(encoding="utf-8")', 'dokploy_env = (ROOT / "infra" / "dokploy" / ".env.production.example").read_text(encoding="utf-8")'),
                   ('("Coolify env example", coolify_env)', '("Dokploy env example", dokploy_env)'),
                   ('ROOT / "infra" / "coolify" / "deployment-checklist.md"', 'ROOT / "infra" / "dokploy" / "deployment-checklist.md"'),
+                  ('"Frontend security audit"', '"Frontend production dependency security audit"'),
               ],
           }
 
