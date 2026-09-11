@@ -5,7 +5,7 @@
 ### SEV-1
 
 - cross-tenant data exposure;
-- leaked marketplace/OpenRouter credentials;
+- leaked marketplace/Groq credentials;
 - duplicate or uncontrolled automatic replies at scale;
 - inability to stop outbound sends;
 - destructive data loss.

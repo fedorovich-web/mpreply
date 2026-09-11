@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
-EXPECTED_VERSION = "0.1.26"
+EXPECTED_VERSION = "0.1.27"
 EXPECTED_ALEMBIC_HEAD = "20260710_0009"
 
 ERRORS: list[str] = []
@@ -137,7 +137,7 @@ def check_versions_and_frontend_security_baseline() -> None:
     env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
     local_compose = (ROOT / "infra" / "docker" / "docker-compose.local.yml").read_text(encoding="utf-8")
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
-    coolify_env = (ROOT / "infra" / "coolify" / ".env.production.example").read_text(encoding="utf-8")
+    dokploy_env = (ROOT / "infra" / "dokploy" / ".env.production.example").read_text(encoding="utf-8")
     web_health = (WEB / "app" / "api" / "health" / "route.ts").read_text(encoding="utf-8")
 
     if package.get("version") != EXPECTED_VERSION:
@@ -153,7 +153,7 @@ def check_versions_and_frontend_security_baseline() -> None:
     for label, content in (
         ("local Compose", local_compose),
         ("production Compose", production_compose),
-        ("Coolify env example", coolify_env),
+        ("Dokploy env example", dokploy_env),
     ):
         if f"APP_VERSION: {EXPECTED_VERSION}" not in content and f"APP_VERSION={EXPECTED_VERSION}" not in content:
             fail(f"{label} APP_VERSION != {EXPECTED_VERSION}")
@@ -161,19 +161,20 @@ def check_versions_and_frontend_security_baseline() -> None:
         fail(f"Web health route version != {EXPECTED_VERSION}")
 
     expected_dependencies = {
-        ("dependencies", "next"): "16.2.10",
-        ("devDependencies", "eslint-config-next"): "16.2.10",
-        ("devDependencies", "vitest"): "4.1.10",
+        ("dependencies", "next"): "16.3.4",
+        ("devDependencies", "eslint-config-next"): "16.3.4",
+        ("devDependencies", "vitest"): "5.0.0",
         ("devDependencies", "@testing-library/react"): "16.3.2",
         ("devDependencies", "@testing-library/jest-dom"): "6.9.1",
         ("devDependencies", "jsdom"): "29.1.1",
         ("devDependencies", "impeccable"): "3.2.1",
         ("devDependencies", "@playwright/test"): "1.61.1",
+        ("devDependencies", "playwright-core"): "1.61.1",
         ("devDependencies", "@axe-core/playwright"): "4.12.1",
         ("devDependencies", "@lhci/cli"): "0.15.1",
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
-        ("overrides", "postcss"): "8.5.10",
+        ("overrides", "postcss"): "8.5.28",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
     }
@@ -209,8 +210,8 @@ def check_release_gate_contract() -> None:
         "--pythonpath $VenvPython app",
         "Backend environment smoke test",
         "Backend dependency consistency",
-        "Frontend security audit",
-        "& $Npm audit --audit-level=high",
+        "Frontend production dependency security audit",
+        "& $Npm audit --omit=dev --audit-level=high",
         "Frontend unit tests",
         "& $Npm run test:unit",
         "Design token tests",
@@ -237,7 +238,7 @@ def check_release_gate_contract() -> None:
 
     if '--pythonpath "$(command -v python)" app' not in workflow:
         fail("GitHub quality gate Pyright is not bound to the installed Python interpreter")
-    if "npm audit --audit-level=high" not in workflow:
+    if "npm audit --omit=dev --audit-level=high" not in workflow:
         fail("GitHub quality gate does not enforce frontend high/critical audit threshold")
     for token in [
         "npm run test:unit",
@@ -291,7 +292,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "operations" / "backup-restore.md",
         ROOT / "docs" / "operations" / "incident-runbook.md",
         ROOT / "docs" / "operations" / "rollback.md",
-        ROOT / "infra" / "coolify" / "deployment-checklist.md",
+        ROOT / "infra" / "dokploy" / "deployment-checklist.md",
         ROOT / "PRODUCT.md",
         ROOT / "DESIGN.md",
         ROOT / "AGENTS.md",

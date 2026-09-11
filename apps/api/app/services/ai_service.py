@@ -17,7 +17,7 @@ from app.models.customer_message import CustomerMessage
 from app.models.product import Product
 from app.models.usage_event import UsageEvent
 from app.models.user import User
-from app.providers.openrouter import OpenRouterProvider, OpenRouterProviderError
+from app.providers.groq import GroqProvider, GroqProviderError
 from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
 from app.services.audit_service import AuditService
 from app.services.message_service import MessageService
@@ -50,7 +50,6 @@ class AIService:
         actor: User,
         message_id: UUID,
         tone: ResponseTone = "neutral",
-        model: str | None = None,
         temperature: float = 0.3,
         max_tokens: int = 600,
         brand_rules: str | None = None,
@@ -78,37 +77,21 @@ class AIService:
             brand_rules=brand_rules,
             knowledge_base=knowledge_base,
         )
-        provider = OpenRouterProvider(
-            api_key=settings.openrouter_api_key.get_secret_value(),
-            base_url=settings.openrouter_base_url,
-            site_url=settings.public_site_url,
-            app_title=settings.app_name,
-            timeout_seconds=settings.openrouter_timeout_seconds,
+        provider = GroqProvider(
+            api_key=settings.groq_api_key.get_secret_value(),
+            base_url=settings.groq_base_url,
+            timeout_seconds=settings.groq_timeout_seconds,
         )
-        selected_model = model or settings.openrouter_default_model
         try:
             completion = await provider.complete(
-                model=selected_model,
+                model=settings.groq_default_model,
                 messages=prompt.messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-        except OpenRouterProviderError as exc:
-            if selected_model != settings.openrouter_fallback_model and exc.error_code in {
-                "openrouter_rate_limited",
-                "openrouter_unavailable",
-                "openrouter_timeout",
-                "openrouter_network_error",
-            }:
-                completion = await provider.complete(
-                    model=settings.openrouter_fallback_model,
-                    messages=prompt.messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-            else:
-                await self._write_failure_audit(actor=actor, message=message, error_code=exc.error_code)
-                raise bad_request(str(exc)) from exc
+        except GroqProviderError as exc:
+            await self._write_failure_audit(actor=actor, message=message, error_code=exc.error_code)
+            raise bad_request(str(exc)) from exc
 
         parsed = self._parse_model_output(completion.text)
         safety = self.safety_gate.evaluate(
@@ -125,7 +108,7 @@ class AIService:
         draft = AIDraft(
             organization_id=message.organization_id,
             message_id=message.id,
-            provider="openrouter",
+            provider="groq",
             model=completion.model,
             prompt_version=prompt.version,
             prompt_input_hash=prompt.input_hash,
@@ -153,7 +136,7 @@ class AIService:
             actor_user_id=actor.id,
             entity_id=str(message.id),
             metadata={
-                "provider": "openrouter",
+                "provider": "groq",
                 "model": completion.model,
                 "prompt_version": prompt.version,
                 "latency_ms": completion.latency_ms,
@@ -233,7 +216,7 @@ class AIService:
             organization_id=message.organization_id,
             actor_user_id=actor.id,
             entity_id=str(message.id),
-            metadata={"provider": "openrouter", "error_code": error_code},
+            metadata={"provider": "groq", "error_code": error_code},
         )
 
     @staticmethod

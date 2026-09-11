@@ -1,7 +1,7 @@
 # Respio — Design System Direction
 
 Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.26
+Version: 0.1.27
 
 ## Design intent
 

@@ -15,7 +15,7 @@ def _production_settings(**overrides: object) -> Settings:
         "public_site_url": "https://respio.ru",
         "auth_secret_key": SecretStr("a" * 64),
         "credentials_encryption_key": SecretStr(Fernet.generate_key().decode("utf-8")),
-        "openrouter_api_key": SecretStr("sk-or-v1-production-test-key"),
+        "groq_api_key": SecretStr("gsk_production_test_key_123456789"),
         "auth_cookie_secure": True,
         "auth_cookie_samesite": "lax",
         "cors_allowed_origins": ["https://app.respio.ru", "https://respio.ru"],
@@ -35,6 +35,11 @@ def test_valid_production_settings_pass() -> None:
 def test_production_rejects_placeholder_secret() -> None:
     with pytest.raises(ValidationError, match="AUTH_SECRET_KEY"):
         _production_settings(auth_secret_key=SecretStr("replace-with-local-dev-secret"))
+
+
+def test_production_rejects_placeholder_groq_key() -> None:
+    with pytest.raises(ValidationError, match="GROQ_API_KEY"):
+        _production_settings(groq_api_key=SecretStr("replace-only-in-real-env"))
 
 
 def test_production_rejects_insecure_cookie() -> None:

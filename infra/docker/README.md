@@ -41,14 +41,14 @@ Remove local PostgreSQL and Redis volumes only when intentional:
 docker compose -f infra\docker\docker-compose.local.yml down -v
 ```
 
-## Production/Coolify
+## Production/Dokploy
 
 `docker-compose.production.yml` contains only application services and expects PostgreSQL and Redis to be provisioned separately. Required secrets and environment values are validated explicitly.
 
 Use:
 
-- `infra/coolify/.env.production.example` as a variable inventory, not as a real secret file;
-- `infra/coolify/deployment-checklist.md` for deployment order and blockers;
+- `infra/dokploy/.env.production.example` as a variable inventory, not as a real secret file;
+- `infra/dokploy/deployment-checklist.md` for deployment order and blockers;
 - `docs/operations/backup-restore.md` before launch;
 - `docs/operations/rollback.md` before the first production migration;
 - `docs/operations/incident-runbook.md` before enabling automatic outbound replies.

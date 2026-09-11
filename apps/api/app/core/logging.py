@@ -8,7 +8,7 @@ import structlog
 SECRET_PATTERNS = [
     re.compile(r"(Authorization:\s*Bearer\s+)[A-Za-z0-9._\-]+", re.IGNORECASE),
     re.compile(r"(api[_-]?key['\"\s:=]+)[A-Za-z0-9._\-]+", re.IGNORECASE),
-    re.compile(r"(OPENROUTER_API_KEY=)[^\s]+", re.IGNORECASE),
+    re.compile(r"(GROQ_API_KEY=)[^\s]+", re.IGNORECASE),
     re.compile(r"(CREDENTIALS_ENCRYPTION_KEY=)[^\s]+", re.IGNORECASE),
 ]
 

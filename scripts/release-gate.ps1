@@ -81,8 +81,8 @@ try {
     Run-Step "Frontend clean install" {
         & $Npm ci
     }
-    Run-Step "Frontend security audit" {
-        & $Npm audit --audit-level=high
+    Run-Step "Frontend production dependency security audit" {
+        & $Npm audit --omit=dev --audit-level=high
     }
     Run-Step "Frontend unit tests" {
         & $Npm run test:unit

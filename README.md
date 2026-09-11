@@ -10,7 +10,7 @@ Implemented through Sprint 11:
 - encrypted marketplace credentials;
 - Wildberries synchronization and reply execution foundation;
 - unified Inbox API and dashboard UI;
-- OpenRouter AI draft generation;
+- Groq/Qwen 3.8 AI draft generation;
 - deterministic SafetyGate;
 - automation rules engine;
 - Dramatiq/Redis worker-backed auto-reply execution;
@@ -29,7 +29,7 @@ apps/web        Next.js App Router public site and SaaS frontend
 apps/worker     Dramatiq worker image
 apps/scheduler  Placeholder only; intentionally excluded from deployment
 infra/docker    Local and production Compose manifests
-infra/coolify   Coolify deployment mapping and checklist
+infra/dokploy   Dokploy deployment mapping and checklist
 docs            ADRs, security, QA, legal and operations runbooks
 scripts         Integrity, release and container gates
 ```
@@ -84,7 +84,7 @@ docker compose -f infra\docker\docker-compose.local.yml down
 Production Compose expects PostgreSQL and Redis as external stateful services and requires explicit secrets and origin/host configuration. See:
 
 - `infra/docker/docker-compose.production.yml`
-- `infra/coolify/deployment-checklist.md`
+- `infra/dokploy/deployment-checklist.md`
 - `docs/operations/backup-restore.md`
 - `docs/operations/rollback.md`
 - `docs/operations/incident-runbook.md`
