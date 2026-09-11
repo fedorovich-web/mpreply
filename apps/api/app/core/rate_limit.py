@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from typing import Protocol, cast
 
 from fastapi import HTTPException, Request, status
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
 
 from app.core.config import get_settings
+
+
+class _RedisFromUrl(Protocol):
+    def __call__(self, url: str, *, decode_responses: bool) -> Redis: ...
+
+
+def _redis_from_url(url: str) -> Redis:
+    """Adapt redis-py's partially typed classmethod to our concrete contract."""
+    factory = cast(_RedisFromUrl, Redis.from_url)
+    return factory(url, decode_responses=True)
 
 
 def _rate_limit_key(*, scope: str, identifier: str) -> str:
@@ -28,7 +39,7 @@ async def enforce_auth_rate_limit(
 
     client_host = request.client.host if request.client else "unknown"
     key = _rate_limit_key(scope=scope, identifier=f"{client_host}:{identifier}")
-    redis = Redis.from_url(settings.redis_url.get_secret_value(), decode_responses=True)
+    redis = _redis_from_url(settings.redis_url.get_secret_value())
     try:
         count = await redis.incr(key)
         if count == 1:
