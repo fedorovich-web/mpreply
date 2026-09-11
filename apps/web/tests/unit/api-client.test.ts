@@ -49,6 +49,26 @@ describe("apiRequest", () => {
     expect(new Headers(request?.headers).get("content-type")).toBe("application/json");
   });
 
+  it("renews an expired access session once and retries the original request", async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "expired" }), { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ message: "Session refreshed" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await apiRequest("/api/protected", z.object({ ok: z.boolean() }));
+
+    expect(result).toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1]?.[0]).toBe("http://localhost:8000/api/auth/refresh");
+    expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+    });
+    expect(fetchMock.mock.calls[2]?.[0]).toBe("http://localhost:8000/api/protected");
+  });
+
   it("preserves API status and request ID on backend errors", async () => {
     vi.stubGlobal(
       "fetch",
