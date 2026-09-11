@@ -15,7 +15,7 @@ Jobs: keep queues attended, answer faster, preserve brand voice, auto-send when 
 
 ## Product truth
 
-Respio is auto-first; semi-auto is optional. Wildberries is the current MVP execution path. Ozon/Yandex Market/Avito must not be called production-ready until implemented and runtime-verified. OpenRouter is backend-only. Credentials are backend-only and encrypted. SafetyGate, rules, idempotency, retries and auditability are real mechanisms, not slogans.
+Respio is auto-first; semi-auto is optional. Wildberries is the current MVP execution path. Ozon/Yandex Market/Avito must not be called production-ready until implemented and runtime-verified. Groq/Qwen 3.8 is backend-only; the browser never receives the provider key. Credentials are backend-only and encrypted. SafetyGate, rules, idempotency, retries and auditability are real mechanisms, not slogans.
 
 ## Route architecture
 

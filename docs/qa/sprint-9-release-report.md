@@ -40,4 +40,4 @@ Docker image builds and live Compose startup were not executed in this build env
 - local and production Compose manifests;
 - API and web readiness checks.
 
-A Sprint 9 deployment must not be called staging-verified or production-ready until `scripts/container-gate.ps1` and the Coolify deployment checklist pass in an environment with Docker and the target infrastructure.
+A Sprint 9 deployment must not be called staging-verified or production-ready until `scripts/container-gate.ps1` and the Dokploy deployment checklist pass in an environment with Docker and the target infrastructure.
