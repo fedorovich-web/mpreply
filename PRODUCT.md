@@ -19,7 +19,7 @@ Respio is a multi-tenant SaaS for marketplace sellers, operators and agencies. I
 
 - Wildberries: current MVP adapter and real execution path.
 - Ozon, Yandex Market and Avito: do not imply production-ready sending until official contracts are verified, adapters implemented and runtime-tested.
-- OpenRouter: backend-only provider abstraction.
+- Groq: backend-only provider; MVP model is `qwen/qwen3.8-27b` with strict structured output and reasoning disabled for reply generation.
 - Existing layers: auth, organizations, RBAC, integrations, Inbox, AI drafts, SafetyGate, automation rules, worker queue, auto replies, manual review, analytics, billing foundation, admin and Docker deployment foundation.
 
 ## Primary audiences
@@ -108,9 +108,9 @@ Approved IA/copy hierarchy, semantic HTML, correct metadata/canonical, responsiv
 ## Product dashboard progress · Live AI Assistant · 0.1.20
 
 - AI Assistant is now a real tenant-scoped workspace over the existing `/api/messages` and `/api/ai/drafts` contracts instead of a static Sprint-era information screen.
-- Owner/admin/manager memberships can generate drafts through the backend-only OpenRouter flow; viewer memberships remain read-only and can inspect persisted draft history.
+- Owner/admin/manager memberships can generate drafts through the backend-only Groq/Qwen 3.8 flow; viewer memberships remain read-only and can inspect persisted draft history.
 - The workspace exposes the operational result that matters: generated answer, provider/model, prompt version, confidence, token usage, latency and safety flags, with loading/error/retry/empty/read-only states.
-- The browser never receives an OpenRouter API key and does not call the provider directly.
+- The browser never receives an Groq API key and does not call the provider directly.
 
 ## Product dashboard progress · Live Integrations · 0.1.21
 

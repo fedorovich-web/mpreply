@@ -2,15 +2,15 @@
 
 ## Scope
 
-This policy applies to marketplace API keys, OpenRouter API key, authentication secrets, encryption keys and any future provider tokens.
+This policy applies to marketplace API keys, Groq API key, authentication secrets, encryption keys and any future provider tokens.
 
 ## Hard rules
 
 - Marketplace API keys are never stored as plaintext.
 - Marketplace API keys are never sent back to the frontend after creation.
 - Marketplace API keys are never logged.
-- Marketplace API keys are never sent to OpenRouter.
-- OpenRouter API key is backend-only.
+- Marketplace API keys are never sent to Groq.
+- Groq API key is backend-only.
 - Database URL, auth secret and credentials encryption key are backend-only.
 
 ## Storage
@@ -39,7 +39,7 @@ Required actions:
 Structured logs must scrub:
 
 - marketplace API keys;
-- OpenRouter API key;
+- Groq API key;
 - auth secret;
 - credentials encryption key;
 - database URL password;

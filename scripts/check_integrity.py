@@ -137,7 +137,7 @@ def check_versions_and_frontend_security_baseline() -> None:
     env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
     local_compose = (ROOT / "infra" / "docker" / "docker-compose.local.yml").read_text(encoding="utf-8")
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
-    coolify_env = (ROOT / "infra" / "coolify" / ".env.production.example").read_text(encoding="utf-8")
+    dokploy_env = (ROOT / "infra" / "dokploy" / ".env.production.example").read_text(encoding="utf-8")
     web_health = (WEB / "app" / "api" / "health" / "route.ts").read_text(encoding="utf-8")
 
     if package.get("version") != EXPECTED_VERSION:
@@ -153,7 +153,7 @@ def check_versions_and_frontend_security_baseline() -> None:
     for label, content in (
         ("local Compose", local_compose),
         ("production Compose", production_compose),
-        ("Coolify env example", coolify_env),
+        ("Dokploy env example", dokploy_env),
     ):
         if f"APP_VERSION: {EXPECTED_VERSION}" not in content and f"APP_VERSION={EXPECTED_VERSION}" not in content:
             fail(f"{label} APP_VERSION != {EXPECTED_VERSION}")
@@ -209,7 +209,7 @@ def check_release_gate_contract() -> None:
         "--pythonpath $VenvPython app",
         "Backend environment smoke test",
         "Backend dependency consistency",
-        "Frontend security audit",
+        "Frontend production dependency security audit",
         "& $Npm audit --omit=dev --audit-level=high",
         "Frontend unit tests",
         "& $Npm run test:unit",
@@ -291,7 +291,7 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "operations" / "backup-restore.md",
         ROOT / "docs" / "operations" / "incident-runbook.md",
         ROOT / "docs" / "operations" / "rollback.md",
-        ROOT / "infra" / "coolify" / "deployment-checklist.md",
+        ROOT / "infra" / "dokploy" / "deployment-checklist.md",
         ROOT / "PRODUCT.md",
         ROOT / "DESIGN.md",
         ROOT / "AGENTS.md",

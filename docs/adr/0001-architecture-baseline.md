@@ -13,12 +13,12 @@ Respio must be a production-grade multi-tenant SaaS for marketplace sellers. It 
 1. Default response mode is `auto`.
 2. `semi_auto` is an explicit user-selectable alternative.
 3. Marketplace credentials are backend-only and encrypted at rest.
-4. OpenRouter is called only from the backend through a provider abstraction.
+4. Groq is called only from the backend through a provider abstraction; the pinned MVP model is `qwen/qwen3.8-27b`.
 5. Wildberries is the first MVP marketplace adapter.
 6. Frontend uses CSS variables/design tokens from the first implementation step.
 7. Backend starts on FastAPI.
 8. Frontend starts on Next.js + TypeScript.
-9. Deployment target is Docker + Coolify.
+9. Deployment target is Docker Compose + Dokploy.
 10. No production image may use floating `latest` tags.
 
 ## Consequences
