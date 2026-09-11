@@ -8,7 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import create_access_token
 from app.core.config import Settings, get_settings
-from app.core.cookies import clear_access_cookie, set_access_cookie
+from app.core.cookies import (
+    REFRESH_COOKIE_NAME,
+    clear_access_cookie,
+    clear_refresh_cookie,
+    set_access_cookie,
+    set_refresh_cookie,
+)
 from app.core.rate_limit import enforce_auth_rate_limit
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
@@ -25,6 +31,7 @@ from app.schemas.auth import (
 )
 from app.schemas.common import MessageResponse
 from app.services.auth_service import AuthService
+from app.services.session_service import SessionError, SessionService
 from app.services.transactional_email import (
     EmailDeliveryError,
     ResendEmailClient,
@@ -57,6 +64,11 @@ async def _deliver(message: TransactionalEmail, settings: Settings, *, kind: str
 
 async def _notify_best_effort(message: TransactionalEmail, settings: Settings, *, kind: str) -> None:
     await _deliver(message, settings, kind=kind)
+
+
+def _clear_session_cookies(response: Response) -> None:
+    clear_access_cookie(response)
+    clear_refresh_cookie(response)
 
 
 @router.post("/register", response_model=MessageResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -251,7 +263,7 @@ async def change_password(
         new_password=payload.new_password,
     )
     await session.commit()
-    clear_access_cookie(response)
+    _clear_session_cookies(response)
     await _notify_best_effort(
         build_password_changed_email(
             recipient=user.email,
@@ -281,15 +293,63 @@ async def login(
     )
     service = AuthService(session)
     user = await service.authenticate_user(email=normalized_email, password=payload.password)
-    token = create_access_token(user_id=user.id, auth_version=user.auth_version)
-    set_access_cookie(response, token)
+    refresh_grant = await SessionService(session).issue(
+        user_id=user.id,
+        auth_version=user.auth_version,
+    )
+    access_token = create_access_token(user_id=user.id, auth_version=user.auth_version)
+    set_access_cookie(response, access_token)
+    set_refresh_cookie(response, refresh_grant.raw_token)
     await session.commit()
     return AuthSessionResponse(user=UserResponse.model_validate(user))
 
 
+@router.post("/refresh", response_model=MessageResponse)
+async def refresh_session(
+    request: Request,
+    response: Response,
+    session: AsyncSession = Depends(get_db_session),
+) -> MessageResponse:
+    raw_refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
+    if not raw_refresh_token:
+        _clear_session_cookies(response)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh session is missing",
+        )
+
+    session_service = SessionService(session)
+    try:
+        grant = await session_service.rotate(raw_refresh_token)
+    except SessionError as exc:
+        await session.rollback()
+        _clear_session_cookies(response)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh session is invalid or expired",
+        ) from exc
+
+    access_token = create_access_token(
+        user_id=grant.user_id,
+        auth_version=grant.auth_version,
+    )
+    set_access_cookie(response, access_token)
+    set_refresh_cookie(response, grant.raw_token)
+    await session.commit()
+    return MessageResponse(message="Session refreshed")
+
+
 @router.post("/logout", response_model=MessageResponse)
-async def logout(response: Response) -> MessageResponse:
-    clear_access_cookie(response)
+async def logout(
+    request: Request,
+    response: Response,
+    session: AsyncSession = Depends(get_db_session),
+) -> MessageResponse:
+    raw_refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
+    if raw_refresh_token:
+        await SessionService(session).revoke(raw_refresh_token)
+        await session.commit()
+    _clear_session_cookies(response)
     return MessageResponse(message="Logged out")
 
 
