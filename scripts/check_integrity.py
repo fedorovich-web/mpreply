@@ -169,6 +169,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "jsdom"): "29.1.1",
         ("devDependencies", "impeccable"): "3.2.1",
         ("devDependencies", "@playwright/test"): "1.61.1",
+        ("devDependencies", "playwright-core"): "1.61.1",
         ("devDependencies", "@axe-core/playwright"): "4.12.1",
         ("devDependencies", "@lhci/cli"): "0.15.1",
         ("devDependencies", "vnu-jar"): "26.7.11",
