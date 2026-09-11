@@ -21,22 +21,20 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-      - name: Refresh secure frontend dependency lock
+      - name: Refresh lockfile from pinned package manifest
         working-directory: apps/web
-        run: |
-          npm install --save-exact next@16.3.4
-          npm install --save-dev --save-exact eslint-config-next@16.3.4 vitest@4.1.11
-          npm pkg set overrides.postcss=8.5.28
-          npm install --package-lock-only --ignore-scripts
-          npm audit fix --package-lock-only --ignore-scripts || true
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Verify production dependency audit
+        working-directory: apps/web
+        run: npm audit --omit=dev --audit-level=high
       - name: Commit generated lockfile
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/web/package.json apps/web/package-lock.json
+          git add apps/web/package-lock.json
           if git diff --cached --quiet; then
-            echo "No dependency changes to commit."
+            echo "No lockfile changes to commit."
             exit 0
           fi
-          git commit -m "chore: refresh secure frontend dependencies"
+          git commit -m "chore: refresh secure frontend lockfile"
           git push origin HEAD:chore/groq-provider-migration
