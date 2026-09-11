@@ -1,0 +1,63 @@
+name: Finalize Playwright alignment
+
+on:
+  push:
+    branches:
+      - chore/groq-provider-migration
+
+permissions:
+  contents: write
+
+jobs:
+  align-playwright:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: chore/groq-provider-migration
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Add Playwright core to integrity baseline
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path("scripts/check_integrity.py")
+          text = path.read_text(encoding="utf-8")
+          anchor = '        ("devDependencies", "@playwright/test"): "1.61.1",\n'
+          addition = anchor + '        ("devDependencies", "playwright-core"): "1.61.1",\n'
+          if '("devDependencies", "playwright-core"): "1.61.1"' not in text:
+              if anchor not in text:
+                  raise SystemExit("Playwright integrity anchor not found")
+              text = text.replace(anchor, addition)
+              path.write_text(text, encoding="utf-8")
+      - name: Regenerate lockfile
+        working-directory: apps/web
+        run: |
+          rm -f package-lock.json
+          npm install --package-lock-only --ignore-scripts --no-audit
+      - name: Verify clean dependency graph
+        working-directory: apps/web
+        run: |
+          npm ci --ignore-scripts
+          npm ls playwright playwright-core @playwright/test @axe-core/playwright
+          npm audit --omit=dev --audit-level=high
+      - name: Verify repository and frontend type contract
+        run: |
+          python scripts/check_integrity.py
+          cd apps/web
+          npm run typecheck
+          npm run test:unit
+          npm run test:design-tokens
+      - name: Commit Playwright alignment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/package-lock.json scripts/check_integrity.py
+          if git diff --cached --quiet; then
+            echo "Playwright dependency graph already aligned."
+            exit 0
+          fi
+          git commit -m "fix: align Playwright core dependency graph"
+          git push origin HEAD:chore/groq-provider-migration
