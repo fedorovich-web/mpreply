@@ -26,7 +26,6 @@ async def generate_ai_draft(
         actor=current_user,
         message_id=payload.message_id,
         tone=payload.tone,
-        model=payload.model,
         temperature=payload.temperature,
         max_tokens=payload.max_tokens,
         brand_rules=payload.brand_rules,

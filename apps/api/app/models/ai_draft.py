@@ -13,7 +13,7 @@ class AIDraft(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     organization_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, index=True)
     message_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("customer_messages.id"), nullable=False, index=True)
-    provider: Mapped[str] = mapped_column(String(64), default="openrouter")
+    provider: Mapped[str] = mapped_column(String(64), default="groq")
     model: Mapped[str] = mapped_column(String(255), nullable=False)
     prompt_version: Mapped[str] = mapped_column(String(64), nullable=False)
     prompt_input_hash: Mapped[str] = mapped_column(String(128), nullable=False)

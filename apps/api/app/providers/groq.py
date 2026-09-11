@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import random
 import time
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import cast
 
 import httpx
+
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_MAX_RETRY_DELAY_SECONDS = 8.0
 
 
 @dataclass(frozen=True)
@@ -26,28 +31,30 @@ class LLMCompletion:
     raw_response: dict[str, object]
 
 
-class OpenRouterProviderError(RuntimeError):
-    def __init__(self, message: str, *, status_code: int | None = None, error_code: str = "openrouter_error") -> None:
+class GroqProviderError(RuntimeError):
+    def __init__(self, message: str, *, status_code: int | None = None, error_code: str = "groq_error") -> None:
         super().__init__(message)
         self.status_code = status_code
         self.error_code = error_code
 
 
-class OpenRouterProvider:
+class GroqProvider:
     def __init__(
         self,
         *,
         api_key: str,
-        base_url: str = "https://openrouter.ai/api/v1",
-        site_url: str | None = None,
-        app_title: str = "Respio",
+        base_url: str = "https://api.groq.com/openai/v1",
         timeout_seconds: float = 45.0,
+        max_attempts: int = 3,
+        transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
+        if not 1 <= max_attempts <= 5:
+            raise ValueError("max_attempts must be between 1 and 5")
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
-        self.site_url = site_url
-        self.app_title = app_title
         self.timeout_seconds = timeout_seconds
+        self.max_attempts = max_attempts
+        self.transport = transport
 
     async def complete(
         self,
@@ -56,8 +63,6 @@ class OpenRouterProvider:
         messages: list[dict[str, str]],
         temperature: float = 0.3,
         max_tokens: int = 600,
-        provider_order: list[str] | None = None,
-        allow_fallbacks: bool = True,
     ) -> LLMCompletion:
         self._validate_api_key()
         started_at = time.perf_counter()
@@ -65,34 +70,44 @@ class OpenRouterProvider:
             "model": model,
             "messages": messages,
             "temperature": temperature,
-            "max_tokens": max_tokens,
+            "max_completion_tokens": max_tokens,
+            "reasoning_effort": "none",
+            "response_format": self._response_format(),
         }
-        if provider_order:
-            payload["provider"] = {"order": provider_order, "allow_fallbacks": allow_fallbacks}
 
-        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
-            try:
-                response = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=self._headers(),
-                    json=payload,
-                )
-            except httpx.TimeoutException as exc:
-                raise OpenRouterProviderError("OpenRouter request timed out", error_code="openrouter_timeout") from exc
-            except httpx.HTTPError as exc:
-                raise OpenRouterProviderError("OpenRouter network error", error_code="openrouter_network_error") from exc
+        async with httpx.AsyncClient(timeout=self.timeout_seconds, transport=self.transport) as client:
+            response: httpx.Response | None = None
+            for attempt in range(1, self.max_attempts + 1):
+                try:
+                    response = await client.post(
+                        f"{self.base_url}/chat/completions",
+                        headers=self._headers(),
+                        json=payload,
+                    )
+                except httpx.TimeoutException as exc:
+                    raise GroqProviderError("Groq request timed out", error_code="groq_timeout") from exc
+                except httpx.HTTPError as exc:
+                    raise GroqProviderError("Groq network error", error_code="groq_network_error") from exc
+
+                if response.status_code not in _RETRYABLE_STATUS_CODES or attempt >= self.max_attempts:
+                    break
+
+                await asyncio.sleep(self._retry_delay_seconds(response=response, attempt=attempt))
+
+        if response is None:  # pragma: no cover - defensive invariant
+            raise GroqProviderError("Groq request did not produce a response", error_code="groq_network_error")
 
         latency_ms = int((time.perf_counter() - started_at) * 1000)
         data = self._safe_json(response)
         if not response.is_success:
-            raise OpenRouterProviderError(
+            raise GroqProviderError(
                 self._safe_error_message(data),
                 status_code=response.status_code,
                 error_code=self._map_status(response.status_code),
             )
-        text = self.extract_text(data)
+
         return LLMCompletion(
-            text=text,
+            text=self.extract_text(data),
             model=str(data.get("model") or model),
             usage=self.extract_usage(data.get("usage")),
             latency_ms=latency_ms,
@@ -100,24 +115,55 @@ class OpenRouterProvider:
         )
 
     def _headers(self) -> dict[str, str]:
-        headers = {
+        return {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "X-OpenRouter-Title": self.app_title,
         }
-        if self.site_url:
-            headers["HTTP-Referer"] = self.site_url
-        return headers
 
     def _validate_api_key(self) -> None:
         if not self.api_key or self.api_key.startswith("replace-"):
-            raise OpenRouterProviderError("OpenRouter API key is not configured", error_code="openrouter_not_configured")
+            raise GroqProviderError("Groq API key is not configured", error_code="groq_not_configured")
+
+    @staticmethod
+    def _response_format() -> dict[str, object]:
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "marketplace_reply",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "answer": {"type": "string", "minLength": 1},
+                        "confidence_score": {"type": "number", "minimum": 0, "maximum": 1},
+                        "safety_flags": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "required": ["answer", "confidence_score", "safety_flags"],
+                    "additionalProperties": False,
+                },
+            },
+        }
+
+    @staticmethod
+    def _retry_delay_seconds(*, response: httpx.Response, attempt: int) -> float:
+        retry_after = response.headers.get("Retry-After")
+        if retry_after is not None:
+            try:
+                parsed = float(retry_after)
+            except ValueError:
+                parsed = -1.0
+            if parsed >= 0:
+                return min(parsed, _MAX_RETRY_DELAY_SECONDS)
+
+        exponential = 0.5 * (2 ** (attempt - 1))
+        jitter = random.uniform(0.0, 0.25)
+        return min(exponential + jitter, _MAX_RETRY_DELAY_SECONDS)
 
     @staticmethod
     def _safe_json(response: httpx.Response) -> dict[str, object]:
         try:
             payload: object = response.json()
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             return {}
         if not isinstance(payload, dict):
             return {}
@@ -127,19 +173,19 @@ class OpenRouterProvider:
     def extract_text(data: dict[str, object]) -> str:
         choices_value = data.get("choices")
         if not isinstance(choices_value, list) or not choices_value:
-            raise OpenRouterProviderError("OpenRouter response has no choices", error_code="openrouter_empty_response")
+            raise GroqProviderError("Groq response has no choices", error_code="groq_empty_response")
         choices = cast(list[object], choices_value)
         first_choice = choices[0]
         if not isinstance(first_choice, dict):
-            raise OpenRouterProviderError("OpenRouter response choice is malformed", error_code="openrouter_malformed_response")
+            raise GroqProviderError("Groq response choice is malformed", error_code="groq_malformed_response")
         choice = cast(dict[str, object], first_choice)
         message_value = choice.get("message")
         if not isinstance(message_value, dict):
-            raise OpenRouterProviderError("OpenRouter response message is malformed", error_code="openrouter_malformed_response")
+            raise GroqProviderError("Groq response message is malformed", error_code="groq_malformed_response")
         message = cast(dict[str, object], message_value)
         content = message.get("content")
         if not isinstance(content, str) or not content.strip():
-            raise OpenRouterProviderError("OpenRouter response content is empty", error_code="openrouter_empty_response")
+            raise GroqProviderError("Groq response content is empty", error_code="groq_empty_response")
         return content.strip()
 
     @staticmethod
@@ -165,17 +211,17 @@ class OpenRouterProvider:
         message = data.get("message")
         if isinstance(message, str):
             return message
-        return "OpenRouter returned an error"
+        return "Groq returned an error"
 
     @staticmethod
     def _map_status(status_code: int) -> str:
         if status_code in {401, 403}:
-            return "openrouter_auth_error"
+            return "groq_auth_error"
         if status_code == 429:
-            return "openrouter_rate_limited"
+            return "groq_rate_limited"
         if 500 <= status_code <= 599:
-            return "openrouter_unavailable"
-        return "openrouter_error"
+            return "groq_unavailable"
+        return "groq_error"
 
 
 def _int_or_none(value: object) -> int | None:

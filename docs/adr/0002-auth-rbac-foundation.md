@@ -23,7 +23,7 @@ Sprint 1 adds:
 
 ## Security notes
 
-- The frontend must not store marketplace credentials, OpenRouter keys or auth secrets.
+- The frontend must not store marketplace credentials, Groq keys or auth secrets.
 - API routes that require organization context must verify membership before returning tenant data.
 - `owner` and `admin` are the only roles allowed to update organization settings in Sprint 1.
 - The default organization response mode is `auto`.

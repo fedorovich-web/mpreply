@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["local", "staging", "production"] = "local"
     app_name: str = "Respio"
-    app_version: str = "0.1.26"
+    app_version: str = "0.1.27"
 
     api_base_url: str = "http://localhost:8000"
     web_app_url: str = "http://localhost:3000"
@@ -39,11 +39,10 @@ class Settings(BaseSettings):
     auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     credentials_encryption_key: SecretStr = Field(default=SecretStr("replace-with-fernet-compatible-key"))
-    openrouter_api_key: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))
-    openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    openrouter_default_model: str = "openai/gpt-5.2"
-    openrouter_fallback_model: str = "anthropic/claude-sonnet-4.6"
-    openrouter_timeout_seconds: float = 45.0
+    groq_api_key: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+    groq_default_model: str = "qwen/qwen3.8-27b"
+    groq_timeout_seconds: float = 45.0
 
     sentry_dsn: str | None = None
     sentry_traces_sample_rate: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -87,7 +86,7 @@ class Settings(BaseSettings):
             return self
 
         self._require_secure_production_secret("AUTH_SECRET_KEY", self.auth_secret_key, min_length=32)
-        self._require_secure_production_secret("OPENROUTER_API_KEY", self.openrouter_api_key, min_length=16)
+        self._require_secure_production_secret("GROQ_API_KEY", self.groq_api_key, min_length=16)
         self._require_valid_fernet_key()
 
         if not self.auth_cookie_secure:
