@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from uuid import UUID
-
 from fastapi import Cookie, Depends, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import decode_access_token
+from app.core.auth import decode_access_token_claims
 from app.core.cookies import ACCESS_COOKIE_NAME
 from app.core.errors import unauthorized
 from app.db.session import get_db_session
@@ -27,9 +25,13 @@ async def get_current_user(
     if not token:
         raise unauthorized("Authentication required")
 
-    user_id: UUID = decode_access_token(token)
-    result = await session.execute(select(User).where(User.id == user_id))
+    claims = decode_access_token_claims(token)
+    result = await session.execute(select(User).where(User.id == claims.user_id))
     user = result.scalar_one_or_none()
     if user is None or user.status != "active":
         raise unauthorized("User account is not active")
+    if user.email_verified_at is None:
+        raise unauthorized("Email verification is required")
+    if user.auth_version != claims.auth_version:
+        raise unauthorized("Session has been revoked")
     return user

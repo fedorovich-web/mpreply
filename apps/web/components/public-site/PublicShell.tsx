@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { marketplaces } from "../../lib/site-config";
+import { marketplaces, siteConfig } from "../../lib/site-config";
 import { PublicHeader } from "./PublicHeader";
 
 type PublicShellProps = {
@@ -53,6 +53,7 @@ export function PublicShell({ children }: PublicShellProps) {
             <strong>Ресурсы</strong>
             <Link href="/resources">Материалы</Link>
             <Link href="/contacts">Контакты</Link>
+            <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
           </div>
           <div>
             <strong>Документы</strong>

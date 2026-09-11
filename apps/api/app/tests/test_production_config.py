@@ -16,8 +16,10 @@ def _production_settings(**overrides: object) -> Settings:
         "auth_secret_key": SecretStr("a" * 64),
         "credentials_encryption_key": SecretStr(Fernet.generate_key().decode("utf-8")),
         "groq_api_key": SecretStr("gsk_production_test_key_123456789"),
+        "resend_api_key": SecretStr("re_production_test_key_123456789"),
         "auth_cookie_secure": True,
         "auth_cookie_samesite": "lax",
+        "rate_limit_enabled": True,
         "cors_allowed_origins": ["https://app.respio.ru", "https://respio.ru"],
         "allowed_hosts": ["api.respio.ru"],
     }
@@ -30,6 +32,7 @@ def test_valid_production_settings_pass() -> None:
 
     assert settings.app_env == "production"
     assert settings.auth_cookie_secure is True
+    assert settings.rate_limit_enabled is True
 
 
 def test_production_rejects_placeholder_secret() -> None:
@@ -40,6 +43,16 @@ def test_production_rejects_placeholder_secret() -> None:
 def test_production_rejects_placeholder_groq_key() -> None:
     with pytest.raises(ValidationError, match="GROQ_API_KEY"):
         _production_settings(groq_api_key=SecretStr("replace-only-in-real-env"))
+
+
+def test_production_rejects_missing_resend_key() -> None:
+    with pytest.raises(ValidationError, match="RESEND_API_KEY"):
+        _production_settings(resend_api_key=SecretStr(""))
+
+
+def test_production_rejects_disabled_rate_limit() -> None:
+    with pytest.raises(ValidationError, match="RATE_LIMIT_ENABLED"):
+        _production_settings(rate_limit_enabled=False)
 
 
 def test_production_rejects_insecure_cookie() -> None:

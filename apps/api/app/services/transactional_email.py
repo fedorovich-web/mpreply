@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from hashlib import sha256
 from html import escape
 
 import httpx
@@ -20,10 +21,16 @@ class TransactionalEmail:
     subject: str
     text: str
     html: str
+    idempotency_key: str
 
 
 class EmailDeliveryError(RuntimeError):
     pass
+
+
+def _idempotency_key(*, kind: str, recipient: str, action_url: str = "") -> str:
+    payload = f"{kind}\0{recipient.strip().lower()}\0{action_url}"
+    return f"auth-{kind}-{sha256(payload.encode('utf-8')).hexdigest()}"
 
 
 def _button_html(*, url: str, label: str) -> str:
@@ -66,7 +73,15 @@ def build_verification_email(
         action_html=_button_html(url=verification_url, label="Подтвердить email"),
         footer="Если вы не создавали аккаунт, просто проигнорируйте это письмо.",
     )
-    return TransactionalEmail(sender=sender, reply_to=reply_to, to=recipient, subject=subject, text=text, html=html)
+    return TransactionalEmail(
+        sender=sender,
+        reply_to=reply_to,
+        to=recipient,
+        subject=subject,
+        text=text,
+        html=html,
+        idempotency_key=_idempotency_key(kind="verify", recipient=recipient, action_url=verification_url),
+    )
 
 
 def build_password_reset_email(
@@ -90,7 +105,15 @@ def build_password_reset_email(
         action_html=_button_html(url=reset_url, label="Задать новый пароль"),
         footer=f"Ссылка действует до {expires_label}. Если запрос делали не вы, проигнорируйте письмо.",
     )
-    return TransactionalEmail(sender=sender, reply_to=reply_to, to=recipient, subject=subject, text=text, html=html)
+    return TransactionalEmail(
+        sender=sender,
+        reply_to=reply_to,
+        to=recipient,
+        subject=subject,
+        text=text,
+        html=html,
+        idempotency_key=_idempotency_key(kind="reset", recipient=recipient, action_url=reset_url),
+    )
 
 
 def build_password_changed_email(
@@ -110,7 +133,15 @@ def build_password_changed_email(
         action_html=None,
         footer=f"Если это были не вы, напишите в поддержку: {reply_to}",
     )
-    return TransactionalEmail(sender=sender, reply_to=reply_to, to=recipient, subject=subject, text=text, html=html)
+    return TransactionalEmail(
+        sender=sender,
+        reply_to=reply_to,
+        to=recipient,
+        subject=subject,
+        text=text,
+        html=html,
+        idempotency_key=_idempotency_key(kind="password-changed", recipient=recipient),
+    )
 
 
 class ResendEmailClient:
@@ -134,7 +165,11 @@ class ResendEmailClient:
             async with httpx.AsyncClient(timeout=self.settings.resend_timeout_seconds) as client:
                 response = await client.post(
                     self.settings.resend_api_url,
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                        "Idempotency-Key": message.idempotency_key,
+                    },
                     json=payload,
                 )
         except httpx.HTTPError as exc:
