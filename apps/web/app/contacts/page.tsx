@@ -26,13 +26,9 @@ export default function ContactsPage() {
           </div>
 
           <aside className="contact-channel-panel">
-            <span className="panel-kicker">Контактный канал</span>
-            {siteConfig.contactEmail ? (
-              <a className="contact-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-            ) : (
-              <strong>Публичный контактный email появится перед открытым запуском</strong>
-            )}
-            <p>Пока контакт не опубликован, продукт можно изучить через демо и страницы интеграций.</p>
+            <span className="panel-kicker">Поддержка</span>
+            <a className="contact-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
+            <p>Напишите нам по вопросам аккаунта, работы сервиса, интеграций или пилотного подключения.</p>
           </aside>
         </div>
       </section>
