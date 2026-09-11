@@ -20,11 +20,14 @@ type ApiRequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
 };
 
+let refreshInFlight: Promise<boolean> | null = null;
+
 export async function apiRequest<T>(
   path: string,
   schema: ZodType<T>,
   options: ApiRequestOptions = {},
 ): Promise<T> {
+  const normalizedPath = normalizePath(path);
   const headers = new Headers(options.headers);
   let body: BodyInit | undefined;
 
@@ -33,13 +36,21 @@ export async function apiRequest<T>(
     body = JSON.stringify(options.body);
   }
 
-  const response = await fetch(`${API_BASE_URL}${normalizePath(path)}`, {
+  const requestInit: RequestInit = {
     ...options,
     body,
     credentials: "include",
     headers,
     cache: "no-store",
-  });
+  };
+
+  let response = await fetch(`${API_BASE_URL}${normalizedPath}`, requestInit);
+  if (response.status === 401 && shouldAttemptSessionRefresh(normalizedPath)) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      response = await fetch(`${API_BASE_URL}${normalizedPath}`, requestInit);
+    }
+  }
 
   const requestId = response.headers.get("x-request-id");
   const payload: unknown = await readJson(response);
@@ -64,6 +75,31 @@ export function buildApiQuery(path: string, params: Record<string, string | numb
   }
   const query = search.toString();
   return query ? `${normalizePath(path)}?${query}` : normalizePath(path);
+}
+
+function shouldAttemptSessionRefresh(path: string): boolean {
+  if (!path.startsWith("/api/auth/")) return true;
+  return path === "/api/auth/me" || path === "/api/auth/change-password";
+}
+
+async function refreshSession(): Promise<boolean> {
+  if (refreshInFlight !== null) return refreshInFlight;
+
+  const refreshRequest = fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+  })
+    .then((response) => response.ok)
+    .catch(() => false)
+    .finally(() => {
+      if (refreshInFlight === refreshRequest) {
+        refreshInFlight = null;
+      }
+    });
+
+  refreshInFlight = refreshRequest;
+  return refreshRequest;
 }
 
 function normalizePath(path: string): string {
