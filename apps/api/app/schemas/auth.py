@@ -17,12 +17,30 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class EmailActionRequest(BaseModel):
+    email: EmailStr
+
+
+class TokenActionRequest(BaseModel):
+    token: str = Field(min_length=32, max_length=512)
+
+
+class PasswordResetRequest(TokenActionRequest):
+    new_password: str = Field(min_length=10, max_length=128)
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=10, max_length=128)
+
+
 class UserResponse(BaseModel):
     id: UUID
     email: EmailStr
     name: str | None
     status: str
     is_superadmin: bool
+    email_verified_at: datetime | None
     created_at: datetime
     updated_at: datetime
 

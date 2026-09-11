@@ -11,7 +11,7 @@ export type MarketplaceConfig = {
 };
 
 const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-const configuredContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || null;
+const configuredContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || "support@mpreply.ru";
 
 export const siteConfig = {
   name: "Respio",

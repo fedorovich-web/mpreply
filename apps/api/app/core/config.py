@@ -15,6 +15,7 @@ _INSECURE_SECRET_MARKERS = {
     "replace-with-local-dev-secret-at-least-32-bytes",
     "replace-with-fernet-compatible-key",
     "replace-only-in-real-env",
+    "set-in-dokploy-environment",
 }
 
 
@@ -37,6 +38,15 @@ class Settings(BaseSettings):
     auth_refresh_token_ttl_days: int = 30
     auth_cookie_secure: bool = False
     auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    auth_email_verification_ttl_hours: int = Field(default=24, ge=1, le=168)
+    auth_password_reset_ttl_minutes: int = Field(default=30, ge=5, le=120)
+    auth_action_token_cooldown_seconds: int = Field(default=60, ge=15, le=3600)
+
+    resend_api_key: SecretStr = Field(default=SecretStr(""))
+    resend_api_url: str = "https://api.resend.com/emails"
+    resend_timeout_seconds: float = Field(default=10.0, gt=0.0, le=30.0)
+    transactional_email_from: str = "MPReply <no-reply@mpreply.ru>"
+    support_email: str = "support@mpreply.ru"
 
     credentials_encryption_key: SecretStr = Field(default=SecretStr("replace-with-fernet-compatible-key"))
     groq_api_key: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))
@@ -87,17 +97,21 @@ class Settings(BaseSettings):
 
         self._require_secure_production_secret("AUTH_SECRET_KEY", self.auth_secret_key, min_length=32)
         self._require_secure_production_secret("GROQ_API_KEY", self.groq_api_key, min_length=16)
+        self._require_secure_production_secret("RESEND_API_KEY", self.resend_api_key, min_length=8)
         self._require_valid_fernet_key()
 
         if not self.auth_cookie_secure:
             raise ValueError("Production requires AUTH_COOKIE_SECURE=true")
         if self.auth_cookie_samesite == "none":
             raise ValueError("Production must not use AUTH_COOKIE_SAMESITE=none by default")
+        if not self.rate_limit_enabled:
+            raise ValueError("Production requires RATE_LIMIT_ENABLED=true")
 
         for label, url in (
             ("WEB_APP_URL", self.web_app_url),
             ("PUBLIC_SITE_URL", self.public_site_url),
             ("API_BASE_URL", self.api_base_url),
+            ("RESEND_API_URL", self.resend_api_url),
         ):
             if urlparse(url).scheme != "https":
                 raise ValueError(f"Production requires HTTPS for {label}")
