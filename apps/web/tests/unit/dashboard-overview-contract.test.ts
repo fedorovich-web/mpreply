@@ -20,11 +20,11 @@ describe("dashboard operational overview", () => {
     expect(dashboard).not.toContain("billingOverviewSchema");
   });
 
-  it("puts unanswered work, moderation and integration health before aggregate reporting", () => {
+  it("puts unanswered work, review decisions and integration health before aggregate reporting", () => {
     expect(page).toContain("Очереди, проверки и состояние автоматизации");
     expect(dashboard).toContain("dashboard-attention-panel");
     expect(dashboard).toContain("Без ответа");
-    expect(dashboard).toContain("На модерации");
+    expect(dashboard).toContain("На проверке");
     expect(dashboard).toContain("Проблемы подключений");
     expect(dashboard).toContain("dashboard-health-panel");
     expect(dashboard).toContain("Включено правил");
@@ -32,6 +32,17 @@ describe("dashboard operational overview", () => {
     expect(dashboard).toContain('href="/app/review-queue"');
     expect(dashboard).toContain('href="/app/integrations"');
     expect(dashboard).toContain('href="/app/automation-rules"');
+    expect(dashboard).not.toContain("На модерации");
+    expect(dashboard).not.toContain("Открыть входящие");
+    expect(dashboard).not.toContain("Открыть модерацию");
+  });
+
+  it("uses the approved product labels in quick actions", () => {
+    expect(dashboard).toContain("Обращения");
+    expect(dashboard).toContain("На проверке");
+    expect(dashboard).toContain("Автоматизация");
+    expect(dashboard).not.toContain(">Входящие<");
+    expect(dashboard).not.toContain(">Модерация<");
   });
 
   it("loads a scoped responsive overview style layer without a second palette", () => {
