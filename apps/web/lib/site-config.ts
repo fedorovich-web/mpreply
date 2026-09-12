@@ -23,7 +23,7 @@ export const siteConfig = {
     { href: "/features", label: "Возможности" },
     { href: "/marketplaces", label: "Интеграции" },
     { href: "/pricing", label: "Тарифы" },
-    { href: "/resources", label: "Материалы" },
+    { href: "/resources", label: "Блог" },
     { href: "/contacts", label: "Помощь" },
   ],
 } as const;
