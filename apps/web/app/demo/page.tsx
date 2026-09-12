@@ -31,16 +31,64 @@ export default function DemoPage() {
             <p className="public-lead">
               Разберём один сценарий без абстрактных обещаний: покупатель задаёт вопрос, ИИ готовит черновик, а система понимает, что данных для автоматической отправки недостаточно.
             </p>
+            <div className="hero-actions">
+              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать на своих обращениях</Link>
+              <Link className="button button-secondary" href="/features">Все возможности</Link>
+            </div>
           </div>
 
-          <aside className="demo-scenario-card" aria-label="Исходное обращение для демонстрации">
-            <div className="demo-scenario-topline">
-              <span>Wildberries · вопрос</span>
-              <span>новый</span>
+          <div className="demo-product-scene" role="group" aria-label="Демонстрация обработки вопроса покупателя">
+            <div className="demo-product-window">
+              <div className="demo-product-window-head">
+                <div>
+                  <span aria-hidden="true">MP</span>
+                  <strong>Все обращения</strong>
+                </div>
+                <span>Wildberries · вопрос</span>
+              </div>
+
+              <div className="demo-product-window-body">
+                <div className="demo-product-sidebar" aria-hidden="true">
+                  <strong>Очередь</strong>
+                  <span>Все обращения</span>
+                  <span>Отзывы</span>
+                  <span>Вопросы</span>
+                  <span>Сообщения</span>
+                </div>
+
+                <div className="demo-product-question">
+                  <div className="demo-product-question-topline">
+                    <span>Новое обращение</span>
+                    <span>требует ответа</span>
+                  </div>
+                  <strong>«Можно ли использовать товар на улице зимой?»</strong>
+                  <p>В доступном контексте нет подтверждённого температурного диапазона. Придумывать характеристику нельзя.</p>
+                  <div className="demo-product-context" role="group" aria-label="Контекст обращения">
+                    <span>Карточка товара</span>
+                    <span>История обращения</span>
+                    <span>Правила команды</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <strong>«Можно ли использовать товар на улице зимой?»</strong>
-            <p>В доступном контексте нет подтверждённого температурного диапазона. Придумывать характеристику нельзя.</p>
-          </aside>
+
+            <div className="demo-product-draft">
+              <div className="demo-product-draft-head">
+                <span aria-hidden="true">✦</span>
+                <strong>Ответ с помощью ИИ</strong>
+                <small>черновик</small>
+              </div>
+              <p>В карточке товара нет подтверждённого температурного диапазона, поэтому ответ лучше проверить перед отправкой.</p>
+            </div>
+
+            <div className="demo-product-review" role="status" aria-label="Ответ передан на проверку">
+              <span aria-hidden="true">!</span>
+              <div>
+                <strong>Нужна проверка</strong>
+                <small>Недостаточно данных для автоматической отправки</small>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
