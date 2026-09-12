@@ -56,6 +56,16 @@ const message = {
   updated_at: timestamp,
 };
 
+const chatMessage = {
+  ...message,
+  id: "88888888-8888-4888-8888-888888888888",
+  external_id: "avito-chat-1",
+  marketplace: "avito",
+  type: "chat",
+  rating: null,
+  customer_text: "Здравствуйте, когда сможете отправить заказ?",
+};
+
 const draft = {
   id: "55555555-5555-4555-8555-555555555555",
   organization_id: organization.id,
@@ -176,5 +186,27 @@ describe("AIAssistantWorkspace", () => {
     expect(await screen.findByText(draft.draft_text)).toBeInTheDocument();
     expect(screen.getByText(/может просматривать историю, но не создавать новые черновики/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Подготовить черновик" })).not.toBeInTheDocument();
+  });
+
+  it("labels marketplace chats as buyer messages", async () => {
+    mockWorkspace("manager");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input) => {
+        const url = String(input);
+        if (url.includes("/api/messages")) {
+          return new Response(JSON.stringify({ items: [chatMessage], total: 1, page: 1, page_size: 50 }), { status: 200 });
+        }
+        if (url.includes("/api/ai/drafts")) {
+          return new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 });
+        }
+        return new Response(JSON.stringify({ detail: "Unexpected request" }), { status: 500 });
+      }),
+    );
+
+    renderWorkspace();
+
+    expect(await screen.findByText("Сообщение")).toBeInTheDocument();
+    expect(screen.queryByText("chat")).not.toBeInTheDocument();
   });
 });
