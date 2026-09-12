@@ -3,6 +3,7 @@
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 type WorkspaceTab = "reviews" | "questions" | "messages" | "all";
+type WorkspaceTone = "green" | "blue" | "cyan";
 
 type WorkspaceFilter = {
   icon: string;
@@ -22,7 +23,7 @@ type WorkspaceState = {
   label: string;
   icon: string;
   answer: string;
-  tone: string;
+  tone: WorkspaceTone;
   filters: readonly WorkspaceFilter[];
   rows: readonly WorkspaceRow[];
 };
@@ -102,14 +103,14 @@ const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
   },
 };
 
-const tabs = Object.entries(workspaceStates) as Array<[WorkspaceTab, WorkspaceState]>;
-const tabOrder = tabs.map(([key]) => key);
+const tabOrder: readonly WorkspaceTab[] = ["reviews", "questions", "messages", "all"];
 
 export function HomeWorkspaceTabs() {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("reviews");
   const id = useId();
   const tabRefs = useRef<Partial<Record<WorkspaceTab, HTMLButtonElement | null>>>({});
   const active = workspaceStates[activeTab];
+  const panelId = `${id}-panel`;
 
   const activateAndFocus = (tab: WorkspaceTab) => {
     setActiveTab(tab);
@@ -133,8 +134,10 @@ export function HomeWorkspaceTabs() {
   return (
     <div className="homepage-workspace homepage-approved-workspace">
       <div className="homepage-workspace-tabs" role="tablist" aria-label="Тип обращения">
-        {tabs.map(([key, item]) => {
+        {tabOrder.map((key) => {
+          const item = workspaceStates[key];
           const selected = key === activeTab;
+
           return (
             <button
               key={key}
@@ -143,7 +146,7 @@ export function HomeWorkspaceTabs() {
               type="button"
               role="tab"
               aria-selected={selected}
-              aria-controls={`${id}-${key}-panel`}
+              aria-controls={panelId}
               tabIndex={selected ? 0 : -1}
               ref={(node) => {
                 tabRefs.current[key] = node;
@@ -158,7 +161,7 @@ export function HomeWorkspaceTabs() {
       </div>
 
       <div
-        id={`${id}-${activeTab}-panel`}
+        id={panelId}
         className="homepage-workspace-panel"
         role="tabpanel"
         aria-labelledby={`${id}-${activeTab}-tab`}
