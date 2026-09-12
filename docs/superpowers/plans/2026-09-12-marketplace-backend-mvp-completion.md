@@ -350,6 +350,7 @@ git commit -m "feat(api): manage marketplace HTTP clients"
 
 **Files:**
 - Create: `apps/api/app/models/marketplace_sync_state.py`
+- Modify: `apps/api/app/models/marketplace_account.py`
 - Modify: `apps/api/app/models/__init__.py`
 - Create: `apps/api/alembic/versions/20260912_0012_marketplace_sync_states.py`
 - Create: `apps/api/app/services/marketplace_sync_state_service.py`
@@ -358,10 +359,10 @@ git commit -m "feat(api): manage marketplace HTTP clients"
 
 **Interfaces:**
 - Produces: `MarketplaceSyncState`, `SyncStateStatus`, and `MarketplaceSyncStateService`.
-- Produces: `acquire(account_id, stream, owner, now, lease_for)`, `renew(...)`, `complete_page(...)`, `fail(...)`, and `release(...)`.
+- Produces: `acquire(state_id, owner, now, lease_for)`, `renew(...)`, `complete_page(...)`, `fail(...)`, and `release(...)`.
 - Consumes: `MarketplaceStream` from Task 1, current migration head `20260911_0011`, and PostgreSQL atomic updates.
 
-- [ ] **Step 1: Write RED model and lease contracts**
+- [x] **Step 1: Write RED model and lease contracts**
 
 ```python
 @pytest.mark.asyncio
@@ -378,13 +379,13 @@ async def test_cursor_advances_only_for_current_lease_owner(postgres_session: As
         await service.complete_page(state_id, owner="worker-b", current_cursor=None, next_cursor="page-2", now=now)
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```powershell
 python -m pytest app/tests/test_marketplace_sync_state.py app/tests/test_marketplace_sync_migration.py -q
 ```
 
-- [ ] **Step 3: Create the ORM model and database constraints**
+- [x] **Step 3: Create the ORM model and database constraints**
 
 ```python
 class MarketplaceSyncState(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -399,7 +400,7 @@ class MarketplaceSyncState(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 Include tenant organization ID, account foreign key with cascade, cursor, allowlisted metadata JSON, scheduling/lease fields, counters, safe last error code, and attempt/success timestamps. Migration defaults must permit existing accounts and be removed where ORM ownership is preferable.
 
-- [ ] **Step 4: Implement atomic lease acquisition**
+- [x] **Step 4: Implement atomic lease acquisition**
 
 ```python
 statement = (
@@ -418,18 +419,19 @@ statement = (
 
 All renewal, page completion, failure, and release updates include `lease_owner == owner` in the `WHERE` clause and require exactly one returned row.
 
-- [ ] **Step 5: Verify migration upgrade/downgrade/re-upgrade and commit**
+- [x] **Step 5: Verify contracts, migration head, static gates, and commit**
 
 ```powershell
 python -m pytest app/tests/test_marketplace_sync_state.py app/tests/test_marketplace_sync_migration.py -q
-python -m alembic upgrade head
-python -m alembic downgrade 20260911_0011
-python -m alembic upgrade head
+python -m pytest -q
+python -m alembic heads
 python -m ruff check app/models/marketplace_sync_state.py app/services/marketplace_sync_state_service.py app/tests/test_marketplace_sync_state.py app/tests/test_marketplace_sync_migration.py alembic/versions/20260912_0012_marketplace_sync_states.py
-python -m pyright app/models/marketplace_sync_state.py app/services/marketplace_sync_state_service.py
-git add -- apps/api/app/models/marketplace_sync_state.py apps/api/app/models/__init__.py apps/api/alembic/versions/20260912_0012_marketplace_sync_states.py apps/api/app/services/marketplace_sync_state_service.py apps/api/app/tests/test_marketplace_sync_state.py apps/api/app/tests/test_marketplace_sync_migration.py
+npx --yes pyright@1.1.411 --pythonpath '.\.venv\Scripts\python.exe' app
+git add -- apps/api/app/models/marketplace_account.py apps/api/app/models/marketplace_sync_state.py apps/api/app/models/__init__.py apps/api/alembic/versions/20260912_0012_marketplace_sync_states.py apps/api/app/services/marketplace_sync_state_service.py apps/api/app/tests/test_marketplace_sync_state.py apps/api/app/tests/test_marketplace_sync_migration.py
 git commit -m "feat(api): add marketplace sync leases"
 ```
+
+The real PostgreSQL `upgrade -> downgrade -> upgrade` cycle remains an explicit Task 15 gate and must run against PostgreSQL; unit migration operation tests or SQLite are not substitutes.
 
 ### Task 4: Make ingestion race-safe and metadata bounded
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -11,6 +11,13 @@ from app.models.enums import ResponseMode
 
 class MarketplaceAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "marketplace_accounts"
+    __table_args__ = (
+        UniqueConstraint(
+            "id",
+            "organization_id",
+            name="uq_marketplace_accounts_id_organization_id",
+        ),
+    )
 
     organization_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, index=True)
     marketplace: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
