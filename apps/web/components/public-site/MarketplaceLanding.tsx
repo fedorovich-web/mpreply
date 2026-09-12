@@ -12,9 +12,11 @@ const workflow = [
   ["02", "Показываем контекст", "Сотрудник видит доступные данные товара, покупателя и самого обращения без поиска по нескольким кабинетам."],
   ["03", "Готовим ответ", "ИИ помогает подготовить черновик с учётом контекста, правил команды и заданного тона коммуникации."],
   ["04", "Отправляем или проверяем", "Типовые сценарии можно автоматизировать, а неоднозначные и чувствительные обращения оставлять сотруднику."],
-];
+] as const;
 
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
+  const marketplaceMark = marketplace.key === "yandex-market" ? "М" : marketplace.key === "avito" ? "A" : marketplace.shortName.slice(0, 2);
+
   return (
     <PublicShell>
       <section className="public-subhero public-subhero-marketplace-detail">
@@ -26,7 +28,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <p className="public-lead">{marketplace.summary}</p>
             <div className="hero-actions">
               <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                Подключить {marketplace.name}
+                Подключить {marketplace.name} <span aria-hidden="true">→</span>
               </Link>
               <Link className="button button-secondary" href="/demo">
                 Посмотреть интерфейс
@@ -34,16 +36,70 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             </div>
           </div>
 
-          <aside className="integration-status-panel integration-status-panel-supported" aria-label={`Интеграция ${marketplace.name}`}>
-            <div className="integration-status-topline">
-              <span className="marketplace-monogram marketplace-monogram-large" aria-hidden="true">{marketplace.shortName}</span>
-              <span className="public-status public-status-supported">Интеграция готова</span>
+          <div className={`marketplace-detail-scene is-${marketplace.key}`} role="group" aria-label={`Пример обработки обращения ${marketplace.name} в MPReply`}>
+            <div className="marketplace-detail-platform">
+              <span className="marketplace-detail-platform-mark" aria-hidden="true">{marketplaceMark}</span>
+              <span className="marketplace-detail-platform-copy">
+                <strong>{marketplace.name}</strong>
+                <small>{marketplace.statusLabel}</small>
+              </span>
             </div>
-            <strong>{marketplace.name} работает в общем процессе обработки обращений</strong>
-            <p>
-              Площадка подключается к тому же интерфейсу, что и остальные интеграции: очередь, контекст, подготовка ответа, проверка и отправка остаются в одном рабочем пространстве.
-            </p>
-          </aside>
+
+            <div className="marketplace-detail-window">
+              <div className="marketplace-detail-window-head">
+                <div className="marketplace-detail-window-title">
+                  <span aria-hidden="true">{marketplaceMark}</span>
+                  <strong>Новое обращение · {marketplace.name}</strong>
+                </div>
+                <small>В общей очереди</small>
+              </div>
+
+              <div className="marketplace-detail-window-body">
+                <aside className="marketplace-detail-sidebar" aria-label="Рабочая очередь MPReply">
+                  <strong>Обращения</strong>
+                  <span>Все обращения</span>
+                  <span>Отзывы</span>
+                  <span>Вопросы</span>
+                  <span>Сообщения</span>
+                  <span>На проверке</span>
+                </aside>
+
+                <div className="marketplace-detail-message">
+                  <div className="marketplace-detail-message-topline">
+                    <span>{marketplace.name} · вопрос покупателя</span>
+                    <strong>Новый</strong>
+                  </div>
+                  <h2>Покупатель уточняет характеристику товара перед заказом</h2>
+                  <p>MPReply показывает обращение рядом с доступным контекстом товара и правилами вашей команды.</p>
+                  <div className="marketplace-detail-context" role="group" aria-label="Контекст обращения">
+                    <span>Карточка товара</span>
+                    <span>История обращения</span>
+                    <span>Правила команды</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="marketplace-detail-draft" role="group" aria-label="Подготовленный ответ">
+              <div className="marketplace-detail-draft-head">
+                <span aria-hidden="true">✦</span>
+                <strong>Ответ с помощью ИИ</strong>
+              </div>
+              <p>Черновик формируется с учётом обращения, доступных данных товара, тона бренда и заданных правил.</p>
+              <div className="marketplace-detail-draft-actions" aria-hidden="true">
+                <span>Проверить перед отправкой</span>
+                <strong>Отправить&nbsp; →</strong>
+              </div>
+            </div>
+
+            <div className="marketplace-detail-review" role="group" aria-label="Статус проверки">
+              <span aria-hidden="true">✓</span>
+              <span className="marketplace-detail-review-copy">
+                <small>Правило команды</small>
+                <strong>Контроль перед отправкой</strong>
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
