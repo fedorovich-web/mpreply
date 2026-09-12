@@ -44,7 +44,8 @@ describe("review queue operational workspace", () => {
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
 
-  it("frames the page around decisions instead of unsupported history claims", () => {
+  it("frames the page around decisions with the approved product label", () => {
+    expect(page).toContain('<p className="eyebrow">На проверке</p>');
     expect(page).toContain("Проверьте ответы, которым нужно решение");
     expect(page).toContain("Причина внимания остаётся рядом с ответом");
     expect(page).not.toContain("История изменений");
