@@ -7,32 +7,32 @@ import { createPageMetadata } from "../../lib/seo";
 export const metadata: Metadata = createPageMetadata({
   title: "Тарифы MPReply — автоматизация ответов для маркетплейсов",
   description:
-    "Тарифная модель MPReply для продавцов и команд: подписка, включённый объём обработки и прозрачные лимиты. Финальные цены публикуются после проверки фактической себестоимости.",
+    "Тарифы MPReply для продавцов, команд и агентств: маркетплейсы, обращения покупателей, ИИ-ответы, автоматизация и лимиты использования в одном сервисе.",
   path: "/pricing",
 });
 
 const pricingParts = [
   {
     number: "01",
-    title: "Доступ к продукту",
-    text: "Рабочее пространство, интеграции с маркетплейсами, единая очередь, правила автоматизации, история обработки и командные сценарии.",
+    title: "Подключённые кабинеты",
+    text: "Работайте с Wildberries, Ozon, Яндекс Маркетом и Авито из одного пространства и добавляйте нужные кабинеты по мере роста бизнеса.",
   },
   {
     number: "02",
-    title: "Включённый объём",
-    text: "В тариф будет входить определённый объём ИИ-обработки и операций. Лимиты должны опираться на реальную нагрузку, а не на выдуманные цифры в лендинге.",
+    title: "Объём обращений и ИИ",
+    text: "План учитывает объём обработки отзывов, вопросов и сообщений, а также использование ИИ для подготовки ответов.",
   },
   {
     number: "03",
-    title: "Понятный перерасход",
-    text: "Если использование выйдет за включённый объём, дополнительный расход должен быть виден заранее вместе с правилами тарификации.",
+    title: "Команда и автоматизация",
+    text: "Используйте ручную проверку, автоответы и совместную работу команды в зависимости от вашего процесса.",
   },
 ];
 
 const audienceModes = [
-  ["Продавец", "Несколько подключённых кабинетов, единая очередь обращений и базовые правила автоматизации."],
-  ["Команда", "Совместная работа с ручной проверкой исключений, историей действий и распределением ответственности."],
-  ["Агентство", "Раздельные рабочие пространства для клиентов и изоляция данных между организациями."],
+  ["Для продавца", "Единое окно для обращений, несколько кабинетов и автоматизация повторяющихся ответов."],
+  ["Для команды", "Совместная работа, проверка отдельных ответов, правила автоматизации и история действий."],
+  ["Для агентства", "Раздельные рабочие пространства для клиентов и удобное управление несколькими проектами."],
 ];
 
 export default function PricingPage() {
@@ -42,20 +42,20 @@ export default function PricingPage() {
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
             <p className="eyebrow">Тарифы MPReply</p>
-            <h1>Без фальшивых цен до того, как понятна реальная экономика продукта</h1>
+            <h1>Тариф под ваш объём обращений и способ работы</h1>
             <p className="public-lead">
-              Финальные тарифы появятся после проверки фактической стоимости ИИ, инфраструктуры и обработки обращений. На этапе запуска важнее не нарисовать три красивые карточки, а зафиксировать честную модель оплаты.
+              Стоимость зависит от подключённых кабинетов, объёма обработки и выбранного уровня автоматизации. Финальные планы и лимиты будут опубликованы перед коммерческим запуском.
             </p>
             <div className="hero-actions">
-              <Link className="button button-primary" href="/contacts">Обсудить пилот</Link>
-              <Link className="button button-secondary" href="/features">Посмотреть возможности</Link>
+              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Создать аккаунт</Link>
+              <Link className="button button-secondary" href="/contacts">Обсудить условия</Link>
             </div>
           </div>
 
           <aside className="pricing-principle-panel">
-            <span className="panel-kicker">Принцип тарификации</span>
-            <strong>Подписка + включённый объём + прозрачное дополнительное использование</strong>
-            <p>Пользователь должен заранее понимать, что входит в тариф и что происходит при достижении лимита.</p>
+            <span className="panel-kicker">Как формируется тариф</span>
+            <strong>Кабинеты, обращения, ИИ и возможности команды</strong>
+            <p>Все основные параметры использования будут видны в кабинете — без скрытых ограничений и неожиданных списаний.</p>
           </aside>
         </div>
       </section>
@@ -63,9 +63,9 @@ export default function PricingPage() {
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Модель оплаты</p>
-            <h2>Стоимость должна учитывать весь рабочий процесс, а не только один запрос к модели</h2>
-            <p>Интеграции, очередь, повторные попытки, хранение состояния и командный интерфейс тоже являются частью продукта.</p>
+            <p className="eyebrow">Что влияет на стоимость</p>
+            <h2>Платите за рабочий объём, а не за набор лишних функций</h2>
+            <p>Выбирайте подходящий уровень использования по мере роста количества обращений, подключений и команды.</p>
           </div>
 
           <div className="pricing-model-grid">
@@ -83,8 +83,9 @@ export default function PricingPage() {
       <section className="public-section public-section-muted">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Кому нужен продукт</p>
-            <h2>Один продукт — разные объёмы и способы работы</h2>
+            <p className="eyebrow">Для разных команд</p>
+            <h2>От одного магазина до нескольких клиентских проектов</h2>
+            <p>MPReply подходит как для самостоятельного продавца, так и для команды, которая ежедневно работает с большим потоком обращений.</p>
           </div>
 
           <div className="audience-pricing-list">
@@ -92,7 +93,7 @@ export default function PricingPage() {
               <article className="audience-pricing-row" key={title}>
                 <h3>{title}</h3>
                 <p>{text}</p>
-                <span>Лимиты будут опубликованы после расчёта нагрузки</span>
+                <span>План под фактический объём работы</span>
               </article>
             ))}
           </div>
@@ -102,14 +103,14 @@ export default function PricingPage() {
       <section className="public-section">
         <div className="public-container public-two-column public-two-column-balanced">
           <div>
-            <p className="eyebrow">Прозрачность</p>
-            <h2>Понятно, сколько используется и что произойдёт дальше</h2>
+            <p className="eyebrow">Контроль использования</p>
+            <h2>Лимиты и текущее использование всегда перед глазами</h2>
           </div>
           <div className="public-check-list public-check-list-large">
-            <p>Текущий объём использования и остаток включённого лимита.</p>
-            <p>Какие операции учитываются в тарифе.</p>
-            <p>Что произойдёт после достижения лимита.</p>
-            <p>Как меняются доступ и квоты при смене плана.</p>
+            <p>Текущий объём обработанных обращений.</p>
+            <p>Использование ИИ и доступный остаток.</p>
+            <p>Количество подключённых кабинетов и участников команды.</p>
+            <p>Понятный переход на другой план при росте нагрузки.</p>
           </div>
         </div>
       </section>
@@ -117,12 +118,13 @@ export default function PricingPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Ранний доступ</p>
-            <h2>Хотите подключить свои маркетплейсы и обсудить условия пилота?</h2>
+            <p className="eyebrow">Начните с вашего рабочего сценария</p>
+            <h2>Подключите маркетплейсы и посмотрите, как MPReply впишется в работу команды</h2>
           </div>
-          <Link className="button button-primary button-on-dark" href="/contacts">
-            Обсудить подключение
-          </Link>
+          <div className="cta-actions-on-dark">
+            <Link className="button button-secondary button-secondary-on-dark" href="/demo">Посмотреть демо</Link>
+            <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">Создать аккаунт</Link>
+          </div>
         </div>
       </section>
     </PublicShell>
