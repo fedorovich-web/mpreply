@@ -1,4 +1,4 @@
-param([switch]$SkipInstall,[switch]$SkipBrowserInstall,[switch]$IncludeVisual,[switch]$AllBrowsers)
+param([switch]$SkipInstall,[switch]$SkipBrowserInstall,[switch]$AllBrowsers)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $Root=Split-Path -Parent $PSScriptRoot
@@ -20,7 +20,7 @@ try {
   if(-not $SkipBrowserInstall){ if($AllBrowsers){ Run-Step "Install Playwright browsers" { & $Npx playwright install chromium firefox webkit } } else { Run-Step "Install Playwright Chromium" { & $Npx playwright install chromium } } }
   Run-Step "Playwright public-site E2E" { & $Npm run test:e2e }
   Run-Step "Playwright accessibility scan" { & $Npm run test:a11y }
+  Run-Step "Playwright visual regression" { & $Npm run test:visual }
   Run-Step "Lighthouse CI" { & $Npm run lighthouse }
-  if($IncludeVisual){ Run-Step "Playwright visual regression" { & $Npm run test:visual } }
 } finally { Pop-Location }
 Write-Host "`nAll web-design-gate checks passed." -ForegroundColor Green
