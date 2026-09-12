@@ -1,3 +1,8 @@
+.public-root {
+	--color-text-muted: #566b90;
+	--color-brand-primary-strong: #1d4ed8;
+}
+
 .public-root .public-subhero {
 	background:
 		radial-gradient(circle at 84% 12%, rgb(14 165 233 / 9%), transparent 25rem),
