@@ -1,11 +1,11 @@
 .public-root {
-	--homepage-section-pad: clamp(7rem, 10vw, 10rem);
-	--homepage-blue: #1167f1;
-	--homepage-blue-deep: #0a46c7;
-	--homepage-ink: #071846;
-	--homepage-muted: #52678d;
-	--homepage-line: #dceafa;
-	--homepage-pale: #f6faff;
+	--homepage-section-pad: var(--space-section-public);
+	--homepage-blue: var(--color-brand-primary);
+	--homepage-blue-deep: var(--color-brand-primary-strong);
+	--homepage-ink: var(--color-text-primary);
+	--homepage-muted: var(--color-text-secondary);
+	--homepage-line: var(--color-border-card);
+	--homepage-pale: var(--color-surface-cool);
 }
 
 .public-root .public-section {
@@ -68,7 +68,7 @@
 .homepage-pill-kicker {
 	width: fit-content;
 	border-radius: 999px;
-	background: #eaf4ff;
+	background: var(--color-bg-brand-soft);
 	padding: 0.52rem 0.82rem;
 	font-size: 0.72rem;
 	letter-spacing: 0;
@@ -125,7 +125,7 @@
 	flex-wrap: wrap;
 	gap: 0.65rem 1.35rem;
 	margin-top: 0.15rem;
-	color: #51678e;
+	color: var(--color-text-secondary);
 	font-size: 0.72rem;
 }
 
@@ -150,7 +150,7 @@
 	position: relative;
 	z-index: 2;
 	border: 0;
-	background: #ffffff;
+	background: var(--color-bg-surface);
 	padding: 3.5rem 0 4.25rem;
 }
 
@@ -219,7 +219,7 @@
 	place-items: center;
 	align-content: center;
 	gap: 0.15rem;
-	border-left: 1px solid #d9e7f8;
+	border-left: 1px solid var(--color-border-card);
 	padding: 0.25rem 1rem;
 	text-align: center;
 }
@@ -232,7 +232,7 @@
 
 .homepage-marketplace-facts small {
 	max-width: 7rem;
-	color: #6880a8;
+	color: var(--color-text-muted);
 	font-size: 0.67rem;
 	line-height: 1.35;
 }
@@ -272,7 +272,7 @@
 .homepage-feature-layout .homepage-workspace-tabs {
 	justify-content: flex-start;
 	gap: 1.2rem;
-	background: #ffffff;
+	background: var(--color-bg-surface);
 	padding: 0.4rem 1.3rem 0;
 }
 
@@ -280,7 +280,7 @@
 	position: relative;
 	border-radius: 0;
 	background: transparent;
-	color: #6a80a6;
+	color: var(--color-text-muted);
 	padding: 1rem 0.2rem 0.9rem;
 }
 
@@ -316,10 +316,10 @@
 	align-content: start;
 	gap: 0.55rem;
 	border: 1px solid #e1ebf7;
-	border-radius: 1rem;
-	background: #ffffff;
+	border-radius: var(--radius-card);
+	background: var(--color-bg-surface);
 	padding: 1.45rem 1.05rem;
-	box-shadow: 0 16px 40px rgb(34 90 168 / 6%);
+	box-shadow: var(--shadow-card);
 }
 
 .homepage-model-mark {
@@ -352,19 +352,19 @@
 }
 
 .homepage-model-card small {
-	color: #7e91b1;
+	color: var(--color-text-muted);
 	font-size: 0.7rem;
 }
 
 .homepage-model-card p {
 	margin: 0.4rem 0 0;
-	color: #60769c;
+	color: var(--color-text-muted);
 	font-size: 0.72rem;
 	line-height: 1.55;
 }
 
 .homepage-approved-process {
-	background: #ffffff;
+	background: var(--color-bg-surface);
 }
 
 .homepage-process-heading {
@@ -402,7 +402,7 @@
 	place-items: center;
 	border-radius: 50%;
 	background: var(--homepage-blue);
-	color: #ffffff;
+	color: var(--color-text-on-brand);
 	font-size: 0.78rem;
 	font-weight: 800;
 }
@@ -450,7 +450,7 @@
 .homepage-horizontal-step p {
 	max-width: 16rem;
 	margin: 0;
-	color: #61779e;
+	color: var(--color-text-muted);
 	font-size: 0.78rem;
 	line-height: 1.62;
 }
@@ -475,8 +475,8 @@
 	align-content: start;
 	gap: 0.55rem;
 	border: 1px solid #e0ebf8;
-	border-radius: 1rem;
-	background: #ffffff;
+	border-radius: var(--radius-card);
+	background: var(--color-bg-surface);
 	padding: 1.35rem 1.1rem;
 	box-shadow: 0 12px 32px rgb(34 90 168 / 5%);
 }
@@ -495,13 +495,13 @@
 
 .homepage-result-card p {
 	margin: 0;
-	color: #657aa0;
+	color: var(--color-text-muted);
 	font-size: 0.7rem;
 	line-height: 1.48;
 }
 
 .homepage-approved-final-cta {
-	background: #ffffff;
+	background: var(--color-bg-surface);
 	padding-top: clamp(6rem, 9vw, 8rem);
 	padding-bottom: clamp(5rem, 8vw, 7rem);
 }
@@ -515,7 +515,7 @@
 	align-items: center;
 	gap: 3rem;
 	border: 1px solid #d2e5fb;
-	border-radius: 1.65rem;
+	border-radius: var(--radius-panel);
 	background: linear-gradient(110deg, #f1f7ff 0%, #eaf5ff 52%, #e1f1ff 100%);
 	padding: clamp(2.6rem, 5vw, 4.5rem);
 	box-shadow: none;
@@ -546,7 +546,7 @@
 .homepage-final-cta-copy > p:not(.homepage-kicker) {
 	max-width: 36rem;
 	margin: 0;
-	color: #5c7197;
+	color: var(--color-text-secondary);
 	font-size: 0.98rem;
 	line-height: 1.65;
 }
@@ -647,7 +647,7 @@
 	}
 
 	.homepage-marketplace-facts > span {
-		border-top: 1px solid #d9e7f8;
+		border-top: 1px solid var(--color-border-card);
 		border-left: 0;
 		padding: 1rem;
 	}
