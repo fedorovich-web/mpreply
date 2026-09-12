@@ -9,6 +9,19 @@ for (const route of PUBLIC_ROUTES) {
     await expect(page.locator("main")).toBeVisible();
     await expect(page.locator("h1:visible"), `${route} must have exactly one visible h1`).toHaveCount(1);
   });
+
+  test(`${route} fits a 390px mobile viewport without horizontal overflow`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(route, { waitUntil: "networkidle" });
+    await page.evaluate(() => document.fonts.ready);
+
+    const viewport = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+
+    expect(viewport.scrollWidth, `${route} must not overflow horizontally`).toBe(viewport.clientWidth);
+  });
 }
 
 test("primary navigation reaches features and pricing", async ({ page }) => {

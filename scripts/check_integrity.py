@@ -47,9 +47,9 @@ def resolve_ts_import(source: Path, specifier: str) -> bool:
     base = (source.parent / specifier).resolve()
     candidates = [
         base,
-        base.with_suffix(".ts"),
-        base.with_suffix(".tsx"),
-        base.with_suffix(".js"),
+        Path(f"{base}.ts"),
+        Path(f"{base}.tsx"),
+        Path(f"{base}.js"),
         base / "index.ts",
         base / "index.tsx",
         base / "index.js",
@@ -210,6 +210,8 @@ def check_release_gate_contract() -> None:
         "--pythonpath $VenvPython app",
         "Backend environment smoke test",
         "Backend dependency consistency",
+        "Backend dependency security audit",
+        "& $VenvPipAudit --strict .",
         "Frontend production dependency security audit",
         "& $Npm audit --omit=dev --audit-level=high",
         "Frontend unit tests",
@@ -226,6 +228,10 @@ def check_release_gate_contract() -> None:
         "& $Npm run test:e2e",
         "Frontend accessibility",
         "& $Npm run test:a11y",
+        "Frontend visual regression",
+        "& $Npm run test:visual:run",
+        "Frontend Lighthouse",
+        "& $Npm run lighthouse",
         "Release gate stopped",
     ]
     for token in required_local_tokens:
@@ -249,6 +255,7 @@ def check_release_gate_contract() -> None:
         "npx playwright install --with-deps chromium",
         "npm run test:e2e",
         "npm run test:a11y",
+        "npm run test:visual:run",
         "npm run lighthouse",
     ]:
         if token not in workflow:

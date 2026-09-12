@@ -6,8 +6,8 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const vnuCli = require.resolve("vnu-jar/vnu-jar.js");
-const nextCli = require.resolve("next/dist/bin/next");
 const appRoot = process.cwd();
+const standaloneServer = resolve(appRoot, ".next", "standalone", "server.js");
 const port = Number.parseInt(process.env.W3C_VALIDATOR_PORT ?? "3119", 10);
 const origin = `http://127.0.0.1:${port}`;
 const renderedRoutes = [
@@ -31,7 +31,7 @@ const renderedRoutes = [
 
 async function ensureBuildExists() {
   try {
-    await stat(resolve(appRoot, ".next/BUILD_ID"));
+    await stat(standaloneServer);
   } catch {
     throw new Error("Next.js production build not found. Run `npm run build` before W3C validation.");
   }
@@ -42,9 +42,14 @@ function routeFileName(route) {
 }
 
 function startServer() {
-  const child = spawn(process.execPath, [nextCli, "start", "--hostname", "127.0.0.1", "--port", String(port)], {
+  const child = spawn(process.execPath, [standaloneServer], {
     cwd: appRoot,
-    env: { ...process.env, NODE_ENV: "production" },
+    env: {
+      ...process.env,
+      HOSTNAME: "127.0.0.1",
+      NODE_ENV: "production",
+      PORT: String(port),
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
