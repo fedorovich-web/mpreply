@@ -18,6 +18,7 @@ const files = [
   "components/ai-assistant/AIAssistantWorkspace.tsx",
   "components/automation-rules/AutomationRulesWorkspace.tsx",
   "components/integrations/IntegrationsWorkspace.tsx",
+  "components/integrations/WildberriesIntegrationWorkspace.tsx",
   "components/analytics/AnalyticsWorkspace.tsx",
   "components/billing/BillingWorkspace.tsx",
 ].map((path) => readFileSync(join(root, path), "utf8")).join("\n");
@@ -85,6 +86,14 @@ describe("dashboard product copy", () => {
       "hard limit",
       "unit economics",
       "Billing overview вернул пустой ответ",
+      "Ключи остаются на backend",
+      "frontend получает только маску fingerprint",
+      "Backend RBAC остаётся security boundary",
+      ">Accounts<",
+      ">New account<",
+      ">Selected account<",
+      ">Settings<",
+      ">Credentials<",
       "· requestId ",
     ];
 
