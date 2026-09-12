@@ -72,19 +72,51 @@ export default function FeaturesPage() {
             </div>
           </div>
 
-          <div className="decision-preview" role="group" aria-label="Пример обработки обращения">
-            <div className="decision-preview-head">
-              <span className="decision-preview-label">Вопрос покупателя</span>
-              <span className="decision-preview-time">сейчас</span>
-            </div>
-            <div className="decision-preview-message">
-              <strong>«Подойдёт ли этот размер на рост 174 см?»</strong>
-              <p>Контекст товара найден. Черновик подготовлен с учётом данных карточки.</p>
-            </div>
-            <div className="decision-preview-path" role="group" aria-label="Этапы обработки">
-              <span>Контекст найден</span>
-              <span>Черновик готов</span>
-              <strong>Правило → проверить сотруднику</strong>
+          <div className="features-hero-scene" role="group" aria-label="Путь обращения от покупателя до готового ответа">
+            <div className="features-hero-glow" aria-hidden="true" />
+            <div className="features-hero-orbit features-hero-orbit-a" aria-hidden="true" />
+            <div className="features-hero-orbit features-hero-orbit-b" aria-hidden="true" />
+
+            <article className="features-hero-message">
+              <div className="features-hero-card-head">
+                <span>Wildberries · Вопрос</span>
+                <strong>Новый</strong>
+              </div>
+              <h2>«Подойдёт ли этот размер на рост 174 см?»</h2>
+              <p>Товар найден · размерная сетка доступна</p>
+              <div className="features-hero-context" aria-label="Доступный контекст">
+                <span>Карточка товара</span>
+                <span>История обращения</span>
+              </div>
+            </article>
+
+            <article className="features-hero-draft">
+              <div className="features-hero-draft-title">
+                <span aria-hidden="true">✦</span>
+                <strong>Ответ с помощью ИИ</strong>
+                <small>Черновик</small>
+              </div>
+              <p>Для роста 174 см размер M обычно подходит. Для более свободной посадки проверьте параметры в таблице размеров.</p>
+              <div className="features-hero-draft-actions" aria-hidden="true">
+                <span>Дружелюбный⌄</span>
+                <b>Отправить&nbsp; →</b>
+              </div>
+            </article>
+
+            <article className="features-hero-review">
+              <span className="features-hero-review-icon" aria-hidden="true">✓</span>
+              <div>
+                <small>Правило команды</small>
+                <strong>Нужна проверка</strong>
+                <p>Ответ останется у менеджера до подтверждения.</p>
+              </div>
+            </article>
+
+            <div className="features-hero-sources" aria-label="Поддерживаемые площадки">
+              <span className="is-wb">WB</span>
+              <span className="is-ozon">OZ</span>
+              <span className="is-market">М</span>
+              <span className="is-avito">A</span>
             </div>
           </div>
         </div>
