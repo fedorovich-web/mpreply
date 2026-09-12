@@ -21,6 +21,8 @@ Product UI supports Wildberries, Ozon, Yandex Market and Avito. Do not return Oz
 
 Public merge/deploy claims still require matching backend/runtime release certification. Do not merge a frontend production claim ahead of the backend work that makes it true.
 
+Billing/payment-provider wiring is a separate launch-stage task after the site is running on its production domain. Do not redesign billing or payment-provider UX in this branch, do not replace the existing tariff price fallback with a new product state, and do not invent checkout/payment actions.
+
 Do not market exact AI provider/model names unless those exact capabilities are implemented and verified on the deployment branch.
 
 Never fabricate customers, logos, testimonials, ratings, metrics, prices, discounts, uptime, compliance claims or free-trial periods.
