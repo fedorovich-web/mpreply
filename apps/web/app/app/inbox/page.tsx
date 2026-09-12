@@ -5,16 +5,15 @@ export default function InboxPage() {
     <section className="app-page app-page-wide">
       <section className="app-header app-header-row">
         <div>
-          <p className="eyebrow">Inbox</p>
-          <h1>Единая очередь отзывов и вопросов</h1>
+          <p className="eyebrow">Обращения</p>
+          <h1>Отзывы, вопросы и сообщения в одной очереди</h1>
           <p>
-            Live-очередь загружается из backend API с фильтрами по типу, статусу, рейтингу и поиску.
-            Карточка обращения поддерживает реальные status updates без демонстрационных данных.
+            Фильтруйте обращения по площадке, типу, оценке и статусу, открывайте контекст товара и переходите к ответу без переключения между кабинетами маркетплейсов.
           </p>
         </div>
         <div className="app-header-actions">
-          <span className="status-badge">Auto-first</span>
-          <span className="status-badge">WB MVP</span>
+          <span className="status-badge">Единая очередь</span>
+          <span className="status-badge">4 маркетплейса</span>
         </div>
       </section>
 
