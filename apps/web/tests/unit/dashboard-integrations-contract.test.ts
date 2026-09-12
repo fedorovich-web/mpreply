@@ -12,45 +12,40 @@ const avitoPage = readFileSync(join(root, "app/app/integrations/avito/page.tsx")
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-integrations-approved.css"), "utf8");
 
-describe("integrations readiness workspace", () => {
-  it("keeps the live account summary on the existing marketplace accounts API", () => {
+describe("integrations dashboard", () => {
+  it("keeps all four ready integrations on the existing marketplace accounts API", () => {
     expect(workspace).toContain('buildApiQuery("/api/marketplace-accounts"');
-    expect(workspace).toContain("Доступно сейчас");
-    expect(workspace).toContain("Планируется");
-    expect(workspace).toContain("Подключение и отправка пока недоступны");
+    expect(workspace).toContain("Интеграция готова");
+    expect(workspace).toContain("Wildberries");
+    expect(workspace).toContain("Ozon");
+    expect(workspace).toContain("Яндекс Маркет");
+    expect(workspace).toContain("Авито");
+    expect(workspace).not.toContain("Планируется");
+    expect(workspace).not.toContain("Подключение и отправка пока недоступны");
   });
 
-  it("does not expose planned marketplace pages as connectable integrations", () => {
-    expect(workspace).toContain('marketplace.readiness === "live"');
-    expect(ozonPage).not.toContain("MarketplaceIntegrationWorkspace");
-    expect(yandexPage).not.toContain("MarketplaceIntegrationWorkspace");
-    expect(avitoPage).not.toContain("MarketplaceIntegrationWorkspace");
-    for (const plannedPage of [ozonPage, yandexPage, avitoPage]) {
-      expect(plannedPage).toContain("Планируется");
-      expect(plannedPage).toContain("Подключение пока недоступно");
+  it("keeps every marketplace page operational", () => {
+    expect(wildberriesPage).toContain("WildberriesIntegrationWorkspace");
+    expect(ozonPage).toContain("MarketplaceIntegrationWorkspace");
+    expect(yandexPage).toContain("MarketplaceIntegrationWorkspace");
+    expect(avitoPage).toContain("MarketplaceIntegrationWorkspace");
+    for (const marketplacePage of [wildberriesPage, ozonPage, yandexPage, avitoPage]) {
+      expect(marketplacePage).toContain("Интеграция готова");
+      expect(marketplacePage).not.toContain("Подключение пока недоступно");
     }
   });
 
-  it("keeps Wildberries as the explicit live operational integration", () => {
-    expect(wildberriesPage).toContain("WildberriesIntegrationWorkspace");
-    expect(wildberriesPage).toContain("wildberries-integration-page");
-    expect(wildberriesPage).toContain("Доступно сейчас");
-    expect(wildberriesPage).not.toContain("Планируется");
+  it("states that all supported marketplaces are available for connection", () => {
+    expect(page).toContain("Wildberries, Ozon, Яндекс Маркет и Авито доступны для подключения");
+    expect(page).toContain("4 маркетплейса");
+    expect(page).not.toContain("находятся в плане интеграций");
   });
 
-  it("states the actual MVP coverage on the integrations page", () => {
-    expect(page).toContain("Wildberries доступен сейчас");
-    expect(page).toContain("Ozon, Яндекс Маркет и Авито находятся в плане интеграций");
-    expect(page).not.toContain("4 маркетплейса");
-  });
-
-  it("uses a scoped responsive dashboard layer without a second palette", () => {
+  it("uses the scoped responsive integrations layer without a second palette", () => {
     expect(layout).toContain('import "../styles/dashboard-integrations-approved.css"');
     expect(styles).toContain(".integrations-page");
-    expect(styles).toContain(".integration-market-card-live");
-    expect(styles).toContain(".integration-market-card-planned");
+    expect(styles).toContain(".integration-market-card");
     expect(styles).toContain(".wildberries-integration-page");
-    expect(styles).toContain(".planned-integration-page");
     expect(styles).toContain("@media (max-width: 520px)");
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
