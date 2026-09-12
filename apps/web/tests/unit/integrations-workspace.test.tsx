@@ -137,7 +137,7 @@ describe("MarketplaceIntegrationWorkspace", () => {
     );
 
     expect(await screen.findByText("Кабинеты Ozon")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Ozon основной" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Ozon основной" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Основной кабинет" })).not.toBeInTheDocument();
 
     const form = screen.getByRole("form", { name: "Новое подключение Ozon" });
