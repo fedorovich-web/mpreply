@@ -113,7 +113,7 @@ function renderWorkspace() {
 }
 
 describe("AIAssistantWorkspace", () => {
-  it("loads Inbox context and lets a manager generate a backend-only AI draft", async () => {
+  it("loads inquiry context and lets a manager prepare a draft", async () => {
     mockWorkspace("manager");
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
@@ -133,12 +133,15 @@ describe("AIAssistantWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByRole("button", { name: /Термокружка/ })).toBeInTheDocument();
-    const form = screen.getByRole("form", { name: "Настройки генерации AI-черновика" });
+    const form = screen.getByRole("form", { name: "Настройки подготовки черновика ответа" });
     fireEvent.change(within(form).getByLabelText("Тон ответа"), { target: { value: "friendly" } });
     fireEvent.change(within(form).getByLabelText("Правила бренда"), { target: { value: "Обращаться на Вы" } });
-    fireEvent.click(within(form).getByRole("button", { name: "Сгенерировать черновик" }));
+    fireEvent.click(within(form).getByRole("button", { name: "Подготовить черновик" }));
 
     expect(await screen.findByText(draft.draft_text)).toBeInTheDocument();
+    expect(screen.getByText("Проверка пройдена")).toBeInTheDocument();
+    expect(screen.queryByText("groq")).not.toBeInTheDocument();
+    expect(screen.queryByText("qwen/qwen3.8-27b")).not.toBeInTheDocument();
 
     const postCall = fetchMock.mock.calls.find(([input, init]) =>
       String(input).includes("/api/ai/drafts/generate") && init?.method === "POST"
@@ -171,7 +174,7 @@ describe("AIAssistantWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByText(draft.draft_text)).toBeInTheDocument();
-    expect(screen.getByText(/может просматривать историю, но не создавать AI-черновики/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Сгенерировать черновик" })).not.toBeInTheDocument();
+    expect(screen.getByText(/может просматривать историю, но не создавать новые черновики/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Подготовить черновик" })).not.toBeInTheDocument();
   });
 });
