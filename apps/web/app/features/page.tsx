@@ -84,7 +84,7 @@ export default function FeaturesPage() {
               </div>
               <h2>«Подойдёт ли этот размер на рост 174 см?»</h2>
               <p>Товар найден · размерная сетка доступна</p>
-              <div className="features-hero-context" aria-label="Доступный контекст">
+              <div className="features-hero-context" role="group" aria-label="Доступный контекст">
                 <span>Карточка товара</span>
                 <span>История обращения</span>
               </div>
@@ -112,7 +112,7 @@ export default function FeaturesPage() {
               </div>
             </article>
 
-            <div className="features-hero-sources" aria-label="Поддерживаемые площадки">
+            <div className="features-hero-sources" role="group" aria-label="Поддерживаемые площадки">
               <span className="is-wb">WB</span>
               <span className="is-ozon">OZ</span>
               <span className="is-market">М</span>
