@@ -15,7 +15,7 @@ import { Badge, type BadgeTone } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
 
 type FilterState = {
-  type: "all" | "review" | "question";
+  type: "all" | "review" | "question" | "chat";
   status: "all" | "needs_reply" | "ai_draft_ready" | "waiting_review" | "failed" | "escalated";
   query: string;
   rating: "all" | "negative" | "positive" | "no_rating";
@@ -47,6 +47,7 @@ const messageStatusLabels: Record<string, string> = {
 const messageTypeLabels: Record<string, string> = {
   review: "Отзыв",
   question: "Вопрос",
+  chat: "Сообщение",
 };
 
 const priorityLabels: Record<string, string> = {
@@ -62,6 +63,15 @@ export function InboxWorkspace() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [selectedId, setSelectedId] = useState("");
   const deferredQuery = useDeferredValue(filters.query.trim());
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.type !== "all") count += 1;
+    if (filters.status !== "all") count += 1;
+    if (filters.rating !== "all") count += 1;
+    if (filters.query.trim()) count += 1;
+    return count;
+  }, [filters]);
 
   const queryPath = useMemo(() => {
     const ratingMin = filters.rating === "positive" ? 4 : undefined;
@@ -118,12 +128,23 @@ export function InboxWorkspace() {
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
+  function resetFilters() {
+    setFilters(defaultFilters);
+  }
+
   return (
     <section className="inbox-workspace" aria-label="Рабочая область обращений">
       <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
-        <div className="panel-heading">
-          <span className="panel-kicker">Фильтры</span>
-          <strong>Очередь обращений</strong>
+        <div className="panel-heading panel-heading-row">
+          <div>
+            <span className="panel-kicker">Фильтры</span>
+            <strong>Очередь обращений</strong>
+          </div>
+          {activeFilterCount > 0 ? (
+            <button className="button button-secondary button-compact" onClick={resetFilters} type="button">
+              Сбросить · {activeFilterCount}
+            </button>
+          ) : null}
         </div>
 
         <label className="field-group">
@@ -131,7 +152,7 @@ export function InboxWorkspace() {
           <input
             aria-label="Поиск по обращениям"
             onChange={(event) => updateFilter("query", event.target.value)}
-            placeholder="Товар, SKU, текст..."
+            placeholder="Товар, SKU или текст"
             type="search"
             value={filters.query}
           />
@@ -141,6 +162,7 @@ export function InboxWorkspace() {
           <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>Все</FilterButton>
           <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>Отзывы</FilterButton>
           <FilterButton active={filters.type === "question"} onClick={() => updateFilter("type", "question")}>Вопросы</FilterButton>
+          <FilterButton active={filters.type === "chat"} onClick={() => updateFilter("type", "chat")}>Сообщения</FilterButton>
         </FilterGroup>
 
         <FilterGroup label="Статус">
@@ -164,7 +186,7 @@ export function InboxWorkspace() {
         <div className="panel-heading panel-heading-row">
           <div>
             <span className="panel-kicker">{messagesQuery.data?.total ?? 0} обращений</span>
-            <strong>{activeOrganization.name}</strong>
+            <strong>{activeFilterCount > 0 ? "Результаты фильтра" : "Все входящие"}</strong>
           </div>
           <button className="button button-secondary button-compact" disabled={messagesQuery.isFetching} onClick={() => void messagesQuery.refetch()} type="button">
             {messagesQuery.isFetching ? "Обновляем..." : "Обновить"}
@@ -193,8 +215,8 @@ export function InboxWorkspace() {
           </div>
         ) : (
           <EmptyState
-            description="Измените фильтры или синхронизируйте подключённые маркетплейсы."
-            title="Нет обращений по выбранным фильтрам"
+            description={activeFilterCount > 0 ? "Сбросьте часть фильтров или измените поиск." : "Новые обращения появятся здесь после синхронизации подключённых площадок."}
+            title={activeFilterCount > 0 ? "По выбранным условиям ничего не найдено" : "В очереди пока нет обращений"}
           />
         )}
       </section>
@@ -213,7 +235,7 @@ export function InboxWorkspace() {
             onEscalate={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "escalated" })}
           />
         ) : (
-          <EmptyState description="Выберите обращение из списка." title="Обращение не выбрано" />
+          <EmptyState description="Выберите обращение из списка, чтобы увидеть контекст и действия." title="Обращение не выбрано" />
         )}
       </aside>
     </section>
@@ -242,14 +264,14 @@ function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; m
     <button className={isSelected ? "message-card message-card-selected" : "message-card"} onClick={onSelect} type="button">
       <span className="message-card-topline">
         <Badge tone="info">{marketplaceLabel(message.marketplace)}</Badge>
-        <Badge tone={statusTone(message.status)}>{messageTypeLabels[message.type] ?? message.type}</Badge>
+        <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
       </span>
       <span className="message-card-title">{message.product?.name ?? "Товар без карточки"}</span>
       <span className="message-card-text">{message.customer_text}</span>
       <span className="message-card-meta">
-        <span>{formatDate(message.marketplace_created_at)}</span>
+        <span>{messageTypeLabels[message.type] ?? message.type}</span>
         <span>{message.rating ? `${message.rating}★` : "без оценки"}</span>
-        <span>{messageStatusLabels[message.status] ?? message.status}</span>
+        <span>{formatDate(message.marketplace_created_at)}</span>
       </span>
     </button>
   );
@@ -281,7 +303,7 @@ function MessageDetail({
     <div className="message-detail-card">
       <div className="panel-heading panel-heading-row">
         <div>
-          <span className="panel-kicker">Карточка обращения</span>
+          <span className="panel-kicker">{messageTypeLabels[message.type] ?? "Обращение"}</span>
           <strong>{message.product?.name ?? "Товар без карточки"}</strong>
         </div>
         <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
@@ -291,7 +313,7 @@ function MessageDetail({
         <DetailItem label="Маркетплейс" value={marketplaceLabel(message.marketplace)} />
         <DetailItem label="Тип" value={messageTypeLabels[message.type] ?? message.type} />
         <DetailItem label="Приоритет" value={priorityLabels[message.priority] ?? message.priority} />
-        <DetailItem label="Оценка" value={message.rating ? `${message.rating} из 5` : "Нет оценки"} />
+        <DetailItem label="Оценка" value={message.rating ? `${message.rating} из 5` : "—"} />
       </div>
 
       <section className="detail-section">
@@ -300,27 +322,27 @@ function MessageDetail({
       </section>
 
       <section className="detail-section">
-        <span>Текст покупателя</span>
+        <span>Обращение</span>
         <p>{message.customer_text}</p>
       </section>
 
       <section className="detail-section">
-        <span>Товар</span>
+        <span>Контекст товара</span>
         <p>
           {message.product
             ? [message.product.name, message.product.sku ? `SKU ${message.product.sku}` : null, message.product.brand].filter(Boolean).join(" · ")
-            : "Карточка товара не привязана."}
+            : "Товар не привязан к обращению."}
         </p>
       </section>
 
       {canCreateDraft ? (
         <label className="review-editor-field inbox-manual-draft-field">
-          <span>Ручной черновик</span>
+          <span>Ответ для проверки</span>
           <textarea
             disabled={isCreatingDraft}
             maxLength={12000}
             onChange={(event) => setReplyText(event.target.value)}
-            placeholder="Напишите ответ, который нужно передать на проверку"
+            placeholder="Введите ответ или отредактируйте подготовленный текст"
             value={replyText}
           />
           <button
@@ -329,7 +351,7 @@ function MessageDetail({
             onClick={() => onCreateDraft(replyText)}
             type="button"
           >
-            {isCreatingDraft ? "Создаём..." : "Передать черновик на проверку"}
+            {isCreatingDraft ? "Сохраняем..." : "Передать на проверку"}
           </button>
         </label>
       ) : null}
