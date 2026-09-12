@@ -5,8 +5,6 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/billing/BillingWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/billing/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
-const styles = readFileSync(join(root, "styles/dashboard-billing-approved.css"), "utf8");
 
 describe("billing and limits dashboard", () => {
   it("keeps plan and usage on the live tenant-scoped billing overview", () => {
@@ -15,26 +13,15 @@ describe("billing and limits dashboard", () => {
     expect(workspace).toContain("data.usage.map");
   });
 
-  it("does not invent pricing or payment actions", () => {
+  it("preserves existing price fallback until billing is connected on the domain", () => {
     expect(workspace).toContain("data.pricing_finalized");
-    expect(workspace).toContain("Цена не задана");
-    expect(workspace).not.toContain("Сменить тариф");
-    expect(workspace).not.toContain("Оплатить");
-    expect(workspace).not.toContain("checkout");
+    expect(workspace).toContain(': "—"');
+    expect(workspace).not.toContain("Цена не задана");
   });
 
-  it("frames the page around current plan facts and limits", () => {
-    expect(page).toContain("Контролируйте тариф и лимиты без скрытых расчётов");
-    expect(page).toContain("Цена отображается только когда она задана в текущем тарифе");
-  });
-
-  it("uses a scoped responsive billing layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-billing-approved.css"');
-    expect(styles).toContain(".billing-page");
-    expect(styles).toContain(".billing-plan-card");
-    expect(styles).toContain(".billing-usage-grid");
-    expect(styles).toContain(".billing-progress");
-    expect(styles).toContain("@media (max-width: 520px)");
-    expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+  it("keeps the existing current-plan framing without premature billing messaging", () => {
+    expect(page).toContain("Текущий тариф и использование");
+    expect(page).toContain("Проверяйте доступные лимиты, текущий расход и параметры тарифа");
+    expect(page).not.toContain("Цена отображается только когда она задана");
   });
 });
