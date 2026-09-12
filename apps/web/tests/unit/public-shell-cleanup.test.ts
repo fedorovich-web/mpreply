@@ -11,4 +11,10 @@ describe("public shell cleanup", () => {
     expect(shell).not.toContain("<span>◉</span>");
     expect(shell).not.toContain("<span>VK</span>");
   });
+
+  it("does not label contact fallbacks as company pages that do not exist", () => {
+    expect(shell).not.toContain(">Компания<");
+    expect(shell).not.toContain(">О нас<");
+    expect(shell).not.toContain(">Партнёрам<");
+  });
 });
