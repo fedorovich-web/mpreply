@@ -34,7 +34,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       }),
     onSuccess: () => {
       const requestedNext = searchParams.get("next");
-      const target = requestedNext?.startsWith("/app/") ? requestedNext : "/app/dashboard";
+      const intent = searchParams.get("intent");
+      const target = requestedNext?.startsWith("/app/")
+        ? requestedNext
+        : mode === "register" && intent === "connect-marketplace"
+          ? "/app/integrations"
+          : "/app/dashboard";
       router.replace(target);
       router.refresh();
     },
