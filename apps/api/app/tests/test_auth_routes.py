@@ -482,7 +482,7 @@ async def test_expired_and_malformed_action_tokens_are_rejected(
 
 
 @pytest.mark.asyncio
-async def test_login_rejects_sql_injection_password_and_replaces_fixed_cookies(
+async def test_login_rejects_injection_shaped_credentials_and_replaces_fixed_cookies(
     auth_routes: AuthRouteHarness,
 ) -> None:
     user_id, _ = await _create_verified_session(auth_routes.session_factory)
@@ -490,7 +490,14 @@ async def test_login_rejects_sql_injection_password_and_replaces_fixed_cookies(
     _set_client_cookie(auth_routes.client, ACCESS_COOKIE_NAME, fixed_access, path="/")
     _set_client_cookie(auth_routes.client, REFRESH_COOKIE_NAME, "attacker-fixed-refresh", path="/api/auth")
 
-    injection_response = await auth_routes.client.post(
+    email_injection_response = await auth_routes.client.post(
+        "/api/auth/login",
+        json={
+            "email": "roman'+OR+'1'='1@example.com",
+            "password": "old-password-123",
+        },
+    )
+    password_injection_response = await auth_routes.client.post(
         "/api/auth/login",
         json={"email": "csrf@example.com", "password": "' OR '1'='1"},
     )
@@ -499,7 +506,8 @@ async def test_login_rejects_sql_injection_password_and_replaces_fixed_cookies(
         json={"email": "csrf@example.com", "password": "old-password-123"},
     )
 
-    assert injection_response.status_code == 401
+    assert email_injection_response.status_code == 401
+    assert password_injection_response.status_code == 401
     assert login_response.status_code == 200
     assert auth_routes.client.cookies.get(
         ACCESS_COOKIE_NAME,
@@ -511,6 +519,21 @@ async def test_login_rejects_sql_injection_password_and_replaces_fixed_cookies(
         domain="testserver.local",
         path="/api/auth",
     ) != "attacker-fixed-refresh"
+
+
+@pytest.mark.asyncio
+async def test_action_token_lookup_rejects_sql_injection_shaped_token(
+    auth_routes: AuthRouteHarness,
+) -> None:
+    injection_token = "' OR '1'='1 -- " + ("x" * 32)
+
+    response = await auth_routes.client.post(
+        "/api/auth/reset-password",
+        json={"token": injection_token, "new_password": "new-password-456"},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid or expired token"}
 
 
 @pytest.mark.asyncio
