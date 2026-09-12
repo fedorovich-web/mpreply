@@ -42,7 +42,7 @@ export const automationRuleSchema = z.object({
   priority: z.number().int().min(0).max(10000),
   is_enabled: z.boolean(),
   mode: z.enum(["auto", "semi_auto"]),
-  applies_to: z.enum(["all", "review", "question"]),
+  applies_to: z.enum(["all", "review", "question", "chat"]),
   marketplace: z.enum(["wildberries", "ozon", "yandex_market", "avito"]).nullable(),
   min_rating: z.number().int().min(1).max(5).nullable(),
   max_rating: z.number().int().min(1).max(5).nullable(),
