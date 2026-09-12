@@ -8,10 +8,10 @@ type MarketplaceLandingProps = {
 };
 
 const workflow = [
-  ["01", "Получаем обращение", "Отзывы, вопросы и доступные сообщения с площадки появляются в общей очереди MPReply."],
-  ["02", "Добавляем контекст", "К обращению подтягиваются доступные данные товара и правила вашей команды."],
-  ["03", "Готовим ответ", "ИИ формирует черновик, который можно проверить, отредактировать или передать в автоматическую обработку."],
-  ["04", "Отправляем", "Типовые сценарии можно автоматизировать, а сложные обращения оставлять менеджеру."],
+  ["01", "Получаем обращение", "Отзывы, вопросы и сообщения покупателей появляются в общей очереди вместе с площадкой и текущим статусом."],
+  ["02", "Показываем контекст", "Сотрудник видит доступные данные товара, покупателя и самого обращения без поиска по нескольким кабинетам."],
+  ["03", "Готовим ответ", "ИИ помогает подготовить черновик с учётом контекста, правил команды и заданного тона коммуникации."],
+  ["04", "Отправляем или проверяем", "Типовые сценарии можно автоматизировать, а неоднозначные и чувствительные обращения оставлять сотруднику."],
 ];
 
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
@@ -21,15 +21,15 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
             <span className="public-status public-status-supported">{marketplace.statusLabel}</span>
-            <p className="eyebrow">MPReply × {marketplace.name}</p>
-            <h1>Автоответы на обращения покупателей {marketplace.name}</h1>
+            <p className="eyebrow">Интеграция с {marketplace.name}</p>
+            <h1>Отзывы, вопросы и сообщения {marketplace.name} — в единой очереди</h1>
             <p className="public-lead">{marketplace.summary}</p>
             <div className="hero-actions">
               <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                 Подключить {marketplace.name}
               </Link>
               <Link className="button button-secondary" href="/demo">
-                Посмотреть демо
+                Посмотреть интерфейс
               </Link>
             </div>
           </div>
@@ -39,9 +39,9 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               <span className="marketplace-monogram marketplace-monogram-large" aria-hidden="true">{marketplace.shortName}</span>
               <span className="public-status public-status-supported">Интеграция готова</span>
             </div>
-            <strong>{marketplace.name} подключается к общей очереди MPReply</strong>
+            <strong>{marketplace.name} работает в общем процессе обработки обращений</strong>
             <p>
-              Работайте с обращениями площадки в том же интерфейсе, что и с другими маркетплейсами: контекст, ИИ-ответ, проверка и отправка находятся рядом.
+              Площадка подключается к тому же интерфейсу, что и остальные интеграции: очередь, контекст, подготовка ответа, проверка и отправка остаются в одном рабочем пространстве.
             </p>
           </aside>
         </div>
@@ -50,9 +50,9 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       <section className="public-section">
         <div className="public-container marketplace-detail-story">
           <div className="section-heading">
-            <p className="eyebrow">Как это работает</p>
+            <p className="eyebrow">Один рабочий процесс</p>
             <h2>От нового обращения на {marketplace.name} до готового ответа</h2>
-            <p>Команда видит один понятный процесс независимо от того, с какой площадки пришёл покупатель.</p>
+            <p>Команда работает по одной логике независимо от того, с какой площадки пришёл покупатель.</p>
           </div>
 
           <div className="integration-flow-list" role="group" aria-label={`Обработка обращений ${marketplace.name}`}>
@@ -70,17 +70,17 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       <section className="public-section public-section-muted">
         <div className="public-container public-two-column public-two-column-balanced">
           <div>
-            <p className="eyebrow">Автоматизация под ваши правила</p>
-            <h2>Отправляйте типовые ответы автоматически, а сложные оставляйте человеку</h2>
+            <p className="eyebrow">Автоматизация под правила команды</p>
+            <h2>Рутину можно отправлять автоматически. Исключения — оставлять человеку.</h2>
             <p className="public-copy-muted">
-              Вы сами определяете, где можно ускорить работу, а где нужен контроль менеджера. Это позволяет автоматизировать рутину без потери качества общения.
+              Настройте, какие обращения проходят автоматически, а где обязательна проверка сотрудником. Контроль остаётся частью рабочего процесса, а не отдельной ручной операцией.
             </p>
           </div>
           <div className="public-check-list public-check-list-large">
-            <p>Контекст обращения и товара рядом с черновиком ответа.</p>
-            <p>Автоматическая отправка для выбранных сценариев.</p>
-            <p>Ручная проверка для исключений и чувствительных тем.</p>
-            <p>Понятные статусы и история работы с обращением.</p>
+            <p>Контекст товара и обращения рядом с ответом.</p>
+            <p>Автоотправка только для выбранных сценариев.</p>
+            <p>Проверка человеком для исключений и чувствительных тем.</p>
+            <p>Понятный статус обработки и история действий.</p>
           </div>
         </div>
       </section>
@@ -88,15 +88,15 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">{marketplace.name} в MPReply</p>
-            <h2>Подключите площадку и отвечайте покупателям из единого рабочего пространства</h2>
+            <p className="eyebrow">{marketplace.name} уже поддерживается</p>
+            <h2>Подключите площадку и начните работать с обращениями в общей очереди</h2>
           </div>
           <div className="cta-actions-on-dark">
             <Link className="button button-secondary button-secondary-on-dark" href="/marketplaces">
-              Все интеграции
+              Сравнить интеграции
             </Link>
             <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">
-              Создать аккаунт
+              Начать подключение
             </Link>
           </div>
         </div>
