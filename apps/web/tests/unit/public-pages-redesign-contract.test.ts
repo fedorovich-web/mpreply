@@ -27,4 +27,13 @@ describe("public page redesign", () => {
     expect(features).toContain("проверку сотруднику");
     expect(features).not.toMatch(/worker-backed|идемпотентности|application layer/i);
   });
+
+  it("shows the features workflow as a layered product scene instead of a generic single card", () => {
+    expect(features).toContain("features-hero-scene");
+    expect(features).toContain("features-hero-message");
+    expect(features).toContain("features-hero-draft");
+    expect(features).toContain("features-hero-review");
+    expect(pagesCss).toContain(".features-hero-scene");
+    expect(pagesCss).toContain(".features-hero-draft");
+  });
 });
