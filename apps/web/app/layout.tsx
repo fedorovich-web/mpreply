@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 
 import { siteConfig } from "../lib/site-config";
 import "../styles/globals.css";
+import "../styles/marketing-site.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
   title: {
-    default: "Respio — AI-ответы на отзывы и вопросы маркетплейсов",
-    template: "%s | Respio",
+    default: "MPReply — ИИ-ответы для маркетплейсов",
+    template: "%s | MPReply",
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
@@ -19,13 +20,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ru_RU",
     siteName: siteConfig.name,
-    title: "Respio — AI-ответы на отзывы и вопросы маркетплейсов",
+    title: "MPReply — ИИ-ответы для маркетплейсов",
     description: siteConfig.description,
     url: "/",
   },
   twitter: {
     card: "summary",
-    title: "Respio — AI-ответы для маркетплейсов",
+    title: "MPReply — ИИ-ответы для маркетплейсов",
     description: siteConfig.description,
   },
   robots: {
