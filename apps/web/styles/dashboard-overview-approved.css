@@ -1,0 +1,310 @@
+/* Operational dashboard overview: queues and health before marketing-style metrics. */
+
+.dashboard-overview-page {
+	max-width: 96rem;
+	margin: 0 auto;
+}
+
+.dashboard-overview-header {
+	max-width: 58rem;
+	margin-bottom: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.dashboard-overview-header h1 {
+	max-width: 22ch;
+	font-size: clamp(2rem, 3.2vw, 3.25rem);
+	letter-spacing: -0.045em;
+}
+
+.dashboard-overview-header > p:last-child {
+	max-width: 48rem;
+	color: var(--color-text-secondary);
+	line-height: 1.65;
+}
+
+.dashboard-operational-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.55fr) minmax(19rem, 0.72fr);
+	gap: 1.1rem;
+	align-items: stretch;
+}
+
+.dashboard-attention-panel,
+.dashboard-health-panel {
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-xl);
+	background: var(--color-bg-surface);
+	box-shadow: var(--shadow-sm);
+}
+
+.dashboard-attention-panel {
+	overflow: hidden;
+}
+
+.dashboard-health-panel {
+	display: flex;
+	flex-direction: column;
+	background:
+		radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-brand-primary) 9%, transparent), transparent 17rem),
+		linear-gradient(150deg, var(--color-bg-surface), color-mix(in srgb, var(--color-bg-brand-soft) 44%, var(--color-bg-surface)));
+	padding-bottom: 1.2rem;
+}
+
+.dashboard-overview-panel-heading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1.5rem;
+	padding: 1.35rem 1.45rem 1.15rem;
+}
+
+.dashboard-overview-panel-heading h2 {
+	margin: 0.38rem 0 0;
+	color: var(--color-text-primary);
+	font-size: 1.18rem;
+	line-height: 1.25;
+	letter-spacing: -0.025em;
+}
+
+.dashboard-period {
+	border: 1px solid var(--color-border-subtle);
+	border-radius: 999px;
+	background: var(--color-bg-subtle);
+	color: var(--color-text-muted);
+	padding: 0.3rem 0.58rem;
+	font-size: 0.64rem;
+	font-weight: 650;
+	white-space: nowrap;
+}
+
+.dashboard-attention-list {
+	border-top: 1px solid var(--color-border-subtle);
+}
+
+.dashboard-attention-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(8.5rem, auto);
+	align-items: center;
+	gap: 1.1rem;
+	border-bottom: 1px solid var(--color-border-subtle);
+	padding: 1rem 1.45rem;
+}
+
+.dashboard-attention-row:last-child {
+	border-bottom: 0;
+}
+
+.dashboard-attention-copy {
+	min-width: 0;
+}
+
+.dashboard-attention-title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.55rem;
+}
+
+.dashboard-attention-title > strong {
+	color: var(--color-text-primary);
+	font-size: 0.88rem;
+}
+
+.dashboard-attention-copy p {
+	max-width: 42rem;
+	margin: 0.35rem 0 0;
+	color: var(--color-text-secondary);
+	font-size: 0.76rem;
+	line-height: 1.5;
+}
+
+.dashboard-attention-value {
+	min-width: 3.4rem;
+	color: var(--color-text-primary);
+	font-size: 1.5rem;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.04em;
+	text-align: right;
+}
+
+.dashboard-row-action {
+	color: var(--color-brand-primary-strong);
+	font-size: 0.73rem;
+	font-weight: 700;
+	text-align: right;
+}
+
+.dashboard-row-action:hover {
+	color: var(--color-brand-primary-hover);
+}
+
+.dashboard-health-list {
+	display: grid;
+	gap: 0;
+	margin: 0;
+	padding: 0 1.4rem;
+}
+
+.dashboard-health-list > div {
+	display: grid;
+	gap: 0.28rem;
+	border-top: 1px solid var(--color-border-subtle);
+	padding: 1rem 0;
+}
+
+.dashboard-health-list dt {
+	color: var(--color-text-muted);
+	font-size: 0.69rem;
+	font-weight: 650;
+}
+
+.dashboard-health-list dd {
+	margin: 0;
+	color: var(--color-text-primary);
+	font-size: 1.42rem;
+	font-weight: 750;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.04em;
+}
+
+.dashboard-health-list small {
+	color: var(--color-text-secondary);
+	font-size: 0.67rem;
+	line-height: 1.45;
+}
+
+.dashboard-health-actions {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.55rem;
+	margin-top: auto;
+	padding: 0.45rem 1.4rem 0;
+}
+
+.dashboard-health-actions .button {
+	min-height: 2.45rem;
+	padding-inline: 0.75rem;
+	font-size: 0.7rem;
+}
+
+.dashboard-quick-actions {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.8rem;
+	margin-top: 1rem;
+}
+
+.dashboard-quick-action {
+	display: grid;
+	gap: 0.35rem;
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-lg);
+	background: var(--color-bg-surface);
+	box-shadow: var(--shadow-xs);
+	padding: 1rem 1.1rem;
+	transition: var(--transition-interactive);
+}
+
+.dashboard-quick-action:hover {
+	border-color: color-mix(in srgb, var(--color-brand-primary) 30%, var(--color-border-subtle));
+	box-shadow: var(--shadow-sm);
+	transform: translateY(var(--motion-hover-lift));
+}
+
+.dashboard-quick-action > span {
+	color: var(--color-brand-primary-strong);
+	font-size: 0.66rem;
+	font-weight: 750;
+	letter-spacing: 0.055em;
+	text-transform: uppercase;
+}
+
+.dashboard-quick-action > strong {
+	color: var(--color-text-primary);
+	font-size: 0.88rem;
+	line-height: 1.35;
+}
+
+.dashboard-quick-action > small {
+	color: var(--color-text-muted);
+	font-size: 0.69rem;
+	line-height: 1.4;
+}
+
+@media (max-width: 1080px) {
+	.dashboard-operational-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.dashboard-health-panel {
+		display: grid;
+		grid-template-columns: minmax(15rem, 0.75fr) minmax(0, 1.25fr);
+		align-items: start;
+		padding-bottom: 0;
+	}
+
+	.dashboard-health-list {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		padding: 0 1rem 1rem 0;
+	}
+
+	.dashboard-health-list > div {
+		padding: 1.2rem 1rem 0;
+	}
+
+	.dashboard-health-actions {
+		grid-column: 1 / -1;
+		grid-template-columns: repeat(2, max-content);
+		padding: 0 1.4rem 1.25rem;
+	}
+}
+
+@media (max-width: 760px) {
+	.dashboard-attention-row {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	.dashboard-row-action {
+		grid-column: 1 / -1;
+		text-align: left;
+	}
+
+	.dashboard-health-panel {
+		display: flex;
+	}
+
+	.dashboard-health-list {
+		display: grid;
+		grid-template-columns: 1fr;
+		padding: 0 1.4rem;
+	}
+
+	.dashboard-health-list > div {
+		padding: 1rem 0;
+	}
+
+	.dashboard-health-actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		padding: 0.45rem 1.4rem 1.2rem;
+	}
+
+	.dashboard-quick-actions {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 520px) {
+	.dashboard-overview-panel-heading {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.dashboard-attention-row {
+		padding-inline: 1rem;
+	}
+
+	.dashboard-health-actions {
+		grid-template-columns: 1fr;
+	}
+}

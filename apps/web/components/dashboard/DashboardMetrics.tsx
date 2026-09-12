@@ -4,139 +4,232 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { apiRequest, buildApiQuery } from "../../lib/api/client";
-import { analyticsOverviewSchema, billingOverviewSchema } from "../../lib/api/schemas";
+import {
+  analyticsOverviewSchema,
+  automationRuleListSchema,
+  marketplaceAccountListSchema,
+  reviewQueueListSchema,
+} from "../../lib/api/schemas";
 import { Badge, type BadgeTone } from "../ui/Badge";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
-type OverviewMetric = {
+type AttentionItem = {
   label: string;
-  value: string;
+  value: number | null;
   helper: string;
-  badge: string;
-  tone: BadgeTone;
+  href: string;
+  action: string;
 };
 
 export function DashboardMetrics() {
   const { activeOrganization } = useWorkspace();
   const analyticsQuery = useQuery({
     queryKey: ["analytics", "overview", activeOrganization.id, 30],
-    queryFn: () => apiRequest(buildApiQuery("/api/analytics/overview", { organization_id: activeOrganization.id, days: 30 }), analyticsOverviewSchema),
+    queryFn: () =>
+      apiRequest(
+        buildApiQuery("/api/analytics/overview", { organization_id: activeOrganization.id, days: 30 }),
+        analyticsOverviewSchema,
+      ),
   });
-  const billingQuery = useQuery({
-    queryKey: ["billing", "overview", activeOrganization.id],
-    queryFn: () => apiRequest(buildApiQuery("/api/billing/overview", { organization_id: activeOrganization.id }), billingOverviewSchema),
+  const reviewQueueQuery = useQuery({
+    queryKey: ["dashboard", "review-queue-summary", activeOrganization.id],
+    queryFn: () =>
+      apiRequest(
+        buildApiQuery("/api/replies/review-queue", {
+          organization_id: activeOrganization.id,
+          page: 1,
+          page_size: 1,
+        }),
+        reviewQueueListSchema,
+      ),
+  });
+  const accountsQuery = useQuery({
+    queryKey: ["marketplace-accounts", activeOrganization.id],
+    queryFn: () =>
+      apiRequest(
+        buildApiQuery("/api/marketplace-accounts", { organization_id: activeOrganization.id }),
+        marketplaceAccountListSchema,
+      ),
+  });
+  const rulesQuery = useQuery({
+    queryKey: ["dashboard", "automation-rules-summary", activeOrganization.id],
+    queryFn: () =>
+      apiRequest(
+        buildApiQuery("/api/automation-rules", { organization_id: activeOrganization.id }),
+        automationRuleListSchema,
+      ),
   });
 
-  if (analyticsQuery.isLoading || billingQuery.isLoading) {
+  if (analyticsQuery.isPending || reviewQueueQuery.isPending || accountsQuery.isPending || rulesQuery.isPending) {
     return (
-      <div className="workspace-inline-state">
-        <strong>Загружаем рабочий обзор</strong>
-        <p>Получаем очередь обращений, ответы и данные по текущему тарифу.</p>
+      <div className="workspace-inline-state" aria-live="polite">
+        <strong>Собираем рабочий обзор</strong>
+        <p>Проверяем входящие, очередь модерации, подключения и правила автоматизации.</p>
       </div>
     );
   }
 
-  if (analyticsQuery.error || billingQuery.error || !analyticsQuery.data || !billingQuery.data) {
+  if (analyticsQuery.error || !analyticsQuery.data) {
     return (
-      <div className="workspace-inline-state workspace-inline-state-error">
+      <div className="workspace-inline-state workspace-inline-state-error" role="alert">
         <strong>Не удалось загрузить рабочий обзор</strong>
-        <p>Обновите страницу. Если ошибка повторится, откройте нужный раздел через меню кабинета.</p>
+        <p>Обновите страницу. Если ошибка повторится, нужные очереди остаются доступны через меню кабинета.</p>
       </div>
     );
   }
 
   const analytics = analyticsQuery.data;
-  const billing = billingQuery.data;
-  const metrics: OverviewMetric[] = [
-    {
-      label: "Все обращения",
-      value: formatNumber(analytics.total_messages),
-      helper: `${formatNumber(analytics.new_messages)} новых за 30 дней`,
-      badge: "30 дней",
-      tone: "neutral",
-    },
-    {
-      label: "Ответы отправлены",
-      value: formatNumber(analytics.replies_sent),
-      helper: `${formatNumber(analytics.auto_replies_sent)} автоматически · ${formatNumber(analytics.manual_replies_sent)} вручную`,
-      badge: "Обработано",
-      tone: "success",
-    },
+  const reviewTotal = reviewQueueQuery.data?.total ?? null;
+  const accounts = accountsQuery.data ?? null;
+  const rules = rulesQuery.data ?? null;
+  const problemAccounts = accounts
+    ? accounts.filter((account) => account.status === "error" || account.error_count > 0).length
+    : null;
+  const activeAccounts = accounts ? accounts.filter((account) => account.status === "active").length : null;
+  const enabledRules = rules ? rules.items.filter((rule) => rule.is_enabled).length : null;
+
+  const attentionItems: AttentionItem[] = [
     {
       label: "Без ответа",
-      value: formatNumber(analytics.unanswered_messages),
-      helper: analytics.unanswered_messages > 0 ? "Нужны действия команды или правила автоматизации" : "Очередь без ответа пуста",
-      badge: analytics.unanswered_messages > 0 ? "Требует внимания" : "Очередь чиста",
-      tone: analytics.unanswered_messages > 0 ? "warning" : "success",
+      value: analytics.unanswered_messages,
+      helper:
+        analytics.unanswered_messages > 0
+          ? "Обращения ждут ответа команды или подходящего правила."
+          : "Очередь обращений без ответа пуста.",
+      href: "/app/inbox",
+      action: "Открыть входящие",
     },
     {
-      label: "Черновики с ИИ",
-      value: formatNumber(analytics.ai_drafts_generated),
-      helper: formatAcceptance(analytics.ai_acceptance_rate),
-      badge: "Подготовка ответов",
-      tone: "info",
+      label: "На модерации",
+      value: reviewTotal,
+      helper: reviewQueueQuery.error
+        ? "Не удалось проверить очередь модерации."
+        : reviewTotal && reviewTotal > 0
+          ? "Ответы ждут проверки или решения сотрудника."
+          : "Ответов, ожидающих проверки, сейчас нет.",
+      href: "/app/review-queue",
+      action: "Открыть модерацию",
+    },
+    {
+      label: "Проблемы подключений",
+      value: problemAccounts,
+      helper: accountsQuery.error
+        ? "Не удалось проверить состояние подключений."
+        : problemAccounts && problemAccounts > 0
+          ? "Есть кабинеты с ошибкой или неуспешной синхронизацией."
+          : "Подключения не сообщают об ошибках.",
+      href: "/app/integrations",
+      action: "Проверить интеграции",
+    },
+    {
+      label: "Негативные отзывы · 30 дней",
+      value: analytics.negative_reviews,
+      helper:
+        analytics.negative_reviews > 0
+          ? "Откройте входящие и проверьте обращения с низкой оценкой."
+          : "За период негативных отзывов в сводке нет.",
+      href: "/app/inbox",
+      action: "Перейти к обращениям",
     },
   ];
 
   return (
     <>
-      <section className="dashboard-cards dashboard-cards-4" aria-label="Ключевые показатели">
-        {metrics.map((metric) => (
-          <article className="metric-card metric-card-rich" key={metric.label}>
-            <div className="metric-card-header">
-              <span>{metric.label}</span>
-              <Badge tone={metric.tone}>{metric.badge}</Badge>
+      <section className="dashboard-operational-grid" aria-label="Операционный обзор">
+        <article className="dashboard-attention-panel">
+          <header className="dashboard-overview-panel-heading">
+            <div>
+              <span className="panel-kicker">Требует внимания</span>
+              <h2>Очереди, где нужен следующий шаг</h2>
             </div>
-            <strong>{metric.value}</strong>
-            <p>{metric.helper}</p>
-          </article>
-        ))}
-      </section>
+            <span className="dashboard-period">Актуальное состояние</span>
+          </header>
 
-      <section className="dashboard-panel-grid" aria-label="Рабочие действия">
-        <article className="dashboard-panel">
-          <div className="panel-heading">
-            <span className="panel-kicker">Сейчас</span>
-            <strong>Очередь и внимание команды</strong>
+          <div className="dashboard-attention-list">
+            {attentionItems.map((item) => (
+              <div className="dashboard-attention-row" key={item.label}>
+                <div className="dashboard-attention-copy">
+                  <div className="dashboard-attention-title">
+                    <strong>{item.label}</strong>
+                    <Badge tone={attentionTone(item.value)}>{attentionLabel(item.value)}</Badge>
+                  </div>
+                  <p>{item.helper}</p>
+                </div>
+                <strong className="dashboard-attention-value">{formatOptionalNumber(item.value)}</strong>
+                <Link className="dashboard-row-action" href={item.href}>{item.action} →</Link>
+              </div>
+            ))}
           </div>
-          <div className="analytics-summary-list">
-            <div className="analytics-summary-row">
-              <span>Новые обращения</span>
-              <strong>{formatNumber(analytics.new_messages)}</strong>
-            </div>
-            <div className="analytics-summary-row">
-              <span>Без ответа</span>
-              <strong>{formatNumber(analytics.unanswered_messages)}</strong>
-            </div>
-            <div className="analytics-summary-row">
-              <span>Негативные отзывы</span>
-              <strong>{formatNumber(analytics.negative_reviews)}</strong>
-            </div>
-          </div>
-          <Link className="button button-secondary" href="/app/inbox">Открыть обращения</Link>
         </article>
 
-        <article className="dashboard-panel dashboard-panel-accent">
-          <div className="panel-heading">
-            <span className="panel-kicker">Тариф и использование</span>
-            <strong>{billing.plan.name}</strong>
+        <aside className="dashboard-health-panel" aria-label="Состояние автоматизации и подключений">
+          <div className="dashboard-overview-panel-heading">
+            <div>
+              <span className="panel-kicker">Состояние работы</span>
+              <h2>Автоматизация и подключения</h2>
+            </div>
           </div>
-          <p>
-            {billing.pricing_finalized
-              ? "Проверьте текущие лимиты и использование тарифа."
-              : "Текущие лимиты и использование доступны в разделе тарифа."}
-          </p>
-          <Link className="button button-secondary" href="/app/billing">Открыть тариф и лимиты</Link>
-        </article>
+
+          <dl className="dashboard-health-list">
+            <div>
+              <dt>Включено правил</dt>
+              <dd>{rules ? `${formatNumber(enabledRules ?? 0)} из ${formatNumber(rules.total)}` : "—"}</dd>
+              <small>{rulesQuery.error ? "Состояние правил недоступно" : "Правила, которые могут участвовать в обработке"}</small>
+            </div>
+            <div>
+              <dt>Активные кабинеты</dt>
+              <dd>{accounts ? `${formatNumber(activeAccounts ?? 0)} из ${formatNumber(accounts.length)}` : "—"}</dd>
+              <small>{accountsQuery.error ? "Состояние подключений недоступно" : "Подключения со статусом «активно»"}</small>
+            </div>
+            <div>
+              <dt>Ответов отправлено · 30 дней</dt>
+              <dd>{formatNumber(analytics.replies_sent)}</dd>
+              <small>{formatNumber(analytics.auto_replies_sent)} автоматически · {formatNumber(analytics.manual_replies_sent)} вручную</small>
+            </div>
+          </dl>
+
+          <div className="dashboard-health-actions">
+            <Link className="button button-secondary" href="/app/automation-rules">Открыть правила</Link>
+            <Link className="button button-secondary" href="/app/integrations">Открыть интеграции</Link>
+          </div>
+        </aside>
       </section>
+
+      <nav className="dashboard-quick-actions" aria-label="Быстрые рабочие действия">
+        <Link className="dashboard-quick-action" href="/app/inbox">
+          <span>Входящие</span>
+          <strong>{formatNumber(analytics.new_messages)} новых за 30 дней</strong>
+          <small>Отзывы, вопросы и сообщения →</small>
+        </Link>
+        <Link className="dashboard-quick-action" href="/app/review-queue">
+          <span>Модерация</span>
+          <strong>{formatOptionalNumber(reviewTotal)} ждут решения</strong>
+          <small>Проверить и отправить ответы →</small>
+        </Link>
+        <Link className="dashboard-quick-action" href="/app/automation-rules">
+          <span>Автоматизация</span>
+          <strong>{rules ? `${formatNumber(enabledRules ?? 0)} правил включено` : "Состояние недоступно"}</strong>
+          <small>Проверить логику автоответов →</small>
+        </Link>
+      </nav>
     </>
   );
+}
+
+function attentionTone(value: number | null): BadgeTone {
+  if (value === null) return "neutral";
+  return value > 0 ? "warning" : "success";
+}
+
+function attentionLabel(value: number | null): string {
+  if (value === null) return "Нет данных";
+  return value > 0 ? "Нужно действие" : "В порядке";
 }
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("ru-RU").format(value);
 }
 
-function formatAcceptance(value: number | null): string {
-  return value === null ? "Пока нет данных по отправленным черновикам" : `${Math.round(value * 100)}% черновиков дошли до отправки`;
+function formatOptionalNumber(value: number | null): string {
+  return value === null ? "—" : formatNumber(value);
 }
