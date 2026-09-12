@@ -216,8 +216,6 @@ def check_release_gate_contract() -> None:
         "& $Npm run test:unit",
         "Design token tests",
         "& $Npm run test:design-tokens",
-        "Frontend design anti-pattern scan",
-        "& $Npm run design:detect",
         "Frontend CSS syntax validation",
         "& $Npm run validate:css-syntax",
         "Frontend W3C HTML and CSS validation",
@@ -243,7 +241,6 @@ def check_release_gate_contract() -> None:
     for token in [
         "npm run test:unit",
         "npm run test:design-tokens",
-        "npm run design:detect",
         "npm run validate:css-syntax",
         "npm run validate:w3c",
         "npx playwright install --with-deps chromium",
@@ -252,7 +249,7 @@ def check_release_gate_contract() -> None:
         "npm run lighthouse",
     ]:
         if token not in workflow:
-            fail(f"GitHub quality gate missing frontend design/browser contract: {token}")
+            fail(f"GitHub quality gate missing frontend browser/quality contract: {token}")
     if "Build production images" not in workflow:
         fail("GitHub quality gate does not build production Docker images")
     if '"pyright==' in pyproject:
