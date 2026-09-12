@@ -149,7 +149,7 @@ describe("MarketplaceIntegrationWorkspace", () => {
     const form = screen.getByRole("form", { name: "Новое подключение Ozon" });
     fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый Ozon" } });
     fireEvent.change(within(form).getByLabelText("Данные доступа Ozon"), { target: { value: "secret-token" } });
-    fireEvent.click(within(editor).getByRole("button", { name: "Добавить кабинет" }));
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
 
     await waitFor(() => {
       expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
