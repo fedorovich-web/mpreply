@@ -20,6 +20,22 @@ test("primary navigation reaches features and pricing", async ({ page }) => {
   await expect(page).toHaveURL(/\/pricing$/);
 });
 
+test("homepage reflects the ready marketplace integrations", async ({ page }) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const marketplaceList = page.locator(".homepage-marketplace-list");
+  await expect(marketplaceList.locator("a")).toHaveCount(4);
+
+  for (const marketplace of ["Wildberries", "Ozon", "Яндекс Маркет", "Авито"]) {
+    await expect(marketplaceList.getByText(marketplace, { exact: true })).toBeVisible();
+  }
+
+  const pageCopy = await page.locator("main").innerText();
+  expect(pageCopy).not.toMatch(/3\s+маркетплейса/i);
+  expect(pageCopy).not.toMatch(/интеграц(?:ия|ии).{0,24}(?:скоро|планиру|в разработке)/i);
+  expect(pageCopy).not.toMatch(/GPT-5\.6|Claude Sonnet|Gemini 3\.8|DeepSeek V4/i);
+});
+
 test("public pages emit no uncaught page errors", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
