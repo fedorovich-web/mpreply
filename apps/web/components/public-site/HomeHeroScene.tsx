@@ -8,9 +8,9 @@ export function HomeHeroScene() {
         className="homepage-hero-image"
         height={1086}
         priority
+        quality={85}
         sizes="(max-width: 1080px) 100vw, 58vw"
         src="/images/mpreply-hero.webp"
-        unoptimized
         width={1448}
       />
     </div>
