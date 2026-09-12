@@ -6,9 +6,9 @@ import { createPageMetadata } from "../../lib/seo";
 import { siteConfig } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Контакты Respio — демо, интеграция и пилот",
+  title: "Контакты MPReply — подключение маркетплейсов и пилот",
   description:
-    "Связаться с Respio по вопросам демо, пилота, интеграций маркетплейсов и будущего production-подключения.",
+    "Связаться с MPReply по вопросам подключения Wildberries, Ozon, Яндекс Маркета и Авито, демо продукта и пилотного запуска автоматизации ответов.",
   path: "/contacts",
 });
 
@@ -19,20 +19,20 @@ export default function ContactsPage() {
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
             <p className="eyebrow">Контакты</p>
-            <h1>Обсудить демо, интеграцию или пилот Respio</h1>
+            <h1>Обсудить подключение маркетплейсов и сценарий автоматизации</h1>
             <p className="public-lead">
-              Расскажите, с какими маркетплейсами работаете, какой объём отзывов и вопросов получаете и где сейчас возникает больше всего ручной работы.
+              Расскажите, с какими площадками работаете, какие обращения занимают больше всего времени и где хотите оставить ручной контроль. Так проще понять подходящий сценарий пилота.
             </p>
           </div>
 
           <aside className="contact-channel-panel">
-            <span className="panel-kicker">Контактный канал</span>
+            <span className="panel-kicker">Связаться с MPReply</span>
             {siteConfig.contactEmail ? (
               <a className="contact-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
             ) : (
-              <strong>Публичный контактный email появится перед открытым запуском</strong>
+              <strong>Контактный email будет опубликован перед открытым запуском</strong>
             )}
-            <p>Пока контакт не опубликован, продукт можно изучить через демо и страницы интеграций.</p>
+            <p>До публикации контакта продукт можно изучить через демо, возможности и страницы интеграций.</p>
           </aside>
         </div>
       </section>
@@ -42,26 +42,26 @@ export default function ContactsPage() {
           <article className="contact-path contact-path-primary">
             <span>01</span>
             <div>
-              <h2>Посмотреть, как работает автоматизация</h2>
-              <p>Разберите путь обращения через контекст, AI, SafetyGate, правила и очередь отправки.</p>
+              <h2>Посмотреть продукт в работе</h2>
+              <p>Разберите путь обращения: контекст, ИИ-черновик, правила, проверка и отправка.</p>
             </div>
-            <Link className="button button-primary" href="/demo">Открыть демо</Link>
+            <Link className="button button-primary" href="/demo">Посмотреть демо</Link>
           </article>
           <article className="contact-path">
             <span>02</span>
             <div>
-              <h2>Проверить статус интеграции</h2>
-              <p>Узнайте, какая площадка уже входит в MVP-основу, а какая ещё требует проверки API.</p>
+              <h2>Выбрать маркетплейс</h2>
+              <p>Посмотрите сценарии для Wildberries, Ozon, Яндекс Маркета и Авито.</p>
             </div>
-            <Link className="button button-secondary" href="/marketplaces">Статусы интеграций</Link>
+            <Link className="button button-secondary" href="/marketplaces">Все интеграции</Link>
           </article>
           <article className="contact-path">
             <span>03</span>
             <div>
-              <h2>Изучить возможности продукта</h2>
-              <p>Inbox, SafetyGate, правила, очередь, повторы, usage accounting и журнал действий.</p>
+              <h2>Понять возможности</h2>
+              <p>Единая очередь, ИИ-ответы, ручная проверка, автоотправка, статусы и история обработки.</p>
             </div>
-            <Link className="button button-secondary" href="/features">Все возможности</Link>
+            <Link className="button button-secondary" href="/features">Возможности</Link>
           </article>
         </div>
       </div>
