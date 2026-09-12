@@ -19,7 +19,7 @@ MarketplaceErrorCode = Literal[
     "unsupported_capability",
 ]
 
-T = TypeVar("T", default=object)
+T_co = TypeVar("T_co", covariant=True, default=object)
 
 
 def _empty_metadata() -> dict[str, object]:
@@ -27,17 +27,17 @@ def _empty_metadata() -> dict[str, object]:
 
 
 @dataclass(frozen=True)
-class AdapterResult(Generic[T]):
+class AdapterResult(Generic[T_co]):
     ok: bool
-    data: T | None = None
+    data: T_co | None = None
     error_code: MarketplaceErrorCode | None = None
     error_message_safe: str | None = None
     retry_after_seconds: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
-class MarketplacePage(Generic[T]):
-    items: tuple[T, ...]
+class MarketplacePage(Generic[T_co]):
+    items: tuple[T_co, ...]
     next_cursor: str | None
 
 

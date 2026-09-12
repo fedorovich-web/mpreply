@@ -5,8 +5,10 @@ from dataclasses import dataclass
 from typing import TypeVar
 
 from app.adapters.base import CredentialAdapter, ReviewQuestionAdapter
-from app.adapters.capabilities import MarketplaceCapability, MarketplaceStream
+from app.adapters.capabilities import WILDBERRIES_CAPABILITY, MarketplaceCapability, MarketplaceStream
 from app.adapters.conversation import ConversationAdapter
+from app.adapters.http import MarketplaceHttpClients
+from app.adapters.wildberries import WildberriesAdapter
 from app.models.enums import Marketplace
 
 ProviderFactory = Callable[[], object]
@@ -69,3 +71,14 @@ class MarketplaceAdapterRegistry:
         if registration is None:
             raise UnsupportedCapabilityError(marketplace, frozenset())
         return registration
+
+
+def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceAdapterRegistry:
+    return MarketplaceAdapterRegistry(
+        {
+            Marketplace.WILDBERRIES: ProviderRegistration(
+                capability=WILDBERRIES_CAPABILITY,
+                factory=lambda: WildberriesAdapter(client=clients.wildberries),
+            )
+        }
+    )
