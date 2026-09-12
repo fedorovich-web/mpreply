@@ -6,19 +6,20 @@ const repoRoot = join(process.cwd(), "..", "..");
 const read = (path: string) => readFileSync(join(repoRoot, path), "utf8");
 
 const product = read("PRODUCT.md");
-const dashboardPlan = read("docs/superpowers/plans/2026-09-12-mpreply-dashboard-admin-ux-redesign.md");
 const billingWorkspace = read("apps/web/components/billing/BillingWorkspace.tsx");
+const billingPage = read("apps/web/app/app/billing/page.tsx");
 
 describe("billing rollout boundary", () => {
   it("documents that payment-provider billing work waits for the production domain", () => {
     expect(product).toContain("production domain");
     expect(product).toContain("payment-provider wiring is deferred");
-    expect(dashboardPlan).toContain("Billing implementation is deferred until the production domain is connected");
+    expect(product).toContain("do not redesign the billing/payment flow");
   });
 
-  it("preserves the existing billing price fallback in this redesign branch", () => {
+  it("preserves the existing billing behavior and framing in this redesign branch", () => {
     expect(billingWorkspace).toContain("data.pricing_finalized");
     expect(billingWorkspace).toContain(': "—"');
     expect(billingWorkspace).not.toContain("Цена не задана");
+    expect(billingPage).toContain("Текущий тариф и использование");
   });
 });
