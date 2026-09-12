@@ -8,18 +8,18 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.adapters.base import MarketplacePage, NormalizedMessage
 from app.adapters.wildberries import WildberriesAdapter
 from app.core.config import get_settings
 from app.core.errors import bad_request, forbidden, not_found
 from app.core.security import CredentialService
-from app.models.customer_message import CustomerMessage
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.product import Product
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.marketplace_ingest_service import MarketplaceIngestService
 from app.services.organization_service import OrganizationService
 
 _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
@@ -48,6 +48,7 @@ class MarketplaceSyncService:
         self.session = session
         self.organization_service = OrganizationService(session)
         self.audit = AuditService(session)
+        self.ingest = MarketplaceIngestService(session)
         settings = get_settings()
         self.credentials = CredentialService(settings.credentials_encryption_key.get_secret_value())
 
@@ -88,15 +89,13 @@ class MarketplaceSyncService:
         try:
             reviews_result = await adapter.fetch_reviews(credential=credential)
             if reviews_result.ok:
-                for raw in adapter.extract_reviews(reviews_result.data):
-                    normalized = adapter.normalize_review(raw)
-                    outcome = await self._upsert_normalized_message(account, normalized)
-                    if outcome == "created":
-                        stats.imported_reviews += 1
-                    elif outcome == "updated":
-                        stats.updated_reviews += 1
-                    else:
-                        stats.skipped += 1
+                review_page = MarketplacePage[NormalizedMessage](
+                    items=tuple(adapter.normalize_review(raw) for raw in adapter.extract_reviews(reviews_result.data)),
+                    next_cursor=None,
+                )
+                ingest_stats = await self.ingest.ingest_page(account, review_page, now)
+                stats.imported_reviews += ingest_stats.created_messages
+                stats.updated_reviews += ingest_stats.updated_messages
                 await self._write_integration_event(
                     account=account,
                     event_type="sync.feedbacks",
@@ -116,15 +115,13 @@ class MarketplaceSyncService:
 
             questions_result = await adapter.fetch_questions(credential=credential)
             if questions_result.ok:
-                for raw in adapter.extract_questions(questions_result.data):
-                    normalized = adapter.normalize_question(raw)
-                    outcome = await self._upsert_normalized_message(account, normalized)
-                    if outcome == "created":
-                        stats.imported_questions += 1
-                    elif outcome == "updated":
-                        stats.updated_questions += 1
-                    else:
-                        stats.skipped += 1
+                question_page = MarketplacePage[NormalizedMessage](
+                    items=tuple(adapter.normalize_question(raw) for raw in adapter.extract_questions(questions_result.data)),
+                    next_cursor=None,
+                )
+                ingest_stats = await self.ingest.ingest_page(account, question_page, now)
+                stats.imported_questions += ingest_stats.created_messages
+                stats.updated_questions += ingest_stats.updated_messages
                 await self._write_integration_event(
                     account=account,
                     event_type="sync.questions",
@@ -210,90 +207,6 @@ class MarketplaceSyncService:
             return WildberriesAdapter()
         raise forbidden("Marketplace adapter is not enabled yet")
 
-    async def _upsert_normalized_message(self, account: MarketplaceAccount, normalized: dict[str, Any]) -> str:
-        if not normalized.get("external_id") or not normalized.get("customer_text"):
-            return "skipped"
-        now = datetime.now(UTC)
-        product = await self._upsert_product(account, normalized["product"])
-        result = await self.session.execute(
-            select(CustomerMessage).where(
-                CustomerMessage.organization_id == account.organization_id,
-                CustomerMessage.marketplace_account_id == account.id,
-                CustomerMessage.marketplace == account.marketplace,
-                CustomerMessage.external_id == normalized["external_id"],
-                CustomerMessage.type == normalized["type"],
-            )
-        )
-        message = result.scalar_one_or_none()
-        if message is None:
-            message = CustomerMessage(
-                organization_id=account.organization_id,
-                marketplace_account_id=account.id,
-                product_id=product.id,
-                marketplace=account.marketplace,
-                external_id=normalized["external_id"],
-                type=normalized["type"],
-                status=normalized["status"],
-                rating=normalized.get("rating"),
-                customer_display_name=normalized.get("customer_display_name"),
-                customer_text=normalized["customer_text"],
-                customer_photos_json=normalized.get("customer_photos_json") or [],
-                marketplace_created_at=normalized["marketplace_created_at"],
-                imported_at=now,
-                last_synced_at=now,
-                priority=self._priority_for(normalized),
-                metadata_json=normalized.get("metadata_json") or {},
-            )
-            self.session.add(message)
-            await self.session.flush()
-            return "created"
-        message.product_id = product.id
-        message.rating = normalized.get("rating")
-        message.customer_display_name = normalized.get("customer_display_name")
-        message.customer_text = normalized["customer_text"]
-        message.customer_photos_json = normalized.get("customer_photos_json") or []
-        message.last_synced_at = now
-        message.metadata_json = {**(message.metadata_json or {}), **(normalized.get("metadata_json") or {})}
-        await self.session.flush()
-        return "updated"
-
-    async def _upsert_product(self, account: MarketplaceAccount, product_payload: dict[str, Any]) -> Product:
-        external_id = product_payload.get("external_id") or "unknown"
-        result = await self.session.execute(
-            select(Product).where(
-                Product.organization_id == account.organization_id,
-                Product.marketplace_account_id == account.id,
-                Product.external_id == external_id,
-            )
-        )
-        product = result.scalar_one_or_none()
-        if product is None:
-            product = Product(
-                organization_id=account.organization_id,
-                marketplace_account_id=account.id,
-                marketplace=account.marketplace,
-                external_id=external_id,
-                sku=product_payload.get("sku"),
-                name=product_payload.get("name") or "Wildberries product",
-                brand=product_payload.get("brand"),
-                category=product_payload.get("category"),
-                image_url=product_payload.get("image_url"),
-                product_url=product_payload.get("product_url"),
-                metadata_json=product_payload.get("metadata_json") or {},
-            )
-            self.session.add(product)
-            await self.session.flush()
-            return product
-        product.sku = product_payload.get("sku")
-        product.name = product_payload.get("name") or product.name
-        product.brand = product_payload.get("brand")
-        product.category = product_payload.get("category")
-        product.image_url = product_payload.get("image_url")
-        product.product_url = product_payload.get("product_url")
-        product.metadata_json = {**(product.metadata_json or {}), **(product_payload.get("metadata_json") or {})}
-        await self.session.flush()
-        return product
-
     async def _write_integration_event(
         self,
         *,
@@ -317,10 +230,3 @@ class MarketplaceSyncService:
         self.session.add(event)
         await self.session.flush()
         return event
-
-    @staticmethod
-    def _priority_for(normalized: dict[str, Any]) -> str:
-        rating = normalized.get("rating")
-        if rating is not None and rating <= 2:
-            return "high"
-        return "normal"
