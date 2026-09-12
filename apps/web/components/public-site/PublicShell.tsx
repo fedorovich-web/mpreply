@@ -36,7 +36,7 @@ export function PublicShell({ children }: PublicShellProps) {
           <div>
             <strong>Продукт</strong>
             <Link href="/features">Возможности</Link>
-            <Link href="/#safetygate">Контроль перед отправкой</Link>
+            <Link href="/#how-it-works">Как это работает</Link>
             <Link href="/pricing">Тарифы</Link>
             <Link href="/demo">Посмотреть демо</Link>
           </div>
@@ -51,7 +51,7 @@ export function PublicShell({ children }: PublicShellProps) {
           </div>
           <div>
             <strong>Ресурсы</strong>
-            <Link href="/resources">Материалы</Link>
+            <Link href="/resources">Блог</Link>
             <Link href="/contacts">Контакты</Link>
           </div>
           <div>
