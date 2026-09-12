@@ -11,6 +11,8 @@ const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
+const resources = readFileSync(join(root, "app/resources/page.tsx"), "utf8");
+const contacts = readFileSync(join(root, "app/contacts/page.tsx"), "utf8");
 const pagesCssPath = join(root, "styles/marketing-pages.css");
 const pagesCss = existsSync(pagesCssPath) ? readFileSync(pagesCssPath, "utf8") : "";
 const marketplacesCssPath = join(root, "styles/marketplaces-approved.css");
@@ -19,6 +21,8 @@ const marketplaceDetailCssPath = join(root, "styles/marketplace-detail-approved.
 const marketplaceDetailCss = existsSync(marketplaceDetailCssPath) ? readFileSync(marketplaceDetailCssPath, "utf8") : "";
 const pricingDemoCssPath = join(root, "styles/pricing-demo-approved.css");
 const pricingDemoCss = existsSync(pricingDemoCssPath) ? readFileSync(pricingDemoCssPath, "utf8") : "";
+const resourcesContactsCssPath = join(root, "styles/resources-contacts-approved.css");
+const resourcesContactsCss = existsSync(resourcesContactsCssPath) ? readFileSync(resourcesContactsCssPath, "utf8") : "";
 
 describe("public page redesign", () => {
   it("loads page-specific marketing compositions", () => {
@@ -66,6 +70,24 @@ describe("public page redesign", () => {
     expect(demo).toContain("demo-product-draft");
     expect(demo).toContain("demo-product-review");
     expect(pricingDemoCss).toContain(".demo-product-scene");
+  });
+
+  it("gives the resources route an editorial composition instead of a plain note list", () => {
+    expect(layout).toContain('import "../styles/resources-contacts-approved.css"');
+    expect(resources).toContain("resource-editorial-scene");
+    expect(resources).toContain("resource-featured-card");
+    expect(resources).toContain("resource-topic-grid");
+    expect(resourcesContactsCss).toContain(".resource-editorial-scene");
+    expect(resourcesContactsCss).toContain(".resource-featured-card");
+  });
+
+  it("makes support email the primary contact action without inventing response-time promises", () => {
+    expect(contacts).toContain("contact-support-scene");
+    expect(contacts).toContain("contact-support-email");
+    expect(contacts).toContain("siteConfig.contactEmail");
+    expect(contacts).toContain("mailto:");
+    expect(contacts).not.toMatch(/ответим за|ответ в течение|24\s*час/i);
+    expect(resourcesContactsCss).toContain(".contact-support-scene");
   });
 
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
