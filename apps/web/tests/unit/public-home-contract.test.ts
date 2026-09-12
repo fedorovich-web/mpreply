@@ -53,7 +53,9 @@ describe("public homepage redesign contract", () => {
     expect(heroScene).toContain("width={1448}");
     expect(heroScene).toContain("height={1086}");
     expect(heroScene).toContain("priority");
+    expect(heroScene).toContain("quality={85}");
     expect(heroScene).toContain("sizes=");
+    expect(heroScene).not.toContain("unoptimized");
     expect(heroScene).not.toContain("homepage-hero-window");
     expect(heroScene).not.toContain("homepage-hero-ai-card");
     expect(page).toContain("homepage-cta-scene");
