@@ -30,13 +30,25 @@
 
 /* Copy widths intentionally mirror the approved line breaks. */
 .homepage-feature-layout {
-	grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-	gap: clamp(2.35rem, 3.2vw, 3rem);
+	grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+	gap: clamp(2.1rem, 2.9vw, 2.7rem);
+}
+
+.homepage-feature-layout .homepage-section-heading-left {
+	max-width: 34rem;
 }
 
 .homepage-models-layout {
-	grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-	gap: clamp(2.35rem, 3.1vw, 2.9rem);
+	grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+	gap: clamp(2.1rem, 2.8vw, 2.6rem);
+}
+
+.homepage-models-layout .homepage-section-heading-left {
+	max-width: 35rem;
+}
+
+.homepage-models-layout .homepage-section-heading-left h2 {
+	font-size: clamp(2.3rem, 3.05vw, 3.2rem);
 }
 
 .homepage-model-card {
@@ -70,8 +82,12 @@
 }
 
 .homepage-results-layout {
-	grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-	gap: clamp(4rem, 5.5vw, 5rem);
+	grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+	gap: clamp(4.15rem, 5.8vw, 5.2rem);
+}
+
+.homepage-results-copy {
+	max-width: 28rem;
 }
 
 .homepage-approved-final-cta {
@@ -80,12 +96,12 @@
 }
 
 .homepage-approved-final-cta .homepage-final-cta-card {
-	grid-template-columns: minmax(0, 1.12fr) minmax(25rem, 0.88fr);
-	gap: 2rem;
+	grid-template-columns: minmax(0, 1.18fr) minmax(24rem, 0.82fr);
+	gap: 1.8rem;
 }
 
 .homepage-approved-final-cta .homepage-final-cta-card h2 {
-	max-width: 20ch;
+	max-width: 24ch;
 }
 
 @media (max-width: 1120px) {
@@ -113,6 +129,16 @@
 	.homepage-approved-hero {
 		padding-top: 3.5rem;
 		padding-bottom: 3.75rem;
+	}
+
+	.homepage-feature-layout .homepage-section-heading-left,
+	.homepage-models-layout .homepage-section-heading-left,
+	.homepage-results-copy {
+		max-width: none;
+	}
+
+	.homepage-models-layout .homepage-section-heading-left h2 {
+		font-size: clamp(2.25rem, 10vw, 3.1rem);
 	}
 
 	.homepage-models-section,
