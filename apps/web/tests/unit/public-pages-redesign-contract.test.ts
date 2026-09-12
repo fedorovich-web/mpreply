@@ -104,6 +104,11 @@ describe("public page redesign", () => {
     expect(authCss).toContain(".auth-preview-queue");
   });
 
+  it("sends marketplace-connect registration intent directly to integrations", () => {
+    expect(authForm).toContain('intent === "connect-marketplace"');
+    expect(authForm).toContain('"/app/integrations"');
+  });
+
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
     expect(features).toMatch(/От обращения покупателя до ответа|путь обработки каждого обращения/i);
     expect(features).toContain("Отзывы, вопросы и сообщения");
