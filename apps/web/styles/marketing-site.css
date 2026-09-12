@@ -30,8 +30,6 @@
 	--gradient-public-blue: linear-gradient(110deg, #1e40af 0%, #2563eb 43%, #0ea5e9 75%, #7dd3fc 100%);
 	--gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #f5faff 100%);
 	--gradient-public-cta: linear-gradient(115deg, #1e40af 0%, #2563eb 52%, #0ea5e9 100%);
-	--gradient-signal-track: linear-gradient(90deg, #2563eb, #0ea5e9);
-	--gradient-hero-glow: radial-gradient(circle, rgb(37 99 235 / 10%), transparent 70%);
 	--public-section-spacing: clamp(6rem, 10vw, 9rem);
 	--shadow-public-card: 0 24px 60px rgb(26 73 145 / 10%);
 	--shadow-public-panel: 0 32px 90px rgb(26 73 145 / 12%);
