@@ -47,7 +47,8 @@ describe("inbox operational workspace", () => {
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
 
-  it("frames the page around triage rather than marketing metrics", () => {
+  it("frames the page around triage with the approved product label", () => {
+    expect(page).toContain('<p className="eyebrow">Обращения</p>');
     expect(page).toContain("Разберите обращения без переключения между кабинетами");
     expect(page).toContain("Фильтры сохраняются");
     expect(page).not.toMatch(/экономи|процент|рост|эффективност/i);
