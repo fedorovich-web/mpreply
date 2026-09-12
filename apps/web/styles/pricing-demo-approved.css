@@ -1,0 +1,644 @@
+/* Pricing and demo compositions aligned with the approved MPReply public direction. */
+
+.public-root .public-subhero-pricing,
+.public-root .public-subhero-demo {
+  position: relative;
+  overflow: hidden;
+  padding-top: clamp(4.75rem, 6vw, 6.25rem);
+  padding-bottom: clamp(4.5rem, 6vw, 6rem);
+  background:
+    radial-gradient(circle at 84% 16%, rgb(37 99 235 / 10%), transparent 24rem),
+    radial-gradient(circle at 70% 76%, rgb(14 165 233 / 7%), transparent 22rem),
+    linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+}
+
+.public-subhero-pricing .public-subhero-grid,
+.public-subhero-demo .public-subhero-grid {
+  position: relative;
+  z-index: 1;
+  grid-template-columns: minmax(0, 0.9fr) minmax(34rem, 1.1fr);
+  align-items: center;
+  gap: clamp(3rem, 5vw, 5.25rem);
+}
+
+.public-subhero-pricing .public-subhero-copy h1,
+.public-subhero-demo .public-subhero-copy h1 {
+  max-width: 12ch;
+  font-size: clamp(3.3rem, 4.65vw, 5rem);
+  line-height: 0.99;
+  letter-spacing: -0.055em;
+}
+
+.public-subhero-pricing .public-lead,
+.public-subhero-demo .public-lead {
+  max-width: 39rem;
+  color: var(--color-text-secondary);
+  font-size: clamp(1rem, 1.25vw, 1.1rem);
+  line-height: 1.65;
+}
+
+/* Pricing hero: show what drives the plan without inventing public prices. */
+.pricing-plan-scene {
+  position: relative;
+  isolation: isolate;
+  min-height: 31.5rem;
+}
+
+.pricing-plan-scene::before {
+  position: absolute;
+  inset: 1.4rem -0.8rem 1rem 2.4rem;
+  z-index: -2;
+  border-radius: 43% 57% 49% 51%;
+  background: linear-gradient(145deg, rgb(224 240 255 / 84%), rgb(237 247 255 / 58%) 55%, rgb(238 242 255 / 40%));
+  content: '';
+  transform: rotate(-6deg);
+}
+
+.pricing-plan-window {
+  position: absolute;
+  top: 1.4rem;
+  right: 0;
+  width: min(92%, 35rem);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1.05rem;
+  background: var(--color-bg-surface);
+  box-shadow: 0 28px 70px rgb(31 82 150 / 14%);
+}
+
+.pricing-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.4rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0.8rem 1rem;
+}
+
+.pricing-plan-head > div {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.pricing-plan-head-mark {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: var(--gradient-public-blue);
+  color: var(--color-text-on-brand);
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.pricing-plan-head strong {
+  color: var(--color-text-primary);
+  font-size: 0.7rem;
+}
+
+.pricing-plan-head > span {
+  border-radius: 999px;
+  background: var(--color-bg-brand-soft);
+  color: var(--color-brand-primary);
+  padding: 0.34rem 0.58rem;
+  font-size: 0.5rem;
+  font-weight: 700;
+}
+
+.pricing-plan-usage {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem 1.15rem 1rem;
+}
+
+.pricing-plan-usage-row {
+  display: grid;
+  grid-template-columns: minmax(9.4rem, 0.8fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.pricing-plan-usage-copy {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.pricing-plan-usage-copy strong {
+  color: var(--color-text-primary);
+  font-size: 0.6rem;
+}
+
+.pricing-plan-usage-copy small,
+.pricing-plan-usage-row > small {
+  color: var(--color-text-muted);
+  font-size: 0.48rem;
+}
+
+.pricing-plan-track {
+  position: relative;
+  height: 0.52rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-bg-muted);
+}
+
+.pricing-plan-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-brand-primary), var(--color-brand-accent));
+}
+
+.pricing-plan-usage-row:nth-child(1) .pricing-plan-track > span { width: 46%; }
+.pricing-plan-usage-row:nth-child(2) .pricing-plan-track > span { width: 68%; }
+.pricing-plan-usage-row:nth-child(3) .pricing-plan-track > span { width: 56%; }
+
+.pricing-plan-note {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.15rem 1.15rem 1.15rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.8rem;
+  background: var(--color-bg-brand-soft);
+  padding: 0.8rem;
+}
+
+.pricing-plan-note > span {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: var(--color-bg-surface);
+  color: var(--color-brand-primary);
+  font-size: 1rem;
+}
+
+.pricing-plan-note div {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.pricing-plan-note strong {
+  color: var(--color-text-primary);
+  font-size: 0.59rem;
+}
+
+.pricing-plan-note small {
+  color: var(--color-text-secondary);
+  font-size: 0.49rem;
+  line-height: 1.45;
+}
+
+.pricing-plan-scale {
+  position: absolute;
+  left: 0;
+  bottom: 0.7rem;
+  z-index: 4;
+  display: grid;
+  width: min(72%, 26rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.pricing-plan-scale > span {
+  display: grid;
+  gap: 0.12rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 96%);
+  padding: 0.72rem;
+  box-shadow: 0 12px 30px rgb(35 87 153 / 10%);
+}
+
+.pricing-plan-scale strong {
+  color: var(--color-text-primary);
+  font-size: 0.57rem;
+}
+
+.pricing-plan-scale small {
+  color: var(--color-text-muted);
+  font-size: 0.46rem;
+  line-height: 1.35;
+}
+
+.public-root .pricing-model-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.public-root .pricing-model-item {
+  min-height: 13rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  background: var(--color-bg-surface);
+  padding: 1.45rem;
+  box-shadow: var(--shadow-public-card);
+}
+
+.public-root .pricing-model-item > span {
+  display: inline-grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: var(--color-bg-brand-soft);
+  color: var(--color-brand-primary);
+}
+
+.public-root .pricing-model-item h3 {
+  margin-top: 1.4rem;
+}
+
+.public-root .audience-pricing-list {
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.public-root .audience-pricing-row {
+  grid-template-columns: minmax(11rem, 0.55fr) minmax(0, 1.1fr) minmax(11rem, 0.55fr);
+  align-items: center;
+  gap: 2rem;
+  padding: 1.55rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+/* Demo hero: show the actual question -> draft -> review path. */
+.demo-product-scene {
+  position: relative;
+  isolation: isolate;
+  min-height: 31.5rem;
+}
+
+.demo-product-scene::before {
+  position: absolute;
+  inset: 1.8rem -1rem 1.2rem 2.8rem;
+  z-index: -3;
+  border-radius: 48% 52% 45% 55%;
+  background: linear-gradient(145deg, rgb(225 241 255 / 84%), rgb(236 247 255 / 54%) 58%, rgb(239 241 255 / 46%));
+  content: '';
+  transform: rotate(-7deg);
+}
+
+.demo-product-window {
+  position: absolute;
+  top: 1.25rem;
+  right: 0;
+  width: min(92%, 35.5rem);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1.05rem;
+  background: var(--color-bg-surface);
+  box-shadow: 0 28px 72px rgb(31 82 150 / 14%);
+}
+
+.demo-product-window-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0.78rem 1rem;
+}
+
+.demo-product-window-head > div {
+  display: flex;
+  align-items: center;
+  gap: 0.52rem;
+}
+
+.demo-product-window-head > div > span {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 0.48rem;
+  background: var(--gradient-public-blue);
+  color: var(--color-text-on-brand);
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.demo-product-window-head strong {
+  color: var(--color-text-primary);
+  font-size: 0.66rem;
+}
+
+.demo-product-window-head > span {
+  color: var(--color-text-muted);
+  font-size: 0.48rem;
+}
+
+.demo-product-window-body {
+  display: grid;
+  min-height: 22rem;
+  grid-template-columns: 8.1rem minmax(0, 1fr);
+}
+
+.demo-product-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  border-right: 1px solid var(--color-border-subtle);
+  background: #fbfdff;
+  padding: 0.9rem 0.65rem;
+}
+
+.demo-product-sidebar strong {
+  margin-bottom: 0.3rem;
+  color: var(--color-text-primary);
+  font-size: 0.58rem;
+}
+
+.demo-product-sidebar span {
+  border-radius: 0.45rem;
+  color: var(--color-text-secondary);
+  padding: 0.45rem 0.5rem;
+  font-size: 0.5rem;
+}
+
+.demo-product-sidebar span:first-of-type {
+  background: var(--color-bg-brand-soft);
+  color: var(--color-brand-primary);
+  font-weight: 700;
+}
+
+.demo-product-question {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem 8rem;
+}
+
+.demo-product-question-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  color: var(--color-text-muted);
+  font-size: 0.48rem;
+}
+
+.demo-product-question-topline > span:last-child {
+  border-radius: 999px;
+  background: var(--color-bg-brand-soft);
+  color: var(--color-brand-primary);
+  padding: 0.26rem 0.46rem;
+  font-weight: 700;
+}
+
+.demo-product-question > strong {
+  max-width: 24rem;
+  color: var(--color-text-primary);
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.demo-product-question > p {
+  max-width: 25rem;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.57rem;
+  line-height: 1.55;
+}
+
+.demo-product-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.demo-product-context span {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+  padding: 0.35rem 0.55rem;
+  font-size: 0.46rem;
+}
+
+.demo-product-draft {
+  position: absolute;
+  right: 1.1rem;
+  bottom: 1.1rem;
+  z-index: 4;
+  width: min(68%, 24rem);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 98%);
+  padding: 1rem;
+  box-shadow: 0 18px 42px rgb(35 87 153 / 14%);
+}
+
+.demo-product-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.demo-product-draft-head > span {
+  color: var(--color-brand-primary);
+}
+
+.demo-product-draft-head strong {
+  color: var(--color-text-primary);
+  font-size: 0.62rem;
+}
+
+.demo-product-draft-head small {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.45rem;
+}
+
+.demo-product-draft p {
+  margin: 0.72rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.55rem;
+  line-height: 1.55;
+}
+
+.demo-product-review {
+  position: absolute;
+  left: 0;
+  bottom: 1rem;
+  z-index: 5;
+  display: grid;
+  width: min(47%, 16rem);
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid #f1dfc5;
+  border-radius: 0.82rem;
+  background: rgb(255 251 244 / 98%);
+  padding: 0.8rem;
+  box-shadow: 0 14px 32px rgb(139 91 28 / 10%);
+}
+
+.demo-product-review > span {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-warning-soft);
+  color: var(--color-warning-text);
+  font-weight: 800;
+}
+
+.demo-product-review div {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.demo-product-review strong {
+  color: var(--color-warning-text);
+  font-size: 0.58rem;
+}
+
+.demo-product-review small {
+  color: var(--color-text-secondary);
+  font-size: 0.46rem;
+  line-height: 1.4;
+}
+
+.public-root .demo-decision-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.55fr);
+  align-items: center;
+  gap: clamp(2.5rem, 5vw, 5rem);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1.1rem;
+  background: var(--color-bg-surface);
+  padding: clamp(2rem, 4vw, 3.5rem);
+  box-shadow: var(--shadow-public-card);
+}
+
+.public-root .demo-flow-list {
+  margin-top: 3rem;
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.public-root .demo-flow-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(12rem, 0.62fr) minmax(0, 1.38fr);
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
+  padding: 1.65rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.public-root .demo-flow-row h3,
+.public-root .demo-flow-row p {
+  margin: 0;
+}
+
+.public-root .decision-outcomes {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.public-root .decision-outcome {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.9rem;
+  background: var(--color-bg-surface);
+  padding: 1.15rem;
+}
+
+.public-root .decision-outcome strong {
+  color: var(--color-text-primary);
+}
+
+.public-root .decision-outcome p {
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 1080px) {
+  .public-subhero-pricing .public-subhero-grid,
+  .public-subhero-demo .public-subhero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-plan-scene,
+  .demo-product-scene {
+    width: min(100%, 42rem);
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .public-root .public-subhero-pricing,
+  .public-root .public-subhero-demo {
+    padding-top: 3.75rem;
+    padding-bottom: 4rem;
+  }
+
+  .public-subhero-pricing .public-subhero-copy h1,
+  .public-subhero-demo .public-subhero-copy h1 {
+    max-width: none;
+    font-size: clamp(2.65rem, 12vw, 3.7rem);
+  }
+
+  .pricing-plan-scene,
+  .demo-product-scene {
+    display: grid;
+    min-height: 0;
+    gap: 0.75rem;
+  }
+
+  .pricing-plan-scene::before,
+  .demo-product-scene::before {
+    display: none;
+  }
+
+  .pricing-plan-window,
+  .pricing-plan-scale,
+  .demo-product-window,
+  .demo-product-draft,
+  .demo-product-review {
+    position: static;
+    width: 100%;
+  }
+
+  .pricing-plan-scale {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-plan-usage-row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .public-root .pricing-model-grid,
+  .public-root .audience-pricing-row,
+  .public-root .demo-decision-stage,
+  .public-root .demo-flow-row {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-product-window-body {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-product-sidebar {
+    display: flex;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .demo-product-question {
+    padding-bottom: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-plan-window,
+  .demo-product-window {
+    transform: none;
+  }
+}
