@@ -1,8 +1,8 @@
 .public-root .public-subhero {
 	background:
-		radial-gradient(circle at 84% 12%, color-mix(in srgb, var(--color-brand-accent) 9%, transparent), transparent 25rem),
-		radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--color-brand-primary) 6%, transparent), transparent 22rem),
-		linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-surface-cool) 100%);
+		radial-gradient(circle at 84% 12%, rgb(14 165 233 / 9%), transparent 25rem),
+		radial-gradient(circle at 12% 8%, rgb(37 99 235 / 6%), transparent 22rem),
+		linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
 .public-root .public-subhero-copy h1 {
@@ -30,8 +30,8 @@
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	border: var(--border-width-hairline) solid var(--color-border-card);
-	border-radius: var(--radius-round);
+	border: 1px solid var(--color-border-card);
+	border-radius: 50%;
 	content: '';
 	transform: translate(-50%, -50%);
 }
@@ -63,42 +63,42 @@
 	place-items: center;
 	align-content: center;
 	gap: 0.28rem;
-	border-radius: var(--radius-round);
+	border-radius: 50%;
 	background: var(--gradient-public-blue);
 	color: var(--color-text-on-brand);
 	transform: translate(-50%, -50%);
 }
 
 .marketplace-cluster-core span {
-	font-size: var(--font-size-micro);
-	font-weight: var(--font-weight-bold);
+	font-size: 0.68rem;
+	font-weight: 800;
 	opacity: 0.78;
 }
 
 .marketplace-cluster-core strong {
-	font-size: var(--font-size-body);
+	font-size: 1rem;
 }
 
 .marketplace-cluster-core small {
-	font-size: var(--font-size-micro);
+	font-size: 0.68rem;
 	opacity: 0.76;
 }
 
 .marketplace-cluster-item {
 	display: grid;
 	min-width: 10.5rem;
-	gap: var(--space-1);
-	border: var(--border-width-hairline) solid var(--color-border-subtle);
+	gap: 0.25rem;
+	border: 1px solid var(--color-border-subtle);
 	border-radius: var(--radius-card);
 	background: var(--color-bg-surface);
-	padding: var(--space-4);
-	transition: var(--transition-interactive);
+	padding: 1rem;
+	transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .marketplace-cluster-item:hover {
 	border-color: var(--color-border-strong);
 	box-shadow: var(--shadow-lg);
-	transform: translateY(var(--motion-hover-lift));
+	transform: translateY(-2px);
 }
 
 .marketplace-cluster-item > span {
@@ -106,21 +106,21 @@
 	width: 2.35rem;
 	height: 2.35rem;
 	place-items: center;
-	margin-bottom: var(--space-1);
-	border-radius: var(--radius-control-soft);
+	margin-bottom: 0.35rem;
+	border-radius: 0.7rem;
 	background: var(--color-brand-soft);
 	color: var(--color-brand-primary);
-	font-size: var(--font-size-micro);
-	font-weight: var(--font-weight-bold);
+	font-size: 0.68rem;
+	font-weight: 800;
 }
 
 .marketplace-cluster-item strong {
-	font-size: var(--font-size-label);
+	font-size: 0.82rem;
 }
 
 .marketplace-cluster-item small {
 	color: var(--color-text-muted);
-	font-size: var(--font-size-micro);
+	font-size: 0.67rem;
 }
 
 .marketplace-cluster-item-1 {
@@ -159,20 +159,20 @@
 	display: grid;
 	grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
 	align-items: start;
-	gap: clamp(var(--space-12), 8vw, var(--space-28));
+	gap: clamp(3rem, 8vw, 7rem);
 }
 
 .marketplace-flow-layout .section-heading,
 .marketplace-detail-story .section-heading {
 	position: sticky;
-	top: var(--space-28);
+	top: 7rem;
 	margin-bottom: 0;
 }
 
 .public-root .integration-status-panel-supported {
 	border-color: var(--color-border-strong);
 	background:
-		radial-gradient(circle at 90% 8%, color-mix(in srgb, var(--color-brand-accent) 12%, transparent), transparent 11rem),
+		radial-gradient(circle at 90% 8%, rgb(14 165 233 / 12%), transparent 11rem),
 		var(--color-bg-surface);
 }
 
@@ -236,7 +236,7 @@
 
 .public-root .public-cta-card {
 	background:
-		radial-gradient(circle at 90% 5%, color-mix(in srgb, var(--color-brand-accent-soft) 28%, transparent), transparent 22rem),
+		radial-gradient(circle at 90% 5%, rgb(125 211 252 / 28%), transparent 22rem),
 		var(--gradient-public-cta);
 	box-shadow: var(--shadow-public-cta);
 }
@@ -272,7 +272,7 @@
 		display: grid;
 		min-height: 0;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--space-3);
+		gap: 0.75rem;
 	}
 
 	.marketplace-cluster::before,
