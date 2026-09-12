@@ -3,24 +3,51 @@
 	--container-max-width: 1240px;
 }
 
+/* Hero keeps the same visual footprint as the approved reference. */
+.homepage-approved-hero {
+	padding-top: 4.25rem;
+	padding-bottom: 4.1rem;
+}
+
 .homepage-hero-grid {
-	grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-	gap: clamp(2.2rem, 3vw, 2.75rem);
+	grid-template-columns: minmax(0, 0.87fr) minmax(0, 1.13fr);
+	gap: clamp(2.45rem, 3.5vw, 3.2rem);
 }
 
 .homepage-hero-copy h1 {
-	font-size: clamp(3.25rem, 4.25vw, 4.35rem);
+	font-size: clamp(3.3rem, 4.4vw, 4.5rem);
 }
 
-.homepage-feature-layout,
+.homepage-hero-scene {
+	min-height: 32.25rem;
+	transform: scale(1.025);
+	transform-origin: right center;
+}
+
+.homepage-approved-marketplaces {
+	margin-top: 4.8rem;
+}
+
+/* The approved workspace gives the copy enough width to keep the intended line breaks. */
+.homepage-feature-layout {
+	grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+	gap: clamp(2.9rem, 4vw, 3.7rem);
+}
+
 .homepage-models-layout {
-	grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
-	gap: clamp(2.5rem, 3.4vw, 3rem);
+	grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.26fr);
+	gap: clamp(2.75rem, 3.8vw, 3.45rem);
 }
 
-.homepage-results-layout {
-	grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-	gap: clamp(4rem, 5.5vw, 5rem);
+.homepage-model-card {
+	min-height: 11.75rem;
+	padding: 1.05rem 0.85rem;
+}
+
+.homepage-model-mark {
+	width: 2.8rem;
+	height: 2.8rem;
+	font-size: 2rem;
 }
 
 .homepage-models-section {
@@ -33,14 +60,32 @@
 	padding-bottom: 4.25rem !important;
 }
 
+.homepage-process-heading {
+	margin-bottom: 2.55rem;
+}
+
 .homepage-results-section {
 	padding-top: 4rem !important;
 	padding-bottom: 4rem !important;
 }
 
+.homepage-results-layout {
+	grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+	gap: clamp(4rem, 5.5vw, 5rem);
+}
+
 .homepage-approved-final-cta {
 	padding-top: 4.25rem !important;
 	padding-bottom: 4.5rem !important;
+}
+
+.homepage-approved-final-cta .homepage-final-cta-card {
+	grid-template-columns: minmax(0, 1.05fr) minmax(25.5rem, 0.95fr);
+	gap: 2.2rem;
+}
+
+.homepage-approved-final-cta .homepage-final-cta-card h2 {
+	max-width: 17ch;
 }
 
 @media (max-width: 1120px) {
@@ -50,11 +95,24 @@
 	.homepage-results-layout {
 		grid-template-columns: 1fr;
 	}
+
+	.homepage-hero-scene {
+		transform: none;
+	}
+
+	.homepage-approved-final-cta .homepage-final-cta-card {
+		grid-template-columns: 1fr;
+	}
 }
 
 @media (max-width: 760px) {
 	.public-root {
 		--container-max-width: 1240px;
+	}
+
+	.homepage-approved-hero {
+		padding-top: 3.5rem;
+		padding-bottom: 3.75rem;
 	}
 
 	.homepage-models-section,
