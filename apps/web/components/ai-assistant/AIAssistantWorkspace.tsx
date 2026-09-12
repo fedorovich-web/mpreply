@@ -101,14 +101,14 @@ export function AIAssistantWorkspace() {
     <section className="ai-workspace" aria-labelledby="ai-workspace-title">
       <header className="ai-workspace-toolbar">
         <div>
-          <p className="eyebrow">Живой AI flow</p>
-          <h2 id="ai-workspace-title">Обращение → AI-черновик → SafetyGate</h2>
+          <p className="eyebrow">Подготовка ответа</p>
+          <h2 id="ai-workspace-title">Обращение → черновик → проверка</h2>
           <p>
-            Выберите отзыв или вопрос, задайте тон и контекст. Ключ OpenRouter остаётся только на backend.
+            Выберите обращение, задайте тон и добавьте нужный контекст. MPReply подготовит ответ и отметит, если его стоит дополнительно проверить.
           </p>
         </div>
         <Badge tone={canGenerate ? "success" : "neutral"}>
-          {canGenerate ? "Генерация доступна" : "Только просмотр"}
+          {canGenerate ? "Можно создавать ответы" : "Только просмотр"}
         </Badge>
       </header>
 
@@ -116,14 +116,14 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-message-panel" aria-labelledby="ai-message-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Inbox context</span>
+              <span className="panel-kicker">Выберите обращение</span>
               <strong id="ai-message-list-title">Обращения</strong>
             </div>
             {messagesQuery.data ? <Badge>{messagesQuery.data.total}</Badge> : null}
           </div>
 
           {messagesQuery.isPending ? (
-            <AIState title="Загружаем обращения" description="Получаем доступные отзывы и вопросы workspace." />
+            <AIState title="Загружаем обращения" description="Получаем доступные отзывы и вопросы." />
           ) : messagesQuery.error ? (
             <AIState
               title="Не удалось загрузить обращения"
@@ -134,7 +134,7 @@ export function AIAssistantWorkspace() {
           ) : !messagesQuery.data || messagesQuery.data.items.length === 0 ? (
             <AIState
               title="Обращений пока нет"
-              description="После синхронизации маркетплейса здесь появятся отзывы и вопросы для генерации черновиков."
+              description="После синхронизации маркетплейса здесь появятся отзывы и вопросы, для которых можно подготовить ответ."
             />
           ) : (
             <div className="ai-message-list" role="list">
@@ -153,8 +153,8 @@ export function AIAssistantWorkspace() {
 
         <section className="ai-panel ai-generate-panel" aria-labelledby="ai-generate-title">
           <div className="panel-heading">
-            <span className="panel-kicker">Generate draft</span>
-            <strong id="ai-generate-title">Новый AI-черновик</strong>
+            <span className="panel-kicker">Настройки ответа</span>
+            <strong id="ai-generate-title">Новый черновик</strong>
           </div>
 
           {selectedMessage ? (
@@ -162,7 +162,7 @@ export function AIAssistantWorkspace() {
               <MessageContext message={selectedMessage} />
               <form
                 className="settings-form ai-form"
-                aria-label="Настройки генерации AI-черновика"
+                aria-label="Настройки подготовки черновика ответа"
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (canGenerate) generateMutation.mutate();
@@ -204,17 +204,17 @@ export function AIAssistantWorkspace() {
                   <p className="form-error" role="alert">
                     {errorMessage(generateMutation.error)}
                     {generateMutation.error instanceof ApiError && generateMutation.error.requestId
-                      ? ` · requestId ${generateMutation.error.requestId}`
+                      ? ` · код запроса ${generateMutation.error.requestId}`
                       : ""}
                   </p>
                 ) : null}
                 {canGenerate ? (
                   <button className="button button-primary" disabled={generateMutation.isPending} type="submit">
-                    {generateMutation.isPending ? "Генерируем..." : "Сгенерировать черновик"}
+                    {generateMutation.isPending ? "Готовим ответ..." : "Подготовить черновик"}
                   </button>
                 ) : (
                   <p className="ai-readonly-note">
-                    Роль {roleLabel(activeOrganization.current_user_role)} может просматривать историю, но не создавать AI-черновики.
+                    Роль {roleLabel(activeOrganization.current_user_role)} может просматривать историю, но не создавать новые черновики.
                   </p>
                 )}
               </form>
@@ -227,8 +227,8 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-result-panel" aria-labelledby="ai-result-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Result</span>
-              <strong id="ai-result-title">Результат и SafetyGate</strong>
+              <span className="panel-kicker">Готовый вариант</span>
+              <strong id="ai-result-title">Черновик и проверка</strong>
             </div>
             {displayedDraft ? <Badge tone={draftTone(displayedDraft)}>{confidenceLabel(displayedDraft)}</Badge> : null}
           </div>
@@ -236,7 +236,7 @@ export function AIAssistantWorkspace() {
           {!selectedMessage ? (
             <AIState title="Нет выбранного обращения" description="Результат появится после выбора обращения." />
           ) : draftsQuery.isPending && !displayedDraft ? (
-            <AIState title="Загружаем историю" description="Получаем предыдущие AI-черновики этого обращения." />
+            <AIState title="Загружаем историю" description="Получаем предыдущие черновики для этого обращения." />
           ) : draftsQuery.error && !displayedDraft ? (
             <AIState
               title="Не удалось загрузить черновики"
@@ -247,7 +247,7 @@ export function AIAssistantWorkspace() {
           ) : displayedDraft ? (
             <DraftResult draft={displayedDraft} />
           ) : (
-            <AIState title="Черновиков ещё нет" description="Сгенерируйте первый ответ для выбранного обращения." />
+            <AIState title="Черновиков ещё нет" description="Подготовьте первый ответ для выбранного обращения." />
           )}
         </section>
       </div>
@@ -303,6 +303,8 @@ function MessageContext({ message }: { message: CustomerMessage }) {
 }
 
 function DraftResult({ draft }: { draft: AIDraft }) {
+  const needsReview = draft.safety_flags_json.length > 0;
+
   return (
     <div className="ai-draft-result" aria-live="polite">
       <div className="ai-draft-copy">
@@ -310,21 +312,10 @@ function DraftResult({ draft }: { draft: AIDraft }) {
       </div>
 
       <div className="ai-draft-flags">
-        {draft.safety_flags_json.length > 0 ? (
-          draft.safety_flags_json.map((flag) => <Badge key={flag} tone="warning">{flag}</Badge>)
-        ) : (
-          <Badge tone="success">Safety flags отсутствуют</Badge>
-        )}
+        <Badge tone={needsReview ? "warning" : "success"}>
+          {needsReview ? "Нужна дополнительная проверка" : "Проверка пройдена"}
+        </Badge>
       </div>
-
-      <dl className="ai-usage-grid">
-        <div><dt>Provider</dt><dd>{draft.provider}</dd></div>
-        <div><dt>Model</dt><dd>{draft.model}</dd></div>
-        <div><dt>Prompt</dt><dd>{draft.prompt_version}</dd></div>
-        <div><dt>Confidence</dt><dd>{formatConfidence(draft.confidence_score)}</dd></div>
-        <div><dt>Tokens</dt><dd>{formatTokens(draft)}</dd></div>
-        <div><dt>Latency</dt><dd>{draft.latency_ms === null ? "—" : `${draft.latency_ms} мс`}</dd></div>
-      </dl>
     </div>
   );
 }
@@ -389,17 +380,8 @@ function draftTone(draft: AIDraft): BadgeTone {
 }
 
 function confidenceLabel(draft: AIDraft): string {
-  if (draft.confidence_score === null) return "Confidence не рассчитан";
-  return `Confidence ${Math.round(draft.confidence_score * 100)}%`;
-}
-
-function formatConfidence(value: number | null): string {
-  return value === null ? "—" : `${Math.round(value * 100)}%`;
-}
-
-function formatTokens(draft: AIDraft): string {
-  if (draft.tokens_input === null && draft.tokens_output === null) return "—";
-  return `${draft.tokens_input ?? 0} + ${draft.tokens_output ?? 0}`;
+  if (draft.confidence_score === null) return "Уверенность не рассчитана";
+  return `Уверенность ${Math.round(draft.confidence_score * 100)}%`;
 }
 
 function errorMessage(error: unknown): string {
