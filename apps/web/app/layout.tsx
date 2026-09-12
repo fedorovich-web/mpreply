@@ -12,6 +12,7 @@ import "../styles/dashboard-automation-approved.css";
 import "../styles/dashboard-integrations-approved.css";
 import "../styles/dashboard-analytics-approved.css";
 import "../styles/dashboard-admin-approved.css";
+import "../styles/workspace-onboarding-approved.css";
 import "../styles/marketing-site.css";
 import "../styles/marketing-pages.css";
 import "../styles/marketplaces-approved.css";
