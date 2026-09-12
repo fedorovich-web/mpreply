@@ -7,32 +7,49 @@ import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { marketplaceAccountListSchema } from "../../lib/api/schemas";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
-const marketplaceCatalog = [
+type MarketplaceCatalogItem = {
+  key: "wildberries" | "ozon" | "yandex_market" | "avito";
+  name: string;
+  href: string;
+  description: string;
+  readiness: "live" | "planned";
+  detailsLabel: string;
+};
+
+const marketplaceCatalog: MarketplaceCatalogItem[] = [
   {
     key: "wildberries",
     name: "Wildberries",
     href: "/app/integrations/wildberries",
-    description: "Отзывы, вопросы и сообщения покупателей в общей очереди с контекстом, подготовкой ответа и контролем отправки.",
+    description: "Отзывы, вопросы и сообщения покупателей в общей очереди с синхронизацией и отправкой ответов через MPReply.",
+    readiness: "live",
+    detailsLabel: "Wildberries",
   },
   {
     key: "ozon",
     name: "Ozon",
     href: "/app/integrations/ozon",
-    description: "Обращения покупателей Ozon, подключённые кабинеты и ответы в том же рабочем процессе, что и на других площадках.",
+    description: "Интеграция запланирована после проверки актуальных API и сценариев production-отправки. Подключение и отправка пока недоступны.",
+    readiness: "planned",
+    detailsLabel: "Ozon",
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
     href: "/app/integrations/yandex-market",
-    description: "Отзывы, вопросы и сообщения Яндекс Маркета с едиными статусами, очередью и правилами обработки.",
+    description: "Интеграция запланирована после проверки актуальных API и сценариев production-отправки. Подключение и отправка пока недоступны.",
+    readiness: "planned",
+    detailsLabel: "Яндекс Маркете",
   },
   {
     key: "avito",
     name: "Авито",
     href: "/app/integrations/avito",
-    description: "Сообщения и обращения покупателей Авито с синхронизацией диалогов и управлением подключением из MPReply.",
+    description: "Интеграция запланирована после проверки актуальных API и сценариев production-отправки. Подключение и отправка пока недоступны.",
+    readiness: "planned",
+    detailsLabel: "Авито",
   },
-] as const;
+];
 
 export function IntegrationsWorkspace() {
   const { activeOrganization } = useWorkspace();
@@ -46,15 +63,16 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const activeCount = accounts.filter((account) => account.status === "active").length;
-  const problemCount = accounts.filter((account) => account.status === "error" || account.error_count > 0).length;
+  const liveAccounts = accounts.filter((account) => account.marketplace === "wildberries");
+  const activeCount = liveAccounts.filter((account) => account.status === "active").length;
+  const problemCount = liveAccounts.filter((account) => account.status === "error" || account.error_count > 0).length;
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
 
   return (
     <section className="integrations-workspace" aria-label="Интеграции маркетплейсов">
-      <div className="integrations-summary-grid" aria-label="Сводка подключений">
-        <SummaryMetric label="Подключено кабинетов" value={accountsQuery.isPending ? "—" : String(accounts.length)} />
-        <SummaryMetric label="Работают нормально" value={accountsQuery.isPending ? "—" : String(activeCount)} />
+      <div className="integrations-summary-grid" aria-label="Сводка доступных подключений">
+        <SummaryMetric label="Подключений" value={accountsQuery.isPending ? "—" : String(liveAccounts.length)} />
+        <SummaryMetric label="Активных" value={accountsQuery.isPending ? "—" : String(activeCount)} />
         <SummaryMetric label="Требуют внимания" value={accountsQuery.isPending ? "—" : String(problemCount)} />
       </div>
 
@@ -70,25 +88,41 @@ export function IntegrationsWorkspace() {
 
       <div className="integration-catalog-grid" role="list">
         {marketplaceCatalog.map((marketplace) => {
-          const marketplaceAccounts = accounts.filter((account) => account.marketplace === marketplace.key);
+          const marketplaceAccounts = marketplace.readiness === "live"
+            ? liveAccounts.filter((account) => account.marketplace === marketplace.key)
+            : [];
           const connectedCount = marketplaceAccounts.length;
           const hasProblem = marketplaceAccounts.some((account) => account.status === "error" || account.error_count > 0);
           const hasActive = marketplaceAccounts.some((account) => account.status === "active");
-          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem });
-          const actionLabel = canManage
-            ? connectedCount > 0
-              ? `Управлять ${marketplace.name}`
-              : `Подключить ${marketplace.name}`
-            : `Открыть ${marketplace.name}`;
+          const connectionState = marketplace.readiness === "live"
+            ? getConnectionState({ connectedCount, hasActive, hasProblem })
+            : null;
+          const actionLabel = marketplace.readiness === "live"
+            ? canManage
+              ? connectedCount > 0
+                ? `Управлять ${marketplace.name}`
+                : `Подключить ${marketplace.name}`
+              : `Открыть ${marketplace.name}`
+            : marketplace.key === "yandex_market"
+              ? `Подробнее о ${marketplace.detailsLabel}`
+              : `Подробнее об ${marketplace.detailsLabel}`;
 
           return (
-            <article className="integration-market-card" key={marketplace.key} role="listitem">
+            <article
+              className={`integration-market-card integration-market-card-${marketplace.readiness}`}
+              key={marketplace.key}
+              role="listitem"
+            >
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge ui-badge-info">Интеграция готова</span>
+                  <span className={marketplace.readiness === "live" ? "ui-badge ui-badge-info" : "ui-badge"}>
+                    {marketplace.readiness === "live" ? "Доступно сейчас" : "Планируется"}
+                  </span>
                   <h2>{marketplace.name}</h2>
                 </div>
-                <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
+                {connectionState ? (
+                  <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
+                ) : null}
               </div>
               <p>{marketplace.description}</p>
               <Link className="button button-secondary" href={marketplace.href}>
