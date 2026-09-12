@@ -1,202 +1,222 @@
-# MPReply Blue Public Redesign Implementation Plan
+# MPReply Product Redesign — Execution Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Execution model:** implement in reviewable batches on `codex/mpreply-blue-public-redesign`. Preserve current product/backend behavior unless a task explicitly requires a backend change. Re-fetch files before every write because parallel work may be happening on the branch.
 
-**Goal:** Rebuild the public homepage and shared public visual tokens into the approved airy blue MPReply direction without inventing capabilities or weakening existing product/security constraints.
+**Goal:** bring the entire public MPReply experience and authenticated workspace to one production-grade design, content and UX system based on the approved 2026-09-12 blue homepage preview.
 
-**Architecture:** Keep the existing Next.js public shell, SEO helpers and tokenized CSS system. Replace homepage composition with focused presentational sections and a small accessible tab component, while centralizing new blue palette/spacing values in `styles/tokens.css` and homepage/public styles in `styles/public-site.css`.
+**Product truth:** MPReply is ready. Wildberries, Ozon, Яндекс Маркет and Авито integrations are ready. The product handles reviews, buyer questions and buyer messages in a unified workflow with AI-assisted response preparation, automation and human approval where required.
 
-**Tech Stack:** Next.js App Router, React, TypeScript, CSS custom properties, Vitest/Testing Library, Playwright, axe, Lighthouse CI.
+**Tech stack:** Next.js App Router, React, TypeScript, CSS custom properties, existing API/backend, Playwright, axe and Lighthouse CI.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-mpreply-blue-public-redesign-design.md`
+**Specification:** `docs/superpowers/specs/2026-09-12-mpreply-blue-public-redesign-design.md`
 
-## Global Constraints
+## Global constraints
 
-- Product claims must match `PRODUCT.md`; Wildberries is the current verified MVP execution path.
-- Do not claim GPT/Claude/Gemini/DeepSeek are runtime providers unless implemented and verified; current AI generation truth is Groq/Qwen 3.8.
-- Marketplace/provider credentials remain backend-only and encrypted.
-- Use existing Onest font and one coherent icon system.
-- Repeated colors, spacing, gradients, radii and shadows must be tokens.
-- No fake metrics, testimonials, ratings, prices, customer counts or unsupported integrations.
-- Preserve reduced-motion, semantic HTML, keyboard focus and WCAG AA-oriented contrast.
+- Do not regress to the superseded visual direction.
+- Do not describe Ozon, Яндекс Маркет or Авито as planned/coming soon.
+- Do not market AI provider/model names unless separately verified and approved.
+- No fake customer proof, savings percentages, ratings or testimonials.
+- No SEO keyword stuffing.
+- No duplicated palette/spacing systems, one-off visual hacks, dead components or orphan assets.
+- Public pages and dashboard share semantic tokens, but dashboard uses denser task-oriented layouts.
+- Security, RBAC, credential storage and backend authorization remain intact.
+- Completion claims require fresh verification evidence.
 
 ---
 
-### Task 1: Add homepage contract tests
+## Phase 1 — Design system and tokens
 
-**Files:**
-- Create: `apps/web/tests/unit/public-home-contract.test.ts`
-- Test: `apps/web/tests/unit/public-home-contract.test.ts`
+### Objective
+Create one semantic visual foundation for both marketing and app UI before expanding page-specific work.
 
-**Interfaces:**
-- Consumes: source files `app/page.tsx`, `styles/tokens.css`, `styles/public-site.css`.
-- Produces: static regression contract for required homepage sections and banned fabricated claims.
+### Work
 
-- [ ] **Step 1: Write the failing test**
+- [ ] Audit `tokens.css`, `brand-theme.css`, `globals.css`, `marketing-visual-refresh.css`, `homepage-approved.css`, auth/onboarding styles and identify duplicate ownership.
+- [ ] Make `tokens.css` the primitive/semantic foundation for brand, surfaces, text, borders, states, spacing, radii, shadows and typography.
+- [ ] Keep theme-specific files as semantic overrides only; remove second independent palettes.
+- [ ] Introduce explicit public rhythm aliases and app density aliases instead of scattered magic numbers.
+- [ ] Align primary/secondary/ghost/destructive buttons, inputs, tabs, badges, cards, panels and focus states.
+- [ ] Migrate touched components to semantic tokens; do not perform a blind global CSS rewrite.
+- [ ] Add/adjust design contract tests for repeated hard-coded brand values and forbidden duplicate token sources where practical.
 
-```ts
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+### Exit criteria
 
-const root = process.cwd();
-const page = readFileSync(join(root, "app/page.tsx"), "utf8");
-const tokens = readFileSync(join(root, "styles/tokens.css"), "utf8");
-const publicCss = readFileSync(join(root, "styles/public-site.css"), "utf8");
+- public and app surfaces resolve through one brand system;
+- touched components no longer introduce new hard-coded repeated visual values;
+- no visual change is accepted only because a snapshot was regenerated.
 
-describe("public homepage redesign contract", () => {
-  it("contains the approved product-story sections", () => {
-    expect(page).toContain("homepage-workspace");
-    expect(page).toContain("homepage-ai-layer");
-    expect(page).toContain("homepage-process");
-    expect(page).toContain("homepage-outcomes");
-    expect(page).toContain("homepage-final-cta");
-  });
+---
 
-  it("does not fabricate customer proof or unsupported model providers", () => {
-    expect(page).not.toMatch(/50K\+|довольных клиентов|GPT-5\.6|Claude Sonnet 5|Gemini 3\.8|DeepSeek V4/i);
-  });
+## Phase 2 — Public pages redesign
 
-  it("uses blue public tokens and spacious section rhythm", () => {
-    expect(tokens).toContain("--color-brand-primary: #2563eb");
-    expect(tokens).toContain("--gradient-public-blue");
-    expect(tokens).toContain("--public-section-spacing");
-    expect(publicCss).toContain(".homepage-process");
-  });
-});
-```
+### Objective
+Bring every relevant public route to the approved homepage quality while varying composition by page purpose.
 
-- [ ] **Step 2: Run test to verify it fails**
+### Route set
 
-Run: `npm run test:unit -- public-home-contract.test.ts`
-Expected: FAIL because the approved homepage classes and blue tokens do not exist yet.
+- [ ] `/` homepage polish and approved-source lock.
+- [ ] `/features` capability architecture and product scenes.
+- [ ] `/marketplaces` integration overview.
+- [ ] `/marketplaces/wildberries`.
+- [ ] `/marketplaces/ozon`.
+- [ ] `/marketplaces/yandex-market`.
+- [ ] `/marketplaces/avito`.
+- [ ] `/pricing` plan selection and FAQ/supporting content.
+- [ ] `/demo` conversion-oriented product preview.
+- [ ] `/resources` editorial/blog index.
+- [ ] `/contacts` support/contact entry.
+- [ ] `/auth/*` sign-in/register/recovery.
+- [ ] onboarding entry points connected to registration and marketplace connection.
+- [ ] legal pages readability pass.
 
-- [ ] **Step 3: Commit the red test**
+### Rules
 
-```bash
-git add tests/unit/public-home-contract.test.ts
-git commit -m "test: define public homepage redesign contract"
-```
+- Do not create a public cases page until verified publishable customer material exists.
+- Add a dedicated FAQ route only if it avoids duplicating the same content across pricing/help pages.
+- Hero/product scenes may be raster assets; real forms and interactive product controls stay semantic HTML.
+- Alternate layouts intentionally so the site does not become repeated `text + four cards` sections.
 
-### Task 2: Update public brand tokens
+---
 
-**Files:**
-- Modify: `apps/web/styles/tokens.css`
-- Test: `apps/web/tests/design/*`
+## Phase 3 — Public copy rewrite
 
-**Interfaces:**
-- Produces: blue brand tokens used by all public components.
+### Objective
+Rewrite commercial and product copy as mature Russian B2B SaaS copy grounded in actual capabilities.
 
-- [ ] **Step 1: Replace the public brand primitives**
+### Work
 
-Set the primary palette around `#2563EB`, deeper interaction state `#1D4ED8`, sky accent `#0EA5E9`, pale section tint, blue focus token and smooth public gradient. Keep semantic success/warning/danger colors independent.
+- [ ] Define page-level message hierarchy: problem → product mechanism → evidence/mechanics → next action.
+- [ ] Normalize terminology for `обращения`, `отзывы`, `вопросы`, `сообщения`, `проверка`, `автоотправка`, `правила`, `контекст`.
+- [ ] Treat all four marketplace integrations as ready.
+- [ ] Replace generic AI slogans with product-specific mechanisms: context, brand tone, team rules, approval and automation.
+- [ ] Remove technical/provider jargon from seller-facing UI and marketing copy.
+- [ ] Ensure CTA labels describe the actual next state instead of repeating one phrase everywhere.
+- [ ] Add useful loading/empty/error/permission copy for public auth/onboarding flows.
 
-- [ ] **Step 2: Increase public rhythm tokens**
+### Content guardrails
 
-Set desktop major-section spacing to approximately `clamp(6rem, 9vw, 9rem)` while keeping responsive reductions for tablet/mobile.
+- no invented customer counts or testimonials;
+- no unsupported percentages;
+- no unapproved AI model names;
+- no keyword stuffing;
+- no filler headings that could belong to any SaaS.
 
-- [ ] **Step 3: Run design/token tests**
+---
 
-Run: `npm run test:unit -- tests/design`
-Expected: PASS after updating any token expectations that encode the superseded violet brand direction.
+## Phase 4 — SEO structure
 
-### Task 3: Build the homepage product-story composition
+### Objective
+Make public architecture indexable and commercially relevant without changing product copy into search-engine prose.
 
-**Files:**
-- Modify: `apps/web/app/page.tsx`
-- Create: `apps/web/components/public-site/HomeWorkspaceTabs.tsx`
-- Modify: `apps/web/styles/public-site.css`
-- Test: `apps/web/tests/unit/public-home-contract.test.ts`
+### Work
 
-**Interfaces:**
-- `HomeWorkspaceTabs` renders semantic tab buttons and tab panels for `reviews`, `questions`, and `all` without external state dependencies.
+- [ ] Map one primary search intent and supporting intent cluster to each commercial route.
+- [ ] Review title, description, H1/H2 structure and internal links.
+- [ ] Keep marketplace detail pages differentiated by actual platform workflow/value rather than templated keyword substitution.
+- [ ] Validate canonical URLs, Open Graph metadata, robots and sitemap.
+- [ ] Add/verify WebSite/SoftwareApplication/Breadcrumb/FAQ structured data only when supported by visible page content.
+- [ ] Prevent indexable thin/duplicate auth or internal utility pages where appropriate.
 
-- [ ] **Step 1: Implement hero and marketplace-readiness strip**
+---
 
-Use left-aligned hero copy plus a CSS/HTML product artifact. Keep one primary hero CTA and one secondary demo action. Do not claim unsupported marketplace readiness.
+## Phase 5 — Dashboard UX/UI redesign
 
-- [ ] **Step 2: Implement accessible workspace tabs**
+### Objective
+Turn the authenticated app into a coherent high-frequency workspace using the public brand language at a denser operational scale.
 
-Render `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls`, matching `tabpanel` IDs and keyboard-friendly buttons.
+### Workstreams
 
-- [ ] **Step 3: Implement AI layer with runtime truth**
+- [ ] **Navigation/IA:** overview, inbox, moderation, AI assistance, automation, integrations, analytics, billing/settings; reduce top-level noise.
+- [ ] **Dashboard overview:** actionable queue/exception/status summary instead of marketing-style metric cards.
+- [ ] **Inbox:** list/detail flow; persistent filters; marketplace/type/status/assignee filtering; clear unread/attention/approval states.
+- [ ] **AI answer flow:** source context → draft → edit → approve/send; show why a draft needs review without provider jargon.
+- [ ] **Moderation:** focused queue for exceptions, risk and approval-required answers.
+- [ ] **Automation rules:** understandable conditions/actions/scope/status with safe enable/disable/edit flows.
+- [ ] **Integrations:** four ready platforms, connection health, account/store scope, sync/error states and re-auth actions.
+- [ ] **Analytics:** operational metrics that help the team decide what needs attention or automation.
+- [ ] **Empty/error/loading/permission states:** designed explicitly for every core workspace.
+- [ ] **Responsive + keyboard:** desktop queue efficiency first; narrow-screen fallbacks remain usable.
 
-Show the actual backend generation stack (`Groq` + `Qwen 3.8`) and explain that provider orchestration is backend-only. Do not list unimplemented providers.
+---
 
-- [ ] **Step 4: Implement asymmetric four-step process**
+## Phase 6 — Dashboard copy rewrite
 
-Use a connected path and four distinct mini-artifacts: marketplace logos/readiness, queue rows, generated reply artifact, auto-send/review switches. Keep steps visually unequal in internal content but equal in semantic importance.
+### Objective
+Replace technical or speculative interface text with seller/support-team language.
 
-- [ ] **Step 5: Implement factual outcome row, concise final CTA and full footer**
+### Work
 
-Use mechanics such as one queue, automation/review paths, audit/history and multi-tenant roles rather than invented percentages/customer counts.
+- [ ] Normalize navigation labels and descriptions.
+- [ ] Standardize status vocabulary and action verbs.
+- [ ] Rewrite filters, tooltips, confirmation dialogs, errors and empty states.
+- [ ] Distinguish `готовится`, `на проверке`, `готов к отправке`, `отправлено`, `ошибка`, `требует внимания` consistently.
+- [ ] Remove implementation/provider terminology from user-facing surfaces unless it is required for diagnostics.
+- [ ] Keep destructive actions explicit and reversible where the product allows it.
 
-- [ ] **Step 6: Verify contract test passes**
+---
 
-Run: `npm run test:unit -- public-home-contract.test.ts`
-Expected: PASS.
+## Phase 7 — Asset generation and optimization
 
-### Task 4: Responsive, accessibility and interaction hardening
+### Objective
+Use a small set of high-quality approved-style scenes rather than many decorative fragments.
 
-**Files:**
-- Modify: `apps/web/styles/public-site.css`
-- Modify: `apps/web/components/public-site/HomeWorkspaceTabs.tsx`
-- Modify/Create browser tests under `apps/web/e2e/` only where necessary.
+### Candidate assets
 
-**Interfaces:**
-- Produces: keyboard-operable tabs, intentional mobile composition and reduced-motion-safe visuals.
+- [ ] homepage hero unified inbox scene;
+- [ ] unified workspace scene;
+- [ ] marketplace/source routing scene;
+- [ ] AI draft + approval/send scene;
+- [ ] integration/onboarding scene where needed.
 
-- [ ] **Step 1: Add 1024/768/390/320 responsive rules**
+### Rules
 
-Prevent horizontal overflow, reduce hero/product-artifact scale intentionally and keep process readable without a simple four-card vertical dump.
+- optimized WebP; AVIF where it materially improves delivery;
+- correct intrinsic dimensions and responsive `sizes`;
+- meaningful alt text for informational scenes, empty alt for decorative scenes;
+- no text baked into an image when that text is required for SEO/accessibility;
+- remove obsolete/orphan assets after references are verified.
 
-- [ ] **Step 2: Add reduced-motion/focus states**
+---
 
-Disable nonessential transforms when `prefers-reduced-motion: reduce`; ensure tab/button focus visibility uses the shared focus token.
+## Phase 8 — QA, regression and release readiness
 
-- [ ] **Step 3: Run static quality gates**
+### Static gates
 
-Run:
-```bash
-npm run design:detect
-npm run typecheck
-npm run lint
-npm run build
-```
-Expected: all exit 0.
+- [ ] design/token checks.
+- [ ] TypeScript typecheck.
+- [ ] ESLint.
+- [ ] unit/integration tests.
+- [ ] production build.
 
-- [ ] **Step 4: Run browser quality gates**
+### Browser gates
 
-Run:
-```bash
-npm run test:e2e
-npm run test:a11y
-npm run test:visual
-npm run lighthouse
-```
-Expected: all configured suites pass; visual changes are reviewed intentionally rather than blindly regenerated.
+- [ ] public route smoke tests.
+- [ ] dashboard critical-flow E2E.
+- [ ] accessibility/axe.
+- [ ] visual regression on approved breakpoints.
+- [ ] keyboard/focus review.
+- [ ] broken-link/navigation review.
+- [ ] Lighthouse/performance review.
 
-### Task 5: Align product/design documentation and finish branch
+### Completion reporting
 
-**Files:**
-- Modify: `PRODUCT.md`
-- Modify: `DESIGN.md`
+After each major implementation batch record:
 
-**Interfaces:**
-- Produces: authoritative documentation matching the approved blue public-site direction while retaining capability truth.
+1. what changed;
+2. design changes;
+3. copy changes;
+4. UX changes;
+5. remaining work;
+6. exact verification executed and its result.
 
-- [ ] **Step 1: Update public visual-direction notes**
+---
 
-Document the new blue palette, spacious editorial rhythm, tabbed product demonstration and asymmetric process flow.
+## Immediate implementation batch
 
-- [ ] **Step 2: Preserve capability/readiness truth**
-
-Do not change Wildberries/Ozon/Yandex/AI-provider readiness unless implementation evidence exists elsewhere in the branch.
-
-- [ ] **Step 3: Re-run full verification**
-
-Run the complete static and browser gate set again after docs/code are final.
-
-- [ ] **Step 4: Review diff and open PR**
-
-Confirm no unrelated backend/security changes, no hard-coded secrets and no unsupported marketing claims before opening the pull request.
+- [x] Treat the approved 2026-09-12 preview as visual source of truth.
+- [x] Correct the redesign specification: MPReply is ready and all four marketplace integrations are ready.
+- [x] Remove the obsolete planning assumption that only Wildberries may be presented as ready.
+- [ ] Add regression coverage for the four ready integrations and banned stale/unsupported public claims.
+- [ ] Audit design-token ownership and start consolidation without changing the approved homepage style.
+- [ ] Review the current public route set against the new copy/SEO hierarchy.
+- [ ] Start dashboard IA/copy cleanup with the shell, overview and inbox before secondary settings surfaces.
