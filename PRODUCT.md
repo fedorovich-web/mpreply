@@ -40,6 +40,12 @@ Product/UI support and production release certification are separate concepts. P
 
 A frontend branch may implement the final supported-state UX before that backend work lands, but it must not be merged or deployed ahead of the required backend/runtime release certification.
 
+### Billing rollout boundary
+
+The current tariff/usage surface remains in place during this redesign. Production payment-provider wiring is deferred until the site is running on its production domain.
+
+Until that deployment step, do not redesign the billing/payment flow, invent checkout actions, or reinterpret the existing price fallback as a product error. Billing/provider integration is a separate launch-stage task.
+
 ## AI capability truth
 
 Normal product and marketing copy should describe the user-facing capability:
