@@ -1,0 +1,18 @@
+name: Runner image smoke
+
+on:
+  push:
+    branches: [codex/mpreply-blue-public-redesign]
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu-24:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "ubuntu-24-started"
+  ubuntu-22:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "ubuntu-22-started"
