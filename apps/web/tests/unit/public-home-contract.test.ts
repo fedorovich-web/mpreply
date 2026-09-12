@@ -4,15 +4,12 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
+const heroScene = readFileSync(join(root, "components/public-site/HomeHeroScene.tsx"), "utf8");
 const publicShell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 const marketingCssPath = join(root, "styles/marketing-site.css");
 const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
 const approvedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
-const heroArtwork = join(root, "public/images/mpreply-hero-ui.webp");
-const ctaArtwork = join(root, "public/images/mpreply-cta-ui.webp");
-const heroWave = join(root, "public/images/mpreply-hero-waves.webp");
-const themeToggle = join(root, "components/public-site/ThemeToggle.tsx");
 
 describe("public homepage redesign contract", () => {
   it("contains the approved product-story sections", () => {
@@ -42,27 +39,28 @@ describe("public homepage redesign contract", () => {
     expect(siteConfig).toContain("Интеграция готова");
   });
 
-  it("uses generated WebP artwork without obsolete hero-wave or theme-toggle dead code", () => {
-    expect(existsSync(heroArtwork)).toBe(true);
-    expect(existsSync(ctaArtwork)).toBe(true);
-    expect(existsSync(heroWave)).toBe(false);
-    expect(existsSync(themeToggle)).toBe(false);
-    expect(page).toContain("/images/mpreply-hero-ui.webp");
-    expect(page).toContain("/images/mpreply-cta-ui.webp");
-    expect(approvedCss).not.toContain("mpreply-hero-waves.webp");
-    expect(approvedCss).toContain("mpreply-cta-waves.webp");
+  it("builds the approved hero and CTA as real interface scenes instead of flat placeholder artwork", () => {
+    expect(page).toContain("<HomeHeroScene />");
+    expect(heroScene).toContain("homepage-hero-window");
+    expect(heroScene).toContain("homepage-hero-ai-card");
+    expect(page).toContain("homepage-cta-scene");
+    expect(page).not.toContain("mpreply-hero-ui.webp");
+    expect(page).not.toContain("mpreply-cta-ui.webp");
   });
 
   it("keeps footer navigation attached to the current homepage process section", () => {
-    expect(publicShell).toContain('href="/#how-it-works"');
+    expect(publicShell).toContain('href="/features"');
+    expect(publicShell).toContain('href="/marketplaces"');
     expect(publicShell).not.toContain('href="/#safetygate"');
   });
 
-  it("uses the approved blue system and spacious section rhythm", () => {
+  it("uses the approved blue system and compact section rhythm", () => {
     expect(marketingCss).toContain(".public-root");
     expect(marketingCss).toContain("--color-brand-primary: #2563eb");
     expect(marketingCss).toContain("--color-brand-accent: #0ea5e9");
     expect(approvedCss).toContain("--homepage-section-pad");
     expect(approvedCss).toContain(".homepage-horizontal-process");
+    expect(approvedCss).toContain(".homepage-hero-scene");
+    expect(approvedCss).toContain(".homepage-cta-scene");
   });
 });
