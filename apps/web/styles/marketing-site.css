@@ -59,9 +59,7 @@
 	color: var(--color-text-primary);
 }
 
-.public-root .public-brand-copy small,
-.public-root .public-nav,
-.public-root .button-ghost {
+.public-root .public-nav {
 	color: var(--color-text-secondary);
 }
 
@@ -94,11 +92,6 @@
 .public-root .button-secondary:hover {
 	border-color: var(--color-brand-primary);
 	background: #f8fbff;
-}
-
-.public-root .button-ghost:hover {
-	background: var(--color-brand-soft);
-	color: var(--color-brand-text-on-soft);
 }
 
 .public-root .public-section {
