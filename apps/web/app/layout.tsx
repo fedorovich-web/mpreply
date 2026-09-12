@@ -10,6 +10,7 @@ import "../styles/dashboard-review-queue-approved.css";
 import "../styles/dashboard-ai-assistant-approved.css";
 import "../styles/dashboard-automation-approved.css";
 import "../styles/dashboard-integrations-approved.css";
+import "../styles/dashboard-analytics-approved.css";
 import "../styles/marketing-site.css";
 import "../styles/marketing-pages.css";
 import "../styles/marketplaces-approved.css";
