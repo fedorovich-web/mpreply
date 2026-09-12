@@ -11,30 +11,26 @@ const marketplaceCatalog = [
   {
     key: "wildberries",
     name: "Wildberries",
-    badge: "MVP adapter",
-    description: "Подключение кабинетов, проверка ключа, ручная синхронизация отзывов и вопросов.",
-    available: true,
+    href: "/app/integrations/wildberries",
+    description: "Отзывы и вопросы, синхронизация обращений, подготовка ответов и управление подключёнными кабинетами.",
   },
   {
     key: "ozon",
     name: "Ozon",
-    badge: "Planned",
-    description: "Production adapter ещё не реализован и не объявляется готовым.",
-    available: false,
+    href: "/app/integrations/ozon",
+    description: "Обращения покупателей Ozon, синхронизация кабинета и работа с ответами в едином интерфейсе MPReply.",
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
-    badge: "Planned",
-    description: "Будет подключён отдельным vertical slice после подтверждения API contract.",
-    available: false,
+    href: "/app/integrations/yandex-market",
+    description: "Вопросы и обращения Яндекс Маркета с общей очередью, статусами и управлением ответами.",
   },
   {
     key: "avito",
     name: "Авито",
-    badge: "Planned",
-    description: "Не включается в production до реализации и проверки реального adapter.",
-    available: false,
+    href: "/app/integrations/avito",
+    description: "Сообщения покупателей Авито, синхронизация чатов и управление подключением из MPReply.",
   },
 ] as const;
 
@@ -50,9 +46,9 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const wildberriesAccounts = accounts.filter((account) => account.marketplace === "wildberries");
   const activeCount = accounts.filter((account) => account.status === "active").length;
   const problemCount = accounts.filter((account) => account.status === "error" || account.error_count > 0).length;
+  const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
 
   return (
     <section className="integrations-workspace" aria-label="Интеграции маркетплейсов">
@@ -74,36 +70,29 @@ export function IntegrationsWorkspace() {
 
       <div className="integration-catalog-grid" role="list">
         {marketplaceCatalog.map((marketplace) => {
-          const connectedCount = marketplace.key === "wildberries" ? wildberriesAccounts.length : 0;
-          const statusLabel = marketplace.available
+          const connectedCount = accounts.filter((account) => account.marketplace === marketplace.key).length;
+          const statusLabel = connectedCount > 0
+            ? `${connectedCount} ${accountWord(connectedCount)}`
+            : "Доступно";
+          const actionLabel = canManage
             ? connectedCount > 0
-              ? `${connectedCount} ${accountWord(connectedCount)}`
-              : "Можно подключить"
-            : "Пока недоступно";
+              ? `Управлять ${marketplace.name}`
+              : `Подключить ${marketplace.name}`
+            : `Открыть ${marketplace.name}`;
 
           return (
             <article className="integration-market-card" key={marketplace.key} role="listitem">
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge">{marketplace.badge}</span>
+                  <span className="ui-badge ui-badge-success">Интеграция готова</span>
                   <h2>{marketplace.name}</h2>
                 </div>
-                <span className={`ui-badge ${marketplace.available ? "ui-badge-success" : "ui-badge-warning"}`}>
-                  {statusLabel}
-                </span>
+                <span className="ui-badge ui-badge-success">{statusLabel}</span>
               </div>
               <p>{marketplace.description}</p>
-              {marketplace.available ? (
-                <Link className="button button-secondary" href="/app/integrations/wildberries">
-                  {activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin"
-                    ? connectedCount > 0
-                      ? "Управлять подключениями"
-                      : "Подключить Wildberries"
-                    : "Просмотреть подключения"}
-                </Link>
-              ) : (
-                <span className="integration-unavailable-note">Без ложного обещания production readiness.</span>
-              )}
+              <Link className="button button-secondary" href={marketplace.href}>
+                {actionLabel}
+              </Link>
             </article>
           );
         })}
