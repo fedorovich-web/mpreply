@@ -47,6 +47,7 @@ describe("apiRequest", () => {
       body: JSON.stringify({ value: 42 }),
     });
     expect(new Headers(request?.headers).get("content-type")).toBe("application/json");
+    expect(new Headers(request?.headers).get("x-csrf-token")).toBe("1");
   });
 
   it("renews an expired access session once and retries the original request", async () => {
@@ -66,7 +67,55 @@ describe("apiRequest", () => {
       credentials: "include",
       cache: "no-store",
     });
+    expect(new Headers(fetchMock.mock.calls[1]?.[1]?.headers).get("x-csrf-token")).toBe("1");
     expect(fetchMock.mock.calls[2]?.[0]).toBe("http://localhost:8000/api/protected");
+  });
+
+  it("shares one refresh across concurrent expired requests", async () => {
+    let releaseRefresh: (() => void) | undefined;
+    const refreshGate = new Promise<Response>((resolve) => {
+      releaseRefresh = () => resolve(new Response(JSON.stringify({ message: "Session refreshed" }), { status: 200 }));
+    });
+    const attempts = new Map<string, number>();
+    let refreshCalls = 0;
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/refresh")) {
+        refreshCalls += 1;
+        return refreshGate;
+      }
+
+      const attempt = (attempts.get(url) ?? 0) + 1;
+      attempts.set(url, attempt);
+      if (attempt === 1) {
+        return new Response(JSON.stringify({ detail: "expired" }), { status: 401 });
+      }
+      return new Response(JSON.stringify({ url }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = apiRequest("/api/first", z.object({ url: z.string() }));
+    const second = apiRequest("/api/second", z.object({ url: z.string() }));
+    await vi.waitFor(() => expect(refreshCalls).toBe(1));
+    releaseRefresh?.();
+
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      { url: "http://localhost:8000/api/first" },
+      { url: "http://localhost:8000/api/second" },
+    ]);
+    expect(refreshCalls).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+  });
+
+  it("does not attach a CSRF proof to safe requests", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await apiRequest("/api/example", z.object({ ok: z.boolean() }));
+
+    expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).has("x-csrf-token")).toBe(false);
   });
 
   it("preserves API status and request ID on backend errors", async () => {

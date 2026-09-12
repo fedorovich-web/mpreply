@@ -15,15 +15,23 @@ from app.core.errors import bad_request, forbidden, unauthorized
 from app.models.auth_token import AuthToken
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.session_service import SessionService
 
 VERIFY_EMAIL_PURPOSE = "verify_email"
 RESET_PASSWORD_PURPOSE = "reset_password"
+_DUMMY_PASSWORD_HASH = hash_password("respio-login-timing-equalizer")
 
 
 @dataclass(frozen=True, slots=True)
 class AuthTokenGrant:
     raw_token: str
     expires_at: datetime
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 class AuthService:
@@ -61,14 +69,16 @@ class AuthService:
             entity_type="user",
             actor_user_id=user.id,
             entity_id=str(user.id),
-            metadata={"email": normalized_email},
+            metadata={},
         )
         return user, True
 
     async def authenticate_user(self, *, email: str, password: str) -> User:
         normalized_email = email.strip().lower()
         user = await self._find_user_by_email(normalized_email)
-        if user is None or not verify_password(password, user.password_hash):
+        password_hash = user.password_hash if user is not None else _DUMMY_PASSWORD_HASH
+        password_matches = verify_password(password, password_hash)
+        if user is None or not password_matches:
             raise unauthorized("Invalid email or password")
         if user.status != "active":
             raise unauthorized("User account is not active")
@@ -80,7 +90,7 @@ class AuthService:
             entity_type="user",
             actor_user_id=user.id,
             entity_id=str(user.id),
-            metadata={"email": normalized_email},
+            metadata={},
         )
         return user
 
@@ -135,6 +145,7 @@ class AuthService:
         user.password_hash = hash_password(new_password)
         user.auth_version += 1
         await self._consume_outstanding_tokens(user_id=user.id, consumed_at=now)
+        await SessionService(self.session).revoke_all(user.id, revoked_at=now)
         await self.audit.write(
             action="auth.user.password_reset",
             entity_type="user",
@@ -154,6 +165,7 @@ class AuthService:
         user.password_hash = hash_password(new_password)
         user.auth_version += 1
         await self._consume_outstanding_tokens(user_id=user.id, consumed_at=now)
+        await SessionService(self.session).revoke_all(user.id, revoked_at=now)
         await self.audit.write(
             action="auth.user.password_changed",
             entity_type="user",
@@ -184,7 +196,7 @@ class AuthService:
         )
         latest = latest_result.scalar_one_or_none()
         cooldown = timedelta(seconds=self.settings.auth_action_token_cooldown_seconds)
-        if latest is not None and latest.created_at > now - cooldown:
+        if latest is not None and _as_utc(latest.created_at) > now - cooldown:
             return None
 
         await self.session.execute(
@@ -221,7 +233,7 @@ class AuthService:
         )
         action_token = result.scalar_one_or_none()
         now = datetime.now(UTC)
-        if action_token is None or action_token.consumed_at is not None or action_token.expires_at <= now:
+        if action_token is None or action_token.consumed_at is not None or _as_utc(action_token.expires_at) <= now:
             raise bad_request("Invalid or expired token")
         return action_token
 

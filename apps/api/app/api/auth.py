@@ -15,6 +15,7 @@ from app.core.cookies import (
     set_access_cookie,
     set_refresh_cookie,
 )
+from app.core.csrf import require_csrf_header
 from app.core.rate_limit import enforce_auth_rate_limit
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
@@ -88,7 +89,7 @@ async def register(
     )
 
     service = AuthService(session)
-    user, created = await service.register_user(
+    user, _ = await service.register_user(
         email=normalized_email,
         password=payload.password,
         name=payload.name,
@@ -108,11 +109,6 @@ async def register(
         )
         if not delivered:
             await session.rollback()
-            if created:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Email delivery is temporarily unavailable",
-                )
             return MessageResponse(message=_REGISTERED_MESSAGE)
 
     await session.commit()
@@ -308,6 +304,7 @@ async def login(
 async def refresh_session(
     request: Request,
     response: Response,
+    _: None = Depends(require_csrf_header),
     session: AsyncSession = Depends(get_db_session),
 ) -> MessageResponse:
     raw_refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
@@ -322,7 +319,10 @@ async def refresh_session(
     try:
         grant = await session_service.rotate(raw_refresh_token)
     except SessionError as exc:
-        await session.rollback()
+        if exc.code == "refresh_session_reused":
+            await session.commit()
+        else:
+            await session.rollback()
         _clear_session_cookies(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -343,6 +343,7 @@ async def refresh_session(
 async def logout(
     request: Request,
     response: Response,
+    _: None = Depends(require_csrf_header),
     session: AsyncSession = Depends(get_db_session),
 ) -> MessageResponse:
     raw_refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)

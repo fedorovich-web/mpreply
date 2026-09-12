@@ -1,26 +1,32 @@
 from __future__ import annotations
 
-from fastapi import Cookie, Depends, Header
+from fastapi import Cookie, Depends, Header, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import decode_access_token_claims
 from app.core.cookies import ACCESS_COOKIE_NAME
+from app.core.csrf import require_cookie_auth_csrf
 from app.core.errors import unauthorized
 from app.db.session import get_db_session
 from app.models.user import User
 
 
 async def get_current_user(
+    request: Request,
     session: AsyncSession = Depends(get_db_session),
     access_cookie: str | None = Cookie(default=None, alias=ACCESS_COOKIE_NAME),
     authorization: str | None = Header(default=None),
 ) -> User:
-    token = access_cookie
-    if token is None and authorization:
+    token = None
+    if authorization:
         prefix = "Bearer "
         if authorization.startswith(prefix):
             token = authorization[len(prefix) :].strip()
+    if not token:
+        token = access_cookie
+        if token:
+            await require_cookie_auth_csrf(request)
 
     if not token:
         raise unauthorized("Authentication required")
