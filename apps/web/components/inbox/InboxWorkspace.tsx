@@ -286,7 +286,7 @@ export function InboxWorkspace() {
         <div className="panel-heading panel-heading-row inbox-list-heading">
           <div>
             <span className="panel-kicker">{displayedTotal} обращений</span>
-            <strong>{activeFilterCount > 0 ? "Результаты фильтра" : "Все входящие"}</strong>
+            <strong>{activeFilterCount > 0 ? "Результаты фильтра" : "Все обращения"}</strong>
           </div>
           <button
             className="button button-secondary button-compact"
@@ -494,9 +494,9 @@ function MessageDetail({
         <div className="inbox-review-handoff">
           <div>
             <span className="panel-kicker">Ответ уже на проверке</span>
-            <strong>Продолжите работу в очереди модерации</strong>
+            <strong>Продолжите работу в разделе «На проверке»</strong>
           </div>
-          <Link className="button button-primary" href="/app/review-queue">Открыть модерацию</Link>
+          <Link className="button button-primary" href="/app/review-queue">Открыть очередь проверки</Link>
         </div>
       ) : null}
 
@@ -510,7 +510,7 @@ function MessageDetail({
             placeholder="Введите ответ или отредактируйте подготовленный текст"
             value={replyText}
           />
-          <small>После отправки ответ попадёт в «Модерацию», где его можно проверить и отправить.</small>
+          <small>После отправки ответ попадёт в раздел «На проверке», где его можно проверить и отправить.</small>
           <button
             className="button button-primary"
             disabled={isCreatingDraft || replyText.trim().length === 0}
@@ -526,9 +526,9 @@ function MessageDetail({
         <div className="inbox-review-handoff" role="status">
           <div>
             <span className="panel-kicker">Ответ передан на проверку</span>
-            <strong>Черновик сохранён и находится в очереди модерации</strong>
+            <strong>Черновик сохранён и находится в разделе «На проверке»</strong>
           </div>
-          <Link className="button button-primary" href="/app/review-queue">Открыть модерацию</Link>
+          <Link className="button button-primary" href="/app/review-queue">Открыть очередь проверки</Link>
         </div>
       ) : null}
 
