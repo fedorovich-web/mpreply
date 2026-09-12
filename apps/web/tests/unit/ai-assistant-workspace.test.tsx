@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AIAssistantWorkspace } from "../../components/ai-assistant/AIAssistantWorkspace";
@@ -85,10 +85,44 @@ const draft = {
   updated_at: timestamp,
 };
 
+const reply = {
+  id: "99999999-9999-4999-8999-999999999999",
+  organization_id: organization.id,
+  message_id: message.id,
+  ai_draft_id: draft.id,
+  automation_rule_id: null,
+  reply_text: draft.draft_text,
+  status: "draft",
+  mode: "semi_auto",
+  revision: 1,
+  idempotency_key: null,
+  worker_message_id: null,
+  attempt_count: 0,
+  max_attempts: 3,
+  last_attempt_at: null,
+  next_retry_at: null,
+  error_code: null,
+  created_by: organization.owner_user_id,
+  approved_by: null,
+  sent_by: null,
+  submitted_for_review_at: null,
+  approved_at: null,
+  rejected_at: null,
+  rejection_reason: null,
+  marketplace_reply_id: null,
+  sent_at: null,
+  failed_reason: null,
+  metadata_json: {},
+  created_at: timestamp,
+  updated_at: timestamp,
+};
+
+const safety = { decision: "allow", flags: [], reasons: [] };
 const mockedUseWorkspace = vi.mocked(useWorkspace);
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
 
 function mockWorkspace(role: "owner" | "admin" | "manager" | "viewer") {
@@ -123,8 +157,9 @@ function renderWorkspace() {
 }
 
 describe("AIAssistantWorkspace", () => {
-  it("loads inquiry context and lets a manager prepare a draft", async () => {
+  it("lets a manager generate, edit and hand an AI draft to the live review queue", async () => {
     mockWorkspace("manager");
+    const editedReply = `${draft.draft_text} Мы проверим детали обращения.`;
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url.includes("/api/messages")) {
@@ -135,6 +170,21 @@ describe("AIAssistantWorkspace", () => {
       }
       if (url.includes("/api/ai/drafts")) {
         return new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 });
+      }
+      if (url.endsWith("/api/replies/manual") && init?.method === "POST") {
+        return new Response(
+          JSON.stringify({ reply: { ...reply, reply_text: editedReply }, safety }),
+          { status: 201 },
+        );
+      }
+      if (url.includes(`/api/replies/${reply.id}/submit-review`) && init?.method === "POST") {
+        return new Response(
+          JSON.stringify({
+            reply: { ...reply, reply_text: editedReply, status: "waiting_review", submitted_for_review_at: timestamp },
+            safety,
+          }),
+          { status: 200 },
+        );
       }
       return new Response(JSON.stringify({ detail: "Unexpected request" }), { status: 500 });
     });
@@ -148,20 +198,45 @@ describe("AIAssistantWorkspace", () => {
     fireEvent.change(within(form).getByLabelText("Правила бренда"), { target: { value: "Обращаться на Вы" } });
     fireEvent.click(within(form).getByRole("button", { name: "Подготовить черновик" }));
 
-    expect(await screen.findByText(draft.draft_text)).toBeInTheDocument();
+    const editor = await screen.findByLabelText("Ответ для проверки");
+    expect(editor).toHaveValue(draft.draft_text);
     expect(screen.getByText("Проверка пройдена")).toBeInTheDocument();
     expect(screen.queryByText("groq")).not.toBeInTheDocument();
     expect(screen.queryByText("qwen/qwen3.8-27b")).not.toBeInTheDocument();
 
-    const postCall = fetchMock.mock.calls.find(([input, init]) =>
+    fireEvent.change(editor, { target: { value: editedReply } });
+    fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
+
+    expect(await screen.findByText("Ответ передан на проверку")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Открыть модерацию" })).toHaveAttribute("href", "/app/review-queue");
+
+    const generateCall = fetchMock.mock.calls.find(([input, init]) =>
       String(input).includes("/api/ai/drafts/generate") && init?.method === "POST"
     );
-    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
-    expect(body).toMatchObject({
+    const generateBody = JSON.parse(String(generateCall?.[1]?.body)) as Record<string, unknown>;
+    expect(generateBody).toMatchObject({
       message_id: message.id,
       tone: "friendly",
       brand_rules: "Обращаться на Вы",
       knowledge_base: null,
+    });
+
+    const manualCall = fetchMock.mock.calls.find(([input, init]) =>
+      String(input).endsWith("/api/replies/manual") && init?.method === "POST"
+    );
+    const manualBody = JSON.parse(String(manualCall?.[1]?.body)) as Record<string, unknown>;
+    expect(manualBody).toMatchObject({
+      message_id: message.id,
+      ai_draft_id: draft.id,
+      reply_text: editedReply,
+    });
+
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([input, init]) => String(input).includes(`/api/replies/${reply.id}/submit-review`) && init?.method === "POST",
+        ),
+      ).toBe(true);
     });
   });
 
@@ -183,9 +258,13 @@ describe("AIAssistantWorkspace", () => {
 
     renderWorkspace();
 
-    expect(await screen.findByText(draft.draft_text)).toBeInTheDocument();
+    const editor = await screen.findByLabelText("Ответ для проверки");
+    expect(editor).toHaveValue(draft.draft_text);
+    expect(editor).toBeDisabled();
     expect(screen.getByText(/может просматривать историю, но не создавать новые черновики/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Подготовить черновик" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Передать на проверку" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Подготовить другой вариант" })).not.toBeInTheDocument();
   });
 
   it("labels marketplace chats as buyer messages", async () => {
