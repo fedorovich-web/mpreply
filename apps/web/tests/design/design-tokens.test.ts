@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const tokenSource = readFileSync(resolve(process.cwd(), "styles/tokens.css"), "utf8");
-const themeSource = readFileSync(resolve(process.cwd(), "styles/theme.css"), "utf8");
+const brandThemeSource = readFileSync(resolve(process.cwd(), "styles/brand-theme.css"), "utf8");
 const globalStyleSource = readFileSync(resolve(process.cwd(), "styles/globals.css"), "utf8");
 const publicStyleSource = readFileSync(resolve(process.cwd(), "styles/public-site.css"), "utf8");
 const fontStyleSource = readFileSync(resolve(process.cwd(), "styles/fonts.css"), "utf8");
@@ -21,6 +21,24 @@ function readTokens(source: string): Map<string, string> {
     tokens.set(name, value);
   }
   return tokens;
+}
+
+function readSelectorBlock(source: string, selector: string): string {
+  const selectorIndex = source.indexOf(selector);
+  if (selectorIndex < 0) throw new Error(`Missing selector block: ${selector}`);
+  const openIndex = source.indexOf("{", selectorIndex);
+  if (openIndex < 0) throw new Error(`Missing opening brace for: ${selector}`);
+
+  let depth = 0;
+  for (let index = openIndex; index < source.length; index += 1) {
+    const character = source[index];
+    if (character === "{") depth += 1;
+    if (character !== "}") continue;
+    depth -= 1;
+    if (depth === 0) return source.slice(openIndex + 1, index);
+  }
+
+  throw new Error(`Missing closing brace for: ${selector}`);
 }
 
 function parseHex(value: string): [number, number, number] {
@@ -75,7 +93,8 @@ function declarationsOutsideTokenFiles(source: string): string[] {
 }
 
 const tokens = readTokens(tokenSource);
-const darkThemeTokens = readTokens(themeSource);
+const lightBrandTokens = readTokens(readSelectorBlock(brandThemeSource, ":root"));
+const darkBrandTokens = readTokens(readSelectorBlock(brandThemeSource, "[data-theme='dark']"));
 
 function token(name: string): string {
   const value = tokens.get(name);
@@ -83,8 +102,12 @@ function token(name: string): string {
   return value;
 }
 
+function lightToken(name: string): string {
+  return lightBrandTokens.get(name) ?? token(name);
+}
+
 function darkToken(name: string): string {
-  return darkThemeTokens.get(name) ?? token(name);
+  return darkBrandTokens.get(name) ?? lightToken(name);
 }
 
 function expectOpaqueHexColor(value: string, label: string): void {
@@ -178,8 +201,15 @@ describe("MPReply base design tokens", () => {
     expect(token("--color-public-section")).toBe("var(--color-bg-page)");
   });
 
+  it("checks the actual blue runtime brand layer rather than the fallback palette", () => {
+    expect(lightToken("--color-brand-primary").toLowerCase()).toBe("#2563eb");
+    expect(lightToken("--color-brand-accent").toLowerCase()).toBe("#0ea5e9");
+    expect(darkToken("--color-brand-primary").toLowerCase()).toBe("#60a5fa");
+    expect(darkToken("--color-brand-accent").toLowerCase()).toBe("#38bdf8");
+  });
+
   it("keeps decorative accent distinct from semantic success", () => {
-    expect(token("--color-brand-accent").toLowerCase()).not.toBe(token("--color-success").toLowerCase());
+    expect(lightToken("--color-brand-accent").toLowerCase()).not.toBe(lightToken("--color-success").toLowerCase());
   });
 
   it("uses the self-hosted Onest RU/EN subset with explicit webfont performance contracts", () => {
@@ -251,9 +281,9 @@ describe("MPReply base design tokens", () => {
     expect(integrationStyles).toContain("@media (max-width: 760px)");
   });
 
-  it("defines dark-theme overrides as custom-property values rather than component hacks", () => {
-    expect(themeSource).toMatch(/\[data-theme=['"]dark['"]\]/);
-    expect(themeSource).not.toMatch(/\.[\w-]+\s*\{/);
+  it("keeps brand-theme limited to token overrides rather than component hacks", () => {
+    expect(brandThemeSource).toMatch(/\[data-theme=['"]dark['"]\]/);
+    expect(brandThemeSource).not.toMatch(/\.[\w-]+\s*\{/);
   });
 
   it.each([
@@ -275,8 +305,8 @@ describe("MPReply base design tokens", () => {
     ["warning text on warning soft surface", "--color-warning-text", "--color-warning-soft", 4.5],
     ["danger text on danger soft surface", "--color-danger-text", "--color-danger-soft", 4.5],
     ["info text on info soft surface", "--color-info-text", "--color-info-soft", 4.5],
-  ])("meets WCAG AA contrast for light theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
-    expect(contrastRatio(token(foregroundToken), token(backgroundToken))).toBeGreaterThanOrEqual(minimum);
+  ])("meets WCAG AA contrast for light runtime theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
+    expect(contrastRatio(lightToken(foregroundToken), lightToken(backgroundToken))).toBeGreaterThanOrEqual(minimum);
   });
 
   it.each([
@@ -297,7 +327,7 @@ describe("MPReply base design tokens", () => {
     ["warning text on warning soft surface", "--color-warning-text", "--color-warning-soft", 4.5],
     ["danger text on danger soft surface", "--color-danger-text", "--color-danger-soft", 4.5],
     ["info text on info soft surface", "--color-info-text", "--color-info-soft", 4.5],
-  ])("meets WCAG AA contrast for dark theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
+  ])("meets WCAG AA contrast for dark runtime theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
     expect(contrastRatio(darkToken(foregroundToken), darkToken(backgroundToken))).toBeGreaterThanOrEqual(minimum);
   });
 
@@ -313,7 +343,7 @@ describe("MPReply base design tokens", () => {
     ["secondary text on brand soft", "--color-text-secondary", "--color-brand-soft"],
     ["muted text on brand soft", "--color-text-muted", "--color-brand-soft"],
   ])("keeps inherited neutral copy accessible on semantic soft surfaces: %s", (_label, foregroundToken, backgroundToken) => {
-    expect(contrastRatio(token(foregroundToken), token(backgroundToken))).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(lightToken(foregroundToken), lightToken(backgroundToken))).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio(darkToken(foregroundToken), darkToken(backgroundToken))).toBeGreaterThanOrEqual(4.5);
   });
 
@@ -327,12 +357,12 @@ describe("MPReply base design tokens", () => {
     ];
 
     for (const name of opaqueSoftTokens) {
-      expectOpaqueHexColor(token(name), `light ${name}`);
+      expectOpaqueHexColor(lightToken(name), `light ${name}`);
       expectOpaqueHexColor(darkToken(name), `dark ${name}`);
     }
 
-    expect(token("--app-nav-active-bg")).toBe("var(--color-brand-soft)");
-    expect(darkToken("--app-nav-active-bg")).toBe("var(--color-brand-soft)");
+    expect(lightToken("--app-nav-active-bg")).toBe("#eff6ff");
+    expect(darkToken("--app-nav-active-bg")).toBe("#102a56");
   });
 
   it("uses the dedicated brand text token on all soft brand text surfaces", () => {
