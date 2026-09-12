@@ -1,70 +1,82 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { marketplaces } from "../../lib/site-config";
+import { siteConfig } from "../../lib/site-config";
 import { PublicHeader } from "./PublicHeader";
 
 type PublicShellProps = {
   children: ReactNode;
 };
 
+function FooterBrandMark() {
+  return (
+    <span className="public-brand-mark" aria-hidden="true">
+      <span className="public-brand-glyph"><i /><i /><i /></span>
+    </span>
+  );
+}
+
 export function PublicShell({ children }: PublicShellProps) {
   return (
     <div className="public-root">
-      <a className="skip-link" href="#main-content">
-        Перейти к содержимому
-      </a>
+      <a className="skip-link" href="#main-content">Перейти к содержимому</a>
 
       <PublicHeader />
 
       <main id="main-content">{children}</main>
 
       <footer className="public-footer">
-        <div className="public-container public-footer-topline">
+        <div className="public-container public-footer-main">
           <div className="public-footer-brand">
             <Link className="public-footer-logo" href="/" aria-label="MPReply — главная">
-              <span className="public-brand-mark" aria-hidden="true">M</span>
+              <FooterBrandMark />
               <strong>MPReply</strong>
             </Link>
-            <p>
-              Единое окно для отзывов, вопросов и сообщений покупателей: ИИ готовит ответ, правила управляют отправкой, а команда сохраняет контроль над сложными случаями.
-            </p>
+            <p>Автоответы на отзывы, вопросы и сообщения покупателей на маркетплейсах.</p>
+            <div className="public-footer-socials" aria-label="Ссылки MPReply">
+              <span aria-hidden="true">➤</span>
+              <span aria-hidden="true">◉</span>
+              <span aria-hidden="true">VK</span>
+            </div>
           </div>
-        </div>
 
-        <div className="public-container public-footer-grid">
-          <div>
+          <div className="public-footer-column">
             <strong>Продукт</strong>
             <Link href="/features">Возможности</Link>
-            <Link href="/#how-it-works">Как это работает</Link>
+            <Link href="/marketplaces">Интеграции</Link>
             <Link href="/pricing">Тарифы</Link>
             <Link href="/demo">Посмотреть демо</Link>
           </div>
-          <div>
-            <strong>Маркетплейсы</strong>
-            {marketplaces.map((marketplace) => (
-              <Link key={marketplace.key} href={marketplace.path}>
-                <span>{marketplace.name}</span>
-                <small>{marketplace.statusLabel}</small>
-              </Link>
-            ))}
-          </div>
-          <div>
+
+          <div className="public-footer-column">
             <strong>Ресурсы</strong>
             <Link href="/resources">Блог</Link>
-            <Link href="/help">Помощь и FAQ</Link>
+            <Link href="/help">База знаний</Link>
+            <Link href="/help">FAQ</Link>
             <Link href="/contacts">Контакты</Link>
           </div>
-          <div>
-            <strong>Документы</strong>
-            <Link href="/privacy">Конфиденциальность</Link>
-            <Link href="/terms">Условия использования</Link>
+
+          <div className="public-footer-column">
+            <strong>Компания</strong>
+            <Link href="/contacts">О нас</Link>
+            <Link href="/contacts">Партнёрам</Link>
+            <Link href="/contacts">Контакты</Link>
+          </div>
+
+          <div className="public-footer-column public-footer-support">
+            <strong>Поддержка</strong>
+            {siteConfig.contactEmail ? <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> : null}
+            <Link href="/help">Помощь и FAQ</Link>
+            <Link href="/contacts">Связаться с нами</Link>
           </div>
         </div>
 
         <div className="public-container public-footer-bottom">
-          <span>© {new Date().getFullYear()} MPReply</span>
-          <span>Поддерживаем Wildberries, Ozon, Яндекс Маркет и Авито.</span>
+          <span>© {new Date().getFullYear()} MPReply. Все права защищены.</span>
+          <nav aria-label="Документы">
+            <Link href="/privacy">Политика конфиденциальности</Link>
+            <Link href="/terms">Условия использования</Link>
+          </nav>
         </div>
       </footer>
     </div>
