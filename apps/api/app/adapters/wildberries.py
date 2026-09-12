@@ -5,8 +5,14 @@ from typing import cast
 
 import httpx
 
-from app.adapters.base import AdapterResult, CredentialValidation, MarketplaceAdapter
-from app.models.enums import Marketplace, MessageStatus, MessageType
+from app.adapters.base import (
+    AdapterResult,
+    CredentialValidation,
+    MarketplaceAdapter,
+    NormalizedMessage,
+    NormalizedProduct,
+)
+from app.models.enums import Marketplace, MessageType
 
 
 class WildberriesAdapter(MarketplaceAdapter):
@@ -91,45 +97,53 @@ class WildberriesAdapter(MarketplaceAdapter):
     def extract_questions(self, payload: object) -> list[dict[str, object]]:
         return self._extract_items(payload, keys=("questions", "items", "data"))
 
-    def normalize_review(self, raw: dict[str, object]) -> dict[str, object]:
+    def normalize_review(self, raw: dict[str, object]) -> NormalizedMessage:
         product = self._product_context(raw)
-        return {
-            "external_id": self._string(raw.get("id") or raw.get("feedbackId") or raw.get("externalId")),
-            "type": MessageType.REVIEW.value,
-            "status": MessageStatus.NEEDS_REPLY.value,
-            "rating": self._int_or_none(raw.get("productValuation") or raw.get("valuation") or raw.get("rating")),
-            "customer_display_name": self._optional_string(raw.get("userName") or raw.get("customerName") or raw.get("buyerName")),
-            "customer_text": self._string(raw.get("text") or raw.get("reviewText") or raw.get("message") or ""),
-            "customer_photos_json": self._photos(raw),
-            "marketplace_created_at": self._datetime(raw.get("createdDate") or raw.get("createdAt") or raw.get("date")),
-            "product": product,
-            "metadata_json": {
+        return NormalizedMessage(
+            external_id=self._required_string(
+                raw.get("id") or raw.get("feedbackId") or raw.get("externalId"),
+                field_name="feedback ID",
+            ),
+            message_type=MessageType.REVIEW,
+            rating=self._int_or_none(raw.get("productValuation") or raw.get("valuation") or raw.get("rating")),
+            customer_display_name=self._optional_string(raw.get("userName") or raw.get("customerName") or raw.get("buyerName")),
+            customer_text=self._required_string(
+                raw.get("text") or raw.get("reviewText") or raw.get("message"),
+                field_name="feedback text",
+            ),
+            customer_photos=self._photos(raw),
+            marketplace_created_at=self._datetime(raw.get("createdDate") or raw.get("createdAt") or raw.get("date")),
+            product=product,
+            metadata={
                 "source": "wildberries.feedbacks",
-                "wb_status": raw.get("state") or raw.get("status"),
+                "status": raw.get("state") or raw.get("status"),
                 "is_answered": raw.get("isAnswered"),
-                "raw_keys": sorted(raw.keys()),
             },
-        }
+        )
 
-    def normalize_question(self, raw: dict[str, object]) -> dict[str, object]:
+    def normalize_question(self, raw: dict[str, object]) -> NormalizedMessage:
         product = self._product_context(raw)
-        return {
-            "external_id": self._string(raw.get("id") or raw.get("questionId") or raw.get("externalId")),
-            "type": MessageType.QUESTION.value,
-            "status": MessageStatus.NEEDS_REPLY.value,
-            "rating": None,
-            "customer_display_name": self._optional_string(raw.get("userName") or raw.get("customerName") or raw.get("buyerName")),
-            "customer_text": self._string(raw.get("text") or raw.get("question") or raw.get("message") or ""),
-            "customer_photos_json": self._photos(raw),
-            "marketplace_created_at": self._datetime(raw.get("createdDate") or raw.get("createdAt") or raw.get("date")),
-            "product": product,
-            "metadata_json": {
+        return NormalizedMessage(
+            external_id=self._required_string(
+                raw.get("id") or raw.get("questionId") or raw.get("externalId"),
+                field_name="question ID",
+            ),
+            message_type=MessageType.QUESTION,
+            rating=None,
+            customer_display_name=self._optional_string(raw.get("userName") or raw.get("customerName") or raw.get("buyerName")),
+            customer_text=self._required_string(
+                raw.get("text") or raw.get("question") or raw.get("message"),
+                field_name="question text",
+            ),
+            customer_photos=self._photos(raw),
+            marketplace_created_at=self._datetime(raw.get("createdDate") or raw.get("createdAt") or raw.get("date")),
+            product=product,
+            metadata={
                 "source": "wildberries.questions",
-                "wb_status": raw.get("state") or raw.get("status"),
+                "status": raw.get("state") or raw.get("status"),
                 "is_answered": raw.get("isAnswered"),
-                "raw_keys": sorted(raw.keys()),
             },
-        }
+        )
 
     async def _get(self, path: str, credential: str, params: dict[str, str | int]) -> AdapterResult:
         return await self._request("GET", path, credential, params=params)
@@ -212,33 +226,44 @@ class WildberriesAdapter(MarketplaceAdapter):
     def _dict_items(value: list[object]) -> list[dict[str, object]]:
         return [cast(dict[str, object], item) for item in value if isinstance(item, dict)]
 
-    def _product_context(self, raw: dict[str, object]) -> dict[str, object]:
+    def _product_context(self, raw: dict[str, object]) -> NormalizedProduct:
         product_details_value = raw.get("productDetails")
         product_details = cast(dict[str, object], product_details_value) if isinstance(product_details_value, dict) else {}
         nm_id = raw.get("nmId") or product_details.get("nmId") or raw.get("productId")
         imt_id = raw.get("imtId") or product_details.get("imtId")
-        name = raw.get("productName") or product_details.get("productName") or raw.get("productTitle") or "Wildberries product"
-        return {
-            "external_id": self._string(nm_id or imt_id or raw.get("productExternalId") or "unknown"),
-            "sku": self._optional_string(raw.get("supplierArticle") or product_details.get("supplierArticle")),
-            "name": self._string(name),
-            "brand": self._optional_string(raw.get("brandName") or product_details.get("brandName")),
-            "category": self._optional_string(raw.get("subjectName") or product_details.get("subjectName")),
-            "image_url": self._optional_string(raw.get("productImageUrl") or product_details.get("imageUrl")),
-            "product_url": self._optional_string(raw.get("productUrl") or product_details.get("productUrl")),
-            "metadata_json": {
-                "nmId": nm_id,
-                "imtId": imt_id,
-                "supplierArticle": raw.get("supplierArticle") or product_details.get("supplierArticle"),
+        supplier_article = raw.get("supplierArticle") or product_details.get("supplierArticle")
+        name = raw.get("productName") or product_details.get("productName") or raw.get("productTitle")
+        return NormalizedProduct(
+            external_id=self._required_string(
+                nm_id or imt_id or raw.get("productExternalId"),
+                field_name="product ID",
+            ),
+            sku=self._optional_string(supplier_article),
+            name=self._required_string(name, field_name="product name"),
+            brand=self._optional_string(raw.get("brandName") or product_details.get("brandName")),
+            category=self._optional_string(raw.get("subjectName") or product_details.get("subjectName")),
+            image_url=self._optional_string(raw.get("productImageUrl") or product_details.get("imageUrl")),
+            product_url=self._optional_string(raw.get("productUrl") or product_details.get("productUrl")),
+            metadata={
+                key: value
+                for key, value in {
+                    "nm_id": nm_id,
+                    "imt_id": imt_id,
+                    "supplier_article": supplier_article,
+                }.items()
+                if value is not None
             },
-        }
+        )
 
     @staticmethod
-    def _photos(raw: dict[str, object]) -> list[object]:
+    def _photos(raw: dict[str, object]) -> tuple[str, ...]:
         value = raw.get("photoLinks") or raw.get("photos") or raw.get("photoLinksJson")
         if isinstance(value, list):
-            return cast(list[object], value)
-        return []
+            photos = cast(list[object], value)
+            if not all(isinstance(photo, str) and photo.strip() for photo in photos):
+                raise ValueError("Wildberries photo list is malformed")
+            return tuple(cast(str, photo).strip() for photo in photos)
+        return ()
 
     @staticmethod
     def _datetime(value: object) -> datetime:
@@ -249,15 +274,22 @@ class WildberriesAdapter(MarketplaceAdapter):
                 normalized = value.replace("Z", "+00:00")
                 parsed = datetime.fromisoformat(normalized)
                 return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
-            except ValueError:
-                return datetime.now(UTC)
-        return datetime.now(UTC)
+            except ValueError as exc:
+                raise ValueError("Wildberries timestamp is malformed") from exc
+        raise ValueError("Wildberries timestamp is missing")
 
     @staticmethod
     def _string(value: object) -> str:
         if value is None:
             return ""
         return str(value).strip()
+
+    @staticmethod
+    def _required_string(value: object, *, field_name: str) -> str:
+        text = WildberriesAdapter._string(value)
+        if not text:
+            raise ValueError(f"Wildberries {field_name} is missing")
+        return text
 
     @staticmethod
     def _optional_string(value: object) -> str | None:

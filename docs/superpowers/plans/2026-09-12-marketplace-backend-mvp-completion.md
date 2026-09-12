@@ -438,14 +438,16 @@ The real PostgreSQL `upgrade -> downgrade -> upgrade` cycle remains an explicit 
 **Files:**
 - Create: `apps/api/app/services/marketplace_ingest_service.py`
 - Modify: `apps/api/app/services/sync_service.py`
+- Modify: `apps/api/app/adapters/wildberries.py`
 - Create: `apps/api/app/tests/test_marketplace_ingest_concurrency.py`
 - Create: `apps/api/app/tests/test_marketplace_metadata_redaction.py`
+- Modify: `apps/api/app/tests/test_wildberries_adapter_normalization.py`
 
 **Interfaces:**
 - Produces: `MarketplaceIngestService.ingest_page(account, page, now) -> IngestStats`.
 - Consumes: `NormalizedMessage`, `NormalizedProduct | None`, named product/message uniqueness constraints, and one caller-owned page transaction.
 
-- [ ] **Step 1: Write RED duplicate and metadata tests**
+- [x] **Step 1: Write RED duplicate and metadata tests**
 
 ```python
 @pytest.mark.asyncio
@@ -462,13 +464,13 @@ def test_metadata_allowlist_drops_secret_and_raw_payload() -> None:
     }
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```powershell
 python -m pytest app/tests/test_marketplace_ingest_concurrency.py app/tests/test_marketplace_metadata_redaction.py -q
 ```
 
-- [ ] **Step 3: Implement savepoint-based conflict resolution**
+- [x] **Step 3: Implement savepoint-based conflict resolution**
 
 ```python
 async def _insert_or_get_message(self, values: MessageValues) -> tuple[CustomerMessage, bool]:
@@ -489,19 +491,21 @@ async def _insert_or_get_message(self, values: MessageValues) -> tuple[CustomerM
 
 Use the same pattern for `uq_products_external`. Do not call `rollback()` on the outer page transaction. Reject a normalized review/question without a product identity; permit `product=None` for chat.
 
-- [ ] **Step 4: Route current sync persistence through the ingest service**
+- [x] **Step 4: Route current sync persistence through the ingest service**
 
 Remove select-before-insert duplicate handling from `sync_service.py`. Keep authorization and `SyncJob` audit behavior, but make page persistence a single `MarketplaceIngestService.ingest_page()` call.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
 ```powershell
 python -m pytest app/tests/test_marketplace_ingest_concurrency.py app/tests/test_marketplace_metadata_redaction.py app/tests/test_wildberries_adapter_normalization.py -q
 python -m ruff check app/services/marketplace_ingest_service.py app/services/sync_service.py app/tests/test_marketplace_ingest_concurrency.py app/tests/test_marketplace_metadata_redaction.py
-python -m pyright app/services/marketplace_ingest_service.py app/services/sync_service.py
-git add -- apps/api/app/services/marketplace_ingest_service.py apps/api/app/services/sync_service.py apps/api/app/tests/test_marketplace_ingest_concurrency.py apps/api/app/tests/test_marketplace_metadata_redaction.py
+npx --yes pyright@1.1.411 --pythonpath '.\.venv\Scripts\python.exe' app
+git add -- apps/api/app/adapters/wildberries.py apps/api/app/services/marketplace_ingest_service.py apps/api/app/services/sync_service.py apps/api/app/tests/test_marketplace_ingest_concurrency.py apps/api/app/tests/test_marketplace_metadata_redaction.py apps/api/app/tests/test_wildberries_adapter_normalization.py
 git commit -m "fix(api): make marketplace ingestion race safe"
 ```
+
+The real two-session PostgreSQL concurrency case remains an explicit Task 15 gate; the deterministic conflict tests prove savepoint handling and constraint discrimination without pretending SQLite has PostgreSQL concurrency semantics.
 
 ### Task 5: Migrate Wildberries to the common sync and reply runners
 
