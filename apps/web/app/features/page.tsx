@@ -90,7 +90,7 @@ export default function FeaturesPage() {
               </div>
             </article>
 
-            <article className="features-hero-draft">
+            <div className="features-hero-draft">
               <div className="features-hero-draft-title">
                 <span aria-hidden="true">✦</span>
                 <strong>Ответ с помощью ИИ</strong>
@@ -101,16 +101,16 @@ export default function FeaturesPage() {
                 <span>Дружелюбный⌄</span>
                 <b>Отправить&nbsp; →</b>
               </div>
-            </article>
+            </div>
 
-            <article className="features-hero-review">
+            <div className="features-hero-review">
               <span className="features-hero-review-icon" aria-hidden="true">✓</span>
               <div>
                 <small>Правило команды</small>
                 <strong>Нужна проверка</strong>
                 <p>Ответ останется у менеджера до подтверждения.</p>
               </div>
-            </article>
+            </div>
 
             <div className="features-hero-sources" role="group" aria-label="Поддерживаемые площадки">
               <span className="is-wb">WB</span>
