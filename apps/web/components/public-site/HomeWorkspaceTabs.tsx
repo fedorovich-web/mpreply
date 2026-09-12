@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 type WorkspaceTab = "reviews" | "questions" | "messages";
 
@@ -45,11 +45,40 @@ const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
 };
 
 const tabs = Object.entries(workspaceStates) as Array<[WorkspaceTab, WorkspaceState]>;
+const tabOrder = tabs.map(([key]) => key);
 
 export function HomeWorkspaceTabs() {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("reviews");
   const id = useId();
+  const tabRefs = useRef<Partial<Record<WorkspaceTab, HTMLButtonElement | null>>>({});
   const active = workspaceStates[activeTab];
+
+  const activateAndFocus = (tab: WorkspaceTab) => {
+    setActiveTab(tab);
+    tabRefs.current[tab]?.focus();
+  };
+
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, key: WorkspaceTab) => {
+    const currentIndex = tabOrder.indexOf(key);
+    let target: WorkspaceTab | null = null;
+
+    if (event.key === "ArrowRight") {
+      target = tabOrder[(currentIndex + 1) % tabOrder.length];
+    } else if (event.key === "ArrowLeft") {
+      target = tabOrder[(currentIndex - 1 + tabOrder.length) % tabOrder.length];
+    } else if (event.key === "Home") {
+      target = tabOrder[0];
+    } else if (event.key === "End") {
+      target = tabOrder[tabOrder.length - 1];
+    }
+
+    if (!target) {
+      return;
+    }
+
+    event.preventDefault();
+    activateAndFocus(target);
+  };
 
   return (
     <div className="homepage-workspace">
@@ -66,7 +95,11 @@ export function HomeWorkspaceTabs() {
               aria-selected={selected}
               aria-controls={`${id}-${key}-panel`}
               tabIndex={selected ? 0 : -1}
+              ref={(node) => {
+                tabRefs.current[key] = node;
+              }}
               onClick={() => setActiveTab(key)}
+              onKeyDown={(event) => handleTabKeyDown(event, key)}
             >
               {item.label}
             </button>
