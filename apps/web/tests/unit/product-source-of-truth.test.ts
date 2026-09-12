@@ -40,6 +40,8 @@ describe("MPReply authoritative product documentation", () => {
   it("keeps agent instructions objective and current", () => {
     expect(agents).toContain("MPReply");
     expect(agents).toContain("npm run test:visual");
+    expect(agents).toContain("production domain");
+    expect(agents).toContain("Do not redesign billing or payment-provider UX in this branch");
     expect(agents).not.toContain("npm run design:detect");
     expect(agents).not.toContain("# Respio Agent Instructions");
   });
