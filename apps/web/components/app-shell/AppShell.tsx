@@ -7,17 +7,15 @@ import { useState } from "react";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const navItems = [
-  { href: "/app/dashboard", label: "Обзор", description: "Главные показатели" },
+  { href: "/app/dashboard", label: "Обзор", description: "Очередь и состояние работы" },
   { href: "/app/inbox", label: "Обращения", description: "Отзывы, вопросы и сообщения" },
-  { href: "/app/review-queue", label: "На проверке", description: "Ответы, где нужен человек" },
-  { href: "/app/ai-assistant", label: "ИИ-ассистент", description: "Подготовка ответов" },
+  { href: "/app/review-queue", label: "На проверке", description: "Ответы, где нужен сотрудник" },
+  { href: "/app/ai-assistant", label: "Подготовка ответов", description: "Черновики и контекст" },
   { href: "/app/automation-rules", label: "Автоматизация", description: "Правила автоответов" },
   { href: "/app/integrations", label: "Интеграции", description: "Подключённые площадки" },
-  { href: "/app/analytics", label: "Аналитика", description: "Обращения и ответы" },
-  { href: "/app/billing", label: "Тариф и лимиты", description: "План и использование" },
+  { href: "/app/analytics", label: "Аналитика", description: "Нагрузка и результаты" },
+  { href: "/app/billing", label: "Тариф и лимиты", description: "Использование сервиса" },
 ];
-
-const upcomingItems = ["Шаблоны", "База знаний", "Команда", "Настройки", "Журнал действий"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -31,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     isLoggingOut,
   } = useWorkspace();
   const visibleNavItems = user.is_superadmin
-    ? [...navItems, { href: "/app/admin", label: "Администрирование", description: "Системный обзор" }]
+    ? [...navItems, { href: "/app/admin", label: "Администрирование", description: "Системные настройки" }]
     : navItems;
 
   return (
@@ -42,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="app-logo-mark" aria-hidden="true">M</span>
             <span>
               <strong>MPReply</strong>
-              <small>Работа с обращениями</small>
+              <small>Работа с покупателями</small>
             </span>
           </Link>
         </div>
@@ -64,15 +62,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-
-        <div className="app-sidebar-section" aria-label="Разделы в разработке">
-          <span className="app-sidebar-caption">В разработке</span>
-          <div className="app-upcoming-list">
-            {upcomingItems.map((item) => (
-              <span className="app-upcoming-item" key={item}>{item}</span>
-            ))}
-          </div>
-        </div>
       </aside>
 
       <div className="app-workspace">
