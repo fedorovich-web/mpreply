@@ -114,7 +114,7 @@ export function HomeWorkspaceTabs() {
           <div className="homepage-workspace-filter"><span>!</span><b>Отрицательные</b><small>6</small></div>
         </aside>
 
-        <div className="homepage-workspace-list" aria-label="Список обращений">
+        <div className="homepage-workspace-list" role="group" aria-label="Список обращений">
           {reviewRows.map((row, index) => (
             <article className={`homepage-workspace-list-row${index === 0 ? " is-active" : ""}`} key={row.name}>
               <span className="homepage-workspace-list-avatar" aria-hidden="true">{row.initials}</span>
@@ -122,7 +122,7 @@ export function HomeWorkspaceTabs() {
                 <strong>{row.name} <span>{row.rating}</span></strong>
                 <p>{row.text}</p>
               </div>
-              <time>{row.time}</time>
+              <span className="homepage-workspace-time">{row.time}</span>
             </article>
           ))}
         </div>
