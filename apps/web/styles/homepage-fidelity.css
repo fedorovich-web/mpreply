@@ -1,0 +1,67 @@
+/* Geometry corrections measured against the approved 782×2010 homepage preview. */
+.public-root {
+	--container-max-width: 1240px;
+}
+
+.homepage-hero-grid {
+	grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+	gap: clamp(2.2rem, 3vw, 2.75rem);
+}
+
+.homepage-hero-copy h1 {
+	font-size: clamp(3.25rem, 4.25vw, 4.35rem);
+}
+
+.homepage-feature-layout,
+.homepage-models-layout {
+	grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+	gap: clamp(2.5rem, 3.4vw, 3rem);
+}
+
+.homepage-results-layout {
+	grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+	gap: clamp(4rem, 5.5vw, 5rem);
+}
+
+.homepage-models-section {
+	padding-top: 3.75rem !important;
+	padding-bottom: 4rem !important;
+}
+
+.homepage-approved-process {
+	padding-top: 3.75rem !important;
+	padding-bottom: 4.25rem !important;
+}
+
+.homepage-results-section {
+	padding-top: 4rem !important;
+	padding-bottom: 4rem !important;
+}
+
+.homepage-approved-final-cta {
+	padding-top: 4.25rem !important;
+	padding-bottom: 4.5rem !important;
+}
+
+@media (max-width: 1120px) {
+	.homepage-hero-grid,
+	.homepage-feature-layout,
+	.homepage-models-layout,
+	.homepage-results-layout {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 760px) {
+	.public-root {
+		--container-max-width: 1240px;
+	}
+
+	.homepage-models-section,
+	.homepage-approved-process,
+	.homepage-results-section,
+	.homepage-approved-final-cta {
+		padding-top: 4.25rem !important;
+		padding-bottom: 4.25rem !important;
+	}
+}
