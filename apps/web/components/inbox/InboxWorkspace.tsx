@@ -1,7 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useDeferredValue, useMemo, useState } from "react";
+import Link from "next/link";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
@@ -10,18 +11,43 @@ import {
   manualReplyWorkflowSchema,
   type CustomerMessage,
 } from "../../lib/api/schemas";
-import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { Badge, type BadgeTone } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
+import { useWorkspace } from "../workspace/WorkspaceProvider";
+
+type MarketplaceFilter = "all" | "wildberries" | "ozon" | "yandex_market" | "avito";
+type AssignmentFilter = "all" | "mine";
+type MessageTypeFilter = "all" | "review" | "question" | "chat";
+type MessageStatusFilter = "all" | "needs_reply" | "ai_draft_ready" | "waiting_review" | "failed" | "escalated";
+type RatingFilter = "all" | "negative" | "positive" | "no_rating";
 
 type FilterState = {
-  type: "all" | "review" | "question" | "chat";
-  status: "all" | "needs_reply" | "ai_draft_ready" | "waiting_review" | "failed" | "escalated";
+  marketplace: MarketplaceFilter;
+  assignment: AssignmentFilter;
+  type: MessageTypeFilter;
+  status: MessageStatusFilter;
   query: string;
-  rating: "all" | "negative" | "positive" | "no_rating";
+  rating: RatingFilter;
 };
 
+type MessageUpdate = {
+  messageId: string;
+  status?: string;
+  assignedTo?: string;
+};
+
+const writeRoles = new Set(["owner", "admin", "manager"]);
+const marketplaceFilters: Array<{ value: MarketplaceFilter; label: string }> = [
+  { value: "all", label: "Все" },
+  { value: "wildberries", label: "Wildberries" },
+  { value: "ozon", label: "Ozon" },
+  { value: "yandex_market", label: "Яндекс Маркет" },
+  { value: "avito", label: "Авито" },
+];
+
 const defaultFilters: FilterState = {
+  marketplace: "all",
+  assignment: "all",
   type: "all",
   status: "all",
   query: "",
@@ -32,12 +58,16 @@ const messageStatusLabels: Record<string, string> = {
   new: "Новое",
   imported: "Получено",
   needs_reply: "Нужен ответ",
+  auto_rule_matched: "Правило найдено",
+  auto_reply_pending: "Готовится автоответ",
   ai_draft_ready: "Черновик готов",
+  safety_blocked: "Нужна проверка",
   waiting_review: "На проверке",
   needs_manual_check: "Нужна проверка",
   approved: "Одобрено",
   sending: "Отправляется",
   answered: "Отвечено",
+  auto_reply_sent: "Отвечено автоматически",
   failed: "Ошибка",
   escalated: "Передано менеджеру",
   archived: "Архив",
@@ -59,13 +89,30 @@ const priorityLabels: Record<string, string> = {
 
 export function InboxWorkspace() {
   const queryClient = useQueryClient();
-  const { activeOrganization } = useWorkspace();
+  const { activeOrganization, user } = useWorkspace();
+  const canManageMessages = writeRoles.has(activeOrganization.current_user_role);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [selectedId, setSelectedId] = useState("");
+  const [restoredOrganizationId, setRestoredOrganizationId] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(filters.query.trim());
+
+  useEffect(() => {
+    const key = filterStorageKey(activeOrganization.id);
+    const restored = readPersistedFilters(window.localStorage.getItem(key));
+    setFilters(restored ?? defaultFilters);
+    setSelectedId("");
+    setRestoredOrganizationId(activeOrganization.id);
+  }, [activeOrganization.id]);
+
+  useEffect(() => {
+    if (restoredOrganizationId !== activeOrganization.id) return;
+    window.localStorage.setItem(filterStorageKey(activeOrganization.id), JSON.stringify(filters));
+  }, [activeOrganization.id, filters, restoredOrganizationId]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
+    if (filters.marketplace !== "all") count += 1;
+    if (filters.assignment !== "all") count += 1;
     if (filters.type !== "all") count += 1;
     if (filters.status !== "all") count += 1;
     if (filters.rating !== "all") count += 1;
@@ -78,15 +125,26 @@ export function InboxWorkspace() {
     const ratingMax = filters.rating === "negative" ? 3 : undefined;
     return buildApiQuery("/api/messages", {
       organization_id: activeOrganization.id,
+      marketplace: filters.marketplace === "all" ? undefined : filters.marketplace,
       type: filters.type === "all" ? undefined : filters.type,
       status: filters.status === "all" ? undefined : filters.status,
+      assigned_to: filters.assignment === "mine" ? user.id : undefined,
       rating_min: ratingMin,
       rating_max: ratingMax,
       search: deferredQuery || undefined,
       page: 1,
       page_size: 100,
     });
-  }, [activeOrganization.id, deferredQuery, filters.rating, filters.status, filters.type]);
+  }, [
+    activeOrganization.id,
+    deferredQuery,
+    filters.assignment,
+    filters.marketplace,
+    filters.rating,
+    filters.status,
+    filters.type,
+    user.id,
+  ]);
 
   const messagesQuery = useQuery({
     queryKey: ["messages", activeOrganization.id, queryPath],
@@ -100,12 +158,16 @@ export function InboxWorkspace() {
   }, [filters.rating, messagesQuery.data?.items]);
 
   const selectedMessage = visibleMessages.find((message) => message.id === selectedId) ?? visibleMessages[0] ?? null;
+  const displayedTotal = filters.rating === "no_rating" ? visibleMessages.length : messagesQuery.data?.total ?? 0;
 
   const updateMutation = useMutation({
-    mutationFn: ({ messageId, status }: { messageId: string; status: string }) =>
+    mutationFn: ({ messageId, status, assignedTo }: MessageUpdate) =>
       apiRequest(`/api/messages/${messageId}`, customerMessageSchema, {
         method: "PATCH",
-        body: { status },
+        body: {
+          ...(status ? { status } : {}),
+          ...(assignedTo ? { assigned_to: assignedTo } : {}),
+        },
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] });
@@ -135,7 +197,7 @@ export function InboxWorkspace() {
   return (
     <section className="inbox-workspace" aria-label="Рабочая область обращений">
       <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
-        <div className="panel-heading panel-heading-row">
+        <div className="panel-heading panel-heading-row inbox-filter-heading">
           <div>
             <span className="panel-kicker">Фильтры</span>
             <strong>Очередь обращений</strong>
@@ -147,7 +209,7 @@ export function InboxWorkspace() {
           ) : null}
         </div>
 
-        <label className="field-group">
+        <label className="field-group inbox-search-field">
           <span>Поиск</span>
           <input
             aria-label="Поиск по обращениям"
@@ -157,6 +219,18 @@ export function InboxWorkspace() {
             value={filters.query}
           />
         </label>
+
+        <FilterGroup label="Площадка">
+          {marketplaceFilters.map((option) => (
+            <FilterButton
+              active={filters.marketplace === option.value}
+              key={option.value}
+              onClick={() => updateFilter("marketplace", option.value)}
+            >
+              {option.label}
+            </FilterButton>
+          ))}
+        </FilterGroup>
 
         <FilterGroup label="Тип обращения">
           <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>Все</FilterButton>
@@ -174,6 +248,11 @@ export function InboxWorkspace() {
           <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>У менеджера</FilterButton>
         </FilterGroup>
 
+        <FilterGroup label="Ответственный">
+          <FilterButton active={filters.assignment === "all"} onClick={() => updateFilter("assignment", "all")}>Все</FilterButton>
+          <FilterButton active={filters.assignment === "mine"} onClick={() => updateFilter("assignment", "mine")}>Назначено мне</FilterButton>
+        </FilterGroup>
+
         <FilterGroup label="Оценка">
           <FilterButton active={filters.rating === "all"} onClick={() => updateFilter("rating", "all")}>Все</FilterButton>
           <FilterButton active={filters.rating === "negative"} onClick={() => updateFilter("rating", "negative")}>1–3 звезды</FilterButton>
@@ -183,12 +262,17 @@ export function InboxWorkspace() {
       </aside>
 
       <section className="inbox-list-panel" aria-label="Список обращений">
-        <div className="panel-heading panel-heading-row">
+        <div className="panel-heading panel-heading-row inbox-list-heading">
           <div>
-            <span className="panel-kicker">{messagesQuery.data?.total ?? 0} обращений</span>
+            <span className="panel-kicker">{displayedTotal} обращений</span>
             <strong>{activeFilterCount > 0 ? "Результаты фильтра" : "Все входящие"}</strong>
           </div>
-          <button className="button button-secondary button-compact" disabled={messagesQuery.isFetching} onClick={() => void messagesQuery.refetch()} type="button">
+          <button
+            className="button button-secondary button-compact"
+            disabled={messagesQuery.isFetching}
+            onClick={() => void messagesQuery.refetch()}
+            type="button"
+          >
             {messagesQuery.isFetching ? "Обновляем..." : "Обновить"}
           </button>
         </div>
@@ -203,14 +287,15 @@ export function InboxWorkspace() {
             onAction={() => void messagesQuery.refetch()}
           />
         ) : visibleMessages.length > 0 ? (
-          <div className="message-stack">
+          <div className="message-stack" role="list">
             {visibleMessages.map((message) => (
-              <MessageCard
-                isSelected={selectedMessage?.id === message.id}
-                key={message.id}
-                message={message}
-                onSelect={() => setSelectedId(message.id)}
-              />
+              <div key={message.id} role="listitem">
+                <MessageCard
+                  isSelected={selectedMessage?.id === message.id}
+                  message={message}
+                  onSelect={() => setSelectedId(message.id)}
+                />
+              </div>
             ))}
           </div>
         ) : (
@@ -224,15 +309,18 @@ export function InboxWorkspace() {
       <aside className="inbox-detail-panel" aria-label="Карточка выбранного обращения">
         {selectedMessage ? (
           <MessageDetail
+            canManage={canManageMessages}
             createDraftError={manualDraftMutation.error}
-            isCreatingDraft={manualDraftMutation.isPending}
+            currentUserId={user.id}
             error={updateMutation.error}
+            isCreatingDraft={manualDraftMutation.isPending}
             isUpdating={updateMutation.isPending}
             key={selectedMessage.id}
             message={selectedMessage}
             onArchive={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "archived" })}
             onCreateDraft={(replyText) => manualDraftMutation.mutate({ messageId: selectedMessage.id, replyText })}
             onEscalate={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "escalated" })}
+            onTake={() => updateMutation.mutate({ messageId: selectedMessage.id, assignedTo: user.id })}
           />
         ) : (
           <EmptyState description="Выберите обращение из списка, чтобы увидеть контекст и действия." title="Обращение не выбрано" />
@@ -261,7 +349,12 @@ function FilterButton({ active, children, onClick }: { active: boolean; children
 
 function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; message: CustomerMessage; onSelect: () => void }) {
   return (
-    <button className={isSelected ? "message-card message-card-selected" : "message-card"} onClick={onSelect} type="button">
+    <button
+      aria-pressed={isSelected}
+      className={isSelected ? "message-card message-card-selected" : "message-card"}
+      onClick={onSelect}
+      type="button"
+    >
       <span className="message-card-topline">
         <Badge tone="info">{marketplaceLabel(message.marketplace)}</Badge>
         <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
@@ -279,29 +372,45 @@ function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; m
 
 function MessageDetail({
   message,
+  currentUserId,
+  canManage,
   isUpdating,
   error,
   isCreatingDraft,
   createDraftError,
   onArchive,
   onEscalate,
+  onTake,
   onCreateDraft,
 }: {
   message: CustomerMessage;
+  currentUserId: string;
+  canManage: boolean;
   isUpdating: boolean;
   error: unknown;
   isCreatingDraft: boolean;
   createDraftError: unknown;
   onArchive: () => void;
   onEscalate: () => void;
+  onTake: () => void;
   onCreateDraft: (replyText: string) => void;
 }) {
   const [replyText, setReplyText] = useState("");
-  const canCreateDraft = !["answered", "approved", "sending", "archived", "duplicate", "skipped"].includes(message.status);
+  const canCreateDraft = canManage && ![
+    "waiting_review",
+    "answered",
+    "approved",
+    "sending",
+    "archived",
+    "duplicate",
+    "skipped",
+    "auto_reply_sent",
+  ].includes(message.status);
+  const isAssignedToCurrentUser = message.assigned_to === currentUserId;
 
   return (
     <div className="message-detail-card">
-      <div className="panel-heading panel-heading-row">
+      <div className="panel-heading panel-heading-row inbox-detail-heading">
         <div>
           <span className="panel-kicker">{messageTypeLabels[message.type] ?? "Обращение"}</span>
           <strong>{message.product?.name ?? "Товар без карточки"}</strong>
@@ -309,24 +418,30 @@ function MessageDetail({
         <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
       </div>
 
+      <div className="inbox-next-step" aria-live="polite">
+        <span>Следующий шаг</span>
+        <strong>{nextStepLabel(message.status)}</strong>
+      </div>
+
       <div className="detail-grid">
         <DetailItem label="Маркетплейс" value={marketplaceLabel(message.marketplace)} />
         <DetailItem label="Тип" value={messageTypeLabels[message.type] ?? message.type} />
         <DetailItem label="Приоритет" value={priorityLabels[message.priority] ?? message.priority} />
-        <DetailItem label="Оценка" value={message.rating ? `${message.rating} из 5` : "—"} />
+        <DetailItem label="Ответственный" value={assignmentLabel(message.assigned_to, currentUserId)} />
       </div>
 
-      <section className="detail-section">
+      <section className="detail-section inbox-customer-context">
         <span>Покупатель</span>
         <p>{message.customer_display_name || "Имя не передано маркетплейсом"}</p>
+        {message.rating ? <small>Оценка: {message.rating} из 5</small> : null}
       </section>
 
-      <section className="detail-section">
+      <section className="detail-section inbox-message-context">
         <span>Обращение</span>
         <p>{message.customer_text}</p>
       </section>
 
-      <section className="detail-section">
+      <section className="detail-section inbox-product-context">
         <span>Контекст товара</span>
         <p>
           {message.product
@@ -334,6 +449,16 @@ function MessageDetail({
             : "Товар не привязан к обращению."}
         </p>
       </section>
+
+      {message.status === "waiting_review" ? (
+        <div className="inbox-review-handoff">
+          <div>
+            <span className="panel-kicker">Ответ уже на проверке</span>
+            <strong>Продолжите работу в очереди модерации</strong>
+          </div>
+          <Link className="button button-primary" href="/app/review-queue">Открыть модерацию</Link>
+        </div>
+      ) : null}
 
       {canCreateDraft ? (
         <label className="review-editor-field inbox-manual-draft-field">
@@ -345,6 +470,7 @@ function MessageDetail({
             placeholder="Введите ответ или отредактируйте подготовленный текст"
             value={replyText}
           />
+          <small>После сохранения ответ появится в «Модерации», где его можно проверить и отправить.</small>
           <button
             className="button button-primary"
             disabled={isCreatingDraft || replyText.trim().length === 0}
@@ -356,17 +482,30 @@ function MessageDetail({
         </label>
       ) : null}
 
+      {!canManage ? (
+        <p className="inbox-readonly-note">
+          Ваша роль позволяет просматривать обращения, но не менять ответственного, статус или черновик ответа.
+        </p>
+      ) : null}
+
       {createDraftError ? <p className="form-error" role="alert">{errorMessage(createDraftError)}</p> : null}
       {error ? <p className="form-error" role="alert">{errorMessage(error)}</p> : null}
 
-      <div className="detail-actions">
-        <button className="button button-primary" disabled={isUpdating || message.status === "escalated"} onClick={onEscalate} type="button">
-          Передать менеджеру
-        </button>
-        <button className="button button-secondary" disabled={isUpdating || message.status === "archived"} onClick={onArchive} type="button">
-          Архивировать
-        </button>
-      </div>
+      {canManage ? (
+        <div className="detail-actions inbox-detail-actions">
+          {!isAssignedToCurrentUser ? (
+            <button className="button button-secondary" disabled={isUpdating} onClick={onTake} type="button">
+              Взять себе
+            </button>
+          ) : null}
+          <button className="button button-secondary" disabled={isUpdating || message.status === "escalated"} onClick={onEscalate} type="button">
+            Передать менеджеру
+          </button>
+          <button className="button button-secondary" disabled={isUpdating || message.status === "archived"} onClick={onArchive} type="button">
+            Архивировать
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -395,9 +534,35 @@ function InboxState({
     <div className="workspace-inline-state" aria-live="polite">
       <strong>{title}</strong>
       <p>{description}</p>
-      {actionLabel && onAction ? <button className="button button-secondary button-compact" onClick={onAction} type="button">{actionLabel}</button> : null}
+      {actionLabel && onAction ? (
+        <button className="button button-secondary button-compact" onClick={onAction} type="button">{actionLabel}</button>
+      ) : null}
     </div>
   );
+}
+
+function filterStorageKey(organizationId: string): string {
+  return `mpreply.inbox.filters.${organizationId}`;
+}
+
+function readPersistedFilters(raw: string | null): FilterState | null {
+  if (!raw) return null;
+  try {
+    const value = JSON.parse(raw) as Partial<FilterState>;
+    if (!isOneOf(value.marketplace, ["all", "wildberries", "ozon", "yandex_market", "avito"])) return null;
+    if (!isOneOf(value.assignment, ["all", "mine"])) return null;
+    if (!isOneOf(value.type, ["all", "review", "question", "chat"])) return null;
+    if (!isOneOf(value.status, ["all", "needs_reply", "ai_draft_ready", "waiting_review", "failed", "escalated"])) return null;
+    if (!isOneOf(value.rating, ["all", "negative", "positive", "no_rating"])) return null;
+    if (typeof value.query !== "string") return null;
+    return value as FilterState;
+  } catch {
+    return null;
+  }
+}
+
+function isOneOf<TValue extends string>(value: unknown, allowed: readonly TValue[]): value is TValue {
+  return typeof value === "string" && allowed.includes(value as TValue);
 }
 
 function marketplaceLabel(value: string): string {
@@ -410,10 +575,26 @@ function marketplaceLabel(value: string): string {
   return labels[value] ?? value;
 }
 
+function assignmentLabel(assignedTo: string | null, currentUserId: string): string {
+  if (!assignedTo) return "Не назначено";
+  return assignedTo === currentUserId ? "Вы" : "Другой сотрудник";
+}
+
+function nextStepLabel(status: string): string {
+  if (status === "waiting_review" || status === "needs_manual_check" || status === "safety_blocked") return "Проверить ответ перед отправкой";
+  if (status === "failed" || status === "blocked_by_marketplace") return "Разобраться с ошибкой отправки";
+  if (status === "answered" || status === "auto_reply_sent") return "Ответ уже отправлен";
+  if (status === "archived") return "Обращение находится в архиве";
+  if (status === "escalated") return "Менеджеру нужно принять решение";
+  if (status === "ai_draft_ready") return "Проверить подготовленный черновик";
+  return "Подготовить ответ или передать обращение";
+}
+
 function statusTone(status: string): BadgeTone {
   if (["failed", "blocked_by_marketplace", "safety_blocked"].includes(status)) return "danger";
   if (["waiting_review", "needs_manual_check", "escalated"].includes(status)) return "warning";
   if (["answered", "approved", "auto_reply_sent"].includes(status)) return "success";
+  if (["needs_reply", "ai_draft_ready"].includes(status)) return "info";
   return "neutral";
 }
 

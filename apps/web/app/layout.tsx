@@ -5,6 +5,7 @@ import "../styles/globals.css";
 import "../styles/brand-theme.css";
 import "../styles/dashboard-shell-approved.css";
 import "../styles/dashboard-overview-approved.css";
+import "../styles/dashboard-inbox-approved.css";
 import "../styles/marketing-site.css";
 import "../styles/marketing-pages.css";
 import "../styles/marketplaces-approved.css";

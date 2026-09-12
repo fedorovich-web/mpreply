@@ -56,6 +56,7 @@ class MessageService:
         rating_min: int | None = None,
         rating_max: int | None = None,
         product_id: UUID | None = None,
+        assigned_to: UUID | None = None,
         search: str | None = None,
         page: int = 1,
         page_size: int = 50,
@@ -75,6 +76,7 @@ class MessageService:
             rating_min=rating_min,
             rating_max=rating_max,
             product_id=product_id,
+            assigned_to=assigned_to,
             search=search,
         )
         stmt = (
@@ -202,6 +204,7 @@ class MessageService:
         rating_min: int | None,
         rating_max: int | None,
         product_id: UUID | None,
+        assigned_to: UUID | None,
         search: str | None,
     ) -> list[ColumnElement[bool]]:
         conditions: list[ColumnElement[bool]] = []
@@ -217,7 +220,8 @@ class MessageService:
             conditions.append(CustomerMessage.rating <= rating_max)
         if product_id is not None:
             conditions.append(CustomerMessage.product_id == product_id)
+        if assigned_to is not None:
+            conditions.append(CustomerMessage.assigned_to == assigned_to)
         if search:
             conditions.append(CustomerMessage.customer_text.ilike(f"%{search}%"))
         return conditions
-
