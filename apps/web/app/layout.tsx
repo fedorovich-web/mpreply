@@ -22,6 +22,7 @@ import "../styles/resources-contacts-approved.css";
 import "../styles/help-legal-approved.css";
 import "../styles/homepage-approved.css";
 import "../styles/homepage-fidelity.css";
+import "../styles/homepage-hero-artwork.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
