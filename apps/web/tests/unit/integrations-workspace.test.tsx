@@ -77,7 +77,7 @@ function renderWithQueryClient(component: React.ReactNode) {
 }
 
 describe("IntegrationsWorkspace", () => {
-  it("shows all four marketplace integrations as ready and distinguishes connection state", async () => {
+  it("exposes only the live Wildberries integration and never links to unavailable adapters", async () => {
     mockWorkspace("owner");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
 
@@ -88,26 +88,17 @@ describe("IntegrationsWorkspace", () => {
     expect(screen.getByRole("heading", { name: "Ozon" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Яндекс Маркет" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Авито" })).toBeInTheDocument();
-    expect(screen.getAllByText("Интеграция готова")).toHaveLength(4);
-    expect(screen.getAllByText("Не подключено")).toHaveLength(3);
-    expect(screen.queryByText(/Planned|Пока недоступно|MVP adapter|production readiness/i)).not.toBeInTheDocument();
+    expect(screen.getAllByText("Интеграция готова")).toHaveLength(1);
+    expect(screen.getAllByText("В разработке")).toHaveLength(3);
 
     expect(screen.getByRole("link", { name: "Управлять Wildberries" })).toHaveAttribute(
       "href",
       "/app/integrations/wildberries",
     );
-    expect(screen.getByRole("link", { name: "Подключить Ozon" })).toHaveAttribute(
-      "href",
-      "/app/integrations/ozon",
-    );
-    expect(screen.getByRole("link", { name: "Подключить Яндекс Маркет" })).toHaveAttribute(
-      "href",
-      "/app/integrations/yandex-market",
-    );
-    expect(screen.getByRole("link", { name: "Подключить Авито" })).toHaveAttribute(
-      "href",
-      "/app/integrations/avito",
-    );
+    expect(screen.queryByRole("link", { name: /Ozon/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Яндекс Маркет/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Авито/i })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Подключение пока недоступно")).toHaveLength(3);
   });
 });
 
