@@ -2,18 +2,18 @@ import { AIAssistantWorkspace } from "../../../components/ai-assistant/AIAssista
 
 export default function AIAssistantPage() {
   return (
-    <section className="app-page app-page-wide">
-      <header className="app-header app-header-row">
+    <section className="app-page app-page-wide ai-assistant-page">
+      <header className="app-header app-header-row ai-assistant-page-header">
         <div>
           <p className="eyebrow">ИИ-ассистент</p>
-          <h1>Подготовьте ответ с учётом контекста обращения</h1>
+          <h1>Подготовьте ответ и передайте его на проверку</h1>
           <p>
-            Выберите отзыв, вопрос или сообщение, задайте стиль ответа и добавьте нужные факты о товаре. MPReply подготовит черновик и покажет, есть ли причины отправить его на дополнительную проверку.
+            Выберите обращение, задайте стиль и добавьте важные факты. В MPReply обращение, контекст и готовый текст остаются в одном рабочем пространстве — черновик можно сразу отредактировать и передать на проверку.
           </p>
         </div>
-        <div className="app-header-actions">
-          <span className="status-badge">Контекст товара</span>
-          <span className="status-badge">Проверка рисков</span>
+        <div className="app-header-actions" aria-label="Возможности ИИ-ассистента">
+          <span className="status-badge">Контекст рядом</span>
+          <span className="status-badge">Редактирование до проверки</span>
         </div>
       </header>
 
