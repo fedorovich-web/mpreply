@@ -24,15 +24,30 @@ const files = [
 ].map((path) => readFileSync(join(root, path), "utf8")).join("\n");
 
 describe("dashboard product copy", () => {
-  it("uses the MPReply product name and user-facing navigation language", () => {
+  it("uses the MPReply product name and approved user-facing navigation language", () => {
     expect(files).toContain("MPReply");
     expect(files).toContain("Обращения");
     expect(files).toContain("На проверке");
+    expect(files).toContain("ИИ-ассистент");
     expect(files).toContain("Автоматизация");
     expect(files).toContain("Интеграции");
     expect(files).toContain("Аналитика");
     expect(files).toContain("Тариф и лимиты");
     expect(files).not.toContain("Respio");
+  });
+
+  it("does not reintroduce superseded primary IA labels", () => {
+    for (const stale of [
+      'label: "Входящие"',
+      'label: "Модерация"',
+      'label: "ИИ-помощник"',
+      'label: "Правила"',
+      "Все входящие",
+      "Открыть модерацию",
+      "попадёт в «Модерацию»",
+    ]) {
+      expect(files).not.toContain(stale);
+    }
   });
 
   it("does not expose implementation jargon as primary interface copy", () => {
