@@ -206,7 +206,7 @@ describe("AIAssistantWorkspace", () => {
 
     renderWorkspace();
 
-    expect(await screen.findByText("Сообщение")).toBeInTheDocument();
+    expect(await screen.findAllByText("Сообщение")).toHaveLength(2);
     expect(screen.queryByText("chat")).not.toBeInTheDocument();
   });
 });
