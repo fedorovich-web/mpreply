@@ -5,22 +5,46 @@ from typing import cast
 
 import httpx
 
-from app.adapters.base import AdapterResult, MarketplaceAdapter
-from app.models.enums import MessageStatus, MessageType
+from app.adapters.base import AdapterResult, CredentialValidation, MarketplaceAdapter
+from app.models.enums import Marketplace, MessageStatus, MessageType
 
 
 class WildberriesAdapter(MarketplaceAdapter):
-    marketplace = "wildberries"
+    marketplace = Marketplace.WILDBERRIES
     base_url = "https://feedbacks-api.wildberries.ru"
 
-    def __init__(self, timeout_seconds: float = 20.0) -> None:
+    def __init__(
+        self,
+        timeout_seconds: float = 20.0,
+        client: httpx.AsyncClient | None = None,
+    ) -> None:
         self._timeout = timeout_seconds
+        self._client = client
 
     def _headers(self, credential: str) -> dict[str, str]:
         return {"Authorization": credential}
 
-    async def validate_credentials(self, credential: str) -> AdapterResult:
-        return await self.fetch_questions(credential=credential, cursor=None)
+    async def validate_credentials(
+        self,
+        credential: str,
+        seller_id: str | None = None,
+    ) -> AdapterResult[CredentialValidation]:
+        del seller_id
+        result = await self.fetch_questions(credential=credential, cursor=None)
+        if not result.ok:
+            return AdapterResult(
+                False,
+                error_code=result.error_code,
+                error_message_safe=result.error_message_safe,
+                retry_after_seconds=result.retry_after_seconds,
+            )
+        return AdapterResult(
+            ok=True,
+            data=CredentialValidation(
+                scopes=("fetch_reviews", "fetch_questions", "send_review_reply", "send_question_reply"),
+                account_reference=None,
+            ),
+        )
 
     async def fetch_reviews(self, credential: str, cursor: str | None = None) -> AdapterResult:
         params: dict[str, str | int] = {"isAnswered": "false", "take": 50, "skip": 0}
@@ -108,33 +132,45 @@ class WildberriesAdapter(MarketplaceAdapter):
         }
 
     async def _get(self, path: str, credential: str, params: dict[str, str | int]) -> AdapterResult:
-        try:
-            async with httpx.AsyncClient(base_url=self.base_url, timeout=self._timeout) as client:
-                response = await client.get(path, headers=self._headers(credential), params=params)
-        except httpx.TimeoutException:
-            return AdapterResult(False, error_code="network_timeout", error_message_safe="Marketplace request timed out")
-        except httpx.HTTPError:
-            return AdapterResult(False, error_code="network_error", error_message_safe="Marketplace network error")
-        if response.is_success:
-            return AdapterResult(ok=True, data=self._safe_json(response))
-        return self.map_error(response.status_code, self._safe_json(response))
+        return await self._request("GET", path, credential, params=params)
 
     async def _post(self, path: str, credential: str, json: dict[str, object]) -> AdapterResult:
-        try:
-            async with httpx.AsyncClient(base_url=self.base_url, timeout=self._timeout) as client:
-                response = await client.post(path, headers=self._headers(credential), json=json)
-        except httpx.TimeoutException:
-            return AdapterResult(False, error_code="network_timeout", error_message_safe="Marketplace request timed out")
-        except httpx.HTTPError:
-            return AdapterResult(False, error_code="network_error", error_message_safe="Marketplace network error")
-        if response.is_success:
-            return AdapterResult(ok=True, data=self._safe_json(response))
-        return self.map_error(response.status_code, self._safe_json(response))
+        return await self._request("POST", path, credential, json=json)
 
     async def _patch(self, path: str, credential: str, json: dict[str, object]) -> AdapterResult:
+        return await self._request("PATCH", path, credential, json=json)
+
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        credential: str,
+        *,
+        params: dict[str, str | int] | None = None,
+        json: dict[str, object] | None = None,
+    ) -> AdapterResult:
         try:
-            async with httpx.AsyncClient(base_url=self.base_url, timeout=self._timeout) as client:
-                response = await client.patch(path, headers=self._headers(credential), json=json)
+            if self._client is not None:
+                response = await self._client.request(
+                    method,
+                    path,
+                    headers=self._headers(credential),
+                    params=params,
+                    json=json,
+                )
+            else:
+                async with httpx.AsyncClient(
+                    base_url=self.base_url,
+                    timeout=self._timeout,
+                    follow_redirects=False,
+                ) as client:
+                    response = await client.request(
+                        method,
+                        path,
+                        headers=self._headers(credential),
+                        params=params,
+                        json=json,
+                    )
         except httpx.TimeoutException:
             return AdapterResult(False, error_code="network_timeout", error_message_safe="Marketplace request timed out")
         except httpx.HTTPError:

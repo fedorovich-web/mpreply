@@ -250,8 +250,9 @@ git commit -m "refactor(api): define marketplace capability boundaries"
 
 **Files:**
 - Create: `apps/api/app/adapters/http.py`
+- Modify: `apps/api/app/adapters/registry.py`
+- Modify: `apps/api/app/adapters/wildberries.py`
 - Modify: `apps/api/app/core/lifecycle.py`
-- Modify: `apps/api/app/main.py`
 - Create: `apps/api/app/tests/marketplace_fixtures.py`
 - Create: `apps/api/app/tests/test_marketplace_http_policy.py`
 
@@ -261,7 +262,7 @@ git commit -m "refactor(api): define marketplace capability boundaries"
 - Produces: synthetic `RequestRecorder`, `SequenceTransport`, `response()`, and `request_json()` helpers that require an explicit `MockTransport`.
 - Consumes: fixed provider base URLs and `httpx.AsyncClient` instances.
 
-- [ ] **Step 1: Write RED tests for bounded retry and SSRF-safe clients**
+- [x] **Step 1: Write RED tests for bounded retry and SSRF-safe clients**
 
 First add `app/tests/marketplace_fixtures.py`. Its recorder accepts only a finite response sequence, records `httpx.Request` objects, and raises `AssertionError` on an unexpected extra request. It returns an `httpx.AsyncClient` with `httpx.MockTransport`, a synthetic base URL supplied by the test, and redirects disabled.
 
@@ -284,13 +285,13 @@ def test_provider_client_rejects_absolute_request_target() -> None:
 
 Also cover negative, non-numeric, and excessive `Retry-After`, permanent 4xx without retry, timeout exhaustion, redirects disabled, and a total-attempt cap.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```powershell
 python -m pytest app/tests/test_marketplace_http_policy.py -q
 ```
 
-- [ ] **Step 3: Implement the retry policy without retrying writes**
+- [x] **Step 3: Implement the retry policy without retrying writes**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -319,7 +320,7 @@ async def request_read_with_retry(client: httpx.AsyncClient, method: Literal["GE
 
 Keep write requests in provider adapters as direct single attempts. Do not expose a generic write-retry helper.
 
-- [ ] **Step 4: Own clients and registry in the application lifespan**
+- [x] **Step 4: Own clients and registry in the application lifespan**
 
 ```python
 @asynccontextmanager
@@ -335,13 +336,13 @@ async def application_lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
 Use fixed `base_url`, `follow_redirects=False`, explicit `httpx.Timeout`, and bounded `httpx.Limits` for each client.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
 ```powershell
 python -m pytest app/tests/test_marketplace_http_policy.py app/tests/test_health.py -q
-python -m ruff check app/adapters/http.py app/core/lifecycle.py app/main.py app/tests/marketplace_fixtures.py app/tests/test_marketplace_http_policy.py
-python -m pyright app/adapters/http.py app/core/lifecycle.py app/main.py
-git add -- apps/api/app/adapters/http.py apps/api/app/core/lifecycle.py apps/api/app/main.py apps/api/app/tests/marketplace_fixtures.py apps/api/app/tests/test_marketplace_http_policy.py
+python -m ruff check app/adapters/http.py app/adapters/registry.py app/adapters/wildberries.py app/core/lifecycle.py app/tests/marketplace_fixtures.py app/tests/test_marketplace_http_policy.py
+python -m pyright app
+git add -- apps/api/app/adapters/http.py apps/api/app/adapters/registry.py apps/api/app/adapters/wildberries.py apps/api/app/core/lifecycle.py apps/api/app/tests/marketplace_fixtures.py apps/api/app/tests/test_marketplace_http_policy.py
 git commit -m "feat(api): manage marketplace HTTP clients"
 ```
 
