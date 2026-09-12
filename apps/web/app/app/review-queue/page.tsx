@@ -2,20 +2,20 @@ import { ReviewQueueWorkspace } from "../../../components/review-queue/ReviewQue
 
 export default function ReviewQueuePage() {
   return (
-    <section className="app-page app-page-wide">
-      <section className="app-header app-header-row">
+    <section className="app-page app-page-wide review-queue-page">
+      <header className="app-header app-header-row review-queue-page-header">
         <div>
-          <p className="eyebrow">На проверке</p>
-          <h1>Ответы, которые требуют внимания</h1>
+          <p className="eyebrow">Ручная проверка</p>
+          <h1>Проверьте ответы, которым нужно решение</h1>
           <p>
-            Проверьте текст, при необходимости отредактируйте его, одобрите отправку или верните ответ на доработку. Причина проверки и история изменений остаются рядом с обращением.
+            Причина внимания остаётся рядом с ответом: сравните текст с обращением и товаром, при необходимости внесите правки, затем одобрите или верните ответ на доработку.
           </p>
         </div>
-        <div className="app-header-actions">
-          <span className="status-badge">Решение менеджера</span>
-          <span className="status-badge">История изменений</span>
+        <div className="app-header-actions" aria-label="Возможности очереди проверки">
+          <span className="status-badge">Контекст рядом</span>
+          <span className="status-badge">Решение без переключений</span>
         </div>
-      </section>
+      </header>
 
       <ReviewQueueWorkspace />
     </section>
