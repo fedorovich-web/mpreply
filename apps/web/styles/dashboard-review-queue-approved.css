@@ -41,7 +41,10 @@
 .review-queue-list {
 	min-width: 0;
 	border-right: 1px solid var(--color-border-subtle);
+	border-radius: 0;
 	background: color-mix(in srgb, var(--color-bg-brand-soft) 18%, var(--color-bg-surface));
+	box-shadow: none;
+	padding: 0;
 }
 
 .review-queue-list > .panel-heading {
@@ -63,7 +66,9 @@
 
 .review-queue-stack {
 	display: grid;
+	gap: 0;
 	max-height: 46rem;
+	margin-top: 0;
 	overflow-y: auto;
 	overscroll-behavior: contain;
 }
@@ -85,21 +90,27 @@
 	border-left: 0.2rem solid transparent;
 	border-radius: 0;
 	background: transparent;
+	box-shadow: none;
 	color: inherit;
 	padding: 1rem 1rem 1rem 0.9rem;
 	font: inherit;
 	text-align: left;
+	transform: none;
 	cursor: pointer;
 	transition: var(--transition-interactive);
 }
 
 .review-queue-card:hover {
 	background: var(--color-surface-cool);
+	box-shadow: none;
+	transform: none;
 }
 
 .review-queue-card-active {
 	border-left-color: var(--color-brand-primary);
 	background: color-mix(in srgb, var(--color-bg-brand-soft) 56%, var(--color-bg-surface));
+	box-shadow: none;
+	transform: none;
 }
 
 .review-queue-card:focus-visible {
@@ -135,7 +146,7 @@
 	-webkit-line-clamp: 2;
 }
 
-.review-queue-card-meta {
+.review-queue-card .review-queue-card-meta {
 	color: var(--color-text-muted);
 	font-size: 0.65rem;
 	line-height: 1.35;
@@ -145,6 +156,7 @@
 	display: grid;
 	min-width: 0;
 	align-content: start;
+	gap: 0;
 	border: 0;
 	border-radius: 0;
 	background: var(--color-bg-surface);
@@ -270,6 +282,7 @@
 	gap: 0.5rem;
 	min-height: 2.7rem;
 	border-right: 1px solid var(--color-border-subtle);
+	border-radius: 0;
 	background: var(--color-bg-subtle);
 	padding: 0.65rem 0.75rem;
 	color: var(--color-text-muted);
