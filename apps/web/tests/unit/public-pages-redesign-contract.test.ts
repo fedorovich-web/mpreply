@@ -10,6 +10,8 @@ const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const pagesCssPath = join(root, "styles/marketing-pages.css");
 const pagesCss = existsSync(pagesCssPath) ? readFileSync(pagesCssPath, "utf8") : "";
+const marketplacesCssPath = join(root, "styles/marketplaces-approved.css");
+const marketplacesCss = existsSync(marketplacesCssPath) ? readFileSync(marketplacesCssPath, "utf8") : "";
 
 describe("public page redesign", () => {
   it("loads page-specific marketing compositions", () => {
@@ -24,12 +26,13 @@ describe("public page redesign", () => {
   });
 
   it("shows integrations as one routed MPReply workspace rather than isolated marketplace cards", () => {
+    expect(layout).toContain('import "../styles/marketplaces-approved.css"');
     expect(marketplaces).toContain("marketplace-unified-scene");
     expect(marketplaces).toContain("marketplace-unified-window");
     expect(marketplaces).toContain("marketplace-unified-sources");
     expect(marketplaces).toContain("marketplace-unified-answer");
-    expect(pagesCss).toContain(".marketplace-unified-scene");
-    expect(pagesCss).toContain(".marketplace-unified-window");
+    expect(marketplacesCss).toContain(".marketplace-unified-scene");
+    expect(marketplacesCss).toContain(".marketplace-unified-window");
   });
 
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
