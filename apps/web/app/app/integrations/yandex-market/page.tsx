@@ -1,35 +1,32 @@
 import Link from "next/link";
 
+import { MarketplaceIntegrationWorkspace } from "../../../../components/integrations/WildberriesIntegrationWorkspace";
+
 export default function YandexMarketIntegrationPage() {
   return (
-    <section className="app-page app-page-wide planned-integration-page">
-      <header className="app-header app-header-row planned-integration-header">
+    <section className="app-page app-page-wide">
+      <header className="app-header app-header-row">
         <div>
           <p className="eyebrow">Яндекс Маркет</p>
-          <h1>Интеграция Яндекс Маркета находится в плане</h1>
+          <h1>Кабинеты Яндекс Маркета и синхронизация</h1>
           <p>
-            MPReply не открывает подключение раньше времени: сначала должны быть проверены актуальные официальные API, синхронизация обращений и production-отправка ответов.
+            Подключайте кабинеты, управляйте доступом, запускайте синхронизацию и выбирайте режим обработки обращений покупателей.
           </p>
         </div>
         <div className="app-header-actions">
           <Link className="button button-secondary button-compact" href="/app/integrations">
             Все интеграции
           </Link>
-          <span className="status-badge">Планируется</span>
+          <span className="status-badge">Интеграция готова</span>
         </div>
       </header>
 
-      <section className="planned-integration-notice" aria-labelledby="yandex-market-planned-title">
-        <p className="eyebrow">Статус интеграции</p>
-        <h2 id="yandex-market-planned-title">Подключение пока недоступно</h2>
-        <p>
-          Форму доступа и синхронизацию Яндекс Маркета включим только после проверки реального API-контракта и безопасного сценария отправки. Сейчас рабочее подключение доступно для Wildberries.
-        </p>
-        <div className="planned-integration-actions">
-          <Link className="button button-primary" href="/app/integrations/wildberries">Открыть Wildberries</Link>
-          <Link className="button button-secondary" href="/app/integrations">Вернуться к интеграциям</Link>
-        </div>
-      </section>
+      <MarketplaceIntegrationWorkspace
+        credentialLabel="Данные доступа Яндекс Маркета"
+        marketplace="yandex_market"
+        marketplaceName="Яндекс Маркет"
+        placeholder="Например, Яндекс Маркет — основной магазин"
+      />
     </section>
   );
 }
