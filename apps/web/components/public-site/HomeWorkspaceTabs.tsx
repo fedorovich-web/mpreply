@@ -114,20 +114,20 @@ export function HomeWorkspaceTabs() {
           <div className="homepage-workspace-filter"><span>!</span><b>Отрицательные</b><small>6</small></div>
         </aside>
 
-        <div className="homepage-workspace-list" role="group" aria-label="Список обращений">
+        <div className="homepage-workspace-list" role="list" aria-label="Список обращений">
           {reviewRows.map((row, index) => (
-            <article className={`homepage-workspace-list-row${index === 0 ? " is-active" : ""}`} key={row.name}>
+            <div role="listitem" className={`homepage-workspace-list-row${index === 0 ? " is-active" : ""}`} key={row.name}>
               <span className="homepage-workspace-list-avatar" aria-hidden="true">{row.initials}</span>
               <div>
                 <strong>{row.name} <span>{row.rating}</span></strong>
                 <p>{row.text}</p>
               </div>
               <span className="homepage-workspace-time">{row.time}</span>
-            </article>
+            </div>
           ))}
         </div>
 
-        <article className="homepage-workspace-answer">
+        <div className="homepage-workspace-answer" role="group" aria-label="Подготовленный ответ">
           <div className="homepage-workspace-answer-head">
             <span className={`homepage-workspace-answer-dot is-${active.tone}`} aria-hidden="true" />
             <strong>Ответ с помощью ИИ</strong>
@@ -137,7 +137,7 @@ export function HomeWorkspaceTabs() {
             <span>Дружелюбный⌄</span>
             <b>Отправить&nbsp; →</b>
           </div>
-        </article>
+        </div>
       </div>
     </div>
   );
