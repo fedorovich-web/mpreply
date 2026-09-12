@@ -36,11 +36,11 @@ type RuleEditorState = {
 };
 
 const precedence = [
-  "Режим организации: auto по умолчанию",
-  "Переопределение для конкретного кабинета маркетплейса",
+  "Режим рабочей области по умолчанию",
+  "Настройки выбранного кабинета маркетплейса",
   "Совпавшее правило с наивысшим приоритетом",
-  "Проверка контекста товара и порога уверенности",
-  "SafetyGate перед автоотправкой",
+  "Проверка контекста товара и уверенности ответа",
+  "Финальная проверка перед автоотправкой",
 ];
 
 const filterLabels: Record<RuleFilter, string> = {
@@ -161,7 +161,7 @@ function AutomationRulesWorkspaceContent({
         <div>
           <p className="automation-toolbar-title">{organizationName}</p>
           <p className="automation-toolbar-copy">
-            Правила применяются по приоритету. SafetyGate остаётся обязательным контрольным слоем.
+            Правила применяются по приоритету. Перед автоотправкой ответ проходит обязательную проверку.
           </p>
         </div>
         {canWrite ? (
@@ -170,7 +170,7 @@ function AutomationRulesWorkspaceContent({
           </button>
         ) : (
           <p className="automation-readonly-note" role="status">
-            Только просмотр: изменение правил доступно owner и admin.
+            Только просмотр: изменять правила могут владелец и администраторы.
           </p>
         )}
       </section>
@@ -211,7 +211,7 @@ function AutomationRulesWorkspaceContent({
       {rulesQuery.isPending ? (
         <section className="automation-state" aria-live="polite">
           <h2>Загружаем правила</h2>
-          <p>Получаем актуальную конфигурацию для выбранной организации.</p>
+          <p>Получаем актуальные правила для выбранной рабочей области.</p>
         </section>
       ) : rulesQuery.error ? (
         <section className="automation-state automation-state-error" role="alert">
@@ -229,7 +229,7 @@ function AutomationRulesWorkspaceContent({
                 <h2>Правил пока нет</h2>
                 <p>
                   {filter === "all"
-                    ? "Создайте первое правило, чтобы управлять автоматическими и полуавтоматическими ответами."
+                    ? "Создайте первое правило, чтобы управлять автоматическими ответами и ответами с проверкой."
                     : "В этой выборке правил нет. Измените фильтр или создайте новое правило."}
                 </p>
                 {canWrite ? (
@@ -286,7 +286,7 @@ function AutomationRulesWorkspaceContent({
             ) : (
               <div className="automation-empty-state">
                 <h2>Выберите правило</h2>
-                <p>Здесь появятся условия, режим, лимиты и настройки SafetyGate.</p>
+                <p>Здесь появятся условия, режим, лимиты и защитные проверки.</p>
               </div>
             )}
           </div>
@@ -300,7 +300,7 @@ function AutomationRulesWorkspaceContent({
       <section className="automation-detail-grid">
         <article className="ai-panel">
           <p className="eyebrow">Приоритет решений</p>
-          <h2>Как Respio выбирает режим ответа</h2>
+          <h2>Как MPReply выбирает режим ответа</h2>
           <ol className="automation-precedence-list">
             {precedence.map((item, index) => (
               <li key={item}>
@@ -312,17 +312,17 @@ function AutomationRulesWorkspaceContent({
         </article>
 
         <article className="ai-panel automation-safety-card">
-          <p className="eyebrow">SafetyGate</p>
+          <p className="eyebrow">Проверка перед отправкой</p>
           <h2>Автоответ не отправляется вслепую</h2>
           <p>
-            После генерации черновик проходит детерминированную проверку. Низкая уверенность,
-            отсутствие товарного контекста, рискованные обещания и чувствительные утверждения
-            переводят обращение на ручную проверку или блокируют автоотправку.
+            После подготовки черновик проходит автоматическую проверку. Низкая уверенность,
+            отсутствие контекста товара, рискованные обещания и чувствительные утверждения
+            отправляют обращение на ручную проверку или останавливают автоотправку.
           </p>
-          <div className="automation-decision-row" aria-label="Решения SafetyGate">
-            <span className="automation-decision automation-decision-allow">Allow</span>
-            <span className="automation-decision automation-decision-review">Manual review</span>
-            <span className="automation-decision automation-decision-block">Block</span>
+          <div className="automation-decision-row" aria-label="Возможные решения проверки">
+            <span className="automation-decision automation-decision-allow">Можно отправить</span>
+            <span className="automation-decision automation-decision-review">Нужна проверка</span>
+            <span className="automation-decision automation-decision-block">Не отправлять</span>
           </div>
         </article>
       </section>
@@ -366,13 +366,13 @@ function RuleDetail({
 
       <div className="automation-safety-checklist" aria-label="Защитные условия правила">
         <p className="automation-safety-item" data-active={rule.require_manual_review_on_flags}>
-          Ручная проверка при флагах SafetyGate
+          Ручная проверка при рискованных сигналах
         </p>
         <p className="automation-safety-item" data-active={rule.stop_on_missing_product_context}>
-          Стоп без контекста товара
+          Не отправлять без контекста товара
         </p>
         <p className="automation-safety-item" data-active={rule.stop_on_low_confidence}>
-          Стоп при низкой уверенности
+          Не отправлять при низкой уверенности
         </p>
       </div>
 
@@ -448,14 +448,14 @@ function RuleEditor({
         </label>
         <label className="automation-field">
           Режим
-          <select value={state.mode} onChange={(e) => set("mode", e.target.value as RuleEditorState["mode"])}>
+          <select value={state.mode} onChange={(e) => set("mode", e.target.value as RuleEditorState["mode"]) }>
             <option value="auto">Автоматически</option>
-            <option value="semi_auto">Полуавтоматически</option>
+            <option value="semi_auto">С проверкой перед отправкой</option>
           </select>
         </label>
         <label className="automation-field">
           Тип обращений
-          <select value={state.appliesTo} onChange={(e) => set("appliesTo", e.target.value as RuleEditorState["appliesTo"])}>
+          <select value={state.appliesTo} onChange={(e) => set("appliesTo", e.target.value as RuleEditorState["appliesTo"]) }>
             <option value="all">Отзывы и вопросы</option>
             <option value="review">Только отзывы</option>
             <option value="question">Только вопросы</option>
@@ -463,7 +463,7 @@ function RuleEditor({
         </label>
         <label className="automation-field">
           Маркетплейс
-          <select value={state.marketplace} onChange={(e) => set("marketplace", e.target.value as RuleEditorState["marketplace"])}>
+          <select value={state.marketplace} onChange={(e) => set("marketplace", e.target.value as RuleEditorState["marketplace"]) }>
             <option value="">Все поддерживаемые</option>
             <option value="wildberries">Wildberries</option>
             <option value="ozon">Ozon</option>
@@ -506,10 +506,10 @@ function RuleEditor({
       </div>
 
       <fieldset className="automation-safety-fieldset">
-        <legend>SafetyGate и защитные остановки</legend>
-        <label><input checked={state.requireManualReviewOnFlags} onChange={(e) => set("requireManualReviewOnFlags", e.target.checked)} type="checkbox" /> Ручная проверка при флагах SafetyGate</label>
-        <label><input checked={state.stopOnMissingProductContext} onChange={(e) => set("stopOnMissingProductContext", e.target.checked)} type="checkbox" /> Остановить автоответ без контекста товара</label>
-        <label><input checked={state.stopOnLowConfidence} onChange={(e) => set("stopOnLowConfidence", e.target.checked)} type="checkbox" /> Остановить автоответ при низкой уверенности</label>
+        <legend>Защитные проверки</legend>
+        <label><input checked={state.requireManualReviewOnFlags} onChange={(e) => set("requireManualReviewOnFlags", e.target.checked)} type="checkbox" /> Передавать на ручную проверку при рискованных сигналах</label>
+        <label><input checked={state.stopOnMissingProductContext} onChange={(e) => set("stopOnMissingProductContext", e.target.checked)} type="checkbox" /> Не отправлять автоответ без контекста товара</label>
+        <label><input checked={state.stopOnLowConfidence} onChange={(e) => set("stopOnLowConfidence", e.target.checked)} type="checkbox" /> Не отправлять автоответ при низкой уверенности</label>
         <label><input checked={state.isEnabled} onChange={(e) => set("isEnabled", e.target.checked)} type="checkbox" /> Правило включено</label>
       </fieldset>
 
@@ -624,7 +624,7 @@ function numberToInput(value: number | null): string {
 }
 
 function modeLabel(mode: AutomationRule["mode"]): string {
-  return mode === "auto" ? "Автоматически" : "Полуавтоматически";
+  return mode === "auto" ? "Автоматически" : "С проверкой перед отправкой";
 }
 
 function appliesToLabel(value: AutomationRule["applies_to"]): string {
@@ -656,8 +656,6 @@ function limitLabel(hourly: number | null, daily: number | null): string {
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.requestId ? `${error.message} ID запроса: ${error.requestId}` : error.message;
-  }
+  if (error instanceof ApiError) return error.message;
   return error instanceof Error ? error.message : "Неизвестная ошибка";
 }
