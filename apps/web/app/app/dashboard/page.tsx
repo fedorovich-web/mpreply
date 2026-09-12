@@ -4,9 +4,9 @@ export default function DashboardPage() {
   return (
     <section className="app-page">
       <section className="app-header">
-        <p className="eyebrow">Dashboard</p>
-        <h1>Операционный центр Respio</h1>
-        <p>Live-сводка по обращениям, автоответам, ручной проверке, AI usage и текущему тарифному контексту выбранного workspace.</p>
+        <p className="eyebrow">Обзор</p>
+        <h1>Главное по обращениям</h1>
+        <p>Следите за входящими обращениями, отправленными ответами, очередью проверки и текущими лимитами в одном месте.</p>
       </section>
       <DashboardMetrics />
     </section>
