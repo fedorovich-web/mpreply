@@ -6,45 +6,57 @@ import { createPageMetadata } from "../../lib/seo";
 import { marketplaces } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Маркетплейсы и статус интеграций Respio",
+  title: "Интеграции с Wildberries, Ozon, Яндекс Маркетом и Авито",
   description:
-    "Актуальный статус интеграций Respio: Wildberries входит в MVP-основу, остальные площадки не заявляются готовыми до проверки официальных API и runtime-тестов.",
+    "Интеграции MPReply с Wildberries, Ozon, Яндекс Маркетом и Авито: единая очередь обращений, ИИ-подготовка ответов, правила автоматизации и контроль отправки.",
   path: "/marketplaces",
 });
 
-const adapterPrinciples = [
-  ["Проверка доступа", "Credentials валидируются на backend и не возвращаются во frontend в открытом виде."],
-  ["Нормализация", "Отзывы, вопросы и товарный контекст приводятся к внутренним моделям Respio."],
-  ["Отправка", "Marketplace-specific методы изолированы внутри adapter, а не размазаны по application layer."],
-  ["Ошибки и лимиты", "Временные и терминальные ошибки разделяются, а ограничения площадки учитываются в execution flow."],
+const integrationFlow = [
+  ["01", "Подключение", "Добавьте аккаунт площадки в рабочее пространство. Секреты остаются на backend и не возвращаются в браузер в открытом виде."],
+  ["02", "Единый формат", "Обращения разных площадок приводятся к общей модели, поэтому команда работает с ними в одном интерфейсе."],
+  ["03", "ИИ и правила", "Ответ готовится с доступным контекстом, после чего правила определяют: автоотправка или проверка человеком."],
+  ["04", "Отправка и история", "Результат, ошибки и повторные попытки сохраняются, чтобы обработка не превращалась в непрозрачный фоновой процесс."],
 ];
 
 export default function MarketplacesPage() {
-  const mvpMarketplace = marketplaces.find((marketplace) => marketplace.status === "mvp");
-  const plannedMarketplaces = marketplaces.filter((marketplace) => marketplace.status === "planned");
-
   return (
     <PublicShell>
       <section className="public-subhero public-subhero-marketplaces">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="eyebrow">Интеграции</p>
-            <h1>Один рабочий процесс — отдельный адаптер для каждой площадки</h1>
+            <p className="eyebrow">Интеграции с маркетплейсами</p>
+            <h1>Wildberries, Ozon, Яндекс Маркет и Авито — в одном рабочем процессе</h1>
             <p className="public-lead">
-              Respio не выдаёт roadmap за готовый продукт. Для каждой площадки мы отдельно проверяем официальный API, права доступа, ограничения, отправку ответов и фактическое поведение в runtime.
+              Подключайте площадки к MPReply и обрабатывайте обращения покупателей без постоянного переключения между кабинетами. Источник меняется, логика работы команды остаётся одной.
             </p>
+            <div className="hero-actions">
+              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+                Подключить площадку
+              </Link>
+              <Link className="button button-secondary" href="/demo">
+                Посмотреть интерфейс
+              </Link>
+            </div>
           </div>
 
-          <div className="readiness-summary" role="group" aria-label="Текущий статус интеграций">
-            <div className="readiness-summary-primary">
-              <span className="public-status public-status-mvp">MVP-интеграция</span>
-              <strong>{mvpMarketplace?.name ?? "Wildberries"}</strong>
-              <p>Реальный adapter, импорт отзывов и вопросов, AI draft, SafetyGate и worker-backed отправка входят в текущую техническую основу.</p>
+          <div className="marketplace-cluster" aria-label="Поддерживаемые маркетплейсы">
+            <div className="marketplace-cluster-core">
+              <span>MP</span>
+              <strong>Одна очередь</strong>
+              <small>единые правила</small>
             </div>
-            <div className="readiness-summary-planned">
-              <span>{plannedMarketplaces.length} площадки</span>
-              <p>Планируются, но не называются production-ready до отдельной технической проверки.</p>
-            </div>
+            {marketplaces.map((marketplace, index) => (
+              <Link
+                className={`marketplace-cluster-item marketplace-cluster-item-${index + 1}`}
+                href={marketplace.path}
+                key={marketplace.key}
+              >
+                <span>{marketplace.shortName.slice(0, 2)}</span>
+                <strong>{marketplace.name}</strong>
+                <small>{marketplace.statusLabel}</small>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -52,24 +64,24 @@ export default function MarketplacesPage() {
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Статус на сегодня</p>
-            <h2>Готовность каждой интеграции видна отдельно</h2>
-            <p>Статус не зависит от того, есть ли на сайте отдельная landing page: готовой считается только проверенная реализация.</p>
+            <p className="eyebrow">Поддерживаемые площадки</p>
+            <h2>Выберите маркетплейс и посмотрите сценарий работы с обращениями</h2>
+            <p>Для каждой площадки сохраняется её API-специфика, но менеджер получает один понятный процесс обработки.</p>
           </div>
 
           <div className="marketplace-readiness-list">
             {marketplaces.map((marketplace) => (
-              <article className={`marketplace-readiness-row marketplace-readiness-row-${marketplace.status}`} key={marketplace.key}>
+              <article className="marketplace-readiness-row marketplace-readiness-row-supported" key={marketplace.key}>
                 <div className="marketplace-readiness-brand">
                   <span className="marketplace-monogram" aria-hidden="true">{marketplace.shortName}</span>
                   <div>
                     <h3>{marketplace.name}</h3>
-                    <span className={`public-status public-status-${marketplace.status}`}>{marketplace.statusLabel}</span>
+                    <span className="public-status public-status-supported">{marketplace.statusLabel}</span>
                   </div>
                 </div>
                 <p>{marketplace.summary}</p>
                 <Link className="button button-secondary marketplace-readiness-action" href={marketplace.path}>
-                  Открыть статус
+                  Подробнее
                 </Link>
               </article>
             ))}
@@ -78,17 +90,17 @@ export default function MarketplacesPage() {
       </section>
 
       <section className="public-section public-section-muted">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Архитектурная граница</p>
-            <h2>Специфика площадки остаётся внутри её адаптера</h2>
-            <p>Это позволяет развивать новые интеграции без marketplace-specific хаоса в общих сервисах Respio.</p>
+        <div className="public-container marketplace-flow-layout">
+          <div className="section-heading">
+            <p className="eyebrow">Под капотом</p>
+            <h2>Разные API не должны превращаться в четыре разных процесса для команды</h2>
+            <p>MPReply отделяет интеграционную специфику от общей логики ответов, правил и контроля.</p>
           </div>
 
-          <div className="adapter-principles">
-            {adapterPrinciples.map(([title, text], index) => (
-              <article className="adapter-principle" key={title}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
+          <div className="integration-flow-list" role="group" aria-label="Путь обращения через интеграцию">
+            {integrationFlow.map(([number, title, text]) => (
+              <article className="integration-flow-row" key={number}>
+                <span>{number}</span>
                 <h3>{title}</h3>
                 <p>{text}</p>
               </article>
@@ -100,11 +112,11 @@ export default function MarketplacesPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Подключение</p>
-            <h2>Выберите маркетплейс и посмотрите его фактический статус до подключения</h2>
+            <p className="eyebrow">Один интерфейс для четырёх площадок</p>
+            <h2>Подключите маркетплейсы и начните собирать обращения в общей очереди</h2>
           </div>
           <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">
-            Подключить маркетплейс
+            Создать аккаунт
           </Link>
         </div>
       </section>
