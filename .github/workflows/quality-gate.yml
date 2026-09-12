@@ -33,6 +33,9 @@ jobs:
             - name: Dependency consistency
               working-directory: apps/api
               run: python -m pip check
+            - name: Backend dependency security audit
+              working-directory: apps/api
+              run: pip-audit --strict .
             - name: Ruff
               working-directory: apps/api
               run: ruff check app alembic
