@@ -6,6 +6,7 @@ import "../styles/brand-theme.css";
 import "../styles/marketing-site.css";
 import "../styles/marketing-pages.css";
 import "../styles/homepage-approved.css";
+import "../styles/homepage-fidelity.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
