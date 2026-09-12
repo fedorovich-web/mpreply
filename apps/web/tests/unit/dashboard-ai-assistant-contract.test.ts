@@ -21,6 +21,8 @@ describe("AI assistant operational workspace", () => {
     expect(workspace).toContain("Подготовить другой вариант");
     expect(workspace).toContain("Передать на проверку");
     expect(workspace).toContain("Контекст и стиль");
+    expect(workspace).toContain("Открыть очередь проверки");
+    expect(workspace).not.toContain("Открыть модерацию");
     expect(workspace).not.toContain("worker pipeline");
     expect(workspace).not.toContain("SafetyGate");
   });
