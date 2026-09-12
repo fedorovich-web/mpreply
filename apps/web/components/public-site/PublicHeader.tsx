@@ -40,12 +40,12 @@ export function PublicHeader() {
   return (
     <header className="public-header">
       <div className="public-container public-header-inner">
-        <Link className="public-brand" href="/" aria-label="Respio — главная" onClick={closeMenu}>
+        <Link className="public-brand" href="/" aria-label="MPReply — главная" onClick={closeMenu}>
           <span className="public-brand-mark" aria-hidden="true">
-            R
+            M
           </span>
           <span className="public-brand-copy">
-            <strong>Respio</strong>
+            <strong>MPReply</strong>
             <small>Ответы для маркетплейсов</small>
           </span>
         </Link>
@@ -67,8 +67,11 @@ export function PublicHeader() {
           <Link className="button button-ghost public-login-link" href="/auth/login">
             Войти
           </Link>
-          <Link className="button button-secondary public-header-cta" href="/demo">
-            Открыть демо
+          <Link
+            className="button button-primary public-header-cta"
+            href="/auth/register?intent=connect-marketplace"
+          >
+            Создать аккаунт
           </Link>
         </div>
 
@@ -115,8 +118,12 @@ export function PublicHeader() {
                   <Link className="button button-secondary" href="/auth/login" onClick={closeMenu}>
                     Войти
                   </Link>
-                  <Link className="button button-primary" href="/demo" onClick={closeMenu}>
-                    Открыть демо
+                  <Link
+                    className="button button-primary"
+                    href="/auth/register?intent=connect-marketplace"
+                    onClick={closeMenu}
+                  >
+                    Создать аккаунт
                   </Link>
                 </div>
               </div>
