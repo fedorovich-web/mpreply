@@ -159,12 +159,12 @@ export default function HomePage() {
           </div>
           <div className="homepage-model-grid" role="group" aria-label="Контекст подготовки ответа">
             {replyContext.map((item) => (
-              <article className={`homepage-model-card is-${item.tone}`} key={item.title}>
+              <div className={`homepage-model-card is-${item.tone}`} key={item.title}>
                 <span className="homepage-model-mark" aria-hidden="true">{item.mark}</span>
                 <strong>{item.title}</strong>
                 <small>{item.meta}</small>
                 <p>{item.description}</p>
-              </article>
+              </div>
             ))}
           </div>
         </div>
@@ -228,11 +228,11 @@ export default function HomePage() {
           </div>
           <div className="homepage-result-grid">
             {resultFacts.map((fact) => (
-              <article className="homepage-result-card" key={fact.label}>
+              <div className="homepage-result-card" key={fact.label}>
                 <span aria-hidden="true">{fact.icon}</span>
                 <strong>{fact.value}</strong>
                 <p>{fact.label}</p>
-              </article>
+              </div>
             ))}
           </div>
         </div>
