@@ -125,13 +125,12 @@ describe("WildberriesIntegrationWorkspace", () => {
 
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
-    expect(await screen.findByRole("heading", { name: "Подключённые кабинеты" })).toBeInTheDocument();
+    expect(await screen.findByText("Кабинеты Wildberries")).toBeInTheDocument();
     expect(screen.queryByLabelText(/organization/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Подключить кабинет" }));
-    const form = screen.getByRole("form", { name: "Подключение Wildberries" });
+    const form = screen.getByRole("form", { name: "Новое подключение Wildberries" });
     fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый WB" } });
-    fireEvent.change(within(form).getByLabelText("API-ключ"), { target: { value: "secret-token" } });
+    fireEvent.change(within(form).getByLabelText("API-ключ Wildberries"), { target: { value: "secret-token" } });
     fireEvent.submit(form);
 
     const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
@@ -148,8 +147,9 @@ describe("WildberriesIntegrationWorkspace", () => {
 
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
-    expect(await screen.findByText("Основной кабинет")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Подключить кабинет" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Обновить ключ/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "Новое подключение Wildberries" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Заменить ключ/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Только просмотр")).toBeInTheDocument();
   });
 });
