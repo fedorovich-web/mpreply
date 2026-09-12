@@ -51,13 +51,6 @@ export function PublicShell({ children }: PublicShellProps) {
             <Link href="/contacts">Контакты</Link>
           </div>
 
-          <div className="public-footer-column">
-            <strong>Компания</strong>
-            <Link href="/contacts">О нас</Link>
-            <Link href="/contacts">Партнёрам</Link>
-            <Link href="/contacts">Контакты</Link>
-          </div>
-
           <div className="public-footer-column public-footer-support">
             <strong>Поддержка</strong>
             {siteConfig.contactEmail ? <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> : null}
