@@ -57,7 +57,7 @@ afterEach(() => {
 });
 
 describe("integration card actions", () => {
-  it("shows Manage for every connected marketplace and Connect only for marketplaces without an account", async () => {
+  it("shows manage actions for connected marketplaces and connect actions only when no account exists", async () => {
     mockedUseWorkspace.mockReturnValue({
       user: {
         id: organization.owner_user_id,
@@ -90,7 +90,14 @@ describe("integration card actions", () => {
 
     renderWithQueryClient(<IntegrationsWorkspace />);
 
-    expect(await screen.findAllByRole("link", { name: "Управлять" })).toHaveLength(2);
+    expect(await screen.findByRole("link", { name: "Управлять Wildberries" })).toHaveAttribute(
+      "href",
+      "/app/integrations/wildberries",
+    );
+    expect(screen.getByRole("link", { name: "Управлять Ozon" })).toHaveAttribute(
+      "href",
+      "/app/integrations/ozon",
+    );
     expect(screen.getByRole("link", { name: "Подключить Яндекс Маркет" })).toHaveAttribute(
       "href",
       "/app/integrations/yandex-market",
