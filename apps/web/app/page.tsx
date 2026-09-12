@@ -15,30 +15,30 @@ export const metadata: Metadata = createPageMetadata({
   path: "/",
 });
 
-const aiModels = [
+const replyContext = [
   {
-    name: "GPT-5.6",
-    provider: "OpenAI",
-    mark: "◎",
-    description: "Глубокое понимание контекста и подготовка ответов.",
+    title: "Контекст товара",
+    meta: "Что именно купил клиент",
+    mark: "01",
+    description: "Ответ учитывает доступные данные карточки и товара, а не строится как абстрактный шаблон.",
   },
   {
-    name: "Claude Sonnet 5",
-    provider: "Anthropic",
-    mark: "✺",
-    description: "Анализ контекста и аккуратные формулировки.",
+    title: "Стиль бренда",
+    meta: "Как должна отвечать команда",
+    mark: "02",
+    description: "Формулировки можно держать в одном тоне, чтобы ответы разных менеджеров не выглядели случайными.",
   },
   {
-    name: "Gemini 3.8",
-    provider: "Google",
-    mark: "✦",
-    description: "Точные ответы с учётом товарного контекста.",
+    title: "Правила команды",
+    meta: "Какие случаи автоматизировать",
+    mark: "03",
+    description: "Рабочие правила определяют, какие обращения можно обработать автоматически, а где нужен человек.",
   },
   {
-    name: "DeepSeek V4.1 Flash",
-    provider: "DeepSeek",
-    mark: "◒",
-    description: "Быстрая обработка русскоязычных обращений.",
+    title: "Контроль перед отправкой",
+    meta: "Автоматически или после проверки",
+    mark: "04",
+    description: "Обычные ситуации не задерживают очередь, а спорные ответы остаются видимыми для менеджера.",
   },
 ] as const;
 
@@ -183,22 +183,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-section homepage-models-section">
+      <section className="public-section homepage-context-section homepage-models-section">
         <div className="public-container homepage-models-layout">
           <div className="homepage-section-heading homepage-section-heading-left">
-            <p className="homepage-kicker">Сила современных ИИ-моделей</p>
-            <h2>Используем лучшие нейросети для точных и естественных ответов</h2>
+            <p className="homepage-kicker">Ответ с нужным контекстом</p>
+            <h2>ИИ учитывает не только текст обращения</h2>
             <p>
-              Подбирайте модель под задачу и сочетайте её возможности с контекстом товара, стилем бренда и правилами обработки обращений.
+              MPReply связывает обращение с доступным контекстом товара, правилами команды и стилем ответа. Поэтому автоматизация остаётся частью рабочего процесса, а не отдельным генератором текста.
             </p>
           </div>
-          <div className="homepage-model-grid" role="group" aria-label="Поддерживаемые ИИ-модели">
-            {aiModels.map((model) => (
-              <div className="homepage-model-card" key={model.name}>
-                <span className="homepage-model-mark" aria-hidden="true">{model.mark}</span>
-                <strong>{model.name}</strong>
-                <small>{model.provider}</small>
-                <p>{model.description}</p>
+          <div className="homepage-model-grid" role="group" aria-label="Контекст подготовки ответа">
+            {replyContext.map((item) => (
+              <div className="homepage-model-card" key={item.title}>
+                <span className="homepage-model-mark" aria-hidden="true">{item.mark}</span>
+                <strong>{item.title}</strong>
+                <small>{item.meta}</small>
+                <p>{item.description}</p>
               </div>
             ))}
           </div>
@@ -233,9 +233,9 @@ export default function HomePage() {
         <div className="public-container homepage-results-layout">
           <div className="homepage-section-heading homepage-section-heading-left homepage-results-copy">
             <p className="homepage-kicker">Реальные возможности продукта</p>
-            <h2>Меньше рутины. Больше времени на развитие бизнеса.</h2>
+            <h2>Меньше переключений. Больше контроля над очередью.</h2>
             <p>
-              Автоматизируйте повторяющиеся обращения и оставляйте команде те случаи, где действительно нужен человек.
+              Повторяющиеся обращения проходят по заданному сценарию, а команда видит те ситуации, где действительно нужно решение человека.
             </p>
           </div>
           <div className="homepage-result-grid">
@@ -255,8 +255,8 @@ export default function HomePage() {
           <div className="homepage-wave homepage-wave-cta" aria-hidden="true" />
           <div className="homepage-final-cta-copy">
             <p className="homepage-kicker">Начните сегодня</p>
-            <h2>Автоматизируйте коммуникацию с покупателями</h2>
-            <p>Подключите маркетплейсы и соберите отзывы, вопросы и сообщения в одном рабочем пространстве.</p>
+            <h2>Соберите коммуникацию с покупателями в одном месте</h2>
+            <p>Подключите маркетплейсы и работайте с отзывами, вопросами и сообщениями в одном рабочем пространстве.</p>
             <div className="homepage-final-cta-actions">
               <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Создать аккаунт →</Link>
               <Link className="button button-secondary homepage-demo-button" href="/demo"><span aria-hidden="true">▶</span> Посмотреть демо</Link>
