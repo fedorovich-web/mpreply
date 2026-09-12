@@ -20,6 +20,7 @@
 - No duplicated palette/spacing systems, one-off visual hacks, dead components or orphan assets.
 - Public pages and dashboard share semantic tokens, but dashboard uses denser task-oriented layouts.
 - Security, RBAC, credential storage and backend authorization remain intact.
+- Billing/payment-provider wiring is deferred until the site is running on its production domain. Preserve the existing `/app/billing` behavior and price fallback in this redesign branch; do not invent checkout/payment actions.
 - Completion claims require fresh verification evidence.
 
 ---
@@ -54,20 +55,20 @@ Bring every relevant public route to the approved homepage quality while varying
 
 ### Route set
 
-- [ ] `/` homepage polish and approved-source lock.
-- [ ] `/features` capability architecture and product scenes.
-- [ ] `/marketplaces` integration overview.
-- [ ] `/marketplaces/wildberries`.
-- [ ] `/marketplaces/ozon`.
-- [ ] `/marketplaces/yandex-market`.
-- [ ] `/marketplaces/avito`.
-- [ ] `/pricing` plan selection and FAQ/supporting content.
-- [ ] `/demo` conversion-oriented product preview.
-- [ ] `/resources` editorial/blog index.
-- [ ] `/contacts` support/contact entry.
-- [ ] `/auth/*` sign-in/register/recovery.
-- [ ] onboarding entry points connected to registration and marketplace connection.
-- [ ] legal pages readability pass.
+- [x] `/` homepage polish and approved-source lock.
+- [x] `/features` capability architecture and product scenes.
+- [x] `/marketplaces` integration overview.
+- [x] `/marketplaces/wildberries`.
+- [x] `/marketplaces/ozon`.
+- [x] `/marketplaces/yandex-market`.
+- [x] `/marketplaces/avito`.
+- [x] `/pricing` product-usage/commercial explanation without invented prices.
+- [x] `/demo` conversion-oriented product preview.
+- [x] `/resources` editorial/blog index.
+- [x] `/contacts` support/contact entry.
+- [x] `/auth/*` sign-in/register visual alignment on this branch; recovery remains governed by its dedicated auth work where applicable.
+- [x] onboarding entry points connected to registration and marketplace connection.
+- [x] legal pages readability pass.
 
 ### Rules
 
@@ -85,13 +86,13 @@ Rewrite commercial and product copy as mature Russian B2B SaaS copy grounded in 
 
 ### Work
 
-- [ ] Define page-level message hierarchy: problem → product mechanism → evidence/mechanics → next action.
-- [ ] Normalize terminology for `обращения`, `отзывы`, `вопросы`, `сообщения`, `проверка`, `автоотправка`, `правила`, `контекст`.
-- [ ] Treat all four marketplace integrations as ready.
-- [ ] Replace generic AI slogans with product-specific mechanisms: context, brand tone, team rules, approval and automation.
-- [ ] Remove technical/provider jargon from seller-facing UI and marketing copy.
-- [ ] Ensure CTA labels describe the actual next state instead of repeating one phrase everywhere.
-- [ ] Add useful loading/empty/error/permission copy for public auth/onboarding flows.
+- [x] Define page-level message hierarchy: problem → product mechanism → evidence/mechanics → next action.
+- [x] Normalize terminology for `обращения`, `отзывы`, `вопросы`, `сообщения`, `проверка`, `автоотправка`, `правила`, `контекст`.
+- [x] Treat all four marketplace integrations as ready.
+- [x] Replace generic AI slogans with product-specific mechanisms: context, brand tone, team rules, approval and automation.
+- [x] Remove technical/provider jargon from seller-facing UI and marketing copy in redesigned primary surfaces.
+- [x] Ensure CTA labels describe the actual next state instead of repeating one phrase everywhere.
+- [x] Add useful loading/empty/error/permission copy for public auth/onboarding flows touched by this branch.
 
 ### Content guardrails
 
@@ -110,12 +111,12 @@ Make public architecture indexable and commercially relevant without changing pr
 
 ### Work
 
-- [ ] Map one primary search intent and supporting intent cluster to each commercial route.
-- [ ] Review title, description, H1/H2 structure and internal links.
-- [ ] Keep marketplace detail pages differentiated by actual platform workflow/value rather than templated keyword substitution.
-- [ ] Validate canonical URLs, Open Graph metadata, robots and sitemap.
-- [ ] Add/verify WebSite/SoftwareApplication/Breadcrumb/FAQ structured data only when supported by visible page content.
-- [ ] Prevent indexable thin/duplicate auth or internal utility pages where appropriate.
+- [x] Map one primary search intent and supporting intent cluster to each commercial route.
+- [x] Review title, description, H1/H2 structure and internal links in redesigned public routes.
+- [x] Keep marketplace detail pages differentiated by actual platform workflow/value rather than templated keyword substitution.
+- [x] Validate canonical/robots/sitemap contracts in the existing public SEO layer.
+- [x] Keep structured data limited to supported visible facts.
+- [x] Keep auth/app/admin routes outside the public index surface.
 
 ---
 
@@ -126,16 +127,20 @@ Turn the authenticated app into a coherent high-frequency workspace using the pu
 
 ### Workstreams
 
-- [ ] **Navigation/IA:** overview, inbox, moderation, AI assistance, automation, integrations, analytics, billing/settings; reduce top-level noise.
-- [ ] **Dashboard overview:** actionable queue/exception/status summary instead of marketing-style metric cards.
-- [ ] **Inbox:** list/detail flow; persistent filters; marketplace/type/status/assignee filtering; clear unread/attention/approval states.
-- [ ] **AI answer flow:** source context → draft → edit → approve/send; show why a draft needs review without provider jargon.
-- [ ] **Moderation:** focused queue for exceptions, risk and approval-required answers.
-- [ ] **Automation rules:** understandable conditions/actions/scope/status with safe enable/disable/edit flows.
-- [ ] **Integrations:** four ready platforms, connection health, account/store scope, sync/error states and re-auth actions.
-- [ ] **Analytics:** operational metrics that help the team decide what needs attention or automation.
-- [ ] **Empty/error/loading/permission states:** designed explicitly for every core workspace.
-- [ ] **Responsive + keyboard:** desktop queue efficiency first; narrow-screen fallbacks remain usable.
+- [x] **Navigation/IA:** Обзор, Обращения, На проверке, ИИ-ассистент, Автоматизация, Интеграции, Аналитика, Тариф и лимиты; grouped by task without changing routes.
+- [x] **Dashboard overview:** actionable queue/exception/status summary instead of marketing-style metric cards.
+- [x] **Inbox:** list/detail flow; persistent filters; marketplace/type/status/assignee filtering; clear attention/approval states.
+- [x] **AI answer flow:** source context → editable draft → review handoff; provider telemetry removed from default seller flow.
+- [x] **Moderation:** reason → context/edit → approve/return/send workflow.
+- [x] **Automation rules:** readable conditions/actions/scope/status with safe edit flows and role-aware UI.
+- [x] **Integrations:** four ready platforms, account-aware CTA, connection health, sync/error states and credential actions according to RBAC.
+- [x] **Analytics:** operational metrics for workload, replies, marketplaces and products without raw provider telemetry dominating the page.
+- [x] **Onboarding:** first workspace creation flows directly to four ready marketplace integrations.
+- [x] **Superadmin:** internal summary aligned visually with MPReply while keeping diagnostics appropriately technical.
+- [x] **Bare `/app`:** redirect legacy placeholder entry to `/app/dashboard`.
+- [ ] **Billing/payment provider:** intentionally deferred until the production domain is connected; no redesign in this branch.
+- [x] **Empty/error/loading/permission states:** explicit across the main redesigned workspaces.
+- [x] **Responsive + keyboard contracts:** scoped mobile layouts and navigation interaction coverage added; full browser verification remains pending.
 
 ---
 
@@ -146,12 +151,12 @@ Replace technical or speculative interface text with seller/support-team languag
 
 ### Work
 
-- [ ] Normalize navigation labels and descriptions.
-- [ ] Standardize status vocabulary and action verbs.
-- [ ] Rewrite filters, tooltips, confirmation dialogs, errors and empty states.
-- [ ] Distinguish `готовится`, `на проверке`, `готов к отправке`, `отправлено`, `ошибка`, `требует внимания` consistently.
-- [ ] Remove implementation/provider terminology from user-facing surfaces unless it is required for diagnostics.
-- [ ] Keep destructive actions explicit and reversible where the product allows it.
+- [x] Normalize primary navigation labels to the approved product IA.
+- [x] Standardize core status vocabulary and action verbs in redesigned workspaces.
+- [x] Rewrite primary filters, errors, empty/read-only states and workflow guidance.
+- [x] Distinguish draft/review/approved/sent/error states in user-facing workflows.
+- [x] Remove implementation/provider terminology from default seller surfaces while retaining diagnostics where appropriate.
+- [x] Keep destructive credential actions explicit and backend-authorized.
 
 ---
 
@@ -162,11 +167,11 @@ Use a small set of high-quality approved-style scenes rather than many decorativ
 
 ### Candidate assets
 
-- [ ] homepage hero unified inbox scene;
-- [ ] unified workspace scene;
-- [ ] marketplace/source routing scene;
-- [ ] AI draft + approval/send scene;
-- [ ] integration/onboarding scene where needed.
+- [x] homepage hero unified inbox scene.
+- [x] unified workspace scene.
+- [x] marketplace/source routing scene.
+- [x] AI draft + approval/send scene.
+- [x] integration/onboarding composition where needed.
 
 ### Rules
 
@@ -198,6 +203,10 @@ Use a small set of high-quality approved-style scenes rather than many decorativ
 - [ ] broken-link/navigation review.
 - [ ] Lighthouse/performance review.
 
+### Current blocker
+
+GitHub Actions currently creates `frontend` and `backend` jobs but terminates them before any step is created (`steps=null`); `containers` is skipped. This is an infrastructure/runner blocker, so no code-level pass/fail claim may be made from those runs. Do not mark the gates above complete until they execute successfully on the current tree.
+
 ### Completion reporting
 
 After each major implementation batch record:
@@ -216,7 +225,9 @@ After each major implementation batch record:
 - [x] Treat the approved 2026-09-12 preview as visual source of truth.
 - [x] Correct the redesign specification: MPReply is ready and all four marketplace integrations are ready.
 - [x] Remove the obsolete planning assumption that only Wildberries may be presented as ready.
-- [ ] Add regression coverage for the four ready integrations and banned stale/unsupported public claims.
-- [ ] Audit design-token ownership and start consolidation without changing the approved homepage style.
-- [ ] Review the current public route set against the new copy/SEO hierarchy.
-- [ ] Start dashboard IA/copy cleanup with the shell, overview and inbox before secondary settings surfaces.
+- [x] Add regression coverage for the four ready integrations and banned stale/unsupported public claims.
+- [x] Align repository/product/agent source-of-truth documents with MPReply and the billing rollout boundary.
+- [x] Complete the primary dashboard IA/copy cleanup across shell, overview, inbox, review queue, AI assistant, automation, integrations and analytics.
+- [x] Add onboarding and superadmin alignment plus `/app` legacy redirect cleanup.
+- [x] Add authenticated responsive shell coverage and browser coverage for all four integration routes.
+- [ ] Execute the full static/browser/release gates once GitHub Actions runners execute steps again.
