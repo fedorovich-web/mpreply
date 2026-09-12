@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AppProviders } from "../../components/providers/AppProviders";
+import "../../styles/auth.css";
 
 export const metadata: Metadata = {
   title: "Вход и регистрация | MPReply",
