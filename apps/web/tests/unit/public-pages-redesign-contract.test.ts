@@ -9,12 +9,16 @@ const homeWorkspace = readFileSync(join(root, "components/public-site/HomeWorksp
 const marketplaceLanding = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
 const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
+const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
+const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const pagesCssPath = join(root, "styles/marketing-pages.css");
 const pagesCss = existsSync(pagesCssPath) ? readFileSync(pagesCssPath, "utf8") : "";
 const marketplacesCssPath = join(root, "styles/marketplaces-approved.css");
 const marketplacesCss = existsSync(marketplacesCssPath) ? readFileSync(marketplacesCssPath, "utf8") : "";
 const marketplaceDetailCssPath = join(root, "styles/marketplace-detail-approved.css");
 const marketplaceDetailCss = existsSync(marketplaceDetailCssPath) ? readFileSync(marketplaceDetailCssPath, "utf8") : "";
+const pricingDemoCssPath = join(root, "styles/pricing-demo-approved.css");
+const pricingDemoCss = existsSync(pricingDemoCssPath) ? readFileSync(pricingDemoCssPath, "utf8") : "";
 
 describe("public page redesign", () => {
   it("loads page-specific marketing compositions", () => {
@@ -45,6 +49,23 @@ describe("public page redesign", () => {
     expect(marketplaceLanding).toContain("marketplace-detail-draft");
     expect(marketplaceDetailCss).toContain(".marketplace-detail-scene");
     expect(marketplaceDetailCss).toContain(".marketplace-detail-window");
+  });
+
+  it("uses a product-usage composition on pricing without inventing public prices", () => {
+    expect(layout).toContain('import "../styles/pricing-demo-approved.css"');
+    expect(pricing).toContain("pricing-plan-scene");
+    expect(pricing).toContain("pricing-plan-usage");
+    expect(pricing).toContain("pricing-plan-scale");
+    expect(pricing).not.toMatch(/₽|руб(?:лей|ля)?|\$\d|€\d/i);
+    expect(pricingDemoCss).toContain(".pricing-plan-scene");
+  });
+
+  it("turns the demo hero into a visible question-to-review product flow", () => {
+    expect(demo).toContain("demo-product-scene");
+    expect(demo).toContain("demo-product-question");
+    expect(demo).toContain("demo-product-draft");
+    expect(demo).toContain("demo-product-review");
+    expect(pricingDemoCss).toContain(".demo-product-scene");
   });
 
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
