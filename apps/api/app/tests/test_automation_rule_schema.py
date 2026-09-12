@@ -25,6 +25,7 @@ def test_automation_rule_schema_normalizes_keyword_lists() -> None:
 
     assert payload.include_keywords == ["доставка", "упаковка"]
 
+
 def test_automation_rule_update_schema_normalizes_keyword_lists() -> None:
     from app.schemas.automation_rule import AutomationRuleUpdateRequest
 
@@ -32,3 +33,13 @@ def test_automation_rule_update_schema_normalizes_keyword_lists() -> None:
 
     assert payload.include_keywords == ["доставка", "упаковка"]
 
+
+def test_automation_rule_schema_accepts_buyer_messages() -> None:
+    payload = AutomationRuleCreateRequest(
+        organization_id=UUID("00000000-0000-0000-0000-000000000001"),
+        name="Buyer messages",
+        applies_to="chat",
+        mode="semi_auto",
+    )
+
+    assert payload.applies_to == "chat"
