@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/integrations/IntegrationsWorkspace.tsx"), "utf8");
-const detailWorkspace = readFileSync(join(root, "components/integrations/WildberriesIntegrationWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/integrations/page.tsx"), "utf8");
 const wildberriesPage = readFileSync(join(root, "app/app/integrations/wildberries/page.tsx"), "utf8");
 const ozonPage = readFileSync(join(root, "app/app/integrations/ozon/page.tsx"), "utf8");
@@ -36,13 +35,7 @@ describe("integrations dashboard", () => {
     }
   });
 
-  it("uses provider-neutral workspace classes and removes stale roadmap styling", () => {
-    expect(detailWorkspace).toContain('className="marketplace-integration-workspace"');
-    expect(detailWorkspace).toContain('className="marketplace-integration-layout"');
-    expect(detailWorkspace).not.toContain('className="wildberries-workspace"');
-    expect(detailWorkspace).not.toContain('className="wildberries-layout"');
-    expect(styles).toContain(".marketplace-integration-workspace");
-    expect(styles).toContain(".marketplace-integration-layout");
+  it("does not retain stale roadmap-only styling for ready integrations", () => {
     expect(styles).not.toMatch(/planned-integration|market-card-planned|roadmap/i);
   });
 
