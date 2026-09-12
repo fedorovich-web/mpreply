@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ReviewQueueWorkspace } from "../../components/review-queue/ReviewQueueWorkspace";
@@ -9,80 +9,89 @@ vi.mock("../../components/workspace/WorkspaceProvider", () => ({
   useWorkspace: vi.fn(),
 }));
 
-const timestamp = "2026-07-12T06:00:00Z";
+const timestamp = "2026-09-12T18:00:00Z";
 const organization = {
   id: "11111111-1111-4111-8111-111111111111",
   name: "Seller Group",
   slug: "seller-group",
   owner_user_id: "22222222-2222-4222-8222-222222222222",
   plan_id: null,
-  default_response_mode: "auto",
+  default_response_mode: "semi_auto",
   status: "active",
-  current_user_role: "manager" as const,
+  current_user_role: "owner" as const,
   created_at: timestamp,
   updated_at: timestamp,
 };
 
-const reviewItem = {
-  reply: {
+const message = {
+  id: "33333333-3333-4333-8333-333333333333",
+  organization_id: organization.id,
+  marketplace_account_id: "44444444-4444-4444-8444-444444444444",
+  product_id: "55555555-5555-4555-8555-555555555555",
+  marketplace: "wildberries",
+  external_id: "wb-message-1",
+  type: "review",
+  status: "waiting_review",
+  rating: 2,
+  customer_display_name: "Анна К.",
+  customer_text: "Обещали заменить товар, но я не понимаю условия.",
+  customer_photos_json: [],
+  marketplace_created_at: timestamp,
+  imported_at: timestamp,
+  last_synced_at: timestamp,
+  assigned_to: null,
+  priority: "normal",
+  metadata_json: {},
+  product: {
     id: "55555555-5555-4555-8555-555555555555",
-    organization_id: organization.id,
-    message_id: "33333333-3333-4333-8333-333333333333",
-    ai_draft_id: null,
-    automation_rule_id: null,
-    reply_text: "Здравствуйте! Отправим заказ сегодня после подтверждения комплектации.",
-    status: "waiting_review",
-    mode: "semi_auto",
-    revision: 1,
-    idempotency_key: null,
-    worker_message_id: null,
-    attempt_count: 0,
-    max_attempts: 3,
-    last_attempt_at: null,
-    next_retry_at: null,
-    error_code: null,
-    created_by: organization.owner_user_id,
-    approved_by: null,
-    sent_by: null,
-    submitted_for_review_at: timestamp,
-    approved_at: null,
-    rejected_at: null,
-    rejection_reason: null,
-    marketplace_reply_id: null,
-    sent_at: null,
-    failed_reason: null,
-    metadata_json: {},
-    created_at: timestamp,
-    updated_at: timestamp,
+    external_id: "product-1",
+    sku: "SKU-1",
+    name: "Тестовый товар",
+    brand: "MPReply",
+    category: "Тест",
+    image_url: null,
+    product_url: null,
   },
-  message: {
-    id: "33333333-3333-4333-8333-333333333333",
-    organization_id: organization.id,
-    marketplace_account_id: "44444444-4444-4444-8444-444444444444",
-    product_id: null,
-    marketplace: "avito",
-    external_id: "avito-chat-1",
-    type: "chat",
-    status: "waiting_review",
-    rating: null,
-    customer_display_name: "Алексей",
-    customer_text: "Здравствуйте, когда сможете отправить заказ?",
-    customer_photos_json: [],
-    marketplace_created_at: timestamp,
-    imported_at: timestamp,
-    last_synced_at: timestamp,
-    assigned_to: null,
-    priority: "normal",
-    metadata_json: {},
-    product: null,
-    created_at: timestamp,
-    updated_at: timestamp,
-  },
-  safety: {
-    decision: "manual_review",
-    flags: ["missing_product_context"],
-    reasons: ["Для ответа требуется подтверждение срока отправки."],
-  },
+  created_at: timestamp,
+  updated_at: timestamp,
+};
+
+const reply = {
+  id: "66666666-6666-4666-8666-666666666666",
+  organization_id: organization.id,
+  message_id: message.id,
+  ai_draft_id: null,
+  automation_rule_id: null,
+  reply_text: "Мы обязательно заменим товар завтра.",
+  status: "waiting_review",
+  mode: "semi_auto",
+  revision: 1,
+  idempotency_key: null,
+  worker_message_id: null,
+  attempt_count: 0,
+  max_attempts: 3,
+  last_attempt_at: null,
+  next_retry_at: null,
+  error_code: null,
+  created_by: organization.owner_user_id,
+  approved_by: null,
+  sent_by: null,
+  submitted_for_review_at: timestamp,
+  approved_at: null,
+  rejected_at: null,
+  rejection_reason: null,
+  marketplace_reply_id: null,
+  sent_at: null,
+  failed_reason: null,
+  metadata_json: {},
+  created_at: timestamp,
+  updated_at: timestamp,
+};
+
+const safety = {
+  decision: "manual_review",
+  flags: ["risky_promise", "negative_review"],
+  reasons: ["Draft contains an unverified promise or guaranteed outcome"],
 };
 
 const mockedUseWorkspace = vi.mocked(useWorkspace);
@@ -92,7 +101,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function renderWorkspace() {
+function mockWorkspace(role: "owner" | "viewer") {
   mockedUseWorkspace.mockReturnValue({
     user: {
       id: organization.owner_user_id,
@@ -103,22 +112,18 @@ function renderWorkspace() {
       created_at: timestamp,
       updated_at: timestamp,
     },
-    organizations: [organization],
-    activeOrganization: organization,
+    organizations: [{ ...organization, current_user_role: role }],
+    activeOrganization: { ...organization, current_user_role: role },
     setActiveOrganizationId: vi.fn(),
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
   });
+}
 
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async () => new Response(JSON.stringify({ items: [reviewItem], total: 1, page: 1, page_size: 100 }), { status: 200 })),
-  );
-
+function renderWorkspace() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-
   return render(
     <QueryClientProvider client={queryClient}>
       <ReviewQueueWorkspace />
@@ -126,13 +131,81 @@ function renderWorkspace() {
   );
 }
 
+function queueResponse(status = reply.status) {
+  return {
+    items: [{ reply: { ...reply, status }, message, safety }],
+    total: 1,
+    page: 1,
+    page_size: 100,
+  };
+}
+
 describe("ReviewQueueWorkspace", () => {
-  it("labels marketplace chats as buyer messages", async () => {
+  it("translates internal safety metadata into seller-facing review reasons", async () => {
+    mockWorkspace("owner");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () => new Response(JSON.stringify(queueResponse()), { status: 200 })),
+    );
+
     renderWorkspace();
 
-    expect(await screen.findByText(/Сообщение\s*·\s*без оценки/)).toBeInTheDocument();
-    expect(screen.getByText(/Сообщение покупателя/)).toBeInTheDocument();
-    expect(screen.queryByText("chat")).not.toBeInTheDocument();
-    expect(screen.getByText("Для ответа требуется подтверждение срока отправки.")).toBeInTheDocument();
+    expect(await screen.findByText("Почему требуется внимание")).toBeInTheDocument();
+    expect(screen.getByText("В тексте есть обещание результата, которое нужно проверить.")).toBeInTheDocument();
+    expect(screen.getByText("Низкая оценка покупателя требует особенно внимательного ответа.")).toBeInTheDocument();
+    expect(screen.queryByText("Draft contains an unverified promise or guaranteed outcome")).not.toBeInTheDocument();
+    expect(screen.getByText("Обращение покупателя")).toBeInTheDocument();
+    expect(screen.getByText("Контекст товара")).toBeInTheDocument();
+  });
+
+  it("shows viewer role as read-only before any mutation is attempted", async () => {
+    mockWorkspace("viewer");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () => new Response(JSON.stringify(queueResponse()), { status: 200 })),
+    );
+
+    renderWorkspace();
+
+    const editor = await screen.findByLabelText("Ответ покупателю");
+    expect(editor).toBeDisabled();
+    expect(screen.getByText(/Ваша роль позволяет просматривать очередь/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Одобрить ответ" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Вернуть на доработку" })).not.toBeInTheDocument();
+  });
+
+  it("submits an unchanged draft through the existing live review endpoint", async () => {
+    mockWorkspace("owner");
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/replies/review-queue")) {
+        return new Response(JSON.stringify(queueResponse("draft")), { status: 200 });
+      }
+      if (url.includes(`/api/replies/${reply.id}/submit-review`) && init?.method === "POST") {
+        return new Response(
+          JSON.stringify({
+            reply: { ...reply, status: "waiting_review" },
+            safety,
+          }),
+          { status: 200 },
+        );
+      }
+      throw new Error(`Unexpected request: ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    const submit = await screen.findByRole("button", { name: "Передать на проверку" });
+    fireEvent.click(submit);
+
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([input, init]) =>
+            String(input).includes(`/api/replies/${reply.id}/submit-review`) && init?.method === "POST",
+        ),
+      ).toBe(true);
+    });
   });
 });
