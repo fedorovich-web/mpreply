@@ -7,18 +7,17 @@ import { useState } from "react";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const navItems = [
-  { href: "/app/dashboard", label: "Dashboard", description: "Сводка" },
-  { href: "/app/inbox", label: "Inbox", description: "Отзывы и вопросы" },
-  { href: "/app/review-queue", label: "Review Queue", description: "Ручная проверка" },
-  { href: "/app/ai-assistant", label: "AI Assistant", description: "ИИ-черновики" },
-  { href: "/app/automation-rules", label: "Automation Rules", description: "Автоответы и контроль" },
-  { href: "/app/integrations", label: "Integrations", description: "Маркетплейсы" },
-  { href: "/app/integrations/wildberries", label: "Wildberries", description: "Настройка аккаунтов" },
-  { href: "/app/analytics", label: "Analytics", description: "Метрики и AI usage" },
-  { href: "/app/billing", label: "Billing", description: "Тариф и лимиты" },
+  { href: "/app/dashboard", label: "Обзор", description: "Главные показатели" },
+  { href: "/app/inbox", label: "Обращения", description: "Отзывы, вопросы и сообщения" },
+  { href: "/app/review-queue", label: "На проверке", description: "Ответы, где нужен человек" },
+  { href: "/app/ai-assistant", label: "ИИ-ассистент", description: "Подготовка ответов" },
+  { href: "/app/automation-rules", label: "Автоматизация", description: "Правила автоответов" },
+  { href: "/app/integrations", label: "Интеграции", description: "Подключённые площадки" },
+  { href: "/app/analytics", label: "Аналитика", description: "Обращения и ответы" },
+  { href: "/app/billing", label: "Тариф и лимиты", description: "План и использование" },
 ];
 
-const upcomingItems = ["Templates", "Knowledge Base", "Team", "Settings", "Audit Log"];
+const upcomingItems = ["Шаблоны", "База знаний", "Команда", "Настройки", "Журнал действий"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,23 +31,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     isLoggingOut,
   } = useWorkspace();
   const visibleNavItems = user.is_superadmin
-    ? [...navItems, { href: "/app/admin", label: "Admin", description: "Internal overview" }]
+    ? [...navItems, { href: "/app/admin", label: "Администрирование", description: "Системный обзор" }]
     : navItems;
 
   return (
     <div className="app-shell">
       <aside className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="MPReply dashboard">
+          <Link href="/app/dashboard" className="app-logo" aria-label="Панель MPReply">
             <span className="app-logo-mark" aria-hidden="true">M</span>
             <span>
               <strong>MPReply</strong>
-              <small>Marketplace inbox</small>
+              <small>Работа с обращениями</small>
             </span>
           </Link>
         </div>
 
-        <nav className="app-nav" aria-label="Разделы dashboard">
+        <nav className="app-nav" aria-label="Разделы кабинета">
           {visibleNavItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
@@ -66,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="app-sidebar-section" aria-label="Следующие разделы">
+        <div className="app-sidebar-section" aria-label="Разделы в разработке">
           <span className="app-sidebar-caption">В разработке</span>
           <div className="app-upcoming-list">
             {upcomingItems.map((item) => (
@@ -80,7 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="app-topbar">
           <button
             aria-expanded={isOpen}
-            aria-label="Открыть меню dashboard"
+            aria-label="Открыть меню кабинета"
             className="app-menu-button"
             onClick={() => setIsOpen((value) => !value)}
             type="button"
