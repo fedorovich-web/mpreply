@@ -12,25 +12,25 @@ const marketplaceCatalog = [
     key: "wildberries",
     name: "Wildberries",
     href: "/app/integrations/wildberries",
-    description: "Отзывы и вопросы, синхронизация обращений, подготовка ответов и управление подключёнными кабинетами.",
+    description: "Отзывы, вопросы и сообщения покупателей в общей очереди с контекстом, подготовкой ответа и контролем отправки.",
   },
   {
     key: "ozon",
     name: "Ozon",
     href: "/app/integrations/ozon",
-    description: "Обращения покупателей Ozon, синхронизация кабинета и работа с ответами в едином интерфейсе MPReply.",
+    description: "Обращения покупателей Ozon, подключённые кабинеты и ответы в том же рабочем процессе, что и на других площадках.",
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
     href: "/app/integrations/yandex-market",
-    description: "Вопросы и обращения Яндекс Маркета с общей очередью, статусами и управлением ответами.",
+    description: "Отзывы, вопросы и сообщения Яндекс Маркета с едиными статусами, очередью и правилами обработки.",
   },
   {
     key: "avito",
     name: "Авито",
     href: "/app/integrations/avito",
-    description: "Сообщения покупателей Авито, синхронизация чатов и управление подключением из MPReply.",
+    description: "Сообщения и обращения покупателей Авито с синхронизацией диалогов и управлением подключением из MPReply.",
   },
 ] as const;
 
@@ -53,15 +53,15 @@ export function IntegrationsWorkspace() {
   return (
     <section className="integrations-workspace" aria-label="Интеграции маркетплейсов">
       <div className="integrations-summary-grid" aria-label="Сводка подключений">
-        <SummaryMetric label="Подключений" value={accountsQuery.isPending ? "—" : String(accounts.length)} />
-        <SummaryMetric label="Активных" value={accountsQuery.isPending ? "—" : String(activeCount)} />
+        <SummaryMetric label="Подключено кабинетов" value={accountsQuery.isPending ? "—" : String(accounts.length)} />
+        <SummaryMetric label="Работают нормально" value={accountsQuery.isPending ? "—" : String(activeCount)} />
         <SummaryMetric label="Требуют внимания" value={accountsQuery.isPending ? "—" : String(problemCount)} />
       </div>
 
       {accountsQuery.error ? (
         <div className="workspace-inline-state workspace-inline-state-error" role="alert">
           <strong>Не удалось загрузить подключения</strong>
-          <p>{errorMessage(accountsQuery.error)}</p>
+          <p>Повторите загрузку. Сохранённые подключения останутся без изменений.</p>
           <button className="button button-secondary button-compact" onClick={() => void accountsQuery.refetch()} type="button">
             Повторить
           </button>
@@ -70,10 +70,11 @@ export function IntegrationsWorkspace() {
 
       <div className="integration-catalog-grid" role="list">
         {marketplaceCatalog.map((marketplace) => {
-          const connectedCount = accounts.filter((account) => account.marketplace === marketplace.key).length;
-          const statusLabel = connectedCount > 0
-            ? `${connectedCount} ${accountWord(connectedCount)}`
-            : "Можно подключить";
+          const marketplaceAccounts = accounts.filter((account) => account.marketplace === marketplace.key);
+          const connectedCount = marketplaceAccounts.length;
+          const hasProblem = marketplaceAccounts.some((account) => account.status === "error" || account.error_count > 0);
+          const hasActive = marketplaceAccounts.some((account) => account.status === "active");
+          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem });
           const actionLabel = canManage
             ? connectedCount > 0
               ? `Управлять ${marketplace.name}`
@@ -84,10 +85,10 @@ export function IntegrationsWorkspace() {
             <article className="integration-market-card" key={marketplace.key} role="listitem">
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge ui-badge-success">Поддерживается</span>
+                  <span className="ui-badge ui-badge-info">Интеграция готова</span>
                   <h2>{marketplace.name}</h2>
                 </div>
-                <span className="ui-badge ui-badge-success">{statusLabel}</span>
+                <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
               </div>
               <p>{marketplace.description}</p>
               <Link className="button button-secondary" href={marketplace.href}>
@@ -108,6 +109,27 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
       <strong>{value}</strong>
     </article>
   );
+}
+
+function getConnectionState({
+  connectedCount,
+  hasActive,
+  hasProblem,
+}: {
+  connectedCount: number;
+  hasActive: boolean;
+  hasProblem: boolean;
+}): { label: string; tone: "neutral" | "success" | "warning" } {
+  if (hasProblem) {
+    return { label: "Требует внимания", tone: "warning" };
+  }
+  if (hasActive) {
+    return { label: `${connectedCount} ${accountWord(connectedCount)}`, tone: "success" };
+  }
+  if (connectedCount > 0) {
+    return { label: "Настройка не завершена", tone: "warning" };
+  }
+  return { label: "Не подключено", tone: "neutral" };
 }
 
 function accountWord(value: number): string {
