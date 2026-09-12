@@ -123,7 +123,7 @@ export function AIAssistantWorkspace() {
           </div>
 
           {messagesQuery.isPending ? (
-            <AIState title="Загружаем обращения" description="Получаем доступные отзывы и вопросы." />
+            <AIState title="Загружаем обращения" description="Получаем отзывы, вопросы и сообщения покупателей." />
           ) : messagesQuery.error ? (
             <AIState
               title="Не удалось загрузить обращения"
@@ -134,7 +134,7 @@ export function AIAssistantWorkspace() {
           ) : !messagesQuery.data || messagesQuery.data.items.length === 0 ? (
             <AIState
               title="Обращений пока нет"
-              description="После синхронизации маркетплейса здесь появятся отзывы и вопросы, для которых можно подготовить ответ."
+              description="После синхронизации здесь появятся отзывы, вопросы и сообщения, для которых можно подготовить ответ."
             />
           ) : (
             <div className="ai-message-list" role="list">
@@ -220,7 +220,7 @@ export function AIAssistantWorkspace() {
               </form>
             </>
           ) : (
-            <AIState title="Выберите обращение" description="Сначала выберите отзыв или вопрос в списке слева." />
+            <AIState title="Выберите обращение" description="Сначала выберите отзыв, вопрос или сообщение в списке слева." />
           )}
         </section>
 
@@ -360,7 +360,10 @@ function marketplaceLabel(value: string): string {
 }
 
 function messageTypeLabel(value: string): string {
-  return value === "review" ? "Отзыв" : value === "question" ? "Вопрос" : value;
+  if (value === "review") return "Отзыв";
+  if (value === "question") return "Вопрос";
+  if (value === "chat") return "Сообщение";
+  return value;
 }
 
 function roleLabel(value: string): string {
