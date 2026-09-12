@@ -220,6 +220,10 @@
 	background: var(--color-warning-soft);
 }
 
+.public-root .demo-decision-badge small {
+	color: var(--color-warning-text);
+}
+
 .public-root .pricing-model-item > span,
 .public-root .contact-path > span {
 	color: var(--color-brand-primary);
