@@ -18,16 +18,9 @@
 	font-size: clamp(3.3rem, 4.35vw, 4.45rem);
 }
 
-.homepage-hero-scene {
-	min-height: 32.5rem;
+.homepage-approved-hero .homepage-hero-scene {
 	transform: scale(1.065);
 	transform-origin: right center;
-}
-
-.homepage-window-time {
-	color: #8798b5;
-	font-size: 0.45rem;
-	white-space: nowrap;
 }
 
 .homepage-approved-marketplaces {
@@ -80,23 +73,23 @@
 	font-size: 2.08rem;
 }
 
-.homepage-models-section {
-	padding-top: 3.85rem !important;
-	padding-bottom: 4.15rem !important;
+.public-root .homepage-models-section {
+	padding-top: 3.85rem;
+	padding-bottom: 4.15rem;
 }
 
-.homepage-approved-process {
-	padding-top: 3.9rem !important;
-	padding-bottom: 4.35rem !important;
+.public-root .homepage-approved-process {
+	padding-top: 3.9rem;
+	padding-bottom: 4.35rem;
 }
 
 .homepage-process-heading {
 	margin-bottom: 2.65rem;
 }
 
-.homepage-results-section {
-	padding-top: 4rem !important;
-	padding-bottom: 4rem !important;
+.public-root .homepage-results-section {
+	padding-top: 4rem;
+	padding-bottom: 4rem;
 }
 
 .homepage-results-layout {
@@ -108,9 +101,9 @@
 	max-width: 28rem;
 }
 
-.homepage-approved-final-cta {
-	padding-top: 4.2rem !important;
-	padding-bottom: 4.35rem !important;
+.public-root .homepage-approved-final-cta {
+	padding-top: 4.2rem;
+	padding-bottom: 4.35rem;
 }
 
 .homepage-approved-final-cta .homepage-final-cta-card {
@@ -131,7 +124,7 @@
 		grid-template-columns: 1fr;
 	}
 
-	.homepage-hero-scene {
+	.homepage-approved-hero .homepage-hero-scene {
 		transform: none;
 	}
 
@@ -141,10 +134,6 @@
 }
 
 @media (max-width: 760px) {
-	.public-root {
-		--container-max-width: 1240px;
-	}
-
 	.homepage-approved-hero {
 		padding-top: 3.5rem;
 		padding-bottom: 3.75rem;
@@ -166,11 +155,11 @@
 		font-size: clamp(2.25rem, 10vw, 3rem);
 	}
 
-	.homepage-models-section,
-	.homepage-approved-process,
-	.homepage-results-section,
-	.homepage-approved-final-cta {
-		padding-top: 4.25rem !important;
-		padding-bottom: 4.25rem !important;
+	.public-root .homepage-models-section,
+	.public-root .homepage-approved-process,
+	.public-root .homepage-results-section,
+	.public-root .homepage-approved-final-cta {
+		padding-top: 4.25rem;
+		padding-bottom: 4.25rem;
 	}
 }
