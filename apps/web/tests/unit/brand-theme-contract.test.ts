@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const themePath = join(root, "styles/brand-theme.css");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const globals = readFileSync(join(root, "styles/globals.css"), "utf8");
 const theme = existsSync(themePath) ? readFileSync(themePath, "utf8") : "";
 const homepage = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
 const marketingPages = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
@@ -12,6 +13,7 @@ const marketingPages = readFileSync(join(root, "styles/marketing-pages.css"), "u
 describe("shared MPReply brand theme", () => {
   it("loads one blue brand system for dashboard and public pages", () => {
     expect(layout).toContain('import "../styles/brand-theme.css"');
+    expect(globals).not.toContain("@import './theme.css'");
     expect(theme).toContain(":root");
     expect(theme).toContain("--color-brand-primary: #2563eb");
     expect(theme).toContain("--color-brand-primary-strong: #1d4ed8");
