@@ -6,9 +6,9 @@ import { createPageMetadata } from "../../lib/seo";
 import { siteConfig } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Контакты MPReply — подключение маркетплейсов и пилот",
+  title: "Контакты MPReply — подключение маркетплейсов и помощь",
   description:
-    "Связаться с MPReply по вопросам подключения Wildberries, Ozon, Яндекс Маркета и Авито, демо продукта и пилотного запуска автоматизации ответов.",
+    "Связаться с MPReply по вопросам подключения Wildberries, Ozon, Яндекс Маркета и Авито, настройки автоматизации, демо и работы с обращениями покупателей.",
   path: "/contacts",
 });
 
@@ -18,21 +18,21 @@ export default function ContactsPage() {
       <section className="public-subhero public-subhero-contacts">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="eyebrow">Контакты</p>
-            <h1>Обсудить подключение маркетплейсов и сценарий автоматизации</h1>
+            <p className="eyebrow">Помощь и контакты</p>
+            <h1>Поможем подключить площадки и настроить рабочий сценарий</h1>
             <p className="public-lead">
-              Расскажите, с какими площадками работаете, какие обращения занимают больше всего времени и где хотите оставить ручной контроль. Так проще понять подходящий сценарий пилота.
+              Расскажите, с какими маркетплейсами работаете, какие обращения занимают больше всего времени и где хотите сохранить проверку сотрудником.
             </p>
           </div>
 
           <aside className="contact-channel-panel">
-            <span className="panel-kicker">Связаться с MPReply</span>
+            <span className="panel-kicker">Связаться с командой</span>
             {siteConfig.contactEmail ? (
               <a className="contact-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
             ) : (
-              <strong>Контактный email будет опубликован перед открытым запуском</strong>
+              <strong>Контакт доступен после входа в кабинет</strong>
             )}
-            <p>До публикации контакта продукт можно изучить через демо, возможности и страницы интеграций.</p>
+            <p>Для знакомства с продуктом можно сразу открыть демо или начать подключение маркетплейсов.</p>
           </aside>
         </div>
       </section>
@@ -43,25 +43,25 @@ export default function ContactsPage() {
             <span>01</span>
             <div>
               <h2>Посмотреть продукт в работе</h2>
-              <p>Разберите путь обращения: контекст, ИИ-черновик, правила, проверка и отправка.</p>
+              <p>Разберите путь обращения: контекст, черновик ответа, правила, проверка и отправка.</p>
             </div>
-            <Link className="button button-primary" href="/demo">Посмотреть демо</Link>
+            <Link className="button button-primary" href="/demo">Открыть демо</Link>
           </article>
           <article className="contact-path">
             <span>02</span>
             <div>
-              <h2>Выбрать маркетплейс</h2>
-              <p>Посмотрите сценарии для Wildberries, Ozon, Яндекс Маркета и Авито.</p>
+              <h2>Подключить нужные площадки</h2>
+              <p>Wildberries, Ozon, Яндекс Маркет и Авито доступны в одном рабочем пространстве.</p>
             </div>
             <Link className="button button-secondary" href="/marketplaces">Все интеграции</Link>
           </article>
           <article className="contact-path">
             <span>03</span>
             <div>
-              <h2>Понять возможности</h2>
-              <p>Единая очередь, ИИ-ответы, ручная проверка, автоотправка, статусы и история обработки.</p>
+              <h2>Начать с реальной очереди</h2>
+              <p>Создайте аккаунт, подключите кабинеты и настройте автоматизацию под правила вашей команды.</p>
             </div>
-            <Link className="button button-secondary" href="/features">Возможности</Link>
+            <Link className="button button-secondary" href="/auth/register?intent=connect-marketplace">Начать подключение</Link>
           </article>
         </div>
       </div>
