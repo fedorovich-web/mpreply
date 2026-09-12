@@ -162,11 +162,29 @@ function WorkspaceOnboarding({ user }: { user: User }) {
   return (
     <main className="workspace-onboarding-page">
       <section className="workspace-onboarding-card" aria-labelledby="workspace-onboarding-title">
-        <p className="eyebrow">Первый шаг</p>
-        <h1 id="workspace-onboarding-title">Создайте рабочее пространство</h1>
-        <p>
-          Аккаунт <strong>{user.email}</strong> готов. Назовите магазин, бренд или команду — после этого перейдём к подключению маркетплейсов.
-        </p>
+        <div className="workspace-onboarding-brand" aria-label="MPReply">
+          <span className="workspace-onboarding-mark" aria-hidden="true"><i /><i /><i /></span>
+          <strong>MPReply</strong>
+        </div>
+
+        <div className="workspace-onboarding-copy">
+          <p className="eyebrow">Первый шаг</p>
+          <h1 id="workspace-onboarding-title">Создайте рабочее пространство</h1>
+          <p>
+            Аккаунт <strong>{user.email}</strong> готов. Назовите магазин, бренд или команду — после этого перейдём к подключению маркетплейсов.
+          </p>
+        </div>
+
+        <div className="workspace-onboarding-marketplaces" aria-label="Готовые интеграции">
+          <div>
+            <span>Wildberries</span>
+            <span>Ozon</span>
+            <span>Яндекс Маркет</span>
+            <span>Авито</span>
+          </div>
+          <small>4 готовые интеграции</small>
+        </div>
+
         <form
           className="workspace-onboarding-form"
           onSubmit={(event) => {
@@ -175,7 +193,7 @@ function WorkspaceOnboarding({ user }: { user: User }) {
           }}
         >
           <label>
-            Название
+            Название рабочего пространства
             <input
               autoComplete="organization"
               minLength={2}
@@ -187,7 +205,7 @@ function WorkspaceOnboarding({ user }: { user: User }) {
           </label>
           {createMutation.error ? <p className="form-error" role="alert">{errorMessage(createMutation.error)}</p> : null}
           <button className="button button-primary" disabled={createMutation.isPending || name.trim().length < 2} type="submit">
-            {createMutation.isPending ? "Создаём..." : "Перейти к подключению"}
+            {createMutation.isPending ? "Создаём..." : "Создать и подключить маркетплейсы"}
           </button>
         </form>
       </section>
