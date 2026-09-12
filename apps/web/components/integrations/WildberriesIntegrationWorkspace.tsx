@@ -66,7 +66,7 @@ export function WildberriesIntegrationWorkspace() {
       setSellerId("");
       setCredentials("");
       setResponseMode("inherit");
-      setNotice({ tone: "success", message: "Подключение создано. Перед синхронизацией проверьте API-ключ." });
+      setNotice({ tone: "success", message: "Кабинет добавлен. Проверьте подключение перед первой синхронизацией." });
       await queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", activeOrganization.id] });
     },
   });
@@ -74,14 +74,14 @@ export function WildberriesIntegrationWorkspace() {
   return (
     <section className="wildberries-workspace" aria-label="Управление подключениями Wildberries">
       <div className="integration-security-strip" role="note">
-        <strong>Ключи остаются на backend</strong>
-        <span>После сохранения frontend получает только маску fingerprint, без исходного API-ключа.</span>
+        <strong>API-ключ защищён</strong>
+        <span>После сохранения полный ключ больше не показывается. В кабинете остаётся только скрытая маска.</span>
       </div>
 
       {!canManage ? (
         <div className="workspace-inline-state">
           <strong>Только просмотр</strong>
-          <p>Роль {roleLabel(activeOrganization.current_user_role)} может видеть состояние подключений, но не управлять ключами и синхронизацией.</p>
+          <p>Для вашей роли доступно состояние подключений. Изменение настроек, ключей и запуск синхронизации недоступны.</p>
         </div>
       ) : null}
 
@@ -95,14 +95,14 @@ export function WildberriesIntegrationWorkspace() {
         <section className="integration-account-panel" aria-labelledby="wb-account-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Accounts</span>
+              <span className="panel-kicker">Подключённые кабинеты</span>
               <strong id="wb-account-list-title">Кабинеты Wildberries</strong>
             </div>
             <span className="ui-badge">{accounts.length}</span>
           </div>
 
           {accountsQuery.isPending ? (
-            <WorkspaceState title="Загружаем подключения" description="Получаем кабинеты текущей организации." />
+            <WorkspaceState title="Загружаем подключения" description="Получаем кабинеты текущего рабочего пространства." />
           ) : accountsQuery.error ? (
             <WorkspaceState
               title="Не удалось загрузить подключения"
@@ -113,7 +113,7 @@ export function WildberriesIntegrationWorkspace() {
           ) : accounts.length === 0 ? (
             <WorkspaceState
               title="Подключений пока нет"
-              description={canManage ? "Создайте первый кабинет Wildberries в форме ниже." : "В этой организации ещё нет кабинетов Wildberries."}
+              description={canManage ? "Добавьте первый кабинет Wildberries в форме ниже." : "В этом рабочем пространстве ещё нет кабинетов Wildberries."}
             />
           ) : (
             <div className="integration-account-list" role="list">
@@ -146,7 +146,7 @@ export function WildberriesIntegrationWorkspace() {
               }}
             >
               <div className="panel-heading">
-                <span className="panel-kicker">New account</span>
+                <span className="panel-kicker">Новое подключение</span>
                 <strong>Добавить кабинет</strong>
               </div>
               <label>
@@ -155,7 +155,7 @@ export function WildberriesIntegrationWorkspace() {
                   maxLength={255}
                   minLength={2}
                   onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="Например, WB основной кабинет"
+                  placeholder="Например, WB — основной магазин"
                   required
                   value={displayName}
                 />
@@ -178,9 +178,9 @@ export function WildberriesIntegrationWorkspace() {
               <label>
                 Режим ответов
                 <select onChange={(event) => setResponseMode(event.target.value as ResponseMode)} value={responseMode}>
-                  <option value="inherit">Наследовать настройки организации</option>
-                  <option value="auto">Автоматический</option>
-                  <option value="semi_auto">С подтверждением</option>
+                  <option value="inherit">Использовать общие настройки</option>
+                  <option value="auto">Автоматическая отправка</option>
+                  <option value="semi_auto">С подтверждением сотрудника</option>
                 </select>
               </label>
               {createMutation.error ? <FormError error={createMutation.error} /> : null}
@@ -207,7 +207,7 @@ export function WildberriesIntegrationWorkspace() {
           ) : (
             <WorkspaceState
               title="Кабинет не выбран"
-              description={accounts.length === 0 ? "После подключения здесь появятся состояние ключа, синхронизация и безопасные действия." : "Выберите кабинет слева."}
+              description={accounts.length === 0 ? "После подключения здесь появятся состояние доступа, синхронизация и настройки." : "Выберите кабинет слева."}
             />
           )}
         </section>
@@ -246,7 +246,7 @@ function AccountDetail({
         },
       }),
     onSuccess: async () => {
-      onNotice({ tone: "success", message: "Настройки кабинета обновлены." });
+      onNotice({ tone: "success", message: "Настройки кабинета сохранены." });
       await invalidate();
     },
   });
@@ -257,7 +257,7 @@ function AccountDetail({
     onSuccess: async (result) => {
       onNotice({
         tone: result.error_code ? "warning" : "success",
-        message: result.error_message_safe ?? (result.error_code ? "Проверка завершилась с ошибкой." : "API-ключ успешно проверен."),
+        message: result.error_message_safe ?? (result.error_code ? "Не удалось подтвердить доступ к кабинету." : "Подключение работает."),
       });
       await invalidate();
     },
@@ -273,7 +273,7 @@ function AccountDetail({
         tone: result.status === "success" ? "success" : "warning",
         message:
           result.error_message_safe ??
-          `Синхронизация завершена: новых ${imported}, обновлено ${updated}, пропущено ${result.skipped}.`,
+          `Синхронизация завершена: новых обращений ${imported}, обновлено ${updated}, без изменений ${result.skipped}.`,
       });
       await invalidate();
     },
@@ -287,7 +287,7 @@ function AccountDetail({
       }),
     onSuccess: async () => {
       setNewCredentials("");
-      onNotice({ tone: "success", message: "Ключ заменён. Перед следующей синхронизацией выполните проверку." });
+      onNotice({ tone: "success", message: "API-ключ заменён. Проверьте подключение перед следующей синхронизацией." });
       await invalidate();
     },
   });
@@ -296,7 +296,7 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/revoke-credentials`, marketplaceAccountActionSchema, { method: "POST" }),
     onSuccess: async () => {
-      onNotice({ tone: "warning", message: "Ключ отозван, подключение отключено." });
+      onNotice({ tone: "warning", message: "API-ключ отозван. Кабинет больше не синхронизируется." });
       await invalidate();
     },
   });
@@ -308,17 +308,17 @@ function AccountDetail({
     <div className="integration-detail-stack">
       <div className="integration-detail-heading">
         <div>
-          <span className="panel-kicker">Selected account</span>
+          <span className="panel-kicker">Выбранный кабинет</span>
           <h2 id="wb-account-detail-title">{account.display_name}</h2>
         </div>
         <StatusBadge account={account} />
       </div>
 
       <dl className="integration-health-grid">
-        <HealthItem label="Ключ" value={credentialsStatusLabel(account.credentials_status)} />
-        <HealthItem label="Маска" value={account.credentials_masked} />
-        <HealthItem label="Последняя успешная синхронизация" value={formatDateTime(account.last_success_sync_at)} />
-        <HealthItem label="Ошибок" value={String(account.error_count)} />
+        <HealthItem label="Состояние доступа" value={credentialsStatusLabel(account.credentials_status)} />
+        <HealthItem label="Сохранённый ключ" value={account.credentials_masked} />
+        <HealthItem label="Последняя синхронизация" value={formatDateTime(account.last_success_sync_at)} />
+        <HealthItem label="Ошибки синхронизации" value={String(account.error_count)} />
       </dl>
 
       {canManage ? (
@@ -333,7 +333,7 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Settings</span>
+              <span className="panel-kicker">Настройки</span>
               <strong>Настройки кабинета</strong>
             </div>
             <label>
@@ -347,9 +347,9 @@ function AccountDetail({
             <label>
               Режим ответов
               <select onChange={(event) => setResponseMode(event.target.value as ResponseMode)} value={responseMode}>
-                <option value="inherit">Наследовать настройки организации</option>
-                <option value="auto">Автоматический</option>
-                <option value="semi_auto">С подтверждением</option>
+                <option value="inherit">Использовать общие настройки</option>
+                <option value="auto">Автоматическая отправка</option>
+                <option value="semi_auto">С подтверждением сотрудника</option>
               </select>
             </label>
             <button className="button button-secondary" disabled={busy || displayName.trim().length < 2} type="submit">
@@ -359,7 +359,7 @@ function AccountDetail({
 
           <div className="integration-action-grid" aria-label="Действия с подключением">
             <button className="button button-primary" disabled={busy || account.credentials_status === "revoked"} onClick={() => validateMutation.mutate()} type="button">
-              {validateMutation.isPending ? "Проверяем..." : "Проверить ключ"}
+              {validateMutation.isPending ? "Проверяем..." : "Проверить подключение"}
             </button>
             <button className="button button-secondary" disabled={busy || account.credentials_status !== "valid"} onClick={() => syncMutation.mutate()} type="button">
               {syncMutation.isPending ? "Синхронизируем..." : "Синхронизировать сейчас"}
@@ -376,7 +376,7 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Credentials</span>
+              <span className="panel-kicker">API-ключ</span>
               <strong>Заменить API-ключ</strong>
             </div>
             <label>
@@ -390,8 +390,8 @@ function AccountDetail({
 
           <div className="integration-danger-zone">
             <div>
-              <strong>Отозвать ключ</strong>
-              <p>Подключение будет отключено. Исходный ключ не возвращается и не показывается.</p>
+              <strong>Отключить доступ</strong>
+              <p>API-ключ будет отозван, и кабинет перестанет синхронизироваться. Для повторного подключения понадобится новый ключ.</p>
             </div>
             <button
               className="button button-danger"
@@ -402,7 +402,7 @@ function AccountDetail({
               }}
               type="button"
             >
-              {revokeMutation.isPending ? "Отзываем..." : "Отозвать ключ"}
+              {revokeMutation.isPending ? "Отключаем..." : "Отозвать ключ"}
             </button>
           </div>
 
@@ -410,8 +410,8 @@ function AccountDetail({
         </>
       ) : (
         <div className="workspace-inline-state">
-          <strong>Управление недоступно для этой роли</strong>
-          <p>Backend RBAC остаётся security boundary; интерфейс не показывает write actions для текущего membership.</p>
+          <strong>Настройки доступны владельцу и администратору</strong>
+          <p>Для вашей роли доступен просмотр состояния подключения. Изменение настроек и API-ключа недоступно.</p>
         </div>
       )}
     </div>
@@ -465,9 +465,7 @@ function FormError({ error }: { error: unknown }) {
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.requestId ? `${error.message} · requestId ${error.requestId}` : error.message;
-  }
+  if (error instanceof ApiError) return error.message;
   return error instanceof Error ? error.message : "Неизвестная ошибка";
 }
 
@@ -503,14 +501,4 @@ function formatDateTime(value: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeStyle: "short" }).format(date);
-}
-
-function roleLabel(value: string): string {
-  const labels: Record<string, string> = {
-    owner: "владельца",
-    admin: "администратора",
-    manager: "менеджера",
-    viewer: "наблюдателя",
-  };
-  return labels[value] ?? value;
 }
