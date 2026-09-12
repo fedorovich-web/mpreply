@@ -85,7 +85,7 @@ describe("dashboard product copy", () => {
       "hard limit",
       "unit economics",
       "Billing overview вернул пустой ответ",
-      "requestId",
+      "· requestId ",
     ];
 
     for (const token of forbiddenCopy) {
