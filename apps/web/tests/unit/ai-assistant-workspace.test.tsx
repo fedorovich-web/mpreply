@@ -47,7 +47,7 @@ const message = {
     external_id: "wb-product-1",
     sku: "SKU-1",
     name: "Термокружка",
-    brand: "Respio Test",
+    brand: "MPReply Test",
     category: "Посуда",
     image_url: null,
     product_url: null,
@@ -208,7 +208,7 @@ describe("AIAssistantWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
 
     expect(await screen.findByText("Ответ передан на проверку")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Открыть модерацию" })).toHaveAttribute("href", "/app/review-queue");
+    expect(screen.getByRole("link", { name: "Открыть очередь проверки" })).toHaveAttribute("href", "/app/review-queue");
 
     const generateCall = fetchMock.mock.calls.find(([input, init]) =>
       String(input).includes("/api/ai/drafts/generate") && init?.method === "POST"
