@@ -64,7 +64,7 @@ export function DashboardMetrics() {
     return (
       <div className="workspace-inline-state" aria-live="polite">
         <strong>Собираем рабочий обзор</strong>
-        <p>Проверяем входящие, очередь модерации, подключения и правила автоматизации.</p>
+        <p>Проверяем обращения, очередь проверки, подключения и правила автоматизации.</p>
       </div>
     );
   }
@@ -97,18 +97,18 @@ export function DashboardMetrics() {
           ? "Обращения ждут ответа команды или подходящего правила."
           : "Очередь обращений без ответа пуста.",
       href: "/app/inbox",
-      action: "Открыть входящие",
+      action: "Открыть обращения",
     },
     {
-      label: "На модерации",
+      label: "На проверке",
       value: reviewTotal,
       helper: reviewQueueQuery.error
-        ? "Не удалось проверить очередь модерации."
+        ? "Не удалось проверить очередь ответов."
         : reviewTotal && reviewTotal > 0
           ? "Ответы ждут проверки или решения сотрудника."
           : "Ответов, ожидающих проверки, сейчас нет.",
       href: "/app/review-queue",
-      action: "Открыть модерацию",
+      action: "Открыть очередь проверки",
     },
     {
       label: "Проблемы подключений",
@@ -126,7 +126,7 @@ export function DashboardMetrics() {
       value: analytics.negative_reviews,
       helper:
         analytics.negative_reviews > 0
-          ? "Откройте входящие и проверьте обращения с низкой оценкой."
+          ? "Откройте обращения и проверьте отзывы с низкой оценкой."
           : "За период негативных отзывов в сводке нет.",
       href: "/app/inbox",
       action: "Перейти к обращениям",
@@ -189,7 +189,7 @@ export function DashboardMetrics() {
           </dl>
 
           <div className="dashboard-health-actions">
-            <Link className="button button-secondary" href="/app/automation-rules">Открыть правила</Link>
+            <Link className="button button-secondary" href="/app/automation-rules">Открыть автоматизацию</Link>
             <Link className="button button-secondary" href="/app/integrations">Открыть интеграции</Link>
           </div>
         </aside>
@@ -197,12 +197,12 @@ export function DashboardMetrics() {
 
       <nav className="dashboard-quick-actions" aria-label="Быстрые рабочие действия">
         <Link className="dashboard-quick-action" href="/app/inbox">
-          <span>Входящие</span>
+          <span>Обращения</span>
           <strong>{formatNumber(analytics.new_messages)} новых за 30 дней</strong>
           <small>Отзывы, вопросы и сообщения →</small>
         </Link>
         <Link className="dashboard-quick-action" href="/app/review-queue">
-          <span>Модерация</span>
+          <span>На проверке</span>
           <strong>{formatOptionalNumber(reviewTotal)} ждут решения</strong>
           <small>Проверить и отправить ответы →</small>
         </Link>
