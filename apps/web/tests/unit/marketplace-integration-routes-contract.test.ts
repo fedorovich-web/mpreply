@@ -33,4 +33,11 @@ describe("ready marketplace dashboard routes", () => {
       expect(source).not.toMatch(/planned|coming soon|в разработке|пока недоступно|MVP adapter/i);
     });
   }
+
+  it("keeps the Wildberries route in seller-facing language", () => {
+    const source = readFileSync(resolve(process.cwd(), "app/app/integrations/wildberries/page.tsx"), "utf8");
+
+    expect(source).toContain("Интеграция готова");
+    expect(source).not.toMatch(/marketplace accounts|credentials|raw secret|MVP adapter/i);
+  });
 });
