@@ -4,6 +4,7 @@ import { siteConfig } from "../lib/site-config";
 import "../styles/globals.css";
 import "../styles/brand-theme.css";
 import "../styles/marketing-site.css";
+import "../styles/marketing-pages.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
