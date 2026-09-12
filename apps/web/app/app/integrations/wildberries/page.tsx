@@ -17,7 +17,7 @@ export default function WildberriesIntegrationPage() {
           <Link className="button button-secondary button-compact" href="/app/integrations">
             Все интеграции
           </Link>
-          <span className="status-badge">Доступно сейчас</span>
+          <span className="status-badge">Интеграция готова</span>
         </div>
       </header>
 
