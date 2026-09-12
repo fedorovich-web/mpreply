@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { siteConfig } from "../lib/site-config";
 import "../styles/globals.css";
+import "../styles/brand-theme.css";
 import "../styles/marketing-site.css";
 
 export const metadata: Metadata = {
