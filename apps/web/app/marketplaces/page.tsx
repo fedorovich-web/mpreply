@@ -17,7 +17,14 @@ const integrationFlow = [
   ["02", "Получайте обращения", "Отзывы, вопросы и сообщения покупателей собираются в общей очереди с указанием площадки и контекста."],
   ["03", "Готовьте ответы с ИИ", "MPReply помогает сформировать ответ с учётом товара и правил вашей команды."],
   ["04", "Отправляйте по своим правилам", "Типовые ответы можно автоматизировать, а сложные обращения оставлять на проверку сотруднику."],
-];
+] as const;
+
+const sampleRequests = [
+  { mark: "WB", title: "Отзыв на товар", text: "Покупатель оставил оценку и комментарий", time: "2 мин" },
+  { mark: "OZ", title: "Вопрос о товаре", text: "Нужно уточнить характеристику перед покупкой", time: "6 мин" },
+  { mark: "М", title: "Сообщение покупателя", text: "Новое обращение в общей очереди", time: "11 мин" },
+  { mark: "A", title: "Сообщение покупателя", text: "Контекст обращения уже доступен команде", time: "18 мин" },
+] as const;
 
 export default function MarketplacesPage() {
   return (
@@ -32,7 +39,7 @@ export default function MarketplacesPage() {
             </p>
             <div className="hero-actions">
               <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                Создать аккаунт
+                Подключить маркетплейсы <span aria-hidden="true">→</span>
               </Link>
               <Link className="button button-secondary" href="/demo">
                 Посмотреть интерфейс
@@ -40,23 +47,76 @@ export default function MarketplacesPage() {
             </div>
           </div>
 
-          <div className="marketplace-cluster" role="group" aria-label="Поддерживаемые маркетплейсы">
-            <div className="marketplace-cluster-core">
-              <span>MP</span>
-              <strong>Одно окно</strong>
-              <small>для всех обращений</small>
+          <div className="marketplace-unified-scene" role="group" aria-label="Обращения с четырёх маркетплейсов в едином рабочем окне MPReply">
+            <div className="marketplace-unified-sources" aria-label="Подключённые маркетплейсы">
+              {marketplaces.map((marketplace) => (
+                <Link
+                  className={`marketplace-unified-source is-${marketplace.key}`}
+                  href={marketplace.path}
+                  key={marketplace.key}
+                >
+                  <span className="marketplace-unified-source-mark" aria-hidden="true">
+                    {marketplace.key === "yandex-market" ? "М" : marketplace.key === "avito" ? "A" : marketplace.shortName.slice(0, 2)}
+                  </span>
+                  <span className="marketplace-unified-source-copy">
+                    <strong>{marketplace.name}</strong>
+                    <small>{marketplace.statusLabel}</small>
+                  </span>
+                </Link>
+              ))}
             </div>
-            {marketplaces.map((marketplace, index) => (
-              <Link
-                className={`marketplace-cluster-item marketplace-cluster-item-${index + 1}`}
-                href={marketplace.path}
-                key={marketplace.key}
-              >
-                <span>{marketplace.shortName.slice(0, 2)}</span>
-                <strong>{marketplace.name}</strong>
-                <small>{marketplace.statusLabel}</small>
-              </Link>
-            ))}
+
+            <div className="marketplace-unified-window">
+              <div className="marketplace-unified-window-topbar">
+                <div className="marketplace-unified-window-brand">
+                  <span aria-hidden="true">M</span>
+                  <strong>MPReply</strong>
+                </div>
+                <span>Единая очередь</span>
+              </div>
+
+              <div className="marketplace-unified-window-body">
+                <aside className="marketplace-unified-nav" aria-label="Типы обращений">
+                  <strong>Обращения</strong>
+                  <span>Все обращения</span>
+                  <span>Отзывы</span>
+                  <span>Вопросы</span>
+                  <span>Сообщения</span>
+                  <span>На проверке</span>
+                </aside>
+
+                <div className="marketplace-unified-feed" role="list" aria-label="Пример общей очереди">
+                  <div className="marketplace-unified-feed-head">
+                    <strong>Все обращения</strong>
+                    <span>4 площадки</span>
+                  </div>
+                  {sampleRequests.map((request) => (
+                    <div className="marketplace-unified-row" role="listitem" key={`${request.mark}-${request.title}`}>
+                      <span className="marketplace-unified-row-mark" aria-hidden="true">{request.mark}</span>
+                      <span className="marketplace-unified-row-copy">
+                        <strong>{request.title}</strong>
+                        <p>{request.text}</p>
+                      </span>
+                      <small>{request.time}</small>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="marketplace-unified-answer" role="group" aria-label="Пример подготовленного ответа">
+              <div className="marketplace-unified-answer-head">
+                <span aria-hidden="true">✦</span>
+                <strong>Ответ с помощью ИИ</strong>
+              </div>
+              <p>MPReply готовит ответ с учётом обращения, товара, тона бренда и правил команды.</p>
+              <div className="marketplace-unified-answer-actions" aria-hidden="true">
+                <span>Проверить перед отправкой</span>
+                <strong>Отправить&nbsp; →</strong>
+              </div>
+            </div>
+
+            <div className="marketplace-unified-caption" aria-hidden="true">4 площадки — один процесс</div>
           </div>
         </div>
       </section>
@@ -116,7 +176,7 @@ export default function MarketplacesPage() {
             <h2>Соберите отзывы, вопросы и сообщения покупателей в одной очереди</h2>
           </div>
           <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">
-            Создать аккаунт
+            Подключить маркетплейсы
           </Link>
         </div>
       </section>
