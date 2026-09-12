@@ -5,6 +5,7 @@ import "../styles/globals.css";
 import "../styles/brand-theme.css";
 import "../styles/marketing-site.css";
 import "../styles/marketing-pages.css";
+import "../styles/marketplaces-approved.css";
 import "../styles/homepage-approved.css";
 import "../styles/homepage-fidelity.css";
 
