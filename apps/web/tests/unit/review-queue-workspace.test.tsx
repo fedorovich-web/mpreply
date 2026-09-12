@@ -130,7 +130,8 @@ describe("ReviewQueueWorkspace", () => {
   it("labels marketplace chats as buyer messages", async () => {
     renderWorkspace();
 
-    expect(await screen.findByText("Сообщение")).toBeInTheDocument();
+    expect(await screen.findByText(/Сообщение\s*·\s*без оценки/)).toBeInTheDocument();
+    expect(screen.getByText(/Сообщение покупателя/)).toBeInTheDocument();
     expect(screen.queryByText("chat")).not.toBeInTheDocument();
     expect(screen.getByText("Для ответа требуется подтверждение срока отправки.")).toBeInTheDocument();
   });
