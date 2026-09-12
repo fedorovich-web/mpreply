@@ -408,7 +408,7 @@ function DraftResult({
             <span className="panel-kicker">Готово</span>
             <strong>Ответ передан на проверку</strong>
           </div>
-          <Link className="button button-primary" href="/app/review-queue">Открыть модерацию</Link>
+          <Link className="button button-primary" href="/app/review-queue">Открыть очередь проверки</Link>
         </div>
       ) : null}
 
