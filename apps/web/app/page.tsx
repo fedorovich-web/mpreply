@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { HomeWorkspaceTabs } from "../components/public-site/HomeWorkspaceTabs";
@@ -101,7 +102,6 @@ export default function HomePage() {
       <JsonLd data={jsonLd} />
 
       <section className="homepage-hero homepage-approved-hero">
-        <div className="homepage-wave homepage-wave-hero" aria-hidden="true" />
         <div className="public-container homepage-hero-grid">
           <div className="homepage-hero-copy">
             <p className="homepage-kicker homepage-pill-kicker">ИИ для продавцов на маркетплейсах</p>
@@ -127,63 +127,15 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="homepage-hero-product homepage-preview-window" aria-label="Пример интерфейса MPReply">
-            <div className="homepage-hero-product-topbar">
-              <div>
-                <span className="homepage-window-dot" />
-                <span className="homepage-window-dot" />
-                <span className="homepage-window-dot" />
-              </div>
-              <strong>Все обращения</strong>
-              <span>Сегодня</span>
-            </div>
-            <div className="homepage-hero-product-body">
-              <aside className="homepage-hero-sidebar">
-                <strong>MPReply</strong>
-                <span className="is-active">Все обращения</span>
-                <span>Отзывы</span>
-                <span>Вопросы</span>
-                <span>Сообщения</span>
-              </aside>
-              <div className="homepage-hero-feed">
-                <div className="homepage-hero-feed-head">
-                  <div>
-                    <small>Единая очередь</small>
-                    <strong>Новые обращения</strong>
-                  </div>
-                  <span>Все площадки</span>
-                </div>
-                <article className="homepage-hero-feed-item is-selected">
-                  <span className="homepage-marketplace-mark">WB</span>
-                  <div>
-                    <strong>Анна К. ★★★★★</strong>
-                    <p>Отличный товар, спасибо!</p>
-                  </div>
-                  <small>Отзыв</small>
-                </article>
-                <article className="homepage-hero-feed-item">
-                  <span className="homepage-marketplace-mark">OZ</span>
-                  <div>
-                    <strong>Игорь С.</strong>
-                    <p>Когда будет доставка в Казань?</p>
-                  </div>
-                  <small>Вопрос</small>
-                </article>
-                <article className="homepage-hero-feed-item">
-                  <span className="homepage-marketplace-mark">AV</span>
-                  <div>
-                    <strong>Мария П.</strong>
-                    <p>Подскажите по комплектации.</p>
-                  </div>
-                  <small>Сообщение</small>
-                </article>
-                <div className="homepage-hero-draft homepage-floating-draft">
-                  <span>✦ Ответ с помощью ИИ</span>
-                  <p>Здравствуйте! Спасибо за вопрос. Подготовили ответ с учётом данных товара и правил команды.</p>
-                  <strong>Отправить →</strong>
-                </div>
-              </div>
-            </div>
+          <div className="homepage-hero-art">
+            <Image
+              alt="Интерфейс MPReply с отзывами, вопросами, сообщениями покупателей и ответом с помощью ИИ"
+              height={450}
+              priority
+              sizes="(max-width: 1100px) 100vw, 48vw"
+              src="/images/mpreply-hero-ui.webp"
+              width={600}
+            />
           </div>
         </div>
       </section>
@@ -310,19 +262,14 @@ export default function HomePage() {
               <Link className="button button-secondary homepage-demo-button" href="/demo"><span aria-hidden="true">▶</span> Посмотреть демо</Link>
             </div>
           </div>
-          <div className="homepage-cta-visual" aria-hidden="true">
-            <div className="homepage-cta-marketplaces">
-              <span>WB</span>
-              <span>OZ</span>
-              <span>ЯМ</span>
-              <span>AV</span>
-            </div>
-            <div className="homepage-cta-inbox-card">
-              <i />
-              <i />
-              <i />
-              <b>→</b>
-            </div>
+          <div className="homepage-cta-art" aria-hidden="true">
+            <Image
+              alt=""
+              height={450}
+              sizes="(max-width: 760px) 100vw, 36vw"
+              src="/images/mpreply-cta-ui.webp"
+              width={600}
+            />
           </div>
         </div>
       </section>
