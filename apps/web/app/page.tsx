@@ -8,34 +8,72 @@ import { createPageMetadata } from "../lib/seo";
 import { marketplaces, siteConfig } from "../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "ИИ-автоответы на отзывы, вопросы и сообщения маркетплейсов",
+  title: "Автоответы на отзывы, вопросы и сообщения покупателей",
   description:
-    "MPReply собирает обращения с Wildberries, Ozon, Яндекс Маркета и Авито в одном окне, готовит ответы с помощью ИИ и автоматизирует отправку с контролем сложных случаев.",
+    "MPReply собирает отзывы, вопросы и сообщения покупателей с Wildberries, Ozon, Яндекс Маркета и Авито в одном окне, готовит ответы с помощью ИИ и автоматизирует отправку.",
   path: "/",
 });
 
-const faq = [
+const aiModels = [
   {
-    question: "Можно ли отправлять ответы автоматически?",
-    answer:
-      "Да. Для предсказуемых сценариев можно включить автоматическую отправку. Случаи с недостаточным контекстом, риском или отдельным правилом остаются на проверке команды.",
+    name: "GPT-5.6",
+    provider: "OpenAI",
+    mark: "◎",
+    description: "Глубокое понимание контекста и подготовка ответов.",
   },
   {
-    question: "Какие маркетплейсы поддерживает MPReply?",
-    answer:
-      "В продукте реализованы интеграции с Wildberries, Ozon, Яндекс Маркетом и Авито. Конкретный набор доступных типов обращений зависит от возможностей API каждой площадки.",
+    name: "Claude Sonnet 5",
+    provider: "Anthropic",
+    mark: "✺",
+    description: "Анализ контекста и аккуратные формулировки.",
   },
   {
-    question: "ИИ отвечает одинаково на все обращения?",
-    answer:
-      "Нет. При подготовке ответа учитываются тип обращения, контекст товара и правила рабочего пространства. Команда может оставить автоматизацию только для тех сценариев, которые ей подходят.",
+    name: "Gemini 3.8",
+    provider: "Google",
+    mark: "✦",
+    description: "Точные ответы с учётом товарного контекста.",
   },
   {
-    question: "Что происходит, если площадка временно недоступна?",
-    answer:
-      "Интеграционный слой фиксирует ошибку и состояние обработки. Повторяемые операции защищены от случайной двойной отправки и могут быть повторены по правилам очереди.",
+    name: "DeepSeek V4.1 Flash",
+    provider: "DeepSeek",
+    mark: "◒",
+    description: "Быстрая обработка русскоязычных обращений.",
   },
-];
+] as const;
+
+const processSteps = [
+  {
+    number: "1",
+    icon: "↗",
+    title: "Подключите маркетплейсы",
+    text: "Добавьте кабинеты Wildberries, Ozon, Яндекс Маркета и Авито.",
+  },
+  {
+    number: "2",
+    icon: "▣",
+    title: "Получайте обращения",
+    text: "Отзывы, вопросы и сообщения собираются в общей очереди.",
+  },
+  {
+    number: "3",
+    icon: "✦",
+    title: "ИИ готовит ответы",
+    text: "Ответ формируется с учётом контекста товара и правил команды.",
+  },
+  {
+    number: "4",
+    icon: "➤",
+    title: "Отправляйте",
+    text: "Автоматически или после проверки сотрудником — по вашим правилам.",
+  },
+] as const;
+
+const resultFacts = [
+  { icon: "◷", value: "4", label: "маркетплейса в одном процессе" },
+  { icon: "▤", value: "3", label: "типа обращений в общей очереди" },
+  { icon: "ϟ", value: "2", label: "режима отправки ответов" },
+  { icon: "◎", value: "1", label: "рабочее окно для команды" },
+] as const;
 
 export default function HomePage() {
   const jsonLd = [
@@ -62,46 +100,55 @@ export default function HomePage() {
     <PublicShell>
       <JsonLd data={jsonLd} />
 
-      <section className="homepage-hero">
+      <section className="homepage-hero homepage-approved-hero">
+        <div className="homepage-wave homepage-wave-hero" aria-hidden="true" />
         <div className="public-container homepage-hero-grid">
           <div className="homepage-hero-copy">
-            <p className="homepage-kicker">ИИ для коммуникации на маркетплейсах</p>
-            <h1>ИИ-автоответы на отзывы, вопросы и сообщения покупателей</h1>
+            <p className="homepage-kicker homepage-pill-kicker">ИИ для продавцов на маркетплейсах</p>
+            <h1>
+              Автоответы на отзывы, вопросы и сообщения <span>покупателей</span>
+            </h1>
             <p className="homepage-hero-lead">
-              Собирайте обращения с Wildberries, Ozon, Яндекс Маркета и Авито в одном окне. ИИ готовит ответ с учётом контекста, а правила решают, отправить его автоматически или оставить на проверку.
+              Собирайте все обращения с Wildberries, Ozon, Яндекс Маркета и Авито в одном окне. ИИ готовит ответы с учётом товара и стиля вашего бренда — автоматически или после проверки.
             </p>
             <div className="homepage-hero-actions">
               <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                 Создать аккаунт
               </Link>
-              <Link className="button button-secondary" href="/demo">
+              <Link className="button button-secondary homepage-demo-button" href="/demo">
+                <span aria-hidden="true">▶</span>
                 Посмотреть демо
               </Link>
             </div>
-            <p className="homepage-hero-note">Без выдуманных метрик и обещаний: на странице показаны реальные сценарии продукта.</p>
+            <div className="homepage-hero-benefits" aria-label="Основные преимущества">
+              <span>✓ Быстрое подключение</span>
+              <span>✓ Автоматически или после проверки</span>
+              <span>✓ Единое рабочее пространство</span>
+            </div>
           </div>
 
-          <div className="homepage-hero-product" aria-label="Пример интерфейса MPReply">
+          <div className="homepage-hero-product homepage-preview-window" aria-label="Пример интерфейса MPReply">
             <div className="homepage-hero-product-topbar">
               <div>
                 <span className="homepage-window-dot" />
                 <span className="homepage-window-dot" />
                 <span className="homepage-window-dot" />
               </div>
-              <span>Входящие обращения</span>
+              <strong>Все обращения</strong>
+              <span>Сегодня</span>
             </div>
             <div className="homepage-hero-product-body">
               <aside className="homepage-hero-sidebar">
                 <strong>MPReply</strong>
-                <span className="is-active">Входящие</span>
-                <span>Автоматизация</span>
-                <span>Интеграции</span>
-                <span>Аналитика</span>
+                <span className="is-active">Все обращения</span>
+                <span>Отзывы</span>
+                <span>Вопросы</span>
+                <span>Сообщения</span>
               </aside>
               <div className="homepage-hero-feed">
                 <div className="homepage-hero-feed-head">
                   <div>
-                    <small>Сегодня</small>
+                    <small>Единая очередь</small>
                     <strong>Новые обращения</strong>
                   </div>
                   <span>Все площадки</span>
@@ -109,23 +156,31 @@ export default function HomePage() {
                 <article className="homepage-hero-feed-item is-selected">
                   <span className="homepage-marketplace-mark">WB</span>
                   <div>
-                    <strong>Отзыв о товаре</strong>
-                    <p>Очень понравилось качество, всё пришло вовремя.</p>
+                    <strong>Анна К. ★★★★★</strong>
+                    <p>Отличный товар, спасибо!</p>
                   </div>
-                  <small>Сейчас</small>
+                  <small>Отзыв</small>
                 </article>
                 <article className="homepage-hero-feed-item">
                   <span className="homepage-marketplace-mark">OZ</span>
                   <div>
-                    <strong>Вопрос покупателя</strong>
-                    <p>Подскажите, пожалуйста, какой размер выбрать?</p>
+                    <strong>Игорь С.</strong>
+                    <p>Когда будет доставка в Казань?</p>
                   </div>
-                  <small>4 мин</small>
+                  <small>Вопрос</small>
                 </article>
-                <div className="homepage-hero-draft">
-                  <span>ИИ подготовил ответ</span>
-                  <p>Спасибо за вопрос. Поможем выбрать размер по параметрам из таблицы товара.</p>
-                  <strong>Проверить и отправить</strong>
+                <article className="homepage-hero-feed-item">
+                  <span className="homepage-marketplace-mark">AV</span>
+                  <div>
+                    <strong>Мария П.</strong>
+                    <p>Подскажите по комплектации.</p>
+                  </div>
+                  <small>Сообщение</small>
+                </article>
+                <div className="homepage-hero-draft homepage-floating-draft">
+                  <span>✦ Ответ с помощью ИИ</span>
+                  <p>Здравствуйте! Спасибо за вопрос. Подготовили ответ с учётом данных товара и правил команды.</p>
+                  <strong>Отправить →</strong>
                 </div>
               </div>
             </div>
@@ -133,182 +188,141 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="homepage-marketplaces" aria-labelledby="homepage-marketplaces-title">
+      <section className="homepage-marketplaces homepage-approved-marketplaces" aria-labelledby="homepage-marketplaces-title">
         <div className="public-container homepage-marketplaces-inner">
           <div className="homepage-marketplaces-copy">
-            <span>Интеграции</span>
-            <h2 id="homepage-marketplaces-title">Четыре площадки — один рабочий процесс</h2>
+            <span>Поддерживаем ведущие площадки</span>
+            <h2 id="homepage-marketplaces-title">Маркетплейсы</h2>
           </div>
           <div className="homepage-marketplace-list">
             {marketplaces.map((marketplace) => (
               <Link key={marketplace.key} className="homepage-marketplace-link" href={marketplace.path}>
-                <span className="homepage-marketplace-logo" aria-hidden="true">{marketplace.shortName.slice(0, 2)}</span>
+                <span className={`homepage-marketplace-logo homepage-marketplace-logo-${marketplace.key}`} aria-hidden="true">
+                  {marketplace.shortName.slice(0, 2)}
+                </span>
                 <span>
                   <strong>{marketplace.name}</strong>
-                  <small>{marketplace.statusLabel}</small>
+                  <small>Интеграция готова</small>
                 </span>
               </Link>
             ))}
+          </div>
+          <div className="homepage-marketplace-facts" aria-label="Факты о продукте">
+            <span><strong>4</strong><small>маркетплейса</small></span>
+            <span><strong>1</strong><small>единое окно</small></span>
+            <span><strong>3</strong><small>типа обращений</small></span>
           </div>
         </div>
       </section>
 
       <section className="public-section homepage-workspace-section" id="product">
-        <div className="public-container">
-          <div className="homepage-section-heading is-centered">
-            <p className="homepage-kicker">Единое окно</p>
-            <h2>Все обращения — в одном окне</h2>
+        <div className="public-container homepage-feature-layout">
+          <div className="homepage-section-heading homepage-section-heading-left">
+            <p className="homepage-kicker">Все обращения в одном окне</p>
+            <h2>Отзывы, вопросы и сообщения — в едином пространстве</h2>
             <p>
-              Переключайтесь между отзывами, вопросами и сообщениями без прыжков по кабинетам. Контекст обращения, черновик ответа и состояние отправки находятся рядом.
+              Переключайтесь между типами обращений, просматривайте контекст, используйте ИИ и отправляйте ответы без лишних переходов между кабинетами.
             </p>
+            <Link className="button button-primary homepage-inline-cta" href="/demo">
+              Посмотреть интерфейс →
+            </Link>
           </div>
           <HomeWorkspaceTabs />
         </div>
       </section>
 
-      <section className="public-section homepage-ai-layer">
-        <div className="public-container homepage-ai-layout">
-          <div className="homepage-ai-copy">
-            <p className="homepage-kicker">ИИ как часть процесса</p>
-            <h2>Не просто сгенерировать текст, а подготовить ответ к реальной отправке</h2>
+      <section className="public-section homepage-models-section">
+        <div className="public-container homepage-models-layout">
+          <div className="homepage-section-heading homepage-section-heading-left">
+            <p className="homepage-kicker">Сила современных ИИ-моделей</p>
+            <h2>Используем лучшие нейросети для точных и естественных ответов</h2>
             <p>
-              Модель работает внутри операционного контура: получает доступный контекст, формирует черновик, после чего правила и проверки определяют следующий шаг. Команда видит результат и может вмешаться там, где это действительно нужно.
+              Подбирайте модель под задачу и сочетайте её возможности с контекстом товара, стилем бренда и правилами обработки обращений.
             </p>
-            <Link className="text-link" href="/features">Разобрать возможности подробнее</Link>
           </div>
-          <div className="homepage-ai-orbit" aria-label="Слои подготовки ответа">
-            <div className="homepage-ai-orbit-core">
-              <span>AI</span>
-              <strong>Ответ</strong>
-            </div>
-            <div className="homepage-ai-orbit-item is-context">
-              <span>01</span>
-              <strong>Контекст</strong>
-              <small>товар и обращение</small>
-            </div>
-            <div className="homepage-ai-orbit-item is-rules">
-              <span>02</span>
-              <strong>Правила</strong>
-              <small>стиль и сценарий</small>
-            </div>
-            <div className="homepage-ai-orbit-item is-safety" id="safetygate">
-              <span>03</span>
-              <strong>Проверка</strong>
-              <small>риск и уверенность</small>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section homepage-process" id="how-it-works">
-        <div className="public-container">
-          <div className="homepage-section-heading">
-            <p className="homepage-kicker">Как это работает</p>
-            <h2>От подключения площадки до готового ответа — четыре понятных шага</h2>
-            <p>Без одинаковых карточек: каждый этап показывает, что именно происходит с обращением дальше.</p>
-          </div>
-
-          <div className="homepage-process-flow">
-            <div className="homepage-process-path" aria-hidden="true" />
-
-            <article className="homepage-process-step is-connect">
-              <span className="homepage-process-number">01</span>
-              <div className="homepage-process-copy">
-                <h3>Подключите маркетплейсы</h3>
-                <p>Добавьте рабочие аккаунты площадок и управляйте ими из одного пространства.</p>
-              </div>
-              <div className="homepage-process-visual homepage-process-channels" aria-hidden="true">
-                <span>WB</span><span>OZ</span><span>ЯМ</span><span>AV</span>
-              </div>
-            </article>
-
-            <article className="homepage-process-step is-inbox">
-              <span className="homepage-process-number">02</span>
-              <div className="homepage-process-visual homepage-process-inbox" aria-hidden="true">
-                <span><i /> Отзыв <b>WB</b></span>
-                <span><i /> Вопрос <b>Ozon</b></span>
-                <span><i /> Сообщение <b>Авито</b></span>
-              </div>
-              <div className="homepage-process-copy">
-                <h3>Получайте обращения</h3>
-                <p>Отзывы, вопросы и доступные сообщения приходят в общую очередь с понятным источником и статусом.</p>
-              </div>
-            </article>
-
-            <article className="homepage-process-step is-generate">
-              <span className="homepage-process-number">03</span>
-              <div className="homepage-process-copy">
-                <h3>ИИ готовит ответы</h3>
-                <p>Черновик строится на доступном контексте, а проверки отделяют обычные случаи от тех, где нужен человек.</p>
-              </div>
-              <div className="homepage-process-visual homepage-process-draft" aria-hidden="true">
-                <span>Черновик</span>
-                <p>Спасибо за обращение. Проверили контекст товара и подготовили ответ…</p>
-                <strong>Готово к проверке</strong>
-              </div>
-            </article>
-
-            <article className="homepage-process-step is-send">
-              <span className="homepage-process-number">04</span>
-              <div className="homepage-process-visual homepage-process-rules" aria-hidden="true">
-                <span><i className="is-on" /> Автоотправка</span>
-                <span><i /> Ручная проверка</span>
-                <strong>Статус сохранён</strong>
-              </div>
-              <div className="homepage-process-copy">
-                <h3>Отправляйте</h3>
-                <p>Правила выбирают автоотправку или проверку менеджером, а история сохраняет результат обработки.</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section homepage-outcomes">
-        <div className="public-container homepage-outcomes-band">
-          <div className="homepage-outcomes-copy">
-            <p className="homepage-kicker">Что меняется в работе</p>
-            <h2>Меньше ручной рутины. Больше контроля над исключениями.</h2>
-          </div>
-          <div className="homepage-outcomes-list">
-            <span><strong>Единая очередь</strong><small>без переключения между кабинетами</small></span>
-            <span><strong>Контроль перед отправкой</strong><small>автоматизация не скрывает сложные случаи</small></span>
-            <span><strong>История обработки</strong><small>видно, что произошло с обращением</small></span>
-            <span><strong>Один процесс для команды</strong><small>единые правила для разных площадок</small></span>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section homepage-faq-section">
-        <div className="public-container homepage-faq-layout">
-          <div className="homepage-section-heading">
-            <p className="homepage-kicker">FAQ</p>
-            <h2>Коротко о работе MPReply</h2>
-            <p>Без маркетинговых цифр, которые невозможно подтвердить.</p>
-          </div>
-          <div className="faq-list">
-            {faq.map((item) => (
-              <details className="faq-item" key={item.question}>
-                <summary>
-                  <span>{item.question}</span>
-                  <span className="faq-item-icon" aria-hidden="true" />
-                </summary>
-                <p>{item.answer}</p>
-              </details>
+          <div className="homepage-model-grid" aria-label="Поддерживаемые ИИ-модели">
+            {aiModels.map((model) => (
+              <article className="homepage-model-card" key={model.name}>
+                <span className="homepage-model-mark" aria-hidden="true">{model.mark}</span>
+                <strong>{model.name}</strong>
+                <small>{model.provider}</small>
+                <p>{model.description}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="public-section homepage-final-cta">
-        <div className="public-container homepage-final-cta-card">
-          <div>
-            <p className="homepage-kicker">Готовы посмотреть продукт?</p>
-            <h2>Подключите площадки и соберите коммуникацию с покупателями в одном процессе</h2>
+      <section className="public-section homepage-process homepage-approved-process" id="how-it-works">
+        <div className="public-container">
+          <div className="homepage-section-heading homepage-section-heading-left homepage-process-heading">
+            <p className="homepage-kicker">Простой и понятный процесс</p>
+            <h2>Как это работает</h2>
+            <p>Подключите маркетплейсы и начните работать с обращениями в одном процессе.</p>
           </div>
-          <div className="homepage-final-cta-actions">
-            <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Создать аккаунт</Link>
-            <Link className="button button-secondary" href="/contacts">Обсудить подключение</Link>
+
+          <div className="homepage-horizontal-process" role="list">
+            {processSteps.map((step, index) => (
+              <article className="homepage-horizontal-step" key={step.number} role="listitem">
+                <div className="homepage-horizontal-step-topline">
+                  <span className="homepage-process-number-circle">{step.number}</span>
+                  <span className="homepage-process-icon" aria-hidden="true">{step.icon}</span>
+                  {index < processSteps.length - 1 ? <span className="homepage-process-connector" aria-hidden="true" /> : null}
+                </div>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="public-section homepage-results-section">
+        <div className="public-container homepage-results-layout">
+          <div className="homepage-section-heading homepage-section-heading-left homepage-results-copy">
+            <p className="homepage-kicker">Реальные возможности продукта</p>
+            <h2>Меньше рутины. Больше времени на развитие бизнеса.</h2>
+            <p>
+              Автоматизируйте повторяющиеся обращения и оставляйте команде те случаи, где действительно нужен человек.
+            </p>
+          </div>
+          <div className="homepage-result-grid">
+            {resultFacts.map((fact) => (
+              <article className="homepage-result-card" key={fact.label}>
+                <span aria-hidden="true">{fact.icon}</span>
+                <strong>{fact.value}</strong>
+                <p>{fact.label}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="public-section homepage-final-cta homepage-approved-final-cta">
+        <div className="public-container homepage-final-cta-card">
+          <div className="homepage-wave homepage-wave-cta" aria-hidden="true" />
+          <div className="homepage-final-cta-copy">
+            <p className="homepage-kicker">Начните сегодня</p>
+            <h2>Автоматизируйте коммуникацию с покупателями</h2>
+            <p>Подключите маркетплейсы и соберите отзывы, вопросы и сообщения в одном рабочем пространстве.</p>
+            <div className="homepage-final-cta-actions">
+              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Создать аккаунт →</Link>
+              <Link className="button button-secondary homepage-demo-button" href="/demo"><span aria-hidden="true">▶</span> Посмотреть демо</Link>
+            </div>
+          </div>
+          <div className="homepage-cta-visual" aria-hidden="true">
+            <div className="homepage-cta-marketplaces">
+              <span>WB</span>
+              <span>OZ</span>
+              <span>ЯМ</span>
+              <span>AV</span>
+            </div>
+            <div className="homepage-cta-inbox-card">
+              <i />
+              <i />
+              <i />
+              <b>→</b>
+            </div>
           </div>
         </div>
       </section>
