@@ -17,6 +17,8 @@ Use the existing Next.js App Router application for both the public site and Saa
 
 ## Marketplace truthfulness
 
+Wildberries, Ozon, Yandex Market and Avito are integration-ready in the current product scope.
+
 - Wildberries: integration ready.
 - Ozon: integration ready.
 - Yandex Market: integration ready.
