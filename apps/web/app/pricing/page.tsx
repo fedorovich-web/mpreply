@@ -58,11 +58,58 @@ export default function PricingPage() {
             </div>
           </div>
 
-          <aside className="pricing-principle-panel">
-            <span className="panel-kicker">Прозрачное использование</span>
-            <strong>Кабинеты, обращения, ИИ и возможности команды</strong>
-            <p>Текущие лимиты и использование видны в кабинете, чтобы команда заранее понимала доступный объём работы.</p>
-          </aside>
+          <div className="pricing-plan-scene" role="group" aria-label="Как рабочая нагрузка влияет на тариф MPReply">
+            <div className="pricing-plan-window">
+              <div className="pricing-plan-head">
+                <div>
+                  <span className="pricing-plan-head-mark" aria-hidden="true">MP</span>
+                  <strong>Рабочий объём</strong>
+                </div>
+                <span>Тариф под нагрузку</span>
+              </div>
+
+              <div className="pricing-plan-usage">
+                <div className="pricing-plan-usage-row">
+                  <div className="pricing-plan-usage-copy">
+                    <strong>Подключённые кабинеты</strong>
+                    <small>Wildberries, Ozon, Яндекс Маркет, Авито</small>
+                  </div>
+                  <div className="pricing-plan-track" aria-hidden="true"><span /></div>
+                  <small>зависит от процесса</small>
+                </div>
+                <div className="pricing-plan-usage-row">
+                  <div className="pricing-plan-usage-copy">
+                    <strong>Обращения покупателей</strong>
+                    <small>Отзывы, вопросы и сообщения</small>
+                  </div>
+                  <div className="pricing-plan-track" aria-hidden="true"><span /></div>
+                  <small>по фактической нагрузке</small>
+                </div>
+                <div className="pricing-plan-usage-row">
+                  <div className="pricing-plan-usage-copy">
+                    <strong>ИИ и автоматизация</strong>
+                    <small>Подготовка, проверка, автоотправка</small>
+                  </div>
+                  <div className="pricing-plan-track" aria-hidden="true"><span /></div>
+                  <small>по выбранному сценарию</small>
+                </div>
+              </div>
+
+              <div className="pricing-plan-note">
+                <span aria-hidden="true">↗</span>
+                <div>
+                  <strong>Использование видно в кабинете</strong>
+                  <small>Команда понимает текущую нагрузку и доступный объём до изменения тарифа.</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="pricing-plan-scale" role="group" aria-label="Типичные масштабы использования">
+              <span><strong>Продавец</strong><small>Несколько площадок, единая очередь</small></span>
+              <span><strong>Команда</strong><small>Проверка, правила и распределение работы</small></span>
+              <span><strong>Агентство</strong><small>Несколько рабочих пространств и проектов</small></span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -70,7 +117,7 @@ export default function PricingPage() {
         <div className="public-container">
           <div className="section-heading section-heading-wide">
             <p className="eyebrow">Из чего складывается тариф</p>
-            <h2>Оплачивайте рабочий объём, а не длинный список функций</h2>
+            <h2>Рабочий объём важнее длинного списка функций</h2>
             <p>Основные возможности продукта остаются частью одного процесса — меняется объём подключений и обработки.</p>
           </div>
 
