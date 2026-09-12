@@ -78,17 +78,17 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (userQuery.isPending || (userQuery.isSuccess && organizationsQuery.isPending)) {
-    return <WorkspaceBootState title="Загружаем workspace" description="Проверяем сессию и доступные организации." />;
+    return <WorkspaceBootState title="Открываем кабинет" description="Загружаем аккаунт и рабочие пространства." />;
   }
 
   if (userQuery.error) {
     if (userQuery.error instanceof ApiError && userQuery.error.status === 401) {
-      return <WorkspaceBootState title="Сессия завершена" description="Перенаправляем на страницу входа." />;
+      return <WorkspaceBootState title="Нужно войти снова" description="Перенаправляем на страницу входа." />;
     }
     return (
       <WorkspaceBootState
-        title="Не удалось загрузить сессию"
-        description={errorMessage(userQuery.error)}
+        title="Не удалось открыть кабинет"
+        description="Повторите загрузку. Если ошибка сохранится, войдите в аккаунт заново."
         actionLabel="Повторить"
         onAction={() => void userQuery.refetch()}
       />
@@ -98,8 +98,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   if (organizationsQuery.error) {
     return (
       <WorkspaceBootState
-        title="Не удалось загрузить организации"
-        description={errorMessage(organizationsQuery.error)}
+        title="Не удалось загрузить рабочие пространства"
+        description="Повторите попытку. Данные аккаунта останутся без изменений."
         actionLabel="Повторить"
         onAction={() => void organizationsQuery.refetch()}
       />
@@ -107,7 +107,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (!userQuery.data) {
-    return <WorkspaceBootState title="Нет данных сессии" description="Повторите вход в аккаунт." />;
+    return <WorkspaceBootState title="Не удалось открыть аккаунт" description="Повторите вход в MPReply." />;
   }
 
   if (!organizationsQuery.data || organizationsQuery.data.length === 0) {
@@ -115,7 +115,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (!activeOrganization) {
-    return <WorkspaceBootState title="Выбираем workspace" description="Подготавливаем рабочее пространство." />;
+    return <WorkspaceBootState title="Открываем рабочее пространство" description="Подготавливаем данные организации." />;
   }
 
   return (
@@ -143,6 +143,7 @@ export function useWorkspace(): WorkspaceContextValue {
 }
 
 function WorkspaceOnboarding({ user }: { user: User }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const createMutation = useMutation({
@@ -154,17 +155,17 @@ function WorkspaceOnboarding({ user }: { user: User }) {
     onSuccess: async (organization) => {
       window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organization.id);
       await queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      router.replace("/app/integrations");
     },
   });
 
   return (
     <main className="workspace-onboarding-page">
       <section className="workspace-onboarding-card" aria-labelledby="workspace-onboarding-title">
-        <p className="eyebrow">Первый workspace</p>
-        <h1 id="workspace-onboarding-title">Создайте организацию</h1>
+        <p className="eyebrow">Первый шаг</p>
+        <h1 id="workspace-onboarding-title">Создайте рабочее пространство</h1>
         <p>
-          Аккаунт <strong>{user.email}</strong> уже создан. Теперь нужен workspace для интеграций,
-          обращений и правил автоответов.
+          Аккаунт <strong>{user.email}</strong> готов. Назовите магазин, бренд или команду — после этого перейдём к подключению маркетплейсов.
         </p>
         <form
           className="workspace-onboarding-form"
@@ -174,7 +175,7 @@ function WorkspaceOnboarding({ user }: { user: User }) {
           }}
         >
           <label>
-            Название организации
+            Название
             <input
               autoComplete="organization"
               minLength={2}
@@ -186,7 +187,7 @@ function WorkspaceOnboarding({ user }: { user: User }) {
           </label>
           {createMutation.error ? <p className="form-error" role="alert">{errorMessage(createMutation.error)}</p> : null}
           <button className="button button-primary" disabled={createMutation.isPending || name.trim().length < 2} type="submit">
-            {createMutation.isPending ? "Создаём..." : "Создать workspace"}
+            {createMutation.isPending ? "Создаём..." : "Перейти к подключению"}
           </button>
         </form>
       </section>
