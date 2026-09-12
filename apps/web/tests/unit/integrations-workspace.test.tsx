@@ -77,19 +77,37 @@ function renderWithQueryClient(component: React.ReactNode) {
 }
 
 describe("IntegrationsWorkspace", () => {
-  it("loads real marketplace accounts and keeps unsupported adapters explicit", async () => {
+  it("shows all four marketplace integrations as available", async () => {
     mockWorkspace("owner");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
 
     renderWithQueryClient(<IntegrationsWorkspace />);
 
     expect(await screen.findByText("1 подключение")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Управлять подключениями" })).toHaveAttribute(
+    expect(screen.getByRole("heading", { name: "Wildberries" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ozon" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Яндекс Маркет" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Авито" })).toBeInTheDocument();
+    expect(screen.getAllByText("Доступно")).toHaveLength(3);
+    expect(screen.getByText("1 подключение")).toBeInTheDocument();
+    expect(screen.queryByText(/Planned|Пока недоступно|MVP adapter|production readiness/i)).not.toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: "Управлять Wildberries" })).toHaveAttribute(
       "href",
       "/app/integrations/wildberries",
     );
-    expect(screen.getAllByText("Пока недоступно")).toHaveLength(3);
-    expect(screen.getAllByText("Без ложного обещания production readiness.")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "Подключить Ozon" })).toHaveAttribute(
+      "href",
+      "/app/integrations/ozon",
+    );
+    expect(screen.getByRole("link", { name: "Подключить Яндекс Маркет" })).toHaveAttribute(
+      "href",
+      "/app/integrations/yandex-market",
+    );
+    expect(screen.getByRole("link", { name: "Подключить Авито" })).toHaveAttribute(
+      "href",
+      "/app/integrations/avito",
+    );
   });
 });
 
