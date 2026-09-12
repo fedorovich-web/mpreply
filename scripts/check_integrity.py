@@ -296,7 +296,6 @@ def check_deployment_contract() -> None:
         WEB / "vitest.config.ts",
         WEB / "vitest.setup.ts",
         WEB / "tests" / "unit" / "api-client.test.ts",
-        WEB / "tests" / "unit" / "theme-toggle.test.tsx",
         WEB / "tests" / "unit" / "automation-rules-contract.test.ts",
         WEB / "tests" / "unit" / "automation-rules-workspace.test.tsx",
         WEB / "tests" / "unit" / "ai-assistant-contract.test.ts",
@@ -427,8 +426,6 @@ def check_generated_artifacts_absent() -> None:
     paths = _git_tracked_paths()
 
     if paths is None:
-        # Extracted release archives have no .git directory, so inspect the archive
-        # tree itself. Developer working trees use the tracked-file path above.
         paths = [path for path in ROOT.rglob("*") if path.is_file()]
 
     reported: set[Path] = set()
