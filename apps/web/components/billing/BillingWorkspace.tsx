@@ -22,9 +22,13 @@ export function BillingWorkspace() {
 
   if (billingQuery.isLoading) return <BillingState title="Загружаем тариф" description="Получаем текущий тариф, лимиты и расчётный период." />;
   if (billingQuery.error) return <BillingState title="Не удалось загрузить тариф" description={errorMessage(billingQuery.error)} error />;
-  if (!billingQuery.data) return <BillingState title="Нет данных о тарифе" description="Информация о тарифе пока недоступна." />;
+  if (!billingQuery.data) return <BillingState title="Нет данных о тарифе" description="Обновите страницу или обратитесь в поддержку, если данные не появятся." />;
 
   const data = billingQuery.data;
+  const price = data.pricing_finalized && data.plan.price_month_minor !== null
+    ? formatPrice(data.plan.price_month_minor, data.plan.currency)
+    : "—";
+
   return (
     <section className="billing-workspace">
       <article className="billing-plan-card">
@@ -37,16 +41,25 @@ export function BillingWorkspace() {
             {subscriptionStatusLabel(data.subscription?.status)}
           </span>
         </div>
+
         <div className="billing-price-state">
-          <strong>{data.pricing_finalized && data.plan.price_month_minor !== null ? formatPrice(data.plan.price_month_minor, data.plan.currency) : "Стоимость уточняется"}</strong>
-          <p>
-            Если стоимость тарифа ещё не утверждена, MPReply не показывает выдуманную цену. Здесь появятся финальная стоимость и условия после их публикации.
-          </p>
+          <strong>{price}</strong>
+          <p>Лимиты и использование ниже относятся к текущему расчётному периоду.</p>
         </div>
+
         <dl className="billing-meta-grid">
-          <div><dt>Расчётный период</dt><dd>{formatDate(data.usage_period_start)} — {formatDate(data.usage_period_end)}</dd></div>
-          <div><dt>Платёжная система</dt><dd>{data.subscription?.provider ?? "Не подключена"}</dd></div>
-          <div><dt>Автопродление</dt><dd>{data.subscription?.cancel_at_period_end ? "Будет отключено" : "Включено"}</dd></div>
+          <div>
+            <dt>Расчётный период</dt>
+            <dd>{formatDate(data.usage_period_start)} — {formatDate(data.usage_period_end)}</dd>
+          </div>
+          <div>
+            <dt>Оплата</dt>
+            <dd>{data.subscription?.provider ? "Настроена" : "Не настроена"}</dd>
+          </div>
+          <div>
+            <dt>Автопродление</dt>
+            <dd>{renewalLabel(data.subscription)}</dd>
+          </div>
         </dl>
       </article>
 
@@ -64,11 +77,11 @@ export function BillingWorkspace() {
                   <span style={{ width: `${percent}%` }} />
                 </div>
               ) : (
-                <div className="billing-unlimited">Лимит не установлен</div>
+                <div className="billing-unlimited">Без отдельного лимита</div>
               )}
               <p>
                 {item.limit === null
-                  ? "Для этого показателя отдельный лимит пока не задан."
+                  ? "Использование учитывается без отдельного ограничения."
                   : item.allowed
                     ? `Осталось: ${formatNumber(item.remaining ?? 0)}`
                     : "Лимит исчерпан."}
@@ -79,10 +92,10 @@ export function BillingWorkspace() {
       </section>
 
       <article className="billing-foundation-note">
-        <span className="panel-kicker">Лимиты и использование</span>
-        <h2>Все показатели тарифа — в одном месте</h2>
+        <span className="panel-kicker">Контроль использования</span>
+        <h2>Тариф и рабочая нагрузка — в одном месте</h2>
         <p>
-          Следите за количеством подготовленных черновиков, отправленных ответов, подключённых кабинетов и участников команды. Данные обновляются по текущему расчётному периоду.
+          Следите за количеством подготовленных черновиков, отправленных ответов, подключённых кабинетов и участников команды в текущем периоде.
         </p>
       </article>
     </section>
@@ -99,6 +112,11 @@ function subscriptionStatusLabel(status: string | null | undefined): string {
   if (status === "past_due") return "Нужна оплата";
   if (status === "canceled") return "Отменён";
   return "Без подписки";
+}
+
+function renewalLabel(subscription: { cancel_at_period_end: boolean } | null | undefined): string {
+  if (!subscription) return "Не настроено";
+  return subscription.cancel_at_period_end ? "Отключится в конце периода" : "Включено";
 }
 
 function formatNumber(value: number): string { return new Intl.NumberFormat("ru-RU").format(value); }
