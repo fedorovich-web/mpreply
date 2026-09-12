@@ -91,6 +91,7 @@ const reply = {
 const mockedUseWorkspace = vi.mocked(useWorkspace);
 
 afterEach(() => {
+  window.localStorage.clear();
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
@@ -194,5 +195,40 @@ describe("InboxWorkspace", () => {
     await waitFor(() => {
       expect(screen.queryByLabelText("Ответ для проверки")).not.toBeInTheDocument();
     });
+  });
+
+  it("does not offer a duplicate draft when draft creation succeeded but review submission failed", async () => {
+    mockWorkspace();
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/messages")) {
+        return new Response(JSON.stringify({ items: [message], total: 1, page: 1, page_size: 100 }), { status: 200 });
+      }
+      if (url.endsWith("/api/replies/manual") && init?.method === "POST") {
+        return new Response(
+          JSON.stringify({ reply, safety: { decision: "allow", flags: [], reasons: [] } }),
+          { status: 201 },
+        );
+      }
+      if (url.includes(`/api/replies/${reply.id}/submit-review`) && init?.method === "POST") {
+        return new Response(JSON.stringify({ detail: "Review service unavailable" }), { status: 503 });
+      }
+      throw new Error(`Unexpected request: ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    const editor = await screen.findByLabelText("Ответ для проверки");
+    fireEvent.change(editor, { target: { value: reply.reply_text } });
+    fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
+
+    const recovery = await screen.findByRole("alert");
+    expect(recovery).toHaveTextContent("Черновик создан, но не удалось передать его на проверку");
+    expect(within(recovery).getByRole("link", { name: "Открыть очередь проверки" })).toHaveAttribute(
+      "href",
+      "/app/review-queue",
+    );
+    expect(screen.queryByLabelText("Ответ для проверки")).not.toBeInTheDocument();
   });
 });
