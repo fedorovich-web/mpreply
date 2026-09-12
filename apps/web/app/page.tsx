@@ -194,12 +194,12 @@ export default function HomePage() {
           </div>
           <div className="homepage-model-grid" role="group" aria-label="Поддерживаемые ИИ-модели">
             {aiModels.map((model) => (
-              <article className="homepage-model-card" key={model.name}>
+              <div className="homepage-model-card" key={model.name}>
                 <span className="homepage-model-mark" aria-hidden="true">{model.mark}</span>
                 <strong>{model.name}</strong>
                 <small>{model.provider}</small>
                 <p>{model.description}</p>
-              </article>
+              </div>
             ))}
           </div>
         </div>
@@ -240,11 +240,11 @@ export default function HomePage() {
           </div>
           <div className="homepage-result-grid">
             {resultFacts.map((fact) => (
-              <article className="homepage-result-card" key={fact.label}>
+              <div className="homepage-result-card" key={fact.label}>
                 <span aria-hidden="true">{fact.icon}</span>
                 <strong>{fact.value}</strong>
                 <p>{fact.label}</p>
-              </article>
+              </div>
             ))}
           </div>
         </div>
