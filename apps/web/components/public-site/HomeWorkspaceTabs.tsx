@@ -4,11 +4,27 @@ import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 type WorkspaceTab = "reviews" | "questions" | "messages" | "all";
 
+type WorkspaceFilter = {
+  icon: string;
+  label: string;
+  count: number;
+};
+
+type WorkspaceRow = {
+  initials: string;
+  name: string;
+  rating?: string;
+  text: string;
+  time: string;
+};
+
 type WorkspaceState = {
   label: string;
   icon: string;
   answer: string;
   tone: string;
+  filters: readonly WorkspaceFilter[];
+  rows: readonly WorkspaceRow[];
 };
 
 const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
@@ -17,36 +33,77 @@ const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
     icon: "☆",
     answer: "Спасибо за ваш отзыв! Нам очень приятно, что товар вам понравился. Будем рады видеть вас снова!",
     tone: "green",
+    filters: [
+      { icon: "▧", label: "Все отзывы", count: 56 },
+      { icon: "☆", label: "Положительные", count: 38 },
+      { icon: "○", label: "Нейтральные", count: 12 },
+      { icon: "!", label: "Отрицательные", count: 6 },
+    ],
+    rows: [
+      { initials: "АК", name: "Анна К.", rating: "★★★★★", text: "Отличное качество, быстрая доставка!", time: "12 мин назад" },
+      { initials: "ДС", name: "Дмитрий С.", rating: "★★★★★", text: "Хороший товар, всё пришло аккуратно упаковано", time: "1 час назад" },
+      { initials: "ЕМ", name: "Елена М.", rating: "★★★★☆", text: "Цвет немного отличается от фото", time: "3 часа назад" },
+      { initials: "СВ", name: "Сергей В.", rating: "★★★★★", text: "Отличный продавец, рекомендую!", time: "5 часов назад" },
+    ],
   },
   questions: {
     label: "Вопросы",
     icon: "◎",
     answer: "Спасибо за вопрос! Подготовили ответ с учётом карточки товара и доступной информации.",
     tone: "blue",
+    filters: [
+      { icon: "▧", label: "Все вопросы", count: 34 },
+      { icon: "?", label: "Новые", count: 12 },
+      { icon: "○", label: "Требуют ответа", count: 15 },
+      { icon: "✓", label: "Отвечено", count: 7 },
+    ],
+    rows: [
+      { initials: "ИС", name: "Игорь С.", text: "Подойдёт ли размер M на рост 178 см?", time: "8 мин назад" },
+      { initials: "ОН", name: "Ольга Н.", text: "Есть ли инструкция на русском языке?", time: "35 мин назад" },
+      { initials: "РБ", name: "Роман Б.", text: "Когда появится чёрный цвет?", time: "2 часа назад" },
+      { initials: "ДК", name: "Дарья К.", text: "Можно ли использовать товар на улице?", time: "4 часа назад" },
+    ],
   },
   messages: {
     label: "Сообщения",
     icon: "▱",
     answer: "Здравствуйте! Сообщение получено. Ответ подготовлен с учётом контекста обращения.",
     tone: "cyan",
+    filters: [
+      { icon: "▧", label: "Все сообщения", count: 28 },
+      { icon: "●", label: "Новые", count: 8 },
+      { icon: "○", label: "В работе", count: 7 },
+      { icon: "✓", label: "Закрытые", count: 13 },
+    ],
+    rows: [
+      { initials: "АВ", name: "Алексей В.", text: "Здравствуйте! Когда сможете отправить заказ?", time: "5 мин назад" },
+      { initials: "МП", name: "Мария П.", text: "Подскажите, пожалуйста, статус моего заказа", time: "24 мин назад" },
+      { initials: "НК", name: "Никита К.", text: "Можно изменить адрес доставки?", time: "1 час назад" },
+      { initials: "ЕА", name: "Екатерина А.", text: "Спасибо, вопрос решён", time: "3 часа назад" },
+    ],
   },
   all: {
     label: "Все обращения",
     icon: "◇",
     answer: "MPReply объединяет отзывы, вопросы и сообщения в одной очереди и помогает отвечать без лишних переключений.",
     tone: "blue",
+    filters: [
+      { icon: "▧", label: "Все обращения", count: 118 },
+      { icon: "☆", label: "Отзывы", count: 56 },
+      { icon: "?", label: "Вопросы", count: 34 },
+      { icon: "▱", label: "Сообщения", count: 28 },
+    ],
+    rows: [
+      { initials: "АК", name: "Анна К.", rating: "★★★★★", text: "Отличное качество, быстрая доставка!", time: "12 мин назад" },
+      { initials: "ИС", name: "Игорь С.", text: "Подойдёт ли размер M на рост 178 см?", time: "28 мин назад" },
+      { initials: "МП", name: "Мария П.", text: "Подскажите, пожалуйста, статус моего заказа", time: "1 час назад" },
+      { initials: "ЕМ", name: "Елена М.", rating: "★★★★☆", text: "Цвет немного отличается от фото", time: "3 часа назад" },
+    ],
   },
 };
 
 const tabs = Object.entries(workspaceStates) as Array<[WorkspaceTab, WorkspaceState]>;
 const tabOrder = tabs.map(([key]) => key);
-
-const reviewRows = [
-  { initials: "АК", name: "Анна К.", rating: "★★★★★", text: "Отличное качество, быстрая доставка!", time: "12 мин назад" },
-  { initials: "ДС", name: "Дмитрий С.", rating: "★★★★★", text: "Хороший товар, из упаковки было понятно...", time: "1 час назад" },
-  { initials: "ЕМ", name: "Елена М.", rating: "★★★★☆", text: "Цвет немного отличается от фото", time: "3 часа назад" },
-  { initials: "СВ", name: "Сергей В.", rating: "★★★★★", text: "Отличный продавец, рекомендую!", time: "5 часов назад" },
-] as const;
 
 export function HomeWorkspaceTabs() {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("reviews");
@@ -108,18 +165,21 @@ export function HomeWorkspaceTabs() {
       >
         <aside className="homepage-workspace-queue" aria-label="Фильтры обращений">
           <strong>{active.label}</strong>
-          <div className="homepage-workspace-filter is-active"><span>▧</span><b>Все отзывы</b><small>56</small></div>
-          <div className="homepage-workspace-filter"><span>☆</span><b>Положительные</b><small>38</small></div>
-          <div className="homepage-workspace-filter"><span>○</span><b>Нейтральные</b><small>12</small></div>
-          <div className="homepage-workspace-filter"><span>!</span><b>Отрицательные</b><small>6</small></div>
+          {active.filters.map((filter, index) => (
+            <div className={`homepage-workspace-filter${index === 0 ? " is-active" : ""}`} key={filter.label}>
+              <span aria-hidden="true">{filter.icon}</span>
+              <b>{filter.label}</b>
+              <small>{filter.count}</small>
+            </div>
+          ))}
         </aside>
 
         <div className="homepage-workspace-list" role="list" aria-label="Список обращений">
-          {reviewRows.map((row, index) => (
-            <div role="listitem" className={`homepage-workspace-list-row${index === 0 ? " is-active" : ""}`} key={row.name}>
+          {active.rows.map((row, index) => (
+            <div role="listitem" className={`homepage-workspace-list-row${index === 0 ? " is-active" : ""}`} key={`${activeTab}-${row.name}`}>
               <span className="homepage-workspace-list-avatar" aria-hidden="true">{row.initials}</span>
               <div>
-                <strong>{row.name} <span>{row.rating}</span></strong>
+                <strong>{row.name}{row.rating ? <> <span>{row.rating}</span></> : null}</strong>
                 <p>{row.text}</p>
               </div>
               <span className="homepage-workspace-time">{row.time}</span>
