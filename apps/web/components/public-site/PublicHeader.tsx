@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 
 import { siteConfig } from "../../lib/site-config";
-import { ThemeToggle } from "./ThemeToggle";
 
 function isActiveNavigationItem(href: string, pathname: string): boolean {
   if (href.includes("#")) {
@@ -41,12 +40,9 @@ export function PublicHeader() {
     <header className="public-header">
       <div className="public-container public-header-inner">
         <Link className="public-brand" href="/" aria-label="MPReply — главная" onClick={closeMenu}>
-          <span className="public-brand-mark" aria-hidden="true">
-            M
-          </span>
+          <span className="public-brand-mark" aria-hidden="true">M</span>
           <span className="public-brand-copy">
             <strong>MPReply</strong>
-            <small>Ответы для маркетплейсов</small>
           </span>
         </Link>
 
@@ -63,7 +59,6 @@ export function PublicHeader() {
         </nav>
 
         <div className="public-header-actions">
-          <ThemeToggle />
           <Link className="button button-ghost public-login-link" href="/auth/login">
             Войти
           </Link>
