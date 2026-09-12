@@ -194,7 +194,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
       </div>
 
       <section className="review-context-card">
-        <span>Покупатель</span>
+        <span>{messageTypeLabel(item.message.type)} покупателя</span>
         <p>{item.message.customer_text}</p>
       </section>
 
@@ -362,7 +362,7 @@ function marketplaceLabel(value: string): string {
 function messageTypeLabel(value: string): string {
   if (value === "review") return "Отзыв";
   if (value === "question") return "Вопрос";
-  if (value === "message") return "Сообщение";
+  if (value === "chat") return "Сообщение";
   return value;
 }
 
