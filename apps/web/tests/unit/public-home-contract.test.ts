@@ -7,7 +7,10 @@ const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 const heroScene = readFileSync(join(root, "components/public-site/HomeHeroScene.tsx"), "utf8");
 const publicShell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
+const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const heroAssetPath = join(root, "public/images/mpreply-hero.webp");
+const heroArtworkCssPath = join(root, "styles/homepage-hero-artwork.css");
+const heroArtworkCss = existsSync(heroArtworkCssPath) ? readFileSync(heroArtworkCssPath, "utf8") : "";
 const marketingCssPath = join(root, "styles/marketing-site.css");
 const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
 const approvedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
@@ -62,14 +65,17 @@ describe("public homepage redesign contract", () => {
     expect(publicShell).not.toContain('href="/#safetygate"');
   });
 
-  it("uses the approved blue system and compact section rhythm", () => {
+  it("uses the approved blue system and a scoped hero artwork layer", () => {
     expect(marketingCss).toContain(".public-root");
     expect(marketingCss).toContain("--color-brand-primary: #2563eb");
     expect(marketingCss).toContain("--color-brand-accent: #0ea5e9");
     expect(approvedCss).toContain("--homepage-section-pad");
     expect(approvedCss).toContain(".homepage-horizontal-process");
     expect(approvedCss).toContain(".homepage-hero-scene");
-    expect(approvedCss).toContain(".homepage-hero-image");
     expect(approvedCss).toContain(".homepage-cta-scene");
+    expect(layout).toContain('import "../styles/homepage-hero-artwork.css"');
+    expect(heroArtworkCss).toContain(".homepage-hero-image");
+    expect(heroArtworkCss).toContain("@media (max-width: 720px)");
+    expect(heroArtworkCss).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
 });
