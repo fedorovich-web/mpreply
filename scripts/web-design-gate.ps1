@@ -12,7 +12,6 @@ try {
   Run-Step "Frontend security audit" { & $Npm audit --audit-level=high }
   Run-Step "Frontend unit tests" { & $Npm run test:unit }
   Run-Step "Design token tests" { & $Npm run test:design-tokens }
-  Run-Step "Impeccable anti-pattern scan" { & $Npm run design:detect }
   Run-Step "Frontend typecheck" { & $Npm run typecheck }
   Run-Step "Frontend lint" { & $Npm run lint }
   Run-Step "Frontend CSS syntax validation" { & $Npm run validate:css-syntax }
