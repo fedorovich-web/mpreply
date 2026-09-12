@@ -39,12 +39,17 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby={`${mode}-title`}>
-        <p className="eyebrow">{isLogin ? "Respio workspace" : "Respio account"}</p>
-        <h1 id={`${mode}-title`}>{isLogin ? "Вход" : "Создать аккаунт"}</h1>
+        <Link className="auth-brand" href="/" aria-label="MPReply — главная">
+          <span className="public-brand-mark" aria-hidden="true">M</span>
+          <strong>MPReply</strong>
+        </Link>
+
+        <p className="eyebrow">{isLogin ? "Рабочий кабинет" : "Новый аккаунт"}</p>
+        <h1 id={`${mode}-title`}>{isLogin ? "Войти в MPReply" : "Создать аккаунт"}</h1>
         <p className="auth-description">
           {isLogin
-            ? "Войдите, чтобы управлять автоответами, правилами, интеграциями и очередью ручной проверки."
-            : "После регистрации создайте workspace и подключите Wildberries API-ключ. Автоответы будут включены по умолчанию."}
+            ? "Откройте единую очередь обращений, ответы на проверке, правила автоматизации и подключённые маркетплейсы."
+            : "После регистрации создайте рабочее пространство и подключите Wildberries, Ozon, Яндекс Маркет или Авито. Автоматизацию можно настроить под правила вашей команды."}
         </p>
 
         <form
@@ -62,7 +67,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 maxLength={255}
                 name="name"
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Роман"
+                placeholder="Ваше имя"
                 type="text"
                 value={name}
               />
@@ -96,18 +101,18 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
           {mutation.error ? (
             <p className="form-error" role="alert">
-              {mutation.error instanceof ApiError ? mutation.error.message : "Не удалось выполнить запрос."}
+              {mutation.error instanceof ApiError ? mutation.error.message : "Не удалось выполнить запрос. Попробуйте ещё раз."}
             </p>
           ) : null}
 
           <button className="button button-primary" disabled={mutation.isPending} type="submit">
-            {mutation.isPending ? "Подождите..." : isLogin ? "Войти" : "Зарегистрироваться"}
+            {mutation.isPending ? "Подождите..." : isLogin ? "Войти" : "Продолжить"}
           </button>
         </form>
 
         <p className="auth-footer">
           {isLogin ? (
-            <>Нет аккаунта? <Link href="/auth/register">Создать аккаунт</Link></>
+            <>Нет аккаунта? <Link href="/auth/register?intent=connect-marketplace">Создать аккаунт</Link></>
           ) : (
             <>Уже есть аккаунт? <Link href="/auth/login">Войти</Link></>
           )}
