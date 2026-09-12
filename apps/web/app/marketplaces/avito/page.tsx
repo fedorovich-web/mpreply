@@ -5,9 +5,9 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Интеграция Respio с Авито — статус и планы",
+  title: "ИИ-ответы на сообщения покупателей Авито",
   description:
-    "Текущий статус интеграции Respio с Авито. Поддержка не заявляется готовой до подтверждения официальных API-возможностей и runtime-проверки сценариев ответов.",
+    "MPReply для Авито: единая очередь сообщений покупателей, ИИ-подготовка ответов, правила автоматизации, статусы и история обработки.",
   path: "/marketplaces/avito",
 });
 
