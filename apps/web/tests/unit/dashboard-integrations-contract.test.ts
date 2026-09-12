@@ -20,8 +20,8 @@ describe("integrations readiness workspace", () => {
     expect(workspace).toContain("Подключение и отправка пока недоступны");
   });
 
-  it("does not expose planned marketplaces as connectable integrations", () => {
-    expect(workspace).not.toContain("`Подключить ${marketplace.name}`");
+  it("does not expose planned marketplace pages as connectable integrations", () => {
+    expect(workspace).toContain('marketplace.readiness === "live"');
     expect(ozonPage).not.toContain("MarketplaceIntegrationWorkspace");
     expect(yandexPage).not.toContain("MarketplaceIntegrationWorkspace");
     expect(avitoPage).not.toContain("MarketplaceIntegrationWorkspace");
