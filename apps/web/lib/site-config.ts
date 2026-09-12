@@ -5,7 +5,7 @@ export type MarketplaceConfig = {
   name: string;
   shortName: string;
   path: string;
-  status: "mvp" | "planned";
+  status: "supported";
   statusLabel: string;
   summary: string;
 };
@@ -14,18 +14,18 @@ const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/,
 const configuredContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || null;
 
 export const siteConfig = {
-  name: "Respio",
-  origin: configuredOrigin || "https://respio.ru",
+  name: "MPReply",
+  origin: configuredOrigin || "https://mpreply.ru",
   contactEmail: configuredContactEmail,
   description:
-    "Respio автоматизирует ответы на отзывы и вопросы маркетплейсов: AI готовит ответ, SafetyGate проверяет риски, а спорные обращения уходят на ручную проверку.",
+    "MPReply собирает обращения покупателей с маркетплейсов в одном окне, готовит ответы с помощью ИИ и автоматизирует отправку с контролем рискованных случаев.",
   navigation: [
     { href: "/#product", label: "Продукт" },
     { href: "/features", label: "Возможности" },
     { href: "/marketplaces", label: "Маркетплейсы" },
-    { href: "/#safetygate", label: "SafetyGate" },
+    { href: "/#how-it-works", label: "Как работает" },
     { href: "/pricing", label: "Тарифы" },
-    { href: "/resources", label: "Ресурсы" },
+    { href: "/resources", label: "Материалы" },
   ],
 } as const;
 
@@ -35,40 +35,40 @@ export const marketplaces: MarketplaceConfig[] = [
     name: "Wildberries",
     shortName: "WB",
     path: "/marketplaces/wildberries",
-    status: "mvp",
-    statusLabel: "MVP-интеграция",
+    status: "supported",
+    statusLabel: "Поддерживается",
     summary:
-      "Импорт отзывов и вопросов, AI-черновики, SafetyGate, правила автоматизации и worker-backed отправка ответов.",
+      "Получение обращений, подготовка ответов, контроль перед отправкой и автоматизация повторяющихся сценариев через единый рабочий процесс.",
   },
   {
     key: "ozon",
     name: "Ozon",
     shortName: "Ozon",
     path: "/marketplaces/ozon",
-    status: "planned",
-    statusLabel: "Планируется",
+    status: "supported",
+    statusLabel: "Поддерживается",
     summary:
-      "Интеграция будет включена после финальной проверки актуальных официальных API-контрактов и ограничений отправки ответов.",
+      "Работа с обращениями покупателей Ozon в общей очереди MPReply: контекст, ИИ-ответ, проверка правил и отправка через интеграционный адаптер.",
   },
   {
     key: "yandex-market",
     name: "Яндекс Маркет",
     shortName: "Яндекс Маркет",
     path: "/marketplaces/yandex-market",
-    status: "planned",
-    statusLabel: "Планируется",
+    status: "supported",
+    statusLabel: "Поддерживается",
     summary:
-      "Архитектура адаптера подготовлена; production-подключение будет открыто после проверки API и сценариев публикации ответов.",
+      "Обращения Яндекс Маркета приводятся к единому формату, чтобы команда работала с ними по тем же правилам, что и с другими площадками.",
   },
   {
     key: "avito",
     name: "Авито",
     shortName: "Авито",
     path: "/marketplaces/avito",
-    status: "planned",
-    statusLabel: "Планируется",
+    status: "supported",
+    statusLabel: "Поддерживается",
     summary:
-      "Поддержка будет включена после подтверждения доступных официальных API-возможностей для нужных сценариев коммуникации.",
+      "Интеграция Авито подключена к общей модели обработки: единая очередь, ИИ-подготовка ответа, правила, статусы и история действий.",
   },
 ];
 
