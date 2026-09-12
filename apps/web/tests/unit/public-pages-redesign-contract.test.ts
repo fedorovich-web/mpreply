@@ -23,6 +23,15 @@ describe("public page redesign", () => {
     expect(marketplaces).toContain("Wildberries, Ozon, Яндекс Маркет и Авито");
   });
 
+  it("shows integrations as one routed MPReply workspace rather than isolated marketplace cards", () => {
+    expect(marketplaces).toContain("marketplace-unified-scene");
+    expect(marketplaces).toContain("marketplace-unified-window");
+    expect(marketplaces).toContain("marketplace-unified-sources");
+    expect(marketplaces).toContain("marketplace-unified-answer");
+    expect(pagesCss).toContain(".marketplace-unified-scene");
+    expect(pagesCss).toContain(".marketplace-unified-window");
+  });
+
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
     expect(features).toMatch(/От обращения покупателя до ответа|путь обработки каждого обращения/i);
     expect(features).toContain("Отзывы, вопросы и сообщения");
