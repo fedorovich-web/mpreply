@@ -95,6 +95,12 @@
 	--color-surface-dark: #050b14;
 	--color-brand-soft: #102a56;
 	--color-brand-soft-strong: rgb(96 165 250 / 18%);
+	--color-success-text: #75e0a7;
+	--color-success-soft: #053321;
+	--color-warning-text: #fec84b;
+	--color-warning-soft: #3f2a0a;
+	--color-danger-text: #fda29b;
+	--color-danger-soft: #55160c;
 	--color-info: #60a5fa;
 	--color-info-text: #93c5fd;
 	--color-info-soft: #102a56;
