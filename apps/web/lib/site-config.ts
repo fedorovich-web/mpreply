@@ -18,14 +18,13 @@ export const siteConfig = {
   origin: configuredOrigin || "https://mpreply.ru",
   contactEmail: configuredContactEmail,
   description:
-    "MPReply собирает обращения покупателей с маркетплейсов в одном окне, готовит ответы с помощью ИИ и автоматизирует отправку с контролем рискованных случаев.",
+    "MPReply собирает обращения покупателей с маркетплейсов в одном окне, готовит ответы с помощью ИИ и автоматизирует отправку с контролем сложных случаев.",
   navigation: [
-    { href: "/#product", label: "Продукт" },
     { href: "/features", label: "Возможности" },
-    { href: "/marketplaces", label: "Маркетплейсы" },
-    { href: "/#how-it-works", label: "Как работает" },
+    { href: "/marketplaces", label: "Интеграции" },
     { href: "/pricing", label: "Тарифы" },
     { href: "/resources", label: "Материалы" },
+    { href: "/contacts", label: "Помощь" },
   ],
 } as const;
 
@@ -36,7 +35,7 @@ export const marketplaces: MarketplaceConfig[] = [
     shortName: "WB",
     path: "/marketplaces/wildberries",
     status: "supported",
-    statusLabel: "Поддерживается",
+    statusLabel: "Интеграция готова",
     summary:
       "Получение обращений, подготовка ответов, контроль перед отправкой и автоматизация повторяющихся сценариев через единый рабочий процесс.",
   },
@@ -46,9 +45,9 @@ export const marketplaces: MarketplaceConfig[] = [
     shortName: "Ozon",
     path: "/marketplaces/ozon",
     status: "supported",
-    statusLabel: "Поддерживается",
+    statusLabel: "Интеграция готова",
     summary:
-      "Работа с обращениями покупателей Ozon в общей очереди MPReply: контекст, ИИ-ответ, проверка правил и отправка через интеграционный адаптер.",
+      "Работа с обращениями покупателей Ozon в общей очереди MPReply: контекст, ИИ-ответ, проверка правил и отправка через интеграцию.",
   },
   {
     key: "yandex-market",
@@ -56,7 +55,7 @@ export const marketplaces: MarketplaceConfig[] = [
     shortName: "Яндекс Маркет",
     path: "/marketplaces/yandex-market",
     status: "supported",
-    statusLabel: "Поддерживается",
+    statusLabel: "Интеграция готова",
     summary:
       "Обращения Яндекс Маркета приводятся к единому формату, чтобы команда работала с ними по тем же правилам, что и с другими площадками.",
   },
@@ -66,7 +65,7 @@ export const marketplaces: MarketplaceConfig[] = [
     shortName: "Авито",
     path: "/marketplaces/avito",
     status: "supported",
-    statusLabel: "Поддерживается",
+    statusLabel: "Интеграция готова",
     summary:
       "Интеграция Авито подключена к общей модели обработки: единая очередь, ИИ-подготовка ответа, правила, статусы и история действий.",
   },
