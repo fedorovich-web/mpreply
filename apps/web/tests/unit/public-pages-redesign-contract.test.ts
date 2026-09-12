@@ -13,6 +13,8 @@ const pagesCssPath = join(root, "styles/marketing-pages.css");
 const pagesCss = existsSync(pagesCssPath) ? readFileSync(pagesCssPath, "utf8") : "";
 const marketplacesCssPath = join(root, "styles/marketplaces-approved.css");
 const marketplacesCss = existsSync(marketplacesCssPath) ? readFileSync(marketplacesCssPath, "utf8") : "";
+const marketplaceDetailCssPath = join(root, "styles/marketplace-detail-approved.css");
+const marketplaceDetailCss = existsSync(marketplaceDetailCssPath) ? readFileSync(marketplaceDetailCssPath, "utf8") : "";
 
 describe("public page redesign", () => {
   it("loads page-specific marketing compositions", () => {
@@ -37,11 +39,12 @@ describe("public page redesign", () => {
   });
 
   it("uses the same layered product language on every marketplace detail route", () => {
+    expect(layout).toContain('import "../styles/marketplace-detail-approved.css"');
     expect(marketplaceLanding).toContain("marketplace-detail-scene");
     expect(marketplaceLanding).toContain("marketplace-detail-window");
     expect(marketplaceLanding).toContain("marketplace-detail-draft");
-    expect(marketplacesCss).toContain(".marketplace-detail-scene");
-    expect(marketplacesCss).toContain(".marketplace-detail-window");
+    expect(marketplaceDetailCss).toContain(".marketplace-detail-scene");
+    expect(marketplaceDetailCss).toContain(".marketplace-detail-window");
   });
 
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
