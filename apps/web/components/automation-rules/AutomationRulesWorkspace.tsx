@@ -19,7 +19,7 @@ type RuleEditorState = {
   name: string;
   priority: string;
   mode: "auto" | "semi_auto";
-  appliesTo: "all" | "review" | "question";
+  appliesTo: "all" | "review" | "question" | "chat";
   marketplace: "" | "wildberries" | "ozon" | "yandex_market" | "avito";
   minRating: string;
   maxRating: string;
@@ -456,9 +456,10 @@ function RuleEditor({
         <label className="automation-field">
           Тип обращений
           <select value={state.appliesTo} onChange={(e) => set("appliesTo", e.target.value as RuleEditorState["appliesTo"]) }>
-            <option value="all">Отзывы и вопросы</option>
+            <option value="all">Отзывы, вопросы и сообщения</option>
             <option value="review">Только отзывы</option>
             <option value="question">Только вопросы</option>
+            <option value="chat">Только сообщения покупателей</option>
           </select>
         </label>
         <label className="automation-field">
@@ -630,7 +631,8 @@ function modeLabel(mode: AutomationRule["mode"]): string {
 function appliesToLabel(value: AutomationRule["applies_to"]): string {
   if (value === "review") return "Отзывы";
   if (value === "question") return "Вопросы";
-  return "Отзывы и вопросы";
+  if (value === "chat") return "Сообщения покупателей";
+  return "Отзывы, вопросы и сообщения";
 }
 
 function marketplaceLabel(value: AutomationRule["marketplace"]): string {
