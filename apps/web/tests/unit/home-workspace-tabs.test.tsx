@@ -12,14 +12,14 @@ describe("HomeWorkspaceTabs", () => {
     const messagesTab = screen.getByRole("tab", { name: "Сообщения" });
 
     expect(reviewsTab).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("Отзыв о товаре")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Отзыв о товаре" })).toBeInTheDocument();
 
     fireEvent.click(questionsTab);
     expect(questionsTab).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("Вопрос покупателя")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Вопрос покупателя" })).toBeInTheDocument();
 
     fireEvent.click(messagesTab);
     expect(messagesTab).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("Диалог с покупателем")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Диалог с покупателем" })).toBeInTheDocument();
   });
 });
