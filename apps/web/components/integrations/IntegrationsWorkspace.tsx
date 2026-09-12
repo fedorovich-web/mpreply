@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
-import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
+import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { marketplaceAccountListSchema } from "../../lib/api/schemas";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
@@ -138,9 +138,4 @@ function accountWord(value: number): string {
   if (mod10 === 1 && mod100 !== 11) return "подключение";
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "подключения";
   return "подключений";
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
 }
