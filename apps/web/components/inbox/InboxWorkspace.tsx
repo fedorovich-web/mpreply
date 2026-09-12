@@ -30,16 +30,16 @@ const defaultFilters: FilterState = {
 
 const messageStatusLabels: Record<string, string> = {
   new: "Новое",
-  imported: "Импортировано",
+  imported: "Получено",
   needs_reply: "Нужен ответ",
-  ai_draft_ready: "AI-черновик готов",
+  ai_draft_ready: "Черновик готов",
   waiting_review: "На проверке",
-  needs_manual_check: "Нужна ручная проверка",
+  needs_manual_check: "Нужна проверка",
   approved: "Одобрено",
   sending: "Отправляется",
   answered: "Отвечено",
   failed: "Ошибка",
-  escalated: "Эскалировано",
+  escalated: "Передано менеджеру",
   archived: "Архив",
   blocked_by_marketplace: "Заблокировано маркетплейсом",
 };
@@ -119,11 +119,11 @@ export function InboxWorkspace() {
   }
 
   return (
-    <section className="inbox-workspace" aria-label="Рабочая область Inbox">
+    <section className="inbox-workspace" aria-label="Рабочая область обращений">
       <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
         <div className="panel-heading">
           <span className="panel-kicker">Фильтры</span>
-          <strong>Живая очередь</strong>
+          <strong>Очередь обращений</strong>
         </div>
 
         <label className="field-group">
@@ -146,10 +146,10 @@ export function InboxWorkspace() {
         <FilterGroup label="Статус">
           <FilterButton active={filters.status === "all"} onClick={() => updateFilter("status", "all")}>Все</FilterButton>
           <FilterButton active={filters.status === "needs_reply"} onClick={() => updateFilter("status", "needs_reply")}>Нужен ответ</FilterButton>
-          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>AI готов</FilterButton>
-          <FilterButton active={filters.status === "waiting_review"} onClick={() => updateFilter("status", "waiting_review")}>Проверка</FilterButton>
+          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>Черновик готов</FilterButton>
+          <FilterButton active={filters.status === "waiting_review"} onClick={() => updateFilter("status", "waiting_review")}>На проверке</FilterButton>
           <FilterButton active={filters.status === "failed"} onClick={() => updateFilter("status", "failed")}>Ошибки</FilterButton>
-          <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>Эскалации</FilterButton>
+          <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>У менеджера</FilterButton>
         </FilterGroup>
 
         <FilterGroup label="Оценка">
@@ -172,10 +172,10 @@ export function InboxWorkspace() {
         </div>
 
         {messagesQuery.isPending ? (
-          <InboxState title="Загружаем обращения" description="Получаем данные из GET /api/messages." />
+          <InboxState title="Загружаем обращения" description="Получаем обращения из подключённых маркетплейсов." />
         ) : messagesQuery.error ? (
           <InboxState
-            title="Не удалось загрузить Inbox"
+            title="Не удалось загрузить обращения"
             description={errorMessage(messagesQuery.error)}
             actionLabel="Повторить"
             onAction={() => void messagesQuery.refetch()}
@@ -193,7 +193,7 @@ export function InboxWorkspace() {
           </div>
         ) : (
           <EmptyState
-            description="Измените фильтры или синхронизируйте маркетплейс. Этот список уже загружается из backend API."
+            description="Измените фильтры или синхронизируйте подключённые маркетплейсы."
             title="Нет обращений по выбранным фильтрам"
           />
         )}
@@ -320,7 +320,7 @@ function MessageDetail({
             disabled={isCreatingDraft}
             maxLength={12000}
             onChange={(event) => setReplyText(event.target.value)}
-            placeholder="Напишите ответ и отправьте его в Review Queue"
+            placeholder="Напишите ответ, который нужно передать на проверку"
             value={replyText}
           />
           <button
@@ -329,7 +329,7 @@ function MessageDetail({
             onClick={() => onCreateDraft(replyText)}
             type="button"
           >
-            {isCreatingDraft ? "Создаём..." : "Создать черновик для проверки"}
+            {isCreatingDraft ? "Создаём..." : "Передать черновик на проверку"}
           </button>
         </label>
       ) : null}
@@ -339,7 +339,7 @@ function MessageDetail({
 
       <div className="detail-actions">
         <button className="button button-primary" disabled={isUpdating || message.status === "escalated"} onClick={onEscalate} type="button">
-          Эскалировать
+          Передать менеджеру
         </button>
         <button className="button button-secondary" disabled={isUpdating || message.status === "archived"} onClick={onArchive} type="button">
           Архивировать
