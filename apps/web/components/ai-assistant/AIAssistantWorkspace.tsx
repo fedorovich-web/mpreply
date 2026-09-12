@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
@@ -8,11 +9,12 @@ import {
   aiDraftListSchema,
   aiDraftSchema,
   customerMessageListSchema,
+  manualReplyWorkflowSchema,
   type AIDraft,
   type CustomerMessage,
 } from "../../lib/api/schemas";
-import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { Badge, type BadgeTone } from "../ui/Badge";
+import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
 const toneOptions = [
@@ -23,6 +25,9 @@ const toneOptions = [
 ] as const;
 
 type Tone = (typeof toneOptions)[number]["value"];
+type ReviewHandoffState =
+  | { status: "submitted" }
+  | { status: "draft_created"; error: unknown };
 
 export function AIAssistantWorkspace() {
   const { activeOrganization } = useWorkspace();
@@ -33,6 +38,7 @@ export function AIAssistantWorkspace() {
   const [brandRules, setBrandRules] = useState("");
   const [knowledgeBase, setKnowledgeBase] = useState("");
   const [latestDraft, setLatestDraft] = useState<AIDraft | null>(null);
+  const [reviewHandoff, setReviewHandoff] = useState<ReviewHandoffState | null>(null);
 
   const messagesQuery = useQuery({
     queryKey: ["ai-assistant", "messages", activeOrganization.id],
@@ -81,9 +87,47 @@ export function AIAssistantWorkspace() {
     },
     onSuccess: async (draft) => {
       setLatestDraft(draft);
+      setReviewHandoff(null);
       await queryClient.invalidateQueries({
         queryKey: ["ai-assistant", "drafts", activeOrganization.id, selectedMessage?.id],
       });
+    },
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: async ({ draft, replyText }: { draft: AIDraft; replyText: string }) => {
+      if (!selectedMessage || selectedMessage.id !== draft.message_id) {
+        throw new Error("Выбранное обращение изменилось. Повторно откройте нужное обращение.");
+      }
+
+      const created = await apiRequest("/api/replies/manual", manualReplyWorkflowSchema, {
+        method: "POST",
+        body: {
+          message_id: selectedMessage.id,
+          ai_draft_id: draft.id,
+          reply_text: replyText.trim(),
+        },
+      });
+
+      try {
+        await apiRequest(`/api/replies/${created.reply.id}/submit-review`, manualReplyWorkflowSchema, {
+          method: "POST",
+        });
+        return { status: "submitted" } as ReviewHandoffState;
+      } catch (error) {
+        return { status: "draft_created", error } as ReviewHandoffState;
+      }
+    },
+    onMutate: () => {
+      setReviewHandoff(null);
+    },
+    onSuccess: async (handoff) => {
+      setReviewHandoff(handoff);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["review-queue", activeOrganization.id] }),
+        queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] }),
+        queryClient.invalidateQueries({ queryKey: ["ai-assistant", "messages", activeOrganization.id] }),
+      ]);
     },
   });
 
@@ -94,21 +138,23 @@ export function AIAssistantWorkspace() {
   function selectMessage(messageId: string) {
     setSelectedMessageId(messageId);
     setLatestDraft(null);
+    setReviewHandoff(null);
     generateMutation.reset();
+    reviewMutation.reset();
   }
 
   return (
     <section className="ai-workspace" aria-labelledby="ai-workspace-title">
       <header className="ai-workspace-toolbar">
         <div>
-          <p className="eyebrow">Подготовка ответа</p>
+          <p className="eyebrow">Рабочий процесс</p>
           <h2 id="ai-workspace-title">Обращение → черновик → проверка</h2>
           <p>
-            Выберите обращение, задайте тон и добавьте нужный контекст. MPReply подготовит ответ и отметит, если его стоит дополнительно проверить.
+            Контекст обращения, настройки ответа и готовый текст остаются рядом — без переключения между экранами.
           </p>
         </div>
         <Badge tone={canGenerate ? "success" : "neutral"}>
-          {canGenerate ? "Можно создавать ответы" : "Только просмотр"}
+          {canGenerate ? "Можно готовить ответы" : "Только просмотр"}
         </Badge>
       </header>
 
@@ -116,8 +162,8 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-message-panel" aria-labelledby="ai-message-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Выберите обращение</span>
-              <strong id="ai-message-list-title">Обращения</strong>
+              <span className="panel-kicker">Шаг 1</span>
+              <strong id="ai-message-list-title">Выберите обращение</strong>
             </div>
             {messagesQuery.data ? <Badge>{messagesQuery.data.total}</Badge> : null}
           </div>
@@ -153,8 +199,8 @@ export function AIAssistantWorkspace() {
 
         <section className="ai-panel ai-generate-panel" aria-labelledby="ai-generate-title">
           <div className="panel-heading">
-            <span className="panel-kicker">Настройки ответа</span>
-            <strong id="ai-generate-title">Новый черновик</strong>
+            <span className="panel-kicker">Шаг 2</span>
+            <strong id="ai-generate-title">Контекст и стиль</strong>
           </div>
 
           {selectedMessage ? (
@@ -191,12 +237,12 @@ export function AIAssistantWorkspace() {
                   />
                 </label>
                 <label>
-                  Контекст базы знаний
+                  Факты для ответа
                   <textarea
                     disabled={!canGenerate || generateMutation.isPending}
                     maxLength={4000}
                     onChange={(event) => setKnowledgeBase(event.target.value)}
-                    placeholder="Факты о товаре, гарантии, комплектации или правилах поддержки"
+                    placeholder="Комплектация, гарантия, доставка или другие факты, которые важно учесть"
                     value={knowledgeBase}
                   />
                 </label>
@@ -227,8 +273,8 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-result-panel" aria-labelledby="ai-result-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Готовый вариант</span>
-              <strong id="ai-result-title">Черновик и проверка</strong>
+              <span className="panel-kicker">Шаг 3</span>
+              <strong id="ai-result-title">Проверьте готовый ответ</strong>
             </div>
             {displayedDraft ? <Badge tone={draftTone(displayedDraft)}>{confidenceLabel(displayedDraft)}</Badge> : null}
           </div>
@@ -245,7 +291,17 @@ export function AIAssistantWorkspace() {
               onAction={() => void draftsQuery.refetch()}
             />
           ) : displayedDraft ? (
-            <DraftResult draft={displayedDraft} />
+            <DraftResult
+              canManage={canGenerate}
+              draft={displayedDraft}
+              handoff={reviewHandoff}
+              isGenerating={generateMutation.isPending}
+              isSubmitting={reviewMutation.isPending}
+              key={displayedDraft.id}
+              onRegenerate={() => generateMutation.mutate()}
+              onSubmit={(replyText) => reviewMutation.mutate({ draft: displayedDraft, replyText })}
+              submitError={reviewMutation.error}
+            />
           ) : (
             <AIState title="Черновиков ещё нет" description="Подготовьте первый ответ для выбранного обращения." />
           )}
@@ -302,20 +358,92 @@ function MessageContext({ message }: { message: CustomerMessage }) {
   );
 }
 
-function DraftResult({ draft }: { draft: AIDraft }) {
+function DraftResult({
+  draft,
+  canManage,
+  isGenerating,
+  isSubmitting,
+  handoff,
+  submitError,
+  onRegenerate,
+  onSubmit,
+}: {
+  draft: AIDraft;
+  canManage: boolean;
+  isGenerating: boolean;
+  isSubmitting: boolean;
+  handoff: ReviewHandoffState | null;
+  submitError: unknown;
+  onRegenerate: () => void;
+  onSubmit: (replyText: string) => void;
+}) {
+  const [replyText, setReplyText] = useState(draft.draft_text);
   const needsReview = draft.safety_flags_json.length > 0;
+  const isLocked = handoff !== null;
 
   return (
     <div className="ai-draft-result" aria-live="polite">
-      <div className="ai-draft-copy">
-        <p>{draft.draft_text}</p>
-      </div>
+      <label className="ai-draft-editor-field">
+        <span>Ответ для проверки</span>
+        <textarea
+          disabled={!canManage || isSubmitting || isLocked}
+          maxLength={12000}
+          onChange={(event) => setReplyText(event.target.value)}
+          value={replyText}
+        />
+        {canManage && !isLocked ? (
+          <small>Отредактируйте текст при необходимости, затем передайте его в очередь ручной проверки.</small>
+        ) : null}
+      </label>
 
       <div className="ai-draft-flags">
         <Badge tone={needsReview ? "warning" : "success"}>
           {needsReview ? "Нужна дополнительная проверка" : "Проверка пройдена"}
         </Badge>
       </div>
+
+      {handoff?.status === "submitted" ? (
+        <div className="ai-review-handoff" role="status">
+          <div>
+            <span className="panel-kicker">Готово</span>
+            <strong>Ответ передан на проверку</strong>
+          </div>
+          <Link className="button button-primary" href="/app/review-queue">Открыть модерацию</Link>
+        </div>
+      ) : null}
+
+      {handoff?.status === "draft_created" ? (
+        <div className="form-error ai-review-handoff" role="alert">
+          <div>
+            <strong>Черновик сохранён, но передача на проверку не завершилась</strong>
+            <span>{errorMessage(handoff.error)}</span>
+          </div>
+          <Link className="button button-secondary" href="/app/review-queue">Открыть очередь проверки</Link>
+        </div>
+      ) : null}
+
+      {submitError ? <p className="form-error" role="alert">{errorMessage(submitError)}</p> : null}
+
+      {canManage && !isLocked ? (
+        <div className="ai-draft-actions">
+          <button
+            className="button button-secondary"
+            disabled={isGenerating || isSubmitting}
+            onClick={onRegenerate}
+            type="button"
+          >
+            {isGenerating ? "Готовим вариант..." : "Подготовить другой вариант"}
+          </button>
+          <button
+            className="button button-primary"
+            disabled={isGenerating || isSubmitting || replyText.trim().length === 0}
+            onClick={() => onSubmit(replyText)}
+            type="button"
+          >
+            {isSubmitting ? "Передаём..." : "Передать на проверку"}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
