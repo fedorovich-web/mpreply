@@ -111,6 +111,12 @@ try {
     Run-Step "Frontend accessibility" {
         & $Npm run test:a11y
     }
+    Run-Step "Frontend visual regression" {
+        & $Npm run test:visual
+    }
+    Run-Step "Frontend Lighthouse CI" {
+        & $Npm run lighthouse
+    }
 }
 finally {
     Pop-Location
