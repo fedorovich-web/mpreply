@@ -6,14 +6,14 @@ export default function IntegrationsPage() {
       <header className="app-header app-header-row integrations-page-header">
         <div>
           <p className="eyebrow">Интеграции</p>
-          <h1>Подключения маркетплейсов без ложной готовности</h1>
+          <h1>Подключите маркетплейсы к MPReply</h1>
           <p>
-            Wildberries доступен сейчас: подключайте кабинеты, следите за синхронизацией и состоянием доступа. Ozon, Яндекс Маркет и Авито находятся в плане интеграций и пока не открыты для подключения.
+            Wildberries, Ozon, Яндекс Маркет и Авито доступны для подключения. Здесь можно видеть состояние кабинетов, открывать настройки интеграций и быстро находить подключения, которым требуется внимание.
           </p>
         </div>
-        <div className="app-header-actions" aria-label="Текущий статус интеграций">
-          <span className="status-badge">Wildberries доступен</span>
-          <span className="status-badge">3 интеграции в плане</span>
+        <div className="app-header-actions">
+          <span className="status-badge">4 маркетплейса</span>
+          <span className="status-badge">Единое управление</span>
         </div>
       </header>
 
