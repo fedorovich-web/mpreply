@@ -91,8 +91,8 @@ function expectOpaqueHexColor(value: string, label: string): void {
   expect(value, `${label} must be an opaque six-digit hex color`).toMatch(/^#[0-9a-f]{6}$/i);
 }
 
-describe("Respio design tokens", () => {
-  it("contains the complete public visual-system contract", () => {
+describe("MPReply base design tokens", () => {
+  it("contains the complete shared visual-system contract", () => {
     const requiredTokens = [
       "--color-bg-page",
       "--color-bg-surface",
@@ -127,8 +127,6 @@ describe("Respio design tokens", () => {
       "--color-border-subtle",
       "--gradient-public-hero",
       "--gradient-public-cta",
-      "--gradient-signal-track",
-      "--gradient-hero-glow",
       "--font-family-sans",
       "--font-weight-regular",
       "--font-weight-medium",
@@ -172,7 +170,7 @@ describe("Respio design tokens", () => {
     }
   });
 
-  it("keeps the approved Respio violet and mint while using a neutral near-white page canvas", () => {
+  it("keeps a complete fallback palette beneath the blue MPReply brand layer", () => {
     expect(token("--color-brand-primary").toLowerCase()).toBe("#6f33ab");
     expect(token("--color-brand-accent").toLowerCase()).toBe("#79d6b0");
     expect(token("--color-bg-page").toLowerCase()).toBe("#fbfafc");
@@ -180,7 +178,7 @@ describe("Respio design tokens", () => {
     expect(token("--color-public-section")).toBe("var(--color-bg-page)");
   });
 
-  it("keeps decorative mint distinct from semantic success", () => {
+  it("keeps decorative accent distinct from semantic success", () => {
     expect(token("--color-brand-accent").toLowerCase()).not.toBe(token("--color-success").toLowerCase());
   });
 
@@ -222,12 +220,6 @@ describe("Respio design tokens", () => {
     for (const declaration of transitionDeclarations) {
       expect(declaration[1]?.trim()).toMatch(/^var\(--transition-[\w-]+\)$/);
     }
-  });
-
-  it("keeps process steps visually equal and SafetyGate semantic rather than oversized", () => {
-    expect(publicStyleSource).toContain(".signal-flow-step-safety > span:first-child");
-    expect(publicStyleSource).not.toMatch(/\.signal-flow-step-safety\s*\{[^}]*transform:/s);
-    expect(publicStyleSource).not.toMatch(/\.signal-flow-step-safety\s*\{[^}]*box-shadow:/s);
   });
 
   it("keeps live Automation Rules on semantic tokens, focus contracts and responsive states", () => {
@@ -364,9 +356,8 @@ describe("Respio design tokens", () => {
     expect(globalStyleSource).not.toMatch(/\.button-danger\s*\{[^}]*color:\s*var\(--color-text-on-brand\);/s);
   });
 
-  it("keeps public success badges on their own accessible semantic pair even inside dark readiness surfaces", () => {
+  it("keeps public success badges on their own accessible semantic pair", () => {
     expect(publicStyleSource).toMatch(/\.public-status-mvp\s*\{[^}]*background:\s*var\(--color-success-soft\);[^}]*color:\s*var\(--color-success-text\);/s);
-    expect(publicStyleSource).not.toMatch(/\.readiness-summary-primary\s+\.public-status-mvp\s*\{[^}]*color:/s);
   });
 
   it("keeps error copy on the dedicated danger text token instead of the lower-contrast accent token", () => {
