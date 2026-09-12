@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/integrations/IntegrationsWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/integrations/page.tsx"), "utf8");
+const wildberriesPage = readFileSync(join(root, "app/app/integrations/wildberries/page.tsx"), "utf8");
 const ozonPage = readFileSync(join(root, "app/app/integrations/ozon/page.tsx"), "utf8");
 const yandexPage = readFileSync(join(root, "app/app/integrations/yandex-market/page.tsx"), "utf8");
 const avitoPage = readFileSync(join(root, "app/app/integrations/avito/page.tsx"), "utf8");
@@ -30,6 +31,13 @@ describe("integrations readiness workspace", () => {
     }
   });
 
+  it("keeps Wildberries as the explicit live operational integration", () => {
+    expect(wildberriesPage).toContain("WildberriesIntegrationWorkspace");
+    expect(wildberriesPage).toContain("wildberries-integration-page");
+    expect(wildberriesPage).toContain("Доступно сейчас");
+    expect(wildberriesPage).not.toContain("Планируется");
+  });
+
   it("states the actual MVP coverage on the integrations page", () => {
     expect(page).toContain("Wildberries доступен сейчас");
     expect(page).toContain("Ozon, Яндекс Маркет и Авито находятся в плане интеграций");
@@ -41,6 +49,7 @@ describe("integrations readiness workspace", () => {
     expect(styles).toContain(".integrations-page");
     expect(styles).toContain(".integration-market-card-live");
     expect(styles).toContain(".integration-market-card-planned");
+    expect(styles).toContain(".wildberries-integration-page");
     expect(styles).toContain(".planned-integration-page");
     expect(styles).toContain("@media (max-width: 520px)");
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
