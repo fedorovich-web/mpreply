@@ -2328,7 +2328,7 @@ body,
 @media (max-width: 1040px) {
 	.public-subhero-grid,
 	.demo-decision-stage {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
 	}
 
 	.public-subhero-copy {
@@ -2514,7 +2514,7 @@ body,
 	}
 
 	.demo-decision-copy h2 {
-		font-size: var(--font-size-h1-compact);
+		font-size: var(--font-size-h2);
 	}
 
 	.cta-actions-on-dark {

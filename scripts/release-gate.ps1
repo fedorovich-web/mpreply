@@ -8,6 +8,7 @@ $VenvPython = Join-Path $Root ".venv\Scripts\python.exe"
 $VenvRuff = Join-Path $Root ".venv\Scripts\ruff.exe"
 $VenvPytest = Join-Path $Root ".venv\Scripts\pytest.exe"
 $VenvAlembic = Join-Path $Root ".venv\Scripts\alembic.exe"
+$VenvPipAudit = Join-Path $Root ".venv\Scripts\pip-audit.exe"
 
 function Assert-File([string]$Path, [string]$Label) {
     if (-not (Test-Path $Path)) {
@@ -31,6 +32,7 @@ Assert-File $VenvPython "Python virtual environment"
 Assert-File $VenvRuff "Ruff executable"
 Assert-File $VenvPytest "Pytest executable"
 Assert-File $VenvAlembic "Alembic executable"
+Assert-File $VenvPipAudit "pip-audit executable"
 
 $NpxCommand = Get-Command npx.cmd -ErrorAction SilentlyContinue
 if ($null -eq $NpxCommand) {
@@ -55,6 +57,9 @@ try {
     }
     Run-Step "Backend dependency consistency" {
         & $VenvPython -m pip check
+    }
+    Run-Step "Backend dependency security audit" {
+        & $VenvPipAudit --strict .
     }
     Run-Step "Backend Ruff" {
         & $VenvRuff check app alembic
@@ -113,6 +118,12 @@ try {
     }
     Run-Step "Frontend accessibility" {
         & $Npm run test:a11y
+    }
+    Run-Step "Frontend visual regression" {
+        & $Npm run test:visual:run
+    }
+    Run-Step "Frontend Lighthouse" {
+        & $Npm run lighthouse
     }
 }
 finally {

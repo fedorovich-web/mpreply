@@ -6,6 +6,7 @@ for (const route of VISUAL_ROUTES) {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 1440, height: 1200 });
     await page.goto(route.path, { waitUntil: "networkidle" });
+    await page.evaluate(() => document.fonts.ready);
     await expect(page).toHaveScreenshot(`${route.slug}-desktop.png`, { fullPage: true });
   });
 
@@ -13,6 +14,7 @@ for (const route of VISUAL_ROUTES) {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(route.path, { waitUntil: "networkidle" });
+    await page.evaluate(() => document.fonts.ready);
     await expect(page).toHaveScreenshot(`${route.slug}-mobile.png`, { fullPage: true });
   });
 }
