@@ -48,9 +48,15 @@ describe("shared MPReply brand theme", () => {
     expect(marketingPages).not.toContain("#1d4ed8");
   });
 
-  it("keeps dark mode in the same blue family instead of purple and mint", () => {
+  it("keeps dark mode in the same blue family with accessible semantic status surfaces", () => {
     expect(brandTheme).toContain("[data-theme='dark']");
     expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-brand-primary:\s*#60a5fa/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-success-text:\s*#75e0a7/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-success-soft:\s*#053321/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-warning-text:\s*#fec84b/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-warning-soft:\s*#3f2a0a/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-danger-text:\s*#fda29b/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-danger-soft:\s*#55160c/);
     expect(brandTheme).not.toMatch(/#ad72dc|#7ad9b2|#6f33ab|#79d6b0/i);
   });
 });
