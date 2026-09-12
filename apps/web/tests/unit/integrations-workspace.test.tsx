@@ -95,7 +95,7 @@ describe("IntegrationsWorkspace", () => {
     expect(screen.getAllByText("Доступно сейчас")).toHaveLength(1);
     expect(screen.getAllByText("Планируется")).toHaveLength(3);
     expect(screen.getAllByText(/Подключение и отправка пока недоступны/)).toHaveLength(3);
-    expect(screen.getAllByText("Не подключено")).toHaveLength(0);
+    expect(screen.queryAllByText("Не подключено")).toHaveLength(0);
 
     expect(screen.getByRole("link", { name: "Управлять Wildberries" })).toHaveAttribute(
       "href",
@@ -149,7 +149,7 @@ describe("MarketplaceIntegrationWorkspace", () => {
     const form = screen.getByRole("form", { name: "Новое подключение Ozon" });
     fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый Ozon" } });
     fireEvent.change(within(form).getByLabelText("Данные доступа Ozon"), { target: { value: "secret-token" } });
-    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+    fireEvent.click(within(editor).getByRole("button", { name: "Добавить кабинет" }));
 
     await waitFor(() => {
       expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
