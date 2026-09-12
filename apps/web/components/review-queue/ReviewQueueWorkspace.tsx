@@ -50,13 +50,18 @@ export function ReviewQueueWorkspace() {
   };
 
   if (queueQuery.isPending) {
-    return <QueueState title="Загружаем очередь проверки" description="Получаем реальные semi-auto ответы из backend API." />;
+    return (
+      <QueueState
+        title="Загружаем очередь проверки"
+        description="Получаем ответы, которые требуют проверки перед отправкой."
+      />
+    );
   }
 
   if (queueQuery.error) {
     return (
       <QueueState
-        title="Не удалось загрузить Review Queue"
+        title="Не удалось загрузить очередь проверки"
         description={errorMessage(queueQuery.error)}
         actionLabel="Повторить"
         onAction={() => void queueQuery.refetch()}
@@ -67,8 +72,8 @@ export function ReviewQueueWorkspace() {
   if (items.length === 0) {
     return (
       <EmptyState
-        title="Очередь ручной проверки пуста"
-        description="Здесь появятся semi-auto ответы со статусами draft, manual_review_required, waiting_review или approved."
+        title="На проверке ничего нет"
+        description="Здесь появятся ответы, которые нужно проверить, исправить или подтвердить перед отправкой."
       />
     );
   }
@@ -81,7 +86,12 @@ export function ReviewQueueWorkspace() {
             <span className="panel-kicker">{queueQuery.data.total} ответов</span>
             <strong>{activeOrganization.name}</strong>
           </div>
-          <button className="button button-secondary button-compact" disabled={queueQuery.isFetching} onClick={() => void queueQuery.refetch()} type="button">
+          <button
+            className="button button-secondary button-compact"
+            disabled={queueQuery.isFetching}
+            onClick={() => void queueQuery.refetch()}
+            type="button"
+          >
             {queueQuery.isFetching ? "Обновляем..." : "Обновить"}
           </button>
         </div>
@@ -101,7 +111,7 @@ export function ReviewQueueWorkspace() {
               <strong>{item.message.product?.name ?? "Товар без карточки"}</strong>
               <span>{item.message.customer_text}</span>
               <small>
-                {messageTypeLabel(item.message.type)} · {item.message.rating ? `${item.message.rating}★` : "без оценки"} · rev {item.reply.revision}
+                {messageTypeLabel(item.message.type)} · {item.message.rating ? `${item.message.rating}★` : "без оценки"}
               </small>
             </button>
           ))}
@@ -175,7 +185,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
     <article className="review-editor-card">
       <div className="panel-heading panel-heading-row">
         <div>
-          <span className="panel-kicker">Reply editor</span>
+          <span className="panel-kicker">Редактор ответа</span>
           <strong>{item.message.product?.name ?? "Товар без карточки"}</strong>
         </div>
         <Badge tone={replyStatusTone(item.reply.status)}>
@@ -189,7 +199,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
       </section>
 
       <label className="review-editor-field">
-        <span>Ответ · revision {item.reply.revision}</span>
+        <span>Ответ покупателю</span>
         <textarea
           disabled={!isEditable(item.reply.status) || isMutating}
           maxLength={12000}
@@ -199,15 +209,11 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
       </label>
 
       <div className="review-safety-block">
-        <span>SafetyGate · {item.safety.decision}</span>
+        <span>Проверка ответа · {safetyDecisionLabel(item.safety.decision)}</span>
         {item.safety.flags.length > 0 ? (
-          <div className="review-flag-list">
-            {item.safety.flags.map((flag) => (
-              <Badge key={flag} tone={safetyTone(item.safety.decision)}>{flag}</Badge>
-            ))}
-          </div>
+          <Badge tone={safetyTone(item.safety.decision)}>Нужна дополнительная проверка</Badge>
         ) : (
-          <p>Блокирующих флагов нет. Текст повторно проверяется backend перед review, approval и send.</p>
+          <p>Проверка не обнаружила причин для блокировки. Перед отправкой ответ проверяется ещё раз.</p>
         )}
         {item.safety.reasons.length > 0 ? (
           <ul className="review-safety-reasons">
@@ -216,7 +222,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
         ) : null}
       </div>
 
-      <div className="review-workflow-track" aria-label="Статусы workflow">
+      <div className="review-workflow-track" role="group" aria-label="Этапы проверки ответа">
         {(["draft", "waiting_review", "approved"] as const).map((status) => {
           const active = workflowStep(item.reply.status) === status;
           return (
@@ -287,10 +293,6 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
           </button>
         ) : null}
       </div>
-
-      <p className="review-api-note">
-        Этот экран работает с live API: GET review-queue → PATCH draft с optimistic revision → submit-review → approve/reject → send → worker.
-      </p>
     </article>
   );
 }
@@ -310,7 +312,11 @@ function QueueState({
     <div className="workspace-inline-state" aria-live="polite">
       <strong>{title}</strong>
       <p>{description}</p>
-      {actionLabel && onAction ? <button className="button button-secondary button-compact" onClick={onAction} type="button">{actionLabel}</button> : null}
+      {actionLabel && onAction ? (
+        <button className="button button-secondary button-compact" onClick={onAction} type="button">
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -337,6 +343,12 @@ function safetyTone(decision: string): BadgeTone {
   return "success";
 }
 
+function safetyDecisionLabel(decision: string): string {
+  if (decision === "block") return "нельзя отправлять";
+  if (decision === "manual_review") return "нужна проверка";
+  return "можно продолжить";
+}
+
 function marketplaceLabel(value: string): string {
   const labels: Record<string, string> = {
     wildberries: "Wildberries",
@@ -348,7 +360,10 @@ function marketplaceLabel(value: string): string {
 }
 
 function messageTypeLabel(value: string): string {
-  return value === "review" ? "Отзыв" : value === "question" ? "Вопрос" : value;
+  if (value === "review") return "Отзыв";
+  if (value === "question") return "Вопрос";
+  if (value === "message") return "Сообщение";
+  return value;
 }
 
 function errorMessage(error: unknown): string {
