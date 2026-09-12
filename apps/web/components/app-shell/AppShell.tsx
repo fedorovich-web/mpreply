@@ -10,10 +10,10 @@ const navItems = [
   { href: "/app/dashboard", label: "Dashboard", description: "Сводка" },
   { href: "/app/inbox", label: "Inbox", description: "Отзывы и вопросы" },
   { href: "/app/review-queue", label: "Review Queue", description: "Ручная проверка" },
-  { href: "/app/ai-assistant", label: "AI Assistant", description: "OpenRouter" },
-  { href: "/app/automation-rules", label: "Automation Rules", description: "Auto + SafetyGate" },
-  { href: "/app/integrations", label: "Integrations", description: "API-ключи" },
-  { href: "/app/integrations/wildberries", label: "Wildberries", description: "MVP adapter" },
+  { href: "/app/ai-assistant", label: "AI Assistant", description: "ИИ-черновики" },
+  { href: "/app/automation-rules", label: "Automation Rules", description: "Автоответы и контроль" },
+  { href: "/app/integrations", label: "Integrations", description: "Маркетплейсы" },
+  { href: "/app/integrations/wildberries", label: "Wildberries", description: "Настройка аккаунтов" },
   { href: "/app/analytics", label: "Analytics", description: "Метрики и AI usage" },
   { href: "/app/billing", label: "Billing", description: "Тариф и лимиты" },
 ];
@@ -39,11 +39,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-shell">
       <aside className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="Respio dashboard">
-            <span className="app-logo-mark" aria-hidden="true">R</span>
+          <Link href="/app/dashboard" className="app-logo" aria-label="MPReply dashboard">
+            <span className="app-logo-mark" aria-hidden="true">M</span>
             <span>
-              <strong>Respio</strong>
-              <small>Seller AI ops</small>
+              <strong>MPReply</strong>
+              <small>Marketplace inbox</small>
             </span>
           </Link>
         </div>
@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="app-sidebar-section" aria-label="Следующие разделы">
-          <span className="app-sidebar-caption">Следующие спринты</span>
+          <span className="app-sidebar-caption">В разработке</span>
           <div className="app-upcoming-list">
             {upcomingItems.map((item) => (
               <span className="app-upcoming-item" key={item}>{item}</span>
@@ -91,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="app-topbar-title">
-            <span>Auto-first workspace</span>
+            <span>Рабочее пространство</span>
             <strong>{activeOrganization.name}</strong>
           </div>
 
