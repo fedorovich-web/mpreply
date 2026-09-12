@@ -2,50 +2,51 @@
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 
-type WorkspaceTab = "reviews" | "questions" | "messages";
+type WorkspaceTab = "reviews" | "questions" | "messages" | "all";
 
 type WorkspaceState = {
   label: string;
-  title: string;
-  source: string;
-  meta: string;
-  customerText: string;
+  icon: string;
   answer: string;
-  state: string;
+  tone: string;
 };
 
 const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
   reviews: {
     label: "Отзывы",
-    title: "Отзыв о товаре",
-    source: "Wildberries",
-    meta: "5 звёзд · Артикул 481205",
-    customerText: "Качество отличное, доставка быстрая. Спасибо!",
-    answer: "Спасибо за отзыв! Рады, что товар и доставка оправдали ожидания.",
-    state: "Готов к отправке",
+    icon: "☆",
+    answer: "Спасибо за ваш отзыв! Нам очень приятно, что товар вам понравился. Будем рады видеть вас снова!",
+    tone: "green",
   },
   questions: {
     label: "Вопросы",
-    title: "Вопрос покупателя",
-    source: "Ozon",
-    meta: "Карточка товара · SKU 24018",
-    customerText: "Подойдёт ли размер M на рост 174 см?",
-    answer: "Для роста 174 см размер M обычно подходит. Если хотите более свободную посадку, ориентируйтесь ещё и на параметры в таблице размеров.",
-    state: "Нужна проверка",
+    icon: "◎",
+    answer: "Спасибо за вопрос! Подготовили ответ с учётом карточки товара и доступной информации.",
+    tone: "blue",
   },
   messages: {
     label: "Сообщения",
-    title: "Диалог с покупателем",
-    source: "Авито",
-    meta: "Новое сообщение · 2 минуты назад",
-    customerText: "Здравствуйте! Когда сможете отправить заказ?",
-    answer: "Здравствуйте! Заказ можно подготовить к отправке сегодня. После передачи в доставку статус обновится автоматически.",
-    state: "Ответ подготовлен",
+    icon: "▱",
+    answer: "Здравствуйте! Сообщение получено. Ответ подготовлен с учётом контекста обращения.",
+    tone: "cyan",
+  },
+  all: {
+    label: "Все обращения",
+    icon: "◇",
+    answer: "MPReply объединяет отзывы, вопросы и сообщения в одной очереди и помогает отвечать без лишних переключений.",
+    tone: "blue",
   },
 };
 
 const tabs = Object.entries(workspaceStates) as Array<[WorkspaceTab, WorkspaceState]>;
 const tabOrder = tabs.map(([key]) => key);
+
+const reviewRows = [
+  { initials: "АК", name: "Анна К.", rating: "★★★★★", text: "Отличное качество, быстрая доставка!", time: "12 мин назад" },
+  { initials: "ДС", name: "Дмитрий С.", rating: "★★★★★", text: "Хороший товар, из упаковки было понятно...", time: "1 час назад" },
+  { initials: "ЕМ", name: "Елена М.", rating: "★★★★☆", text: "Цвет немного отличается от фото", time: "3 часа назад" },
+  { initials: "СВ", name: "Сергей В.", rating: "★★★★★", text: "Отличный продавец, рекомендую!", time: "5 часов назад" },
+] as const;
 
 export function HomeWorkspaceTabs() {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("reviews");
@@ -62,26 +63,18 @@ export function HomeWorkspaceTabs() {
     const currentIndex = tabOrder.indexOf(key);
     let target: WorkspaceTab | null = null;
 
-    if (event.key === "ArrowRight") {
-      target = tabOrder[(currentIndex + 1) % tabOrder.length];
-    } else if (event.key === "ArrowLeft") {
-      target = tabOrder[(currentIndex - 1 + tabOrder.length) % tabOrder.length];
-    } else if (event.key === "Home") {
-      target = tabOrder[0];
-    } else if (event.key === "End") {
-      target = tabOrder[tabOrder.length - 1];
-    }
-
-    if (!target) {
-      return;
-    }
+    if (event.key === "ArrowRight") target = tabOrder[(currentIndex + 1) % tabOrder.length];
+    if (event.key === "ArrowLeft") target = tabOrder[(currentIndex - 1 + tabOrder.length) % tabOrder.length];
+    if (event.key === "Home") target = tabOrder[0];
+    if (event.key === "End") target = tabOrder[tabOrder.length - 1];
+    if (!target) return;
 
     event.preventDefault();
     activateAndFocus(target);
   };
 
   return (
-    <div className="homepage-workspace">
+    <div className="homepage-workspace homepage-approved-workspace">
       <div className="homepage-workspace-tabs" role="tablist" aria-label="Тип обращения">
         {tabs.map(([key, item]) => {
           const selected = key === activeTab;
@@ -101,7 +94,7 @@ export function HomeWorkspaceTabs() {
               onClick={() => setActiveTab(key)}
               onKeyDown={(event) => handleTabKeyDown(event, key)}
             >
-              {item.label}
+              <span aria-hidden="true">{item.icon}</span>{item.label}
             </button>
           );
         })}
@@ -113,62 +106,36 @@ export function HomeWorkspaceTabs() {
         role="tabpanel"
         aria-labelledby={`${id}-${activeTab}-tab`}
       >
-        <aside className="homepage-workspace-queue" aria-label="Очередь обращений">
-          <div className="homepage-workspace-queue-head">
-            <strong>Входящие</strong>
-            <span>4 площадки</span>
-          </div>
-          <div className="homepage-workspace-queue-item is-active">
-            <span className="homepage-marketplace-mark" aria-hidden="true">{active.source.slice(0, 2)}</span>
-            <div>
-              <strong>{active.title}</strong>
-              <small>{active.source}</small>
-            </div>
-          </div>
-          <div className="homepage-workspace-queue-item">
-            <span className="homepage-marketplace-mark is-muted" aria-hidden="true">ЯМ</span>
-            <div>
-              <strong>Новое обращение</strong>
-              <small>Яндекс Маркет</small>
-            </div>
-          </div>
-          <div className="homepage-workspace-queue-item">
-            <span className="homepage-marketplace-mark is-muted" aria-hidden="true">OZ</span>
-            <div>
-              <strong>Ожидает ответа</strong>
-              <small>Ozon</small>
-            </div>
-          </div>
+        <aside className="homepage-workspace-queue" aria-label="Фильтры обращений">
+          <strong>{active.label}</strong>
+          <div className="homepage-workspace-filter is-active"><span>▧</span><b>Все отзывы</b><small>56</small></div>
+          <div className="homepage-workspace-filter"><span>☆</span><b>Положительные</b><small>38</small></div>
+          <div className="homepage-workspace-filter"><span>○</span><b>Нейтральные</b><small>12</small></div>
+          <div className="homepage-workspace-filter"><span>!</span><b>Отрицательные</b><small>6</small></div>
         </aside>
 
-        <article className="homepage-workspace-conversation">
-          <div className="homepage-workspace-titlebar">
-            <div>
-              <span>{active.source}</span>
-              <h3>{active.title}</h3>
-            </div>
-            <small>{active.meta}</small>
-          </div>
-
-          <div className="homepage-message homepage-message-customer">
-            <span>Покупатель</span>
-            <p>{active.customerText}</p>
-          </div>
-
-          <div className="homepage-ai-draft">
-            <div className="homepage-ai-draft-head">
+        <div className="homepage-workspace-list" aria-label="Список обращений">
+          {reviewRows.map((row, index) => (
+            <article className={`homepage-workspace-list-row${index === 0 ? " is-active" : ""}`} key={row.name}>
+              <span className="homepage-workspace-list-avatar" aria-hidden="true">{row.initials}</span>
               <div>
-                <span className="homepage-ai-spark" aria-hidden="true">AI</span>
-                <strong>Черновик ответа</strong>
+                <strong>{row.name} <span>{row.rating}</span></strong>
+                <p>{row.text}</p>
               </div>
-              <span className="homepage-ai-state">{active.state}</span>
-            </div>
-            <p>{active.answer}</p>
-            <div className="homepage-ai-actions" role="group" aria-label="Пример действий с ответом">
-              <span>Изменить</span>
-              <span>Проверить</span>
-              <span className="is-primary">Отправить</span>
-            </div>
+              <time>{row.time}</time>
+            </article>
+          ))}
+        </div>
+
+        <article className="homepage-workspace-answer">
+          <div className="homepage-workspace-answer-head">
+            <span className={`homepage-workspace-answer-dot is-${active.tone}`} aria-hidden="true" />
+            <strong>Ответ с помощью ИИ</strong>
+          </div>
+          <p>{active.answer}</p>
+          <div className="homepage-workspace-answer-actions" aria-hidden="true">
+            <span>Дружелюбный⌄</span>
+            <b>Отправить&nbsp; →</b>
           </div>
         </article>
       </div>
