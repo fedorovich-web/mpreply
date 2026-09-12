@@ -40,7 +40,7 @@ export default function MarketplacesPage() {
             </div>
           </div>
 
-          <div className="marketplace-cluster" aria-label="Поддерживаемые маркетплейсы">
+          <div className="marketplace-cluster" role="group" aria-label="Поддерживаемые маркетплейсы">
             <div className="marketplace-cluster-core">
               <span>MP</span>
               <strong>Одно окно</strong>
