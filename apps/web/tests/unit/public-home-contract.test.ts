@@ -7,6 +7,7 @@ const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 const heroScene = readFileSync(join(root, "components/public-site/HomeHeroScene.tsx"), "utf8");
 const publicShell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
+const heroAssetPath = join(root, "public/images/mpreply-hero.webp");
 const marketingCssPath = join(root, "styles/marketing-site.css");
 const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
 const approvedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
@@ -41,13 +42,18 @@ describe("public homepage redesign contract", () => {
     expect(siteConfig).toContain("Интеграция готова");
   });
 
-  it("builds the approved hero and CTA as real interface scenes instead of flat placeholder artwork", () => {
+  it("uses the approved optimized hero artwork while keeping the CTA scene semantic", () => {
     expect(page).toContain("<HomeHeroScene />");
-    expect(heroScene).toContain("homepage-hero-window");
-    expect(heroScene).toContain("homepage-hero-ai-card");
+    expect(existsSync(heroAssetPath)).toBe(true);
+    expect(heroScene).toContain('import Image from "next/image"');
+    expect(heroScene).toContain('src="/images/mpreply-hero.webp"');
+    expect(heroScene).toContain("width={1448}");
+    expect(heroScene).toContain("height={1086}");
+    expect(heroScene).toContain("priority");
+    expect(heroScene).toContain("sizes=");
+    expect(heroScene).not.toContain("homepage-hero-window");
+    expect(heroScene).not.toContain("homepage-hero-ai-card");
     expect(page).toContain("homepage-cta-scene");
-    expect(page).not.toContain("mpreply-hero-ui.webp");
-    expect(page).not.toContain("mpreply-cta-ui.webp");
   });
 
   it("keeps footer navigation attached to the current homepage process section", () => {
@@ -63,6 +69,7 @@ describe("public homepage redesign contract", () => {
     expect(approvedCss).toContain("--homepage-section-pad");
     expect(approvedCss).toContain(".homepage-horizontal-process");
     expect(approvedCss).toContain(".homepage-hero-scene");
+    expect(approvedCss).toContain(".homepage-hero-image");
     expect(approvedCss).toContain(".homepage-cta-scene");
   });
 });
