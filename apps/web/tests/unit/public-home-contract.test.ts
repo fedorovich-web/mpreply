@@ -21,7 +21,9 @@ describe("public homepage redesign contract", () => {
     expect(page).toContain("homepage-final-cta");
   });
 
-  it("explains verified AI value through context and control instead of unverified provider names", () => {
+  it("keeps the approved AI-section message without exposing unverified provider names", () => {
+    expect(page).toContain("Используем лучшие нейросети");
+    expect(page).toContain("для точных и естественных ответов");
     for (const capability of ["Контекст товара", "Стиль бренда", "Правила команды", "Контроль перед отправкой"]) {
       expect(page).toContain(capability);
     }
