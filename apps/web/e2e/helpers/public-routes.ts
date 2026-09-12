@@ -1,7 +1,7 @@
 export const PUBLIC_ROUTES = [
   "/", "/features", "/marketplaces", "/marketplaces/wildberries", "/marketplaces/ozon",
   "/marketplaces/yandex-market", "/marketplaces/avito", "/pricing", "/demo", "/resources",
-  "/contacts", "/privacy", "/terms",
+  "/help", "/contacts", "/privacy", "/terms",
 ] as const;
 
 export const VISUAL_ROUTES = [
