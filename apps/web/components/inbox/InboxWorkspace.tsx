@@ -87,6 +87,16 @@ const priorityLabels: Record<string, string> = {
   urgent: "Срочный",
 };
 
+class ManualReviewSubmissionError extends Error {
+  readonly replyId: string;
+
+  constructor(replyId: string, cause: unknown) {
+    super(`Черновик создан, но не удалось передать его на проверку: ${errorMessage(cause)}`);
+    this.name = "ManualReviewSubmissionError";
+    this.replyId = replyId;
+  }
+}
+
 export function InboxWorkspace() {
   const queryClient = useQueryClient();
   const { activeOrganization, user } = useWorkspace();
@@ -175,14 +185,25 @@ export function InboxWorkspace() {
   });
 
   const manualDraftMutation = useMutation({
-    mutationFn: ({ messageId, replyText }: { messageId: string; replyText: string }) =>
-      apiRequest("/api/replies/manual", manualReplyWorkflowSchema, {
+    mutationFn: async ({ messageId, replyText }: { messageId: string; replyText: string }) => {
+      const draft = await apiRequest("/api/replies/manual", manualReplyWorkflowSchema, {
         method: "POST",
         body: { message_id: messageId, reply_text: replyText.trim() },
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["review-queue", activeOrganization.id] });
-      await queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] });
+      });
+
+      try {
+        return await apiRequest(`/api/replies/${draft.reply.id}/submit-review`, manualReplyWorkflowSchema, {
+          method: "POST",
+        });
+      } catch (error) {
+        throw new ManualReviewSubmissionError(draft.reply.id, error);
+      }
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["review-queue", activeOrganization.id] }),
+        queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] }),
+      ]);
     },
   });
 
@@ -310,10 +331,21 @@ export function InboxWorkspace() {
         {selectedMessage ? (
           <MessageDetail
             canManage={canManageMessages}
-            createDraftError={manualDraftMutation.error}
+            createDraftError={
+              manualDraftMutation.variables?.messageId === selectedMessage.id ? manualDraftMutation.error : null
+            }
             currentUserId={user.id}
-            error={updateMutation.error}
-            isCreatingDraft={manualDraftMutation.isPending}
+            draftRecoveryNeeded={
+              manualDraftMutation.variables?.messageId === selectedMessage.id &&
+              manualDraftMutation.error instanceof ManualReviewSubmissionError
+            }
+            draftSubmissionSucceeded={
+              manualDraftMutation.variables?.messageId === selectedMessage.id && manualDraftMutation.isSuccess
+            }
+            error={updateMutation.variables?.messageId === selectedMessage.id ? updateMutation.error : null}
+            isCreatingDraft={
+              manualDraftMutation.variables?.messageId === selectedMessage.id && manualDraftMutation.isPending
+            }
             isUpdating={updateMutation.isPending}
             key={selectedMessage.id}
             message={selectedMessage}
@@ -378,6 +410,8 @@ function MessageDetail({
   error,
   isCreatingDraft,
   createDraftError,
+  draftSubmissionSucceeded,
+  draftRecoveryNeeded,
   onArchive,
   onEscalate,
   onTake,
@@ -390,21 +424,27 @@ function MessageDetail({
   error: unknown;
   isCreatingDraft: boolean;
   createDraftError: unknown;
+  draftSubmissionSucceeded: boolean;
+  draftRecoveryNeeded: boolean;
   onArchive: () => void;
   onEscalate: () => void;
   onTake: () => void;
   onCreateDraft: (replyText: string) => void;
 }) {
   const [replyText, setReplyText] = useState("");
-  const canCreateDraft = canManage && ![
+  const canCreateDraft = canManage && !draftSubmissionSucceeded && !draftRecoveryNeeded && ![
     "waiting_review",
+    "needs_manual_check",
+    "safety_blocked",
     "answered",
     "approved",
+    "auto_reply_pending",
     "sending",
     "archived",
     "duplicate",
     "skipped",
     "auto_reply_sent",
+    "blocked_by_marketplace",
   ].includes(message.status);
   const isAssignedToCurrentUser = message.assigned_to === currentUserId;
 
@@ -470,16 +510,39 @@ function MessageDetail({
             placeholder="Введите ответ или отредактируйте подготовленный текст"
             value={replyText}
           />
-          <small>После сохранения ответ появится в «Модерации», где его можно проверить и отправить.</small>
+          <small>После отправки ответ попадёт в «Модерацию», где его можно проверить и отправить.</small>
           <button
             className="button button-primary"
             disabled={isCreatingDraft || replyText.trim().length === 0}
             onClick={() => onCreateDraft(replyText)}
             type="button"
           >
-            {isCreatingDraft ? "Сохраняем..." : "Передать на проверку"}
+            {isCreatingDraft ? "Передаём..." : "Передать на проверку"}
           </button>
         </label>
+      ) : null}
+
+      {draftSubmissionSucceeded ? (
+        <div className="inbox-review-handoff" role="status">
+          <div>
+            <span className="panel-kicker">Ответ передан на проверку</span>
+            <strong>Черновик сохранён и находится в очереди модерации</strong>
+          </div>
+          <Link className="button button-primary" href="/app/review-queue">Открыть модерацию</Link>
+        </div>
+      ) : null}
+
+      {draftRecoveryNeeded && createDraftError ? (
+        <div className="inbox-review-handoff" role="alert">
+          <div>
+            <span className="panel-kicker">Черновик уже сохранён</span>
+            <strong>{errorMessage(createDraftError)}</strong>
+            <p>Не создавайте второй ответ: продолжите работу с существующим черновиком в очереди проверки.</p>
+          </div>
+          <Link className="button button-secondary" href="/app/review-queue">Открыть очередь проверки</Link>
+        </div>
+      ) : createDraftError ? (
+        <p className="form-error" role="alert">{errorMessage(createDraftError)}</p>
       ) : null}
 
       {!canManage ? (
@@ -488,7 +551,6 @@ function MessageDetail({
         </p>
       ) : null}
 
-      {createDraftError ? <p className="form-error" role="alert">{errorMessage(createDraftError)}</p> : null}
       {error ? <p className="form-error" role="alert">{errorMessage(error)}</p> : null}
 
       {canManage ? (
