@@ -5,15 +5,16 @@ export default function IntegrationsPage() {
     <section className="app-page app-page-wide">
       <header className="app-header app-header-row">
         <div>
-          <p className="eyebrow">Integrations</p>
-          <h1>Подключения маркетплейсов и состояние API</h1>
+          <p className="eyebrow">Интеграции</p>
+          <h1>Подключите маркетплейсы к MPReply</h1>
           <p>
-            Respio показывает реальные кабинеты текущей организации и не выдаёт planned marketplace adapters за готовые production-интеграции.
+            Wildberries, Ozon, Яндекс Маркет и Авито доступны для подключения. Здесь можно видеть состояние кабинетов,
+            открывать настройки интеграций и быстро находить подключения, которым требуется внимание.
           </p>
         </div>
         <div className="app-header-actions">
-          <span className="status-badge">Encrypted credentials</span>
-          <span className="status-badge">Tenant scoped</span>
+          <span className="status-badge">4 маркетплейса</span>
+          <span className="status-badge">Единое управление</span>
         </div>
       </header>
 
