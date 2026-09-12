@@ -5,19 +5,19 @@ import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Как работает Respio — демонстрация автоматического ответа",
+  title: "Как работает MPReply — демо ИИ-ответов для маркетплейсов",
   description:
-    "Пошаговая демонстрация Respio: обращение, контекст, AI, SafetyGate, правило автоматизации, очередь, отправка и журнал результата.",
+    "Посмотрите, как MPReply обрабатывает обращение покупателя: получает контекст, готовит ИИ-ответ, применяет правила и выбирает автоотправку или проверку менеджером.",
   path: "/demo",
 });
 
 const steps = [
-  ["01", "Получено обращение", "Отзыв или вопрос приходит через marketplace adapter и получает внутренний идентификатор."],
-  ["02", "Собран контекст", "Respio использует данные товара, правила компании и доступные знания."],
-  ["03", "Подготовлен AI-ответ", "Модель возвращает структурированный результат; сохраняются версия инструкции, токены и задержка."],
-  ["04", "SafetyGate принял решение", "Ответ разрешается, отправляется человеку или блокируется до внешней отправки."],
-  ["05", "Применено правило", "Учитываются тип обращения, рейтинг, ключевые слова, товар и установленные ограничения."],
-  ["06", "Отправка и журнал", "Ответ получает ключ идемпотентности, идёт в очередь, отправляется worker-процессом и фиксирует итог."],
+  ["01", "Приходит обращение", "Отзыв, вопрос или доступное сообщение попадает в общую очередь вместе с источником и статусом."],
+  ["02", "Собирается контекст", "Система использует доступные данные обращения и товара, необходимые для ответа."],
+  ["03", "ИИ готовит черновик", "Ответ появляется прямо в рабочем интерфейсе рядом с исходным сообщением."],
+  ["04", "Срабатывают проверки", "Если данных недостаточно или сценарий требует осторожности, автоматическая отправка останавливается."],
+  ["05", "Применяются правила команды", "Для выбранных типов обращений можно разрешить автоответ или оставить обязательную проверку."],
+  ["06", "Ответ отправляется и получает статус", "Результат обработки сохраняется, а временные ошибки интеграции не остаются незаметными."],
 ];
 
 export default function DemoPage() {
@@ -26,10 +26,10 @@ export default function DemoPage() {
       <section className="public-subhero public-subhero-demo">
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
-            <p className="eyebrow">Демонстрация workflow</p>
-            <h1>Что происходит между новым отзывом и опубликованным ответом</h1>
+            <p className="eyebrow">Демо MPReply</p>
+            <h1>Что происходит между новым обращением и готовым ответом</h1>
             <p className="public-lead">
-              Без «магии AI» и скрытых переходов. Ниже — реальный продуктовый pipeline Respio: от входящего сообщения до решения, очереди и подтверждённого результата.
+              Разберём один сценарий без абстрактных обещаний: покупатель задаёт вопрос, ИИ готовит черновик, а система понимает, что данных для автоматической отправки недостаточно.
             </p>
           </div>
 
@@ -39,7 +39,7 @@ export default function DemoPage() {
               <span>новый</span>
             </div>
             <strong>«Можно ли использовать товар на улице зимой?»</strong>
-            <p>В карточке товара нет подтверждённого температурного диапазона. Система не должна выдумывать характеристику.</p>
+            <p>В доступном контексте нет подтверждённого температурного диапазона. Придумывать характеристику нельзя.</p>
           </aside>
         </div>
       </section>
@@ -48,13 +48,13 @@ export default function DemoPage() {
         <div className="public-container">
           <div className="demo-decision-stage">
             <div className="demo-decision-copy">
-              <p className="eyebrow">Результат для этого сценария</p>
-              <h2>SafetyGate остановил автоотправку из-за недостатка подтверждённого контекста</h2>
-              <p>Ответ не публикуется вслепую. Обращение получает статус ручной проверки, а менеджер видит причину решения.</p>
+              <p className="eyebrow">Результат этого сценария</p>
+              <h2>Автоотправка остановлена — вопрос передан менеджеру с готовым контекстом</h2>
+              <p>Система не публикует уверенный на вид ответ без фактов. Менеджер видит исходный вопрос, причину остановки и может уточнить или переписать ответ.</p>
             </div>
-            <div className="demo-decision-badge" role="status" aria-label="Решение SafetyGate: на проверку">
-              <span>SafetyGate</span>
-              <strong>На проверку</strong>
+            <div className="demo-decision-badge" role="status" aria-label="Решение: требуется проверка">
+              <span>Проверка ответа</span>
+              <strong>Нужен менеджер</strong>
               <small>Причина: недостаточно данных о товаре</small>
             </div>
           </div>
@@ -74,21 +74,22 @@ export default function DemoPage() {
       <section className="public-section public-section-muted">
         <div className="public-container public-two-column public-two-column-balanced">
           <div>
-            <p className="eyebrow">Другие возможные исходы</p>
-            <h2>Один pipeline — разные действия в зависимости от риска и правил</h2>
+            <p className="eyebrow">Три возможных действия</p>
+            <h2>Один процесс, но не один ответ на все случаи</h2>
+            <p className="public-copy-muted">Автоматизация полезна только тогда, когда команда понимает, где она работает сама, а где должна остановиться.</p>
           </div>
           <div className="decision-outcomes">
             <div className="decision-outcome decision-outcome-allow">
-              <strong>Разрешено</strong>
-              <p>Ответ безопасен и может перейти к автоматической отправке.</p>
+              <strong>Отправить автоматически</strong>
+              <p>Сценарий подходит под правила команды и не требует дополнительной проверки.</p>
             </div>
             <div className="decision-outcome decision-outcome-review">
-              <strong>На проверку</strong>
-              <p>Нужен человек: не хватает контекста или правило требует ручного решения.</p>
+              <strong>Передать менеджеру</strong>
+              <p>Недостаточно контекста или правило требует участия человека.</p>
             </div>
             <div className="decision-outcome decision-outcome-block">
-              <strong>Заблокировано</strong>
-              <p>Ответ не должен быть отправлен в текущем виде.</p>
+              <strong>Не отправлять</strong>
+              <p>Текущий вариант ответа нельзя публиковать без изменения.</p>
             </div>
           </div>
         </div>
@@ -97,12 +98,12 @@ export default function DemoPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Продолжить</p>
-            <h2>Посмотрите все возможности Respio или перейдите к подключению маркетплейса</h2>
+            <p className="eyebrow">Попробуйте на своих обращениях</p>
+            <h2>Подключите маркетплейс и соберите отзывы, вопросы и сообщения в одной очереди</h2>
           </div>
           <div className="cta-actions-on-dark">
-            <Link className="button button-secondary button-secondary-on-dark" href="/features">Возможности</Link>
-            <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">Подключить маркетплейс</Link>
+            <Link className="button button-secondary button-secondary-on-dark" href="/features">Все возможности</Link>
+            <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">Создать аккаунт</Link>
           </div>
         </div>
       </section>
