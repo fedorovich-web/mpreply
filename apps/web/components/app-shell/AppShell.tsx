@@ -36,16 +36,16 @@ const navGroups: NavGroup[] = [
     label: "Работа",
     items: [
       { href: "/app/dashboard", label: "Обзор", icon: "overview" },
-      { href: "/app/inbox", label: "Входящие", icon: "inbox" },
-      { href: "/app/review-queue", label: "Модерация", icon: "review" },
+      { href: "/app/inbox", label: "Обращения", icon: "inbox" },
+      { href: "/app/review-queue", label: "На проверке", icon: "review" },
     ],
   },
   {
     id: "answers",
     label: "Ответы и автоматизация",
     items: [
-      { href: "/app/ai-assistant", label: "ИИ-помощник", icon: "ai" },
-      { href: "/app/automation-rules", label: "Правила", icon: "automation" },
+      { href: "/app/ai-assistant", label: "ИИ-ассистент", icon: "ai" },
+      { href: "/app/automation-rules", label: "Автоматизация", icon: "automation" },
     ],
   },
   {
