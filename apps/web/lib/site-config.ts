@@ -11,12 +11,12 @@ export type MarketplaceConfig = {
 };
 
 const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-const configuredContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || null;
+const configuredContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim();
 
 export const siteConfig = {
   name: "MPReply",
   origin: configuredOrigin || "https://mpreply.ru",
-  contactEmail: configuredContactEmail,
+  contactEmail: configuredContactEmail || "support@mpreply.ru",
   description:
     "MPReply собирает обращения покупателей с маркетплейсов в одном окне, готовит ответы с помощью ИИ и автоматизирует отправку с контролем сложных случаев.",
   navigation: [
