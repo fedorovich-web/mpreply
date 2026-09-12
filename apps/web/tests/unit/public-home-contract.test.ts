@@ -1,11 +1,12 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
-const tokens = readFileSync(join(root, "styles/tokens.css"), "utf8");
-const publicCss = readFileSync(join(root, "styles/public-site.css"), "utf8");
+const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
+const marketingCssPath = join(root, "styles/marketing-site.css");
+const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
 
 describe("public homepage redesign contract", () => {
   it("contains the approved product-story sections", () => {
@@ -20,10 +21,21 @@ describe("public homepage redesign contract", () => {
     expect(page).not.toMatch(/50K\+|довольных клиентов|GPT-5\.6|Claude Sonnet 5|Gemini 3\.8|DeepSeek V4/i);
   });
 
-  it("uses the approved blue public tokens and spacious section rhythm", () => {
-    expect(tokens).toContain("--color-brand-primary: #2563eb");
-    expect(tokens).toContain("--gradient-public-blue");
-    expect(tokens).toMatch(/--public-section-spacing:\s*clamp\([^;]*6rem[^;]*9rem\)/);
-    expect(publicCss).toContain(".homepage-process");
+  it("keeps public marketplace readiness aligned with implemented integrations", () => {
+    expect(siteConfig).not.toContain('"planned"');
+    expect(siteConfig).not.toContain("Планируется");
+    expect(siteConfig).toContain("Wildberries");
+    expect(siteConfig).toContain("Ozon");
+    expect(siteConfig).toContain("Яндекс Маркет");
+    expect(siteConfig).toContain("Авито");
+  });
+
+  it("uses public-scoped blue tokens and spacious section rhythm without recoloring the dashboard", () => {
+    expect(marketingCss).toContain(".public-root");
+    expect(marketingCss).toContain("--color-brand-primary: #2563eb");
+    expect(marketingCss).toContain("--color-brand-accent: #0ea5e9");
+    expect(marketingCss).toContain("--gradient-public-blue");
+    expect(marketingCss).toMatch(/--public-section-spacing:\s*clamp\([^;]*6rem[^;]*9rem\)/);
+    expect(marketingCss).toContain(".homepage-process");
   });
 });
