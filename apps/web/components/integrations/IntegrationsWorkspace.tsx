@@ -12,25 +12,29 @@ const marketplaceCatalog = [
     key: "wildberries",
     name: "Wildberries",
     href: "/app/integrations/wildberries",
+    available: true,
     description: "Отзывы, вопросы и сообщения покупателей в общей очереди с контекстом, подготовкой ответа и контролем отправки.",
   },
   {
     key: "ozon",
     name: "Ozon",
-    href: "/app/integrations/ozon",
-    description: "Обращения покупателей Ozon, подключённые кабинеты и ответы в том же рабочем процессе, что и на других площадках.",
+    href: null,
+    available: false,
+    description: "Поддержка обращений покупателей Ozon запланирована в том же рабочем процессе MPReply.",
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
-    href: "/app/integrations/yandex-market",
-    description: "Отзывы, вопросы и сообщения Яндекс Маркета с едиными статусами, очередью и правилами обработки.",
+    href: null,
+    available: false,
+    description: "Поддержка обращений Яндекс Маркета запланирована с едиными статусами, очередью и правилами обработки.",
   },
   {
     key: "avito",
     name: "Авито",
-    href: "/app/integrations/avito",
-    description: "Сообщения и обращения покупателей Авито с синхронизацией диалогов и управлением подключением из MPReply.",
+    href: null,
+    available: false,
+    description: "Поддержка сообщений и обращений покупателей Авито запланирована для единой очереди MPReply.",
   },
 ] as const;
 
@@ -85,15 +89,23 @@ export function IntegrationsWorkspace() {
             <article className="integration-market-card" key={marketplace.key} role="listitem">
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge ui-badge-info">Интеграция готова</span>
+                  <span className={`ui-badge ${marketplace.available ? "ui-badge-info" : "ui-badge-neutral"}`}>
+                    {marketplace.available ? "Интеграция готова" : "В разработке"}
+                  </span>
                   <h2>{marketplace.name}</h2>
                 </div>
-                <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
+                {marketplace.available ? (
+                  <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
+                ) : null}
               </div>
               <p>{marketplace.description}</p>
-              <Link className="button button-secondary" href={marketplace.href}>
-                {actionLabel}
-              </Link>
+              {marketplace.available && marketplace.href ? (
+                <Link className="button button-secondary" href={marketplace.href}>
+                  {actionLabel}
+                </Link>
+              ) : (
+                <span className="integration-unavailable-note">Подключение пока недоступно</span>
+              )}
             </article>
           );
         })}
