@@ -3,7 +3,10 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationsWorkspace } from "../../components/integrations/IntegrationsWorkspace";
-import { WildberriesIntegrationWorkspace } from "../../components/integrations/WildberriesIntegrationWorkspace";
+import {
+  MarketplaceIntegrationWorkspace,
+  WildberriesIntegrationWorkspace,
+} from "../../components/integrations/WildberriesIntegrationWorkspace";
 import { useWorkspace } from "../../components/workspace/WorkspaceProvider";
 
 vi.mock("../../components/workspace/WorkspaceProvider", () => ({
@@ -108,6 +111,48 @@ describe("IntegrationsWorkspace", () => {
       "href",
       "/app/integrations/avito",
     );
+  });
+});
+
+describe("MarketplaceIntegrationWorkspace", () => {
+  it("uses the selected marketplace in labels, filtering and create payload", async () => {
+    mockWorkspace("owner");
+    const ozonAccount = { ...account, id: "55555555-5555-4555-8555-555555555555", marketplace: "ozon", display_name: "Ozon основной" };
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({ ...ozonAccount, ...payload }), { status: 200 });
+      }
+      return new Response(JSON.stringify([account, ozonAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(
+      <MarketplaceIntegrationWorkspace
+        credentialLabel="Данные доступа Ozon"
+        marketplace="ozon"
+        marketplaceName="Ozon"
+        placeholder="Например, Ozon — основной магазин"
+      />,
+    );
+
+    expect(await screen.findByText("Кабинеты Ozon")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ozon основной" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Основной кабинет" })).not.toBeInTheDocument();
+
+    const form = screen.getByRole("form", { name: "Новое подключение Ozon" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый Ozon" } });
+    fireEvent.change(within(form).getByLabelText("Данные доступа Ozon"), { target: { value: "secret-token" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
+    });
+
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("ozon");
+    expect(body.organization_id).toBe(organization.id);
   });
 });
 
