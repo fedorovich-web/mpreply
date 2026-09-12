@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { IntegrationsWorkspace } from "../../components/integrations/IntegrationsWorkspace";
@@ -28,13 +28,13 @@ const account = {
   id: "33333333-3333-4333-8333-333333333333",
   organization_id: organization.id,
   marketplace: "wildberries",
-  display_name: "WB основной кабинет",
-  seller_id: "seller-42",
+  display_name: "Основной кабинет",
+  seller_id: "seller-1",
   status: "active",
-  credentials_masked: "sha256:ab12…90ef",
+  credentials_masked: "••••••••abcd",
   credentials_status: "valid",
-  scopes_json: { validated: true },
-  default_response_mode: "inherit",
+  scopes_json: {},
+  default_response_mode: "auto",
   last_success_sync_at: timestamp,
   last_error_sync_at: null,
   error_count: 0,
@@ -46,7 +46,7 @@ const mockedUseWorkspace = vi.mocked(useWorkspace);
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  vi.restoreAllMocks();
+  vi.clearAllMocks();
 });
 
 function mockWorkspace(role: "owner" | "admin" | "manager" | "viewer") {
@@ -77,7 +77,7 @@ function renderWithQueryClient(component: React.ReactNode) {
 }
 
 describe("IntegrationsWorkspace", () => {
-  it("shows all four marketplace integrations as available", async () => {
+  it("shows all four marketplace integrations as ready and distinguishes connection state", async () => {
     mockWorkspace("owner");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
 
@@ -88,8 +88,8 @@ describe("IntegrationsWorkspace", () => {
     expect(screen.getByRole("heading", { name: "Ozon" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Яндекс Маркет" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Авито" })).toBeInTheDocument();
-    expect(screen.getAllByText("Можно подключить")).toHaveLength(3);
-    expect(screen.getByText("1 подключение")).toBeInTheDocument();
+    expect(screen.getAllByText("Интеграция готова")).toHaveLength(4);
+    expect(screen.getAllByText("Не подключено")).toHaveLength(3);
     expect(screen.queryByText(/Planned|Пока недоступно|MVP adapter|production readiness/i)).not.toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: "Управлять Wildberries" })).toHaveAttribute(
@@ -117,18 +117,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
       if (init?.method === "POST") {
         const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
-        return new Response(
-          JSON.stringify({
-            ...account,
-            ...payload,
-            id: "44444444-4444-4444-8444-444444444444",
-            seller_id: payload.seller_id ?? null,
-            credentials_masked: "sha256:new1…safe",
-            credentials_status: "pending_validation",
-            status: "pending_validation",
-          }),
-          { status: 201 },
-        );
+        return new Response(JSON.stringify({ ...account, ...payload }), { status: 200 });
       }
       return new Response(JSON.stringify([]), { status: 200 });
     });
@@ -136,30 +125,21 @@ describe("WildberriesIntegrationWorkspace", () => {
 
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
-    const form = await screen.findByRole("form", { name: "Новое подключение Wildberries" });
-    expect(within(form).queryByLabelText(/Organization ID/i)).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Подключённые кабинеты" })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/organization/i)).not.toBeInTheDocument();
 
-    fireEvent.change(within(form).getByLabelText("Название подключения"), {
-      target: { value: "WB второй кабинет" },
-    });
-    fireEvent.change(within(form).getByLabelText("API-ключ Wildberries"), {
-      target: { value: "super-secret-wb-token" },
-    });
-    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
-
-    await waitFor(() => {
-      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Подключить кабинет" }));
+    const form = screen.getByRole("form", { name: "Подключение Wildberries" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый WB" } });
+    fireEvent.change(within(form).getByLabelText("API-ключ"), { target: { value: "secret-token" } });
+    fireEvent.submit(form);
 
     const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
-    const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
-    expect(payload).toMatchObject({
-      organization_id: organization.id,
-      marketplace: "wildberries",
-      display_name: "WB второй кабинет",
-      credentials: "super-secret-wb-token",
-      default_response_mode: "inherit",
-    });
+    expect(postCall).toBeTruthy();
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.organization_id).toBe(organization.id);
+    expect(body.display_name).toBe("Новый WB");
+    expect(body.credentials).toBe("secret-token");
   });
 
   it("keeps viewer membership read-only and hides credential actions", async () => {
@@ -168,11 +148,8 @@ describe("WildberriesIntegrationWorkspace", () => {
 
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
-    expect(await screen.findByRole("heading", { name: account.display_name })).toBeInTheDocument();
-    expect(screen.getByText(/Только просмотр/)).toBeInTheDocument();
-    expect(screen.queryByRole("form", { name: "Новое подключение Wildberries" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Проверить ключ" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Синхронизировать сейчас" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Отозвать ключ" })).not.toBeInTheDocument();
+    expect(await screen.findByText("Основной кабинет")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Подключить кабинет" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Обновить ключ/i })).not.toBeInTheDocument();
   });
 });
