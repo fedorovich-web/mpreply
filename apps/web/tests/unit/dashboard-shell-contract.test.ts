@@ -18,19 +18,34 @@ const requiredRoutes = [
   "/app/billing",
 ];
 
+const requiredLabels = [
+  "Обзор",
+  "Обращения",
+  "На проверке",
+  "ИИ-ассистент",
+  "Автоматизация",
+  "Интеграции",
+  "Аналитика",
+  "Тариф и лимиты",
+];
+
 describe("dashboard shell information architecture", () => {
-  it("groups existing routes by task without changing their URLs", () => {
+  it("groups existing routes by task using the approved product navigation labels", () => {
     expect(shell).toContain('label: "Работа"');
     expect(shell).toContain('label: "Ответы и автоматизация"');
     expect(shell).toContain('label: "Управление"');
-    expect(shell).toContain('label: "Входящие"');
-    expect(shell).toContain('label: "Модерация"');
-    expect(shell).toContain('label: "ИИ-помощник"');
 
     for (const route of requiredRoutes) {
       expect(shell).toContain(`href: "${route}"`);
     }
+    for (const label of requiredLabels) {
+      expect(shell).toContain(`label: "${label}"`);
+    }
 
+    expect(shell).not.toContain('label: "Входящие"');
+    expect(shell).not.toContain('label: "Модерация"');
+    expect(shell).not.toContain('label: "ИИ-помощник"');
+    expect(shell).not.toContain('label: "Правила"');
     expect(shell).not.toContain("description:");
   });
 
