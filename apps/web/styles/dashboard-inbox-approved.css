@@ -340,8 +340,8 @@
 	font-size: 0.68rem;
 }
 
-.inbox-message-context p {
-	font-size: 0.92rem !important;
+.inbox-detail-panel .inbox-message-context p {
+	font-size: 0.92rem;
 }
 
 .inbox-review-handoff {
