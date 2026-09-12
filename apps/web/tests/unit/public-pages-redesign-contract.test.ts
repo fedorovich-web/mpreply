@@ -21,8 +21,10 @@ describe("public page redesign", () => {
     expect(marketplaces).toContain("Wildberries, Ozon, Яндекс Маркет и Авито");
   });
 
-  it("uses buyer-facing feature language instead of infrastructure jargon", () => {
-    expect(features).toContain("От входящего обращения до готового ответа");
+  it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
+    expect(features).toMatch(/От обращения покупателя до ответа|путь обработки каждого обращения/i);
+    expect(features).toContain("Отзывы, вопросы и сообщения");
+    expect(features).toContain("проверку сотруднику");
     expect(features).not.toMatch(/worker-backed|идемпотентности|application layer/i);
   });
 });
