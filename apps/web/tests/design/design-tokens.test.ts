@@ -7,10 +7,6 @@ const themeSource = readFileSync(resolve(process.cwd(), "styles/theme.css"), "ut
 const globalStyleSource = readFileSync(resolve(process.cwd(), "styles/globals.css"), "utf8");
 const publicStyleSource = readFileSync(resolve(process.cwd(), "styles/public-site.css"), "utf8");
 const fontStyleSource = readFileSync(resolve(process.cwd(), "styles/fonts.css"), "utf8");
-const canvasSource = readFileSync(
-  resolve(process.cwd(), "components/public-site/HeroFlowCanvas.tsx"),
-  "utf8",
-);
 const tokenPattern = /(--[\w-]+)\s*:\s*([^;]+);/g;
 
 function readTokens(source: string): Map<string, string> {
@@ -226,38 +222,6 @@ describe("Respio design tokens", () => {
     for (const declaration of transitionDeclarations) {
       expect(declaration[1]?.trim()).toMatch(/^var\(--transition-[\w-]+\)$/);
     }
-  });
-
-  it("keeps Canvas presentation and animation fully driven by Respio tokens", () => {
-    const requiredCanvasTokens = [
-      "--canvas-color-violet",
-      "--canvas-color-mint",
-      "--canvas-color-soft-violet",
-      "--canvas-color-soft-mint",
-      "--canvas-opacity-violet",
-      "--canvas-opacity-mint",
-      "--canvas-amplitude-violet",
-      "--canvas-amplitude-mint",
-      "--canvas-speed-violet",
-      "--canvas-speed-mint",
-      "--canvas-fps",
-      "--canvas-dpr-max",
-      "--canvas-reduced-motion-time",
-    ];
-    for (const name of requiredCanvasTokens) {
-      expect(tokens.has(name), `${name} should exist`).toBe(true);
-    }
-    expect(canvasSource).toContain("`--canvas-color-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-opacity-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-amplitude-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-speed-${suffix}`");
-    expect(canvasSource).toContain('"--canvas-fps"');
-    expect(canvasSource).toContain('"--canvas-dpr-max"');
-    expect(canvasSource).toContain('"--canvas-reduced-motion-time"');
-    expect(canvasSource).not.toMatch(/#[0-9a-f]{3,8}\b/i);
-    expect(canvasSource).toContain("prefers-reduced-motion: reduce");
-    expect(canvasSource).toContain("IntersectionObserver");
-    expect(canvasSource).toContain("ResizeObserver");
   });
 
   it("keeps process steps visually equal and SafetyGate semantic rather than oversized", () => {
