@@ -1,14 +1,132 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Literal
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Generic, Literal, Protocol, TypeVar, runtime_checkable
+
+from app.adapters.capabilities import MarketplaceStream
+from app.models.enums import Marketplace, MessageType
+
+MarketplaceErrorCode = Literal[
+    "invalid_credentials",
+    "insufficient_scope",
+    "marketplace_validation_error",
+    "marketplace_not_found",
+    "rate_limited",
+    "marketplace_unavailable",
+    "network_timeout",
+    "network_error",
+    "malformed_payload",
+    "unsupported_capability",
+]
+
+T = TypeVar("T", default=object)
+
+
+def _empty_metadata() -> dict[str, object]:
+    return {}
 
 
 @dataclass(frozen=True)
-class AdapterResult:
+class AdapterResult(Generic[T]):
     ok: bool
-    data: object | None = None
-    error_code: str | None = None
+    data: T | None = None
+    error_code: MarketplaceErrorCode | None = None
     error_message_safe: str | None = None
+    retry_after_seconds: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class MarketplacePage(Generic[T]):
+    items: tuple[T, ...]
+    next_cursor: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class CredentialValidation:
+    scopes: tuple[str, ...]
+    account_reference: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class NormalizedProduct:
+    external_id: str
+    sku: str | None
+    name: str
+    brand: str | None
+    category: str | None
+    image_url: str | None
+    product_url: str | None
+    metadata: dict[str, object] = field(default_factory=_empty_metadata)
+
+
+@dataclass(frozen=True, slots=True)
+class NormalizedMessage:
+    external_id: str
+    message_type: MessageType
+    rating: int | None
+    customer_display_name: str | None
+    customer_text: str
+    customer_photos: tuple[str, ...]
+    marketplace_created_at: datetime
+    product: NormalizedProduct | None
+    metadata: dict[str, object] = field(default_factory=_empty_metadata)
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderMessageContext:
+    message_type: MessageType
+    external_id: str
+    marketplace_created_at: datetime
+    metadata: dict[str, object] = field(default_factory=_empty_metadata)
+
+
+@dataclass(frozen=True, slots=True)
+class ExistingReplyResult:
+    exists: bool
+    provider_reply_id: str | None = None
+    provider_state: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderWriteReceipt:
+    provider_reply_id: str
+
+
+@runtime_checkable
+class CredentialAdapter(Protocol):
+    marketplace: Marketplace
+
+    async def validate_credentials(
+        self,
+        credential: str,
+        seller_id: str | None,
+    ) -> AdapterResult[CredentialValidation]: ...
+
+
+@runtime_checkable
+class ReviewQuestionAdapter(CredentialAdapter, Protocol):
+    async def fetch_page(
+        self,
+        credential: str,
+        seller_id: str | None,
+        stream: MarketplaceStream,
+        cursor: str | None,
+    ) -> AdapterResult[MarketplacePage[NormalizedMessage]]: ...
+
+    async def find_existing_reply(
+        self,
+        credential: str,
+        seller_id: str | None,
+        context: ProviderMessageContext,
+    ) -> AdapterResult[ExistingReplyResult]: ...
+
+    async def send_reply(
+        self,
+        credential: str,
+        seller_id: str | None,
+        context: ProviderMessageContext,
+        text: str,
+    ) -> AdapterResult[ProviderWriteReceipt]: ...
 
 
 class MarketplaceAdapter(ABC):

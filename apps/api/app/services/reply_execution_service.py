@@ -454,7 +454,7 @@ class ReplyExecutionService:
             return await adapter.send_question_reply(credential, message.external_id, reply.reply_text)
         return AdapterResult(
             False,
-            error_code="unsupported_message_type",
+            error_code="unsupported_capability",
             error_message_safe="Message type cannot be replied to through the marketplace adapter",
         )
 
