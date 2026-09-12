@@ -5,7 +5,7 @@ export default function ReviewQueuePage() {
     <section className="app-page app-page-wide review-queue-page">
       <header className="app-header app-header-row review-queue-page-header">
         <div>
-          <p className="eyebrow">Ручная проверка</p>
+          <p className="eyebrow">На проверке</p>
           <h1>Проверьте ответы, которым нужно решение</h1>
           <p>
             Причина внимания остаётся рядом с ответом: сравните текст с обращением и товаром, при необходимости внесите правки, затем одобрите или верните ответ на доработку.
