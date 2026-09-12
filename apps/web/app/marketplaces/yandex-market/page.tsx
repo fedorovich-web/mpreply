@@ -5,9 +5,9 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Интеграция Respio с Яндекс Маркетом — статус и планы",
+  title: "Автоответы покупателям Яндекс Маркета с ИИ",
   description:
-    "Текущий статус интеграции Respio с Яндекс Маркетом. Подключение не считается production-ready до проверки API, прав, лимитов и фактической отправки ответов.",
+    "MPReply для Яндекс Маркета: собирайте обращения в единой очереди, готовьте ответы с помощью ИИ и управляйте автоматической отправкой из одного рабочего пространства.",
   path: "/marketplaces/yandex-market",
 });
 
