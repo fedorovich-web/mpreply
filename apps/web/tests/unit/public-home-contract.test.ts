@@ -8,6 +8,8 @@ const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 const marketingCssPath = join(root, "styles/marketing-site.css");
 const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
 const approvedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
+const heroArtwork = join(root, "public/images/mpreply-hero-ui.webp");
+const ctaArtwork = join(root, "public/images/mpreply-cta-ui.webp");
 
 describe("public homepage redesign contract", () => {
   it("contains the approved product-story sections", () => {
@@ -36,13 +38,20 @@ describe("public homepage redesign contract", () => {
     expect(siteConfig).toContain("Интеграция готова");
   });
 
-  it("uses the approved blue system, spacious rhythm and dedicated wave assets", () => {
+  it("uses generated WebP artwork without a competing hero wave background", () => {
+    expect(existsSync(heroArtwork)).toBe(true);
+    expect(existsSync(ctaArtwork)).toBe(true);
+    expect(page).toContain("/images/mpreply-hero-ui.webp");
+    expect(page).toContain("/images/mpreply-cta-ui.webp");
+    expect(approvedCss).not.toContain("mpreply-hero-waves.webp");
+    expect(approvedCss).toContain("mpreply-cta-waves.webp");
+  });
+
+  it("uses the approved blue system and spacious section rhythm", () => {
     expect(marketingCss).toContain(".public-root");
     expect(marketingCss).toContain("--color-brand-primary: #2563eb");
     expect(marketingCss).toContain("--color-brand-accent: #0ea5e9");
     expect(approvedCss).toContain("--homepage-section-pad");
-    expect(approvedCss).toContain("mpreply-hero-waves.webp");
-    expect(approvedCss).toContain("mpreply-cta-waves.webp");
     expect(approvedCss).toContain(".homepage-horizontal-process");
   });
 });
