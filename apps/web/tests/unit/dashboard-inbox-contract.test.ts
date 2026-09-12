@@ -30,6 +30,17 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain('href="/app/review-queue"');
   });
 
+  it("uses the approved Обращения / На проверке vocabulary throughout the workflow", () => {
+    expect(inbox).toContain("Все обращения");
+    expect(inbox).toContain("Продолжите работу в разделе «На проверке»");
+    expect(inbox).toContain("Открыть очередь проверки");
+    expect(inbox).toContain("попадёт в раздел «На проверке»");
+    expect(inbox).not.toContain("Все входящие");
+    expect(inbox).not.toContain("очереди модерации");
+    expect(inbox).not.toContain("Открыть модерацию");
+    expect(inbox).not.toContain("попадёт в «Модерацию»");
+  });
+
   it("uses known role information before showing write actions", () => {
     expect(inbox).toContain('new Set(["owner", "admin", "manager"])');
     expect(inbox).toContain("canManageMessages");
