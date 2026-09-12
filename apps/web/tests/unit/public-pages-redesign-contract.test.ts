@@ -7,12 +7,16 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const home = readFileSync(join(root, "app/page.tsx"), "utf8");
 const homeWorkspace = readFileSync(join(root, "components/public-site/HomeWorkspaceTabs.tsx"), "utf8");
 const marketplaceLanding = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
+const publicShell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
 const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const resources = readFileSync(join(root, "app/resources/page.tsx"), "utf8");
 const contacts = readFileSync(join(root, "app/contacts/page.tsx"), "utf8");
+const help = readFileSync(join(root, "app/help/page.tsx"), "utf8");
+const privacy = readFileSync(join(root, "app/privacy/page.tsx"), "utf8");
+const terms = readFileSync(join(root, "app/terms/page.tsx"), "utf8");
 const authForm = readFileSync(join(root, "components/auth/AuthForm.tsx"), "utf8");
 const authCss = readFileSync(join(root, "styles/auth.css"), "utf8");
 const pagesCssPath = join(root, "styles/marketing-pages.css");
@@ -25,6 +29,8 @@ const pricingDemoCssPath = join(root, "styles/pricing-demo-approved.css");
 const pricingDemoCss = existsSync(pricingDemoCssPath) ? readFileSync(pricingDemoCssPath, "utf8") : "";
 const resourcesContactsCssPath = join(root, "styles/resources-contacts-approved.css");
 const resourcesContactsCss = existsSync(resourcesContactsCssPath) ? readFileSync(resourcesContactsCssPath, "utf8") : "";
+const helpLegalCssPath = join(root, "styles/help-legal-approved.css");
+const helpLegalCss = existsSync(helpLegalCssPath) ? readFileSync(helpLegalCssPath, "utf8") : "";
 
 describe("public page redesign", () => {
   it("loads page-specific marketing compositions", () => {
@@ -90,6 +96,36 @@ describe("public page redesign", () => {
     expect(contacts).toContain("mailto:");
     expect(contacts).not.toMatch(/ответим за|ответ в течение|24\s*час/i);
     expect(resourcesContactsCss).toContain(".contact-support-scene");
+  });
+
+  it("turns help into a task-oriented support map with concrete troubleshooting paths", () => {
+    expect(layout).toContain('import "../styles/help-legal-approved.css"');
+    expect(help).toContain("help-hero-scene");
+    expect(help).toContain("help-path-list");
+    expect(help).toContain("help-troubleshooting-flow");
+    expect(help).toContain("siteConfig.contactEmail");
+    expect(help).toContain("Wildberries, Ozon, Яндекс Маркет и Авито");
+    expect(help).not.toMatch(/ответим за|ответ в течение|24\s*час/i);
+    expect(helpLegalCss).toContain(".help-hero-scene");
+    expect(helpLegalCss).toContain(".help-troubleshooting-flow");
+  });
+
+  it("adds readable anchored legal layouts without changing the draft substance", () => {
+    expect(privacy).toContain("legal-approved-layout");
+    expect(privacy).toContain('id="privacy-data"');
+    expect(privacy).toContain("До production-запуска требуется юридическая финализация.");
+    expect(terms).toContain("legal-approved-layout");
+    expect(terms).toContain('id="terms-acceptable-use"');
+    expect(terms).toContain("Не является финальной офертой.");
+    expect(helpLegalCss).toContain(".legal-toc");
+    expect(helpLegalCss).toContain(".legal-approved-document");
+  });
+
+  it("keeps footer routes for help and legal documents wired to real pages", () => {
+    expect(publicShell).toContain('href="/help"');
+    expect(publicShell).toContain('href="/privacy"');
+    expect(publicShell).toContain('href="/terms"');
+    expect(publicShell).toContain("siteConfig.contactEmail");
   });
 
   it("keeps auth behavior intact while presenting a real product workspace beside the form", () => {
