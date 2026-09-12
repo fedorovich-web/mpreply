@@ -73,7 +73,7 @@ export function IntegrationsWorkspace() {
           const connectedCount = accounts.filter((account) => account.marketplace === marketplace.key).length;
           const statusLabel = connectedCount > 0
             ? `${connectedCount} ${accountWord(connectedCount)}`
-            : "Доступно";
+            : "Можно подключить";
           const actionLabel = canManage
             ? connectedCount > 0
               ? `Управлять ${marketplace.name}`
@@ -84,7 +84,7 @@ export function IntegrationsWorkspace() {
             <article className="integration-market-card" key={marketplace.key} role="listitem">
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge ui-badge-success">Интеграция готова</span>
+                  <span className="ui-badge ui-badge-success">Поддерживается</span>
                   <h2>{marketplace.name}</h2>
                 </div>
                 <span className="ui-badge ui-badge-success">{statusLabel}</span>
@@ -119,8 +119,6 @@ function accountWord(value: number): string {
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.requestId ? `${error.message} · requestId ${error.requestId}` : error.message;
-  }
+  if (error instanceof ApiError) return error.message;
   return error instanceof Error ? error.message : "Неизвестная ошибка";
 }
