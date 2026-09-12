@@ -5,7 +5,7 @@ export default function InboxPage() {
     <section className="app-page app-page-wide inbox-page">
       <header className="app-header app-header-row inbox-page-header">
         <div>
-          <p className="eyebrow">Входящие</p>
+          <p className="eyebrow">Обращения</p>
           <h1>Разберите обращения без переключения между кабинетами</h1>
           <p>
             Отфильтруйте очередь по площадке, типу, статусу, оценке или ответственному, откройте контекст рядом с сообщением и сразу выберите следующий шаг.
