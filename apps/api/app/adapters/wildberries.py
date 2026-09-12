@@ -254,4 +254,4 @@ class WildberriesAdapter(MarketplaceAdapter):
             return AdapterResult(False, error_code="rate_limited", error_message_safe="Marketplace rate limit exceeded")
         if 500 <= status_code <= 599:
             return AdapterResult(False, error_code="marketplace_unavailable", error_message_safe="Marketplace is temporarily unavailable")
-        return AdapterResult(False, error_code="marketplace_error", error_message_safe="Marketplace returned an error")
+        return AdapterResult(False, error_code="marketplace_validation_error", error_message_safe="Marketplace returned an error")

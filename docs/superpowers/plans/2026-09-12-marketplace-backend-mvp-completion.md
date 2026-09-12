@@ -64,17 +64,16 @@
 - Create: `apps/api/app/adapters/conversation.py`
 - Create: `apps/api/app/adapters/capabilities.py`
 - Create: `apps/api/app/adapters/registry.py`
-- Create: `apps/api/app/tests/marketplace_fixtures.py`
+- Modify: `apps/api/app/services/reply_execution_service.py`
 - Create: `apps/api/app/tests/test_adapter_registry_boundaries.py`
 - Create: `apps/api/app/tests/test_marketplace_capability_dispatch.py`
 
 **Interfaces:**
 - Produces: `MarketplaceErrorCode`, `AdapterResult[T]`, `MarketplacePage[T]`, `MarketplaceStream`, `CredentialValidation`, `NormalizedProduct`, `NormalizedMessage`, `ProviderMessageContext`, `ExistingReplyResult`, `ProviderWriteReceipt`, `ConversationThread`, `ConversationMessage`, `CredentialAdapter`, `ReviewQuestionAdapter`, and `ConversationAdapter`.
 - Produces: `MarketplaceCapability`, `get_marketplace_capability()`, and `MarketplaceAdapterRegistry`.
-- Produces: synthetic `RequestRecorder`, `SequenceTransport`, `response()`, and `request_json()` helpers that require an explicit `MockTransport`.
 - Consumes: `Marketplace`, `MessageType`, and injected provider adapter instances.
 
-- [ ] **Step 1: Write failing protocol and registry tests**
+- [x] **Step 1: Write failing protocol and registry tests**
 
 ```python
 def test_avito_has_conversation_capability_only() -> None:
@@ -91,7 +90,7 @@ def test_registry_rejects_unsupported_capability_before_factory_call() -> None:
     factory.assert_not_called()
 ```
 
-- [ ] **Step 2: Run the RED tests**
+- [x] **Step 2: Run the RED tests**
 
 Run from `apps/api`:
 
@@ -101,7 +100,7 @@ python -m pytest app/tests/test_adapter_registry_boundaries.py app/tests/test_ma
 
 Expected: collection fails because the protocols, capabilities, and registry do not exist.
 
-- [ ] **Step 3: Replace the broad adapter ABC with typed contracts**
+- [x] **Step 3: Introduce typed contracts beside the existing Wildberries ABC**
 
 ```python
 MarketplaceErrorCode = Literal[
@@ -191,6 +190,8 @@ class ReviewQuestionAdapter(CredentialAdapter, Protocol):
 
 Keep these value objects immutable and do not add a raw-provider-body field. `NormalizedMessage.product` remains `NormalizedProduct | None` so Avito does not fabricate a product.
 
+Keep the existing `MarketplaceAdapter` ABC only until Task 5 so every intermediate commit remains runnable. Task 5 migrates Wildberries and all active callers, then deletes the broad ABC in the same GREEN commit; do not add another compatibility alias.
+
 In `conversation.py`, define immutable `ConversationThread` and `ConversationMessage` values and this exact protocol:
 
 ```python
@@ -202,7 +203,7 @@ class ConversationAdapter(CredentialAdapter, Protocol):
     async def send_chat_message(self, credential: str, seller_id: str, context: ProviderMessageContext, text: str) -> AdapterResult[ProviderWriteReceipt]: ...
 ```
 
-- [ ] **Step 4: Implement immutable capabilities and lifecycle registry**
+- [x] **Step 4: Implement immutable capabilities and lifecycle registry**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -229,20 +230,18 @@ class MarketplaceAdapterRegistry:
 
 The three registry methods validate capability first, instantiate once, verify the runtime-checkable protocol, and raise `UnsupportedCapabilityError(code="unsupported_capability")` on mismatch.
 
-Add the shared recorder in `app/tests/marketplace_fixtures.py`; its constructor accepts only a finite response sequence, records `httpx.Request` objects, and raises `AssertionError` on an unexpected extra request. It returns an `httpx.AsyncClient` with `httpx.MockTransport`, an explicit synthetic base URL supplied by the test, and redirects disabled.
-
-- [ ] **Step 5: Run focused tests and strict static checks GREEN**
+- [x] **Step 5: Run focused tests and strict static checks GREEN**
 
 ```powershell
 python -m pytest app/tests/test_adapter_registry_boundaries.py app/tests/test_marketplace_capability_dispatch.py -q
-python -m ruff check app/adapters/base.py app/adapters/conversation.py app/adapters/capabilities.py app/adapters/registry.py app/tests/marketplace_fixtures.py app/tests/test_adapter_registry_boundaries.py app/tests/test_marketplace_capability_dispatch.py
+python -m ruff check app/adapters/base.py app/adapters/conversation.py app/adapters/capabilities.py app/adapters/registry.py app/services/reply_execution_service.py app/tests/test_adapter_registry_boundaries.py app/tests/test_marketplace_capability_dispatch.py
 python -m pyright app/adapters
 ```
 
-- [ ] **Step 6: Commit the contract boundary**
+- [x] **Step 6: Commit the contract boundary**
 
 ```powershell
-git add -- apps/api/app/adapters/base.py apps/api/app/adapters/conversation.py apps/api/app/adapters/capabilities.py apps/api/app/adapters/registry.py apps/api/app/tests/marketplace_fixtures.py apps/api/app/tests/test_adapter_registry_boundaries.py apps/api/app/tests/test_marketplace_capability_dispatch.py
+git add -- apps/api/app/adapters/base.py apps/api/app/adapters/conversation.py apps/api/app/adapters/capabilities.py apps/api/app/adapters/registry.py apps/api/app/services/reply_execution_service.py apps/api/app/tests/test_adapter_registry_boundaries.py apps/api/app/tests/test_marketplace_capability_dispatch.py
 git diff --cached --check
 git commit -m "refactor(api): define marketplace capability boundaries"
 ```
@@ -253,14 +252,18 @@ git commit -m "refactor(api): define marketplace capability boundaries"
 - Create: `apps/api/app/adapters/http.py`
 - Modify: `apps/api/app/core/lifecycle.py`
 - Modify: `apps/api/app/main.py`
+- Create: `apps/api/app/tests/marketplace_fixtures.py`
 - Create: `apps/api/app/tests/test_marketplace_http_policy.py`
 
 **Interfaces:**
 - Produces: `MarketplaceHttpClients`, `ReadRetryPolicy`, `parse_retry_after()`, and `request_read_with_retry()`.
 - Produces: `request.app.state.marketplace_registry` initialized during FastAPI lifespan.
+- Produces: synthetic `RequestRecorder`, `SequenceTransport`, `response()`, and `request_json()` helpers that require an explicit `MockTransport`.
 - Consumes: fixed provider base URLs and `httpx.AsyncClient` instances.
 
 - [ ] **Step 1: Write RED tests for bounded retry and SSRF-safe clients**
+
+First add `app/tests/marketplace_fixtures.py`. Its recorder accepts only a finite response sequence, records `httpx.Request` objects, and raises `AssertionError` on an unexpected extra request. It returns an `httpx.AsyncClient` with `httpx.MockTransport`, a synthetic base URL supplied by the test, and redirects disabled.
 
 ```python
 @pytest.mark.asyncio
@@ -336,9 +339,9 @@ Use fixed `base_url`, `follow_redirects=False`, explicit `httpx.Timeout`, and bo
 
 ```powershell
 python -m pytest app/tests/test_marketplace_http_policy.py app/tests/test_health.py -q
-python -m ruff check app/adapters/http.py app/core/lifecycle.py app/main.py app/tests/test_marketplace_http_policy.py
+python -m ruff check app/adapters/http.py app/core/lifecycle.py app/main.py app/tests/marketplace_fixtures.py app/tests/test_marketplace_http_policy.py
 python -m pyright app/adapters/http.py app/core/lifecycle.py app/main.py
-git add -- apps/api/app/adapters/http.py apps/api/app/core/lifecycle.py apps/api/app/main.py apps/api/app/tests/test_marketplace_http_policy.py
+git add -- apps/api/app/adapters/http.py apps/api/app/core/lifecycle.py apps/api/app/main.py apps/api/app/tests/marketplace_fixtures.py apps/api/app/tests/test_marketplace_http_policy.py
 git commit -m "feat(api): manage marketplace HTTP clients"
 ```
 
