@@ -7,10 +7,10 @@ import { billingOverviewSchema } from "../../lib/api/schemas";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const metricLabels: Record<string, string> = {
-  ai_drafts_monthly: "AI-черновики за период",
+  ai_drafts_monthly: "Черновики с ИИ",
   replies_sent_monthly: "Отправленные ответы",
   marketplace_accounts: "Подключённые кабинеты",
-  members: "Участники workspace",
+  members: "Участники команды",
 };
 
 export function BillingWorkspace() {
@@ -20,26 +20,33 @@ export function BillingWorkspace() {
     queryFn: () => apiRequest(buildApiQuery("/api/billing/overview", { organization_id: activeOrganization.id }), billingOverviewSchema),
   });
 
-  if (billingQuery.isLoading) return <BillingState title="Загружаем тариф" description="Получаем план, usage и текущий период." />;
-  if (billingQuery.error) return <BillingState title="Не удалось загрузить billing" description={errorMessage(billingQuery.error)} error />;
-  if (!billingQuery.data) return <BillingState title="Нет данных" description="Billing overview вернул пустой ответ." />;
+  if (billingQuery.isLoading) return <BillingState title="Загружаем тариф" description="Получаем текущий тариф, лимиты и расчётный период." />;
+  if (billingQuery.error) return <BillingState title="Не удалось загрузить тариф" description={errorMessage(billingQuery.error)} error />;
+  if (!billingQuery.data) return <BillingState title="Нет данных о тарифе" description="Информация о тарифе пока недоступна." />;
 
   const data = billingQuery.data;
   return (
     <section className="billing-workspace">
       <article className="billing-plan-card">
         <div className="billing-plan-heading">
-          <div><span className="panel-kicker">Current plan</span><h2>{data.plan.name}</h2><p>Код плана: <code>{data.plan.code}</code></p></div>
-          <span className={data.subscription?.status === "active" ? "billing-status billing-status-active" : "billing-status"}>{data.subscription?.status ?? "fallback"}</span>
+          <div>
+            <span className="panel-kicker">Текущий тариф</span>
+            <h2>{data.plan.name}</h2>
+          </div>
+          <span className={data.subscription?.status === "active" ? "billing-status billing-status-active" : "billing-status"}>
+            {subscriptionStatusLabel(data.subscription?.status)}
+          </span>
         </div>
         <div className="billing-price-state">
-          <strong>{data.pricing_finalized && data.plan.price_month_minor !== null ? formatPrice(data.plan.price_month_minor, data.plan.currency) : "Цена ещё не зафиксирована"}</strong>
-          <p>Коммерческие цены и overage не выдумываются до завершения unit economics. Схема уже готова для подключения платёжного провайдера.</p>
+          <strong>{data.pricing_finalized && data.plan.price_month_minor !== null ? formatPrice(data.plan.price_month_minor, data.plan.currency) : "Стоимость уточняется"}</strong>
+          <p>
+            Если стоимость тарифа ещё не утверждена, MPReply не показывает выдуманную цену. Здесь появятся финальная стоимость и условия после их публикации.
+          </p>
         </div>
         <dl className="billing-meta-grid">
-          <div><dt>Период usage</dt><dd>{formatDate(data.usage_period_start)} — {formatDate(data.usage_period_end)}</dd></div>
-          <div><dt>Провайдер</dt><dd>{data.subscription?.provider ?? "Не подключён"}</dd></div>
-          <div><dt>Автопродление</dt><dd>{data.subscription?.cancel_at_period_end ? "Будет отключено" : "Не запрошено"}</dd></div>
+          <div><dt>Расчётный период</dt><dd>{formatDate(data.usage_period_start)} — {formatDate(data.usage_period_end)}</dd></div>
+          <div><dt>Платёжная система</dt><dd>{data.subscription?.provider ?? "Не подключена"}</dd></div>
+          <div><dt>Автопродление</dt><dd>{data.subscription?.cancel_at_period_end ? "Будет отключено" : "Включено"}</dd></div>
         </dl>
       </article>
 
@@ -48,18 +55,35 @@ export function BillingWorkspace() {
           const percent = item.limit && item.limit > 0 ? Math.min((item.used / item.limit) * 100, 100) : 0;
           return (
             <article className="billing-usage-card" key={item.metric}>
-              <div className="billing-usage-heading"><span>{metricLabels[item.metric] ?? item.metric}</span><strong>{formatNumber(item.used)}{item.limit !== null ? ` / ${formatNumber(item.limit)}` : ""}</strong></div>
-              {item.limit !== null ? <div className="billing-progress" aria-label={`${Math.round(percent)}% лимита использовано`}><span style={{ width: `${percent}%` }} /></div> : <div className="billing-unlimited">Коммерческий лимит не задан</div>}
-              <p>{item.limit === null ? "До финализации тарифа hard limit не применяется." : item.allowed ? `Осталось: ${formatNumber(item.remaining ?? 0)}` : "Лимит исчерпан."}</p>
+              <div className="billing-usage-heading">
+                <span>{metricLabels[item.metric] ?? item.metric}</span>
+                <strong>{formatNumber(item.used)}{item.limit !== null ? ` / ${formatNumber(item.limit)}` : ""}</strong>
+              </div>
+              {item.limit !== null ? (
+                <div className="billing-progress" aria-label={`${Math.round(percent)}% лимита использовано`}>
+                  <span style={{ width: `${percent}%` }} />
+                </div>
+              ) : (
+                <div className="billing-unlimited">Лимит не установлен</div>
+              )}
+              <p>
+                {item.limit === null
+                  ? "Для этого показателя отдельный лимит пока не задан."
+                  : item.allowed
+                    ? `Осталось: ${formatNumber(item.remaining ?? 0)}`
+                    : "Лимит исчерпан."}
+              </p>
             </article>
           );
         })}
       </section>
 
       <article className="billing-foundation-note">
-        <span className="panel-kicker">Billing-ready</span>
-        <h2>Что уже заложено</h2>
-        <p>Планы, подписки, provider IDs, период подписки, trial, cancel-at-period-end, usage evaluation и enforcement hooks для AI drafts, marketplace accounts и участников workspace.</p>
+        <span className="panel-kicker">Лимиты и использование</span>
+        <h2>Все показатели тарифа — в одном месте</h2>
+        <p>
+          Следите за количеством подготовленных черновиков, отправленных ответов, подключённых кабинетов и участников команды. Данные обновляются по текущему расчётному периоду.
+        </p>
       </article>
     </section>
   );
@@ -68,6 +92,15 @@ export function BillingWorkspace() {
 function BillingState({ title, description, error = false }: { title: string; description: string; error?: boolean }) {
   return <div className={error ? "workspace-inline-state workspace-inline-state-error" : "workspace-inline-state"}><strong>{title}</strong><p>{description}</p></div>;
 }
+
+function subscriptionStatusLabel(status: string | null | undefined): string {
+  if (status === "active") return "Активен";
+  if (status === "trialing") return "Пробный период";
+  if (status === "past_due") return "Нужна оплата";
+  if (status === "canceled") return "Отменён";
+  return "Без подписки";
+}
+
 function formatNumber(value: number): string { return new Intl.NumberFormat("ru-RU").format(value); }
 function formatDate(value: string): string { return new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value)); }
 function formatPrice(minor: number, currency: string): string { return new Intl.NumberFormat("ru-RU", { style: "currency", currency }).format(minor / 100); }
