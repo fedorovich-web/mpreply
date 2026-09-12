@@ -75,6 +75,7 @@ def test_engine_requires_manual_review_for_missing_product_context() -> None:
     assert result.requires_manual_review is True
     assert any("product context" in reason.lower() for reason in result.reasons)
 
+
 def test_rating_restricted_rule_does_not_match_question_without_rating() -> None:
     rule = AutomationRuleSnapshot(
         id=uuid4(),
@@ -100,3 +101,29 @@ def test_rating_restricted_rule_does_not_match_question_without_rating() -> None
     assert result.matched_rule_id is None
     assert result.mode == "auto"
 
+
+def test_chat_specific_rule_matches_buyer_message() -> None:
+    rule = AutomationRuleSnapshot(
+        id=uuid4(),
+        name="Buyer messages need review",
+        priority=500,
+        mode="semi_auto",
+        applies_to="chat",
+        stop_on_missing_product_context=False,
+    )
+    context = AutomationEvaluationContext(
+        organization_default_mode="auto",
+        marketplace_account_default_mode="inherit",
+        marketplace_account_id=uuid4(),
+        marketplace="avito",
+        message_type="chat",
+        rating=None,
+        customer_text="Когда сможете отправить заказ?",
+        has_product_context=False,
+    )
+
+    result = AutomationRuleEngine().evaluate(context, [rule])
+
+    assert result.matched_rule_id == rule.id
+    assert result.mode == "semi_auto"
+    assert result.requires_manual_review is True
