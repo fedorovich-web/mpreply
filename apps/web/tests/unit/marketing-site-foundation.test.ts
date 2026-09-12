@@ -13,7 +13,7 @@ describe("marketing site foundation", () => {
     expect(marketingCss).toContain(".public-root .public-footer {");
   });
 
-  it("does not keep the retired homepage implementation or removed theme toggle", () => {
+  it("does not keep retired public UI selectors", () => {
     for (const retiredSelector of [
       "homepage-hero-product",
       "homepage-hero-feed",
@@ -24,6 +24,8 @@ describe("marketing site foundation", () => {
       "homepage-outcomes",
       "homepage-faq-layout",
       "theme-toggle",
+      "button-ghost",
+      "public-brand-copy small",
     ]) {
       expect(marketingCss).not.toContain(retiredSelector);
     }
