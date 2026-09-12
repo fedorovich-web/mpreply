@@ -13,6 +13,8 @@ const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const resources = readFileSync(join(root, "app/resources/page.tsx"), "utf8");
 const contacts = readFileSync(join(root, "app/contacts/page.tsx"), "utf8");
+const authForm = readFileSync(join(root, "components/auth/AuthForm.tsx"), "utf8");
+const authCss = readFileSync(join(root, "styles/auth.css"), "utf8");
 const pagesCssPath = join(root, "styles/marketing-pages.css");
 const pagesCss = existsSync(pagesCssPath) ? readFileSync(pagesCssPath, "utf8") : "";
 const marketplacesCssPath = join(root, "styles/marketplaces-approved.css");
@@ -88,6 +90,18 @@ describe("public page redesign", () => {
     expect(contacts).toContain("mailto:");
     expect(contacts).not.toMatch(/ответим за|ответ в течение|24\s*час/i);
     expect(resourcesContactsCss).toContain(".contact-support-scene");
+  });
+
+  it("keeps auth behavior intact while presenting a real product workspace beside the form", () => {
+    expect(authForm).toContain("auth-shell");
+    expect(authForm).toContain("auth-product-panel");
+    expect(authForm).toContain("auth-preview-queue");
+    expect(authForm).toContain("auth-preview-draft");
+    expect(authForm).toContain('apiRequest(`/api/auth/${mode}`');
+    expect(authForm).toContain('requestedNext?.startsWith("/app/")');
+    expect(authForm).not.toMatch(/14\s*дн|бесплатн(?:ый|ых)\s+период/i);
+    expect(authCss).toContain(".auth-product-panel");
+    expect(authCss).toContain(".auth-preview-queue");
   });
 
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
