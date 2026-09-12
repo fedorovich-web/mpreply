@@ -61,20 +61,24 @@ async def enforce_auth_rate_limit(
         return
 
     client_host = request.client.host if request.client else "unknown"
-    key = _rate_limit_key(scope=scope, identifier=f"{client_host}:{identifier}")
+    keys = (
+        _rate_limit_key(scope=f"{scope}:ip", identifier=client_host),
+        _rate_limit_key(scope=f"{scope}:identifier", identifier=identifier),
+    )
     redis = _redis_from_url(settings.redis_url.get_secret_value())
     try:
-        count = await redis.incr(key)
-        if count == 1:
-            await redis.expire(key, window_seconds)
-        if count > limit:
-            ttl = await redis.ttl(key)
-            retry_after = max(int(ttl), 1)
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Too many authentication attempts",
-                headers={"Retry-After": str(retry_after)},
-            )
+        for key in keys:
+            count = await redis.incr(key)
+            if count == 1:
+                await redis.expire(key, window_seconds)
+            if count > limit:
+                ttl = await redis.ttl(key)
+                retry_after = max(int(ttl), 1)
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Too many authentication attempts",
+                    headers={"Retry-After": str(retry_after)},
+                )
     except RedisError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

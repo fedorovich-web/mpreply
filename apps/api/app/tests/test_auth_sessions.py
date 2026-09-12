@@ -84,6 +84,7 @@ async def test_refresh_rotation_revokes_old_token_and_rejects_replay(
     await session.commit()
 
     assert rotated.raw_token != original.raw_token
+    assert rotated.family_id == original.family_id
     sessions = (
         (await session.execute(select(AuthSession).order_by(AuthSession.created_at)))
         .scalars()
@@ -94,8 +95,17 @@ async def test_refresh_rotation_revokes_old_token_and_rejects_replay(
     assert _utc(sessions[0].revoked_at) == now
     assert sessions[1].revoked_at is None
 
-    with pytest.raises(SessionError, match="invalid_refresh_session"):
+    with pytest.raises(SessionError) as exc_info:
         await service.rotate(original.raw_token)
+    assert exc_info.value.code == "refresh_session_reused"
+    await session.commit()
+
+    active_child = (
+        await session.execute(
+            select(AuthSession).where(AuthSession.token_digest == digest_auth_token(rotated.raw_token))
+        )
+    ).scalar_one()
+    assert active_child.revoked_at is not None
 
 
 @pytest.mark.asyncio

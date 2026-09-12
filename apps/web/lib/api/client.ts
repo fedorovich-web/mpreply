@@ -1,6 +1,8 @@
 import type { ZodType } from "zod";
 
 const fallbackApiBaseUrl = "http://localhost:8000";
+const csrfHeaderValue = "1";
+const csrfProtectedMethods = new Set(["DELETE", "PATCH", "POST", "PUT"]);
 
 export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || fallbackApiBaseUrl).replace(/\/$/, "");
 
@@ -34,6 +36,9 @@ export async function apiRequest<T>(
   if (options.body !== undefined) {
     headers.set("Content-Type", "application/json");
     body = JSON.stringify(options.body);
+  }
+  if (csrfProtectedMethods.has((options.method ?? "GET").toUpperCase())) {
+    headers.set("X-CSRF-Token", csrfHeaderValue);
   }
 
   const requestInit: RequestInit = {
@@ -88,6 +93,7 @@ async function refreshSession(): Promise<boolean> {
   const refreshRequest = fetch(`${API_BASE_URL}/api/auth/refresh`, {
     method: "POST",
     credentials: "include",
+    headers: { "X-CSRF-Token": csrfHeaderValue },
     cache: "no-store",
   })
     .then((response) => response.ok)

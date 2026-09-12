@@ -5,7 +5,7 @@ from fastapi import Response
 
 from app.core import cookies as cookie_module
 from app.core.config import Settings
-from app.core.cookies import clear_refresh_cookie, set_refresh_cookie
+from app.core.cookies import clear_access_cookie, clear_refresh_cookie, set_access_cookie, set_refresh_cookie
 
 
 def hardened_settings() -> Settings:
@@ -29,6 +29,23 @@ def test_refresh_cookie_is_persistent_and_hardened(monkeypatch: pytest.MonkeyPat
     assert "Domain=" not in cookie
 
 
+def test_access_cookie_is_short_lived_and_hardened(monkeypatch: pytest.MonkeyPatch) -> None:
+    settings = hardened_settings()
+    monkeypatch.setattr(cookie_module, "get_settings", lambda: settings)
+    response = Response()
+
+    set_access_cookie(response, "signed-access-token")
+
+    cookie = response.headers["set-cookie"]
+    assert cookie.startswith("respio_access=signed-access-token;")
+    assert "HttpOnly" in cookie
+    assert "Secure" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Path=/" in cookie
+    assert "Max-Age=900" in cookie
+    assert "Domain=" not in cookie
+
+
 def test_refresh_cookie_removal_uses_same_scope(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = hardened_settings()
     monkeypatch.setattr(cookie_module, "get_settings", lambda: settings)
@@ -42,4 +59,20 @@ def test_refresh_cookie_removal_uses_same_scope(monkeypatch: pytest.MonkeyPatch)
     assert "Secure" in cookie
     assert "SameSite=lax" in cookie
     assert "Path=/api/auth" in cookie
+    assert "Max-Age=0" in cookie
+
+
+def test_access_cookie_removal_uses_same_scope(monkeypatch: pytest.MonkeyPatch) -> None:
+    settings = hardened_settings()
+    monkeypatch.setattr(cookie_module, "get_settings", lambda: settings)
+    response = Response()
+
+    clear_access_cookie(response)
+
+    cookie = response.headers["set-cookie"]
+    assert cookie.startswith('respio_access="";')
+    assert "HttpOnly" in cookie
+    assert "Secure" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Path=/" in cookie
     assert "Max-Age=0" in cookie
