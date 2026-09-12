@@ -33,10 +33,10 @@ export function PublicShell({ children }: PublicShellProps) {
               <strong>MPReply</strong>
             </Link>
             <p>Автоответы на отзывы, вопросы и сообщения покупателей на маркетплейсах.</p>
-            <div className="public-footer-socials" aria-label="Ссылки MPReply">
-              <span aria-hidden="true">➤</span>
-              <span aria-hidden="true">◉</span>
-              <span aria-hidden="true">VK</span>
+            <div className="public-footer-socials" aria-hidden="true">
+              <span>➤</span>
+              <span>◉</span>
+              <span>VK</span>
             </div>
           </div>
 
