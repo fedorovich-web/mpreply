@@ -4,9 +4,11 @@ export default function DashboardPage() {
   return (
     <section className="app-page">
       <section className="app-header">
-        <p className="eyebrow">Обзор</p>
-        <h1>Главное по обращениям</h1>
-        <p>Следите за входящими обращениями, отправленными ответами, очередью проверки и текущими лимитами в одном месте.</p>
+        <p className="eyebrow">Рабочий обзор</p>
+        <h1>Что происходит с обращениями</h1>
+        <p>
+          Смотрите текущую очередь, находите обращения без ответа и контролируйте, как команда и автоматизация обрабатывают входящие.
+        </p>
       </section>
       <DashboardMetrics />
     </section>
