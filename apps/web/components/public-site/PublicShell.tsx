@@ -52,6 +52,7 @@ export function PublicShell({ children }: PublicShellProps) {
           <div>
             <strong>Ресурсы</strong>
             <Link href="/resources">Блог</Link>
+            <Link href="/help">Помощь и FAQ</Link>
             <Link href="/contacts">Контакты</Link>
           </div>
           <div>
