@@ -120,7 +120,7 @@ export default function HomePage() {
                 Посмотреть демо
               </Link>
             </div>
-            <div className="homepage-hero-benefits" aria-label="Основные преимущества">
+            <div className="homepage-hero-benefits" role="group" aria-label="Основные преимущества">
               <span>✓ Быстрое подключение</span>
               <span>✓ Автоматически или после проверки</span>
               <span>✓ Единое рабочее пространство</span>
@@ -159,7 +159,7 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
-          <div className="homepage-marketplace-facts" aria-label="Факты о продукте">
+          <div className="homepage-marketplace-facts" role="group" aria-label="Факты о продукте">
             <span><strong>4</strong><small>маркетплейса</small></span>
             <span><strong>1</strong><small>единое окно</small></span>
             <span><strong>3</strong><small>типа обращений</small></span>
@@ -192,7 +192,7 @@ export default function HomePage() {
               Подбирайте модель под задачу и сочетайте её возможности с контекстом товара, стилем бренда и правилами обработки обращений.
             </p>
           </div>
-          <div className="homepage-model-grid" aria-label="Поддерживаемые ИИ-модели">
+          <div className="homepage-model-grid" role="group" aria-label="Поддерживаемые ИИ-модели">
             {aiModels.map((model) => (
               <article className="homepage-model-card" key={model.name}>
                 <span className="homepage-model-mark" aria-hidden="true">{model.mark}</span>
@@ -213,9 +213,9 @@ export default function HomePage() {
             <p>Подключите маркетплейсы и начните работать с обращениями в одном процессе.</p>
           </div>
 
-          <div className="homepage-horizontal-process" role="list">
+          <ol className="homepage-horizontal-process">
             {processSteps.map((step, index) => (
-              <article className="homepage-horizontal-step" key={step.number} role="listitem">
+              <li className="homepage-horizontal-step" key={step.number}>
                 <div className="homepage-horizontal-step-topline">
                   <span className="homepage-process-number-circle">{step.number}</span>
                   <span className="homepage-process-icon" aria-hidden="true">{step.icon}</span>
@@ -223,9 +223,9 @@ export default function HomePage() {
                 </div>
                 <h3>{step.title}</h3>
                 <p>{step.text}</p>
-              </article>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
