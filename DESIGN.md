@@ -1,203 +1,239 @@
-# Respio — Design System Direction
+# MPReply — Design System and UX Direction
 
-Status: authoritative design rules and pre-redesign constraints.
-Version: 0.1.27
+Status: authoritative visual and UX source of truth for the public site, authenticated workspace and internal admin screens.
 
 ## Design intent
 
-**Operational clarity. Quiet intelligence. Marketplace confidence.**
+**Clear marketplace operations in one coherent MPReply product.**
 
-## Approved public brand direction · Respio Signal Flow
+The latest approved light-blue MPReply homepage preview is the visual source of truth. Public pages and the authenticated product must look related: same palette, typography, component character and spacing logic, adapted to different information densities.
 
-The approved public-site direction combines a light-first editorial SaaS layout with a full-width animated ribbon canvas in the hero, visually close in motion language and composition to the Handhold reference while using original Respio code, content and brand colors. The public site must not feel empty or unfinished: keep a complete header/navigation, real product evidence, substantial page structure and a functional footer.
+Accessibility, semantics, performance and responsive fixes must preserve the approved composition and hierarchy unless a design change is explicitly approved.
 
-Approved public palette:
-- Primary violet: `#6F33AB`.
-- Signal mint: `#79D6B0`.
-- Neutral near-white public page background: `#FBFAFC`; subtle/elevated surfaces use centralized semantic background tokens.
-- Deep violet is secondary for selected contrast surfaces and optional dark theme, not the default page background.
-- Status colors remain semantic and separate from the mint brand accent.
+## Brand palette
 
-Approved hero behavior:
-- Large centered headline and supporting copy.
-- Full-width organic animated canvas/ribbon below the copy.
-- Primary CTA: `Подключить маркетплейс`, not a single-marketplace CTA.
-- Complete desktop navigation and accessible mobile menu.
-- Light theme is the default; optional theme switch is allowed.
-- Respect reduced motion and pause canvas animation when off-screen or the page is hidden.
+Primary brand family:
 
-Respio should feel like a reliable operating system for marketplace communication: calm, precise, fast and accountable. Marketing may be more expressive than the dashboard, but both must belong to one family.
+- deep blue: `#1E40AF`;
+- strong blue: `#1D4ED8`;
+- primary: `#2563EB`;
+- sky accent: `#0EA5E9`;
+- light sky accent: `#7DD3FC`.
 
-## Secondary public routes · 0.1.15
+Use white and cool near-white surfaces with dark navy text. Success, warning and danger are semantic colors and remain separate from the brand palette.
 
-The `features`, `marketplaces`, marketplace detail, `pricing`, `demo`, `resources` and `contacts` routes use the same Signal Flow language as the homepage: editorial hierarchy, restrained violet/mint accents, explicit operational states, fewer card grids and more structured rows/lists. Planned marketplace pages must visually separate roadmap status from an implemented integration and must not use a production-ready headline.
+Reusable visual primitives belong in shared CSS custom properties: colors, surfaces, borders, radii, shadows, section rhythm, focus rings, transitions and public gradients.
 
-## Public shell polish · 0.1.16
-
-The shared public shell adds active desktop/mobile navigation states, an accessible controlled mobile menu with Escape/backdrop close behavior, a theme toggle that announces the next action, a fuller conversion-oriented footer and disclosure-based FAQ interaction. Public copy avoids internal implementation jargon when a clear Russian term exists.
-
-## Automated design verification · 0.1.17
-
-The frontend test foundation now verifies critical brand/semantic design tokens, duplicate token declarations and WCAG AA contrast for the primary text/surface combinations used by the current system. These checks run alongside unit tests in both CI and the local release gate.
-
-## Product dashboard · Live Automation Rules · 0.1.18
-
-Automation Rules is an operational workspace, not a decorative gallery of fake rule cards. The screen loads tenant-scoped backend data, exposes explicit loading, empty, error and success states, makes the selected rule and current filter obvious, and preserves a calm dense hierarchy suitable for recurring operational work.
-
-Authorization is visible but never treated as a frontend security boundary: owner/admin roles receive create, edit, enable and disable controls, while manager/viewer roles see a clear read-only state. SafetyGate stop/review behavior stays explicit in the editor and cannot be visually hidden to inflate automation rate. The UI uses existing semantic tokens, responsive composition and restrained motion; no page-specific color hacks or new design system are introduced.
-
-## Public visual-system stabilization · 0.1.19
-
-The public site uses self-hosted Onest for Cyrillic and Latin with four production weights: 400, 500, 600 and 700. The optimized WOFF2 family totals 64,972 bytes, down from 114,084 bytes in the supplied source set (about 43% smaller), while retaining required Russian/English letters and product punctuation.
-
-Reusable visual decisions are centralized in `styles/tokens.css`: brand/semantic colors, backgrounds, gradients, typography roles, font weights, line heights, letter spacing, spacing, layout dimensions, radii, borders, shadows, focus, motion durations/easings and Canvas configuration. Public component CSS must reference these variables instead of introducing local HEX/RGB/HSL colors or one-off transition timing values.
-
-The public background system is neutral and continuous: a near-white page foundation, white surfaces and a restrained subtle violet surface token. Alternating section tones are permitted only through semantic background variables and must not create arbitrary beige/white/violet banding.
-
-Hero motion uses a token-driven Canvas ribbon system in Respio violet/mint, with multiple restrained layers, edge fading, reduced-motion support, intersection/visibility pausing, bounded device-pixel ratio and frame-rate control. Visual parameters belong to CSS custom properties so the motion system can be tuned without hardcoded component constants.
-
-Interactive controls share one motion/focus contract. Hover and active feedback must avoid geometry changes such as border-width/padding shifts; use tokenized transform, color and shadow transitions. Process steps remain equal in layout weight, and CTA labels are contextual rather than mechanically repeating the same primary action.
-
-Rendered public HTML is validated route-by-route through Nu HTML Checker, while stylesheet sources are validated through Nu and CSS syntax tooling. Validator findings are fixed in source rather than silenced; current semantic corrections include valid ARIA roles, heading ownership for sections/process steps and removal of wrappers that falsely claimed independent `section`/`article` semantics.
+Marketplace brand colors may remain marketplace-specific; they are not MPReply design tokens.
 
 ## Two visual lanes
 
-### Brand/marketing
-Allowed: stronger typography, richer composition, editorial layouts, real product artifacts, restrained brand accents and purposeful motion.
+### Public / marketing
 
-Forbidden: generic purple-blue AI gradients, fake screenshots, meaningless blobs, endless card grids, excessive glow/glass, generic stock people as identity.
+Purpose: explain, demonstrate and convert.
 
-### Product/dashboard
-Priorities: scanning speed, state visibility, stable controls, dense but breathable hierarchy, minimal decorative motion, obvious action semantics.
+Use:
+- generous whitespace;
+- strong editorial hierarchy;
+- realistic MPReply product artifacts;
+- restrained blue/sky accents;
+- different compositions between sections/pages;
+- one clear primary conversion action per context.
 
-## Hierarchy
+Major public desktop sections should usually preserve approximately **112–160px** of vertical separation where the approved composition calls for it.
 
-Every screen must answer: Where am I? What is happening? What needs attention? What is primary? What happens after action? Never give equal emphasis to everything.
+Avoid:
+- card-everything layouts;
+- identical section templates across every route;
+- glassmorphism;
+- broad uncontrolled glow;
+- gradient text;
+- generic AI blobs;
+- fake screenshots, testimonials or metrics;
+- excessive decorative motion.
+
+### Authenticated workspace / admin
+
+Purpose: help users understand state and complete recurring work efficiently.
+
+The dashboard is visually quieter and denser than marketing, but stays in the same MPReply family. Priorities are scanning speed, stable controls, clear information hierarchy, visible state and obvious next action.
+
+Every operational screen should answer:
+
+1. Where am I?
+2. What is happening?
+3. **What needs attention?**
+4. What can I do?
+5. What happens next?
+
+Do not give equal visual weight to every metric, filter and control.
 
 ## Typography
 
-- Final fonts require high-quality Cyrillic and Latin.
-- Do not default to Inter by reflex.
-- Maximum two families without strong justification.
-- Body copy: readable line-height and generally 65–75ch.
-- Display letter spacing floor: `-0.04em`.
-- No tiny all-caps eyebrow on every section.
-- Final font approval requires Russian marketing copy, dashboard tables, forms and legal prose.
+- Use the existing self-hosted Onest family.
+- Russian copy is the primary quality check for line lengths and wrapping.
+- Body text needs comfortable line-height and useful measure.
+- Display headings may be compact but must remain readable on 320/390px layouts.
+- Do not add tiny uppercase eyebrow text to every section mechanically.
+- One coherent type system must cover marketing, tables, forms, dashboard controls and legal pages.
 
-## Color
+## Public page rhythm
 
-- Semantic CSS variables only.
-- Verify contrast; body text generally ≥4.5:1, large text ≥3:1.
-- Status colors remain semantic and distinct from brand accent.
-- Color cannot be the only carrier of meaning.
-- Do not use purple/cyan gradient as generic AI shorthand or cream/sand as automatic “premium” styling.
+- Major chapters are clearly separated by whitespace, not by arbitrary background stripes.
+- Content width stays near the approved 1180–1240px range where existing containers use it.
+- Alternate white/cool near-white surfaces only when composition benefits from it.
+- Keep the latest approved section padding rather than compressing the page after unrelated fixes.
 
-## Layout
+## Homepage visual contract
 
-- Use existing tokens.
-- Prefer fewer stronger layout decisions over box proliferation.
-- No nested cards or card-everything UI.
-- Mobile is intentionally composed, not desktop simply stacked.
-- Test for overflow and long Russian headings.
+### Hero
 
-## Radius, borders, shadows
+- Left: category/outcome copy and CTAs.
+- Right: dedicated realistic MPReply product-UI WebP.
+- Do not put a second active wave/background asset behind the hero UI; the illustration itself provides visual depth.
+- Preserve the approved airy spacing and split composition.
 
-Radius is a system, not decoration. Cards generally stay within restrained radii; pills are for tags/controls where semantically useful. Do not combine heavy border + broad soft shadow + large radius as default.
+### Unified workspace demonstration
 
-## Icons
+`Отзывы / Вопросы / Сообщения` remains real interactive HTML/React, not a screenshot. Tabs must be keyboard accessible and the content should resemble a plausible seller workflow.
 
-One coherent family per surface. No emoji. No mixed outline/fill/duotone systems without an explicit system. Marketplace trademarks are not general-purpose UI icons.
+### How it works
 
-## Logo and brand assets
+Use the approved connected horizontal journey. Do not regress to four identical feature cards. Steps should read as one process: connect → receive → prepare → send/review.
 
-The current `R` in a rounded square is a placeholder, not the final Respio logo. Final identity must include wordmark, symbol if justified, monochrome/light/dark versions, favicon/app exports, clearspace/minimum-size rules and editable SVG. Do not imitate marketplace identities or competitors.
+### Closing CTA
+
+May use a separate UI WebP plus a restrained wave background. Keep this visually distinct from the hero.
+
+## Secondary public pages
+
+Every public route uses the same visual language but gets a composition appropriate to its purpose.
+
+- `/features`: feature-to-job storytelling, not a homepage duplicate.
+- `/marketplaces`: integration discovery and workflow coverage.
+- marketplace detail pages: unique marketplace-specific content and structure.
+- `/pricing`: clear commercial explanation without invented prices.
+- `/demo`: realistic product workflow.
+- `/resources`: editorial/SEO entry point.
+- `/contacts`: focused onboarding/sales contact.
+- `/privacy`, `/terms`: readable legal typography without marketing distortion.
+
+Do not solve every page with the same hero + three cards + CTA template.
+
+## Dashboard UX hierarchy
+
+### Overview
+
+Show operational priorities before decorative metrics. Answer what needs attention, what changed and where the user should go next.
+
+### Inbox / Обращения
+
+Prefer a triage/list-detail flow with:
+- fast marketplace/type/status filtering;
+- message content and product context near each other;
+- clear state and next action;
+- useful desktop and mobile layouts;
+- preserved filter/state semantics when moving between items where feasible.
+
+### На проверке
+
+Put reason for review next to the draft and available decision. Use seller language. Do not expose internal nouns such as `revision`, `worker pipeline` or `SafetyGate` in normal UX.
+
+### ИИ-ассистент
+
+Normal users need source/context, reply style where supported, prepared draft and edit/regenerate/approve actions. Provider/model/token/latency belongs in diagnostics, not the primary screen.
+
+### Автоматизация
+
+Explain conditions as seller decisions: when to answer automatically, which situations require review, whether a rule is enabled and what has higher priority.
+
+### Интеграции
+
+Show connection state, safe account identity, sync/health where useful, actionable errors and RBAC-appropriate actions. `Подключить` versus `Управлять` depends on account state for all supported marketplaces.
+
+### Аналитика
+
+Answer seller questions rather than exposing provider telemetry as the main story.
+
+### Тариф и лимиты
+
+Make period, usage and remaining limits understandable. Never invent pricing.
+
+## States and feedback
+
+Every data-driven workspace must intentionally cover:
+
+- loading: explain what is loading;
+- empty: explain why the screen is empty and the next useful action;
+- error: explain what failed and what the user can do;
+- success: confirm the result without blocking the workflow;
+- read-only: explain permission state before the user attempts a forbidden mutation.
+
+Dangerous/destructive actions must be visually distinct and confirmable.
+
+## Forms and actions
+
+- Visible labels, not placeholder-only forms.
+- One clear primary action where possible.
+- Action copy describes the resulting state (`Сохранить правило`, `Подключить Ozon`, `Одобрить и отправить`).
+- Prevent duplicate submission.
+- Preserve entered values on recoverable validation errors where safe.
+- Do not make the user discover authorization through a post-click 403 if the current role is already known.
+
+## Responsive behavior
+
+Mobile is intentionally composed, not desktop stacked blindly.
+
+At 320px and 390px:
+- no horizontal overflow;
+- primary actions remain reachable;
+- filters do not dominate the viewport;
+- dense tables become suitable mobile patterns rather than squeezed columns;
+- critical state is never hover-only;
+- long Russian labels/headings wrap intentionally.
 
 ## Motion
 
-Use short opacity/transform transitions and purposeful state feedback. Avoid bounce/elastic easing, scroll hijacking, long intro sequences and layout-property animations when transform/opacity is sufficient. Always respect reduced motion.
+Use short opacity/transform transitions for useful state feedback. Avoid bounce/elastic motion, layout-property animation and decorative sequences that slow recurring work. Respect `prefers-reduced-motion`.
 
-## Forms and CTAs
+## Accessibility
 
-Visible labels, recoverable errors, duplicate-submit protection, singular primary CTA where possible, specific action copy. Never promise free trial, instant integration or production support unless true.
+- WCAG AA-oriented contrast.
+- Semantic HTML and meaningful heading hierarchy.
+- Visible focus.
+- Keyboard access to all interactive controls.
+- Tabs support Tab, ArrowLeft, ArrowRight, Home and End.
+- Color is never the only state signal.
+- Automated axe is mandatory but does not replace semantic/manual review.
 
-## Homepage story
+## Design governance
 
-1. Category + outcome.
-2. Product mechanism.
-3. Trust/safety model.
-4. Marketplace readiness truth.
-5. Workflow demonstration.
-6. Benefits by audience/JTBD.
-7. Product evidence.
-8. Automation controls.
-9. Analytics/accountability.
-10. Security/integration trust.
-11. Useful FAQ.
-12. Conversion CTA.
+The user is the final judge of subjective visual quality. Do not use a subjective design heuristic as a blocking CI gate.
 
-This is a framework, not permission to force every section onto the page.
+Objective gates remain mandatory:
+- unit tests;
+- design-token tests;
+- typecheck;
+- lint;
+- CSS syntax validation;
+- production build;
+- W3C HTML/CSS validation;
+- E2E;
+- accessibility;
+- visual regression;
+- Lighthouse;
+- production Compose/container validation.
 
-## Accessibility and performance
+Visual snapshots are evidence, not an excuse to accept a design regression. Never update snapshots only to silence a failure.
 
-WCAG AA-oriented implementation, keyboard navigation, visible focus, semantics, labels, contrast, reduced motion, no hover-only essential info. Automated axe is necessary but insufficient. Protect LCP, CLS and INP; avoid large client bundles and unnecessary third-party scripts.
+## Absolute anti-patterns
 
-## Impeccable contract
-
-Before substantial UI work: read `PRODUCT.md`, `DESIGN.md`, relevant docs, inspect existing tokens/components, run `npm run design:detect`, and never suppress findings silently.
-
-## Absolute anti-pattern bans
-
-Reject gradient text, generic glassmorphism, fake hero metrics, identical card grids, side-stripe accent cards, excessive 32px+ card rounding, decorative CSS grid backgrounds, fake logos/testimonials, uncontrolled glow, and AI-template copy.
-
-## Product dashboard · Live AI Assistant · 0.1.20
-
-AI Assistant is an operational three-part workspace rather than an AI marketing panel: source message context, generation controls, and the resulting draft/SafetyGate telemetry are visible together. The screen uses the existing dashboard language, semantic tokens, restrained motion and responsive composition.
-
-Permission state is explicit without being treated as a security boundary. Owner/admin/manager roles can generate; viewer remains read-only while retaining permitted draft-history visibility. New styles must continue to use the centralized token system for colors, typography, spacing, surfaces, shadows, focus and transitions.
-
-## Product dashboard · Live Integrations · 0.1.21
-
-The integrations experience is an operational workspace rather than a marketplace roadmap gallery. Real account health, credential state, masked fingerprint, sync history and error count are visible together, while unsupported marketplace adapters remain visually and textually marked as unavailable.
-
-The Wildberries management flow uses the existing dashboard design language and centralized CSS custom properties for colors, typography, spacing, radii, shadows, focus and transitions. Interactive account rows use stable transform-based hover/active motion, destructive credential revocation is explicit and confirmable, and write controls are absent for read-only memberships without treating frontend hiding as authorization.
-
-## Test foundation recovery · 0.1.22
-
-The visual-system contract remains unchanged. The patch restores the Vitest jsdom/setup files and baseline UI unit tests required for deterministic React Testing Library execution in CI.
-
-## E2E locator and mock-contract recovery · 0.1.23
-
-No visual-system change is introduced. The patch only hardens E2E semantics: Automation Rules assertions target the intended heading role, and AI Assistant test routing distinguishes draft history from draft generation.
-
-
-## E2E mock-state recovery · 0.1.24
-
-Automation Rules E2E mocks now preserve newly created rules in the subsequent list response, matching the workspace flow after React Query invalidation. The change is covered by a unit regression test and does not alter production UI or backend behavior.
-
-
-## Accessibility contrast recovery · 0.1.25
-
-- Error/danger text now uses a dedicated accessible semantic token instead of the decorative danger base color.
-- Info badges use a dedicated accessible info-text token.
-- Soft danger/info surfaces are opaque semantic tokens so contrast does not drift with the parent background.
-- The selected Wildberries account keeps secondary metadata above WCAG AA contrast on the violet-soft active surface.
-- Accessibility diagnostics for the Wildberries workspace now print selector-level failure details.
-
-
-## Semantic contrast hardening · 0.1.26
-
-A project-wide semantic-color audit found that the final `0.1.25` GitHub axe failure was caused by alpha compositing, not by the badge selector itself: `--color-success-soft` used an 8% transparent green over the selected integration account's translucent violet active surface, producing the computed `#DFE6EA` background and only `4.28:1` contrast against `#027A48`.
-
-The audit was then expanded across all public/dashboard stylesheet status surfaces, brand-soft active states, light/dark theme overrides and representative axe flows. It exposed several latent dark-theme failures that the light-only CI path had never exercised: low-contrast kicker text, brand-primary text over translucent violet active surfaces, the dark primary-button text contract leaking into danger buttons, and a special marketplace readiness override that became invalid once success surfaces were made opaque.
-
-The corrected contract is systemic rather than selector-specific:
-- success/warning/danger/info soft status surfaces are opaque in both themes;
-- brand-soft text-bearing surfaces are opaque and use a dedicated `--color-brand-text-on-soft` token;
-- small kicker/caption copy has an explicit dark-theme token;
-- primary-brand and danger buttons have separate text tokens;
-- public success badges keep their own success text/surface pair even inside dark panels;
-- active navigation/filter/process markers use the soft-surface brand text token;
-- Automation Rules error copy uses the dedicated higher-contrast danger text token.
-
-Design-token tests now verify light/dark text/surface pairs, semantic status pairs, brand-soft pairs, on-brand/on-danger button contrast, opacity invariants and CSS usage contracts. A permanent dark-theme axe suite covers representative public and authenticated product surfaces so the same class of regression cannot remain invisible until a later push.
-
+Reject:
+- fake proof or unsupported product claims;
+- generic AI-template copy;
+- arbitrary hard-coded duplicate visual systems;
+- endless nested cards;
+- meaningless pills;
+- mixed icon languages;
+- important status available only on hover;
+- dashboard pages that lead with implementation telemetry instead of user tasks.
