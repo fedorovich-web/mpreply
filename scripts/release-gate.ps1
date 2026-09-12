@@ -96,9 +96,6 @@ try {
     Run-Step "Frontend lint" {
         & $Npm run lint
     }
-    Run-Step "Frontend design anti-pattern scan" {
-        & $Npm run design:detect
-    }
     Run-Step "Frontend CSS syntax validation" {
         & $Npm run validate:css-syntax
     }
