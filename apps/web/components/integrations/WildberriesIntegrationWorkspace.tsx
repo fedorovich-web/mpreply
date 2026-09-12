@@ -15,13 +15,37 @@ import {
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 type ResponseMode = "inherit" | "auto" | "semi_auto";
+export type MarketplaceIntegrationKey = "wildberries" | "ozon" | "yandex_market" | "avito";
 
 type Notice = {
   tone: "success" | "warning";
   message: string;
 };
 
+type MarketplaceIntegrationWorkspaceProps = {
+  marketplace: MarketplaceIntegrationKey;
+  marketplaceName: string;
+  credentialLabel: string;
+  placeholder: string;
+};
+
 export function WildberriesIntegrationWorkspace() {
+  return (
+    <MarketplaceIntegrationWorkspace
+      credentialLabel="API-ключ Wildberries"
+      marketplace="wildberries"
+      marketplaceName="Wildberries"
+      placeholder="Например, WB — основной магазин"
+    />
+  );
+}
+
+export function MarketplaceIntegrationWorkspace({
+  marketplace,
+  marketplaceName,
+  credentialLabel,
+  placeholder,
+}: MarketplaceIntegrationWorkspaceProps) {
   const { activeOrganization } = useWorkspace();
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
   const queryClient = useQueryClient();
@@ -31,6 +55,8 @@ export function WildberriesIntegrationWorkspace() {
   const [credentials, setCredentials] = useState("");
   const [responseMode, setResponseMode] = useState<ResponseMode>("inherit");
   const [notice, setNotice] = useState<Notice | null>(null);
+  const listTitleId = `integration-${marketplace}-account-list-title`;
+  const detailTitleId = `integration-${marketplace}-account-detail-title`;
 
   const accountsQuery = useQuery({
     queryKey: ["marketplace-accounts", activeOrganization.id],
@@ -42,8 +68,8 @@ export function WildberriesIntegrationWorkspace() {
   });
 
   const accounts = useMemo(
-    () => (accountsQuery.data ?? []).filter((account) => account.marketplace === "wildberries"),
-    [accountsQuery.data],
+    () => (accountsQuery.data ?? []).filter((account) => account.marketplace === marketplace),
+    [accountsQuery.data, marketplace],
   );
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? accounts[0] ?? null;
 
@@ -53,7 +79,7 @@ export function WildberriesIntegrationWorkspace() {
         method: "POST",
         body: {
           organization_id: activeOrganization.id,
-          marketplace: "wildberries",
+          marketplace,
           display_name: displayName.trim(),
           credentials,
           seller_id: emptyToNull(sellerId),
@@ -72,16 +98,16 @@ export function WildberriesIntegrationWorkspace() {
   });
 
   return (
-    <section className="wildberries-workspace" aria-label="Управление подключениями Wildberries">
+    <section className="wildberries-workspace" aria-label={`Управление подключениями ${marketplaceName}`}>
       <div className="integration-security-strip" role="note">
-        <strong>API-ключ защищён</strong>
-        <span>После сохранения полный ключ больше не показывается. В кабинете остаётся только скрытая маска.</span>
+        <strong>Данные доступа защищены</strong>
+        <span>После сохранения полный секрет больше не показывается. В кабинете остаётся только скрытая маска.</span>
       </div>
 
       {!canManage ? (
         <div className="workspace-inline-state">
           <strong>Только просмотр</strong>
-          <p>Для вашей роли доступно состояние подключений. Изменение настроек, ключей и запуск синхронизации недоступны.</p>
+          <p>Для вашей роли доступно состояние подключений. Изменение настроек, данных доступа и запуск синхронизации недоступны.</p>
         </div>
       ) : null}
 
@@ -92,11 +118,11 @@ export function WildberriesIntegrationWorkspace() {
       ) : null}
 
       <div className="wildberries-layout">
-        <section className="integration-account-panel" aria-labelledby="wb-account-list-title">
+        <section className="integration-account-panel" aria-labelledby={listTitleId}>
           <div className="panel-heading panel-heading-row">
             <div>
               <span className="panel-kicker">Подключённые кабинеты</span>
-              <strong id="wb-account-list-title">Кабинеты Wildberries</strong>
+              <strong id={listTitleId}>Кабинеты {marketplaceName}</strong>
             </div>
             <span className="ui-badge">{accounts.length}</span>
           </div>
@@ -113,7 +139,7 @@ export function WildberriesIntegrationWorkspace() {
           ) : accounts.length === 0 ? (
             <WorkspaceState
               title="Подключений пока нет"
-              description={canManage ? "Добавьте первый кабинет Wildberries в форме ниже." : "В этом рабочем пространстве ещё нет кабинетов Wildberries."}
+              description={canManage ? `Добавьте первый кабинет ${marketplaceName} в форме ниже.` : `В этом рабочем пространстве ещё нет кабинетов ${marketplaceName}.`}
             />
           ) : (
             <div className="integration-account-list" role="list">
@@ -139,7 +165,7 @@ export function WildberriesIntegrationWorkspace() {
           {canManage ? (
             <form
               className="settings-form integration-create-form"
-              aria-label="Новое подключение Wildberries"
+              aria-label={`Новое подключение ${marketplaceName}`}
               onSubmit={(event) => {
                 event.preventDefault();
                 if (displayName.trim().length >= 2 && credentials.length >= 8) createMutation.mutate();
@@ -155,7 +181,7 @@ export function WildberriesIntegrationWorkspace() {
                   maxLength={255}
                   minLength={2}
                   onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="Например, WB — основной магазин"
+                  placeholder={placeholder}
                   required
                   value={displayName}
                 />
@@ -165,7 +191,7 @@ export function WildberriesIntegrationWorkspace() {
                 <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} value={sellerId} />
               </label>
               <label>
-                API-ключ Wildberries
+                {credentialLabel}
                 <input
                   autoComplete="off"
                   minLength={8}
@@ -195,12 +221,15 @@ export function WildberriesIntegrationWorkspace() {
           ) : null}
         </section>
 
-        <section className="integration-account-detail" aria-labelledby="wb-account-detail-title">
+        <section className="integration-account-detail" aria-labelledby={detailTitleId}>
           {selectedAccount ? (
             <AccountDetail
               key={selectedAccount.id}
               account={selectedAccount}
               canManage={canManage}
+              credentialLabel={credentialLabel}
+              detailTitleId={detailTitleId}
+              marketplaceName={marketplaceName}
               organizationId={activeOrganization.id}
               onNotice={setNotice}
             />
@@ -219,11 +248,17 @@ export function WildberriesIntegrationWorkspace() {
 function AccountDetail({
   account,
   canManage,
+  credentialLabel,
+  detailTitleId,
+  marketplaceName,
   organizationId,
   onNotice,
 }: {
   account: MarketplaceAccount;
   canManage: boolean;
+  credentialLabel: string;
+  detailTitleId: string;
+  marketplaceName: string;
   organizationId: string;
   onNotice: (notice: Notice | null) => void;
 }) {
@@ -287,7 +322,7 @@ function AccountDetail({
       }),
     onSuccess: async () => {
       setNewCredentials("");
-      onNotice({ tone: "success", message: "API-ключ заменён. Проверьте подключение перед следующей синхронизацией." });
+      onNotice({ tone: "success", message: "Данные доступа заменены. Проверьте подключение перед следующей синхронизацией." });
       await invalidate();
     },
   });
@@ -296,7 +331,7 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/revoke-credentials`, marketplaceAccountActionSchema, { method: "POST" }),
     onSuccess: async () => {
-      onNotice({ tone: "warning", message: "API-ключ отозван. Кабинет больше не синхронизируется." });
+      onNotice({ tone: "warning", message: "Данные доступа отозваны. Кабинет больше не синхронизируется." });
       await invalidate();
     },
   });
@@ -309,14 +344,14 @@ function AccountDetail({
       <div className="integration-detail-heading">
         <div>
           <span className="panel-kicker">Выбранный кабинет</span>
-          <h2 id="wb-account-detail-title">{account.display_name}</h2>
+          <h2 id={detailTitleId}>{account.display_name}</h2>
         </div>
         <StatusBadge account={account} />
       </div>
 
       <dl className="integration-health-grid">
         <HealthItem label="Состояние доступа" value={credentialsStatusLabel(account.credentials_status)} />
-        <HealthItem label="Сохранённый ключ" value={account.credentials_masked} />
+        <HealthItem label="Сохранённые данные" value={account.credentials_masked} />
         <HealthItem label="Последняя синхронизация" value={formatDateTime(account.last_success_sync_at)} />
         <HealthItem label="Ошибки синхронизации" value={String(account.error_count)} />
       </dl>
@@ -325,7 +360,7 @@ function AccountDetail({
         <>
           <form
             className="settings-form integration-detail-form"
-            aria-label="Настройки кабинета Wildberries"
+            aria-label={`Настройки кабинета ${marketplaceName}`}
             onSubmit={(event) => {
               event.preventDefault();
               setLocalError(null);
@@ -368,7 +403,7 @@ function AccountDetail({
 
           <form
             className="settings-form integration-rotate-form"
-            aria-label="Замена API-ключа Wildberries"
+            aria-label={`Замена данных доступа ${marketplaceName}`}
             onSubmit={(event) => {
               event.preventDefault();
               setLocalError(null);
@@ -376,33 +411,33 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">API-ключ</span>
-              <strong>Заменить API-ключ</strong>
+              <span className="panel-kicker">Доступ</span>
+              <strong>Заменить данные доступа</strong>
             </div>
             <label>
-              Новый API-ключ
+              {credentialLabel}
               <input autoComplete="off" minLength={8} onChange={(event) => setNewCredentials(event.target.value)} required type="password" value={newCredentials} />
             </label>
             <button className="button button-secondary" disabled={busy || newCredentials.length < 8} type="submit">
-              {rotateMutation.isPending ? "Заменяем..." : "Заменить ключ"}
+              {rotateMutation.isPending ? "Заменяем..." : "Заменить данные"}
             </button>
           </form>
 
           <div className="integration-danger-zone">
             <div>
               <strong>Отключить доступ</strong>
-              <p>API-ключ будет отозван, и кабинет перестанет синхронизироваться. Для повторного подключения понадобится новый ключ.</p>
+              <p>Данные доступа будут отозваны, и кабинет перестанет синхронизироваться. Для повторного подключения понадобятся новые данные.</p>
             </div>
             <button
               className="button button-danger"
               disabled={busy || account.credentials_status === "revoked"}
               onClick={() => {
                 setLocalError(null);
-                if (window.confirm("Отозвать API-ключ и отключить это подключение?")) revokeMutation.mutate();
+                if (window.confirm("Отозвать данные доступа и отключить это подключение?")) revokeMutation.mutate();
               }}
               type="button"
             >
-              {revokeMutation.isPending ? "Отключаем..." : "Отозвать ключ"}
+              {revokeMutation.isPending ? "Отключаем..." : "Отозвать доступ"}
             </button>
           </div>
 
@@ -411,7 +446,7 @@ function AccountDetail({
       ) : (
         <div className="workspace-inline-state">
           <strong>Настройки доступны владельцу и администратору</strong>
-          <p>Для вашей роли доступен просмотр состояния подключения. Изменение настроек и API-ключа недоступно.</p>
+          <p>Для вашей роли доступен просмотр состояния подключения. Изменение настроек и данных доступа недоступно.</p>
         </div>
       )}
     </div>
@@ -479,7 +514,7 @@ function normalizeResponseMode(value: string): ResponseMode {
 }
 
 function accountStatusLabel(account: MarketplaceAccount): string {
-  if (account.credentials_status === "revoked") return "Ключ отозван";
+  if (account.credentials_status === "revoked") return "Доступ отозван";
   if (account.status === "active" && account.credentials_status === "valid") return "Активно";
   if (account.status === "error") return "Ошибка";
   if (account.status === "disabled") return "Отключено";
