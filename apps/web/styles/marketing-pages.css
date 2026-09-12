@@ -1,6 +1,5 @@
 .public-root {
-	--color-text-muted: #566b90;
-	--color-brand-primary-strong: #1d4ed8;
+	--color-text-muted: var(--color-text-secondary);
 }
 
 .public-root .public-subhero {
@@ -156,7 +155,7 @@
 .public-root .public-status-supported {
 	border-color: var(--color-border-strong);
 	background: var(--color-bg-brand-soft);
-	color: var(--color-brand-primary-strong);
+	color: var(--color-brand-primary);
 }
 
 .marketplace-flow-layout,
