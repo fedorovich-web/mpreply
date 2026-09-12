@@ -6,6 +6,7 @@ const root = process.cwd();
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const home = readFileSync(join(root, "app/page.tsx"), "utf8");
 const homeWorkspace = readFileSync(join(root, "components/public-site/HomeWorkspaceTabs.tsx"), "utf8");
+const marketplaceLanding = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
 const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const pagesCssPath = join(root, "styles/marketing-pages.css");
@@ -33,6 +34,14 @@ describe("public page redesign", () => {
     expect(marketplaces).toContain("marketplace-unified-answer");
     expect(marketplacesCss).toContain(".marketplace-unified-scene");
     expect(marketplacesCss).toContain(".marketplace-unified-window");
+  });
+
+  it("uses the same layered product language on every marketplace detail route", () => {
+    expect(marketplaceLanding).toContain("marketplace-detail-scene");
+    expect(marketplaceLanding).toContain("marketplace-detail-window");
+    expect(marketplaceLanding).toContain("marketplace-detail-draft");
+    expect(marketplacesCss).toContain(".marketplace-detail-scene");
+    expect(marketplacesCss).toContain(".marketplace-detail-window");
   });
 
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
