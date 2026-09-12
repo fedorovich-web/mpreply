@@ -6,17 +6,17 @@ import { createPageMetadata } from "../../lib/seo";
 import { marketplaces } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Интеграции с Wildberries, Ozon, Яндекс Маркетом и Авито",
+  title: "Интеграции MPReply с Wildberries, Ozon, Яндекс Маркетом и Авито",
   description:
-    "Интеграции MPReply с Wildberries, Ozon, Яндекс Маркетом и Авито: единая очередь обращений, ИИ-подготовка ответов, правила автоматизации и контроль отправки.",
+    "Подключите Wildberries, Ozon, Яндекс Маркет и Авито к MPReply. Отзывы, вопросы и сообщения покупателей собираются в одном окне для ИИ-ответов, проверки и автоматической отправки.",
   path: "/marketplaces",
 });
 
 const integrationFlow = [
-  ["01", "Подключение", "Добавьте аккаунт площадки в рабочее пространство. Секреты остаются на backend и не возвращаются в браузер в открытом виде."],
-  ["02", "Единый формат", "Обращения разных площадок приводятся к общей модели, поэтому команда работает с ними в одном интерфейсе."],
-  ["03", "ИИ и правила", "Ответ готовится с доступным контекстом, после чего правила определяют: автоотправка или проверка человеком."],
-  ["04", "Отправка и история", "Результат, ошибки и повторные попытки сохраняются, чтобы обработка не превращалась в непрозрачный фоновой процесс."],
+  ["01", "Подключите кабинеты", "Добавьте нужные маркетплейсы в рабочее пространство MPReply и управляйте подключениями из одного места."],
+  ["02", "Получайте обращения", "Отзывы, вопросы и сообщения покупателей собираются в общей очереди с указанием площадки и контекста."],
+  ["03", "Готовьте ответы с ИИ", "MPReply помогает сформировать ответ с учётом товара и правил вашей команды."],
+  ["04", "Отправляйте по своим правилам", "Типовые ответы можно автоматизировать, а сложные обращения оставлять на проверку сотруднику."],
 ];
 
 export default function MarketplacesPage() {
@@ -26,13 +26,13 @@ export default function MarketplacesPage() {
         <div className="public-container public-subhero-grid">
           <div className="public-subhero-copy">
             <p className="eyebrow">Интеграции с маркетплейсами</p>
-            <h1>Wildberries, Ozon, Яндекс Маркет и Авито — в одном рабочем процессе</h1>
+            <h1>Все обращения с Wildberries, Ozon, Яндекс Маркета и Авито — в одном окне</h1>
             <p className="public-lead">
-              Подключайте площадки к MPReply и обрабатывайте обращения покупателей без постоянного переключения между кабинетами. Источник меняется, логика работы команды остаётся одной.
+              Подключайте площадки к MPReply и отвечайте покупателям из единого рабочего пространства. Не нужно держать открытыми несколько кабинетов и переносить контекст вручную.
             </p>
             <div className="hero-actions">
               <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                Подключить площадку
+                Создать аккаунт
               </Link>
               <Link className="button button-secondary" href="/demo">
                 Посмотреть интерфейс
@@ -43,8 +43,8 @@ export default function MarketplacesPage() {
           <div className="marketplace-cluster" aria-label="Поддерживаемые маркетплейсы">
             <div className="marketplace-cluster-core">
               <span>MP</span>
-              <strong>Одна очередь</strong>
-              <small>единые правила</small>
+              <strong>Одно окно</strong>
+              <small>для всех обращений</small>
             </div>
             {marketplaces.map((marketplace, index) => (
               <Link
@@ -64,9 +64,9 @@ export default function MarketplacesPage() {
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Поддерживаемые площадки</p>
-            <h2>Выберите маркетплейс и посмотрите сценарий работы с обращениями</h2>
-            <p>Для каждой площадки сохраняется её API-специфика, но менеджер получает один понятный процесс обработки.</p>
+            <p className="eyebrow">4 готовые интеграции</p>
+            <h2>Подключите площадки, на которых уже работает ваш бизнес</h2>
+            <p>Каждая интеграция подключается к общей очереди MPReply, поэтому команда работает с обращениями по одному понятному сценарию.</p>
           </div>
 
           <div className="marketplace-readiness-list">
@@ -92,12 +92,12 @@ export default function MarketplacesPage() {
       <section className="public-section public-section-muted">
         <div className="public-container marketplace-flow-layout">
           <div className="section-heading">
-            <p className="eyebrow">Под капотом</p>
-            <h2>Разные API не должны превращаться в четыре разных процесса для команды</h2>
-            <p>MPReply отделяет интеграционную специфику от общей логики ответов, правил и контроля.</p>
+            <p className="eyebrow">Один рабочий процесс</p>
+            <h2>Площадка меняется. Работа команды остаётся привычной.</h2>
+            <p>MPReply объединяет обращения разных маркетплейсов в одном интерфейсе и сохраняет единые правила подготовки и отправки ответов.</p>
           </div>
 
-          <div className="integration-flow-list" role="group" aria-label="Путь обращения через интеграцию">
+          <div className="integration-flow-list" role="group" aria-label="Работа с подключёнными маркетплейсами">
             {integrationFlow.map(([number, title, text]) => (
               <article className="integration-flow-row" key={number}>
                 <span>{number}</span>
@@ -112,8 +112,8 @@ export default function MarketplacesPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Один интерфейс для четырёх площадок</p>
-            <h2>Подключите маркетплейсы и начните собирать обращения в общей очереди</h2>
+            <p className="eyebrow">Все площадки в MPReply</p>
+            <h2>Соберите отзывы, вопросы и сообщения покупателей в одной очереди</h2>
           </div>
           <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">
             Создать аккаунт
