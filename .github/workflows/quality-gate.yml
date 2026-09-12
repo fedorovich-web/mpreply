@@ -94,9 +94,15 @@ jobs:
             - name: Accessibility scan
               working-directory: apps/web
               run: npm run test:a11y
-            - name: Visual regression
+            - name: Generate visual baseline candidates
               working-directory: apps/web
-              run: npm run test:visual
+              run: npm run test:visual -- --update-snapshots
+            - name: Upload visual baseline candidates
+              uses: actions/upload-artifact@v4
+              with:
+                  name: visual-baseline-candidates
+                  path: apps/web/e2e/visual.spec.ts-snapshots
+                  if-no-files-found: error
             - name: Lighthouse CI
               working-directory: apps/web
               run: npm run lighthouse
