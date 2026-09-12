@@ -131,7 +131,7 @@ export function HomeWorkspaceTabs() {
               <span className="homepage-ai-state">{active.state}</span>
             </div>
             <p>{active.answer}</p>
-            <div className="homepage-ai-actions" aria-label="Пример действий с ответом">
+            <div className="homepage-ai-actions" role="group" aria-label="Пример действий с ответом">
               <span>Изменить</span>
               <span>Проверить</span>
               <span className="is-primary">Отправить</span>
