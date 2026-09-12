@@ -8,17 +8,24 @@ const read = (path: string) => readFileSync(join(repoRoot, path), "utf8");
 const product = read("PRODUCT.md");
 const design = read("DESIGN.md");
 const agents = read("AGENTS.md");
+const readme = read("README.md");
 const publicBrief = read("docs/product/public-site-master-brief.md");
 const seo = read("docs/seo/public-site-seo-spec.md");
+const adr = read("docs/adr/0008-public-site-seo-legal-foundation.md");
 
 describe("MPReply authoritative product documentation", () => {
   it("uses MPReply and the four-marketplace product truth", () => {
     expect(product).toContain("# MPReply");
+    expect(readme).toContain("# MPReply");
     for (const marketplace of ["Wildberries", "Ozon", "Yandex Market", "Avito"]) {
       expect(product).toContain(marketplace);
+      expect(readme).toContain(marketplace);
     }
     expect(product).toContain("release certification");
     expect(product).not.toContain("Wildberries: current MVP adapter");
+    expect(readme).not.toContain("Wildberries is the current MVP marketplace integration");
+    expect(adr).toContain("Wildberries, Ozon, Yandex Market and Avito");
+    expect(adr).not.toMatch(/roadmap\/planned|not represented as production-ready/i);
   });
 
   it("defines the approved blue design direction and dashboard UX", () => {
