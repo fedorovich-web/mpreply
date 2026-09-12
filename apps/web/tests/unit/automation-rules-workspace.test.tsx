@@ -89,7 +89,7 @@ function renderWorkspace() {
 }
 
 describe("AutomationRulesWorkspace", () => {
-  it("loads live rules and lets an owner create a tenant-scoped rule", async () => {
+  it("loads live rules and lets an owner create a buyer-message rule", async () => {
     mockWorkspace("owner");
     const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
       if (init?.method === "POST") {
@@ -108,7 +108,9 @@ describe("AutomationRulesWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Создать правило" }));
 
     const editor = screen.getByRole("form", { name: "Редактор правила автоматизации" });
-    fireEvent.change(within(editor).getByLabelText("Название"), { target: { value: "Отзывы 1–3" } });
+    fireEvent.change(within(editor).getByLabelText("Название"), { target: { value: "Сообщения покупателей" } });
+    fireEvent.change(within(editor).getByLabelText("Тип обращений"), { target: { value: "chat" } });
+    expect(within(editor).getByLabelText("Тип обращений")).toHaveValue("chat");
     fireEvent.click(within(editor).getByRole("button", { name: "Создать правило" }));
 
     await waitFor(() => {
@@ -119,7 +121,8 @@ describe("AutomationRulesWorkspace", () => {
     const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
     expect(body).toMatchObject({
       organization_id: organization.id,
-      name: "Отзывы 1–3",
+      name: "Сообщения покупателей",
+      applies_to: "chat",
       mode: "auto",
       require_manual_review_on_flags: true,
       stop_on_missing_product_context: true,
