@@ -12,29 +12,25 @@ const marketplaceCatalog = [
     key: "wildberries",
     name: "Wildberries",
     href: "/app/integrations/wildberries",
-    status: "supported",
     description: "Отзывы, вопросы и сообщения покупателей в общей очереди с контекстом, подготовкой ответа и контролем отправки.",
   },
   {
     key: "ozon",
     name: "Ozon",
     href: "/app/integrations/ozon",
-    status: "planned",
-    description: "Интеграция с обращениями покупателей Ozon запланирована. Подключение кабинетов и синхронизация пока недоступны.",
+    description: "Обращения покупателей Ozon, подключённые кабинеты и ответы в том же рабочем процессе, что и на других площадках.",
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
     href: "/app/integrations/yandex-market",
-    status: "planned",
-    description: "Интеграция с Яндекс Маркетом запланирована. До запуска площадку нельзя подключить к рабочей очереди MPReply.",
+    description: "Отзывы, вопросы и сообщения Яндекс Маркета с едиными статусами, очередью и правилами обработки.",
   },
   {
     key: "avito",
     name: "Авито",
     href: "/app/integrations/avito",
-    status: "planned",
-    description: "Интеграция с Авито запланирована. Синхронизация диалогов и управление подключением пока недоступны.",
+    description: "Сообщения и обращения покупателей Авито с синхронизацией диалогов и управлением подключением из MPReply.",
   },
 ] as const;
 
@@ -50,15 +46,14 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const supportedAccounts = accounts.filter((account) => account.marketplace === "wildberries");
-  const activeCount = supportedAccounts.filter((account) => account.status === "active").length;
-  const problemCount = supportedAccounts.filter((account) => account.status === "error" || account.error_count > 0).length;
+  const activeCount = accounts.filter((account) => account.status === "active").length;
+  const problemCount = accounts.filter((account) => account.status === "error" || account.error_count > 0).length;
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
 
   return (
     <section className="integrations-workspace" aria-label="Интеграции маркетплейсов">
       <div className="integrations-summary-grid" aria-label="Сводка подключений">
-        <SummaryMetric label="Подключено кабинетов" value={accountsQuery.isPending ? "—" : String(supportedAccounts.length)} />
+        <SummaryMetric label="Подключено кабинетов" value={accountsQuery.isPending ? "—" : String(accounts.length)} />
         <SummaryMetric label="Работают нормально" value={accountsQuery.isPending ? "—" : String(activeCount)} />
         <SummaryMetric label="Требуют внимания" value={accountsQuery.isPending ? "—" : String(problemCount)} />
       </div>
@@ -75,25 +70,7 @@ export function IntegrationsWorkspace() {
 
       <div className="integration-catalog-grid" role="list">
         {marketplaceCatalog.map((marketplace) => {
-          if (marketplace.status === "planned") {
-            return (
-              <article className="integration-market-card" key={marketplace.key} role="listitem">
-                <div className="integration-market-card-topline">
-                  <div>
-                    <span className="ui-badge ui-badge-info">Планируется</span>
-                    <h2>{marketplace.name}</h2>
-                  </div>
-                  <span className="ui-badge ui-badge-neutral">Подключение пока недоступно</span>
-                </div>
-                <p>{marketplace.description}</p>
-                <Link className="button button-secondary" href={marketplace.href}>
-                  Подробнее
-                </Link>
-              </article>
-            );
-          }
-
-          const marketplaceAccounts = supportedAccounts.filter((account) => account.marketplace === marketplace.key);
+          const marketplaceAccounts = accounts.filter((account) => account.marketplace === marketplace.key);
           const connectedCount = marketplaceAccounts.length;
           const hasProblem = marketplaceAccounts.some((account) => account.status === "error" || account.error_count > 0);
           const hasActive = marketplaceAccounts.some((account) => account.status === "active");
