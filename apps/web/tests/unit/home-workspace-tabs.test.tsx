@@ -28,6 +28,18 @@ describe("HomeWorkspaceTabs", () => {
     expect(screen.getByText(/объединяет отзывы, вопросы и сообщения/)).toBeInTheDocument();
   });
 
+  it("keeps every tab connected to the rendered tabpanel", () => {
+    render(<HomeWorkspaceTabs />);
+
+    const panel = screen.getByRole("tabpanel");
+    const panelId = panel.getAttribute("id");
+    expect(panelId).toBeTruthy();
+
+    for (const tab of screen.getAllByRole("tab")) {
+      expect(tab).toHaveAttribute("aria-controls", panelId);
+    }
+  });
+
   it("keeps filters and preview rows aligned with the selected request type", () => {
     render(<HomeWorkspaceTabs />);
 
