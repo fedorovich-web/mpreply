@@ -22,12 +22,12 @@ export function PublicShell({ children }: PublicShellProps) {
       <footer className="public-footer">
         <div className="public-container public-footer-topline">
           <div className="public-footer-brand">
-            <Link className="public-footer-logo" href="/" aria-label="Respio — главная">
-              <span className="public-brand-mark" aria-hidden="true">R</span>
-              <strong>Respio</strong>
+            <Link className="public-footer-logo" href="/" aria-label="MPReply — главная">
+              <span className="public-brand-mark" aria-hidden="true">M</span>
+              <strong>MPReply</strong>
             </Link>
             <p>
-              Автоматизирует ответы на отзывы и вопросы маркетплейсов, проверяет рискованные случаи до отправки и оставляет понятную историю действий.
+              Единое окно для отзывов, вопросов и сообщений покупателей: ИИ готовит ответ, правила управляют отправкой, а команда сохраняет контроль над сложными случаями.
             </p>
           </div>
         </div>
@@ -36,9 +36,9 @@ export function PublicShell({ children }: PublicShellProps) {
           <div>
             <strong>Продукт</strong>
             <Link href="/features">Возможности</Link>
-            <Link href="/#safetygate">SafetyGate</Link>
+            <Link href="/#safetygate">Контроль перед отправкой</Link>
             <Link href="/pricing">Тарифы</Link>
-            <Link href="/demo">Как работает Respio</Link>
+            <Link href="/demo">Посмотреть демо</Link>
           </div>
           <div>
             <strong>Маркетплейсы</strong>
@@ -62,8 +62,8 @@ export function PublicShell({ children }: PublicShellProps) {
         </div>
 
         <div className="public-container public-footer-bottom">
-          <span>© {new Date().getFullYear()} Respio</span>
-          <span>Информация о планируемых интеграциях не означает их текущую production-доступность.</span>
+          <span>© {new Date().getFullYear()} MPReply</span>
+          <span>Поддерживаем Wildberries, Ozon, Яндекс Маркет и Авито.</span>
         </div>
       </footer>
     </div>
