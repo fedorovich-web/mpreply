@@ -7,7 +7,7 @@ export function HomeHeroScene() {
   ] as const;
 
   return (
-    <div className="homepage-hero-scene" aria-label="Пример интерфейса MPReply">
+    <div className="homepage-hero-scene" role="img" aria-label="Пример интерфейса MPReply">
       <div className="homepage-hero-glow" aria-hidden="true" />
       <div className="homepage-hero-window">
         <aside className="homepage-hero-window-sidebar" aria-hidden="true">
@@ -41,7 +41,7 @@ export function HomeHeroScene() {
                   <strong>{row.name}</strong>
                   <small>{row.text}</small>
                 </div>
-                <time>{row.time}</time>
+                <span className="homepage-window-time">{row.time}</span>
                 <span className={`homepage-window-type is-${row.tone}`}>{row.type}</span>
               </div>
             ))}
