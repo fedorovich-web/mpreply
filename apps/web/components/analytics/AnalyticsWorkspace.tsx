@@ -52,7 +52,7 @@ export function AnalyticsWorkspace() {
     <section className="analytics-workspace">
       <div className="analytics-toolbar">
         <div>
-          <span className="panel-kicker">Сводка</span>
+          <span className="panel-kicker">Рабочая сводка</span>
           <strong>{activeOrganization.name}</strong>
         </div>
         <label className="analytics-period-select">
@@ -64,24 +64,41 @@ export function AnalyticsWorkspace() {
       </div>
 
       {firstError ? <WorkspaceState title="Не удалось загрузить аналитику" description={errorMessage(firstError)} tone="error" /> : null}
-      {isLoading && !overviewQuery.data ? <WorkspaceState title="Считаем показатели" description="Собираем обращения, ответы и использование ИИ за выбранный период." /> : null}
+      {isLoading && !overviewQuery.data ? <WorkspaceState title="Считаем показатели" description="Собираем обращения и ответы за выбранный период." /> : null}
 
       {overviewQuery.data ? (
         <>
           <section className="analytics-metric-grid" aria-label="Ключевые показатели">
-            <Metric label="Обращения" value={formatNumber(overviewQuery.data.total_messages)} helper={`${overviewQuery.data.new_messages} новых`} />
-            <Metric label="Без ответа" value={formatNumber(overviewQuery.data.unanswered_messages)} helper={`${overviewQuery.data.answered_messages} отвечено`} tone={overviewQuery.data.unanswered_messages > 0 ? "warning" : "default"} />
-            <Metric label="Ответы отправлены" value={formatNumber(overviewQuery.data.replies_sent)} helper={`${overviewQuery.data.auto_replies_sent} автоматически · ${overviewQuery.data.manual_replies_sent} после проверки`} />
+            <Metric label="Обращения" value={formatNumber(overviewQuery.data.total_messages)} helper={`${formatNumber(overviewQuery.data.new_messages)} новых`} />
+            <Metric
+              label="Без ответа"
+              value={formatNumber(overviewQuery.data.unanswered_messages)}
+              helper={`${formatNumber(overviewQuery.data.answered_messages)} уже обработано`}
+              tone={overviewQuery.data.unanswered_messages > 0 ? "warning" : "default"}
+            />
+            <Metric
+              label="Ответы отправлены"
+              value={formatNumber(overviewQuery.data.replies_sent)}
+              helper={`${formatNumber(overviewQuery.data.auto_replies_sent)} автоматически · ${formatNumber(overviewQuery.data.manual_replies_sent)} после проверки`}
+            />
             <Metric label="Черновики с ИИ" value={formatNumber(overviewQuery.data.ai_drafts_generated)} helper={formatAcceptance(overviewQuery.data.ai_acceptance_rate)} />
             <Metric label="Среднее время ответа" value={formatDuration(overviewQuery.data.average_response_seconds)} helper="От обращения до отправки ответа" />
-            <Metric label="Негативные отзывы" value={formatNumber(overviewQuery.data.negative_reviews)} helper="Оценка 1–2" tone={overviewQuery.data.negative_reviews > 0 ? "danger" : "default"} />
+            <Metric
+              label="Негативные отзывы"
+              value={formatNumber(overviewQuery.data.negative_reviews)}
+              helper="Оценка 1–2"
+              tone={overviewQuery.data.negative_reviews > 0 ? "danger" : "default"}
+            />
           </section>
 
           <section className="analytics-panel-grid">
             <article className="analytics-panel analytics-panel-wide">
               <div className="analytics-panel-heading">
                 <div><span className="panel-kicker">Динамика</span><h2>Обращения и ответы по дням</h2></div>
-                <div className="analytics-legend"><span><i className="legend-dot legend-imported" />Получено</span><span><i className="legend-dot legend-answered" />Отвечено</span></div>
+                <div className="analytics-legend">
+                  <span><i className="legend-dot legend-imported" />Получено</span>
+                  <span><i className="legend-dot legend-answered" />Отвечено</span>
+                </div>
               </div>
               {messagesQuery.data?.points.length ? (
                 <div className="analytics-bars" aria-label="Динамика обращений по дням">
@@ -99,15 +116,15 @@ export function AnalyticsWorkspace() {
             </article>
 
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">ИИ</span><h2>Использование ИИ</h2></div></div>
-              {aiUsageQuery.data ? (
-                <div className="analytics-summary-list">
-                  <SummaryRow label="Подготовлено черновиков" value={formatNumber(aiUsageQuery.data.drafts_generated)} />
-                  <SummaryRow label="Нужна была дополнительная проверка" value={formatNumber(aiUsageQuery.data.safety_flagged_drafts)} />
-                  <SummaryRow label="Среднее время подготовки" value={formatLatency(aiUsageQuery.data.average_latency_ms)} />
-                  <SummaryRow label="Оценочная стоимость" value={formatUsd(aiUsageQuery.data.cost_estimate)} />
-                </div>
-              ) : <EmptyData text="Данных по использованию ИИ пока нет." />}
+              <div className="analytics-panel-heading">
+                <div><span className="panel-kicker">Обработка</span><h2>Как команда отвечает покупателям</h2></div>
+              </div>
+              <div className="analytics-summary-list">
+                <SummaryRow label="Автоматически отправлено" value={formatNumber(overviewQuery.data.auto_replies_sent)} />
+                <SummaryRow label="Отправлено после проверки" value={formatNumber(overviewQuery.data.manual_replies_sent)} />
+                <SummaryRow label="Подготовлено черновиков с ИИ" value={formatNumber(aiUsageQuery.data?.drafts_generated ?? overviewQuery.data.ai_drafts_generated)} />
+                <SummaryRow label="Потребовали дополнительной проверки" value={formatNumber(aiUsageQuery.data?.safety_flagged_drafts ?? 0)} />
+              </div>
             </article>
           </section>
 
@@ -116,9 +133,19 @@ export function AnalyticsWorkspace() {
               <div className="analytics-panel-heading"><div><span className="panel-kicker">Площадки</span><h2>Маркетплейсы</h2></div></div>
               {marketplacesQuery.data?.items.length ? (
                 <div className="analytics-table-wrap">
-                  <table className="analytics-table"><thead><tr><th>Площадка</th><th>Обращения</th><th>Отвечено</th><th>Ошибки синхронизации</th></tr></thead><tbody>
-                    {marketplacesQuery.data.items.map((item) => <tr key={item.marketplace}><td>{marketplaceLabel(item.marketplace)}</td><td>{formatNumber(item.messages)}</td><td>{formatNumber(item.answered)}</td><td>{formatNumber(item.failed_integration_events)}</td></tr>)}
-                  </tbody></table>
+                  <table className="analytics-table">
+                    <thead><tr><th>Площадка</th><th>Обращения</th><th>Отвечено</th><th>Ошибки синхронизации</th></tr></thead>
+                    <tbody>
+                      {marketplacesQuery.data.items.map((item) => (
+                        <tr key={item.marketplace}>
+                          <td>{marketplaceLabel(item.marketplace)}</td>
+                          <td>{formatNumber(item.messages)}</td>
+                          <td>{formatNumber(item.answered)}</td>
+                          <td>{formatNumber(item.failed_integration_events)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : <EmptyData text="Нет данных по маркетплейсам." />}
             </article>
@@ -130,24 +157,13 @@ export function AnalyticsWorkspace() {
                   {productsQuery.data.items.slice(0, 8).map((item) => (
                     <div className="analytics-product-row" key={item.product_id}>
                       <div><strong>{item.name}</strong><small>{item.sku ? `SKU ${item.sku}` : "Без SKU"}</small></div>
-                      <div><span>{formatNumber(item.messages)}</span><small>{item.negative_reviews} негативных</small></div>
+                      <div><span>{formatNumber(item.messages)}</span><small>{formatNumber(item.negative_reviews)} негативных</small></div>
                     </div>
                   ))}
                 </div>
               ) : <EmptyData text="Товарная аналитика появится после синхронизации." />}
             </article>
           </section>
-
-          {aiUsageQuery.data?.models.length ? (
-            <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">Модели</span><h2>Использование моделей ИИ</h2></div></div>
-              <div className="analytics-table-wrap">
-                <table className="analytics-table"><thead><tr><th>Модель</th><th>Черновики</th><th>Оценочная стоимость</th><th>Среднее время</th></tr></thead><tbody>
-                  {aiUsageQuery.data.models.map((model) => <tr key={model.model}><td>{model.model}</td><td>{formatNumber(model.drafts)}</td><td>{formatUsd(model.cost_estimate)}</td><td>{formatLatency(model.average_latency_ms)}</td></tr>)}
-                </tbody></table>
-              </div>
-            </article>
-          ) : null}
         </>
       ) : null}
     </section>
@@ -171,9 +187,7 @@ function WorkspaceState({ title, description, tone = "default" }: { title: strin
 }
 
 function formatNumber(value: number): string { return new Intl.NumberFormat("ru-RU").format(value); }
-function formatUsd(value: number): string { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 4 }).format(value); }
-function formatLatency(value: number | null): string { return value === null ? "—" : `${Math.round(value)} мс`; }
-function formatAcceptance(value: number | null): string { return value === null ? "Пока нет отправленных ответов с ИИ" : `${Math.round(value * 100)}% дошли до отправки`; }
+function formatAcceptance(value: number | null): string { return value === null ? "Пока нет отправленных ответов с ИИ" : `${Math.round(value * 100)}% черновиков дошли до отправки`; }
 function formatDuration(value: number | null): string {
   if (value === null) return "—";
   if (value < 60) return `${Math.round(value)} сек`;
