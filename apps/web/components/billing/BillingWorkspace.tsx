@@ -27,7 +27,7 @@ export function BillingWorkspace() {
   const data = billingQuery.data;
   const price = data.pricing_finalized && data.plan.price_month_minor !== null
     ? formatPrice(data.plan.price_month_minor, data.plan.currency)
-    : "Цена не задана";
+    : "—";
 
   return (
     <section className="billing-workspace">
@@ -44,11 +44,7 @@ export function BillingWorkspace() {
 
         <div className="billing-price-state">
           <strong>{price}</strong>
-          <p>
-            {data.pricing_finalized
-              ? "Лимиты и использование ниже относятся к текущему расчётному периоду."
-              : "Цена для текущего тарифа пока не задана. Доступные лимиты и фактическое использование показаны ниже."}
-          </p>
+          <p>Лимиты и использование ниже относятся к текущему расчётному периоду.</p>
         </div>
 
         <dl className="billing-meta-grid">
