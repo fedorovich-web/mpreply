@@ -1,36 +1,31 @@
-/* Integrations: live marketplace operations are visually distinct from roadmap items. */
+/* Integrations: four ready marketplace integrations in one operational system. */
 
 .integrations-page,
-.wildberries-integration-page,
-.planned-integration-page {
+.wildberries-integration-page {
 	max-width: 100rem;
 	margin: 0 auto;
 }
 
 .integrations-page-header,
-.wildberries-integration-header,
-.planned-integration-header {
+.wildberries-integration-header {
 	align-items: end;
 	margin-bottom: clamp(1.5rem, 2.6vw, 2.25rem);
 }
 
 .integrations-page-header > div:first-child,
-.wildberries-integration-header > div:first-child,
-.planned-integration-header > div:first-child {
+.wildberries-integration-header > div:first-child {
 	max-width: 58rem;
 }
 
 .integrations-page-header h1,
-.wildberries-integration-header h1,
-.planned-integration-header h1 {
+.wildberries-integration-header h1 {
 	max-width: 26ch;
 	font-size: clamp(2rem, 3vw, 3.15rem);
 	letter-spacing: -0.04em;
 }
 
 .integrations-page-header > div:first-child > p:last-child,
-.wildberries-integration-header > div:first-child > p:last-child,
-.planned-integration-header > div:first-child > p:last-child {
+.wildberries-integration-header > div:first-child > p:last-child {
 	max-width: 55rem;
 	color: var(--color-text-secondary);
 	line-height: 1.65;
@@ -80,7 +75,7 @@
 
 .integration-catalog-grid {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.8rem;
 }
 
@@ -95,31 +90,6 @@
 	box-shadow: none;
 	padding: 1rem;
 	transform: none;
-}
-
-.integration-market-card-live {
-	grid-column: 1 / -1;
-	grid-template-columns: minmax(0, 1fr) auto;
-	align-items: end;
-	column-gap: 1.25rem;
-	border-color: color-mix(in srgb, var(--color-brand-primary) 24%, var(--color-border-subtle));
-	background: color-mix(in srgb, var(--color-bg-brand-soft) 36%, var(--color-bg-surface));
-	padding: 1.15rem 1.2rem;
-}
-
-.integration-market-card-live .integration-market-card-topline,
-.integration-market-card-live > p {
-	grid-column: 1;
-}
-
-.integration-market-card-live > .button {
-	grid-column: 2;
-	grid-row: 1 / span 2;
-	align-self: center;
-}
-
-.integration-market-card-planned {
-	background: color-mix(in srgb, var(--color-bg-subtle) 70%, var(--color-bg-surface));
 }
 
 .integration-market-card-topline {
@@ -153,10 +123,6 @@
 	min-height: 2.35rem;
 	margin-top: auto;
 	font-size: 0.7rem;
-}
-
-.integration-market-card-planned .button {
-	background: var(--color-bg-surface);
 }
 
 .integrations-workspace > .workspace-inline-state {
@@ -472,47 +438,6 @@
 	margin: 1rem;
 }
 
-.planned-integration-notice {
-	display: grid;
-	max-width: 52rem;
-	gap: 0.75rem;
-	border: 1px solid var(--color-border-subtle);
-	border-radius: var(--radius-xl);
-	background: var(--color-bg-surface);
-	box-shadow: var(--shadow-sm);
-	padding: clamp(1.25rem, 3vw, 2rem);
-}
-
-.planned-integration-notice h2,
-.planned-integration-notice p {
-	margin: 0;
-}
-
-.planned-integration-notice h2 {
-	font-size: clamp(1.25rem, 2vw, 1.65rem);
-	letter-spacing: -0.025em;
-}
-
-.planned-integration-notice > p:not(.eyebrow) {
-	max-width: 48rem;
-	color: var(--color-text-secondary);
-	font-size: 0.82rem;
-	line-height: 1.65;
-}
-
-.planned-integration-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.55rem;
-	border-top: 1px solid var(--color-border-subtle);
-	padding-top: 1rem;
-}
-
-.planned-integration-actions .button {
-	min-height: 2.45rem;
-	font-size: 0.72rem;
-}
-
 @media (min-width: 1181px) {
 	.integration-account-detail {
 		max-height: 48rem;
@@ -534,18 +459,6 @@
 }
 
 @media (max-width: 900px) {
-	.integration-catalog-grid {
-		grid-template-columns: 1fr 1fr;
-	}
-
-	.integration-market-card-live {
-		grid-template-columns: minmax(0, 1fr) auto;
-	}
-
-	.integration-market-card-planned:last-child {
-		grid-column: 1 / -1;
-	}
-
 	.integration-health-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -562,7 +475,6 @@
 @media (max-width: 680px) {
 	.integrations-page-header,
 	.wildberries-integration-header,
-	.planned-integration-header,
 	.integration-security-strip {
 		align-items: flex-start;
 		flex-direction: column;
@@ -573,13 +485,11 @@
 	}
 
 	.integration-catalog-grid,
-	.integration-market-card-live,
 	.integration-detail-form,
 	.integration-rotate-form {
 		grid-template-columns: 1fr;
 	}
 
-	.integration-market-card-live > .button,
 	.integration-detail-form > .panel-heading,
 	.integration-rotate-form > .panel-heading,
 	.integration-detail-form > .form-error,
@@ -587,16 +497,11 @@
 		grid-column: 1;
 		grid-row: auto;
 	}
-
-	.integration-market-card-planned:last-child {
-		grid-column: auto;
-	}
 }
 
 @media (max-width: 520px) {
 	.integrations-page-header h1,
-	.wildberries-integration-header h1,
-	.planned-integration-header h1 {
+	.wildberries-integration-header h1 {
 		font-size: clamp(1.8rem, 10vw, 2.35rem);
 	}
 
@@ -618,8 +523,6 @@
 	}
 
 	.integration-market-card,
-	.integration-market-card-live,
-	.planned-integration-notice,
 	.integration-create-form,
 	.integration-detail-form,
 	.integration-rotate-form,
@@ -639,13 +542,11 @@
 	.integration-action-grid .button,
 	.integration-detail-form .button,
 	.integration-rotate-form .button,
-	.integration-danger-zone .button,
-	.planned-integration-actions .button {
+	.integration-danger-zone .button {
 		width: 100%;
 	}
 
-	.integration-action-grid,
-	.planned-integration-actions {
+	.integration-action-grid {
 		display: grid;
 	}
 }
