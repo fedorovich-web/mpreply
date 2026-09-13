@@ -386,8 +386,9 @@ describe("MPReply base design tokens", () => {
     expect(globalStyleSource).not.toMatch(/\.button-danger\s*\{[^}]*color:\s*var\(--color-text-on-brand\);/s);
   });
 
-  it("keeps public success badges on their own accessible semantic pair", () => {
-    expect(publicStyleSource).toMatch(/\.public-status-mvp\s*\{[^}]*background:\s*var\(--color-success-soft\);[^}]*color:\s*var\(--color-success-text\);/s);
+  it("keeps public supported badges on their accessible brand pair", () => {
+    expect(publicStyleSource).toMatch(/\.public-status-supported\s*\{[^}]*background:\s*var\(--color-bg-brand-soft\);[^}]*color:\s*var\(--color-brand-primary\);/s);
+    expect(publicStyleSource).not.toContain(".public-status-mvp");
   });
 
   it("keeps error copy on the dedicated danger text token instead of the lower-contrast accent token", () => {
