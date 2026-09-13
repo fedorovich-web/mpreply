@@ -183,6 +183,10 @@
 	padding: 0.8rem 0.15rem 0 0;
 }
 
+.app-mobile-workspace-switcher {
+	display: none;
+}
+
 .app-help-link {
 	display: grid;
 	grid-template-columns: 2rem minmax(0, 1fr);
@@ -346,6 +350,27 @@
 
 	.app-topbar-title {
 		margin-right: auto;
+	}
+}
+
+@media (max-width: 820px) {
+	.app-mobile-workspace-switcher {
+		display: grid;
+		gap: 0.45rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.app-mobile-workspace-switcher .app-nav-group-label {
+		padding-inline: 0.58rem;
+	}
+
+	.app-mobile-workspace-switcher .workspace-selector {
+		display: block;
+	}
+
+	.app-mobile-workspace-switcher .workspace-selector select {
+		width: 100%;
+		max-width: none;
 	}
 }
 
