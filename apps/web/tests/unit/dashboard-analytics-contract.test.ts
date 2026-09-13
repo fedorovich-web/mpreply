@@ -18,6 +18,10 @@ describe("analytics operational dashboard", () => {
     expect(workspace).toContain("organization_id: activeOrganization.id");
   });
 
+  it("does not report zero safety flags when AI usage analytics failed", () => {
+    expect(workspace).toContain('aiUsageQuery.error ? "—" : formatNumber(aiUsageQuery.data?.safety_flagged_drafts ?? 0)');
+  });
+
   it("keeps operational metrics seller-facing instead of exposing AI diagnostics", () => {
     expect(workspace).toContain("Обращения");
     expect(workspace).toContain("Без ответа");
