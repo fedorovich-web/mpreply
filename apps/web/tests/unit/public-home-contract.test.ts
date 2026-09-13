@@ -106,6 +106,15 @@ describe("public homepage redesign contract", () => {
     expect(publicSiteCss).not.toContain(".public-footer-topline");
   });
 
+  it("uses supported as the only public marketplace readiness status style", () => {
+    expect(publicSiteCss).toContain(".public-status-supported");
+    expect(marketingPagesCss).not.toContain(".public-status-supported");
+    for (const legacySelector of [".public-status-mvp", ".marketplace-readiness-row-mvp", ".integration-status-panel-mvp"]) {
+      expect(publicSiteCss).not.toContain(legacySelector);
+      expect(marketingPagesCss).not.toContain(legacySelector);
+    }
+  });
+
   it("uses the approved blue system and a scoped hero artwork layer", () => {
     expect(marketingCss).toContain(".public-root");
     expect(marketingCss).toContain("--color-brand-primary: #2563eb");
