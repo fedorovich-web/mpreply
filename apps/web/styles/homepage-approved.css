@@ -1426,6 +1426,14 @@
 		min-height: 4.15rem;
 	}
 
+	.public-root .homepage-models-section,
+	.public-root .homepage-approved-process,
+	.public-root .homepage-results-section,
+	.public-root .homepage-approved-final-cta {
+		padding-top: 4.25rem;
+		padding-bottom: 4.25rem;
+	}
+
 	.homepage-approved-hero {
 		padding: 3.5rem 0 3.75rem;
 	}
