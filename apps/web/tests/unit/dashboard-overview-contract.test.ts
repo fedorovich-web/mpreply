@@ -20,6 +20,11 @@ describe("dashboard operational overview", () => {
     expect(dashboard).not.toContain("billingOverviewSchema");
   });
 
+  it("does not count an account with sync errors as an active healthy connection", () => {
+    expect(dashboard).toContain('account.status === "active" && account.error_count === 0');
+    expect(dashboard).toContain('account.status === "error" || account.error_count > 0');
+  });
+
   it("puts unanswered work, review decisions and integration health before aggregate reporting", () => {
     expect(page).toContain("Очереди, проверки и состояние автоматизации");
     expect(dashboard).toContain("dashboard-attention-panel");
