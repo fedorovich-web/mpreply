@@ -31,6 +31,8 @@ describe("marketing site foundation", () => {
       ".public-root .public-footer-logo .public-brand-mark",
       "--color-public-surface:",
       "--color-brand-accent-hover:",
+      "--color-brand-primary-active:",
+      "--shadow-public-panel:",
     ]) {
       expect(marketingCss).not.toContain(retiredSelector);
     }
