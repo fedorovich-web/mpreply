@@ -14,7 +14,6 @@
 	--color-brand-primary-hover: #1d4ed8;
 	--color-brand-primary-active: #1e40af;
 	--color-brand-accent: #0ea5e9;
-	--color-brand-accent-hover: #0284c7;
 	--color-brand-text-on-soft: #1d4ed8;
 	--color-brand-soft: #eff6ff;
 	--color-brand-soft-strong: #dbeafe;
@@ -24,7 +23,6 @@
 	--color-public-page: #ffffff;
 	--color-public-section: #ffffff;
 	--color-public-section-subtle: #f7fbff;
-	--color-public-surface: #ffffff;
 	--color-public-header: rgb(255 255 255 / 96%);
 	--color-public-footer: #f8fbff;
 	--gradient-public-blue: linear-gradient(110deg, #1e40af 0%, #2563eb 43%, #0ea5e9 75%, #7dd3fc 100%);
