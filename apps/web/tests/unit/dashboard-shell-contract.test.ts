@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const shell = readFileSync(join(root, "components/app-shell/AppShell.tsx"), "utf8");
+const workspaceProvider = readFileSync(join(root, "components/workspace/WorkspaceProvider.tsx"), "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-shell-approved.css"), "utf8");
 
@@ -56,6 +57,16 @@ describe("dashboard shell information architecture", () => {
     expect(shell).toContain("isLoggingOut");
     expect(shell).toContain("logout");
     expect(shell).toContain('href="/help"');
+  });
+
+  it("surfaces logout failures without an unhandled mutateAsync promise", () => {
+    expect(workspaceProvider).toContain("logoutError");
+    expect(workspaceProvider).toContain("logoutMutation.mutate()");
+    expect(workspaceProvider).not.toContain("logoutMutation.mutateAsync()");
+    expect(shell).toContain("logoutError");
+    expect(shell).toContain('role="alert"');
+    expect(shell).toContain("Не удалось выйти");
+    expect(styles).toContain(".app-logout-error");
   });
 
   it("loads a focused shell style layer instead of rewriting global workspace styles", () => {
