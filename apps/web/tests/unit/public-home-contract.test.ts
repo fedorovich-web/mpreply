@@ -12,13 +12,13 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const heroAssetPath = join(root, "public/images/mpreply-hero.webp");
 const heroArtworkCssPath = join(root, "styles/homepage-hero-artwork.css");
 const heroArtworkCss = existsSync(heroArtworkCssPath) ? readFileSync(heroArtworkCssPath, "utf8") : "";
+const fidelityCssPath = join(root, "styles/homepage-fidelity.css");
 const globalsCss = readFileSync(join(root, "styles/globals.css"), "utf8");
 const marketingCssPath = join(root, "styles/marketing-site.css");
 const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
 const marketingPagesCss = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
 const publicSiteCss = readFileSync(join(root, "styles/public-site.css"), "utf8");
 const approvedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
-const fidelityCss = readFileSync(join(root, "styles/homepage-fidelity.css"), "utf8");
 
 describe("public homepage redesign contract", () => {
   it("contains the approved product-story sections", () => {
@@ -81,7 +81,7 @@ describe("public homepage redesign contract", () => {
       "homepage-hero-draft",
     ];
     for (const selector of legacyHeroSelectors) {
-      for (const source of [approvedCss, fidelityCss, heroArtworkCss, globalsCss, marketingCss, marketingPagesCss, publicSiteCss]) {
+      for (const source of [approvedCss, heroArtworkCss, globalsCss, marketingCss, marketingPagesCss, publicSiteCss]) {
         expect(source).not.toContain(selector);
       }
     }
@@ -114,6 +114,16 @@ describe("public homepage redesign contract", () => {
       expect(publicSiteCss).not.toContain(legacySelector);
       expect(marketingPagesCss).not.toContain(legacySelector);
     }
+  });
+
+  it("keeps final homepage geometry in the approved layer without a fidelity override file", () => {
+    expect(existsSync(fidelityCssPath)).toBe(false);
+    expect(layout).not.toContain('import "../styles/homepage-fidelity.css"');
+    expect(approvedCss).toContain("--container-max-width: 1240px");
+    expect(approvedCss).toContain("grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr)");
+    expect(approvedCss).toContain("transform: scale(1.065)");
+    expect(approvedCss).toContain("grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr)");
+    expect(approvedCss).toContain("grid-template-columns: minmax(0, 1.18fr) minmax(24rem, 0.82fr)");
   });
 
   it("uses the approved blue system and a scoped hero artwork layer", () => {
