@@ -6,6 +6,8 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { siteConfig } from "../../lib/site-config";
 
+const focusableSelector = 'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 function isActiveNavigationItem(href: string, pathname: string): boolean {
   if (href.includes("#")) return false;
   if (href === "/marketplaces") return pathname === href || pathname.startsWith(`${href}/`);
@@ -32,18 +34,35 @@ export function PublicHeader() {
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    menuPanelRef.current?.querySelector<HTMLElement>("a[href], button:not([disabled])")?.focus();
+    menuPanelRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setMenuOpen(false);
-      window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+        return;
+      }
+
+      if (event.key !== "Tab" || !menuPanelRef.current) return;
+      const focusableElements = Array.from(menuPanelRef.current.querySelectorAll<HTMLElement>(focusableSelector))
+        .filter((element) => element.offsetParent !== null);
+      const firstFocusable = focusableElements[0];
+      const lastFocusable = focusableElements.at(-1);
+      if (!firstFocusable || !lastFocusable) return;
+
+      if (event.shiftKey && document.activeElement === firstFocusable) {
+        event.preventDefault();
+        lastFocusable.focus();
+      } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+        event.preventDefault();
+        firstFocusable.focus();
+      }
     };
 
-    window.addEventListener("keydown", handleEscape);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [menuOpen]);
 
