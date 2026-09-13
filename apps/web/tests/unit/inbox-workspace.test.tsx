@@ -112,6 +112,7 @@ function mockWorkspace() {
     setActiveOrganizationId: vi.fn(),
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
+    logoutError: null,
   });
 }
 
