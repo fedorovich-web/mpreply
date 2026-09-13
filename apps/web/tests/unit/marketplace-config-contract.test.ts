@@ -9,7 +9,8 @@ const marketplaceLanding = readFileSync(join(root, "components/public-site/Marke
 
 describe("marketplace public configuration", () => {
   it("derives readiness from one shared product truth instead of per-marketplace duplicate state", () => {
-    expect(siteConfig).toContain('export const marketplaceStatusLabel = "Интеграция готова"');
+    expect(siteConfig).toContain('const marketplaceStatusLabel = "Интеграция готова"');
+    expect(siteConfig).not.toContain("export const marketplaceStatusLabel");
     expect(siteConfig.match(/Интеграция готова/g)).toHaveLength(1);
     expect(siteConfig).not.toContain('status: "supported"');
     expect(siteConfig).toContain("statusLabel: marketplaceStatusLabel");
