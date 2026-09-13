@@ -66,8 +66,9 @@ type WorkspaceContextValue = {
   organizations: Organization[];
   activeOrganization: Organization;
   setActiveOrganizationId: (organizationId: string) => void;
-  logout: () => Promise<void>;
+  logout: () => void;
   isLoggingOut: boolean;
+  logoutError: string | null;
 };
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -106,7 +107,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest("/api/auth/logout", messageResponseSchema, { method: "POST" }),
-    onSuccess: async () => {
+    onSuccess: () => {
       clearStoredActiveOrganizationId();
       queryClient.clear();
       router.replace("/auth/login");
@@ -167,10 +168,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         organizations: organizationsQuery.data,
         activeOrganization,
         setActiveOrganizationId,
-        logout: async () => {
-          await logoutMutation.mutateAsync();
-        },
+        logout: () => logoutMutation.mutate(),
         isLoggingOut: logoutMutation.isPending,
+        logoutError: logoutMutation.error ? "Не удалось выйти. Проверьте соединение и попробуйте ещё раз." : null,
       }}
     >
       {children}
