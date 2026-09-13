@@ -15,8 +15,6 @@ const workflow = [
 ] as const;
 
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
-  const marketplaceMark = marketplace.key === "yandex-market" ? "М" : marketplace.key === "avito" ? "A" : marketplace.shortName.slice(0, 2);
-
   return (
     <PublicShell>
       <section className="public-subhero public-subhero-marketplace-detail">
@@ -38,7 +36,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
 
           <div className={`marketplace-detail-scene is-${marketplace.key}`} role="group" aria-label={`Пример обработки обращения ${marketplace.name} в MPReply`}>
             <div className="marketplace-detail-platform">
-              <span className="marketplace-detail-platform-mark" aria-hidden="true">{marketplaceMark}</span>
+              <span className="marketplace-detail-platform-mark" aria-hidden="true">{marketplace.mark}</span>
               <span className="marketplace-detail-platform-copy">
                 <strong>{marketplace.name}</strong>
                 <small>{marketplace.statusLabel}</small>
@@ -48,7 +46,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="marketplace-detail-window">
               <div className="marketplace-detail-window-head">
                 <div className="marketplace-detail-window-title">
-                  <span aria-hidden="true">{marketplaceMark}</span>
+                  <span aria-hidden="true">{marketplace.mark}</span>
                   <strong>Новое обращение · {marketplace.name}</strong>
                 </div>
                 <small>В общей очереди</small>
