@@ -20,6 +20,26 @@ test("primary navigation reaches features and pricing", async ({ page }) => {
   await expect(page).toHaveURL(/\/pricing$/);
 });
 
+test("mobile navigation manages focus, scroll lock and Escape", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const trigger = page.getByRole("button", { name: "Открыть меню" });
+  await trigger.click();
+
+  const panel = page.locator(".public-mobile-menu-panel");
+  await expect(panel).toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(panel.locator("a").first()).toBeFocused();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.keyboard.press("Escape");
+
+  await expect(panel).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
+});
+
 test("homepage reflects the ready marketplace integrations", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
