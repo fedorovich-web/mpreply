@@ -123,7 +123,7 @@ export function AnalyticsWorkspace() {
                 <SummaryRow label="Автоматически отправлено" value={formatNumber(overviewQuery.data.auto_replies_sent)} />
                 <SummaryRow label="Отправлено после проверки" value={formatNumber(overviewQuery.data.manual_replies_sent)} />
                 <SummaryRow label="Подготовлено черновиков с ИИ" value={formatNumber(aiUsageQuery.data?.drafts_generated ?? overviewQuery.data.ai_drafts_generated)} />
-                <SummaryRow label="Потребовали дополнительной проверки" value={formatNumber(aiUsageQuery.data?.safety_flagged_drafts ?? 0)} />
+                <SummaryRow label="Потребовали дополнительной проверки" value={aiUsageQuery.error ? "—" : formatNumber(aiUsageQuery.data?.safety_flagged_drafts ?? 0)} />
               </div>
             </article>
           </section>
