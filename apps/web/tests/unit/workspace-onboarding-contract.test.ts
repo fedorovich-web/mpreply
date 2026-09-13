@@ -22,6 +22,15 @@ describe("first workspace onboarding", () => {
     expect(provider).toContain("Авито");
   });
 
+  it("uses MPReply workspace storage with a fail-safe Respio migration", () => {
+    expect(provider).toContain('const ACTIVE_ORGANIZATION_KEY = "mpreply.activeOrganizationId"');
+    expect(provider).toContain('const LEGACY_ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId"');
+    expect(provider).toContain("readStoredActiveOrganizationId");
+    expect(provider).toContain("storeActiveOrganizationId");
+    expect(provider).toContain("clearStoredActiveOrganizationId");
+    expect(provider).toContain("catch {");
+  });
+
   it("uses a scoped responsive onboarding layer without a second palette", () => {
     expect(layout).toContain('import "../styles/workspace-onboarding-approved.css"');
     expect(styles).toContain(".workspace-onboarding-page");
