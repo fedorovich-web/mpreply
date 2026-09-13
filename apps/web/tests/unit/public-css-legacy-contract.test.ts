@@ -81,6 +81,17 @@ describe("public CSS legacy contract", () => {
     }
   });
 
+  it("does not keep descendant selectors for markup that current routes no longer render", () => {
+    for (const selector of [
+      ".marketplace-monogram-large",
+      ".resource-note h2",
+      ".resource-note blockquote",
+      ".contact-path h2",
+    ]) {
+      expect(publicSiteCss).not.toContain(selector);
+    }
+  });
+
   it("keeps current shared public compositions available", () => {
     for (const selector of [
       ".marketplace-readiness-row-supported",
