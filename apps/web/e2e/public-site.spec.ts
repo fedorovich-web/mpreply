@@ -48,6 +48,23 @@ test("mobile navigation traps focus, locks scroll and restores focus on Escape",
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
 });
 
+test("mobile navigation releases scroll lock when viewport becomes desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const trigger = page.getByRole("button", { name: "Открыть меню" });
+  await trigger.click();
+  await expect(page.locator(".public-mobile-menu-panel")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  await expect(page.locator(".public-mobile-menu-panel")).toBeHidden();
+  await expect(page.locator(".public-mobile-menu-backdrop")).toHaveCount(0);
+  await expect(trigger).toBeHidden();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
+});
+
 test("homepage reflects the ready marketplace integrations", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
