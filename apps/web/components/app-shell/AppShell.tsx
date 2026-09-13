@@ -198,6 +198,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="app-sidebar-footer">
+          {organizations.length > 1 ? (
+            <div className="app-mobile-workspace-switcher">
+              <span className="app-nav-group-label">Рабочее пространство</span>
+              <label className="workspace-selector">
+                <span className="sr-only">Выбрать организацию</span>
+                <select
+                  aria-label="Выбрать организацию"
+                  onChange={(event) => setActiveOrganizationId(event.target.value)}
+                  value={activeOrganization.id}
+                >
+                  {organizations.map((organization) => (
+                    <option key={organization.id} value={organization.id}>{organization.name}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          ) : null}
+
           <Link className="app-help-link" href="/help" onClick={closeDrawer}>
             <span className="app-nav-icon"><NavIcon name="help" /></span>
             <span><strong>Помощь</strong><small>База знаний и поддержка</small></span>
