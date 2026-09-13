@@ -1,10 +1,14 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const shell = readFileSync(join(process.cwd(), "components/public-site/PublicShell.tsx"), "utf8");
-const marketingCss = readFileSync(join(process.cwd(), "styles/marketing-site.css"), "utf8");
-const homepageCss = readFileSync(join(process.cwd(), "styles/homepage-approved.css"), "utf8");
+const root = process.cwd();
+const shell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
+const header = readFileSync(join(root, "components/public-site/PublicHeader.tsx"), "utf8");
+const brandMarkPath = join(root, "components/public-site/PublicBrandMark.tsx");
+const brandMark = existsSync(brandMarkPath) ? readFileSync(brandMarkPath, "utf8") : "";
+const marketingCss = readFileSync(join(root, "styles/marketing-site.css"), "utf8");
+const homepageCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
 
 describe("public shell cleanup", () => {
   it("does not render fake social controls or decorative social placeholders", () => {
@@ -26,6 +30,18 @@ describe("public shell cleanup", () => {
     expect(shell).not.toContain("public-footer-topline");
     expect(marketingCss).not.toContain(".public-footer-grid");
     expect(marketingCss).not.toContain(".public-footer-topline");
+  });
+
+  it("uses one shared brand-mark component in the public header and footer", () => {
+    expect(existsSync(brandMarkPath)).toBe(true);
+    expect(brandMark).toContain('className="public-brand-mark"');
+    expect(brandMark).toContain('className="public-brand-glyph"');
+    expect(header).toContain('import { PublicBrandMark } from "./PublicBrandMark"');
+    expect(shell).toContain('import { PublicBrandMark } from "./PublicBrandMark"');
+    expect(header).toContain("<PublicBrandMark />");
+    expect(shell).toContain("<PublicBrandMark />");
+    expect(header).not.toContain("function BrandMark");
+    expect(shell).not.toContain("function FooterBrandMark");
   });
 
   it("sizes the desktop footer for the brand plus three real link columns", () => {
