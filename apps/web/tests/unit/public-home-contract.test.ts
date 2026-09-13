@@ -102,6 +102,7 @@ describe("public homepage redesign contract", () => {
     expect(publicShell).not.toContain('href="/#safetygate"');
     expect(publicShell).not.toContain("public-footer-grid");
     expect(publicShell).not.toContain("public-footer-topline");
+    expect(publicShell).not.toContain("public-footer-support");
     expect(publicSiteCss).not.toContain(".public-footer-grid");
     expect(publicSiteCss).not.toContain(".public-footer-topline");
   });
