@@ -1,4 +1,4 @@
-param([switch]$SkipBrowser, [switch]$SkipImpeccableSkills, [switch]$AllBrowsers)
+param([switch]$SkipBrowser, [switch]$AllBrowsers)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
@@ -13,8 +13,6 @@ try {
   Run-Step "Impeccable version" { & $Npx impeccable --version }
   Run-Step "Playwright version" { & $Npx playwright --version }
   Run-Step "Lighthouse CI version" { & $Npx lhci --version }
-  Run-Step "Impeccable project scan" { & $Npm run design:detect }
-  if(-not $SkipImpeccableSkills){ Run-Step "Install project-local Impeccable skills" { & $Npm run impeccable:install } }
   if(-not $SkipBrowser){ if($AllBrowsers){ Run-Step "Install Playwright browsers" { & $Npx playwright install chromium firefox webkit } } else { Run-Step "Install Playwright Chromium" { & $Npx playwright install chromium } } }
 } finally { Pop-Location }
 Write-Host "`nDesign tooling bootstrap completed." -ForegroundColor Green
