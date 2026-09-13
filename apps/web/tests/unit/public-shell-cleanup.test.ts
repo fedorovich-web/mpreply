@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const shell = readFileSync(join(process.cwd(), "components/public-site/PublicShell.tsx"), "utf8");
+const marketingCss = readFileSync(join(process.cwd(), "styles/marketing-site.css"), "utf8");
 const homepageCss = readFileSync(join(process.cwd(), "styles/homepage-approved.css"), "utf8");
 
 describe("public shell cleanup", () => {
@@ -18,6 +19,13 @@ describe("public shell cleanup", () => {
     expect(shell).not.toContain(">Компания<");
     expect(shell).not.toContain(">О нас<");
     expect(shell).not.toContain(">Партнёрам<");
+  });
+
+  it("does not retain selectors for the retired footer markup", () => {
+    expect(shell).not.toContain("public-footer-grid");
+    expect(shell).not.toContain("public-footer-topline");
+    expect(marketingCss).not.toContain(".public-footer-grid");
+    expect(marketingCss).not.toContain(".public-footer-topline");
   });
 
   it("sizes the desktop footer for the brand plus three real link columns", () => {
