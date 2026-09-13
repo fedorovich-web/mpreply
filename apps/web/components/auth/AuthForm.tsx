@@ -22,6 +22,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const isLogin = mode === "login";
+  const requestedNext = searchParams.get("next");
+  const intent = searchParams.get("intent");
+
+  const alternateAuthHref = (() => {
+    const query = new URLSearchParams();
+    if (requestedNext?.startsWith("/app/")) query.set("next", requestedNext);
+    if (intent === "connect-marketplace" || (isLogin && !requestedNext)) {
+      query.set("intent", "connect-marketplace");
+    }
+    const queryString = query.toString();
+    const path = isLogin ? "/auth/register" : "/auth/login";
+    return queryString ? `${path}?${queryString}` : path;
+  })();
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -33,19 +47,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             : { email: email.trim(), password },
       }),
     onSuccess: () => {
-      const requestedNext = searchParams.get("next");
-      const intent = searchParams.get("intent");
       const target = requestedNext?.startsWith("/app/")
         ? requestedNext
-        : mode === "register" && intent === "connect-marketplace"
+        : intent === "connect-marketplace"
           ? "/app/integrations"
           : "/app/dashboard";
       router.replace(target);
       router.refresh();
     },
   });
-
-  const isLogin = mode === "login";
 
   return (
     <main className="auth-page">
@@ -176,9 +186,9 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
             <p className="auth-footer">
               {isLogin ? (
-                <>Нет аккаунта? <Link href="/auth/register?intent=connect-marketplace">Создать аккаунт</Link></>
+                <>Нет аккаунта? <Link href={alternateAuthHref}>Создать аккаунт</Link></>
               ) : (
-                <>Уже есть аккаунт? <Link href="/auth/login">Войти</Link></>
+                <>Уже есть аккаунт? <Link href={alternateAuthHref}>Войти</Link></>
               )}
             </p>
           </div>
