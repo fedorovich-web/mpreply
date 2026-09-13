@@ -1,31 +1,31 @@
 /* Integrations: four ready marketplace integrations in one operational system. */
 
 .integrations-page,
-.wildberries-integration-page {
+.marketplace-integration-page {
 	max-width: 100rem;
 	margin: 0 auto;
 }
 
 .integrations-page-header,
-.wildberries-integration-header {
+.marketplace-integration-header {
 	align-items: end;
 	margin-bottom: clamp(1.5rem, 2.6vw, 2.25rem);
 }
 
 .integrations-page-header > div:first-child,
-.wildberries-integration-header > div:first-child {
+.marketplace-integration-header > div:first-child {
 	max-width: 58rem;
 }
 
 .integrations-page-header h1,
-.wildberries-integration-header h1 {
+.marketplace-integration-header h1 {
 	max-width: 26ch;
 	font-size: clamp(2rem, 3vw, 3.15rem);
 	letter-spacing: -0.04em;
 }
 
 .integrations-page-header > div:first-child > p:last-child,
-.wildberries-integration-header > div:first-child > p:last-child {
+.marketplace-integration-header > div:first-child > p:last-child {
 	max-width: 55rem;
 	color: var(--color-text-secondary);
 	line-height: 1.65;
@@ -474,7 +474,7 @@
 
 @media (max-width: 680px) {
 	.integrations-page-header,
-	.wildberries-integration-header,
+	.marketplace-integration-header,
 	.integration-security-strip {
 		align-items: flex-start;
 		flex-direction: column;
@@ -501,7 +501,7 @@
 
 @media (max-width: 520px) {
 	.integrations-page-header h1,
-	.wildberries-integration-header h1 {
+	.marketplace-integration-header h1 {
 		font-size: clamp(1.8rem, 10vw, 2.35rem);
 	}
 
