@@ -65,7 +65,8 @@ describe("dashboard shell information architecture", () => {
     expect(shell).toContain("setActiveOrganizationId(event.target.value)");
     expect(styles).toContain(".app-mobile-workspace-switcher");
     expect(styles).toContain(".app-mobile-workspace-switcher .workspace-selector");
-    expect(styles).toContain("@media (max-width: 820px)");
+    expect(styles).toContain("@media (max-width: 860px) {\n\t.app-mobile-workspace-switcher {");
+    expect(styles).not.toContain("@media (max-width: 820px) {\n\t.app-mobile-workspace-switcher {");
   });
 
   it("surfaces logout failures without an unhandled mutateAsync promise", () => {
