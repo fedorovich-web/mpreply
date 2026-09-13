@@ -35,6 +35,19 @@ describe("integrations dashboard", () => {
     }
   });
 
+  it("uses the same detail page and header layout for every ready marketplace", () => {
+    for (const marketplacePage of [wildberriesPage, ozonPage, yandexPage, avitoPage]) {
+      expect(marketplacePage).toContain("marketplace-integration-page");
+      expect(marketplacePage).toContain("marketplace-integration-header");
+      expect(marketplacePage).not.toContain("wildberries-integration-page");
+      expect(marketplacePage).not.toContain("wildberries-integration-header");
+    }
+    expect(styles).toContain(".marketplace-integration-page");
+    expect(styles).toContain(".marketplace-integration-header");
+    expect(styles).not.toContain(".wildberries-integration-page");
+    expect(styles).not.toContain(".wildberries-integration-header");
+  });
+
   it("does not retain stale roadmap-only styling for ready integrations", () => {
     expect(styles).not.toMatch(/planned-integration|market-card-planned|roadmap/i);
   });
@@ -49,7 +62,7 @@ describe("integrations dashboard", () => {
     expect(layout).toContain('import "../styles/dashboard-integrations-approved.css"');
     expect(styles).toContain(".integrations-page");
     expect(styles).toContain(".integration-market-card");
-    expect(styles).toContain(".wildberries-integration-page");
+    expect(styles).toContain(".marketplace-integration-page");
     expect(styles).toContain("@media (max-width: 520px)");
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
