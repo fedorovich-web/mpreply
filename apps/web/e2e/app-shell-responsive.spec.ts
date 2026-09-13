@@ -35,13 +35,15 @@ test("authenticated mobile shell manages drawer focus, backdrop and overflow", a
   await page.goto("/app/integrations", { waitUntil: "networkidle" });
 
   const openMenu = page.getByRole("button", { name: "Открыть меню кабинета" });
+  const sidebar = page.locator(".app-sidebar");
   await expect(openMenu).toBeVisible();
   await expect(openMenu).toHaveAttribute("aria-expanded", "false");
+  await expect(sidebar).toBeHidden();
 
   await openMenu.click();
 
-  const sidebar = page.locator(".app-sidebar");
   await expect(sidebar).toHaveClass(/app-sidebar-open/);
+  await expect(sidebar).toBeVisible();
   await expect(page.getByRole("button", { name: "Закрыть боковое меню" })).toBeVisible();
   await expect(sidebar.locator("a").first()).toBeFocused();
   await expect(page.getByRole("link", { name: "Обращения", exact: true })).toBeVisible();
@@ -54,6 +56,7 @@ test("authenticated mobile shell manages drawer focus, backdrop and overflow", a
   await page.keyboard.press("Escape");
 
   await expect(sidebar).not.toHaveClass(/app-sidebar-open/);
+  await expect(sidebar).toBeHidden();
   await expect(openMenu).toHaveAttribute("aria-expanded", "false");
   await expect(openMenu).toBeFocused();
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
