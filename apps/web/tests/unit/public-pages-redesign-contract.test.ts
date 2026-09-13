@@ -33,9 +33,10 @@ const helpLegalCssPath = join(root, "styles/help-legal-approved.css");
 const helpLegalCss = existsSync(helpLegalCssPath) ? readFileSync(helpLegalCssPath, "utf8") : "";
 
 describe("public page redesign", () => {
-  it("loads page-specific marketing compositions", () => {
+  it("loads page-specific marketing compositions without the superseded marketplace cluster", () => {
     expect(layout).toContain('import "../styles/marketing-pages.css"');
-    expect(pagesCss).toContain(".marketplace-cluster");
+    expect(pagesCss).toContain(".features-hero-scene");
+    expect(pagesCss).not.toContain(".marketplace-cluster");
     expect(pagesCss).toContain(".marketplace-detail-story");
   });
 
