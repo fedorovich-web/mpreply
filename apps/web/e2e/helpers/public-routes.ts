@@ -1,8 +1,6 @@
-export const PUBLIC_ROUTES = [
-  "/", "/features", "/marketplaces", "/marketplaces/wildberries", "/marketplaces/ozon",
-  "/marketplaces/yandex-market", "/marketplaces/avito", "/pricing", "/demo", "/resources",
-  "/help", "/contacts", "/privacy", "/terms",
-] as const;
+import { publicRoutes } from "../../lib/site-config";
+
+export const PUBLIC_ROUTES = publicRoutes;
 
 export const VISUAL_ROUTES = [
   { path: "/", slug: "home" },
