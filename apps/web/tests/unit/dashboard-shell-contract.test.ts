@@ -59,6 +59,15 @@ describe("dashboard shell information architecture", () => {
     expect(shell).toContain('href="/help"');
   });
 
+  it("keeps multi-workspace switching available inside the mobile drawer", () => {
+    expect(shell).toContain('className="app-mobile-workspace-switcher"');
+    expect(shell).toContain("organizations.length > 1");
+    expect(shell).toContain("setActiveOrganizationId(event.target.value)");
+    expect(styles).toContain(".app-mobile-workspace-switcher");
+    expect(styles).toContain(".app-mobile-workspace-switcher .workspace-selector");
+    expect(styles).toContain("@media (max-width: 820px)");
+  });
+
   it("surfaces logout failures without an unhandled mutateAsync promise", () => {
     expect(workspaceProvider).toContain("logoutError");
     expect(workspaceProvider).toContain("logoutMutation.mutate()");
