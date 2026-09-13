@@ -6,6 +6,7 @@ export type MarketplaceConfig = {
   key: MarketplaceKey;
   name: string;
   shortName: string;
+  mark: string;
   path: string;
   statusLabel: typeof marketplaceStatusLabel;
   summary: string;
@@ -36,6 +37,7 @@ const marketplaceDefinitions = [
     key: "wildberries",
     name: "Wildberries",
     shortName: "WB",
+    mark: "WB",
     path: "/marketplaces/wildberries",
     summary:
       "Получение обращений, подготовка ответов, контроль перед отправкой и автоматизация повторяющихся сценариев через единый рабочий процесс.",
@@ -44,6 +46,7 @@ const marketplaceDefinitions = [
     key: "ozon",
     name: "Ozon",
     shortName: "Ozon",
+    mark: "OZ",
     path: "/marketplaces/ozon",
     summary:
       "Работа с обращениями покупателей Ozon в общей очереди MPReply: контекст, ИИ-ответ, проверка правил и отправка через интеграцию.",
@@ -52,6 +55,7 @@ const marketplaceDefinitions = [
     key: "yandex-market",
     name: "Яндекс Маркет",
     shortName: "Яндекс Маркет",
+    mark: "М",
     path: "/marketplaces/yandex-market",
     summary:
       "Обращения Яндекс Маркета приводятся к единому формату, чтобы команда работала с ними по тем же правилам, что и с другими площадками.",
@@ -60,6 +64,7 @@ const marketplaceDefinitions = [
     key: "avito",
     name: "Авито",
     shortName: "Авито",
+    mark: "A",
     path: "/marketplaces/avito",
     summary:
       "Интеграция Авито подключена к общей модели обработки: единая очередь, ИИ-подготовка ответа, правила, статусы и история действий.",
