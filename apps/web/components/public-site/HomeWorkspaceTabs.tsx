@@ -132,7 +132,7 @@ export function HomeWorkspaceTabs() {
   };
 
   return (
-    <div className="homepage-workspace homepage-approved-workspace">
+    <div className="homepage-approved-workspace">
       <div className="homepage-workspace-tabs" role="tablist" aria-label="Тип обращения">
         {tabOrder.map((key) => {
           const item = workspaceStates[key];
