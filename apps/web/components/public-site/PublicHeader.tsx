@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { siteConfig } from "../../lib/site-config";
+import { PublicBrandMark } from "./PublicBrandMark";
 
 const focusableSelector = 'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -12,14 +13,6 @@ function isActiveNavigationItem(href: string, pathname: string): boolean {
   if (href.includes("#")) return false;
   if (href === "/marketplaces") return pathname === href || pathname.startsWith(`${href}/`);
   return pathname === href;
-}
-
-function BrandMark() {
-  return (
-    <span className="public-brand-mark" aria-hidden="true">
-      <span className="public-brand-glyph"><i /><i /><i /></span>
-    </span>
-  );
 }
 
 export function PublicHeader() {
@@ -83,7 +76,7 @@ export function PublicHeader() {
     <header className="public-header">
       <div className="public-container public-header-inner">
         <Link className="public-brand" href="/" aria-label="MPReply — главная" onClick={closeMenu}>
-          <BrandMark />
+          <PublicBrandMark />
           <span className="public-brand-copy"><strong>MPReply</strong></span>
         </Link>
 
