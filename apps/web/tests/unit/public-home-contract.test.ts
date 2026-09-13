@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 const heroScene = readFileSync(join(root, "components/public-site/HomeHeroScene.tsx"), "utf8");
+const homeWorkspace = readFileSync(join(root, "components/public-site/HomeWorkspaceTabs.tsx"), "utf8");
 const publicShell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
@@ -13,16 +14,19 @@ const heroArtworkCssPath = join(root, "styles/homepage-hero-artwork.css");
 const heroArtworkCss = existsSync(heroArtworkCssPath) ? readFileSync(heroArtworkCssPath, "utf8") : "";
 const marketingCssPath = join(root, "styles/marketing-site.css");
 const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
+const marketingPagesCss = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
+const publicSiteCss = readFileSync(join(root, "styles/public-site.css"), "utf8");
 const approvedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
+const fidelityCss = readFileSync(join(root, "styles/homepage-fidelity.css"), "utf8");
 
 describe("public homepage redesign contract", () => {
   it("contains the approved product-story sections", () => {
     expect(page).toContain("homepage-workspace-section");
-    expect(page).toContain("homepage-context-section");
+    expect(page).toContain("homepage-models-section");
     expect(page).toContain("homepage-approved-process");
     expect(page).toContain("homepage-horizontal-process");
     expect(page).toContain("homepage-results-section");
-    expect(page).toContain("homepage-final-cta");
+    expect(page).toContain("homepage-approved-final-cta");
   });
 
   it("keeps the approved AI-section message without exposing unverified provider names", () => {
@@ -61,7 +65,36 @@ describe("public homepage redesign contract", () => {
     expect(page).toContain("homepage-cta-scene");
   });
 
-  it("keeps footer navigation attached to the current homepage process section", () => {
+  it("keeps homepage selectors owned by the homepage layers only", () => {
+    expect(marketingPagesCss).not.toContain(".homepage-");
+    expect(marketingCss).not.toContain(".homepage-");
+    expect(publicSiteCss).not.toContain(".homepage-");
+
+    const legacyHeroSelectors = [
+      "homepage-hero-window",
+      "homepage-hero-ai-card",
+      "homepage-hero-product",
+      "homepage-hero-product-body",
+      "homepage-hero-sidebar",
+      "homepage-hero-feed",
+      "homepage-hero-draft",
+    ];
+    for (const selector of legacyHeroSelectors) {
+      for (const source of [approvedCss, fidelityCss, heroArtworkCss, marketingCss, marketingPagesCss, publicSiteCss]) {
+        expect(source).not.toContain(selector);
+      }
+    }
+  });
+
+  it("does not keep obsolete class hooks from the superseded homepage markup", () => {
+    expect(page).not.toContain("homepage-context-section");
+    expect(page).not.toContain("homepage-process homepage-approved-process");
+    expect(page).not.toContain("homepage-final-cta homepage-approved-final-cta");
+    expect(page).not.toContain("homepage-section-heading homepage-section-heading-left");
+    expect(homeWorkspace).not.toContain('className="homepage-workspace homepage-approved-workspace"');
+  });
+
+  it("keeps footer navigation attached to real routes", () => {
     expect(publicShell).toContain('href="/features"');
     expect(publicShell).toContain('href="/marketplaces"');
     expect(publicShell).not.toContain('href="/#safetygate"');
