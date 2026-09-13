@@ -13,17 +13,14 @@ export const metadata: Metadata = createPageMetadata({
 
 const pricingParts = [
   {
-    number: "01",
     title: "Подписка",
     text: "Оплата за доступ к продукту, интеграционному контуру, правилам, очередям, журналу и рабочему месту команды.",
   },
   {
-    number: "02",
     title: "Включённый объём",
     text: "В тариф входит определённый объём AI-обработки и отправок. Конкретные лимиты будут рассчитаны по реальной себестоимости.",
   },
   {
-    number: "03",
     title: "Прозрачный перерасход",
     text: "Если объём превышен, дополнительное использование должно быть видно заранее и не превращаться в скрытый платёж.",
   },
@@ -59,15 +56,13 @@ export default function PricingPage() {
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Из чего складывается модель</p>
             <h2>Платформа выполняет больше работы, чем один AI-запрос</h2>
             <p>Получение данных, контекст, SafetyGate, правила, очередь, повторы, отправка, журнал и аналитика тоже входят в продукт.</p>
           </div>
 
           <div className="pricing-model-grid">
             {pricingParts.map((part) => (
-              <article className="pricing-model-item" key={part.number}>
-                <span>{part.number}</span>
+              <article className="pricing-model-item" key={part.title}>
                 <h3>{part.title}</h3>
                 <p>{part.text}</p>
               </article>
@@ -79,7 +74,6 @@ export default function PricingPage() {
       <section className="public-section public-section-muted">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Для разных операционных моделей</p>
             <h2>Тариф должен учитывать способ работы, а не просто число карточек на странице</h2>
           </div>
 
@@ -98,7 +92,6 @@ export default function PricingPage() {
       <section className="public-section">
         <div className="public-container public-two-column public-two-column-balanced">
           <div>
-            <p className="eyebrow">Что не будет скрыто</p>
             <h2>Пользователь должен заранее понимать, за что платит и что произойдёт при достижении лимита</h2>
           </div>
           <div className="public-check-list public-check-list-large">
@@ -113,7 +106,6 @@ export default function PricingPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Коммерческий запуск</p>
             <h2>Нужен пилот или хотите обсудить требования к тарифу для вашей команды?</h2>
           </div>
           <Link className="button button-primary button-on-dark" href="/contacts">

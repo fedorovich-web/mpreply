@@ -140,9 +140,8 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       )}
 
       <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
+          <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Следующий шаг</p>
             <h2>{isMvp ? "Посмотрите, как Respio принимает решение об автоматической отправке" : `Нужна интеграция с ${marketplace.name}? Обсудим реальный сценарий и API-доступ`}</h2>
           </div>
           <Link className="button button-primary button-on-dark" href={isMvp ? "/demo" : "/contacts"}>

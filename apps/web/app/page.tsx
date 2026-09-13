@@ -111,7 +111,6 @@ export default function HomePage() {
       <section className="public-section" id="product">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Не просто генератор текста</p>
             <h2>Respio проводит ответ через весь путь — от входящего обращения до подтверждённой отправки</h2>
             <p>
               ИИ — только один слой. До отправки Respio учитывает товарный контекст и правила компании, проверяет риски, контролирует лимиты и защищает от повторной публикации одного и того же ответа.
@@ -160,7 +159,6 @@ export default function HomePage() {
       <section className="public-section public-section-muted">
         <div className="public-container public-two-column public-two-column-feature">
           <div>
-            <p className="eyebrow">Автоматический режим</p>
             <h2>Менеджер не обязан подтверждать каждый ответ вручную</h2>
             <p className="public-copy-muted">
               Безопасная рутина обрабатывается автоматически. Человек подключается только там, где не хватает контекста, есть рискованная формулировка или правило требует ручной проверки.
@@ -211,27 +209,22 @@ export default function HomePage() {
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Операционный контур</p>
             <h2>Не только ответить, но и понимать, что произошло на каждом этапе</h2>
           </div>
           <div className="feature-grid feature-grid-4 feature-grid-editorial">
             <article className="feature-card">
-              <span className="feature-number">01</span>
               <h3>Единый Inbox</h3>
               <p>Отзывы и вопросы в нормализованном формате с фильтрами и понятными статусами.</p>
             </article>
             <article className="feature-card">
-              <span className="feature-number">02</span>
               <h3>Правила автоматизации</h3>
               <p>Условия по рейтингу, типу обращения, ключевым словам, товарам и чувствительным темам.</p>
             </article>
             <article className="feature-card">
-              <span className="feature-number">03</span>
               <h3>Очередь проверки</h3>
               <p>Только исключения, которые действительно требуют решения менеджера.</p>
             </article>
             <article className="feature-card">
-              <span className="feature-number">04</span>
               <h3>История действий</h3>
               <p>Понятная хронология значимых действий пользователя, ИИ и интеграционных процессов.</p>
             </article>
@@ -242,7 +235,6 @@ export default function HomePage() {
       <section className="public-section public-section-muted">
         <div className="public-container">
           <div className="section-heading">
-            <p className="eyebrow">FAQ</p>
             <h2>Ключевые вопросы об автоматизации</h2>
           </div>
           <div className="faq-list">
@@ -262,7 +254,6 @@ export default function HomePage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Автоматизация без слепой отправки</p>
             <h2>Подключите маркетплейс и настройте, какие ответы Respio может отправлять самостоятельно</h2>
           </div>
           <Link className="button button-secondary-on-dark" href="/contacts">

@@ -36,7 +36,6 @@ export default function ContactsPage() {
       <div className="public-section">
         <div className="public-container contact-paths">
           <article className="contact-path contact-path-primary">
-            <span>01</span>
             <div>
               <h2>Посмотреть, как работает автоматизация</h2>
               <p>Разберите путь обращения через контекст, AI, SafetyGate, правила и очередь отправки.</p>
@@ -44,7 +43,6 @@ export default function ContactsPage() {
             <Link className="button button-primary" href="/demo">Открыть демо</Link>
           </article>
           <article className="contact-path">
-            <span>02</span>
             <div>
               <h2>Проверить статус интеграции</h2>
               <p>Узнайте, какая площадка уже входит в MVP-основу, а какая ещё требует проверки API.</p>
@@ -52,7 +50,6 @@ export default function ContactsPage() {
             <Link className="button button-secondary" href="/marketplaces">Статусы интеграций</Link>
           </article>
           <article className="contact-path">
-            <span>03</span>
             <div>
               <h2>Изучить возможности продукта</h2>
               <p>Inbox, SafetyGate, правила, очередь, повторы, usage accounting и журнал действий.</p>
