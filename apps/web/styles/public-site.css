@@ -536,27 +536,11 @@
 	transition: var(--transition-background-border);
 }
 
-.public-footer-grid {
-	display: grid;
-	grid-template-columns: minmax(0, 2fr) repeat(2, minmax(160px, 0.7fr));
-	gap: var(--space-12);
-}
-
-.public-footer-grid > div {
-	display: grid;
-	align-content: start;
-	gap: var(--space-3);
-}
-
 .public-footer-brand p {
 	max-width: 480px;
 	margin: 0;
 	color: var(--color-text-secondary);
 	line-height: var(--line-height-relaxed);
-}
-
-.public-footer-grid a {
-	color: var(--color-text-secondary);
 }
 
 .public-footer-bottom {
@@ -642,8 +626,7 @@ body,
 	.feature-grid-4,
 	.marketplace-card-grid,
 	.pricing-grid,
-	.resource-grid,
-	.public-footer-grid {
+	.resource-grid {
 		grid-template-columns: 1fr;
 	}
 
@@ -1924,15 +1907,6 @@ body,
 	padding-top: var(--space-12);
 }
 
-.public-footer-topline {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-8);
-	border-bottom: 1px solid var(--color-border-subtle);
-	padding-bottom: var(--space-10);
-}
-
 .public-footer-brand {
 	display: grid;
 	max-width: 42rem;
@@ -1953,41 +1927,6 @@ body,
 	height: 2.4rem;
 }
 
-.public-footer-grid {
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: var(--space-8);
-	padding-top: var(--space-10);
-}
-
-.public-footer-grid > div {
-	gap: var(--space-2);
-}
-
-.public-footer-grid > div > strong {
-	margin-bottom: var(--space-2);
-	color: var(--color-text-primary);
-}
-
-.public-footer-grid a {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: var(--space-3);
-	min-height: 2.25rem;
-	color: var(--color-text-secondary);
-	transition: var(--transition-color);
-}
-
-.public-footer-grid a:hover {
-	color: var(--color-brand-primary);
-}
-
-.public-footer-grid a small {
-	color: var(--color-text-muted);
-	font-size: var(--font-size-micro);
-	white-space: nowrap;
-}
-
 .public-footer-bottom {
 	margin-top: var(--space-8);
 }
@@ -2000,36 +1939,12 @@ body,
 	.public-mobile-menu {
 		display: none;
 	}
-
-	.public-footer-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
 }
 
 @media (max-width: 720px) {
-	.public-footer-topline,
 	.public-footer-bottom {
 		align-items: flex-start;
 		flex-direction: column;
-	}
-
-	.public-footer-topline .button {
-		width: 100%;
-	}
-
-	.public-footer-grid {
-		grid-template-columns: 1fr;
-		gap: var(--space-6);
-	}
-
-	.public-footer-grid > div {
-		padding-bottom: var(--space-5);
-		border-bottom: 1px solid var(--color-border-subtle);
-	}
-
-	.public-footer-grid > div:last-child {
-		padding-bottom: 0;
-		border-bottom: 0;
 	}
 
 	.faq-item summary {
