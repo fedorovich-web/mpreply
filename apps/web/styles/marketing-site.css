@@ -12,7 +12,6 @@
 	--color-border-strong: #bfd6f3;
 	--color-brand-primary: #2563eb;
 	--color-brand-primary-hover: #1d4ed8;
-	--color-brand-primary-active: #1e40af;
 	--color-brand-accent: #0ea5e9;
 	--color-brand-text-on-soft: #1d4ed8;
 	--color-brand-soft: #eff6ff;
@@ -30,7 +29,6 @@
 	--gradient-public-cta: linear-gradient(115deg, #1e40af 0%, #2563eb 52%, #0ea5e9 100%);
 	--public-section-spacing: clamp(6rem, 10vw, 9rem);
 	--shadow-public-card: 0 24px 60px rgb(26 73 145 / 10%);
-	--shadow-public-panel: 0 32px 90px rgb(26 73 145 / 12%);
 	--shadow-public-cta: 0 30px 72px rgb(30 64 175 / 20%);
 	--shadow-public-button: 0 10px 24px rgb(37 99 235 / 20%);
 	--shadow-public-button-hover: 0 14px 30px rgb(37 99 235 / 24%);
