@@ -26,6 +26,8 @@ describe("marketing site foundation", () => {
       "theme-toggle",
       "button-ghost",
       "public-brand-copy small",
+      ".public-root .public-nav a::after",
+      ".public-root .public-footer-logo .public-brand-mark",
     ]) {
       expect(marketingCss).not.toContain(retiredSelector);
     }
