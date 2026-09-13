@@ -8,13 +8,12 @@ const marketplacesPage = readFileSync(join(root, "app/marketplaces/page.tsx"), "
 const marketplaceLanding = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
 
 describe("marketplace public configuration", () => {
-  it("keeps readiness as one shared product truth instead of per-marketplace duplicate state", () => {
+  it("derives readiness from one shared product truth instead of per-marketplace duplicate state", () => {
     expect(siteConfig).toContain('export const marketplaceStatusLabel = "Интеграция готова"');
+    expect(siteConfig.match(/Интеграция готова/g)).toHaveLength(1);
     expect(siteConfig).not.toContain('status: "supported"');
-    expect(siteConfig).not.toContain("statusLabel:");
-    expect(marketplacesPage).toContain("marketplaceStatusLabel");
-    expect(marketplaceLanding).toContain("marketplaceStatusLabel");
-    expect(marketplacesPage).not.toContain("marketplace.statusLabel");
-    expect(marketplaceLanding).not.toContain("marketplace.statusLabel");
+    expect(siteConfig).toContain("statusLabel: marketplaceStatusLabel");
+    expect(marketplacesPage).toContain("marketplace.statusLabel");
+    expect(marketplaceLanding).toContain("marketplace.statusLabel");
   });
 });
