@@ -11,7 +11,6 @@ const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const heroAssetPath = join(root, "public/images/mpreply-hero.webp");
 const heroArtworkCssPath = join(root, "styles/homepage-hero-artwork.css");
-const heroArtworkCss = existsSync(heroArtworkCssPath) ? readFileSync(heroArtworkCssPath, "utf8") : "";
 const fidelityCssPath = join(root, "styles/homepage-fidelity.css");
 const globalsCss = readFileSync(join(root, "styles/globals.css"), "utf8");
 const marketingCssPath = join(root, "styles/marketing-site.css");
@@ -66,7 +65,7 @@ describe("public homepage redesign contract", () => {
     expect(page).toContain("homepage-cta-scene");
   });
 
-  it("keeps homepage selectors owned by the homepage layers only", () => {
+  it("keeps homepage selectors owned by the homepage stylesheet only", () => {
     for (const source of [globalsCss, marketingPagesCss, marketingCss, publicSiteCss]) {
       expect(source).not.toContain(".homepage-");
     }
@@ -81,7 +80,7 @@ describe("public homepage redesign contract", () => {
       "homepage-hero-draft",
     ];
     for (const selector of legacyHeroSelectors) {
-      for (const source of [approvedCss, heroArtworkCss, globalsCss, marketingCss, marketingPagesCss, publicSiteCss]) {
+      for (const source of [approvedCss, globalsCss, marketingCss, marketingPagesCss, publicSiteCss]) {
         expect(source).not.toContain(selector);
       }
     }
@@ -116,9 +115,11 @@ describe("public homepage redesign contract", () => {
     }
   });
 
-  it("keeps final homepage geometry in the approved layer without a fidelity override file", () => {
+  it("keeps final homepage geometry in the approved layer without override stylesheets", () => {
     expect(existsSync(fidelityCssPath)).toBe(false);
+    expect(existsSync(heroArtworkCssPath)).toBe(false);
     expect(layout).not.toContain('import "../styles/homepage-fidelity.css"');
+    expect(layout).not.toContain('import "../styles/homepage-hero-artwork.css"');
     expect(approvedCss).toContain("--container-max-width: 1240px");
     expect(approvedCss).toContain("grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr)");
     expect(approvedCss).toContain("transform: scale(1.065)");
@@ -126,17 +127,15 @@ describe("public homepage redesign contract", () => {
     expect(approvedCss).toContain("grid-template-columns: minmax(0, 1.18fr) minmax(24rem, 0.82fr)");
   });
 
-  it("uses the approved blue system and a scoped hero artwork layer", () => {
+  it("uses the approved blue system with hero artwork owned by the approved stylesheet", () => {
     expect(marketingCss).toContain(".public-root");
     expect(marketingCss).toContain("--color-brand-primary: #2563eb");
     expect(marketingCss).toContain("--color-brand-accent: #0ea5e9");
     expect(approvedCss).toContain("--homepage-section-pad");
     expect(approvedCss).toContain(".homepage-horizontal-process");
     expect(approvedCss).toContain(".homepage-hero-scene");
+    expect(approvedCss).toContain(".homepage-hero-image");
     expect(approvedCss).toContain(".homepage-cta-scene");
-    expect(layout).toContain('import "../styles/homepage-hero-artwork.css"');
-    expect(heroArtworkCss).toContain(".homepage-hero-image");
-    expect(heroArtworkCss).toContain("@media (max-width: 720px)");
-    expect(heroArtworkCss).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+    expect(approvedCss).toContain("@media (max-width: 720px)");
   });
 });
