@@ -30,6 +30,8 @@ type NavGroup = {
   items: NavItem[];
 };
 
+const focusableSelector = 'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 const navGroups: NavGroup[] = [
   {
     id: "work",
@@ -138,18 +140,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    sidebarRef.current?.querySelector<HTMLElement>("a[href], button:not([disabled]), select")?.focus();
+    sidebarRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setIsOpen(false);
-      window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+        return;
+      }
+
+      if (event.key !== "Tab" || !sidebarRef.current) return;
+      const focusableElements = Array.from(sidebarRef.current.querySelectorAll<HTMLElement>(focusableSelector))
+        .filter((element) => element.offsetParent !== null);
+      const firstFocusable = focusableElements[0];
+      const lastFocusable = focusableElements.at(-1);
+      if (!firstFocusable || !lastFocusable) return;
+
+      if (event.shiftKey && document.activeElement === firstFocusable) {
+        event.preventDefault();
+        lastFocusable.focus();
+      } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+        event.preventDefault();
+        firstFocusable.focus();
+      }
     };
 
-    window.addEventListener("keydown", handleEscape);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
