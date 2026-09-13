@@ -69,6 +69,7 @@ function mockWorkspace(role: "owner" | "admin" | "manager" | "viewer") {
     setActiveOrganizationId: vi.fn(),
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
+    logoutError: null,
   });
 }
 
