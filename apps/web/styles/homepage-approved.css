@@ -647,6 +647,9 @@
 /* AI context cards */
 .homepage-models-section {
 	background: #fff;
+}
+
+.public-root .homepage-models-section {
 	padding-top: 3.85rem;
 	padding-bottom: 4.15rem;
 }
@@ -730,6 +733,9 @@
 /* Process */
 .homepage-approved-process {
 	background: #fff;
+}
+
+.public-root .homepage-approved-process {
 	padding-top: 3.9rem;
 	padding-bottom: 4.35rem;
 }
@@ -1014,6 +1020,9 @@
 /* Results */
 .homepage-results-section {
 	background: linear-gradient(180deg, #f8fcff 0%, #f4f9ff 100%);
+}
+
+.public-root .homepage-results-section {
 	padding-top: 4rem;
 	padding-bottom: 4rem;
 }
@@ -1069,6 +1078,9 @@
 /* CTA */
 .homepage-approved-final-cta {
 	background: #fff;
+}
+
+.public-root .homepage-approved-final-cta {
 	padding-top: 4.2rem;
 	padding-bottom: 4.35rem;
 }
