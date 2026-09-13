@@ -92,6 +92,10 @@ describe("public CSS legacy contract", () => {
       ".public-brand small",
       ".public-header-actions .button-ghost",
       ".public-header-actions .button {",
+      ".button-ghost {",
+      ".button-ghost:hover",
+      ".public-nav a[aria-current='page']::after",
+      ".public-footer-logo .public-brand-mark",
     ]) {
       expect(publicSiteCss).not.toContain(selector);
     }
