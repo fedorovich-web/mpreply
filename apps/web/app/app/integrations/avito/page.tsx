@@ -4,8 +4,8 @@ import { MarketplaceIntegrationWorkspace } from "../../../../components/integrat
 
 export default function AvitoIntegrationPage() {
   return (
-    <section className="app-page app-page-wide">
-      <header className="app-header app-header-row">
+    <section className="app-page app-page-wide marketplace-integration-page">
+      <header className="app-header app-header-row marketplace-integration-header">
         <div>
           <p className="eyebrow">Авито</p>
           <h1>Аккаунты Авито и синхронизация</h1>
