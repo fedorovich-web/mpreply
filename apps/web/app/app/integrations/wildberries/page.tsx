@@ -4,8 +4,8 @@ import { WildberriesIntegrationWorkspace } from "../../../../components/integrat
 
 export default function WildberriesIntegrationPage() {
   return (
-    <section className="app-page app-page-wide wildberries-integration-page">
-      <header className="app-header app-header-row wildberries-integration-header">
+    <section className="app-page app-page-wide marketplace-integration-page">
+      <header className="app-header app-header-row marketplace-integration-header">
         <div>
           <p className="eyebrow">Wildberries</p>
           <h1>Кабинеты Wildberries и синхронизация</h1>
