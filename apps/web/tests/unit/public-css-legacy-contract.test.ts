@@ -101,6 +101,21 @@ describe("public CSS legacy contract", () => {
     }
   });
 
+  it("does not keep declarations that are immediately superseded in the same public stylesheet", () => {
+    expect(publicSiteCss).not.toMatch(
+      /\.public-footer-bottom\s*\{[^}]*margin-top:\s*var\(--space-12\)/,
+    );
+    expect(publicSiteCss).not.toMatch(
+      /\.product-console-head,\s*\.product-console-columns,\s*\.product-console-row\s*\{\s*min-width:\s*44rem;/,
+    );
+    expect(publicSiteCss).not.toMatch(
+      /@media \(max-width: 480px\)\s*\{\s*\.public-subhero-copy h1\s*\{/,
+    );
+    expect(publicSiteCss).not.toContain(
+      ".public-footer-bottom {\n\t\talign-items: flex-start;\n\t\tflex-direction: column;\n\t}",
+    );
+  });
+
   it("keeps shared header breakpoint ownership out of homepage styles", () => {
     expect(publicSiteCss).toMatch(
       /@media \(max-width: 1040px\)[\s\S]*?\.public-header-inner\s*\{[^}]*grid-template-columns:\s*1fr auto;[^}]*\}[\s\S]*?\.public-nav,\s*\.public-header-actions\s*\{[^}]*display:\s*none;[^}]*\}[\s\S]*?\.public-mobile-navigation\s*\{[^}]*display:\s*block;/,
