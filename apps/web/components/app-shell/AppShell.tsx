@@ -139,6 +139,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!isOpen) return;
 
     const previousOverflow = document.body.style.overflow;
+    const desktopMedia = window.matchMedia("(min-width: 861px)");
     document.body.style.overflow = "hidden";
     sidebarRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
 
@@ -153,7 +154,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const focusableElements = Array.from(sidebarRef.current.querySelectorAll<HTMLElement>(focusableSelector))
         .filter((element) => element.offsetParent !== null);
       const firstFocusable = focusableElements[0];
-      const lastFocusable = focusableElements.at(-1);
+      const lastFocusable = focusableElements[focusableElements.length - 1];
       if (!firstFocusable || !lastFocusable) return;
 
       if (event.shiftKey && document.activeElement === firstFocusable) {
@@ -165,10 +166,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
     };
 
+    const handleDesktopLayout = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsOpen(false);
+    };
+
     window.addEventListener("keydown", handleKeyDown);
+    desktopMedia.addEventListener("change", handleDesktopLayout);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
+      desktopMedia.removeEventListener("change", handleDesktopLayout);
     };
   }, [isOpen]);
 
