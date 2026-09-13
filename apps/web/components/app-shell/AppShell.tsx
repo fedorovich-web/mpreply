@@ -126,6 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setActiveOrganizationId,
     logout,
     isLoggingOut,
+    logoutError,
   } = useWorkspace();
   const visibleNavGroups = user.is_superadmin ? [...navGroups, adminNavGroup] : navGroups;
   const activeNavItem = visibleNavGroups
@@ -257,14 +258,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
             </div>
 
-            <button
-              className="button button-secondary button-compact"
-              disabled={isLoggingOut}
-              onClick={() => void logout()}
-              type="button"
-            >
-              {isLoggingOut ? "Выходим..." : "Выйти"}
-            </button>
+            <div className="app-logout-control">
+              <button
+                className="button button-secondary button-compact"
+                disabled={isLoggingOut}
+                onClick={logout}
+                type="button"
+              >
+                {isLoggingOut ? "Выходим..." : "Выйти"}
+              </button>
+              {logoutError ? <span className="app-logout-error" role="alert">{logoutError}</span> : null}
+            </div>
           </div>
         </header>
 
