@@ -35,6 +35,10 @@ describe("public shell cleanup", () => {
     expect(shell).toContain('<Link href="/help#faq">FAQ</Link>');
   });
 
+  it("does not keep unreachable hash handling in route-only header navigation", () => {
+    expect(header).not.toContain('href.includes("#")');
+  });
+
   it("does not retain selectors for the retired footer markup", () => {
     expect(shell).not.toContain("public-footer-grid");
     expect(shell).not.toContain("public-footer-topline");
