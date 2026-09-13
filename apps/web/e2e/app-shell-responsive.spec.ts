@@ -29,7 +29,7 @@ test("authenticated desktop shell exposes the approved product navigation", asyn
   await expect(page.getByText("Seller Group", { exact: true })).toBeVisible();
 });
 
-test("authenticated mobile shell opens and closes without horizontal overflow", async ({ page }) => {
+test("authenticated mobile shell manages drawer focus, backdrop and overflow", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockIntegrationsApi(page, "owner");
   await page.goto("/app/integrations", { waitUntil: "networkidle" });
@@ -40,14 +40,21 @@ test("authenticated mobile shell opens and closes without horizontal overflow", 
 
   await openMenu.click();
 
-  const closeMenu = page.getByRole("button", { name: "Закрыть меню кабинета" });
-  await expect(closeMenu).toHaveAttribute("aria-expanded", "true");
+  const sidebar = page.locator(".app-sidebar");
+  await expect(sidebar).toHaveClass(/app-sidebar-open/);
+  await expect(page.getByRole("button", { name: "Закрыть боковое меню" })).toBeVisible();
+  await expect(sidebar.locator("a").first()).toBeFocused();
   await expect(page.getByRole("link", { name: "Обращения", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "На проверке", exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
 
   const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(hasHorizontalOverflow).toBe(false);
 
-  await closeMenu.click();
-  await expect(page.getByRole("button", { name: "Открыть меню кабинета" })).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Escape");
+
+  await expect(sidebar).not.toHaveClass(/app-sidebar-open/);
+  await expect(openMenu).toHaveAttribute("aria-expanded", "false");
+  await expect(openMenu).toBeFocused();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
 });
