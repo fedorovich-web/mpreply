@@ -464,8 +464,6 @@ body,
 .demo-flow-row h3,
 .pricing-model-item h3,
 .audience-pricing-row h3,
-.contact-path h2,
-.resource-note h2,
 .marketplace-readiness-row h3 {
 	margin: 0;
 	letter-spacing: var(--letter-spacing-subheading);
@@ -641,13 +639,6 @@ body,
 	text-align: center;
 }
 
-.marketplace-monogram-large {
-	min-width: 4.75rem;
-	min-height: 4.75rem;
-	padding: var(--space-2);
-	font-size: var(--font-size-md);
-}
-
 .marketplace-readiness-action {
 	white-space: nowrap;
 }
@@ -706,7 +697,7 @@ body,
 
 .audience-pricing-row {
 	display: grid;
-	grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1fr) minmax(12rem, 0.55fr);
+	grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1.1fr) minmax(12rem, 0.55fr);
 	gap: var(--space-8);
 	align-items: center;
 	padding: var(--space-6) 0;
@@ -857,22 +848,8 @@ body,
 	border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.resource-note h2 {
-	font-size: var(--font-size-h3);
-}
-
 .resource-note p {
 	margin: var(--space-3) 0 0;
-}
-
-.resource-note blockquote {
-	margin: 0;
-	padding-left: var(--space-5);
-	border-left: 0.24rem solid var(--color-brand-accent);
-	color: var(--color-text-primary);
-	font-size: var(--font-size-lg);
-	font-weight: var(--font-weight-medium);
-	line-height: var(--line-height-snug);
 }
 
 .contact-paths {
@@ -887,10 +864,6 @@ body,
 	min-height: 9rem;
 	padding: var(--space-6) 0;
 	border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.contact-path h2 {
-	font-size: var(--font-size-h3);
 }
 
 .contact-path p {
@@ -931,8 +904,7 @@ body,
 		grid-template-columns: 3rem minmax(0, 1fr);
 	}
 
-	.capability-points,
-	.resource-note blockquote {
+	.capability-points {
 		grid-column: 2;
 	}
 
@@ -1008,8 +980,7 @@ body,
 		gap: var(--space-4);
 	}
 
-	.capability-points,
-	.resource-note blockquote {
+	.capability-points {
 		grid-column: auto;
 	}
 
@@ -1019,10 +990,6 @@ body,
 	.demo-flow-row > span,
 	.contact-path > span {
 		margin-bottom: var(--space-1);
-	}
-
-	.resource-note blockquote {
-		margin-top: var(--space-2);
 	}
 
 	.marketplace-readiness-row {
