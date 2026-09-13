@@ -5,8 +5,6 @@ export type MarketplaceConfig = {
   name: string;
   shortName: string;
   path: string;
-  status: "supported";
-  statusLabel: string;
   summary: string;
 };
 
@@ -28,14 +26,14 @@ export const siteConfig = {
   ],
 } as const;
 
+export const marketplaceStatusLabel = "Интеграция готова";
+
 export const marketplaces: MarketplaceConfig[] = [
   {
     key: "wildberries",
     name: "Wildberries",
     shortName: "WB",
     path: "/marketplaces/wildberries",
-    status: "supported",
-    statusLabel: "Интеграция готова",
     summary:
       "Получение обращений, подготовка ответов, контроль перед отправкой и автоматизация повторяющихся сценариев через единый рабочий процесс.",
   },
@@ -44,8 +42,6 @@ export const marketplaces: MarketplaceConfig[] = [
     name: "Ozon",
     shortName: "Ozon",
     path: "/marketplaces/ozon",
-    status: "supported",
-    statusLabel: "Интеграция готова",
     summary:
       "Работа с обращениями покупателей Ozon в общей очереди MPReply: контекст, ИИ-ответ, проверка правил и отправка через интеграцию.",
   },
@@ -54,8 +50,6 @@ export const marketplaces: MarketplaceConfig[] = [
     name: "Яндекс Маркет",
     shortName: "Яндекс Маркет",
     path: "/marketplaces/yandex-market",
-    status: "supported",
-    statusLabel: "Интеграция готова",
     summary:
       "Обращения Яндекс Маркета приводятся к единому формату, чтобы команда работала с ними по тем же правилам, что и с другими площадками.",
   },
@@ -64,8 +58,6 @@ export const marketplaces: MarketplaceConfig[] = [
     name: "Авито",
     shortName: "Авито",
     path: "/marketplaces/avito",
-    status: "supported",
-    statusLabel: "Интеграция готова",
     summary:
       "Интеграция Авито подключена к общей модели обработки: единая очередь, ИИ-подготовка ответа, правила, статусы и история действий.",
   },
