@@ -416,12 +416,6 @@
 	background: var(--color-bg-surface);
 }
 
-.public-root .public-status-supported {
-	border-color: var(--color-border-strong);
-	background: var(--color-bg-brand-soft);
-	color: var(--color-brand-primary);
-}
-
 .marketplace-flow-layout,
 .marketplace-detail-story {
 	display: grid;
