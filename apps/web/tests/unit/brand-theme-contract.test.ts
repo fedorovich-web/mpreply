@@ -32,6 +32,13 @@ describe("shared MPReply brand theme", () => {
     expect(nativeTheme).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
 
+  it("uses the MPReply storage key while preserving one-time Respio theme migration", () => {
+    expect(layout).toContain('localStorage.getItem("mpreply-theme")');
+    expect(layout).toContain('localStorage.getItem("respio-theme")');
+    expect(layout).toContain('localStorage.setItem("mpreply-theme", theme)');
+    expect(layout).toContain('localStorage.removeItem("respio-theme")');
+  });
+
   it("centralizes repeated card and public rhythm primitives", () => {
     expect(brandTheme).toContain("--shadow-card:");
     expect(brandTheme).toContain("--radius-card:");
