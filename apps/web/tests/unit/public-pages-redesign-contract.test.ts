@@ -140,9 +140,17 @@ describe("public page redesign", () => {
     expect(authCss).toContain(".auth-preview-queue");
   });
 
-  it("sends marketplace-connect registration intent directly to integrations", () => {
+  it("sends marketplace-connect auth intent directly to integrations", () => {
     expect(authForm).toContain('intent === "connect-marketplace"');
     expect(authForm).toContain('"/app/integrations"');
+    expect(authForm).not.toContain('mode === "register" && intent === "connect-marketplace"');
+  });
+
+  it("preserves safe next and marketplace intent when switching auth mode", () => {
+    expect(authForm).toContain("const alternateAuthHref");
+    expect(authForm).toContain('query.set("next", requestedNext)');
+    expect(authForm).toContain('query.set("intent", "connect-marketplace")');
+    expect(authForm).toContain("href={alternateAuthHref}");
   });
 
   it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
