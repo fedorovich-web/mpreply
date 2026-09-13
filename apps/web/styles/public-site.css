@@ -106,46 +106,12 @@
 	color: var(--color-brand-text-on-soft);
 }
 
-.public-hero {
-	background: var(--gradient-public-hero);
-	padding: var(--space-28) 0 var(--space-24);
-}
-
-.public-hero-compact {
-	padding: var(--space-20) 0;
-}
-
-.public-hero-grid {
-	display: grid;
-	grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
-	align-items: center;
-	gap: var(--space-16);
-}
-
-.public-hero-copy {
-	display: grid;
-	gap: var(--space-6);
-	align-content: start;
-}
-
-.public-hero-copy-centered {
-	max-width: var(--container-content-width);
-	margin-inline: auto;
-	text-align: center;
-}
-
-.public-hero-copy h1,
 .legal-hero h1 {
 	margin: 0;
-	font-size: var(--font-size-public-hero);
+	font-size: var(--font-size-public-hero-compact);
 	line-height: var(--line-height-display);
 	letter-spacing: var(--letter-spacing-display);
 	text-wrap: balance;
-}
-
-.public-hero-compact .public-hero-copy h1,
-.legal-hero h1 {
-	font-size: var(--font-size-public-hero-compact);
 }
 
 .public-lead {
@@ -156,17 +122,6 @@
 	line-height: var(--line-height-relaxed);
 }
 
-.public-hero-copy-centered .public-lead {
-	margin-inline: auto;
-}
-
-.public-trust-row {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-2);
-}
-
-.public-trust-row span,
 .public-status {
 	display: inline-flex;
 	width: fit-content;
@@ -220,91 +175,11 @@
 
 .section-heading p,
 .public-copy-muted,
-.feature-card p,
-.marketplace-card p,
-.pricing-card p,
-.resource-card p,
 .faq-item p,
-.public-note-card p,
 .legal-document p,
 .legal-document li {
 	color: var(--color-text-secondary);
 	line-height: var(--line-height-relaxed);
-}
-
-.feature-grid,
-.marketplace-card-grid,
-.pricing-grid,
-.resource-grid {
-	display: grid;
-	gap: var(--space-4);
-}
-
-.feature-grid-3 {
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.feature-grid-4,
-.pricing-grid {
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.marketplace-card-grid,
-.resource-grid {
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.feature-card,
-.marketplace-card,
-.pricing-card,
-.resource-card,
-.public-note-card {
-	display: grid;
-	align-content: start;
-	gap: var(--space-4);
-	border: 1px solid var(--color-border-subtle);
-	border-radius: var(--radius-xl);
-	background: var(--color-bg-surface);
-	padding: var(--space-6);
-	box-shadow: var(--shadow-xs);
-}
-
-.feature-card-emphasis {
-	background: var(--gradient-public-hero);
-	box-shadow: var(--shadow-public-card);
-}
-
-.feature-card h2,
-.feature-card h3,
-.marketplace-card h2,
-.pricing-card h2,
-.resource-card h2,
-.faq-item h3,
-.public-note-card strong {
-	margin: 0;
-}
-
-.feature-card p,
-.marketplace-card p,
-.pricing-card p,
-.resource-card p,
-.faq-item p,
-.public-note-card p {
-	margin: 0;
-}
-
-.feature-title {
-	font-size: var(--font-size-xl);
-}
-
-.feature-number {
-	color: var(--color-brand-primary);
-	font-size: var(--font-size-sm);
-	font-weight: var(--font-weight-bold);
-}
-
-.section-action {
-	margin-top: var(--space-8);
 }
 
 .public-two-column {
@@ -425,22 +300,6 @@
 	color: var(--color-focus-ring);
 }
 
-.public-note-card {
-	box-shadow: var(--shadow-public-card);
-}
-
-.marketplace-card-topline {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-3);
-}
-
-.marketplace-logo-text {
-	font-size: var(--font-size-xl);
-	font-weight: var(--font-weight-bold);
-}
-
 .text-link,
 .contact-email {
 	width: fit-content;
@@ -448,19 +307,12 @@
 	font-weight: var(--font-weight-semibold);
 }
 
-.pricing-card ul,
 .legal-document ul {
 	display: grid;
 	gap: var(--space-2);
 	margin: 0;
 	padding-left: var(--space-5);
 	color: var(--color-text-secondary);
-}
-
-.pricing-state,
-.resource-state {
-	color: var(--color-brand-primary);
-	font-size: var(--font-size-sm);
 }
 
 .demo-step {
@@ -591,14 +443,8 @@ body,
 		padding-bottom: var(--space-3);
 	}
 
-	.public-hero-grid,
 	.public-two-column {
 		grid-template-columns: 1fr;
-	}
-
-	.feature-grid-4,
-	.pricing-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
@@ -612,8 +458,6 @@ body,
 		padding-inline: var(--space-4);
 	}
 
-	.public-hero,
-	.public-hero-compact,
 	.legal-hero {
 		padding: var(--space-16) 0;
 	}
@@ -622,22 +466,10 @@ body,
 		padding: var(--space-16) 0;
 	}
 
-	.feature-grid-3,
-	.feature-grid-4,
-	.marketplace-card-grid,
-	.pricing-grid,
-	.resource-grid {
-		grid-template-columns: 1fr;
-	}
-
 	.public-cta-card,
 	.public-footer-bottom {
 		align-items: flex-start;
 		flex-direction: column;
-	}
-
-	.public-trust-row {
-		display: grid;
 	}
 }
 
