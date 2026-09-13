@@ -1,6 +1,6 @@
 export type MarketplaceKey = "wildberries" | "ozon" | "yandex-market" | "avito";
 
-export const marketplaceStatusLabel = "Интеграция готова";
+const marketplaceStatusLabel = "Интеграция готова";
 
 export type MarketplaceConfig = {
   key: MarketplaceKey;
