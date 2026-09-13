@@ -282,7 +282,7 @@
 	padding: 0.45rem 0.25rem;
 }
 
-.marketplace-unified-row:first-of-type {
+.marketplace-unified-feed-head + .marketplace-unified-row {
 	border-top: 0;
 	border-radius: 0.6rem;
 	background: #fbfdff;
