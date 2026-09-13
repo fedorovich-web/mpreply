@@ -86,7 +86,6 @@ export default function FeaturesPage() {
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Один операционный контур</p>
             <h2>Четыре слоя между входящим обращением и опубликованным ответом</h2>
             <p>Каждый слой отвечает за свою задачу. Marketplace-specific логика не смешивается с AI, правилами и отправкой.</p>
           </div>
@@ -111,7 +110,6 @@ export default function FeaturesPage() {
       <section className="public-section public-section-muted">
         <div className="public-container public-two-column public-two-column-feature">
           <div>
-            <p className="eyebrow">Рабочее место менеджера</p>
             <h2>Видно не только сообщение, но и почему система выбрала именно это действие</h2>
             <p className="public-copy-muted">
               Для каждого обращения важны контекст, решение SafetyGate, сработавшее правило, статус отправки и история попыток. Это превращает автоматизацию из «чёрного ящика» в управляемый процесс.
@@ -132,10 +130,10 @@ export default function FeaturesPage() {
             <div className="product-console-rows">
               {consoleRows.map(([message, decision, action, status]) => (
                 <div className="product-console-row" key={message}>
-                  <strong>{message}</strong>
-                  <span>{decision}</span>
-                  <span>{action}</span>
-                  <span>{status}</span>
+                  <strong><span className="product-console-field-label">Обращение</span>{message}</strong>
+                  <span><span className="product-console-field-label">Решение</span>{decision}</span>
+                  <span><span className="product-console-field-label">Действие</span>{action}</span>
+                  <span><span className="product-console-field-label">Статус</span>{status}</span>
                 </div>
               ))}
             </div>
@@ -146,7 +144,6 @@ export default function FeaturesPage() {
       <section className="public-section">
         <div className="public-container public-two-column public-two-column-balanced">
           <div>
-            <p className="eyebrow">Auto-first, а не ручное подтверждение по умолчанию</p>
             <h2>Безопасная рутина проходит автоматически. Исключения остаются человеку.</h2>
           </div>
           <div className="public-check-list public-check-list-large">
@@ -161,7 +158,6 @@ export default function FeaturesPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Следующий шаг</p>
             <h2>Посмотрите полный путь ответа — от входящего отзыва до решения и отправки</h2>
           </div>
           <Link className="button button-primary button-on-dark" href="/demo">

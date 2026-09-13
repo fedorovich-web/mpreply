@@ -52,7 +52,6 @@ export default function MarketplacesPage() {
       <section className="public-section">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Статус на сегодня</p>
             <h2>Готовность каждой интеграции видна отдельно</h2>
             <p>Статус не зависит от того, есть ли на сайте отдельная landing page: готовой считается только проверенная реализация.</p>
           </div>
@@ -80,15 +79,13 @@ export default function MarketplacesPage() {
       <section className="public-section public-section-muted">
         <div className="public-container">
           <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Архитектурная граница</p>
             <h2>Специфика площадки остаётся внутри её адаптера</h2>
             <p>Это позволяет развивать новые интеграции без marketplace-specific хаоса в общих сервисах Respio.</p>
           </div>
 
           <div className="adapter-principles">
-            {adapterPrinciples.map(([title, text], index) => (
+            {adapterPrinciples.map(([title, text]) => (
               <article className="adapter-principle" key={title}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
                 <h3>{title}</h3>
                 <p>{text}</p>
               </article>
@@ -100,7 +97,6 @@ export default function MarketplacesPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Подключение</p>
             <h2>Выберите маркетплейс и посмотрите его фактический статус до подключения</h2>
           </div>
           <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">

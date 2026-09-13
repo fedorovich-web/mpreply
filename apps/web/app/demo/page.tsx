@@ -48,7 +48,6 @@ export default function DemoPage() {
         <div className="public-container">
           <div className="demo-decision-stage">
             <div className="demo-decision-copy">
-              <p className="eyebrow">Результат для этого сценария</p>
               <h2>SafetyGate остановил автоотправку из-за недостатка подтверждённого контекста</h2>
               <p>Ответ не публикуется вслепую. Обращение получает статус ручной проверки, а менеджер видит причину решения.</p>
             </div>
@@ -74,7 +73,6 @@ export default function DemoPage() {
       <section className="public-section public-section-muted">
         <div className="public-container public-two-column public-two-column-balanced">
           <div>
-            <p className="eyebrow">Другие возможные исходы</p>
             <h2>Один pipeline — разные действия в зависимости от риска и правил</h2>
           </div>
           <div className="decision-outcomes">
@@ -97,7 +95,6 @@ export default function DemoPage() {
       <section className="public-section public-cta-section">
         <div className="public-container public-cta-card">
           <div>
-            <p className="eyebrow">Продолжить</p>
             <h2>Посмотрите все возможности Respio или перейдите к подключению маркетплейса</h2>
           </div>
           <div className="cta-actions-on-dark">
