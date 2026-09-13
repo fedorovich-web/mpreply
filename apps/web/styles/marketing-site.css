@@ -103,20 +103,9 @@
 	background: #f8fbff;
 }
 
-.public-root .public-footer-topline,
-.public-root .public-footer-grid,
-.public-root .public-footer-bottom {
-	color: var(--color-text-primary);
-}
-
 .public-root .public-footer-brand p,
-.public-root .public-footer-grid a,
 .public-root .public-footer-bottom {
 	color: var(--color-text-secondary);
-}
-
-.public-root .public-footer-grid a:hover {
-	color: var(--color-brand-primary);
 }
 
 .public-root .public-footer-logo .public-brand-mark {
