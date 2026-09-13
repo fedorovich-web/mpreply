@@ -13,6 +13,10 @@
 	padding: 0.9rem 0.8rem 0.9rem 0.95rem;
 }
 
+.app-sidebar-backdrop {
+	display: none;
+}
+
 .app-sidebar-brand {
 	min-height: 3.8rem;
 	border-bottom: 1px solid var(--color-border-subtle);
@@ -283,6 +287,17 @@
 		width: min(86vw, 17rem);
 		padding: 0.9rem;
 		box-shadow: var(--shadow-lg);
+	}
+
+	.app-sidebar-backdrop {
+		position: fixed;
+		z-index: 29;
+		inset: 0;
+		display: block;
+		border: 0;
+		background: var(--color-overlay-dark);
+		padding: 0;
+		cursor: default;
 	}
 
 	.app-sidebar-brand {
