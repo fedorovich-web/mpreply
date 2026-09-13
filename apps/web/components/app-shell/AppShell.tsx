@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
@@ -117,6 +117,8 @@ function NavIcon({ name }: { name: NavIconName }) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   const {
     user,
     organizations,
@@ -130,11 +132,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     .flatMap((group) => group.items)
     .find((item) => matchesRoute(pathname, item.href));
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    sidebarRef.current?.querySelector<HTMLElement>("a[href], button:not([disabled]), select")?.focus();
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsOpen(false);
+      window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
+
+  const closeDrawer = () => setIsOpen(false);
+  const closeDrawerAndRestoreFocus = () => {
+    setIsOpen(false);
+    window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+  };
+
   return (
     <div className="app-shell">
-      <aside className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
+      <aside ref={sidebarRef} className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="Панель MPReply" onClick={() => setIsOpen(false)}>
+          <Link href="/app/dashboard" className="app-logo" aria-label="Панель MPReply" onClick={closeDrawer}>
             <BrandMark />
             <span>
               <strong>MPReply</strong>
@@ -156,7 +184,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       className={isActive ? "app-nav-link app-nav-link-active" : "app-nav-link"}
                       href={item.href}
                       key={item.href}
-                      onClick={() => setIsOpen(false)}
+                      onClick={closeDrawer}
                     >
                       <span className="app-nav-icon"><NavIcon name={item.icon} /></span>
                       <span className="app-nav-label">{item.label}</span>
@@ -169,16 +197,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="app-sidebar-footer">
-          <Link className="app-help-link" href="/help" onClick={() => setIsOpen(false)}>
+          <Link className="app-help-link" href="/help" onClick={closeDrawer}>
             <span className="app-nav-icon"><NavIcon name="help" /></span>
             <span><strong>Помощь</strong><small>База знаний и поддержка</small></span>
           </Link>
         </div>
       </aside>
 
+      {isOpen ? (
+        <button
+          aria-label="Закрыть боковое меню"
+          className="app-sidebar-backdrop"
+          onClick={closeDrawerAndRestoreFocus}
+          type="button"
+        />
+      ) : null}
+
       <div className="app-workspace">
         <header className="app-topbar">
           <button
+            ref={menuTriggerRef}
             aria-expanded={isOpen}
             aria-label={isOpen ? "Закрыть меню кабинета" : "Открыть меню кабинета"}
             className="app-menu-button"
