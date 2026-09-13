@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { siteConfig } from "../../lib/site-config";
 
@@ -23,17 +23,35 @@ function BrandMark() {
 export function PublicHeader() {
   const pathname = usePathname();
   const menuId = useId();
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuPanelRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (!menuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    menuPanelRef.current?.querySelector<HTMLElement>("a[href], button:not([disabled])")?.focus();
+
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
     };
+
     window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, []);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [menuOpen]);
 
   const closeMenu = () => setMenuOpen(false);
+  const closeMenuAndRestoreFocus = () => {
+    setMenuOpen(false);
+    window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+  };
 
   return (
     <header className="public-header">
@@ -63,6 +81,7 @@ export function PublicHeader() {
 
         <div className="public-mobile-navigation">
           <button
+            ref={menuTriggerRef}
             className="public-mobile-menu-trigger"
             type="button"
             aria-expanded={menuOpen}
@@ -75,8 +94,8 @@ export function PublicHeader() {
 
           {menuOpen ? (
             <>
-              <button className="public-mobile-menu-backdrop" type="button" aria-label="Закрыть меню" onClick={closeMenu} />
-              <div className="public-mobile-menu-panel" id={menuId}>
+              <button className="public-mobile-menu-backdrop" type="button" aria-label="Закрыть меню" onClick={closeMenuAndRestoreFocus} />
+              <div className="public-mobile-menu-panel" id={menuId} ref={menuPanelRef}>
                 <nav aria-label="Мобильная навигация">
                   {siteConfig.navigation.map((item) => {
                     const active = isActiveNavigationItem(item.href, pathname);
