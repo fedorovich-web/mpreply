@@ -33,6 +33,7 @@ export function PublicHeader() {
     if (!menuOpen) return;
 
     const previousOverflow = document.body.style.overflow;
+    const desktopMedia = window.matchMedia("(min-width: 1041px)");
     document.body.style.overflow = "hidden";
     menuPanelRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
 
@@ -47,7 +48,7 @@ export function PublicHeader() {
       const focusableElements = Array.from(menuPanelRef.current.querySelectorAll<HTMLElement>(focusableSelector))
         .filter((element) => element.offsetParent !== null);
       const firstFocusable = focusableElements[0];
-      const lastFocusable = focusableElements.at(-1);
+      const lastFocusable = focusableElements[focusableElements.length - 1];
       if (!firstFocusable || !lastFocusable) return;
 
       if (event.shiftKey && document.activeElement === firstFocusable) {
@@ -59,10 +60,16 @@ export function PublicHeader() {
       }
     };
 
+    const handleDesktopLayout = (event: MediaQueryListEvent) => {
+      if (event.matches) setMenuOpen(false);
+    };
+
     window.addEventListener("keydown", handleKeyDown);
+    desktopMedia.addEventListener("change", handleDesktopLayout);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
+      desktopMedia.removeEventListener("change", handleDesktopLayout);
     };
   }, [menuOpen]);
 
