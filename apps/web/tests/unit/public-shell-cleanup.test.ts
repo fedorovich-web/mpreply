@@ -25,6 +25,11 @@ describe("public shell cleanup", () => {
     expect(shell).not.toContain(">Партнёрам<");
   });
 
+  it("renders the guaranteed support email without an unreachable null branch", () => {
+    expect(shell).toContain('href={`mailto:${siteConfig.contactEmail}`}');
+    expect(shell).not.toContain("siteConfig.contactEmail ?");
+  });
+
   it("does not retain selectors for the retired footer markup", () => {
     expect(shell).not.toContain("public-footer-grid");
     expect(shell).not.toContain("public-footer-topline");
