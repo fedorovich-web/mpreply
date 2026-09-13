@@ -4,8 +4,8 @@ import { MarketplaceIntegrationWorkspace } from "../../../../components/integrat
 
 export default function OzonIntegrationPage() {
   return (
-    <section className="app-page app-page-wide">
-      <header className="app-header app-header-row">
+    <section className="app-page app-page-wide marketplace-integration-page">
+      <header className="app-header app-header-row marketplace-integration-header">
         <div>
           <p className="eyebrow">Ozon</p>
           <h1>Кабинеты Ozon и синхронизация</h1>
