@@ -1,12 +1,11 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const shell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
 const header = readFileSync(join(root, "components/public-site/PublicHeader.tsx"), "utf8");
-const brandMarkPath = join(root, "components/public-site/PublicBrandMark.tsx");
-const brandMark = existsSync(brandMarkPath) ? readFileSync(brandMarkPath, "utf8") : "";
+const brandMark = readFileSync(join(root, "components/public-site/PublicBrandMark.tsx"), "utf8");
 const marketingCss = readFileSync(join(root, "styles/marketing-site.css"), "utf8");
 const homepageCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
 
@@ -47,7 +46,6 @@ describe("public shell cleanup", () => {
   });
 
   it("uses one shared brand-mark component in the public header and footer", () => {
-    expect(existsSync(brandMarkPath)).toBe(true);
     expect(brandMark).toContain('className="public-brand-mark"');
     expect(brandMark).toContain('className="public-brand-glyph"');
     expect(header).toContain('import { PublicBrandMark } from "./PublicBrandMark"');
