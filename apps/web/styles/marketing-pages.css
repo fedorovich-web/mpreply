@@ -308,13 +308,6 @@
 	margin-bottom: 0;
 }
 
-.public-root .integration-status-panel-supported {
-	border-color: var(--color-border-strong);
-	background:
-		radial-gradient(circle at 90% 8%, rgb(14 165 233 / 12%), transparent 11rem),
-		var(--color-bg-surface);
-}
-
 .public-root .integration-flow-row > span,
 .public-root .demo-flow-row > span,
 .public-root .capability-index,
@@ -322,28 +315,10 @@
 	color: var(--color-brand-primary);
 }
 
-.public-root .resource-intro-panel,
-.public-root .contact-channel-panel,
-.public-root .decision-preview,
-.public-root .demo-scenario-card {
-	border-color: var(--color-border-subtle);
-	background: var(--color-bg-surface);
-	box-shadow: var(--shadow-public-panel);
-}
-
-.public-root .pricing-principle-panel {
-	border-color: var(--color-transparent);
-	background: var(--color-surface-dark);
-	color: var(--color-text-on-dark);
-	box-shadow: var(--shadow-public-panel);
-}
-
-.public-root .pricing-principle-panel .panel-kicker,
 .public-root .demo-decision-copy .eyebrow {
 	color: var(--color-brand-accent);
 }
 
-.public-root .decision-preview-path strong,
 .public-root .contact-path-primary {
 	border-color: var(--color-border-strong);
 	background: var(--color-bg-brand-soft);
