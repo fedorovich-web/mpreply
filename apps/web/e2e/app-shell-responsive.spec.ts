@@ -70,6 +70,23 @@ test("authenticated mobile shell traps focus and manages drawer visibility, back
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
 });
 
+test("authenticated mobile shell keeps workspace switching available in the drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockIntegrationsApi(page, "owner", { includeSecondOrganization: true });
+  await page.goto("/app/integrations", { waitUntil: "networkidle" });
+
+  await page.getByRole("button", { name: "Открыть меню кабинета" }).click();
+  const sidebar = page.locator(".app-sidebar");
+  const workspaceSelect = sidebar.getByLabel("Выбрать организацию");
+  await expect(workspaceSelect).toBeVisible();
+  await expect(workspaceSelect.locator("option")).toHaveCount(2);
+
+  await workspaceSelect.selectOption({ label: "Second Store" });
+
+  await expect(workspaceSelect).toHaveValue("11111111-1111-4111-8111-222222222222");
+  await expect(page.locator(".app-topbar-title strong")).toHaveText("Second Store");
+});
+
 test("authenticated mobile shell releases drawer state when viewport becomes desktop", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockIntegrationsApi(page, "owner");
