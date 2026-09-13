@@ -53,6 +53,34 @@ describe("public CSS legacy contract", () => {
     }
   });
 
+  it("does not keep superseded generic panels, FAQ or legal scaffolds", () => {
+    const legacySelectors = [
+      ".decision-stack",
+      ".demo-timeline",
+      ".faq-list",
+      ".faq-item",
+      ".faq-item-icon",
+      ".demo-step",
+      ".legal-document",
+      ".contact-email",
+      ".decision-preview",
+      ".readiness-summary",
+      ".adapter-principles",
+      ".adapter-principle",
+      ".integration-status-panel",
+      ".integration-checklist",
+      ".pricing-principle-panel",
+      ".resource-intro-panel",
+      ".contact-channel-panel",
+      ".demo-scenario-card",
+      ".demo-scenario-topline",
+    ];
+
+    for (const selector of legacySelectors) {
+      expect(publicSiteCss).not.toContain(selector);
+    }
+  });
+
   it("keeps current shared public compositions available", () => {
     for (const selector of [
       ".marketplace-readiness-row-supported",
@@ -77,9 +105,14 @@ describe("public CSS legacy contract", () => {
       ".section-heading",
       ".public-two-column",
       ".public-cta-card",
+      ".legal-hero",
+      ".legal-warning",
       ".marketplace-readiness-row",
       ".integration-flow-row",
       ".demo-flow-row",
+      ".pricing-model-grid",
+      ".resource-note",
+      ".contact-path",
     ]) {
       expect(publicSiteCss).toContain(selector);
     }
