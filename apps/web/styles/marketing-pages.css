@@ -493,15 +493,6 @@
 	color: var(--color-brand-primary);
 }
 
-.public-root .homepage-marketplace-facts small,
-.public-root .homepage-feature-layout .homepage-workspace-tab,
-.public-root .homepage-model-card small,
-.public-root .homepage-model-card p,
-.public-root .homepage-horizontal-step p,
-.public-root .homepage-result-card p {
-	color: var(--color-text-muted);
-}
-
 .public-root .public-cta-card {
 	background:
 		radial-gradient(circle at 90% 5%, rgb(125 211 252 / 28%), transparent 22rem),
