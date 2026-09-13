@@ -78,7 +78,7 @@ export default function HomePage() {
     <PublicShell>
       <JsonLd data={jsonLd} />
 
-      <section className="homepage-hero homepage-approved-hero">
+      <section className="homepage-approved-hero">
         <div className="homepage-hero-decoration homepage-hero-decoration-a" aria-hidden="true" />
         <div className="homepage-hero-decoration homepage-hero-decoration-b" aria-hidden="true" />
         <div className="public-container homepage-hero-grid">
@@ -134,7 +134,7 @@ export default function HomePage() {
 
       <section className="public-section homepage-workspace-section" id="product">
         <div className="public-container homepage-feature-layout">
-          <div className="homepage-section-heading homepage-section-heading-left">
+          <div className="homepage-section-heading-left">
             <p className="homepage-kicker">Все обращения в одном окне</p>
             <h2>Отзывы, вопросы и сообщения — в едином пространстве</h2>
             <p>
@@ -148,9 +148,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-section homepage-context-section homepage-models-section">
+      <section className="public-section homepage-models-section">
         <div className="public-container homepage-models-layout">
-          <div className="homepage-section-heading homepage-section-heading-left">
+          <div className="homepage-section-heading-left">
             <p className="homepage-kicker">Сила современного ИИ</p>
             <h2>Используем лучшие нейросети для точных и естественных ответов</h2>
             <p>
@@ -170,9 +170,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-section homepage-process homepage-approved-process" id="how-it-works">
+      <section className="public-section homepage-approved-process" id="how-it-works">
         <div className="public-container">
-          <div className="homepage-section-heading homepage-section-heading-left homepage-process-heading">
+          <div className="homepage-section-heading-left homepage-process-heading">
             <p className="homepage-kicker">Простой и понятный процесс</p>
             <h2>Как это работает</h2>
             <p>Подключите маркетплейсы и начните экономить время уже с первой общей очереди.</p>
@@ -219,7 +219,7 @@ export default function HomePage() {
 
       <section className="public-section homepage-results-section">
         <div className="public-container homepage-results-layout">
-          <div className="homepage-section-heading homepage-section-heading-left homepage-results-copy">
+          <div className="homepage-section-heading-left homepage-results-copy">
             <p className="homepage-kicker">Реальные возможности продукта</p>
             <h2>Меньше рутины. Больше времени на развитие бизнеса.</h2>
             <p>
@@ -238,7 +238,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-section homepage-final-cta homepage-approved-final-cta">
+      <section className="public-section homepage-approved-final-cta">
         <div className="public-container homepage-final-cta-card">
           <div className="homepage-final-cta-copy">
             <p className="homepage-kicker">Начните сегодня</p>
