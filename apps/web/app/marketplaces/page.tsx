@@ -56,7 +56,7 @@ export default function MarketplacesPage() {
                   key={marketplace.key}
                 >
                   <span className="marketplace-unified-source-mark" aria-hidden="true">
-                    {marketplace.key === "yandex-market" ? "М" : marketplace.key === "avito" ? "A" : marketplace.shortName.slice(0, 2)}
+                    {marketplace.mark}
                   </span>
                   <span className="marketplace-unified-source-copy">
                     <strong>{marketplace.name}</strong>
