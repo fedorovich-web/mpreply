@@ -63,9 +63,9 @@ describe("dashboard shell information architecture", () => {
     expect(workspaceProvider).toContain("logoutError");
     expect(workspaceProvider).toContain("logoutMutation.mutate()");
     expect(workspaceProvider).not.toContain("logoutMutation.mutateAsync()");
+    expect(workspaceProvider).toContain("Не удалось выйти");
     expect(shell).toContain("logoutError");
     expect(shell).toContain('role="alert"');
-    expect(shell).toContain("Не удалось выйти");
     expect(styles).toContain(".app-logout-error");
   });
 
