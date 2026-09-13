@@ -1,12 +1,17 @@
 export type MarketplaceKey = "wildberries" | "ozon" | "yandex-market" | "avito";
 
+export const marketplaceStatusLabel = "Интеграция готова";
+
 export type MarketplaceConfig = {
   key: MarketplaceKey;
   name: string;
   shortName: string;
   path: string;
+  statusLabel: typeof marketplaceStatusLabel;
   summary: string;
 };
+
+type MarketplaceDefinition = Omit<MarketplaceConfig, "statusLabel">;
 
 const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
 const configuredContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim();
@@ -26,9 +31,7 @@ export const siteConfig = {
   ],
 } as const;
 
-export const marketplaceStatusLabel = "Интеграция готова";
-
-export const marketplaces: MarketplaceConfig[] = [
+const marketplaceDefinitions = [
   {
     key: "wildberries",
     name: "Wildberries",
@@ -61,7 +64,12 @@ export const marketplaces: MarketplaceConfig[] = [
     summary:
       "Интеграция Авито подключена к общей модели обработки: единая очередь, ИИ-подготовка ответа, правила, статусы и история действий.",
   },
-];
+] satisfies MarketplaceDefinition[];
+
+export const marketplaces: MarketplaceConfig[] = marketplaceDefinitions.map((marketplace) => ({
+  ...marketplace,
+  statusLabel: marketplaceStatusLabel,
+}));
 
 export function getMarketplaceConfig(key: MarketplaceKey): MarketplaceConfig {
   const marketplace = marketplaces.find((item) => item.key === key);
