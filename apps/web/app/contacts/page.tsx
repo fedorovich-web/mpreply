@@ -56,14 +56,14 @@ export default function ContactsPage() {
               </div>
             </div>
 
-            <div className="contact-support-route contact-support-route-demo">
+            <Link className="contact-support-route contact-support-route-demo" href="/demo">
               <span aria-hidden="true">▶</span>
               <div><strong>Нужно сначала посмотреть продукт?</strong><small>Откройте демо рабочего процесса.</small></div>
-            </div>
-            <div className="contact-support-route contact-support-route-connect">
+            </Link>
+            <Link className="contact-support-route contact-support-route-connect" href="/auth/register?intent=connect-marketplace">
               <span aria-hidden="true">↗</span>
               <div><strong>Готовы подключать площадки?</strong><small>Начните с создания аккаунта.</small></div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
