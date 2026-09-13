@@ -118,7 +118,7 @@ export default function HomePage() {
             {marketplaces.map((marketplace) => (
               <Link key={marketplace.key} className="homepage-marketplace-link" href={marketplace.path}>
                 <span className={`homepage-marketplace-logo homepage-marketplace-logo-${marketplace.key}`} aria-hidden="true">
-                  {marketplace.key === "yandex-market" ? "M" : marketplace.key === "avito" ? "A" : marketplace.shortName.slice(0, 2)}
+                  {marketplace.mark}
                 </span>
                 <strong>{marketplace.name}</strong>
               </Link>
