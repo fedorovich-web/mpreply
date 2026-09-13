@@ -29,9 +29,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const alternateAuthHref = (() => {
     const query = new URLSearchParams();
     if (requestedNext?.startsWith("/app/")) query.set("next", requestedNext);
-    if (intent === "connect-marketplace" || (isLogin && !requestedNext)) {
-      query.set("intent", "connect-marketplace");
-    }
+    if (intent === "connect-marketplace") query.set("intent", "connect-marketplace");
     const queryString = query.toString();
     const path = isLogin ? "/auth/register" : "/auth/login";
     return queryString ? `${path}?${queryString}` : path;
