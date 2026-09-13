@@ -29,7 +29,7 @@ test("authenticated desktop shell exposes the approved product navigation", asyn
   await expect(page.getByText("Seller Group", { exact: true })).toBeVisible();
 });
 
-test("authenticated mobile shell manages drawer focus, backdrop and overflow", async ({ page }) => {
+test("authenticated mobile shell traps focus and manages drawer visibility, backdrop and overflow", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockIntegrationsApi(page, "owner");
   await page.goto("/app/integrations", { waitUntil: "networkidle" });
@@ -42,13 +42,21 @@ test("authenticated mobile shell manages drawer focus, backdrop and overflow", a
 
   await openMenu.click();
 
+  const focusable = sidebar.locator('a[href], button:not([disabled]), select, input, textarea, [tabindex]:not([tabindex="-1"])');
+  const firstFocusable = focusable.first();
+  const lastFocusable = focusable.last();
   await expect(sidebar).toHaveClass(/app-sidebar-open/);
   await expect(sidebar).toBeVisible();
   await expect(page.getByRole("button", { name: "Закрыть боковое меню" })).toBeVisible();
-  await expect(sidebar.locator("a").first()).toBeFocused();
+  await expect(firstFocusable).toBeFocused();
   await expect(page.getByRole("link", { name: "Обращения", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "На проверке", exact: true })).toBeVisible();
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.keyboard.press("Shift+Tab");
+  await expect(lastFocusable).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(firstFocusable).toBeFocused();
 
   const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(hasHorizontalOverflow).toBe(false);
