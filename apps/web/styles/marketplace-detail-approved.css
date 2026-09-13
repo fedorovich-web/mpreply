@@ -366,7 +366,7 @@
 	box-shadow: 0 12px 28px rgb(40 86 148 / 11%);
 }
 
-.marketplace-detail-review > span {
+.marketplace-detail-review > span[aria-hidden='true'] {
 	display: grid;
 	width: 1.55rem;
 	height: 1.55rem;
