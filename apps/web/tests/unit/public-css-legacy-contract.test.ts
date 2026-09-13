@@ -89,6 +89,9 @@ describe("public CSS legacy contract", () => {
       ".resource-note blockquote",
       ".contact-path h2",
       ".public-mobile-menu {",
+      ".public-brand small",
+      ".public-header-actions .button-ghost",
+      ".public-header-actions .button {",
     ]) {
       expect(publicSiteCss).not.toContain(selector);
     }
