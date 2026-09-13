@@ -65,6 +65,22 @@ test("mobile navigation releases scroll lock when viewport becomes desktop", asy
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
 });
 
+test("auth mode links preserve only explicit safe navigation intent", async ({ page }) => {
+  await page.goto("/auth/login", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("link", { name: "Создать аккаунт" }).last()).toHaveAttribute("href", "/auth/register");
+
+  await page.goto("/auth/login?intent=connect-marketplace", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("link", { name: "Создать аккаунт" }).last()).toHaveAttribute(
+    "href",
+    "/auth/register?intent=connect-marketplace",
+  );
+
+  await page.goto("/auth/login?next=%2Fapp%2Finbox", { waitUntil: "domcontentloaded" });
+  const safeNextLink = page.getByRole("link", { name: "Создать аккаунт" }).last();
+  await expect(safeNextLink).toHaveAttribute("href", "/auth/register?next=%2Fapp%2Finbox");
+  await expect(safeNextLink).not.toHaveAttribute("href", /intent=/);
+});
+
 test("homepage reflects the ready marketplace integrations", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
