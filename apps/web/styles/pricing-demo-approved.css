@@ -635,10 +635,3 @@
     padding-bottom: 1rem;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .pricing-plan-window,
-  .demo-product-window {
-    transform: none;
-  }
-}
