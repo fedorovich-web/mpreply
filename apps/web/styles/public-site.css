@@ -60,15 +60,8 @@
 	box-shadow: var(--shadow-sm);
 }
 
-.public-brand strong,
-.public-brand small {
+.public-brand strong {
 	display: block;
-}
-
-.public-brand small {
-	margin-top: var(--space-1);
-	color: var(--color-text-muted);
-	font-size: var(--font-size-xs);
 }
 
 .public-nav {
@@ -340,15 +333,6 @@ body,
 }
 
 @media (max-width: 720px) {
-	.public-header-actions .button-ghost {
-		display: none;
-	}
-
-	.public-header-actions .button {
-		min-height: 2.5rem;
-		padding-inline: var(--space-4);
-	}
-
 	.legal-hero {
 		padding: var(--space-16) 0;
 	}
