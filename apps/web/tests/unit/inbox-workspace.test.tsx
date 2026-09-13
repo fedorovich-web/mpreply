@@ -91,6 +91,7 @@ const reply = {
 const mockedUseWorkspace = vi.mocked(useWorkspace);
 
 afterEach(() => {
+  vi.restoreAllMocks();
   window.localStorage.clear();
   vi.unstubAllGlobals();
   vi.clearAllMocks();
@@ -146,6 +147,29 @@ describe("InboxWorkspace", () => {
         fetchMock.mock.calls.some(([input]) => String(input).includes("marketplace=ozon")),
       ).toBe(true);
     });
+  });
+
+  it("keeps the queue usable when browser storage is unavailable", async () => {
+    mockWorkspace();
+    const getItemSpy = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("storage blocked");
+    });
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("storage blocked");
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ items: [message], total: 1, page: 1, page_size: 100 }), { status: 200 }),
+      ),
+    );
+
+    renderWorkspace();
+
+    expect(await screen.findByText("Тестовый товар")).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Фильтры обращений" })).toBeVisible();
+    expect(getItemSpy).toHaveBeenCalled();
+    await waitFor(() => expect(setItemSpy).toHaveBeenCalled());
   });
 
   it("creates a manual reply and actually submits it to review from the inbox", async () => {
