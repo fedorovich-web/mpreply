@@ -14,7 +14,52 @@ import {
   userSchema,
 } from "../../lib/api/schemas";
 
-const ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId";
+const ACTIVE_ORGANIZATION_KEY = "mpreply.activeOrganizationId";
+const LEGACY_ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId";
+
+function readStoredActiveOrganizationId(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const current = window.localStorage.getItem(ACTIVE_ORGANIZATION_KEY);
+    if (current !== null) return current;
+
+    const legacy = window.localStorage.getItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+    if (legacy === null) return null;
+
+    try {
+      window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, legacy);
+      window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+    } catch {
+      // Keep the legacy value usable even when storage writes are unavailable.
+    }
+    return legacy;
+  } catch {
+    return null;
+  }
+}
+
+function storeActiveOrganizationId(organizationId: string) {
+  try {
+    window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organizationId);
+    window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+  } catch {
+    // Organization switching must still work for the current session without storage.
+  }
+}
+
+function clearStoredActiveOrganizationId() {
+  try {
+    window.localStorage.removeItem(ACTIVE_ORGANIZATION_KEY);
+  } catch {
+    // Logout must continue even when storage is unavailable.
+  }
+  try {
+    window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+  } catch {
+    // Logout must continue even when legacy storage is unavailable.
+  }
+}
 
 type WorkspaceContextValue = {
   user: User;
@@ -31,10 +76,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const [activeOrganizationId, setActiveOrganizationIdState] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(ACTIVE_ORGANIZATION_KEY);
-  });
+  const [activeOrganizationId, setActiveOrganizationIdState] = useState<string | null>(readStoredActiveOrganizationId);
 
   const userQuery = useQuery({
     queryKey: ["session", "me"],
@@ -65,7 +107,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest("/api/auth/logout", messageResponseSchema, { method: "POST" }),
     onSuccess: async () => {
-      window.localStorage.removeItem(ACTIVE_ORGANIZATION_KEY);
+      clearStoredActiveOrganizationId();
       queryClient.clear();
       router.replace("/auth/login");
     },
@@ -73,7 +115,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   function setActiveOrganizationId(organizationId: string) {
     if (!organizationsQuery.data?.some((organization) => organization.id === organizationId)) return;
-    window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organizationId);
+    storeActiveOrganizationId(organizationId);
     setActiveOrganizationIdState(organizationId);
   }
 
@@ -153,7 +195,7 @@ function WorkspaceOnboarding({ user }: { user: User }) {
         body: { name: name.trim() },
       }),
     onSuccess: async (organization) => {
-      window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organization.id);
+      storeActiveOrganizationId(organization.id);
       await queryClient.invalidateQueries({ queryKey: ["organizations"] });
       router.replace("/app/integrations");
     },
