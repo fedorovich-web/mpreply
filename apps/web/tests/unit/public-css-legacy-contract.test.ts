@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const marketingPagesCss = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
 const publicSiteCss = readFileSync(join(root, "styles/public-site.css"), "utf8");
+const homepageApprovedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
 
 describe("public CSS legacy contract", () => {
   it("does not keep overrides for superseded public marketing compositions", () => {
@@ -87,9 +88,19 @@ describe("public CSS legacy contract", () => {
       ".resource-note h2",
       ".resource-note blockquote",
       ".contact-path h2",
+      ".public-mobile-menu {",
     ]) {
       expect(publicSiteCss).not.toContain(selector);
     }
+  });
+
+  it("keeps shared header breakpoint ownership out of homepage styles", () => {
+    expect(publicSiteCss).toMatch(
+      /@media \(max-width: 1040px\)[\s\S]*?\.public-header-inner\s*\{[^}]*grid-template-columns:\s*1fr auto;[^}]*\}[\s\S]*?\.public-nav,\s*\.public-header-actions\s*\{[^}]*display:\s*none;[^}]*\}[\s\S]*?\.public-mobile-navigation\s*\{[^}]*display:\s*block;/,
+    );
+    expect(homepageApprovedCss).not.toMatch(
+      /@media \(max-width: 760px\)[\s\S]*?\.public-root \.public-nav,[\s\S]*?\.public-root \.public-header-actions\s*\{[^}]*display:\s*none;/,
+    );
   });
 
   it("keeps current shared public compositions available", () => {
