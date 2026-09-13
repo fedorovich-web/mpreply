@@ -10,7 +10,6 @@ import { PublicBrandMark } from "./PublicBrandMark";
 const focusableSelector = 'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function isActiveNavigationItem(href: string, pathname: string): boolean {
-  if (href.includes("#")) return false;
   if (href === "/marketplaces") return pathname === href || pathname.startsWith(`${href}/`);
   return pathname === href;
 }
