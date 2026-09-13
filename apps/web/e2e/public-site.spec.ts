@@ -20,6 +20,15 @@ test("primary navigation reaches features and pricing", async ({ page }) => {
   await expect(page).toHaveURL(/\/pricing$/);
 });
 
+test("tablet header uses only the mobile navigation mode", async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 800 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  await expect(page.getByRole("button", { name: "Открыть меню" })).toBeVisible();
+  await expect(page.locator(".public-nav")).toBeHidden();
+  await expect(page.locator(".public-header-actions")).toBeHidden();
+});
+
 test("mobile navigation traps focus, locks scroll and restores focus on Escape", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/", { waitUntil: "domcontentloaded" });
