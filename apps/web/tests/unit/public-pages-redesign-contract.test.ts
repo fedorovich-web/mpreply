@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -19,18 +19,12 @@ const privacy = readFileSync(join(root, "app/privacy/page.tsx"), "utf8");
 const terms = readFileSync(join(root, "app/terms/page.tsx"), "utf8");
 const authForm = readFileSync(join(root, "components/auth/AuthForm.tsx"), "utf8");
 const authCss = readFileSync(join(root, "styles/auth.css"), "utf8");
-const pagesCssPath = join(root, "styles/marketing-pages.css");
-const pagesCss = existsSync(pagesCssPath) ? readFileSync(pagesCssPath, "utf8") : "";
-const marketplacesCssPath = join(root, "styles/marketplaces-approved.css");
-const marketplacesCss = existsSync(marketplacesCssPath) ? readFileSync(marketplacesCssPath, "utf8") : "";
-const marketplaceDetailCssPath = join(root, "styles/marketplace-detail-approved.css");
-const marketplaceDetailCss = existsSync(marketplaceDetailCssPath) ? readFileSync(marketplaceDetailCssPath, "utf8") : "";
-const pricingDemoCssPath = join(root, "styles/pricing-demo-approved.css");
-const pricingDemoCss = existsSync(pricingDemoCssPath) ? readFileSync(pricingDemoCssPath, "utf8") : "";
-const resourcesContactsCssPath = join(root, "styles/resources-contacts-approved.css");
-const resourcesContactsCss = existsSync(resourcesContactsCssPath) ? readFileSync(resourcesContactsCssPath, "utf8") : "";
-const helpLegalCssPath = join(root, "styles/help-legal-approved.css");
-const helpLegalCss = existsSync(helpLegalCssPath) ? readFileSync(helpLegalCssPath, "utf8") : "";
+const pagesCss = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
+const marketplacesCss = readFileSync(join(root, "styles/marketplaces-approved.css"), "utf8");
+const marketplaceDetailCss = readFileSync(join(root, "styles/marketplace-detail-approved.css"), "utf8");
+const pricingDemoCss = readFileSync(join(root, "styles/pricing-demo-approved.css"), "utf8");
+const resourcesContactsCss = readFileSync(join(root, "styles/resources-contacts-approved.css"), "utf8");
+const helpLegalCss = readFileSync(join(root, "styles/help-legal-approved.css"), "utf8");
 
 describe("public page redesign", () => {
   it("loads page-specific marketing compositions without the superseded marketplace cluster", () => {
