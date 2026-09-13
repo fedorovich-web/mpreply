@@ -697,7 +697,7 @@ body,
 
 .audience-pricing-row {
 	display: grid;
-	grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1.1fr) minmax(12rem, 0.55fr);
+	grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1fr) minmax(12rem, 0.55fr);
 	gap: var(--space-8);
 	align-items: center;
 	padding: var(--space-6) 0;
