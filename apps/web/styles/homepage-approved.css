@@ -1,4 +1,5 @@
 .public-root {
+	--container-max-width: 1240px;
 	--homepage-section-pad: clamp(4.8rem, 6vw, 6.4rem);
 	--homepage-ink: var(--color-text-primary);
 }
@@ -109,7 +110,7 @@
 	background:
 		radial-gradient(circle at 90% 8%, rgb(103 188 255 / 13%), transparent 26rem),
 		linear-gradient(180deg, #ffffff 0%, #f8fcff 82%, #f4f9ff 100%);
-	padding: 4.15rem 0 3.8rem;
+	padding: 4.25rem 0 4.1rem;
 }
 
 .homepage-hero-decoration {
@@ -140,9 +141,9 @@
 	position: relative;
 	z-index: 2;
 	display: grid;
-	grid-template-columns: minmax(0, 0.82fr) minmax(35rem, 1.18fr);
+	grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
 	align-items: center;
-	gap: clamp(3rem, 5.4vw, 5rem);
+	gap: clamp(2rem, 2.8vw, 2.6rem);
 }
 
 .homepage-hero-copy {
@@ -166,7 +167,7 @@
 	max-width: none;
 	margin: 0;
 	color: var(--homepage-ink);
-	font-size: clamp(3.25rem, 4.45vw, 4.55rem);
+	font-size: clamp(3.3rem, 4.35vw, 4.45rem);
 	font-weight: 700;
 	line-height: 0.99;
 	letter-spacing: -0.055em;
@@ -241,6 +242,8 @@
 
 .homepage-hero-scene {
 	position: relative;
+	transform: scale(1.065);
+	transform-origin: right center;
 }
 
 /* Marketplace row inside hero */
@@ -251,7 +254,7 @@
 	grid-template-columns: minmax(13rem, 0.65fr) minmax(0, 1.45fr) minmax(19rem, 0.9fr);
 	align-items: end;
 	gap: clamp(1.7rem, 3.5vw, 3.2rem);
-	margin-top: 4.5rem;
+	margin-top: 4.8rem;
 }
 
 .homepage-marketplaces-copy h2 {
@@ -401,9 +404,17 @@
 
 .homepage-feature-layout {
 	display: grid;
-	grid-template-columns: minmax(0, 0.68fr) minmax(35rem, 1.32fr);
+	grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
 	align-items: center;
-	gap: clamp(3.8rem, 7vw, 6.4rem);
+	gap: clamp(2.1rem, 2.9vw, 2.7rem);
+}
+
+.homepage-feature-layout .homepage-section-heading-left {
+	max-width: 34.5rem;
+}
+
+.homepage-feature-layout .homepage-section-heading-left h2 {
+	font-size: clamp(2.25rem, 2.9vw, 2.95rem);
 }
 
 .homepage-approved-workspace {
@@ -566,6 +577,14 @@
 	white-space: nowrap;
 }
 
+.homepage-workspace-time {
+	align-self: start;
+	margin-top: 0.48rem;
+	color: #8b9ab4;
+	font-size: 0.42rem;
+	white-space: nowrap;
+}
+
 .homepage-workspace-answer {
 	align-self: start;
 	margin: 1.25rem 0.85rem 0 0;
@@ -628,13 +647,23 @@
 /* AI context cards */
 .homepage-models-section {
 	background: #fff;
+	padding-top: 3.85rem;
+	padding-bottom: 4.15rem;
 }
 
 .homepage-models-layout {
 	display: grid;
-	grid-template-columns: minmax(0, 0.75fr) minmax(35rem, 1.25fr);
+	grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
 	align-items: center;
-	gap: clamp(3.5rem, 6vw, 5.6rem);
+	gap: clamp(2.1rem, 2.8vw, 2.6rem);
+}
+
+.homepage-models-layout .homepage-section-heading-left {
+	max-width: 35rem;
+}
+
+.homepage-models-layout .homepage-section-heading-left h2 {
+	font-size: clamp(2.3rem, 3.05vw, 3.2rem);
 }
 
 .homepage-model-grid {
@@ -645,25 +674,25 @@
 
 .homepage-model-card {
 	display: grid;
-	min-height: 13rem;
+	min-height: 12.35rem;
 	align-content: start;
 	gap: 0.45rem;
 	border: 1px solid #e2ebf7;
 	border-radius: 0.86rem;
 	background: #fff;
-	padding: 1.15rem 0.85rem;
+	padding: 1.1rem 0.85rem;
 	box-shadow: 0 12px 28px rgb(40 92 162 / 6%);
 	text-align: left;
 }
 
 .homepage-model-mark {
 	display: grid;
-	width: 3rem;
-	height: 3rem;
+	width: 2.9rem;
+	height: 2.9rem;
 	place-items: center;
 	margin-bottom: 0.25rem;
 	color: #125fee;
-	font-size: 2.15rem;
+	font-size: 2.08rem;
 	line-height: 1;
 }
 
@@ -701,11 +730,13 @@
 /* Process */
 .homepage-approved-process {
 	background: #fff;
+	padding-top: 3.9rem;
+	padding-bottom: 4.35rem;
 }
 
 .homepage-process-heading {
 	max-width: 43rem;
-	margin-bottom: 2.8rem;
+	margin-bottom: 2.65rem;
 }
 
 .homepage-process-heading h2 {
@@ -983,17 +1014,19 @@
 /* Results */
 .homepage-results-section {
 	background: linear-gradient(180deg, #f8fcff 0%, #f4f9ff 100%);
+	padding-top: 4rem;
+	padding-bottom: 4rem;
 }
 
 .homepage-results-layout {
 	display: grid;
-	grid-template-columns: minmax(0, 0.82fr) minmax(35rem, 1.18fr);
+	grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
 	align-items: center;
-	gap: clamp(3.5rem, 6vw, 5.6rem);
+	gap: clamp(3.8rem, 5.2vw, 4.8rem);
 }
 
 .homepage-results-copy {
-	max-width: 31rem;
+	max-width: 28rem;
 }
 
 .homepage-result-grid {
@@ -1036,6 +1069,8 @@
 /* CTA */
 .homepage-approved-final-cta {
 	background: #fff;
+	padding-top: 4.2rem;
+	padding-bottom: 4.35rem;
 }
 
 .homepage-approved-final-cta .homepage-final-cta-card {
@@ -1044,9 +1079,9 @@
 	display: grid;
 	overflow: hidden;
 	min-height: 21rem;
-	grid-template-columns: minmax(0, 0.95fr) minmax(28rem, 0.85fr);
+	grid-template-columns: minmax(0, 1.18fr) minmax(24rem, 0.82fr);
 	align-items: center;
-	gap: 2rem;
+	gap: 1.8rem;
 	border: 1px solid #d7e8fb;
 	border-radius: 1.15rem;
 	background:
@@ -1074,10 +1109,10 @@
 }
 
 .homepage-approved-final-cta .homepage-final-cta-card h2 {
-	max-width: 15ch;
+	max-width: 25ch;
 	margin: 0;
 	color: #071846;
-	font-size: clamp(2.35rem, 3.4vw, 3.6rem);
+	font-size: clamp(2.35rem, 3vw, 3.05rem);
 	line-height: 1.02;
 	letter-spacing: -0.045em;
 }
@@ -1326,6 +1361,7 @@
 	.homepage-hero-scene {
 		width: min(100%, 44rem);
 		justify-self: center;
+		transform: none;
 	}
 
 	.homepage-approved-marketplaces {
@@ -1378,13 +1414,8 @@
 		min-height: 4.15rem;
 	}
 
-	.public-root .public-nav,
-	.public-root .public-header-actions {
-		display: none;
-	}
-
 	.homepage-approved-hero {
-		padding: 3.1rem 0 3.4rem;
+		padding: 3.5rem 0 3.75rem;
 	}
 
 	.homepage-hero-grid {
@@ -1431,6 +1462,17 @@
 		font-size: 1.35rem;
 	}
 
+	.homepage-feature-layout .homepage-section-heading-left,
+	.homepage-models-layout .homepage-section-heading-left,
+	.homepage-results-copy {
+		max-width: none;
+	}
+
+	.homepage-feature-layout .homepage-section-heading-left h2,
+	.homepage-models-layout .homepage-section-heading-left h2 {
+		font-size: clamp(2.25rem, 10vw, 3.1rem);
+	}
+
 	.homepage-feature-layout .homepage-workspace-tabs {
 		overflow-x: auto;
 		grid-template-columns: repeat(4, minmax(7rem, 1fr));
@@ -1473,6 +1515,11 @@
 
 	.homepage-approved-final-cta .homepage-final-cta-card {
 		padding: 2rem 1.4rem;
+	}
+
+	.homepage-approved-final-cta .homepage-final-cta-card h2 {
+		max-width: none;
+		font-size: clamp(2.25rem, 10vw, 3rem);
 	}
 
 	.homepage-final-cta-actions {
