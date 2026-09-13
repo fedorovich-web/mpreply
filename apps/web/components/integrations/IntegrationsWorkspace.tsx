@@ -46,7 +46,7 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const activeCount = accounts.filter((account) => account.status === "active").length;
+  const activeCount = accounts.filter((account) => account.status === "active" && account.error_count === 0).length;
   const problemCount = accounts.filter((account) => account.status === "error" || account.error_count > 0).length;
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
 
