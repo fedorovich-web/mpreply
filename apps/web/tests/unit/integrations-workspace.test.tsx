@@ -113,6 +113,18 @@ describe("IntegrationsWorkspace", () => {
       "/app/integrations/avito",
     );
   });
+
+  it("does not count an active account with sync errors as working normally", async () => {
+    mockWorkspace("owner");
+    const accountWithErrors = { ...account, error_count: 1 };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithErrors]), { status: 200 })));
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    const summary = await screen.findByLabelText("Сводка подключений");
+    expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("0");
+    expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
+  });
 });
 
 describe("MarketplaceIntegrationWorkspace", () => {
