@@ -30,6 +30,11 @@ describe("public shell cleanup", () => {
     expect(shell).not.toContain("siteConfig.contactEmail ?");
   });
 
+  it("links footer help entries to the sections they name", () => {
+    expect(shell).toContain('<Link href="/help#start">База знаний</Link>');
+    expect(shell).toContain('<Link href="/help#faq">FAQ</Link>');
+  });
+
   it("does not retain selectors for the retired footer markup", () => {
     expect(shell).not.toContain("public-footer-grid");
     expect(shell).not.toContain("public-footer-topline");
