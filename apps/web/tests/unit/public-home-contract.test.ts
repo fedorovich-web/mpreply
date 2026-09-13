@@ -87,6 +87,7 @@ describe("public homepage redesign contract", () => {
   });
 
   it("does not keep obsolete class hooks from the superseded homepage markup", () => {
+    expect(page).not.toContain('className="homepage-hero homepage-approved-hero"');
     expect(page).not.toContain("homepage-context-section");
     expect(page).not.toContain("homepage-process homepage-approved-process");
     expect(page).not.toContain("homepage-final-cta homepage-approved-final-cta");
