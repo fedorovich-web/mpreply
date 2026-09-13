@@ -20,7 +20,7 @@ test("primary navigation reaches features and pricing", async ({ page }) => {
   await expect(page).toHaveURL(/\/pricing$/);
 });
 
-test("mobile navigation manages focus, scroll lock and Escape", async ({ page }) => {
+test("mobile navigation traps focus, locks scroll and restores focus on Escape", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
@@ -28,10 +28,18 @@ test("mobile navigation manages focus, scroll lock and Escape", async ({ page })
   await trigger.click();
 
   const panel = page.locator(".public-mobile-menu-panel");
+  const focusable = panel.locator('a[href], button:not([disabled]), select, input, textarea, [tabindex]:not([tabindex="-1"])');
+  const firstFocusable = focusable.first();
+  const lastFocusable = focusable.last();
   await expect(panel).toBeVisible();
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
-  await expect(panel.locator("a").first()).toBeFocused();
+  await expect(firstFocusable).toBeFocused();
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.keyboard.press("Shift+Tab");
+  await expect(lastFocusable).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(firstFocusable).toBeFocused();
 
   await page.keyboard.press("Escape");
 
