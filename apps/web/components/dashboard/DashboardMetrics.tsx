@@ -85,7 +85,9 @@ export function DashboardMetrics() {
   const problemAccounts = accounts
     ? accounts.filter((account) => account.status === "error" || account.error_count > 0).length
     : null;
-  const activeAccounts = accounts ? accounts.filter((account) => account.status === "active").length : null;
+  const activeAccounts = accounts
+    ? accounts.filter((account) => account.status === "active" && account.error_count === 0).length
+    : null;
   const enabledRules = rules ? rules.items.filter((rule) => rule.is_enabled).length : null;
 
   const attentionItems: AttentionItem[] = [
