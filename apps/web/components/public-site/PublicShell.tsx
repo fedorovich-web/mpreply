@@ -2,19 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { siteConfig } from "../../lib/site-config";
+import { PublicBrandMark } from "./PublicBrandMark";
 import { PublicHeader } from "./PublicHeader";
 
 type PublicShellProps = {
   children: ReactNode;
 };
-
-function FooterBrandMark() {
-  return (
-    <span className="public-brand-mark" aria-hidden="true">
-      <span className="public-brand-glyph"><i /><i /><i /></span>
-    </span>
-  );
-}
 
 export function PublicShell({ children }: PublicShellProps) {
   return (
@@ -29,7 +22,7 @@ export function PublicShell({ children }: PublicShellProps) {
         <div className="public-container public-footer-main">
           <div className="public-footer-brand">
             <Link className="public-footer-logo" href="/" aria-label="MPReply — главная">
-              <FooterBrandMark />
+              <PublicBrandMark />
               <strong>MPReply</strong>
             </Link>
             <p>Автоответы на отзывы, вопросы и сообщения покупателей на маркетплейсах.</p>
