@@ -6,15 +6,9 @@ type PageMetadataInput = {
   title: string;
   description: string;
   path: string;
-  noIndex?: boolean;
 };
 
-export function createPageMetadata({
-  title,
-  description,
-  path,
-  noIndex = false,
-}: PageMetadataInput): Metadata {
+export function createPageMetadata({ title, description, path }: PageMetadataInput): Metadata {
   return {
     title,
     description,
@@ -34,8 +28,6 @@ export function createPageMetadata({
       title,
       description,
     },
-    robots: noIndex
-      ? { index: false, follow: false, nocache: true }
-      : { index: true, follow: true },
+    robots: { index: true, follow: true },
   };
 }
