@@ -22,6 +22,37 @@ describe("public CSS legacy contract", () => {
     }
   });
 
+  it("does not keep the superseded generic hero and card scaffold", () => {
+    const legacySelectors = [
+      ".public-hero {",
+      ".public-hero-compact",
+      ".public-hero-grid",
+      ".public-hero-copy",
+      ".public-hero-copy-centered",
+      ".public-trust-row",
+      ".feature-grid",
+      ".marketplace-card-grid",
+      ".pricing-grid",
+      ".resource-grid",
+      ".feature-card",
+      ".marketplace-card",
+      ".pricing-card",
+      ".resource-card",
+      ".public-note-card",
+      ".feature-title",
+      ".feature-number",
+      ".section-action",
+      ".marketplace-card-topline",
+      ".marketplace-logo-text",
+      ".pricing-state",
+      ".resource-state",
+    ];
+
+    for (const selector of legacySelectors) {
+      expect(publicSiteCss).not.toContain(selector);
+    }
+  });
+
   it("keeps current shared public compositions available", () => {
     for (const selector of [
       ".marketplace-readiness-row-supported",
@@ -40,6 +71,17 @@ describe("public CSS legacy contract", () => {
       expect(marketingPagesCss).toContain(selector);
     }
 
-    expect(publicSiteCss).toContain(".public-status-supported");
+    for (const selector of [
+      ".public-status-supported",
+      ".public-subhero",
+      ".section-heading",
+      ".public-two-column",
+      ".public-cta-card",
+      ".marketplace-readiness-row",
+      ".integration-flow-row",
+      ".demo-flow-row",
+    ]) {
+      expect(publicSiteCss).toContain(selector);
+    }
   });
 });
