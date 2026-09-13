@@ -68,10 +68,6 @@
 	color: var(--color-brand-primary);
 }
 
-.public-root .public-nav a::after {
-	background: var(--color-brand-primary);
-}
-
 .public-root .button-primary {
 	background: var(--color-brand-primary);
 	color: #ffffff;
@@ -106,10 +102,6 @@
 .public-root .public-footer-brand p,
 .public-root .public-footer-bottom {
 	color: var(--color-text-secondary);
-}
-
-.public-root .public-footer-logo .public-brand-mark {
-	background: var(--gradient-public-blue);
 }
 
 @media (max-width: 720px) {
