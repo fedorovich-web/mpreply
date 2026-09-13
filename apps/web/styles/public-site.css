@@ -90,15 +90,6 @@
 	gap: var(--space-2);
 }
 
-.button-ghost {
-	color: var(--color-text-secondary);
-}
-
-.button-ghost:hover {
-	background: var(--color-brand-soft);
-	color: var(--color-brand-text-on-soft);
-}
-
 .legal-hero h1 {
 	margin: 0;
 	font-size: var(--font-size-public-hero-compact);
@@ -1043,10 +1034,6 @@ body,
 	color: var(--color-brand-primary);
 }
 
-.public-nav a[aria-current='page']::after {
-	transform: var(--transform-scale-x-visible);
-}
-
 .public-mobile-navigation {
 	display: none;
 }
@@ -1180,11 +1167,6 @@ body,
 	gap: var(--space-3);
 	font-size: var(--font-size-xl);
 	letter-spacing: var(--letter-spacing-brand);
-}
-
-.public-footer-logo .public-brand-mark {
-	width: 2.4rem;
-	height: 2.4rem;
 }
 
 .public-footer-bottom {
