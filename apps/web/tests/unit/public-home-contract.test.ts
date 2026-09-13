@@ -96,10 +96,14 @@ describe("public homepage redesign contract", () => {
     expect(homeWorkspace).not.toContain('className="homepage-workspace homepage-approved-workspace"');
   });
 
-  it("keeps footer navigation attached to real routes", () => {
+  it("keeps footer navigation attached to real routes without legacy footer markup or CSS", () => {
     expect(publicShell).toContain('href="/features"');
     expect(publicShell).toContain('href="/marketplaces"');
     expect(publicShell).not.toContain('href="/#safetygate"');
+    expect(publicShell).not.toContain("public-footer-grid");
+    expect(publicShell).not.toContain("public-footer-topline");
+    expect(publicSiteCss).not.toContain(".public-footer-grid");
+    expect(publicSiteCss).not.toContain(".public-footer-topline");
   });
 
   it("uses the approved blue system and a scoped hero artwork layer", () => {
