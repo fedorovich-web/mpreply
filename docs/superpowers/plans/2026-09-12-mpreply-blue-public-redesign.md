@@ -205,7 +205,7 @@ Use a small set of high-quality approved-style scenes rather than many decorativ
 
 ### Current blocker
 
-GitHub Actions currently creates `frontend` and `backend` jobs but terminates them before any step is created (`steps=null`); `containers` is skipped. This is an infrastructure/runner blocker, so no code-level pass/fail claim may be made from those runs. Do not mark the gates above complete until they execute successfully on the current tree.
+GitHub Actions currently creates `frontend` and `backend` jobs but terminates them before any step is created (`steps=null`); `containers` is skipped. This is an infrastructure/runner blocker, so no code-level pass/fail claim may be made from those runs. The latest re-check on HEAD `d451aeafae9a17a97640c1dc4bb967e117d7154c` is Quality Gate run `34743129336` with the same pre-execution state. Do not mark the gates above complete until they execute successfully on the current tree.
 
 ### Completion reporting
 
@@ -230,4 +230,9 @@ After each major implementation batch record:
 - [x] Complete the primary dashboard IA/copy cleanup across shell, overview, inbox, review queue, AI assistant, automation, integrations and analytics.
 - [x] Add onboarding and superadmin alignment plus `/app` legacy redirect cleanup.
 - [x] Add authenticated responsive shell coverage and browser coverage for all four integration routes.
+- [x] Harden public/app mobile overlays with focus trapping, closed-state visibility, Escape/backdrop focus restoration and desktop-resize cleanup.
+- [x] Keep multi-workspace switching available in the mobile drawer and add a two-organization browser scenario.
+- [x] Preserve auth `next`/marketplace intent across login/register without inventing marketplace intent on an ordinary login.
+- [x] Lock public/dashboard route integrity and use `siteConfig.publicRoutes` as the browser-gate source of truth.
+- [x] Wire `app-shell-responsive.spec.ts` into the standard `test:e2e` and `test:e2e:all` commands used by CI/release gates.
 - [ ] Execute the full static/browser/release gates once GitHub Actions runners execute steps again.
