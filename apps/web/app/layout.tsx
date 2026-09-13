@@ -58,8 +58,12 @@ export const metadata: Metadata = {
 const themeScript = `
 (() => {
   try {
-    const saved = localStorage.getItem("respio-theme");
+    const current = localStorage.getItem("mpreply-theme");
+    const legacy = localStorage.getItem("respio-theme");
+    const saved = current ?? legacy;
     const theme = saved === "dark" || saved === "light" ? saved : "light";
+    localStorage.setItem("mpreply-theme", theme);
+    if (legacy !== null) localStorage.removeItem("respio-theme");
     document.documentElement.dataset.theme = theme;
   } catch {
     document.documentElement.dataset.theme = "light";
