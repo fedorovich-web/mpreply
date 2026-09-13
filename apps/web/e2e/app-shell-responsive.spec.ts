@@ -69,3 +69,23 @@ test("authenticated mobile shell traps focus and manages drawer visibility, back
   await expect(openMenu).toBeFocused();
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
 });
+
+test("authenticated mobile shell releases drawer state when viewport becomes desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockIntegrationsApi(page, "owner");
+  await page.goto("/app/integrations", { waitUntil: "networkidle" });
+
+  const openMenu = page.getByRole("button", { name: "Открыть меню кабинета" });
+  const sidebar = page.locator(".app-sidebar");
+  await openMenu.click();
+  await expect(sidebar).toHaveClass(/app-sidebar-open/);
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  await expect(sidebar).not.toHaveClass(/app-sidebar-open/);
+  await expect(sidebar).toBeVisible();
+  await expect(page.locator(".app-sidebar-backdrop")).toHaveCount(0);
+  await expect(openMenu).toBeHidden();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
+});
