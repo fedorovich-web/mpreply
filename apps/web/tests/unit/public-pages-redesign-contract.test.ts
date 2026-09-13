@@ -150,6 +150,7 @@ describe("public page redesign", () => {
     expect(authForm).toContain("const alternateAuthHref");
     expect(authForm).toContain('query.set("next", requestedNext)');
     expect(authForm).toContain('query.set("intent", "connect-marketplace")');
+    expect(authForm).not.toContain("isLogin && !requestedNext");
     expect(authForm).toContain("href={alternateAuthHref}");
   });
 
