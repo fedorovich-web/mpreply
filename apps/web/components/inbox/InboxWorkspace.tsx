@@ -107,8 +107,7 @@ export function InboxWorkspace() {
   const deferredQuery = useDeferredValue(filters.query.trim());
 
   useEffect(() => {
-    const key = filterStorageKey(activeOrganization.id);
-    const restored = readPersistedFilters(window.localStorage.getItem(key));
+    const restored = readStoredFilters(activeOrganization.id);
     setFilters(restored ?? defaultFilters);
     setSelectedId("");
     setRestoredOrganizationId(activeOrganization.id);
@@ -116,7 +115,7 @@ export function InboxWorkspace() {
 
   useEffect(() => {
     if (restoredOrganizationId !== activeOrganization.id) return;
-    window.localStorage.setItem(filterStorageKey(activeOrganization.id), JSON.stringify(filters));
+    persistFilters(activeOrganization.id, filters);
   }, [activeOrganization.id, filters, restoredOrganizationId]);
 
   const activeFilterCount = useMemo(() => {
@@ -605,6 +604,22 @@ function InboxState({
 
 function filterStorageKey(organizationId: string): string {
   return `mpreply.inbox.filters.${organizationId}`;
+}
+
+function readStoredFilters(organizationId: string): FilterState | null {
+  try {
+    return readPersistedFilters(window.localStorage.getItem(filterStorageKey(organizationId)));
+  } catch {
+    return null;
+  }
+}
+
+function persistFilters(organizationId: string, filters: FilterState) {
+  try {
+    window.localStorage.setItem(filterStorageKey(organizationId), JSON.stringify(filters));
+  } catch {
+    // Filter persistence is optional; the current queue must remain usable without browser storage.
+  }
 }
 
 function readPersistedFilters(raw: string | null): FilterState | null {
