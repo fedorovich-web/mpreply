@@ -12,6 +12,7 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const heroAssetPath = join(root, "public/images/mpreply-hero.webp");
 const heroArtworkCssPath = join(root, "styles/homepage-hero-artwork.css");
 const heroArtworkCss = existsSync(heroArtworkCssPath) ? readFileSync(heroArtworkCssPath, "utf8") : "";
+const globalsCss = readFileSync(join(root, "styles/globals.css"), "utf8");
 const marketingCssPath = join(root, "styles/marketing-site.css");
 const marketingCss = existsSync(marketingCssPath) ? readFileSync(marketingCssPath, "utf8") : "";
 const marketingPagesCss = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
@@ -66,9 +67,9 @@ describe("public homepage redesign contract", () => {
   });
 
   it("keeps homepage selectors owned by the homepage layers only", () => {
-    expect(marketingPagesCss).not.toContain(".homepage-");
-    expect(marketingCss).not.toContain(".homepage-");
-    expect(publicSiteCss).not.toContain(".homepage-");
+    for (const source of [globalsCss, marketingPagesCss, marketingCss, publicSiteCss]) {
+      expect(source).not.toContain(".homepage-");
+    }
 
     const legacyHeroSelectors = [
       "homepage-hero-window",
@@ -80,7 +81,7 @@ describe("public homepage redesign contract", () => {
       "homepage-hero-draft",
     ];
     for (const selector of legacyHeroSelectors) {
-      for (const source of [approvedCss, fidelityCss, heroArtworkCss, marketingCss, marketingPagesCss, publicSiteCss]) {
+      for (const source of [approvedCss, fidelityCss, heroArtworkCss, globalsCss, marketingCss, marketingPagesCss, publicSiteCss]) {
         expect(source).not.toContain(selector);
       }
     }
