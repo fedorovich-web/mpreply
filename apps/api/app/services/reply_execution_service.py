@@ -39,9 +39,8 @@ _WRITE_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
 _RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"})
 _BLOCKING_MARKETPLACE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
-_AMBIGUOUS_WRITE_ERRORS = frozenset(
-    {"malformed_payload", "marketplace_unavailable", "network_error", "network_timeout"}
-)
+_AMBIGUOUS_WRITE_ERRORS = frozenset({"malformed_payload", "marketplace_unavailable", "network_error", "network_timeout"})
+_NON_PUBLISHABLE_PROVIDER_STATES = frozenset({"unmoderated", "banned", "deleted", "unknown"})
 
 
 @dataclass(frozen=True)
@@ -255,11 +254,7 @@ class ReplyExecutionService:
         reply.error_code = None
         reply.failed_reason = None
         message = await self._get_message(reply.message_id)
-        retry_message_target = (
-            MessageStatus.AUTO_REPLY_PENDING.value
-            if reply.mode == ResponseMode.AUTO.value
-            else MessageStatus.APPROVED.value
-        )
+        retry_message_target = MessageStatus.AUTO_REPLY_PENDING.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.APPROVED.value
         self._transition_message(message, retry_message_target)
         action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
         await self.audit.write(
@@ -281,8 +276,7 @@ class ReplyExecutionService:
         if (
             reply.status == ReplyStatus.SENDING.value
             and reply.last_attempt_at is not None
-            and reply.last_attempt_at
-            >= datetime.now(UTC) - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
+            and reply.last_attempt_at >= datetime.now(UTC) - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
         ):
             await self.session.commit()
             return ExecuteReplyResult(reply.id, reply.status, False, "execution_in_progress")
@@ -342,11 +336,7 @@ class ReplyExecutionService:
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         required_scope = write_scope_for_message(message_type)
         scopes = validated_scope_names(account.scopes_json or {})
-        if (
-            account.status != "active"
-            or account.credentials_status != "valid"
-            or required_scope not in scopes
-        ):
+        if account.status != "active" or account.credentials_status != "valid" or required_scope not in scopes:
             await self._mark_terminal_marketplace_failure(
                 reply=reply,
                 message=message,
@@ -465,6 +455,19 @@ class ReplyExecutionService:
                 current = await self._get_reply(reply_id)
                 return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
             message = await self._get_message(reply.message_id, organization_id=reply.organization_id)
+            if preflight.data.provider_state in _NON_PUBLISHABLE_PROVIDER_STATES:
+                await self._mark_provider_state_manual_review(
+                    reply=reply,
+                    message=message,
+                    provider_reply_id=preflight.data.provider_reply_id,
+                    provider_state=preflight.data.provider_state,
+                )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    False,
+                    reply.error_code,
+                )
             await self._mark_sent(
                 reply=reply,
                 message=message,
@@ -490,6 +493,14 @@ class ReplyExecutionService:
             return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
         message = await self._get_message(reply.message_id, organization_id=reply.organization_id)
         if result.ok and result.data is not None:
+            if result.data.provider_state in _NON_PUBLISHABLE_PROVIDER_STATES:
+                await self._mark_provider_state_manual_review(
+                    reply=reply,
+                    message=message,
+                    provider_reply_id=result.data.provider_reply_id,
+                    provider_state=result.data.provider_state,
+                )
+                return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
             await self._mark_sent(
                 reply=reply,
                 message=message,
@@ -520,11 +531,7 @@ class ReplyExecutionService:
             AIDraft.organization_id == message.organization_id,
             AIDraft.message_id == message.id,
         )
-        stmt = (
-            stmt.where(AIDraft.id == ai_draft_id)
-            if ai_draft_id is not None
-            else stmt.order_by(AIDraft.created_at.desc()).limit(1)
-        )
+        stmt = stmt.where(AIDraft.id == ai_draft_id) if ai_draft_id is not None else stmt.order_by(AIDraft.created_at.desc()).limit(1)
         result = await self.session.execute(stmt)
         draft = result.scalar_one_or_none()
         if draft is None:
@@ -642,11 +649,7 @@ class ReplyExecutionService:
         externally_already_answered: bool,
     ) -> None:
         self._transition_reply(reply, ReplyStatus.SENT.value)
-        message_target = (
-            MessageStatus.AUTO_REPLY_SENT.value
-            if reply.mode == ResponseMode.AUTO.value
-            else MessageStatus.ANSWERED.value
-        )
+        message_target = MessageStatus.AUTO_REPLY_SENT.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.ANSWERED.value
         self._transition_message(message, message_target)
         reply.sent_at = datetime.now(UTC)
         reply.marketplace_reply_id = marketplace_reply_id
@@ -704,11 +707,7 @@ class ReplyExecutionService:
         result: AdapterResult,
     ) -> None:
         self._transition_reply(reply, ReplyStatus.RETRY_PENDING.value)
-        message_target = (
-            MessageStatus.AUTO_REPLY_PENDING.value
-            if reply.mode == ResponseMode.AUTO.value
-            else MessageStatus.APPROVED.value
-        )
+        message_target = MessageStatus.AUTO_REPLY_PENDING.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.APPROVED.value
         self._transition_message(message, message_target)
         reply.error_code = result.error_code
         reply.failed_reason = result.error_message_safe
@@ -774,6 +773,45 @@ class ReplyExecutionService:
             metadata={
                 "attempt_count": reply.attempt_count,
                 "error_code": error_code,
+            },
+        )
+        await self.session.commit()
+
+    async def _mark_provider_state_manual_review(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        provider_reply_id: str | None,
+        provider_state: str,
+    ) -> None:
+        self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+        self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        reply.marketplace_reply_id = provider_reply_id
+        reply.error_code = "marketplace_validation_error"
+        reply.failed_reason = "Marketplace reply is not in a publishable state"
+        reply.next_retry_at = None
+        reply.metadata_json = {
+            **(reply.metadata_json or {}),
+            "provider_reply_state": provider_state,
+        }
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="manual_review_required",
+            error_code=reply.error_code,
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.provider_state_requires_review",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by,
+            entity_id=str(reply.id),
+            metadata={
+                "attempt_count": reply.attempt_count,
+                "provider_state": provider_state,
             },
         )
         await self.session.commit()

@@ -4,6 +4,7 @@ from app.models.enums import MessageStatus, ReplyStatus
 
 _MESSAGE_TRANSITIONS: dict[str, frozenset[str]] = {
     MessageStatus.NEEDS_REPLY.value: frozenset({
+        MessageStatus.ANSWERED.value,
         MessageStatus.AI_DRAFT_READY.value,
         MessageStatus.NEEDS_MANUAL_CHECK.value,
         MessageStatus.SAFETY_BLOCKED.value,
