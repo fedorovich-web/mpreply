@@ -46,6 +46,17 @@ export default function ContactsPage() {
                 <span className="contact-support-label">Основной email</span>
                 <a className="contact-support-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
                 <p>Подходит для вопросов по подключению площадок, настройке рабочего процесса, демо и работе с обращениями.</p>
+
+                <div className="contact-support-facts" aria-label="Контактная информация">
+                  <div className="contact-support-fact">
+                    <span>Офис</span>
+                    <strong>г. Майкоп, ул. Чкалова, 65, помещение 17А</strong>
+                  </div>
+                  <div className="contact-support-fact">
+                    <span>Режим работы</span>
+                    <strong>Ежедневно, 09:00–18:00 (МСК)</strong>
+                  </div>
+                </div>
               </div>
 
               <div className="contact-support-checklist" aria-label="Что полезно указать в обращении">
