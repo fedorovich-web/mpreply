@@ -17,6 +17,7 @@ import { Badge, type BadgeTone } from "../ui/Badge";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
+const aiMessagePageSize = 50;
 const toneOptions = [
   { value: "neutral", label: "Нейтральный" },
   { value: "friendly", label: "Доброжелательный" },
@@ -34,6 +35,7 @@ export function AIAssistantWorkspace() {
   const queryClient = useQueryClient();
   const canGenerate = writeRoles.has(activeOrganization.current_user_role);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [messagePage, setMessagePage] = useState(1);
   const [tone, setTone] = useState<Tone>("neutral");
   const [brandRules, setBrandRules] = useState("");
   const [knowledgeBase, setKnowledgeBase] = useState("");
@@ -41,13 +43,13 @@ export function AIAssistantWorkspace() {
   const [reviewHandoff, setReviewHandoff] = useState<ReviewHandoffState | null>(null);
 
   const messagesQuery = useQuery({
-    queryKey: ["ai-assistant", "messages", activeOrganization.id],
+    queryKey: ["ai-assistant", "messages", activeOrganization.id, messagePage],
     queryFn: () =>
       apiRequest(
         buildApiQuery("/api/messages", {
           organization_id: activeOrganization.id,
-          page: 1,
-          page_size: 50,
+          page: messagePage,
+          page_size: aiMessagePageSize,
         }),
         customerMessageListSchema,
       ),
@@ -58,6 +60,9 @@ export function AIAssistantWorkspace() {
     if (items.length === 0) return null;
     return items.find((message) => message.id === selectedMessageId) ?? items[0] ?? null;
   }, [messagesQuery.data?.items, selectedMessageId]);
+  const messageTotalPages = messagesQuery.data
+    ? Math.max(1, Math.ceil(messagesQuery.data.total / messagesQuery.data.page_size))
+    : 1;
 
   const draftsQuery = useQuery({
     queryKey: ["ai-assistant", "drafts", activeOrganization.id, selectedMessage?.id],
@@ -143,6 +148,15 @@ export function AIAssistantWorkspace() {
     reviewMutation.reset();
   }
 
+  function changeMessagePage(nextPage: number) {
+    setSelectedMessageId(null);
+    setLatestDraft(null);
+    setReviewHandoff(null);
+    generateMutation.reset();
+    reviewMutation.reset();
+    setMessagePage(nextPage);
+  }
+
   return (
     <section className="ai-workspace" aria-labelledby="ai-workspace-title">
       <header className="ai-workspace-toolbar">
@@ -195,6 +209,30 @@ export function AIAssistantWorkspace() {
               ))}
             </div>
           )}
+
+          {messagesQuery.data && messageTotalPages > 1 ? (
+            <nav className="ai-message-pagination" aria-label="Страницы обращений ИИ-ассистента">
+              <button
+                aria-label="Предыдущая страница обращений"
+                className="button button-secondary button-compact"
+                disabled={messagePage <= 1 || messagesQuery.isFetching}
+                onClick={() => changeMessagePage(Math.max(1, messagePage - 1))}
+                type="button"
+              >
+                Назад
+              </button>
+              <span aria-live="polite">Страница {messagePage} из {messageTotalPages}</span>
+              <button
+                aria-label="Следующая страница обращений"
+                className="button button-secondary button-compact"
+                disabled={messagePage >= messageTotalPages || messagesQuery.isFetching}
+                onClick={() => changeMessagePage(Math.min(messageTotalPages, messagePage + 1))}
+                type="button"
+              >
+                Далее
+              </button>
+            </nav>
+          ) : null}
         </section>
 
         <section className="ai-panel ai-generate-panel" aria-labelledby="ai-generate-title">
