@@ -378,7 +378,7 @@ function DraftResult({
   onSubmit: (replyText: string) => void;
 }) {
   const [replyText, setReplyText] = useState(draft.draft_text);
-  const needsReview = draft.safety_flags_json.length > 0;
+  const needsReview = draftNeedsReview(draft);
   const isLocked = handoff !== null;
 
   return (
@@ -504,10 +504,12 @@ function roleLabel(value: string): string {
   return labels[value] ?? value;
 }
 
+function draftNeedsReview(draft: AIDraft): boolean {
+  return draft.safety_flags_json.length > 0 || (draft.confidence_score !== null && draft.confidence_score < 0.75);
+}
+
 function draftTone(draft: AIDraft): BadgeTone {
-  if (draft.safety_flags_json.length > 0) return "warning";
-  if (draft.confidence_score !== null && draft.confidence_score < 0.75) return "warning";
-  return "success";
+  return draftNeedsReview(draft) ? "warning" : "success";
 }
 
 function confidenceLabel(draft: AIDraft): string {
