@@ -22,6 +22,12 @@ const organization = {
   created_at: timestamp,
   updated_at: timestamp,
 };
+const secondOrganization = {
+  ...organization,
+  id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  name: "Second Store",
+  slug: "second-store",
+};
 
 const firstMessage = {
   id: "33333333-3333-4333-8333-333333333333",
@@ -70,36 +76,61 @@ const message51 = {
     name: "Товар 51",
   },
 };
+const secondOrganizationMessage = {
+  ...firstMessage,
+  id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+  organization_id: secondOrganization.id,
+  external_id: "second-store-message-1",
+  customer_text: "Обращение второго магазина",
+  product: {
+    ...firstMessage.product,
+    id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    external_id: "second-product-1",
+    sku: "SECOND-1",
+    name: "Товар второго магазина",
+  },
+};
 
 const mockedUseWorkspace = vi.mocked(useWorkspace);
+const user = {
+  id: organization.owner_user_id,
+  email: "owner@example.com",
+  name: "Owner",
+  status: "active",
+  is_superadmin: false,
+  created_at: timestamp,
+  updated_at: timestamp,
+};
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
 
-function renderWorkspace() {
+function mockActiveOrganization(activeOrganization = organization) {
   mockedUseWorkspace.mockReturnValue({
-    user: {
-      id: organization.owner_user_id,
-      email: "owner@example.com",
-      name: "Owner",
-      status: "active",
-      is_superadmin: false,
-      created_at: timestamp,
-      updated_at: timestamp,
-    },
-    organizations: [organization],
-    activeOrganization: organization,
+    user,
+    organizations: [organization, secondOrganization],
+    activeOrganization,
     setActiveOrganizationId: vi.fn(),
     logout: vi.fn(),
     isLoggingOut: false,
     logoutError: null,
   });
+}
+
+function renderWorkspace() {
+  mockActiveOrganization();
 
   const fetchMock = vi.fn<typeof fetch>(async (input) => {
     const url = String(input);
     if (url.includes("/api/messages")) {
+      if (url.includes(secondOrganization.id)) {
+        if (url.includes("page=2")) {
+          return new Response(JSON.stringify({ items: [], total: 1, page: 2, page_size: 50 }), { status: 200 });
+        }
+        return new Response(JSON.stringify({ items: [secondOrganizationMessage], total: 1, page: 1, page_size: 50 }), { status: 200 });
+      }
       if (url.includes("page=2")) {
         return new Response(JSON.stringify({ items: [message51], total: 51, page: 2, page_size: 50 }), { status: 200 });
       }
@@ -115,17 +146,17 @@ function renderWorkspace() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <AIAssistantWorkspace />
     </QueryClientProvider>,
   );
-  return fetchMock;
+  return { fetchMock, queryClient, ...view };
 }
 
 describe("AIAssistantWorkspace message pagination", () => {
   it("lets the user reach messages after the first 50 results", async () => {
-    const fetchMock = renderWorkspace();
+    const { fetchMock } = renderWorkspace();
 
     expect(await screen.findByText("Страница 1 из 2")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /Товар 1/ })).toBeInTheDocument();
@@ -135,5 +166,23 @@ describe("AIAssistantWorkspace message pagination", () => {
     expect(await screen.findByText("Страница 2 из 2")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /Товар 51/ })).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes("page=2"))).toBe(true);
+  });
+
+  it("returns to the first message page when the active workspace changes", async () => {
+    const { queryClient, rerender } = renderWorkspace();
+
+    expect(await screen.findByText("Страница 1 из 2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Следующая страница обращений" }));
+    expect(await screen.findByText("Страница 2 из 2")).toBeInTheDocument();
+
+    mockActiveOrganization(secondOrganization);
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <AIAssistantWorkspace />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByRole("button", { name: /Товар второго магазина/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Товар 51/ })).not.toBeInTheDocument();
   });
 });
