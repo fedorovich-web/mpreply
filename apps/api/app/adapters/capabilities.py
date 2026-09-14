@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import cast
 
 from app.models.enums import Marketplace, MessageType
 
@@ -59,6 +61,17 @@ _CAPABILITIES = {
     )
 }
 
+_STREAM_READ_SCOPES = {
+    MarketplaceStream.REVIEWS: "reviews:read",
+    MarketplaceStream.QUESTIONS: "questions:read",
+    MarketplaceStream.CHATS: "chats:read",
+}
+_MESSAGE_WRITE_SCOPES = {
+    MessageType.REVIEW: "reviews:write",
+    MessageType.QUESTION: "questions:write",
+    MessageType.CHAT: "chats:write",
+}
+
 
 def get_marketplace_capability(marketplace: Marketplace | str) -> MarketplaceCapability:
     try:
@@ -66,3 +79,33 @@ def get_marketplace_capability(marketplace: Marketplace | str) -> MarketplaceCap
     except ValueError:
         raise ValueError("unsupported marketplace") from None
     return _CAPABILITIES[normalized]
+
+
+def validated_scope_names(scopes_json: Mapping[str, object]) -> frozenset[str]:
+    value = scopes_json.get("scopes")
+    if not isinstance(value, list):
+        return frozenset()
+    items = cast(list[object], value)
+    if not all(isinstance(item, str) and item for item in items):
+        return frozenset()
+    return frozenset(cast(str, item) for item in items)
+
+
+def read_scope_for_stream(stream: MarketplaceStream) -> str:
+    return _STREAM_READ_SCOPES[stream]
+
+
+def write_scope_for_message(message_type: MessageType) -> str:
+    return _MESSAGE_WRITE_SCOPES[message_type]
+
+
+def streams_for_scopes(
+    capability_streams: frozenset[MarketplaceStream],
+    scopes_json: Mapping[str, object],
+) -> frozenset[MarketplaceStream]:
+    scopes = validated_scope_names(scopes_json)
+    return frozenset(
+        stream
+        for stream in capability_streams
+        if read_scope_for_stream(stream) in scopes
+    )

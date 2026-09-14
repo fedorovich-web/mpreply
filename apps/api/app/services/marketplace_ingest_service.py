@@ -23,13 +23,13 @@ _PRODUCT_CONSTRAINT = "uq_products_external"
 
 _MESSAGE_METADATA_KEYS: dict[Marketplace, frozenset[str]] = {
     Marketplace.WILDBERRIES: frozenset({"source", "status", "is_answered"}),
-    Marketplace.OZON: frozenset({"source", "status", "is_answered"}),
+    Marketplace.OZON: frozenset({"source", "status", "is_answered", "sku"}),
     Marketplace.YANDEX_MARKET: frozenset({"source", "status", "is_answered"}),
     Marketplace.AVITO: frozenset({"source", "status", "chat_id", "chat_type", "author_type", "direction"}),
 }
 _PRODUCT_METADATA_KEYS: dict[Marketplace, frozenset[str]] = {
     Marketplace.WILDBERRIES: frozenset({"nm_id", "imt_id", "supplier_article"}),
-    Marketplace.OZON: frozenset({"offer_id", "product_id"}),
+    Marketplace.OZON: frozenset({"offer_id", "product_id", "sku"}),
     Marketplace.YANDEX_MARKET: frozenset({"business_id", "market_sku", "offer_id"}),
     Marketplace.AVITO: frozenset({"item_id"}),
 }

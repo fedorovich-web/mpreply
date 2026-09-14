@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.capabilities import MarketplaceStream
+from app.adapters.capabilities import MarketplaceStream, streams_for_scopes
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.errors import bad_request, forbidden, not_found
 from app.models.enums import Marketplace
@@ -69,7 +69,7 @@ class MarketplaceSyncService:
             user_id=actor.id,
             allowed_roles=_ALLOWED_SYNC_ROLES,
         )
-        if account.status not in {"active", "pending_validation", "error"}:
+        if account.status != "active" or account.credentials_status != "valid":
             raise bad_request("Marketplace account is not available for sync")
         try:
             marketplace = Marketplace(account.marketplace)
@@ -105,7 +105,13 @@ class MarketplaceSyncService:
             entity_id=str(account.id),
             metadata={"marketplace": account.marketplace, "sync_job_id": str(job.id)},
         )
-        states = await self._ensure_states(account, capability.streams, now)
+        supported_streams = streams_for_scopes(
+            capability.streams,
+            account.scopes_json or {},
+        )
+        if not supported_streams:
+            raise forbidden("Marketplace account has no validated synchronization scope")
+        states = await self._ensure_states(account, supported_streams, now)
         await self.session.commit()
 
         runner = self.runner or ScheduledSyncService(self.session, registry=registry)

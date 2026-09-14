@@ -5,9 +5,15 @@ from dataclasses import dataclass
 from typing import TypeVar
 
 from app.adapters.base import CredentialAdapter, ReviewQuestionAdapter
-from app.adapters.capabilities import WILDBERRIES_CAPABILITY, MarketplaceCapability, MarketplaceStream
+from app.adapters.capabilities import (
+    OZON_CAPABILITY,
+    WILDBERRIES_CAPABILITY,
+    MarketplaceCapability,
+    MarketplaceStream,
+)
 from app.adapters.conversation import ConversationAdapter
 from app.adapters.http import MarketplaceHttpClients
+from app.adapters.ozon import OzonAdapter
 from app.adapters.wildberries import WildberriesAdapter
 from app.models.enums import Marketplace
 
@@ -82,6 +88,10 @@ def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceA
             Marketplace.WILDBERRIES: ProviderRegistration(
                 capability=WILDBERRIES_CAPABILITY,
                 factory=lambda: WildberriesAdapter(client=clients.wildberries),
-            )
+            ),
+            Marketplace.OZON: ProviderRegistration(
+                capability=OZON_CAPABILITY,
+                factory=lambda: OzonAdapter(client=clients.ozon),
+            ),
         }
     )

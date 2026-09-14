@@ -13,6 +13,7 @@ from app.adapters.base import (
     ProviderMessageContext,
     ProviderWriteReceipt,
 )
+from app.adapters.capabilities import validated_scope_names, write_scope_for_message
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
 from app.core.config import get_settings
@@ -336,6 +337,23 @@ class ReplyExecutionService:
                     False,
                     error_code="unsupported_capability",
                     error_message_safe="Message type cannot be replied to through the review adapter",
+                ),
+            )
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        required_scope = write_scope_for_message(message_type)
+        scopes = validated_scope_names(account.scopes_json or {})
+        if (
+            account.status != "active"
+            or account.credentials_status != "valid"
+            or required_scope not in scopes
+        ):
+            await self._mark_terminal_marketplace_failure(
+                reply=reply,
+                message=message,
+                result=AdapterResult(
+                    False,
+                    error_code="insufficient_scope",
+                    error_message_safe="Marketplace account is inactive or lacks reply permission",
                 ),
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
