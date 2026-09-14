@@ -107,6 +107,21 @@ describe("apiRequest", () => {
     expect(fetchMock).toHaveBeenCalledTimes(5);
   });
 
+  it("keeps refresh infrastructure failure distinct from an expired session", async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "expired" }), { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(apiRequest("/api/protected", z.object({ ok: z.boolean() }))).rejects.toMatchObject({
+      name: "ApiError",
+      message: "Не удалось проверить сессию. Повторите попытку позже.",
+      status: 401,
+      kind: "session-refresh-unavailable",
+    } satisfies Partial<ApiError>);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("does not attach a CSRF proof to safe requests", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () =>
       new Response(JSON.stringify({ ok: true }), { status: 200 }),

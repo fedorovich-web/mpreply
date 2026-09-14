@@ -67,10 +67,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     <AuthShell
       description={
         isLogin
-          ? "Войдите, чтобы продолжить работу с отзывами, вопросами, сообщениями и AI-ответами."
+          ? "Войдите, чтобы продолжить работу с отзывами, вопросами и ответами."
           : "Создайте аккаунт, подтвердите email и подключите первый маркетплейс."
       }
-      eyebrow={isLogin ? "MPReply workspace" : "MPReply account"}
+      eyebrow={isLogin ? "Вход в Respio" : "Аккаунт Respio"}
       footer={footer}
       showYandexButton={!successMessage}
       title={isLogin ? "Вход" : "Создать аккаунт"}

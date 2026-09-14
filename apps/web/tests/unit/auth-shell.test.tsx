@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 import { AuthShell } from "../../components/auth/AuthShell";
 
 describe("AuthShell", () => {
-  it("shows an MPReply product preview beside the auth content", () => {
+  it("shows a truthful Respio workflow beside the auth content", () => {
     render(
       <AuthShell
         description="Продолжите работу с отзывами и сообщениями покупателей."
-        eyebrow="MPReply account"
+        eyebrow="Аккаунт Respio"
         title="Вход"
       >
         <div>Форма входа</div>
@@ -17,19 +17,23 @@ describe("AuthShell", () => {
 
     expect(screen.getByRole("heading", { name: "Вход" })).toBeInTheDocument();
     expect(screen.getByText("Форма входа")).toBeInTheDocument();
-    expect(screen.getByLabelText("Превью интерфейса MPReply")).toBeInTheDocument();
-    expect(screen.getByText("Единая очередь")).toBeInTheDocument();
-    expect(screen.getByText("AI-черновик готов")).toBeInTheDocument();
-    expect(screen.getByText("Wildberries")).toBeInTheDocument();
-    expect(screen.getByText("Ozon")).toBeInTheDocument();
-    expect(screen.getByText("Яндекс Маркет")).toBeInTheDocument();
+    expect(
+      screen.getByRole("complementary", {
+        name: "Автоматизация с проверкой там, где она нужна",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Обращения в очереди")).toBeInTheDocument();
+    expect(screen.getByText("В MVP отправка ответов поддерживается через Wildberries.")).toBeInTheDocument();
+    expect(screen.queryByText("Ozon")).not.toBeInTheDocument();
+    expect(screen.queryByText("Яндекс Маркет")).not.toBeInTheDocument();
+    expect(screen.queryByText(/\b\d+%\b/)).not.toBeInTheDocument();
   });
 
   it("offers only the planned Yandex social entry point", () => {
     render(
       <AuthShell
         description="Создайте аккаунт."
-        eyebrow="MPReply account"
+        eyebrow="Аккаунт Respio"
         showYandexButton
         title="Создать аккаунт"
       >

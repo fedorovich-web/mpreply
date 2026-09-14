@@ -48,7 +48,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (!(userQuery.error instanceof ApiError) || userQuery.error.status !== 401) return;
+    if (!(userQuery.error instanceof ApiError) || userQuery.error.kind !== "session-expired") return;
     const next = pathname ? `?next=${encodeURIComponent(pathname)}` : "";
     router.replace(`/auth/login${next}`);
   }, [pathname, router, userQuery.error]);
@@ -82,7 +82,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (userQuery.error) {
-    if (userQuery.error instanceof ApiError && userQuery.error.status === 401) {
+    if (userQuery.error instanceof ApiError && userQuery.error.kind === "session-expired") {
       return <WorkspaceBootState title="Сессия завершена" description="Перенаправляем на страницу входа." />;
     }
     return (
