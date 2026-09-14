@@ -325,8 +325,15 @@
 	line-height: 1.5;
 }
 
-.automation-action-error {
+.automation-action-error,
+.automation-action-success {
 	font-size: 0.72rem;
+}
+
+.automation-action-success {
+	margin: 0;
+	color: var(--color-success-text);
+	font-weight: 650;
 }
 
 .automation-detail-grid {
