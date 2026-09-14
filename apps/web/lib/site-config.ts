@@ -27,7 +27,6 @@ export const siteConfig = {
     { href: "/features", label: "Возможности" },
     { href: "/marketplaces", label: "Интеграции" },
     { href: "/pricing", label: "Тарифы" },
-    { href: "/resources", label: "Блог" },
     { href: "/help", label: "Помощь" },
   ],
 } as const;
@@ -96,7 +95,6 @@ export const publicRoutes = [
   "/marketplaces/avito",
   "/pricing",
   "/demo",
-  "/resources",
   "/help",
   "/privacy",
   "/terms",
