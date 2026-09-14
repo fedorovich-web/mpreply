@@ -23,20 +23,29 @@ describe("superadmin dashboard", () => {
     expect(workspace).not.toContain("usage ledger");
   });
 
-  it("groups system health metrics into readable operational cards", () => {
-    expect(workspace).toContain("admin-overview-grid");
-    expect(workspace).toContain("admin-overview-card");
-    expect(workspace).toContain("Организации");
-    expect(workspace).toContain("Пользователи");
+  it("puts current incidents before product scale and 30-day usage", () => {
+    expect(workspace).toContain("admin-section-incidents");
+    expect(workspace).toContain("admin-section-product");
+    expect(workspace).toContain("admin-section-usage");
+    expect(workspace.indexOf("admin-section-incidents")).toBeLessThan(workspace.indexOf("admin-section-product"));
+    expect(workspace.indexOf("admin-section-product")).toBeLessThan(workspace.indexOf("admin-section-usage"));
     expect(workspace).toContain("Ошибки интеграций за 24 часа");
     expect(workspace).toContain("Неотправленные ответы за 24 часа");
+    expect(workspace).toContain("Организации");
+    expect(workspace).toContain("Пользователи");
+  });
+
+  it("keeps the overview error recoverable without leaving the page", () => {
+    expect(workspace).toContain("overviewQuery.refetch()");
+    expect(workspace).toContain("Повторить");
   });
 
   it("loads a scoped responsive admin layer without introducing a second palette", () => {
     expect(layout).toContain('import "../styles/dashboard-admin-approved.css"');
     expect(styles).toContain(".admin-page");
-    expect(styles).toContain(".admin-overview-grid");
-    expect(styles).toContain(".admin-overview-card");
+    expect(styles).toContain(".admin-section-incidents");
+    expect(styles).toContain(".admin-section-product");
+    expect(styles).toContain(".admin-section-usage");
     expect(styles).toContain("@media (max-width: 520px)");
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
