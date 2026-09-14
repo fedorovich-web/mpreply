@@ -18,6 +18,17 @@ describe("analytics operational dashboard", () => {
     expect(workspace).toContain("organization_id: activeOrganization.id");
   });
 
+  it("keeps analytics failures recoverable without leaving the page", () => {
+    expect(workspace).toContain("function retryAnalytics()");
+    expect(workspace).toContain("overviewQuery.refetch()");
+    expect(workspace).toContain("messagesQuery.refetch()");
+    expect(workspace).toContain("marketplacesQuery.refetch()");
+    expect(workspace).toContain("productsQuery.refetch()");
+    expect(workspace).toContain("aiUsageQuery.refetch()");
+    expect(workspace).toContain('actionLabel="Повторить"');
+    expect(workspace).toContain("onAction={retryAnalytics}");
+  });
+
   it("does not report zero safety flags when AI usage analytics failed", () => {
     expect(workspace).toContain('aiUsageQuery.error ? "—" : formatNumber(aiUsageQuery.data?.safety_flagged_drafts ?? 0)');
   });
