@@ -84,9 +84,10 @@ Required order is enforced by Compose where applicable:
 2. `migrate` runs `alembic upgrade head` and exits successfully.
 3. `api` starts and reaches `/health/ready`.
 4. `worker` starts.
-5. `web` starts and reaches `/api/health`.
-6. Run production smoke checks.
-7. Only then enable/resume automatic reply execution.
+5. `scheduler` starts.
+6. `web` starts and reaches `/api/health`.
+7. Run production smoke checks.
+8. Only then enable/resume automatic reply execution.
 
 ## 6. Security and operational checks
 

@@ -37,6 +37,8 @@ x-backend-env: &backend-env
   SECURITY_HEADERS_ENABLED: "true"
   FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:?FORWARDED_ALLOW_IPS is required}
   DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:?DEPLOYMENT_VERSION is required}
+  MARKETPLACE_SCHEDULER_INTERVAL_SECONDS: ${MARKETPLACE_SCHEDULER_INTERVAL_SECONDS:-30}
+  MARKETPLACE_SCHEDULER_BATCH_SIZE: ${MARKETPLACE_SCHEDULER_BATCH_SIZE:-25}
 
 services:
   migrate:
@@ -81,6 +83,23 @@ services:
     build:
       context: ../..
       dockerfile: apps/worker/Dockerfile
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: apps/scheduler/Dockerfile
     environment: *backend-env
     depends_on:
       migrate:

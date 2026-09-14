@@ -31,4 +31,4 @@ USER respio
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import os; from redis import Redis; client=Redis.from_url(os.environ['REDIS_URL']); assert client.ping(); client.close()"
 
-CMD ["dramatiq", "app.workers.auto_reply", "--processes", "1", "--threads", "4"]
+CMD ["dramatiq", "app.workers.auto_reply", "app.workers.marketplace_sync", "--processes", "1", "--threads", "4"]
