@@ -52,7 +52,7 @@ export function PublicHeader() {
   return (
     <header className="public-header">
       <div className="public-container public-header-inner">
-        <Link className="public-brand" href="/" aria-label="Respio — главная" onClick={closeMenu}>
+        <Link className="public-brand" href="/" aria-label="Respio — главная" onClick={() => closeMenu()}>
           <span className="public-brand-mark" aria-hidden="true">
             R
           </span>
