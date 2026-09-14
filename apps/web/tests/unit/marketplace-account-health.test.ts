@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { hasCurrentIntegrationProblem } from "../../lib/marketplace-account-health";
 
 const baseAccount = {
-  status: "active",
+  status: "active" as const,
   last_success_sync_at: "2026-09-14T06:30:00Z",
   last_error_sync_at: null as string | null,
 };
