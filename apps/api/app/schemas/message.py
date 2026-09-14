@@ -10,7 +10,7 @@ class ProductSummary(BaseModel):
     id: UUID
     external_id: str
     sku: str | None = None
-    name: str
+    name: str | None = None
     brand: str | None = None
     category: str | None = None
     image_url: str | None = None

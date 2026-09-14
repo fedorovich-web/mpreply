@@ -289,7 +289,7 @@ def _validate_message(message: NormalizedMessage) -> None:
 
 def _validate_product(product: NormalizedProduct) -> None:
     _validate_required_text(product.external_id, field_name="product external ID", maximum=255)
-    _validate_required_text(product.name, field_name="product name", maximum=500)
+    _validate_optional_text(product.name, field_name="product name", maximum=500)
     _validate_optional_text(product.sku, field_name="product SKU", maximum=255)
     _validate_optional_text(product.brand, field_name="product brand", maximum=255)
     _validate_optional_text(product.category, field_name="product category", maximum=255)
