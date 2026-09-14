@@ -27,6 +27,13 @@ describe("review queue operational workspace", () => {
     expect(workspace).not.toContain("worker pipeline");
   });
 
+  it("keeps paginated review work reachable beyond the first API page", () => {
+    expect(workspace).toContain("const [page, setPage] = useState(1)");
+    expect(workspace).toContain("page_size: reviewQueuePageSize");
+    expect(workspace).toContain('aria-label="Следующая страница"');
+    expect(styles).toContain(".review-queue-pagination");
+  });
+
   it("prevents known read-only roles from discovering permissions through a failed click", () => {
     expect(workspace).toContain('new Set(["owner", "admin", "manager"])');
     expect(workspace).toContain("canManageReview");
