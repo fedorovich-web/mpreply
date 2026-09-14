@@ -1,4 +1,4 @@
-import { AIAssistantWorkspace } from "../../../components/ai-assistant/AIAssistantWorkspace";
+import { ScopedAIAssistantWorkspace } from "../../../components/ai-assistant/ScopedAIAssistantWorkspace";
 
 export default function AIAssistantPage() {
   return (
@@ -17,7 +17,7 @@ export default function AIAssistantPage() {
         </div>
       </header>
 
-      <AIAssistantWorkspace />
+      <ScopedAIAssistantWorkspace />
     </section>
   );
 }
