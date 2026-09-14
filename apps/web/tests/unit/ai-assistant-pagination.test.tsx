@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AIAssistantWorkspace } from "../../components/ai-assistant/AIAssistantWorkspace";
+import { ScopedAIAssistantWorkspace } from "../../components/ai-assistant/ScopedAIAssistantWorkspace";
 import { useWorkspace } from "../../components/workspace/WorkspaceProvider";
 
 vi.mock("../../components/workspace/WorkspaceProvider", () => ({
@@ -148,7 +148,7 @@ function renderWorkspace() {
   });
   const view = render(
     <QueryClientProvider client={queryClient}>
-      <AIAssistantWorkspace />
+      <ScopedAIAssistantWorkspace />
     </QueryClientProvider>,
   );
   return { fetchMock, queryClient, ...view };
@@ -178,7 +178,7 @@ describe("AIAssistantWorkspace message pagination", () => {
     mockActiveOrganization(secondOrganization);
     rerender(
       <QueryClientProvider client={queryClient}>
-        <AIAssistantWorkspace />
+        <ScopedAIAssistantWorkspace />
       </QueryClientProvider>,
     );
 
