@@ -20,9 +20,10 @@ describe("dashboard operational overview", () => {
     expect(dashboard).not.toContain("billingOverviewSchema");
   });
 
-  it("does not count an account with sync errors as an active healthy connection", () => {
-    expect(dashboard).toContain('account.status === "active" && account.error_count === 0');
-    expect(dashboard).toContain('account.status === "error" || account.error_count > 0');
+  it("uses current sync health instead of cumulative error count for connection status", () => {
+    expect(dashboard).toContain('import { hasCurrentIntegrationProblem } from "../../lib/marketplace-account-health"');
+    expect(dashboard).toContain("hasCurrentIntegrationProblem(account)");
+    expect(dashboard).not.toContain("account.error_count > 0");
   });
 
   it("puts unanswered work, review decisions and integration health before aggregate reporting", () => {
