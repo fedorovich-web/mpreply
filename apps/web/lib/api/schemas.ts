@@ -78,7 +78,7 @@ export const productSummarySchema = z.object({
   id: uuidSchema,
   external_id: z.string(),
   sku: z.string().nullable(),
-  name: z.string(),
+  name: z.string().nullable(),
   brand: z.string().nullable(),
   category: z.string().nullable(),
   image_url: z.string().nullable(),

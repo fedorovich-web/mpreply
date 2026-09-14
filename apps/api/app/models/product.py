@@ -19,7 +19,7 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     marketplace: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     external_id: Mapped[str] = mapped_column(String(255), nullable=False)
     sku: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    name: Mapped[str] = mapped_column(String(500), nullable=False)
+    name: Mapped[str | None] = mapped_column(String(500), nullable=True)
     brand: Mapped[str | None] = mapped_column(String(255), nullable=True)
     category: Mapped[str | None] = mapped_column(String(255), nullable=True)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)

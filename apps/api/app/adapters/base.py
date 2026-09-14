@@ -50,7 +50,7 @@ class CredentialValidation:
 class NormalizedProduct:
     external_id: str
     sku: str | None
-    name: str
+    name: str | None
     brand: str | None
     category: str | None
     image_url: str | None
