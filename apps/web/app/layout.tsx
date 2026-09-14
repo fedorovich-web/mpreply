@@ -18,7 +18,7 @@ import "../styles/marketing-pages.css";
 import "../styles/marketplaces-approved.css";
 import "../styles/marketplace-detail-approved.css";
 import "../styles/pricing-demo-approved.css";
-import "../styles/resources-contacts-approved.css";
+import "../styles/contacts-approved.css";
 import "../styles/help-legal-approved.css";
 import "../styles/homepage-approved.css";
 
