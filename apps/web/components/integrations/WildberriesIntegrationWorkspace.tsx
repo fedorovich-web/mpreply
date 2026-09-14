@@ -12,6 +12,7 @@ import {
   marketplaceSyncSchema,
   type MarketplaceAccount,
 } from "../../lib/api/schemas";
+import { hasCurrentIntegrationProblem } from "../../lib/marketplace-account-health";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 type ResponseMode = "inherit" | "auto" | "semi_auto";
@@ -458,11 +459,14 @@ function AccountDetail({
 }
 
 function StatusBadge({ account }: { account: MarketplaceAccount }) {
-  const tone = account.status === "active" && account.credentials_status === "valid"
-    ? "ui-badge-success"
-    : account.status === "error" || account.credentials_status === "revoked"
-      ? "ui-badge-danger"
-      : "ui-badge-warning";
+  const hasProblem = hasCurrentIntegrationProblem(account);
+  const tone = account.status === "error" || account.credentials_status === "revoked"
+    ? "ui-badge-danger"
+    : hasProblem
+      ? "ui-badge-warning"
+      : account.status === "active" && account.credentials_status === "valid"
+        ? "ui-badge-success"
+        : "ui-badge-warning";
   return <span className={`ui-badge ${tone}`}>{accountStatusLabel(account)}</span>;
 }
 
@@ -519,8 +523,9 @@ function normalizeResponseMode(value: string): ResponseMode {
 
 function accountStatusLabel(account: MarketplaceAccount): string {
   if (account.credentials_status === "revoked") return "Доступ отозван";
-  if (account.status === "active" && account.credentials_status === "valid") return "Активно";
   if (account.status === "error") return "Ошибка";
+  if (hasCurrentIntegrationProblem(account)) return "Требует внимания";
+  if (account.status === "active" && account.credentials_status === "valid") return "Активно";
   if (account.status === "disabled") return "Отключено";
   return "Нужна проверка";
 }
