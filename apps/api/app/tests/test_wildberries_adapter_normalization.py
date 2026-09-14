@@ -1,3 +1,6 @@
+from collections.abc import AsyncIterator
+
+import httpx
 import pytest
 
 from app.adapters.base import NormalizedMessage, NormalizedProduct
@@ -5,15 +8,17 @@ from app.adapters.wildberries import WildberriesAdapter
 from app.models.enums import MessageType
 
 
-def test_wildberries_extracts_feedbacks_from_nested_payload():
-    adapter = WildberriesAdapter()
-    payload = {"data": {"feedbacks": [{"id": "fb-1", "text": "ok"}]}}
+@pytest.fixture
+async def wildberries_adapter() -> AsyncIterator[WildberriesAdapter]:
+    async with httpx.AsyncClient() as client:
+        yield WildberriesAdapter(client)
 
-    assert adapter.extract_reviews(payload) == [{"id": "fb-1", "text": "ok"}]
 
-
-def test_wildberries_normalizes_feedback_without_customer_name():
-    adapter = WildberriesAdapter()
+@pytest.mark.asyncio
+async def test_wildberries_normalizes_feedback_without_customer_name(
+    wildberries_adapter: WildberriesAdapter,
+) -> None:
+    adapter = wildberries_adapter
     normalized = adapter.normalize_review(
         {
             "id": "fb-1",
@@ -35,8 +40,9 @@ def test_wildberries_normalizes_feedback_without_customer_name():
     assert normalized.product.metadata == {"nm_id": 123}
 
 
-def test_wildberries_normalizes_question():
-    adapter = WildberriesAdapter()
+@pytest.mark.asyncio
+async def test_wildberries_normalizes_question(wildberries_adapter: WildberriesAdapter) -> None:
+    adapter = wildberries_adapter
     normalized = adapter.normalize_question(
         {
             "id": "q-1",
@@ -65,6 +71,10 @@ def test_wildberries_normalizes_question():
         {"id": "fb-1", "text": "Valid", "createdDate": "2026-07-08T10:00:00Z"},
     ],
 )
-def test_wildberries_rejects_malformed_required_fields(payload: dict[str, object]) -> None:
+@pytest.mark.asyncio
+async def test_wildberries_rejects_malformed_required_fields(
+    payload: dict[str, object],
+    wildberries_adapter: WildberriesAdapter,
+) -> None:
     with pytest.raises(ValueError):
-        WildberriesAdapter().normalize_review(payload)
+        wildberries_adapter.normalize_review(payload)

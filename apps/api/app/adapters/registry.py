@@ -51,6 +51,9 @@ class MarketplaceAdapterRegistry:
         self._require_streams(marketplace, required)
         return self._resolve(marketplace, ConversationAdapter)
 
+    def capability(self, marketplace: Marketplace) -> MarketplaceCapability:
+        return self._registration(marketplace).capability
+
     def _resolve(self, marketplace: Marketplace, expected: type[AdapterT]) -> AdapterT:
         registration = self._registration(marketplace)
         instance = self._instances.get(marketplace)

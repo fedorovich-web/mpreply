@@ -6,8 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.adapters.registry import MarketplaceAdapterRegistry
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
+from app.dependencies.marketplace import get_marketplace_registry
 from app.models.user import User
 from app.schemas.marketplace_account import (
     MarketplaceAccountActionResponse,
@@ -89,22 +91,26 @@ async def update_marketplace_account(
 @router.post("/{account_id}/validate", response_model=MarketplaceAccountValidateResponse)
 async def validate_marketplace_account(
     account_id: UUID,
+    registry: MarketplaceAdapterRegistry = Depends(get_marketplace_registry),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> MarketplaceAccountValidateResponse:
     service = MarketplaceAccountService(session)
-    account, result = await service.validate_credentials(actor=current_user, account_id=account_id)
+    account, result = await service.validate_credentials(
+        actor=current_user,
+        account_id=account_id,
+        registry=registry,
+    )
     await session.commit()
     return MarketplaceAccountValidateResponse(
         id=account.id,
         status=account.status,
         credentials_status=account.credentials_status,
-        scopes=list((account.scopes_json or {}).keys()),
+        scopes=list(result.data.scopes) if result.data is not None else [],
         checked_at=datetime.now(UTC),
         error_code=result.error_code,
         error_message_safe=result.error_message_safe,
     )
-
 
 @router.post("/{account_id}/rotate-credentials", response_model=MarketplaceAccountActionResponse)
 async def rotate_marketplace_credentials(
@@ -152,11 +158,12 @@ async def revoke_marketplace_credentials(
 @router.post("/{account_id}/sync", response_model=MarketplaceSyncResponse, status_code=status.HTTP_202_ACCEPTED)
 async def request_marketplace_sync(
     account_id: UUID,
+    registry: MarketplaceAdapterRegistry = Depends(get_marketplace_registry),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> MarketplaceSyncResponse:
-    service = MarketplaceSyncService(session)
-    account, stats, error_code, error_message_safe = await service.sync_account(
+    service = MarketplaceSyncService(session, registry=registry)
+    account, stats, error_code, error_message_safe = await service.request_sync(
         actor=current_user,
         account_id=account_id,
     )

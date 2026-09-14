@@ -3,22 +3,25 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import cast
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import AdapterResult
-from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.base import (
+    AdapterResult,
+    ProviderMessageContext,
+    ProviderWriteReceipt,
+)
+from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
 from app.core.config import get_settings
 from app.core.errors import bad_request, conflict, not_found
-from app.core.security import CredentialService
+from app.core.security import CredentialEncryptionError, CredentialService
 from app.models.ai_draft import AIDraft
 from app.models.automation_rule import AutomationRule
 from app.models.customer_message import CustomerMessage
-from app.models.enums import MessageStatus, MessageType, ReplyStatus, ResponseMode
+from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.reply import Reply
@@ -35,6 +38,9 @@ _WRITE_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
 _RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"})
 _BLOCKING_MARKETPLACE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
+_AMBIGUOUS_WRITE_ERRORS = frozenset(
+    {"malformed_payload", "marketplace_unavailable", "network_error", "network_timeout"}
+)
 
 
 @dataclass(frozen=True)
@@ -57,7 +63,13 @@ class ExecuteReplyResult:
 
 
 class ReplyExecutionService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        *,
+        registry: MarketplaceAdapterRegistry | None = None,
+        credentials: CredentialService | None = None,
+    ) -> None:
         self.session = session
         self.audit = AuditService(session)
         self.message_service = MessageService(session)
@@ -65,8 +77,11 @@ class ReplyExecutionService:
         self.automation_service = AutomationRuleService(session)
         self.quota = QuotaService(session)
         self.safety_gate = SafetyGate()
-        settings = get_settings()
-        self.credentials = CredentialService(settings.credentials_encryption_key.get_secret_value())
+        self.registry = registry
+        if credentials is None:
+            settings = get_settings()
+            credentials = CredentialService(settings.credentials_encryption_key.get_secret_value())
+        self.credentials = credentials
 
     async def queue_auto_reply(
         self,
@@ -259,14 +274,29 @@ class ReplyExecutionService:
     async def execute_reply(self, *, reply_id: UUID) -> ExecuteReplyResult:
         reply = await self._get_reply_for_update(reply_id)
         if reply.status == ReplyStatus.SENT.value:
+            await self.session.commit()
             return ExecuteReplyResult(reply.id, reply.status, False)
         settings = get_settings()
         if (
             reply.status == ReplyStatus.SENDING.value
             and reply.last_attempt_at is not None
-            and reply.last_attempt_at >= datetime.now(UTC) - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
+            and reply.last_attempt_at
+            >= datetime.now(UTC) - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
         ):
+            await self.session.commit()
             return ExecuteReplyResult(reply.id, reply.status, False, "execution_in_progress")
+        if reply.status == ReplyStatus.SENDING.value:
+            message = await self._get_message(reply.message_id, organization_id=reply.organization_id)
+            await self._mark_ambiguous_write(
+                reply=reply,
+                message=message,
+                result=AdapterResult[ProviderWriteReceipt](
+                    False,
+                    error_code="network_error",
+                    error_message_safe="Previous marketplace write outcome is unknown",
+                ),
+            )
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         if reply.attempt_count >= reply.max_attempts:
             await self._mark_final_failure(reply, "retry_limit_exhausted", "Retry limit exhausted")
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
@@ -276,10 +306,52 @@ class ReplyExecutionService:
             ReplyStatus.FAILED.value,
             ReplyStatus.SENDING.value,
         }:
+            await self.session.commit()
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
 
-        message = await self._get_message(reply.message_id)
-        account = await self._get_account(message.marketplace_account_id)
+        message = await self._get_message(reply.message_id, organization_id=reply.organization_id)
+        account = await self._get_account(
+            message.marketplace_account_id,
+            organization_id=reply.organization_id,
+        )
+        try:
+            message_type = MessageType(message.type)
+            marketplace = Marketplace(message.marketplace)
+        except ValueError:
+            await self._mark_terminal_marketplace_failure(
+                reply=reply,
+                message=message,
+                result=AdapterResult(
+                    False,
+                    error_code="unsupported_capability",
+                    error_message_safe="Message type cannot be replied to through the marketplace adapter",
+                ),
+            )
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        if message_type not in {MessageType.REVIEW, MessageType.QUESTION}:
+            await self._mark_terminal_marketplace_failure(
+                reply=reply,
+                message=message,
+                result=AdapterResult(
+                    False,
+                    error_code="unsupported_capability",
+                    error_message_safe="Message type cannot be replied to through the review adapter",
+                ),
+            )
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        try:
+            adapter = self._adapter_registry().review_questions(marketplace)
+        except UnsupportedCapabilityError:
+            await self._mark_terminal_marketplace_failure(
+                reply=reply,
+                message=message,
+                result=AdapterResult(
+                    False,
+                    error_code="unsupported_capability",
+                    error_message_safe="Marketplace reply capability is not supported",
+                ),
+            )
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         if reply.mode == ResponseMode.AUTO.value:
             rule = await self._get_rule(reply.automation_rule_id)
             quota = await self._check_quota(message=message, rule=rule)
@@ -290,48 +362,134 @@ class ReplyExecutionService:
         self._transition_reply(reply, ReplyStatus.SENDING.value)
         self._transition_message(message, MessageStatus.SENDING.value)
         reply.attempt_count += 1
+        if reply.idempotency_key is None:
+            reply.idempotency_key = self.build_idempotency_key(message)
+        attempt_count = reply.attempt_count
+        idempotency_key = reply.idempotency_key
         reply.last_attempt_at = datetime.now(UTC)
         reply.next_retry_at = None
         reply.error_code = None
         reply.failed_reason = None
         await self.session.commit()
 
-        credential = self.credentials.decrypt(account.credentials_encrypted)
-        adapter = self._adapter_for(account)
-        preflight = await self._preflight_answer_status(
-            adapter=adapter,
-            credential=credential,
-            message=message,
+        try:
+            credential = self.credentials.decrypt(account.credentials_encrypted)
+        except CredentialEncryptionError:
+            owned = await self._get_owned_attempt_for_update(
+                reply_id,
+                attempt_count=attempt_count,
+                idempotency_key=idempotency_key,
+            )
+            if owned is None:
+                await self.session.commit()
+                current = await self._get_reply(reply_id)
+                return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
+            message = await self._get_message(owned.message_id, organization_id=owned.organization_id)
+            await self._mark_terminal_marketplace_failure(
+                reply=owned,
+                message=message,
+                result=AdapterResult(
+                    False,
+                    error_code="invalid_credentials",
+                    error_message_safe="Stored marketplace credential is invalid",
+                ),
+            )
+            return ExecuteReplyResult(owned.id, owned.status, False, "invalid_credentials")
+        context = ProviderMessageContext(
+            message_type=message_type,
+            external_id=message.external_id,
+            marketplace_created_at=message.marketplace_created_at,
+            metadata=dict(message.metadata_json or {}),
         )
-        if preflight is True:
-            reply = await self._get_reply_for_update(reply_id)
-            message = await self._get_message(reply.message_id)
+        preflight = await adapter.find_existing_reply(
+            credential,
+            account.seller_id,
+            context,
+        )
+        if not preflight.ok or preflight.data is None:
+            failed_result: AdapterResult = preflight
+            if preflight.ok:
+                failed_result = AdapterResult(
+                    False,
+                    error_code="malformed_payload",
+                    error_message_safe="Marketplace preflight returned an invalid result",
+                )
+            owned = await self._get_owned_attempt_for_update(
+                reply_id,
+                attempt_count=attempt_count,
+                idempotency_key=idempotency_key,
+            )
+            if owned is None:
+                await self.session.commit()
+                current = await self._get_reply(reply_id)
+                return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
+            message = await self._get_message(owned.message_id, organization_id=owned.organization_id)
+            error_code = failed_result.error_code or "malformed_payload"
+            retryable = error_code in _RETRYABLE_ERRORS and owned.attempt_count < owned.max_attempts
+            if retryable:
+                await self._mark_retry_pending(reply=owned, message=message, result=failed_result)
+            else:
+                await self._mark_terminal_marketplace_failure(
+                    reply=owned,
+                    message=message,
+                    result=failed_result,
+                )
+            return ExecuteReplyResult(owned.id, owned.status, retryable, error_code)
+
+        if preflight.data.exists:
+            reply = await self._get_owned_attempt_for_update(
+                reply_id,
+                attempt_count=attempt_count,
+                idempotency_key=idempotency_key,
+            )
+            if reply is None:
+                await self.session.commit()
+                current = await self._get_reply(reply_id)
+                return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
+            message = await self._get_message(reply.message_id, organization_id=reply.organization_id)
             await self._mark_sent(
                 reply=reply,
                 message=message,
-                marketplace_reply_id=None,
+                marketplace_reply_id=preflight.data.provider_reply_id,
                 externally_already_answered=True,
             )
             return ExecuteReplyResult(reply.id, reply.status, False, externally_already_answered=True)
 
-        result = await self._send_through_adapter(
-            adapter=adapter,
-            credential=credential,
-            message=message,
-            reply=reply,
+        result = await adapter.send_reply(
+            credential,
+            account.seller_id,
+            context,
+            reply.reply_text,
         )
-        reply = await self._get_reply_for_update(reply_id)
-        message = await self._get_message(reply.message_id)
-        if result.ok:
+        reply = await self._get_owned_attempt_for_update(
+            reply_id,
+            attempt_count=attempt_count,
+            idempotency_key=idempotency_key,
+        )
+        if reply is None:
+            await self.session.commit()
+            current = await self._get_reply(reply_id)
+            return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
+        message = await self._get_message(reply.message_id, organization_id=reply.organization_id)
+        if result.ok and result.data is not None:
             await self._mark_sent(
                 reply=reply,
                 message=message,
-                marketplace_reply_id=self._extract_marketplace_reply_id(result.data),
+                marketplace_reply_id=result.data.provider_reply_id,
                 externally_already_answered=False,
             )
             return ExecuteReplyResult(reply.id, reply.status, False)
 
-        error_code = result.error_code or "marketplace_error"
+        if result.ok:
+            result = AdapterResult[ProviderWriteReceipt](
+                False,
+                error_code="malformed_payload",
+                error_message_safe="Marketplace write success could not be proven",
+            )
+        error_code = result.error_code or "malformed_payload"
+        if error_code in _AMBIGUOUS_WRITE_ERRORS:
+            await self._mark_ambiguous_write(reply=reply, message=message, result=result)
+            return ExecuteReplyResult(reply.id, reply.status, False, error_code)
         retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
         if retryable:
             await self._mark_retry_pending(reply=reply, message=message, result=result)
@@ -371,19 +529,54 @@ class ReplyExecutionService:
             raise not_found("Reply not found")
         return reply
 
+    async def _get_owned_attempt_for_update(
+        self,
+        reply_id: UUID,
+        *,
+        attempt_count: int,
+        idempotency_key: str,
+    ) -> Reply | None:
+        result = await self.session.execute(
+            select(Reply)
+            .where(
+                Reply.id == reply_id,
+                Reply.status == ReplyStatus.SENDING.value,
+                Reply.attempt_count == attempt_count,
+                Reply.idempotency_key == idempotency_key,
+            )
+            .with_for_update()
+        )
+        return result.scalar_one_or_none()
+
     async def _get_reply_by_idempotency_key(self, idempotency_key: str) -> Reply | None:
         result = await self.session.execute(select(Reply).where(Reply.idempotency_key == idempotency_key))
         return result.scalar_one_or_none()
 
-    async def _get_message(self, message_id: UUID) -> CustomerMessage:
-        result = await self.session.execute(select(CustomerMessage).where(CustomerMessage.id == message_id))
+    async def _get_message(
+        self,
+        message_id: UUID,
+        *,
+        organization_id: UUID | None = None,
+    ) -> CustomerMessage:
+        statement = select(CustomerMessage).where(CustomerMessage.id == message_id)
+        if organization_id is not None:
+            statement = statement.where(CustomerMessage.organization_id == organization_id)
+        result = await self.session.execute(statement)
         message = result.scalar_one_or_none()
         if message is None:
             raise not_found("Customer message not found")
         return message
 
-    async def _get_account(self, account_id: UUID) -> MarketplaceAccount:
-        result = await self.session.execute(select(MarketplaceAccount).where(MarketplaceAccount.id == account_id))
+    async def _get_account(
+        self,
+        account_id: UUID,
+        *,
+        organization_id: UUID | None = None,
+    ) -> MarketplaceAccount:
+        statement = select(MarketplaceAccount).where(MarketplaceAccount.id == account_id)
+        if organization_id is not None:
+            statement = statement.where(MarketplaceAccount.organization_id == organization_id)
+        result = await self.session.execute(statement)
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")
@@ -417,46 +610,10 @@ class ReplyExecutionService:
         )
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
-    @staticmethod
-    def _adapter_for(account: MarketplaceAccount) -> WildberriesAdapter:
-        if account.marketplace == "wildberries":
-            return WildberriesAdapter()
-        raise bad_request("Marketplace reply adapter is not enabled yet")
-
-    async def _preflight_answer_status(
-        self,
-        *,
-        adapter: WildberriesAdapter,
-        credential: str,
-        message: CustomerMessage,
-    ) -> bool | None:
-        if message.type == MessageType.REVIEW.value:
-            result = await adapter.get_review(credential, message.external_id)
-        elif message.type == MessageType.QUESTION.value:
-            result = await adapter.get_question(credential, message.external_id)
-        else:
-            return None
-        if not result.ok:
-            return None
-        return adapter.is_already_answered(result.data)
-
-    async def _send_through_adapter(
-        self,
-        *,
-        adapter: WildberriesAdapter,
-        credential: str,
-        message: CustomerMessage,
-        reply: Reply,
-    ) -> AdapterResult:
-        if message.type == MessageType.REVIEW.value:
-            return await adapter.send_review_reply(credential, message.external_id, reply.reply_text)
-        if message.type == MessageType.QUESTION.value:
-            return await adapter.send_question_reply(credential, message.external_id, reply.reply_text)
-        return AdapterResult(
-            False,
-            error_code="unsupported_capability",
-            error_message_safe="Message type cannot be replied to through the marketplace adapter",
-        )
+    def _adapter_registry(self) -> MarketplaceAdapterRegistry:
+        if self.registry is None:
+            raise RuntimeError("marketplace adapter registry is required for reply execution")
+        return self.registry
 
     async def _mark_sent(
         self,
@@ -557,6 +714,48 @@ class ReplyExecutionService:
                 "attempt_count": reply.attempt_count,
                 "max_attempts": reply.max_attempts,
                 "error_code": result.error_code,
+            },
+        )
+        await self.session.commit()
+
+    async def _mark_ambiguous_write(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        result: AdapterResult[ProviderWriteReceipt],
+    ) -> None:
+        self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+        self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        error_code = result.error_code or "malformed_payload"
+        reply.error_code = error_code
+        reply.failed_reason = result.error_message_safe
+        reply.next_retry_at = None
+        reply.metadata_json = {
+            **(reply.metadata_json or {}),
+            "provider_write_ambiguity": {
+                "active": True,
+                "attempt_count": reply.attempt_count,
+                "error_code": error_code,
+            },
+        }
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="manual_review_required",
+            error_code=error_code,
+            error_message_safe=result.error_message_safe,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.write_ambiguity",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by,
+            entity_id=str(reply.id),
+            metadata={
+                "attempt_count": reply.attempt_count,
+                "error_code": error_code,
             },
         )
         await self.session.commit()
@@ -686,31 +885,10 @@ class ReplyExecutionService:
         }
 
     @staticmethod
-    def _extract_marketplace_reply_id(payload: object | None) -> str | None:
-        if not isinstance(payload, dict):
-            return None
-        mapping = cast(dict[str, object], payload)
-        data = mapping.get("data")
-        if isinstance(data, dict):
-            data_mapping = cast(dict[str, object], data)
-            value = data_mapping.get("id") or data_mapping.get("replyId") or data_mapping.get("answerId")
-            return str(value) if value is not None else None
-        value = mapping.get("id") or mapping.get("replyId") or mapping.get("answerId")
-        return str(value) if value is not None else None
-
-    @staticmethod
     def _transition_message(message: CustomerMessage, target: str) -> None:
         try:
             ensure_message_transition(message.status, target)
         except ValueError as exc:
-            if target in {
-                MessageStatus.NEEDS_MANUAL_CHECK.value,
-                MessageStatus.SAFETY_BLOCKED.value,
-                MessageStatus.BLOCKED_BY_MARKETPLACE.value,
-                MessageStatus.FAILED.value,
-            }:
-                message.status = target
-                return
             raise conflict(str(exc)) from exc
         message.status = target
 
