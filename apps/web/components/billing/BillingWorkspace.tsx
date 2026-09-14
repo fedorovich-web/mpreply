@@ -65,7 +65,11 @@ export function BillingWorkspace() {
 
       <section className="billing-usage-grid" aria-label="Использование лимитов">
         {data.usage.map((item) => {
-          const percent = item.limit && item.limit > 0 ? Math.min((item.used / item.limit) * 100, 100) : 0;
+          const percent = item.limit === null
+            ? 0
+            : item.limit === 0
+              ? 100
+              : Math.min((item.used / item.limit) * 100, 100);
           return (
             <article className="billing-usage-card" key={item.metric}>
               <div className="billing-usage-heading">
