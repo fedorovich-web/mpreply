@@ -117,6 +117,7 @@ function mockWorkspace(role: "owner" | "viewer") {
     setActiveOrganizationId: vi.fn(),
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
+    logoutError: null,
   });
 }
 
@@ -156,6 +157,49 @@ describe("ReviewQueueWorkspace", () => {
     expect(screen.queryByText("Draft contains an unverified promise or guaranteed outcome")).not.toBeInTheDocument();
     expect(screen.getByText("Обращение покупателя")).toBeInTheDocument();
     expect(screen.getByText("Контекст товара")).toBeInTheDocument();
+  });
+
+  it("lets users reach review items after the first 100 results", async () => {
+    mockWorkspace("owner");
+    const pageTwoMessage = {
+      ...message,
+      id: "77777777-7777-4777-8777-777777777777",
+      external_id: "wb-message-101",
+      product: { ...message.product, id: "88888888-8888-4888-8888-888888888888", name: "Товар 101" },
+    };
+    const pageTwoReply = {
+      ...reply,
+      id: "99999999-9999-4999-8999-999999999999",
+      message_id: pageTwoMessage.id,
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("page=2")) {
+        return new Response(
+          JSON.stringify({
+            items: [{ reply: pageTwoReply, message: pageTwoMessage, safety }],
+            total: 101,
+            page: 2,
+            page_size: 100,
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(
+        JSON.stringify({ items: [{ reply, message, safety }], total: 101, page: 1, page_size: 100 }),
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByText("Страница 1 из 2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Следующая страница" }));
+
+    expect(await screen.findByText("Страница 2 из 2")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Товар 101/ })).toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes("page=2"))).toBe(true);
   });
 
   it("shows viewer role as read-only before any mutation is attempted", async () => {
