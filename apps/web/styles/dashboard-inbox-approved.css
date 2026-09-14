@@ -164,6 +164,23 @@
 	overscroll-behavior: contain;
 }
 
+.inbox-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.65rem;
+	border-top: 1px solid var(--color-border-subtle);
+	background: var(--color-bg-surface);
+	padding: 0.75rem 0.9rem;
+}
+
+.inbox-pagination > span {
+	color: var(--color-text-muted);
+	font-size: 0.68rem;
+	font-weight: 650;
+	white-space: nowrap;
+}
+
 .message-stack > [role='listitem'] {
 	border-bottom: 1px solid var(--color-border-subtle);
 }
