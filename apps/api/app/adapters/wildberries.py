@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import cast
 
@@ -8,35 +12,62 @@ import httpx
 from app.adapters.base import (
     AdapterResult,
     CredentialValidation,
-    MarketplaceAdapter,
+    ExistingReplyResult,
+    MarketplacePage,
     NormalizedMessage,
     NormalizedProduct,
+    ProviderMessageContext,
+    ProviderWriteReceipt,
+    ReviewQuestionAdapter,
 )
+from app.adapters.capabilities import MarketplaceStream
+from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_with_retry
 from app.models.enums import Marketplace, MessageType
 
+_PAGE_SIZE = 50
+_MAX_OFFSET = 1_000_000
+_MAX_REPLY_TEXT_LENGTH = 5_000
+_FEEDBACKS_AND_QUESTIONS_SCOPE = 1 << 6
+_READ_ONLY_SCOPE = 1 << 29
+_Normalizer = Callable[[dict[str, object]], NormalizedMessage]
 
-class WildberriesAdapter(MarketplaceAdapter):
+
+class WildberriesAdapter(ReviewQuestionAdapter):
     marketplace = Marketplace.WILDBERRIES
-    base_url = "https://feedbacks-api.wildberries.ru"
 
     def __init__(
         self,
-        timeout_seconds: float = 20.0,
-        client: httpx.AsyncClient | None = None,
+        client: httpx.AsyncClient,
+        *,
+        read_retry_policy: ReadRetryPolicy = ReadRetryPolicy(),
     ) -> None:
-        self._timeout = timeout_seconds
         self._client = client
-
-    def _headers(self, credential: str) -> dict[str, str]:
-        return {"Authorization": credential}
+        self._read_retry_policy = read_retry_policy
 
     async def validate_credentials(
         self,
         credential: str,
         seller_id: str | None = None,
     ) -> AdapterResult[CredentialValidation]:
-        del seller_id
-        result = await self.fetch_questions(credential=credential, cursor=None)
+        token_scope = self._token_scope(credential)
+        if token_scope is None:
+            return AdapterResult(
+                False,
+                error_code="invalid_credentials",
+                error_message_safe="Wildberries API key has an invalid format",
+            )
+        if not token_scope & _FEEDBACKS_AND_QUESTIONS_SCOPE or token_scope & _READ_ONLY_SCOPE:
+            return AdapterResult(
+                False,
+                error_code="insufficient_scope",
+                error_message_safe="Wildberries API key cannot read and answer feedbacks and questions",
+            )
+        result = await self.fetch_page(
+            credential,
+            seller_id,
+            MarketplaceStream.QUESTIONS,
+            None,
+        )
         if not result.ok:
             return AdapterResult(
                 False,
@@ -47,36 +78,241 @@ class WildberriesAdapter(MarketplaceAdapter):
         return AdapterResult(
             ok=True,
             data=CredentialValidation(
-                scopes=("fetch_reviews", "fetch_questions", "send_review_reply", "send_question_reply"),
+                scopes=(
+                    "reviews:read",
+                    "reviews:write",
+                    "questions:read",
+                    "questions:write",
+                ),
                 account_reference=None,
             ),
         )
 
-    async def fetch_reviews(self, credential: str, cursor: str | None = None) -> AdapterResult:
-        params: dict[str, str | int] = {"isAnswered": "false", "take": 50, "skip": 0}
-        if cursor:
-            params["skip"] = int(cursor)
-        return await self._get("/api/v1/feedbacks", credential, params=params)
+    async def fetch_page(
+        self,
+        credential: str,
+        seller_id: str | None,
+        stream: MarketplaceStream,
+        cursor: str | None,
+    ) -> AdapterResult[MarketplacePage[NormalizedMessage]]:
+        del seller_id
+        contract = self._stream_contract(stream)
+        if contract is None:
+            return AdapterResult(
+                False,
+                error_code="unsupported_capability",
+                error_message_safe="Wildberries stream is not supported",
+            )
+        path, collection_key, normalizer = contract
+        offset = self._parse_cursor(cursor)
+        if offset is None:
+            return AdapterResult(
+                False,
+                error_code="malformed_payload",
+                error_message_safe="Wildberries pagination cursor is invalid",
+            )
+        response_result = await self._read(
+            path,
+            credential,
+            params={"isAnswered": "false", "take": _PAGE_SIZE, "skip": offset},
+        )
+        if not response_result.ok:
+            return AdapterResult(
+                False,
+                error_code=response_result.error_code,
+                error_message_safe=response_result.error_message_safe,
+                retry_after_seconds=response_result.retry_after_seconds,
+            )
+        records = self._page_records(response_result.data, collection_key)
+        if records is None:
+            return cast(
+                AdapterResult[MarketplacePage[NormalizedMessage]],
+                self._malformed_payload("Wildberries returned an invalid page"),
+            )
+        if len(records) > _PAGE_SIZE:
+            return cast(
+                AdapterResult[MarketplacePage[NormalizedMessage]],
+                self._malformed_payload("Wildberries returned an oversized page"),
+            )
+        try:
+            items = tuple(normalizer(record) for record in records)
+        except (TypeError, ValueError):
+            return cast(
+                AdapterResult[MarketplacePage[NormalizedMessage]],
+                self._malformed_payload("Wildberries returned an invalid record"),
+            )
+        next_offset = offset + _PAGE_SIZE
+        if len(items) == _PAGE_SIZE and next_offset > _MAX_OFFSET:
+            return cast(
+                AdapterResult[MarketplacePage[NormalizedMessage]],
+                self._malformed_payload("Wildberries pagination exceeded the safe limit"),
+            )
+        next_cursor = str(next_offset) if len(items) == _PAGE_SIZE else None
+        return AdapterResult(ok=True, data=MarketplacePage(items=items, next_cursor=next_cursor))
 
-    async def fetch_questions(self, credential: str, cursor: str | None = None) -> AdapterResult:
-        params: dict[str, str | int] = {"isAnswered": "false", "take": 50, "skip": 0}
-        if cursor:
-            params["skip"] = int(cursor)
-        return await self._get("/api/v1/questions", credential, params=params)
+    async def find_existing_reply(
+        self,
+        credential: str,
+        seller_id: str | None,
+        context: ProviderMessageContext,
+    ) -> AdapterResult[ExistingReplyResult]:
+        del seller_id
+        path = self._detail_path(context.message_type)
+        if path is None:
+            return AdapterResult(
+                False,
+                error_code="unsupported_capability",
+                error_message_safe="Wildberries message type is not supported",
+            )
+        response_result = await self._read(
+            path,
+            credential,
+            params={"id": context.external_id},
+        )
+        if not response_result.ok:
+            return AdapterResult(
+                False,
+                error_code=response_result.error_code,
+                error_message_safe=response_result.error_message_safe,
+                retry_after_seconds=response_result.retry_after_seconds,
+            )
+        data = self._required_data_object(response_result.data)
+        if data is None or data.get("id") != context.external_id:
+            return cast(
+                AdapterResult[ExistingReplyResult],
+                self._malformed_payload("Wildberries returned an invalid message detail"),
+            )
+        exists = self.is_already_answered(data)
+        return AdapterResult(
+            ok=True,
+            data=ExistingReplyResult(
+                exists=exists,
+                provider_reply_id=context.external_id if exists else None,
+                provider_state=self._optional_string(data.get("state") or data.get("status")),
+            ),
+        )
 
-    async def get_review(self, credential: str, external_id: str) -> AdapterResult:
-        return await self._get("/api/v1/feedback", credential, params={"id": external_id})
+    async def send_reply(
+        self,
+        credential: str,
+        seller_id: str | None,
+        context: ProviderMessageContext,
+        text: str,
+    ) -> AdapterResult[ProviderWriteReceipt]:
+        del seller_id
+        if (
+            not context.external_id
+            or len(context.external_id) > 255
+            or "\x00" in context.external_id
+            or not text.strip()
+            or len(text) > _MAX_REPLY_TEXT_LENGTH
+            or "\x00" in text
+        ):
+            return AdapterResult(
+                False,
+                error_code="marketplace_validation_error",
+                error_message_safe="Wildberries reply input is invalid",
+            )
+        if context.message_type is MessageType.REVIEW:
+            method = "POST"
+            path = "/api/v1/feedbacks/answer"
+            payload: dict[str, object] = {"id": context.external_id, "text": text}
+        elif context.message_type is MessageType.QUESTION:
+            method = "PATCH"
+            path = "/api/v1/questions"
+            payload = {"id": context.external_id, "text": text, "state": "wbRu"}
+        else:
+            return AdapterResult(
+                False,
+                error_code="unsupported_capability",
+                error_message_safe="Wildberries message type is not supported",
+            )
+        try:
+            response = await self._client.request(
+                method,
+                path,
+                headers=self._headers(credential),
+                json=payload,
+            )
+        except httpx.TimeoutException:
+            return AdapterResult(
+                False,
+                error_code="network_timeout",
+                error_message_safe="Wildberries write timed out",
+            )
+        except httpx.RequestError:
+            return AdapterResult(
+                False,
+                error_code="network_error",
+                error_message_safe="Wildberries network request failed",
+            )
+        if not response.is_success:
+            return cast(AdapterResult[ProviderWriteReceipt], self._map_error_response(response))
+        if response.status_code != 204:
+            return cast(
+                AdapterResult[ProviderWriteReceipt],
+                self._malformed_payload("Wildberries write success could not be proven"),
+            )
+        return AdapterResult(
+            ok=True,
+            data=ProviderWriteReceipt(provider_reply_id=context.external_id),
+        )
 
-    async def get_question(self, credential: str, external_id: str) -> AdapterResult:
-        return await self._get("/api/v1/question", credential, params={"id": external_id})
+    def normalize_review(self, raw: dict[str, object]) -> NormalizedMessage:
+        return NormalizedMessage(
+            external_id=self._required_string(
+                raw.get("id") or raw.get("feedbackId") or raw.get("externalId"),
+                field_name="feedback ID",
+            ),
+            message_type=MessageType.REVIEW,
+            rating=self._rating(
+                raw.get("productValuation") or raw.get("valuation") or raw.get("rating")
+            ),
+            customer_display_name=self._optional_string(
+                raw.get("userName") or raw.get("customerName") or raw.get("buyerName")
+            ),
+            customer_text=self._required_string(
+                raw.get("text") or raw.get("reviewText") or raw.get("message"),
+                field_name="feedback text",
+            ),
+            customer_photos=self._photos(raw),
+            marketplace_created_at=self._datetime(
+                raw.get("createdDate") or raw.get("createdAt") or raw.get("date")
+            ),
+            product=self._product_context(raw),
+            metadata={
+                "source": "wildberries.feedbacks",
+                "status": raw.get("state") or raw.get("status"),
+                "is_answered": raw.get("isAnswered"),
+            },
+        )
 
-    async def send_review_reply(self, credential: str, external_id: str, reply_text: str) -> AdapterResult:
-        payload: dict[str, object] = {"id": external_id, "text": reply_text}
-        return await self._post("/api/v1/feedbacks/answer", credential, json=payload)
-
-    async def send_question_reply(self, credential: str, external_id: str, reply_text: str) -> AdapterResult:
-        payload: dict[str, object] = {"id": external_id, "answer": {"text": reply_text}}
-        return await self._patch("/api/v1/questions", credential, json=payload)
+    def normalize_question(self, raw: dict[str, object]) -> NormalizedMessage:
+        return NormalizedMessage(
+            external_id=self._required_string(
+                raw.get("id") or raw.get("questionId") or raw.get("externalId"),
+                field_name="question ID",
+            ),
+            message_type=MessageType.QUESTION,
+            rating=None,
+            customer_display_name=self._optional_string(
+                raw.get("userName") or raw.get("customerName") or raw.get("buyerName")
+            ),
+            customer_text=self._required_string(
+                raw.get("text") or raw.get("question") or raw.get("message"),
+                field_name="question text",
+            ),
+            customer_photos=self._photos(raw),
+            marketplace_created_at=self._datetime(
+                raw.get("createdDate") or raw.get("createdAt") or raw.get("date")
+            ),
+            product=self._product_context(raw),
+            metadata={
+                "source": "wildberries.questions",
+                "status": raw.get("state") or raw.get("status"),
+                "is_answered": raw.get("isAnswered"),
+            },
+        )
 
     def is_already_answered(self, payload: object) -> bool:
         data = self._data(payload)
@@ -89,146 +325,179 @@ class WildberriesAdapter(MarketplaceAdapter):
             return bool(self._optional_string(answer_mapping.get("text")))
         if isinstance(answer, str):
             return bool(answer.strip())
-        return bool(mapping.get("isAnswered"))
+        return mapping.get("isAnswered") is True
 
-    def extract_reviews(self, payload: object) -> list[dict[str, object]]:
-        return self._extract_items(payload, keys=("feedbacks", "items", "data"))
-
-    def extract_questions(self, payload: object) -> list[dict[str, object]]:
-        return self._extract_items(payload, keys=("questions", "items", "data"))
-
-    def normalize_review(self, raw: dict[str, object]) -> NormalizedMessage:
-        product = self._product_context(raw)
-        return NormalizedMessage(
-            external_id=self._required_string(
-                raw.get("id") or raw.get("feedbackId") or raw.get("externalId"),
-                field_name="feedback ID",
-            ),
-            message_type=MessageType.REVIEW,
-            rating=self._int_or_none(raw.get("productValuation") or raw.get("valuation") or raw.get("rating")),
-            customer_display_name=self._optional_string(raw.get("userName") or raw.get("customerName") or raw.get("buyerName")),
-            customer_text=self._required_string(
-                raw.get("text") or raw.get("reviewText") or raw.get("message"),
-                field_name="feedback text",
-            ),
-            customer_photos=self._photos(raw),
-            marketplace_created_at=self._datetime(raw.get("createdDate") or raw.get("createdAt") or raw.get("date")),
-            product=product,
-            metadata={
-                "source": "wildberries.feedbacks",
-                "status": raw.get("state") or raw.get("status"),
-                "is_answered": raw.get("isAnswered"),
-            },
-        )
-
-    def normalize_question(self, raw: dict[str, object]) -> NormalizedMessage:
-        product = self._product_context(raw)
-        return NormalizedMessage(
-            external_id=self._required_string(
-                raw.get("id") or raw.get("questionId") or raw.get("externalId"),
-                field_name="question ID",
-            ),
-            message_type=MessageType.QUESTION,
-            rating=None,
-            customer_display_name=self._optional_string(raw.get("userName") or raw.get("customerName") or raw.get("buyerName")),
-            customer_text=self._required_string(
-                raw.get("text") or raw.get("question") or raw.get("message"),
-                field_name="question text",
-            ),
-            customer_photos=self._photos(raw),
-            marketplace_created_at=self._datetime(raw.get("createdDate") or raw.get("createdAt") or raw.get("date")),
-            product=product,
-            metadata={
-                "source": "wildberries.questions",
-                "status": raw.get("state") or raw.get("status"),
-                "is_answered": raw.get("isAnswered"),
-            },
-        )
-
-    async def _get(self, path: str, credential: str, params: dict[str, str | int]) -> AdapterResult:
-        return await self._request("GET", path, credential, params=params)
-
-    async def _post(self, path: str, credential: str, json: dict[str, object]) -> AdapterResult:
-        return await self._request("POST", path, credential, json=json)
-
-    async def _patch(self, path: str, credential: str, json: dict[str, object]) -> AdapterResult:
-        return await self._request("PATCH", path, credential, json=json)
-
-    async def _request(
+    async def _read(
         self,
-        method: str,
         path: str,
         credential: str,
         *,
-        params: dict[str, str | int] | None = None,
-        json: dict[str, object] | None = None,
-    ) -> AdapterResult:
+        params: dict[str, str | int],
+    ) -> AdapterResult[object]:
         try:
-            if self._client is not None:
-                response = await self._client.request(
-                    method,
-                    path,
-                    headers=self._headers(credential),
-                    params=params,
-                    json=json,
-                )
-            else:
-                async with httpx.AsyncClient(
-                    base_url=self.base_url,
-                    timeout=self._timeout,
-                    follow_redirects=False,
-                ) as client:
-                    response = await client.request(
-                        method,
-                        path,
-                        headers=self._headers(credential),
-                        params=params,
-                        json=json,
-                    )
+            response = await request_read_with_retry(
+                self._client,
+                "GET",
+                path,
+                headers=self._headers(credential),
+                params=params,
+                policy=self._read_retry_policy,
+            )
         except httpx.TimeoutException:
-            return AdapterResult(False, error_code="network_timeout", error_message_safe="Marketplace request timed out")
-        except httpx.HTTPError:
-            return AdapterResult(False, error_code="network_error", error_message_safe="Marketplace network error")
-        if response.is_success:
-            return AdapterResult(ok=True, data=self._safe_json(response))
-        return self.map_error(response.status_code, self._safe_json(response))
-
-    @staticmethod
-    def _safe_json(response: httpx.Response) -> object:
+            return AdapterResult(
+                False,
+                error_code="network_timeout",
+                error_message_safe="Wildberries request timed out",
+            )
+        except httpx.RequestError:
+            return AdapterResult(
+                False,
+                error_code="network_error",
+                error_message_safe="Wildberries network request failed",
+            )
+        if not response.is_success:
+            return self._map_error_response(response)
         try:
             payload: object = response.json()
-            return payload
         except ValueError:
-            return {"text": response.text[:500]}
+            return self._malformed_payload("Wildberries returned invalid JSON")
+        return AdapterResult(ok=True, data=payload)
+
+    def _map_error_response(self, response: httpx.Response) -> AdapterResult[object]:
+        retry_after = (
+            parse_retry_after(
+                response.headers.get("Retry-After"),
+                now=datetime.now(UTC),
+                maximum_seconds=self._read_retry_policy.max_retry_after_seconds,
+            )
+            if response.status_code == 429
+            else None
+        )
+        if response.status_code == 401:
+            code = "invalid_credentials"
+            message = "Wildberries API key is invalid"
+        elif response.status_code == 403:
+            code = "insufficient_scope"
+            message = "Wildberries API key has insufficient permissions"
+        elif response.status_code == 404:
+            code = "marketplace_not_found"
+            message = "Wildberries resource was not found"
+        elif response.status_code == 429:
+            code = "rate_limited"
+            message = "Wildberries rate limit was exceeded"
+        elif 500 <= response.status_code <= 599:
+            code = "marketplace_unavailable"
+            message = "Wildberries is temporarily unavailable"
+        else:
+            code = "marketplace_validation_error"
+            message = "Wildberries rejected the request"
+        return AdapterResult(
+            False,
+            error_code=code,
+            error_message_safe=message,
+            retry_after_seconds=retry_after,
+        )
+
+    @staticmethod
+    def _malformed_payload(message: str) -> AdapterResult[object]:
+        return AdapterResult(False, error_code="malformed_payload", error_message_safe=message)
+
+    @staticmethod
+    def _headers(credential: str) -> dict[str, str]:
+        return {"Authorization": credential}
+
+    @staticmethod
+    def _parse_cursor(cursor: str | None) -> int | None:
+        if cursor is None:
+            return 0
+        if (
+            not cursor
+            or len(cursor) > len(str(_MAX_OFFSET))
+            or not cursor.isascii()
+            or not cursor.isdecimal()
+        ):
+            return None
+        offset = int(cursor)
+        return offset if offset <= _MAX_OFFSET and str(offset) == cursor else None
+
+    @staticmethod
+    def _token_scope(credential: str) -> int | None:
+        if not credential or credential != credential.strip() or len(credential) > 16_384:
+            return None
+        segments = credential.split(".")
+        if len(segments) != 3 or not segments[1]:
+            return None
+        encoded_payload = segments[1]
+        padding = "=" * (-len(encoded_payload) % 4)
+        try:
+            payload_bytes = base64.b64decode(
+                encoded_payload + padding,
+                altchars=b"-_",
+                validate=True,
+            )
+            payload: object = json.loads(payload_bytes)
+        except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError):
+            return None
+        if not isinstance(payload, dict):
+            return None
+        mapping = cast(dict[str, object], payload)
+        scope = mapping.get("s")
+        if isinstance(scope, bool) or not isinstance(scope, int) or scope < 0:
+            return None
+        return scope
+
+    def _stream_contract(self, stream: MarketplaceStream) -> tuple[str, str, _Normalizer] | None:
+        if stream is MarketplaceStream.REVIEWS:
+            return "/api/v1/feedbacks", "feedbacks", self.normalize_review
+        if stream is MarketplaceStream.QUESTIONS:
+            return "/api/v1/questions", "questions", self.normalize_question
+        return None
+
+    @staticmethod
+    def _detail_path(message_type: MessageType) -> str | None:
+        if message_type is MessageType.REVIEW:
+            return "/api/v1/feedback"
+        if message_type is MessageType.QUESTION:
+            return "/api/v1/question"
+        return None
+
+    @staticmethod
+    def _page_records(
+        payload: object | None,
+        collection_key: str,
+    ) -> list[dict[str, object]] | None:
+        data = WildberriesAdapter._required_data_object(payload)
+        if data is None:
+            return None
+        items_value = data.get(collection_key)
+        if not isinstance(items_value, list):
+            return None
+        items = cast(list[object], items_value)
+        if not all(isinstance(item, dict) for item in items):
+            return None
+        return [cast(dict[str, object], item) for item in items]
+
+    @staticmethod
+    def _required_data_object(payload: object | None) -> dict[str, object] | None:
+        if not isinstance(payload, dict):
+            return None
+        data = cast(dict[str, object], payload).get("data")
+        return cast(dict[str, object], data) if isinstance(data, dict) else None
 
     @staticmethod
     def _data(payload: object) -> object:
         if isinstance(payload, dict):
-            data = cast(dict[str, object], payload)
-            if "data" in data:
-                return data["data"]
-            return data
+            mapping = cast(dict[str, object], payload)
+            return mapping.get("data", mapping)
         return payload
-
-    def _extract_items(self, payload: object, *, keys: tuple[str, ...]) -> list[dict[str, object]]:
-        data = self._data(payload)
-        if isinstance(data, dict):
-            mapping = cast(dict[str, object], data)
-            for key in keys:
-                value = mapping.get(key)
-                if isinstance(value, list):
-                    return self._dict_items(cast(list[object], value))
-        if isinstance(data, list):
-            return self._dict_items(cast(list[object], data))
-        return []
-
-    @staticmethod
-    def _dict_items(value: list[object]) -> list[dict[str, object]]:
-        return [cast(dict[str, object], item) for item in value if isinstance(item, dict)]
 
     def _product_context(self, raw: dict[str, object]) -> NormalizedProduct:
         product_details_value = raw.get("productDetails")
-        product_details = cast(dict[str, object], product_details_value) if isinstance(product_details_value, dict) else {}
+        product_details = (
+            cast(dict[str, object], product_details_value)
+            if isinstance(product_details_value, dict)
+            else {}
+        )
         nm_id = raw.get("nmId") or product_details.get("nmId") or raw.get("productId")
         imt_id = raw.get("imtId") or product_details.get("imtId")
         supplier_article = raw.get("supplierArticle") or product_details.get("supplierArticle")
@@ -258,36 +527,35 @@ class WildberriesAdapter(MarketplaceAdapter):
     @staticmethod
     def _photos(raw: dict[str, object]) -> tuple[str, ...]:
         value = raw.get("photoLinks") or raw.get("photos") or raw.get("photoLinksJson")
-        if isinstance(value, list):
-            photos = cast(list[object], value)
-            if not all(isinstance(photo, str) and photo.strip() for photo in photos):
-                raise ValueError("Wildberries photo list is malformed")
-            return tuple(cast(str, photo).strip() for photo in photos)
-        return ()
+        if value is None:
+            return ()
+        if not isinstance(value, list):
+            raise ValueError("Wildberries photo list is malformed")
+        photos = cast(list[object], value)
+        if not all(isinstance(photo, str) and photo.strip() for photo in photos):
+            raise ValueError("Wildberries photo list is malformed")
+        return tuple(cast(str, photo).strip() for photo in photos)
 
     @staticmethod
     def _datetime(value: object) -> datetime:
         if isinstance(value, datetime):
-            return value if value.tzinfo else value.replace(tzinfo=UTC)
-        if isinstance(value, str) and value:
-            try:
-                normalized = value.replace("Z", "+00:00")
-                parsed = datetime.fromisoformat(normalized)
-                return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
-            except ValueError as exc:
-                raise ValueError("Wildberries timestamp is malformed") from exc
-        raise ValueError("Wildberries timestamp is missing")
-
-    @staticmethod
-    def _string(value: object) -> str:
-        if value is None:
-            return ""
-        return str(value).strip()
+            if value.tzinfo is None or value.utcoffset() is None:
+                raise ValueError("Wildberries timestamp has no timezone")
+            return value
+        if not isinstance(value, str) or not value:
+            raise ValueError("Wildberries timestamp is missing")
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("Wildberries timestamp is malformed") from exc
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError("Wildberries timestamp has no timezone")
+        return parsed
 
     @staticmethod
     def _required_string(value: object, *, field_name: str) -> str:
-        text = WildberriesAdapter._string(value)
-        if not text:
+        text = WildberriesAdapter._optional_string(value)
+        if text is None:
             raise ValueError(f"Wildberries {field_name} is missing")
         return text
 
@@ -295,31 +563,21 @@ class WildberriesAdapter(MarketplaceAdapter):
     def _optional_string(value: object) -> str | None:
         if value is None:
             return None
+        if isinstance(value, bool):
+            return None
+        if not isinstance(value, (str, int)):
+            return None
         text = str(value).strip()
         return text or None
 
     @staticmethod
-    def _int_or_none(value: object) -> int | None:
+    def _rating(value: object) -> int | None:
         if value is None or value == "":
             return None
         if isinstance(value, bool):
-            return int(value)
+            raise ValueError("Wildberries rating is malformed")
         if isinstance(value, int):
             return value
-        if isinstance(value, float | str):
-            try:
-                return int(value)
-            except (TypeError, ValueError):
-                return None
-        return None
-
-    def map_error(self, status_code: int, payload: object | None = None) -> AdapterResult:
-        if status_code == 401:
-            return AdapterResult(False, error_code="invalid_credentials", error_message_safe="API key is invalid")
-        if status_code == 403:
-            return AdapterResult(False, error_code="insufficient_scope", error_message_safe="API key has insufficient permissions")
-        if status_code == 429:
-            return AdapterResult(False, error_code="rate_limited", error_message_safe="Marketplace rate limit exceeded")
-        if 500 <= status_code <= 599:
-            return AdapterResult(False, error_code="marketplace_unavailable", error_message_safe="Marketplace is temporarily unavailable")
-        return AdapterResult(False, error_code="marketplace_validation_error", error_message_safe="Marketplace returned an error")
+        if isinstance(value, str) and value.isascii() and value.isdecimal():
+            return int(value)
+        raise ValueError("Wildberries rating is malformed")

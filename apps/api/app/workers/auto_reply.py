@@ -5,6 +5,8 @@ from uuid import UUID
 
 import dramatiq
 
+from app.adapters.http import MarketplaceHttpClients
+from app.adapters.registry import create_marketplace_registry
 from app.db.session import AsyncSessionLocal
 from app.services.reply_execution_service import ReplyExecutionService
 from app.workers.broker import redis_broker
@@ -29,9 +31,14 @@ def auto_reply_actor(reply_id: str) -> None:
 
 
 async def _execute_reply(reply_id: UUID):
-    async with AsyncSessionLocal() as session:
-        service = ReplyExecutionService(session)
-        return await service.execute_reply(reply_id=reply_id)
+    clients = MarketplaceHttpClients.create()
+    try:
+        registry = create_marketplace_registry(clients)
+        async with AsyncSessionLocal() as session:
+            service = ReplyExecutionService(session, registry=registry)
+            return await service.execute_reply(reply_id=reply_id)
+    finally:
+        await clients.aclose()
 
 
 def enqueue_auto_reply(reply_id: UUID) -> str:

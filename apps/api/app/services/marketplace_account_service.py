@@ -6,8 +6,8 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import AdapterResult
-from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.base import AdapterResult, CredentialValidation
+from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.config import get_settings
 from app.core.errors import bad_request, forbidden, not_found, payment_required
 from app.core.security import CredentialService
@@ -196,13 +196,24 @@ class MarketplaceAccountService:
         )
         return account
 
-    async def validate_credentials(self, *, actor: User, account_id: UUID) -> tuple[MarketplaceAccount, AdapterResult]:
+    async def validate_credentials(
+        self,
+        *,
+        actor: User,
+        account_id: UUID,
+        registry: MarketplaceAdapterRegistry,
+    ) -> tuple[MarketplaceAccount, AdapterResult[CredentialValidation]]:
         account = await self.get_account(actor=actor, account_id=account_id)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
+        try:
+            marketplace = Marketplace(account.marketplace)
+            adapter = registry.credentials(marketplace)
+        except (ValueError, UnsupportedCapabilityError):
+            raise forbidden("Marketplace adapter is not enabled yet") from None
         credential = self.credentials.decrypt(account.credentials_encrypted)
         await self.audit.write(
             action="marketplace_account.credentials.used_for_validation",
@@ -212,14 +223,26 @@ class MarketplaceAccountService:
             entity_id=str(account.id),
             metadata={"marketplace": account.marketplace},
         )
-        adapter = self._adapter_for(account.marketplace)
-        result = await adapter.validate_credentials(credential)
+        # Persist the authorization/audit boundary before the provider call. This
+        # also guarantees that no database transaction is held open during I/O.
+        await self.session.commit()
+        result = await adapter.validate_credentials(credential, account.seller_id)
         now = datetime.now(UTC)
+        validation = result.data if result.ok else None
+        if result.ok and validation is None:
+            result = AdapterResult[CredentialValidation](
+                False,
+                error_code="malformed_payload",
+                error_message_safe="Marketplace credential validation could not be proven",
+            )
 
-        if result.ok:
+        if validation is not None:
             account.status = "active"
             account.credentials_status = "valid"
-            account.scopes_json = {"validated": True, "checked_at": now.isoformat()}
+            account.scopes_json = {
+                "scopes": list(validation.scopes),
+                "checked_at": now.isoformat(),
+            }
             event_status = "success"
             error_code = None
             error_message_safe = None
@@ -270,17 +293,12 @@ class MarketplaceAccountService:
             credentials_status=account.credentials_status,
             scopes_json=account.scopes_json or {},
             default_response_mode=account.default_response_mode,
-            last_success_sync_at=getattr(account, "last_success_sync_at", None),
-            last_error_sync_at=getattr(account, "last_error_sync_at", None),
-            error_count=int(getattr(account, "error_count", 0) or 0),
+            last_success_sync_at=account.last_success_sync_at,
+            last_error_sync_at=account.last_error_sync_at,
+            error_count=account.error_count,
             created_at=account.created_at,
             updated_at=account.updated_at,
         )
-
-    def _adapter_for(self, marketplace: str):
-        if marketplace == Marketplace.WILDBERRIES.value:
-            return WildberriesAdapter()
-        raise forbidden("Marketplace adapter is not enabled yet")
 
     async def _write_integration_event(
         self,

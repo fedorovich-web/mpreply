@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 
@@ -23,6 +25,11 @@ from app.tests.marketplace_fixtures import SequenceTransport, response
 
 async def _no_wait(_: float) -> None:
     return None
+
+
+def _wildberries_token(*, scope: int) -> str:
+    payload = base64.urlsafe_b64encode(json.dumps({"s": scope}).encode()).decode().rstrip("=")
+    return f"synthetic.{payload}.signature"
 
 
 @pytest.mark.asyncio
@@ -173,14 +180,14 @@ async def test_registry_wildberries_validation_uses_injected_client() -> None:
     registry = create_marketplace_registry(clients)
 
     result = await registry.credentials(Marketplace.WILDBERRIES).validate_credentials(
-        "synthetic-token",
+        _wildberries_token(scope=1 << 6),
         None,
     )
 
     assert result.ok is True
     assert len(transport.requests) == 1
     assert transport.requests[0].url.host == "feedbacks-api.wildberries.ru"
-    assert transport.requests[0].headers["Authorization"] == "synthetic-token"
+    assert transport.requests[0].headers["Authorization"] == _wildberries_token(scope=1 << 6)
     transport.assert_exhausted()
     await clients.aclose()
 

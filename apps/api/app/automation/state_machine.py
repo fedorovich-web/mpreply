@@ -51,6 +51,7 @@ _MESSAGE_TRANSITIONS: dict[str, frozenset[str]] = {
     MessageStatus.SENDING.value: frozenset({
         MessageStatus.AUTO_REPLY_PENDING.value,
         MessageStatus.APPROVED.value,
+        MessageStatus.NEEDS_MANUAL_CHECK.value,
         MessageStatus.AUTO_REPLY_SENT.value,
         MessageStatus.ANSWERED.value,
         MessageStatus.FAILED.value,
@@ -93,6 +94,7 @@ _REPLY_TRANSITIONS: dict[str, frozenset[str]] = {
         ReplyStatus.SENT.value,
     }),
     ReplyStatus.SENDING.value: frozenset({
+        ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
         ReplyStatus.RETRY_PENDING.value,
         ReplyStatus.SENT.value,
         ReplyStatus.FAILED.value,
