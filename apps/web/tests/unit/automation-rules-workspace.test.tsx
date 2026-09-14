@@ -55,6 +55,7 @@ const mockedUseWorkspace = vi.mocked(useWorkspace);
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 function mockWorkspace(role: "owner" | "admin" | "manager" | "viewer") {
@@ -129,6 +130,35 @@ describe("AutomationRulesWorkspace", () => {
       stop_on_missing_product_context: true,
       stop_on_low_confidence: true,
     });
+  });
+
+  it("keeps a toggled rule visible and confirms the change when the active filter no longer matches", async () => {
+    mockWorkspace("owner");
+    let enabled = true;
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (init?.method === "DELETE") {
+        enabled = false;
+        return new Response(JSON.stringify({ ok: true, id: rule.id, is_enabled: false }), { status: 200 });
+      }
+      const onlyEnabled = url.includes("is_enabled=true");
+      const items = onlyEnabled && !enabled ? [] : [{ ...rule, is_enabled: enabled }];
+      return new Response(JSON.stringify({ items, total: items.length }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByRole("heading", { name: "Balanced auto" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Включённые" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Включённые" })).toHaveAttribute("aria-pressed", "true"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Выключить" }));
+
+    expect(await screen.findByText("Правило выключено.")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Все" })).toHaveAttribute("aria-pressed", "true"));
+    expect(screen.getByRole("heading", { name: "Balanced auto" })).toBeInTheDocument();
   });
 
   it("shows a read-only state for viewer membership and hides write controls", async () => {
