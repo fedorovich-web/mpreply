@@ -41,15 +41,36 @@ export function AdminOverviewWorkspace() {
 
   if (overviewQuery.error || !overviewQuery.data) {
     return (
-      <div className="workspace-inline-state workspace-inline-state-error">
+      <div className="workspace-inline-state workspace-inline-state-error" role="alert">
         <strong>Не удалось загрузить системную сводку</strong>
         <p>{overviewQuery.error instanceof Error ? overviewQuery.error.message : "Нет данных"}</p>
+        <button className="button button-secondary button-compact" onClick={() => void overviewQuery.refetch()} type="button">
+          Повторить
+        </button>
       </div>
     );
   }
 
   const data = overviewQuery.data;
-  const metrics: AdminMetric[] = [
+  const incidentMetrics: AdminMetric[] = [
+    {
+      label: "Ошибки интеграций за 24 часа",
+      value: data.integration_failures_24h,
+      helper: data.integration_failures_24h > 0
+        ? "Есть неуспешные события обмена с маркетплейсами"
+        : "Неуспешных событий обмена не зафиксировано",
+      tone: data.integration_failures_24h > 0 ? "warning" : undefined,
+    },
+    {
+      label: "Неотправленные ответы за 24 часа",
+      value: data.replies_failed_24h,
+      helper: data.replies_failed_24h > 0
+        ? "Есть ответы, завершившиеся ошибкой отправки"
+        : "Ошибок отправки ответов не зафиксировано",
+      tone: data.replies_failed_24h > 0 ? "warning" : undefined,
+    },
+  ];
+  const productMetrics: AdminMetric[] = [
     {
       label: "Организации",
       value: data.organizations_total,
@@ -65,6 +86,8 @@ export function AdminOverviewWorkspace() {
       value: data.subscriptions_active,
       helper: "Активные и пробные подписки",
     },
+  ];
+  const usageMetrics: AdminMetric[] = [
     {
       label: "События использования · 30 дней",
       value: data.usage_events_30d,
@@ -75,18 +98,6 @@ export function AdminOverviewWorkspace() {
       value: formatUsd(data.ai_cost_estimate_30d),
       helper: "Расчёт по сохранённым ИИ-черновикам",
     },
-    {
-      label: "Ошибки интеграций за 24 часа",
-      value: data.integration_failures_24h,
-      helper: "Неуспешные события обмена с маркетплейсами",
-      tone: data.integration_failures_24h > 0 ? "warning" : undefined,
-    },
-    {
-      label: "Неотправленные ответы за 24 часа",
-      value: data.replies_failed_24h,
-      helper: "Ответы, завершившиеся ошибкой отправки",
-      tone: data.replies_failed_24h > 0 ? "warning" : undefined,
-    },
   ];
 
   return (
@@ -96,6 +107,47 @@ export function AdminOverviewWorkspace() {
         <strong>Данные на {formatDateTime(data.generated_at)}</strong>
       </div>
 
+      <div className="admin-overview-body">
+        <AdminMetricSection
+          className="admin-section-incidents"
+          eyebrow="Последние 24 часа"
+          metrics={incidentMetrics}
+          title="Что требует внимания сейчас"
+        />
+        <AdminMetricSection
+          className="admin-section-product"
+          eyebrow="Продукт и доступ"
+          metrics={productMetrics}
+          title="Масштаб активного контура"
+        />
+        <AdminMetricSection
+          className="admin-section-usage"
+          eyebrow="Последние 30 дней"
+          metrics={usageMetrics}
+          title="Нагрузка и оценка расходов"
+        />
+      </div>
+    </section>
+  );
+}
+
+function AdminMetricSection({
+  className,
+  eyebrow,
+  metrics,
+  title,
+}: {
+  className: string;
+  eyebrow: string;
+  metrics: AdminMetric[];
+  title: string;
+}) {
+  return (
+    <section className={`admin-section ${className}`}>
+      <header className="admin-section-heading">
+        <span>{eyebrow}</span>
+        <h2>{title}</h2>
+      </header>
       <div className="admin-overview-grid">
         {metrics.map((metric) => (
           <article
