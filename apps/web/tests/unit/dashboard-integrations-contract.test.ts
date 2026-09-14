@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/integrations/IntegrationsWorkspace.tsx"), "utf8");
+const detailWorkspace = readFileSync(join(root, "components/integrations/WildberriesIntegrationWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/integrations/page.tsx"), "utf8");
 const wildberriesPage = readFileSync(join(root, "app/app/integrations/wildberries/page.tsx"), "utf8");
 const ozonPage = readFileSync(join(root, "app/app/integrations/ozon/page.tsx"), "utf8");
@@ -33,6 +34,11 @@ describe("integrations dashboard", () => {
       expect(marketplacePage).toContain("Интеграция готова");
       expect(marketplacePage).not.toContain("Подключение пока недоступно");
     }
+  });
+
+  it("keeps the account detail section named even when no account is selected", () => {
+    expect(detailWorkspace).toContain("aria-labelledby={selectedAccount ? detailTitleId : undefined}");
+    expect(detailWorkspace).toContain('aria-label={selectedAccount ? undefined : `Состояние подключения ${marketplaceName}`}');
   });
 
   it("uses the same detail page and header layout for every ready marketplace", () => {
