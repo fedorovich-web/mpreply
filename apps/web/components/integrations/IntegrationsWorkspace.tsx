@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { marketplaceAccountListSchema } from "../../lib/api/schemas";
+import { hasCurrentIntegrationProblem } from "../../lib/marketplace-account-health";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const marketplaceCatalog = [
@@ -46,8 +47,10 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const activeCount = accounts.filter((account) => account.status === "active" && account.error_count === 0).length;
-  const problemCount = accounts.filter((account) => account.status === "error" || account.error_count > 0).length;
+  const activeCount = accounts.filter(
+    (account) => account.status === "active" && !hasCurrentIntegrationProblem(account),
+  ).length;
+  const problemCount = accounts.filter(hasCurrentIntegrationProblem).length;
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
 
   return (
@@ -72,7 +75,7 @@ export function IntegrationsWorkspace() {
         {marketplaceCatalog.map((marketplace) => {
           const marketplaceAccounts = accounts.filter((account) => account.marketplace === marketplace.key);
           const connectedCount = marketplaceAccounts.length;
-          const hasProblem = marketplaceAccounts.some((account) => account.status === "error" || account.error_count > 0);
+          const hasProblem = marketplaceAccounts.some(hasCurrentIntegrationProblem);
           const hasActive = marketplaceAccounts.some((account) => account.status === "active");
           const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem });
           const actionLabel = canManage
