@@ -22,6 +22,13 @@ describe("first workspace onboarding", () => {
     expect(provider).toContain("Авито");
   });
 
+  it("uses the canonical MPReply brand mark instead of a separate onboarding glyph", () => {
+    expect(provider).toContain('import { PublicBrandMark } from "../public-site/PublicBrandMark"');
+    expect(provider).toContain("<PublicBrandMark />");
+    expect(provider).not.toContain("workspace-onboarding-mark");
+    expect(styles).not.toContain(".workspace-onboarding-mark");
+  });
+
   it("uses MPReply workspace storage with a fail-safe Respio migration", () => {
     expect(provider).toContain('const ACTIVE_ORGANIZATION_KEY = "mpreply.activeOrganizationId"');
     expect(provider).toContain('const LEGACY_ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId"');
