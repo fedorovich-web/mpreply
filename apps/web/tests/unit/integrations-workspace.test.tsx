@@ -114,16 +114,39 @@ describe("IntegrationsWorkspace", () => {
     );
   });
 
-  it("does not count an active account with sync errors as working normally", async () => {
+  it("keeps a recovered account healthy even when its cumulative error count is nonzero", async () => {
     mockWorkspace("owner");
-    const accountWithErrors = { ...account, error_count: 1 };
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithErrors]), { status: 200 })));
+    const recoveredAccount = {
+      ...account,
+      error_count: 3,
+      last_error_sync_at: "2026-07-12T05:30:00Z",
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([recoveredAccount]), { status: 200 })));
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    const summary = await screen.findByLabelText("Сводка подключений");
+    expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("1");
+    expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("0");
+  });
+
+  it("marks an active account as requiring attention when its latest sync failed", async () => {
+    mockWorkspace("owner");
+    const accountWithCurrentSyncError = {
+      ...account,
+      error_count: 1,
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+      last_error_sync_at: "2026-07-12T06:30:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithCurrentSyncError]), { status: 200 })));
 
     renderWithQueryClient(<IntegrationsWorkspace />);
 
     const summary = await screen.findByLabelText("Сводка подключений");
     expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("0");
     expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
+    expect(screen.getByText("Требует внимания")).toBeInTheDocument();
   });
 });
 
@@ -201,6 +224,23 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(body.organization_id).toBe(organization.id);
     expect(body.display_name).toBe("Новый WB");
     expect(body.credentials).toBe("secret-token");
+  });
+
+  it("shows a current sync failure instead of calling an active account healthy", async () => {
+    mockWorkspace("owner");
+    const accountWithCurrentSyncError = {
+      ...account,
+      error_count: 1,
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+      last_error_sync_at: "2026-07-12T06:30:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithCurrentSyncError]), { status: 200 })));
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    expect(screen.getAllByText("Требует внимания").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Активно")).not.toBeInTheDocument();
   });
 
   it("keeps viewer membership read-only and hides credential actions", async () => {
