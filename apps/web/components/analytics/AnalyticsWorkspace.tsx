@@ -48,6 +48,16 @@ export function AnalyticsWorkspace() {
     return Math.max(1, ...points.flatMap((point) => [point.imported, point.answered]));
   }, [messagesQuery.data]);
 
+  function retryAnalytics() {
+    void Promise.all([
+      overviewQuery.refetch(),
+      messagesQuery.refetch(),
+      marketplacesQuery.refetch(),
+      productsQuery.refetch(),
+      aiUsageQuery.refetch(),
+    ]);
+  }
+
   return (
     <section className="analytics-workspace">
       <div className="analytics-toolbar">
@@ -63,7 +73,15 @@ export function AnalyticsWorkspace() {
         </label>
       </div>
 
-      {firstError ? <WorkspaceState title="Не удалось загрузить аналитику" description={errorMessage(firstError)} tone="error" /> : null}
+      {firstError ? (
+        <WorkspaceState
+          actionLabel="Повторить"
+          description={errorMessage(firstError)}
+          onAction={retryAnalytics}
+          title="Не удалось загрузить аналитику"
+          tone="error"
+        />
+      ) : null}
       {isLoading && !overviewQuery.data ? <WorkspaceState title="Считаем показатели" description="Собираем обращения и ответы за выбранный период." /> : null}
 
       {overviewQuery.data ? (
@@ -182,8 +200,28 @@ function EmptyData({ text }: { text: string }) {
   return <p className="analytics-empty">{text}</p>;
 }
 
-function WorkspaceState({ title, description, tone = "default" }: { title: string; description: string; tone?: "default" | "error" }) {
-  return <div className={tone === "error" ? "workspace-inline-state workspace-inline-state-error" : "workspace-inline-state"}><strong>{title}</strong><p>{description}</p></div>;
+function WorkspaceState({
+  title,
+  description,
+  tone = "default",
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  description: string;
+  tone?: "default" | "error";
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div className={tone === "error" ? "workspace-inline-state workspace-inline-state-error" : "workspace-inline-state"}>
+      <strong>{title}</strong>
+      <p>{description}</p>
+      {actionLabel && onAction ? (
+        <button className="button button-secondary button-compact" onClick={onAction} type="button">{actionLabel}</button>
+      ) : null}
+    </div>
+  );
 }
 
 function formatNumber(value: number): string { return new Intl.NumberFormat("ru-RU").format(value); }
