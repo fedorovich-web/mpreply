@@ -28,6 +28,8 @@ describe("automation operational workspace", () => {
     expect(styles).toContain(".automation-live-layout");
     expect(styles).toContain(".automation-rule-row");
     expect(styles).toContain(".automation-detail-panel");
+    expect(styles).toContain(".automation-action-success");
+    expect(styles).toContain("var(--color-success-text)");
     expect(styles).toContain("@media (max-width: 520px)");
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
