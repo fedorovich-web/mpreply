@@ -11,12 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.base import (
     AdapterResult,
     MarketplaceErrorCode,
-    MarketplacePage,
-    NormalizedMessage,
     ProviderMessageContext,
     ReviewQuestionAdapter,
 )
 from app.adapters.capabilities import MarketplaceStream, read_scope_for_stream, validated_scope_names
+from app.adapters.conversation import ConversationAdapter
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.adapters.yandex_market import YandexMarketAdapter
 from app.core.config import get_settings
@@ -26,6 +25,7 @@ from app.models.enums import Marketplace, MessageStatus, MessageType
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
+from app.services.avito_chat_sync_service import AvitoChatSyncService
 from app.services.marketplace_ingest_service import IngestStats, MarketplaceIngestService
 from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
 from app.services.yandex_question_policy import (
@@ -103,7 +103,10 @@ class ScheduledSyncService:
             try:
                 marketplace = Marketplace(account.marketplace)
                 stream = MarketplaceStream(state.stream)
-                adapter = self.registry.review_questions(marketplace)
+                if stream is MarketplaceStream.CHATS:
+                    adapter: ReviewQuestionAdapter | ConversationAdapter = self.registry.conversations(marketplace)
+                else:
+                    adapter = self.registry.review_questions(marketplace)
             except (ValueError, UnsupportedCapabilityError):
                 await self.states.fail(
                     state.id,
@@ -156,6 +159,16 @@ class ScheduledSyncService:
         seen: set[str | None] = set()
         cursor = state.cursor
         totals = IngestStats()
+
+        if isinstance(adapter, ConversationAdapter):
+            return await self._run_conversation_batch(
+                state=state,
+                account=account,
+                adapter=adapter,
+                credential=credential,
+                stream=stream,
+                owner=owner,
+            )
 
         if marketplace is Marketplace.YANDEX_MARKET and stream is MarketplaceStream.QUESTIONS and isinstance(adapter, YandexMarketAdapter):
             try:
@@ -241,6 +254,59 @@ class ScheduledSyncService:
                 )
 
         return await self._fail(state, stream, owner, "malformed_payload", self._now(), totals)
+
+    async def _run_conversation_batch(
+        self,
+        *,
+        state: MarketplaceSyncState,
+        account: MarketplaceAccount,
+        adapter: ConversationAdapter,
+        credential: str,
+        stream: MarketplaceStream,
+        owner: str,
+    ) -> StreamRunResult:
+        result = await AvitoChatSyncService(
+            self.session,
+            adapter=adapter,
+            states=self.states,
+            ingest=self.ingest,
+            clock=self.clock,
+        ).sync_batch(
+            account=account,
+            credential=credential,
+            state=state,
+            owner=owner,
+            lease_for=_LEASE_DURATION,
+        )
+        if result.error_code is not None:
+            return await self._record_adapter_failure(
+                result.state,
+                stream,
+                owner,
+                AdapterResult(
+                    False,
+                    error_code=result.error_code,
+                    error_message_safe="Marketplace conversation synchronization failed",
+                    retry_after_seconds=result.retry_after_seconds,
+                ),
+                self._now(),
+                result.stats,
+            )
+        release_at = self._now()
+        next_run_at = release_at + (timedelta(seconds=1) if result.has_more else _SUCCESS_INTERVAL)
+        async with self.session.begin():
+            await self.states.release(
+                result.state.id,
+                owner=owner,
+                now=release_at,
+                next_run_at=next_run_at,
+            )
+        return _result(
+            result.state.id,
+            stream,
+            result.stats,
+            completed=result.completed,
+        )
 
     async def _run_yandex_question_backfill(
         self,
@@ -447,7 +513,7 @@ class ScheduledSyncService:
         state: MarketplaceSyncState,
         stream: MarketplaceStream,
         owner: str,
-        result: AdapterResult[MarketplacePage[NormalizedMessage]],
+        result: AdapterResult[object],
         now: datetime,
         totals: IngestStats,
     ) -> StreamRunResult:

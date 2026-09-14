@@ -29,16 +29,20 @@ _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
 class SyncStats:
     imported_reviews: int = 0
     imported_questions: int = 0
+    imported_chats: int = 0
     updated_reviews: int = 0
     updated_questions: int = 0
+    updated_chats: int = 0
     skipped: int = 0
 
     def as_dict(self) -> dict[str, object]:
         return {
             "imported_reviews": self.imported_reviews,
             "imported_questions": self.imported_questions,
+            "imported_chats": self.imported_chats,
             "updated_reviews": self.updated_reviews,
             "updated_questions": self.updated_questions,
+            "updated_chats": self.updated_chats,
             "skipped": self.skipped,
         }
 
@@ -80,7 +84,9 @@ class MarketplaceSyncService:
             capability = registry.capability(marketplace)
             if capability.streams & {MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS}:
                 registry.review_questions(marketplace)
-            else:
+            if MarketplaceStream.CHATS in capability.streams:
+                registry.conversations(marketplace)
+            if not capability.streams:
                 raise UnsupportedCapabilityError(marketplace, capability.streams)
         except UnsupportedCapabilityError:
             raise forbidden("Marketplace adapter is not enabled yet") from None
@@ -127,14 +133,13 @@ class MarketplaceSyncService:
             await self._write_integration_event(
                 account=account,
                 event_type=f"sync.{stream_name}",
-                status="success" if result.completed else "failed",
+                status="failed" if result.error_code is not None else "success",
                 error_code=result.error_code,
-                error_message_safe=(
-                    None if result.error_code is None else "Marketplace synchronization failed"
-                ),
+                error_message_safe=(None if result.error_code is None else "Marketplace synchronization failed"),
                 metadata={
                     "created_messages": result.created_messages,
                     "updated_messages": result.updated_messages,
+                    "completed": result.completed,
                 },
             )
 
@@ -151,7 +156,7 @@ class MarketplaceSyncService:
             account.credentials_status = "valid"
         job.finished_at = finished_at
         job.stats_json = stats.as_dict()
-        imported_total = stats.imported_reviews + stats.imported_questions
+        imported_total = stats.imported_reviews + stats.imported_questions + stats.imported_chats
         if imported_total > 0:
             self.session.add(
                 UsageEvent(
@@ -165,6 +170,7 @@ class MarketplaceSyncService:
                         "sync_job_id": str(job.id),
                         "imported_reviews": stats.imported_reviews,
                         "imported_questions": stats.imported_questions,
+                        "imported_chats": stats.imported_chats,
                     },
                 )
             )
@@ -215,9 +221,7 @@ class MarketplaceSyncService:
                     created_at=now,
                     updated_at=now,
                 )
-                .on_conflict_do_nothing(
-                    constraint="uq_marketplace_sync_states_account_stream"
-                )
+                .on_conflict_do_nothing(constraint="uq_marketplace_sync_states_account_stream")
             )
         if missing:
             result = await self.session.execute(
@@ -233,9 +237,7 @@ class MarketplaceSyncService:
         return [existing[stream.value] for stream in ordered_streams]
 
     async def _get_account(self, account_id: UUID) -> MarketplaceAccount:
-        result = await self.session.execute(
-            select(MarketplaceAccount).where(MarketplaceAccount.id == account_id)
-        )
+        result = await self.session.execute(select(MarketplaceAccount).where(MarketplaceAccount.id == account_id))
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")
@@ -277,4 +279,7 @@ def _sync_stats(results: list[StreamRunResult]) -> SyncStats:
         elif result.stream is MarketplaceStream.QUESTIONS:
             stats.imported_questions += result.created_messages
             stats.updated_questions += result.updated_messages
+        elif result.stream is MarketplaceStream.CHATS:
+            stats.imported_chats += result.created_messages
+            stats.updated_chats += result.updated_messages
     return stats

@@ -10,10 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import (
     AdapterResult,
+    ExistingReplyResult,
     ProviderMessageContext,
     ProviderWriteReceipt,
+    ReviewQuestionAdapter,
 )
 from app.adapters.capabilities import validated_scope_names, write_scope_for_message
+from app.adapters.conversation import ConversationAdapter
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
 from app.core.config import get_settings
@@ -323,14 +326,18 @@ class ReplyExecutionService:
                 ),
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
-        if message_type not in {MessageType.REVIEW, MessageType.QUESTION}:
+        if message_type not in {
+            MessageType.REVIEW,
+            MessageType.QUESTION,
+            MessageType.CHAT,
+        }:
             await self._mark_terminal_marketplace_failure(
                 reply=reply,
                 message=message,
                 result=AdapterResult(
                     False,
                     error_code="unsupported_capability",
-                    error_message_safe="Message type cannot be replied to through the review adapter",
+                    error_message_safe="Message type cannot be replied to through the marketplace adapter",
                 ),
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
@@ -348,7 +355,12 @@ class ReplyExecutionService:
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         try:
-            adapter = self._adapter_registry().review_questions(marketplace)
+            review_adapter: ReviewQuestionAdapter | None = None
+            conversation_adapter: ConversationAdapter | None = None
+            if message_type is MessageType.CHAT:
+                conversation_adapter = self._adapter_registry().conversations(marketplace)
+            else:
+                review_adapter = self._adapter_registry().review_questions(marketplace)
         except UnsupportedCapabilityError:
             await self._mark_terminal_marketplace_failure(
                 reply=reply,
@@ -409,11 +421,32 @@ class ReplyExecutionService:
             marketplace_created_at=message.marketplace_created_at,
             metadata=dict(message.metadata_json or {}),
         )
-        preflight = await adapter.find_existing_reply(
-            credential,
-            account.seller_id,
-            context,
-        )
+        preflight: AdapterResult[ExistingReplyResult]
+        if conversation_adapter is not None:
+            if account.seller_id is None:
+                preflight = AdapterResult(
+                    False,
+                    error_code="marketplace_validation_error",
+                    error_message_safe="Marketplace conversation account ID is missing",
+                )
+            else:
+                preflight = await conversation_adapter.find_existing_chat_reply(
+                    credential,
+                    account.seller_id,
+                    context,
+                )
+        elif review_adapter is not None:
+            preflight = await review_adapter.find_existing_reply(
+                credential,
+                account.seller_id,
+                context,
+            )
+        else:
+            preflight = AdapterResult(
+                False,
+                error_code="unsupported_capability",
+                error_message_safe="Marketplace reply capability is not supported",
+            )
         if not preflight.ok or preflight.data is None:
             failed_result: AdapterResult = preflight
             if preflight.ok:
@@ -476,12 +509,33 @@ class ReplyExecutionService:
             )
             return ExecuteReplyResult(reply.id, reply.status, False, externally_already_answered=True)
 
-        result = await adapter.send_reply(
-            credential,
-            account.seller_id,
-            context,
-            reply.reply_text,
-        )
+        if conversation_adapter is not None:
+            if account.seller_id is None:
+                result = AdapterResult[ProviderWriteReceipt](
+                    False,
+                    error_code="marketplace_validation_error",
+                    error_message_safe="Marketplace conversation account ID is missing",
+                )
+            else:
+                result = await conversation_adapter.send_chat_message(
+                    credential,
+                    account.seller_id,
+                    context,
+                    reply.reply_text,
+                )
+        elif review_adapter is not None:
+            result = await review_adapter.send_reply(
+                credential,
+                account.seller_id,
+                context,
+                reply.reply_text,
+            )
+        else:
+            result = AdapterResult[ProviderWriteReceipt](
+                False,
+                error_code="unsupported_capability",
+                error_message_safe="Marketplace reply capability is not supported",
+            )
         reply = await self._get_owned_attempt_for_update(
             reply_id,
             attempt_count=attempt_count,

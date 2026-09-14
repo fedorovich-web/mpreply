@@ -4,8 +4,10 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
+from app.adapters.avito import AvitoAdapter
 from app.adapters.base import CredentialAdapter, ReviewQuestionAdapter
 from app.adapters.capabilities import (
+    AVITO_CAPABILITY,
     OZON_CAPABILITY,
     WILDBERRIES_CAPABILITY,
     YANDEX_MARKET_CAPABILITY,
@@ -87,6 +89,10 @@ class MarketplaceAdapterRegistry:
 def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceAdapterRegistry:
     return MarketplaceAdapterRegistry(
         {
+            Marketplace.AVITO: ProviderRegistration(
+                capability=AVITO_CAPABILITY,
+                factory=lambda: AvitoAdapter(client=clients.avito),
+            ),
             Marketplace.WILDBERRIES: ProviderRegistration(
                 capability=WILDBERRIES_CAPABILITY,
                 factory=lambda: WildberriesAdapter(client=clients.wildberries),

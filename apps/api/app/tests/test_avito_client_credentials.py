@@ -50,8 +50,11 @@ async def test_concurrent_avito_resolve_coalesces_token_refresh() -> None:
         "not-json",
         "{}",
         '{"version":2,"client_id":"x","client_secret":"y"}',
+        '{"version":true,"client_id":"x","client_secret":"y"}',
+        '{"version":1,"version":1,"client_id":"x","client_secret":"y"}',
         '{"version":1,"client_id":"","client_secret":"y"}',
         '{"version":1,"client_id":1,"client_secret":"y"}',
+        '"\ud800"',
     ],
 )
 @pytest.mark.asyncio

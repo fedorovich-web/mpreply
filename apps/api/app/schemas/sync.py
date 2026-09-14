@@ -11,8 +11,10 @@ class MarketplaceSyncResponse(BaseModel):
     status: str
     imported_reviews: int
     imported_questions: int
+    imported_chats: int
     updated_reviews: int
     updated_questions: int
+    updated_chats: int
     skipped: int
     error_code: str | None = None
     error_message_safe: str | None = None
