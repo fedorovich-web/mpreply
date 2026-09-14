@@ -20,7 +20,6 @@ const renderedRoutes = [
   "/marketplaces/avito",
   "/pricing",
   "/demo",
-  "/resources",
   "/contacts",
   "/privacy",
   "/terms",
