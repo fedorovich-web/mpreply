@@ -67,3 +67,10 @@ class ConversationAdapter(CredentialAdapter, Protocol):
         context: ProviderMessageContext,
         text: str,
     ) -> AdapterResult[ProviderWriteReceipt]: ...
+
+    async def mark_chat_read(
+        self,
+        credential: str,
+        seller_id: str,
+        chat_id: str,
+    ) -> AdapterResult[None]: ...

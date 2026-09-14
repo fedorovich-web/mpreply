@@ -112,6 +112,7 @@ async def validate_marketplace_account(
         error_message_safe=result.error_message_safe,
     )
 
+
 @router.post("/{account_id}/rotate-credentials", response_model=MarketplaceAccountActionResponse)
 async def rotate_marketplace_credentials(
     account_id: UUID,
@@ -174,8 +175,10 @@ async def request_marketplace_sync(
         status="failed" if error_code else "success",
         imported_reviews=stats.imported_reviews,
         imported_questions=stats.imported_questions,
+        imported_chats=stats.imported_chats,
         updated_reviews=stats.updated_reviews,
         updated_questions=stats.updated_questions,
+        updated_chats=stats.updated_chats,
         skipped=stats.skipped,
         error_code=error_code,
         error_message_safe=error_message_safe,

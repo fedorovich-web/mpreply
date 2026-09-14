@@ -31,16 +31,20 @@ class AvitoClientCredentials:
 
     @classmethod
     def parse(cls, raw: str) -> AvitoClientCredentials:
-        if len(raw.encode("utf-8")) > _MAX_CREDENTIAL_JSON_BYTES:
+        try:
+            raw_size = len(raw.encode("utf-8"))
+        except UnicodeEncodeError as exc:
+            raise InvalidAvitoCredential from exc
+        if raw_size > _MAX_CREDENTIAL_JSON_BYTES:
             raise InvalidAvitoCredential
         try:
-            payload: object = json.loads(raw)
+            payload: object = json.loads(raw, object_pairs_hook=_unique_object)
         except (json.JSONDecodeError, UnicodeError) as exc:
             raise InvalidAvitoCredential from exc
         if not isinstance(payload, dict):
             raise InvalidAvitoCredential
         data = cast(dict[str, object], payload)
-        if set(data) != {"version", "client_id", "client_secret"} or data.get("version") != 1:
+        if set(data) != {"version", "client_id", "client_secret"} or type(data.get("version")) is not int or data.get("version") != 1:
             raise InvalidAvitoCredential
         client_id = cls._part(data.get("client_id"))
         client_secret = cls._part(data.get("client_secret"))
@@ -55,6 +59,15 @@ class AvitoClientCredentials:
         if value and value == value.strip() and len(value) <= _MAX_CREDENTIAL_PART_LENGTH and all(ord(character) >= 32 for character in value):
             return value
         return None
+
+
+def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise InvalidAvitoCredential
+        result[key] = value
+    return result
 
 
 @dataclass(frozen=True, slots=True)
