@@ -28,37 +28,13 @@
 	gap: 0.72rem;
 }
 
-.app-logo-mark {
-	display: grid;
+.app-logo .public-brand-mark {
 	width: 2.35rem;
 	height: 2.35rem;
 	flex: 0 0 auto;
-	place-items: center;
 	border-radius: 0.72rem;
-	background: var(--color-brand-primary);
-	color: var(--color-text-on-brand);
+	font-size: 0.82rem;
 	box-shadow: var(--shadow-sm);
-}
-
-.app-brand-glyph {
-	display: grid;
-	width: 1.12rem;
-	gap: 0.17rem;
-}
-
-.app-brand-glyph i {
-	display: block;
-	height: 0.12rem;
-	border-radius: 999px;
-	background: currentColor;
-}
-
-.app-brand-glyph i:nth-child(2) {
-	width: 82%;
-}
-
-.app-brand-glyph i:nth-child(3) {
-	width: 62%;
 }
 
 .app-logo > span:last-child {
