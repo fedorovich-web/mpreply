@@ -8,6 +8,7 @@ from app.adapters.base import CredentialAdapter, ReviewQuestionAdapter
 from app.adapters.capabilities import (
     OZON_CAPABILITY,
     WILDBERRIES_CAPABILITY,
+    YANDEX_MARKET_CAPABILITY,
     MarketplaceCapability,
     MarketplaceStream,
 )
@@ -15,6 +16,7 @@ from app.adapters.conversation import ConversationAdapter
 from app.adapters.http import MarketplaceHttpClients
 from app.adapters.ozon import OzonAdapter
 from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.yandex_market import YandexMarketAdapter
 from app.models.enums import Marketplace
 
 ProviderFactory = Callable[[], object]
@@ -92,6 +94,10 @@ def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceA
             Marketplace.OZON: ProviderRegistration(
                 capability=OZON_CAPABILITY,
                 factory=lambda: OzonAdapter(client=clients.ozon),
+            ),
+            Marketplace.YANDEX_MARKET: ProviderRegistration(
+                capability=YANDEX_MARKET_CAPABILITY,
+                factory=lambda: YandexMarketAdapter(client=clients.yandex_market),
             ),
         }
     )

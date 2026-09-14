@@ -89,6 +89,7 @@ class ExistingReplyResult:
 @dataclass(frozen=True, slots=True)
 class ProviderWriteReceipt:
     provider_reply_id: str
+    provider_state: str | None = None
 
 
 @runtime_checkable

@@ -5,19 +5,36 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import AdapterResult, MarketplaceErrorCode, MarketplacePage, NormalizedMessage
+from app.adapters.base import (
+    AdapterResult,
+    MarketplaceErrorCode,
+    MarketplacePage,
+    NormalizedMessage,
+    ProviderMessageContext,
+    ReviewQuestionAdapter,
+)
 from app.adapters.capabilities import MarketplaceStream, read_scope_for_stream, validated_scope_names
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
+from app.adapters.yandex_market import YandexMarketAdapter
 from app.core.config import get_settings
 from app.core.security import CredentialEncryptionError, CredentialService
-from app.models.enums import Marketplace
+from app.models.customer_message import CustomerMessage
+from app.models.enums import Marketplace, MessageStatus, MessageType
+from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.services.marketplace_ingest_service import IngestStats, MarketplaceIngestService
 from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
+from app.services.yandex_question_policy import (
+    YandexQuestionCheckpoint,
+    advance_window,
+    load_checkpoint,
+    record_page,
+    store_checkpoint,
+)
 
 MAX_PAGES_PER_RUN = 100
 _LEASE_DURATION = timedelta(minutes=5)
@@ -105,11 +122,7 @@ class ScheduledSyncService:
 
             required_scope = read_scope_for_stream(stream)
             scopes = validated_scope_names(account.scopes_json or {})
-            if (
-                account.status != "active"
-                or account.credentials_status != "valid"
-                or required_scope not in scopes
-            ):
+            if account.status != "active" or account.credentials_status != "valid" or required_scope not in scopes:
                 await self.states.fail(
                     state.id,
                     owner=owner,
@@ -143,6 +156,32 @@ class ScheduledSyncService:
         seen: set[str | None] = set()
         cursor = state.cursor
         totals = IngestStats()
+
+        if marketplace is Marketplace.YANDEX_MARKET and stream is MarketplaceStream.QUESTIONS and isinstance(adapter, YandexMarketAdapter):
+            try:
+                checkpoint = load_checkpoint(
+                    state.metadata_json or {},
+                    self._now().date(),
+                )
+            except ValueError:
+                return await self._fail(
+                    state,
+                    stream,
+                    owner,
+                    "malformed_payload",
+                    self._now(),
+                    totals,
+                )
+            if not checkpoint.completed:
+                return await self._run_yandex_question_backfill(
+                    state=state,
+                    account=account,
+                    adapter=adapter,
+                    credential=credential,
+                    stream=stream,
+                    owner=owner,
+                    checkpoint=checkpoint,
+                )
 
         for page_number in range(1, MAX_PAGES_PER_RUN + 1):
             if cursor in seen:
@@ -180,11 +219,9 @@ class ScheduledSyncService:
                     current_cursor=cursor,
                     next_cursor=page.next_cursor,
                     metadata={
+                        **(state.metadata_json or {}),
                         "pages_completed": page_number,
-                        "items_completed": totals.created_messages
-                        + totals.updated_messages
-                        + page_stats.created_messages
-                        + page_stats.updated_messages,
+                        "items_completed": totals.created_messages + totals.updated_messages + page_stats.created_messages + page_stats.updated_messages,
                     },
                     now=page_completed_at,
                     lease_for=_LEASE_DURATION,
@@ -192,9 +229,104 @@ class ScheduledSyncService:
             totals = _add_stats(totals, page_stats)
             cursor = page.next_cursor
             if cursor is None:
-                return await self._complete_cycle(state, stream, owner, self._now(), totals)
+                return await self._complete_cycle(
+                    state,
+                    stream,
+                    owner,
+                    self._now(),
+                    totals,
+                    account=account,
+                    adapter=adapter,
+                    credential=credential,
+                )
 
         return await self._fail(state, stream, owner, "malformed_payload", self._now(), totals)
+
+    async def _run_yandex_question_backfill(
+        self,
+        *,
+        state: MarketplaceSyncState,
+        account: MarketplaceAccount,
+        adapter: YandexMarketAdapter,
+        credential: str,
+        stream: MarketplaceStream,
+        owner: str,
+        checkpoint: YandexQuestionCheckpoint,
+    ) -> StreamRunResult:
+        totals = IngestStats()
+        for page_number in range(1, MAX_PAGES_PER_RUN + 1):
+            fetched = await adapter.fetch_questions_window(
+                credential,
+                account.seller_id,
+                date_from=checkpoint.date_from,
+                date_to=checkpoint.date_to,
+                cursor=checkpoint.page_token,
+            )
+            if not fetched.ok or fetched.data is None:
+                return await self._record_adapter_failure(
+                    state,
+                    stream,
+                    owner,
+                    fetched,
+                    self._now(),
+                    totals,
+                )
+            page = fetched.data
+            try:
+                next_checkpoint = record_page(checkpoint, page.next_cursor)
+                if page.next_cursor is None:
+                    next_checkpoint = advance_window(next_checkpoint)
+            except ValueError:
+                return await self._fail(
+                    state,
+                    stream,
+                    owner,
+                    "malformed_payload",
+                    self._now(),
+                    totals,
+                )
+            completed_at = self._now()
+            async with self.session.begin():
+                page_stats = await self.ingest.ingest_page(account, page, completed_at)
+                state = await self.states.complete_page(
+                    state_id=state.id,
+                    owner=owner,
+                    current_cursor=state.cursor,
+                    next_cursor=state.cursor,
+                    metadata=store_checkpoint(
+                        {
+                            **(state.metadata_json or {}),
+                            "pages_completed": page_number,
+                            "items_completed": totals.created_messages + totals.updated_messages + page_stats.created_messages + page_stats.updated_messages,
+                        },
+                        next_checkpoint,
+                    ),
+                    now=completed_at,
+                    lease_for=_LEASE_DURATION,
+                )
+            totals = _add_stats(totals, page_stats)
+            checkpoint = next_checkpoint
+            if checkpoint.completed:
+                return await self._complete_cycle(
+                    state,
+                    stream,
+                    owner,
+                    self._now(),
+                    totals,
+                    account=account,
+                    adapter=adapter,
+                    credential=credential,
+                )
+
+        release_at = self._now()
+        async with self.session.begin():
+            await self.states.release(
+                state.id,
+                owner=owner,
+                now=release_at,
+                next_run_at=release_at + timedelta(seconds=1),
+            )
+        return _result(state.id, stream, totals, completed=False)
 
     def _now(self) -> datetime:
         current = self.clock()
@@ -209,7 +341,26 @@ class ScheduledSyncService:
         owner: str,
         now: datetime,
         totals: IngestStats,
+        *,
+        account: MarketplaceAccount,
+        adapter: ReviewQuestionAdapter,
+        credential: str,
     ) -> StreamRunResult:
+        if stream is MarketplaceStream.QUESTIONS and account.marketplace == Marketplace.YANDEX_MARKET.value and isinstance(adapter, YandexMarketAdapter):
+            reconciliation_error = await self._reconcile_yandex_questions(
+                account=account,
+                adapter=adapter,
+                credential=credential,
+            )
+            if reconciliation_error is not None:
+                return await self._fail(
+                    state,
+                    stream,
+                    owner,
+                    reconciliation_error,
+                    now,
+                    totals,
+                )
         async with self.session.begin():
             await self.states.release(
                 state.id,
@@ -218,6 +369,78 @@ class ScheduledSyncService:
                 next_run_at=now + _SUCCESS_INTERVAL,
             )
         return _result(state.id, stream, totals, completed=True)
+
+    async def _reconcile_yandex_questions(
+        self,
+        *,
+        account: MarketplaceAccount,
+        adapter: YandexMarketAdapter,
+        credential: str,
+    ) -> MarketplaceErrorCode | None:
+        result = await self.session.execute(
+            select(CustomerMessage)
+            .where(
+                CustomerMessage.organization_id == account.organization_id,
+                CustomerMessage.marketplace_account_id == account.id,
+                CustomerMessage.marketplace == Marketplace.YANDEX_MARKET.value,
+                CustomerMessage.type == MessageType.QUESTION.value,
+                CustomerMessage.status == MessageStatus.NEEDS_REPLY.value,
+            )
+            .order_by(CustomerMessage.marketplace_created_at.asc(), CustomerMessage.id.asc())
+            .limit(25)
+        )
+        candidates = [
+            (
+                message.id,
+                message.external_id,
+                message.marketplace_created_at,
+                dict(message.metadata_json or {}),
+            )
+            for message in result.scalars().all()
+        ]
+        organization_id = account.organization_id
+        account_id = account.id
+        seller_id = account.seller_id
+        await self.session.commit()
+        published_ids: list[UUID] = []
+        for message_id, external_id, marketplace_created_at, metadata in candidates:
+            reconciliation = await adapter.find_existing_reply(
+                credential,
+                seller_id,
+                ProviderMessageContext(
+                    message_type=MessageType.QUESTION,
+                    external_id=external_id,
+                    marketplace_created_at=marketplace_created_at,
+                    metadata=metadata,
+                ),
+            )
+            if not reconciliation.ok or reconciliation.data is None:
+                return reconciliation.error_code or "malformed_payload"
+            if reconciliation.data.exists and reconciliation.data.provider_state == "published":
+                published_ids.append(message_id)
+        if published_ids:
+            async with self.session.begin():
+                await self.session.execute(
+                    update(CustomerMessage)
+                    .where(
+                        CustomerMessage.id.in_(published_ids),
+                        CustomerMessage.organization_id == organization_id,
+                        CustomerMessage.marketplace_account_id == account_id,
+                        CustomerMessage.status == MessageStatus.NEEDS_REPLY.value,
+                    )
+                    .values(status=MessageStatus.ANSWERED.value)
+                )
+                self.session.add(
+                    IntegrationEvent(
+                        organization_id=organization_id,
+                        marketplace_account_id=account_id,
+                        marketplace=Marketplace.YANDEX_MARKET.value,
+                        event_type="questions.reconcile",
+                        status="success",
+                        metadata_json={"published_messages": len(published_ids)},
+                    )
+                )
+        return None
 
     async def _record_adapter_failure(
         self,
