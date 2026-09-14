@@ -24,3 +24,11 @@ This log records documentation checks for provider-facing contracts. It does not
 - Scope: `Api-Key` authorization, `communication` and `all-methods` write scopes, `/v2/auth/token`, business-scoped goods-feedback and goods-questions reads, comment/answer reconciliation, `pageToken`, limits, and write receipt shapes.
 - Contract corrections from the historical implementation: review creation returns the comment object under `result` with its `id` and moderation `status`; question creation returns `result.entity` and must identify an `ANSWER`. Invalid timestamps are rejected instead of being replaced with the local clock, and missing products are rejected instead of receiving synthetic names or IDs.
 - Evidence boundary: official-documentation review with synthetic transports only; no seller-account request was made. Yandex Market remains runtime-unverified until a separately authorized live probe succeeds.
+
+## Avito API
+
+- Inspected: 2026-09-14.
+- Official sources: [authorization catalog](https://developers.avito.ru/api-catalog/auth/documentation) and [Messenger catalog](https://developers.avito.ru/api-catalog/messenger/documentation).
+- Scope: client-credentials token exchange at fixed `https://api.avito.ru/token/`, Messenger chat/message/read/send paths, numeric account IDs, opaque chat IDs, bounded limit/offset pagination, and text-only outbound messages up to 1000 characters.
+- Retrieval note: the current official catalog pages could not be opened by the automated documentation reader. No bypass was attempted. Contract shapes were cross-checked against the repository contract history and the current completion specification; provider responses remain fail-closed.
+- Evidence boundary: synthetic transports only; no Avito account or Messenger request was made. Avito remains runtime-unverified until a separately authorized live probe succeeds.
