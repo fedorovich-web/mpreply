@@ -20,6 +20,14 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain("window.localStorage.setItem");
   });
 
+  it("keeps server pagination reachable without losing the active filters", () => {
+    expect(inbox).toContain("const [page, setPage] = useState(1)");
+    expect(inbox).toContain("page_size: inboxPageSize");
+    expect(inbox).toContain('aria-label="Следующая страница"');
+    expect(inbox).toContain("без оценки на странице");
+    expect(styles).toContain(".inbox-pagination");
+  });
+
   it("keeps the list-detail flow keyboard-operable and the next action explicit", () => {
     expect(inbox).toContain('aria-pressed={isSelected}');
     expect(inbox).toContain("inbox-next-step");
