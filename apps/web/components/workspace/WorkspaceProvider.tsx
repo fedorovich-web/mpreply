@@ -13,6 +13,7 @@ import {
   type User,
   userSchema,
 } from "../../lib/api/schemas";
+import { PublicBrandMark } from "../public-site/PublicBrandMark";
 
 const ACTIVE_ORGANIZATION_KEY = "mpreply.activeOrganizationId";
 const LEGACY_ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId";
@@ -205,7 +206,7 @@ function WorkspaceOnboarding({ user }: { user: User }) {
     <main className="workspace-onboarding-page">
       <section className="workspace-onboarding-card" aria-labelledby="workspace-onboarding-title">
         <div className="workspace-onboarding-brand" aria-label="MPReply">
-          <span className="workspace-onboarding-mark" aria-hidden="true"><i /><i /><i /></span>
+          <PublicBrandMark />
           <strong>MPReply</strong>
         </div>
 
