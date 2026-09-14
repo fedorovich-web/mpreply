@@ -63,6 +63,8 @@ class Settings(BaseSettings):
     auto_reply_daily_limit_default: int = 100
     auto_reply_max_attempts: int = 4
     auto_reply_execution_lease_seconds: int = 120
+    marketplace_scheduler_interval_seconds: int = Field(default=30, ge=5, le=300)
+    marketplace_scheduler_batch_size: int = Field(default=25, ge=1, le=100)
 
     cors_allowed_origins: list[str] = Field(default_factory=list)
     allowed_hosts: list[str] = Field(default_factory=lambda: ["localhost", "127.0.0.1", "testserver"])

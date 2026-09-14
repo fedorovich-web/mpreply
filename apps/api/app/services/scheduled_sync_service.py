@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import (
@@ -24,7 +24,7 @@ from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.marketplace_sync_state import MarketplaceSyncState
+from app.models.marketplace_sync_state import MarketplaceSyncState, SyncStateStatus
 from app.services.avito_chat_sync_service import AvitoChatSyncService
 from app.services.marketplace_ingest_service import IngestStats, MarketplaceIngestService
 from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
@@ -41,6 +41,7 @@ _LEASE_DURATION = timedelta(minutes=5)
 _SUCCESS_INTERVAL = timedelta(minutes=5)
 _MAX_BACKOFF_SECONDS = 60 * 60
 _PAUSE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
+_MAX_DUE_STREAMS = 100
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,14 +78,45 @@ class ScheduledSyncService:
         self.credentials = credentials
         self.clock = clock or _utc_now
 
-    async def run_stream(self, state_id: UUID, owner: str, now: datetime) -> StreamRunResult:
+    async def claim_due(
+        self,
+        *,
+        now: datetime,
+        owner: str,
+        limit: int,
+    ) -> list[MarketplaceSyncState]:
+        return await claim_due_marketplace_streams(
+            self.session,
+            now=now,
+            owner=owner,
+            limit=limit,
+        )
+
+    async def run_stream(
+        self,
+        state_id: UUID,
+        owner: str,
+        now: datetime,
+        *,
+        preacquired: bool = False,
+    ) -> StreamRunResult:
         async with self.session.begin():
-            state = await self.states.acquire(
-                state_id=state_id,
-                owner=owner,
-                now=now,
-                lease_for=_LEASE_DURATION,
-            )
+            if preacquired:
+                state = await self.session.scalar(
+                    select(MarketplaceSyncState).where(
+                        MarketplaceSyncState.id == state_id,
+                        MarketplaceSyncState.status == SyncStateStatus.LEASED.value,
+                        MarketplaceSyncState.lease_owner == owner,
+                        MarketplaceSyncState.lease_expires_at > now,
+                    )
+                )
+            else:
+                state = await self.states.acquire(
+                    state_id=state_id,
+                    owner=owner,
+                    now=now,
+                    lease_for=_LEASE_DURATION,
+                )
             if state is None:
                 return StreamRunResult(
                     state_id=state_id,
@@ -583,3 +615,80 @@ def _result(
 
 def _utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+async def claim_due_marketplace_streams(
+    session: AsyncSession,
+    *,
+    now: datetime,
+    owner: str,
+    limit: int,
+) -> list[MarketplaceSyncState]:
+    _validate_scheduler_input(now, owner, limit)
+    async with session.begin():
+        result = await session.execute(
+            select(MarketplaceSyncState)
+            .where(
+                or_(
+                    and_(
+                        MarketplaceSyncState.status.in_((SyncStateStatus.IDLE.value, SyncStateStatus.ERROR.value)),
+                        MarketplaceSyncState.next_run_at.is_not(None),
+                        MarketplaceSyncState.next_run_at <= now,
+                    ),
+                    and_(
+                        MarketplaceSyncState.status == SyncStateStatus.LEASED.value,
+                        MarketplaceSyncState.lease_expires_at <= now,
+                    ),
+                )
+            )
+            .order_by(
+                MarketplaceSyncState.next_run_at.asc().nullsfirst(),
+                MarketplaceSyncState.id.asc(),
+            )
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+        states = list(result.scalars().all())
+        lease_expires_at = now + _LEASE_DURATION
+        for state in states:
+            state.status = SyncStateStatus.LEASED.value
+            state.lease_owner = owner
+            state.lease_expires_at = lease_expires_at
+            state.last_attempt_at = now
+    return states
+
+
+async def take_claimed_marketplace_stream(
+    session: AsyncSession,
+    *,
+    state_id: UUID,
+    now: datetime,
+    owner: str,
+) -> MarketplaceSyncState | None:
+    _validate_scheduler_input(now, owner, 1)
+    async with session.begin():
+        result = await session.execute(
+            update(MarketplaceSyncState)
+            .where(
+                MarketplaceSyncState.id == state_id,
+                MarketplaceSyncState.status == SyncStateStatus.LEASED.value,
+                MarketplaceSyncState.lease_owner.startswith("scheduler:"),
+                MarketplaceSyncState.lease_expires_at > now,
+            )
+            .values(
+                lease_owner=owner,
+                lease_expires_at=now + _LEASE_DURATION,
+                last_attempt_at=now,
+            )
+            .returning(MarketplaceSyncState)
+        )
+        return result.scalar_one_or_none()
+
+
+def _validate_scheduler_input(now: datetime, owner: str, limit: int) -> None:
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError("marketplace scheduler time must be timezone-aware")
+    if not owner or len(owner) > 128 or any(ord(character) < 33 for character in owner):
+        raise ValueError("marketplace scheduler owner is invalid")
+    if type(limit) is not int or not 1 <= limit <= _MAX_DUE_STREAMS:
+        raise ValueError("marketplace scheduler limit is outside safe bounds")

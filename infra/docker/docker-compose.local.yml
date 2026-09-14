@@ -26,6 +26,8 @@ x-backend-env: &backend-env
   SECURITY_HEADERS_ENABLED: "true"
   FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
   DEPLOYMENT_VERSION: local
+  MARKETPLACE_SCHEDULER_INTERVAL_SECONDS: ${MARKETPLACE_SCHEDULER_INTERVAL_SECONDS:-30}
+  MARKETPLACE_SCHEDULER_BATCH_SIZE: ${MARKETPLACE_SCHEDULER_BATCH_SIZE:-25}
 
 services:
   postgres:
@@ -97,6 +99,19 @@ services:
     build:
       context: ../..
       dockerfile: apps/worker/Dockerfile
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: apps/scheduler/Dockerfile
     environment: *backend-env
     depends_on:
       migrate:
