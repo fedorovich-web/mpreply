@@ -10,6 +10,7 @@ import {
   marketplaceAccountListSchema,
   reviewQueueListSchema,
 } from "../../lib/api/schemas";
+import { hasCurrentIntegrationProblem } from "../../lib/marketplace-account-health";
 import { Badge, type BadgeTone } from "../ui/Badge";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
@@ -83,10 +84,10 @@ export function DashboardMetrics() {
   const accounts = accountsQuery.data ?? null;
   const rules = rulesQuery.data ?? null;
   const problemAccounts = accounts
-    ? accounts.filter((account) => account.status === "error" || account.error_count > 0).length
+    ? accounts.filter(hasCurrentIntegrationProblem).length
     : null;
   const activeAccounts = accounts
-    ? accounts.filter((account) => account.status === "active" && account.error_count === 0).length
+    ? accounts.filter((account) => account.status === "active" && !hasCurrentIntegrationProblem(account)).length
     : null;
   const enabledRules = rules ? rules.items.filter((rule) => rule.is_enabled).length : null;
 
@@ -181,7 +182,7 @@ export function DashboardMetrics() {
             <div>
               <dt>Активные кабинеты</dt>
               <dd>{accounts ? `${formatNumber(activeAccounts ?? 0)} из ${formatNumber(accounts.length)}` : "—"}</dd>
-              <small>{accountsQuery.error ? "Состояние подключений недоступно" : "Подключения со статусом «активно»"}</small>
+              <small>{accountsQuery.error ? "Состояние подключений недоступно" : "Подключения со статусом «активно» без текущей ошибки синхронизации"}</small>
             </div>
             <div>
               <dt>Ответов отправлено · 30 дней</dt>
