@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, MarketplaceErrorCode, MarketplacePage, NormalizedMessage
-from app.adapters.capabilities import MarketplaceStream
+from app.adapters.capabilities import MarketplaceStream, read_scope_for_stream, validated_scope_names
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.config import get_settings
 from app.core.security import CredentialEncryptionError, CredentialService
@@ -101,6 +101,28 @@ class ScheduledSyncService:
                     acquired=True,
                     completed=False,
                     error_code="unsupported_capability",
+                )
+
+            required_scope = read_scope_for_stream(stream)
+            scopes = validated_scope_names(account.scopes_json or {})
+            if (
+                account.status != "active"
+                or account.credentials_status != "valid"
+                or required_scope not in scopes
+            ):
+                await self.states.fail(
+                    state.id,
+                    owner=owner,
+                    error_code="insufficient_scope",
+                    next_run_at=None,
+                    pause=True,
+                )
+                return StreamRunResult(
+                    state_id=state.id,
+                    stream=stream,
+                    acquired=True,
+                    completed=False,
+                    error_code="insufficient_scope",
                 )
 
         try:

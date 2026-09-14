@@ -220,7 +220,14 @@ def _rows(message_type: MessageType = MessageType.REVIEW) -> _SharedRows:
         credentials_encrypted="encrypted",
         credentials_fingerprint="fingerprint",
         credentials_status="valid",
-        scopes_json={},
+        scopes_json={
+            "scopes": [
+                "reviews:read",
+                "reviews:write",
+                "questions:read",
+                "questions:write",
+            ]
+        },
     )
     return _SharedRows(reply, message, account)
 

@@ -186,7 +186,14 @@ def _account() -> MarketplaceAccount:
         credentials_encrypted="encrypted",
         credentials_fingerprint="fingerprint",
         credentials_status="valid",
-        scopes_json={},
+        scopes_json={
+            "scopes": [
+                "reviews:read",
+                "reviews:write",
+                "questions:read",
+                "questions:write",
+            ]
+        },
     )
 
 
