@@ -9,12 +9,19 @@ export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || fallbackApi
 export class ApiError extends Error {
   readonly status: number;
   readonly requestId: string | null;
+  readonly kind: "request" | "invalid-response" | "session-expired" | "session-refresh-unavailable";
 
-  constructor(message: string, status: number, requestId: string | null = null) {
+  constructor(
+    message: string,
+    status: number,
+    requestId: string | null = null,
+    kind: ApiError["kind"] = "request",
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.requestId = requestId;
+    this.kind = kind;
   }
 }
 
@@ -22,7 +29,9 @@ type ApiRequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
 };
 
-let refreshInFlight: Promise<boolean> | null = null;
+type SessionRefreshResult = "refreshed" | "expired" | "unavailable";
+
+let refreshInFlight: Promise<SessionRefreshResult> | null = null;
 
 export async function apiRequest<T>(
   path: string,
@@ -51,9 +60,32 @@ export async function apiRequest<T>(
 
   let response = await fetch(`${API_BASE_URL}${normalizedPath}`, requestInit);
   if (response.status === 401 && shouldAttemptSessionRefresh(normalizedPath)) {
-    const refreshed = await refreshSession();
-    if (refreshed) {
-      response = await fetch(`${API_BASE_URL}${normalizedPath}`, requestInit);
+    const refreshResult = await refreshSession();
+    if (refreshResult === "unavailable") {
+      throw new ApiError(
+        "Не удалось проверить сессию. Повторите попытку позже.",
+        response.status,
+        response.headers.get("x-request-id"),
+        "session-refresh-unavailable",
+      );
+    }
+    if (refreshResult === "expired") {
+      throw new ApiError(
+        "Сессия истекла. Войдите снова.",
+        response.status,
+        response.headers.get("x-request-id"),
+        "session-expired",
+      );
+    }
+
+    response = await fetch(`${API_BASE_URL}${normalizedPath}`, requestInit);
+    if (response.status === 401) {
+      throw new ApiError(
+        "Сессия истекла. Войдите снова.",
+        response.status,
+        response.headers.get("x-request-id"),
+        "session-expired",
+      );
     }
   }
 
@@ -66,7 +98,7 @@ export async function apiRequest<T>(
 
   const parsed = schema.safeParse(payload);
   if (!parsed.success) {
-    throw new ApiError(`Некорректный ответ API (${response.status})`, 502, requestId);
+    throw new ApiError(`Некорректный ответ API (${response.status})`, 502, requestId, "invalid-response");
   }
 
   return parsed.data;
@@ -87,7 +119,7 @@ function shouldAttemptSessionRefresh(path: string): boolean {
   return path === "/api/auth/me" || path === "/api/auth/change-password";
 }
 
-async function refreshSession(): Promise<boolean> {
+async function refreshSession(): Promise<SessionRefreshResult> {
   if (refreshInFlight !== null) return refreshInFlight;
 
   const refreshRequest = fetch(`${API_BASE_URL}/api/auth/refresh`, {
@@ -96,8 +128,11 @@ async function refreshSession(): Promise<boolean> {
     headers: { "X-CSRF-Token": csrfHeaderValue },
     cache: "no-store",
   })
-    .then((response) => response.ok)
-    .catch(() => false)
+    .then((response): SessionRefreshResult => {
+      if (response.ok) return "refreshed";
+      return response.status === 401 ? "expired" : "unavailable";
+    })
+    .catch((): SessionRefreshResult => "unavailable")
     .finally(() => {
       if (refreshInFlight === refreshRequest) {
         refreshInFlight = null;

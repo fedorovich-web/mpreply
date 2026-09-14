@@ -24,9 +24,8 @@ export function AuthShell({
     <main className={styles.page}>
       <section className={styles.formPanel} aria-labelledby="auth-title">
         <div className={styles.formContainer}>
-          <Link className={styles.brand} href="/" aria-label="MPReply — на главную">
-            <span className={styles.brandMark} aria-hidden="true">M</span>
-            <span>MPReply</span>
+          <Link className={styles.brand} href="/" aria-label="Respio — на главную">
+            <span>Respio</span>
           </Link>
 
           <div className={styles.heading}>
@@ -58,54 +57,35 @@ export function AuthShell({
         </div>
       </section>
 
-      <aside className={styles.previewPanel} aria-label="Превью интерфейса MPReply">
-        <div className={styles.previewGlow} aria-hidden="true" />
+      <aside className={styles.previewPanel} aria-labelledby="auth-overview-title">
         <div className={styles.previewCopy}>
-          <span className={styles.previewKicker}>MPReply workspace</span>
-          <h2>Все обращения покупателей — в одном рабочем окне</h2>
-          <p>Отзывы, вопросы и AI-черновики без переключения между кабинетами маркетплейсов.</p>
+          <p className={styles.previewKicker}>Как работает Respio</p>
+          <h2 id="auth-overview-title">Автоматизация с проверкой там, где она нужна</h2>
+          <p>Respio собирает отзывы и вопросы, помогает подготовить ответы и передаёт сложные случаи на проверку.</p>
         </div>
 
-        <div className={styles.workspace} aria-hidden="true">
-          <div className={styles.workspaceTopbar}>
-            <div>
-              <span className={styles.workspaceLabel}>Единая очередь</span>
-              <strong>12 требуют внимания</strong>
+        <ol className={styles.workflow}>
+          <li className={styles.workflowItem}>
+            <div className={styles.workflowContent}>
+              <strong>Обращения в очереди</strong>
+              <span>Отзывы и вопросы Wildberries собраны в одном месте.</span>
             </div>
-            <span className={styles.liveBadge}>Live</span>
-          </div>
+          </li>
+          <li className={styles.workflowItem}>
+            <div className={styles.workflowContent}>
+              <strong>Подготовка ответа</strong>
+              <span>ИИ помогает сформулировать ответ с учётом контекста и тона бренда.</span>
+            </div>
+          </li>
+          <li className={styles.workflowItem}>
+            <div className={styles.workflowContent}>
+              <strong>Отправка по правилам</strong>
+              <span>Безопасные ответы отправляются автоматически, сложные случаи остаются на проверке.</span>
+            </div>
+          </li>
+        </ol>
 
-          <div className={styles.marketplaces}>
-            <span>Wildberries</span>
-            <span>Ozon</span>
-            <span>Яндекс Маркет</span>
-          </div>
-
-          <div className={styles.reviewCard}>
-            <div className={styles.reviewMeta}>
-              <span className={styles.avatar}>АК</span>
-              <div>
-                <strong>Алексей К.</strong>
-                <span>Wildberries · 5 ★</span>
-              </div>
-              <time>2 мин</time>
-            </div>
-            <p>Спасибо, товар пришёл быстро. Подскажите, есть ли такая модель в другом цвете?</p>
-          </div>
-
-          <div className={styles.replyCard}>
-            <div className={styles.replyHeader}>
-              <span className={styles.aiDot} />
-              <strong>AI-черновик готов</strong>
-              <span className={styles.confidence}>96%</span>
-            </div>
-            <p>Алексей, спасибо за отзыв. Да, модель доступна в нескольких цветах — актуальные варианты уже отображаются в карточке товара.</p>
-            <div className={styles.replyActions}>
-              <span>Проверено правилами</span>
-              <span className={styles.sendAction}>Отправить ответ</span>
-            </div>
-          </div>
-        </div>
+        <p className={styles.marketplaceNote}>В MVP отправка ответов поддерживается через Wildberries.</p>
       </aside>
     </main>
   );
