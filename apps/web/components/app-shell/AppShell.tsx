@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { PublicBrandMark } from "../public-site/PublicBrandMark";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 type NavIconName =
@@ -69,14 +70,6 @@ const adminNavGroup: NavGroup = {
 
 function matchesRoute(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function BrandMark() {
-  return (
-    <span className="app-logo-mark" aria-hidden="true">
-      <span className="app-brand-glyph"><i /><i /><i /></span>
-    </span>
-  );
 }
 
 function NavIcon({ name }: { name: NavIconName }) {
@@ -190,7 +183,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside ref={sidebarRef} className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
         <div className="app-sidebar-brand">
           <Link href="/app/dashboard" className="app-logo" aria-label="Панель MPReply" onClick={closeDrawer}>
-            <BrandMark />
+            <PublicBrandMark />
             <span>
               <strong>MPReply</strong>
               <small>Работа с покупателями</small>
