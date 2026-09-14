@@ -16,6 +16,13 @@ describe("AI assistant operational workspace", () => {
     expect(workspace).toContain("ai_draft_id: draft.id");
   });
 
+  it("keeps paginated source messages reachable beyond the first API page", () => {
+    expect(workspace).toContain("const [messagePage, setMessagePage] = useState(1)");
+    expect(workspace).toContain("page_size: aiMessagePageSize");
+    expect(workspace).toContain('aria-label="Следующая страница обращений"');
+    expect(styles).toContain(".ai-message-pagination");
+  });
+
   it("keeps seller context, editable reply and clear next actions together", () => {
     expect(workspace).toContain("Ответ для проверки");
     expect(workspace).toContain("Подготовить другой вариант");
