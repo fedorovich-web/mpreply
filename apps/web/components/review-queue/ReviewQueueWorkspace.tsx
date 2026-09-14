@@ -16,6 +16,7 @@ import { EmptyState } from "../ui/EmptyState";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
+const reviewQueuePageSize = 100;
 
 const statusLabels: Record<string, string> = {
   draft: "Черновик",
@@ -46,20 +47,24 @@ export function ReviewQueueWorkspace() {
   const { activeOrganization } = useWorkspace();
   const canManageReview = writeRoles.has(activeOrganization.current_user_role);
   const [selectedId, setSelectedId] = useState("");
+  const [page, setPage] = useState(1);
 
   const queuePath = buildApiQuery("/api/replies/review-queue", {
     organization_id: activeOrganization.id,
-    page: 1,
-    page_size: 100,
+    page,
+    page_size: reviewQueuePageSize,
   });
 
   const queueQuery = useQuery({
-    queryKey: ["review-queue", activeOrganization.id],
+    queryKey: ["review-queue", activeOrganization.id, page],
     queryFn: () => apiRequest(queuePath, reviewQueueListSchema),
   });
 
   const items = queueQuery.data?.items ?? [];
   const selected = items.find((item) => item.reply.id === selectedId) ?? items[0] ?? null;
+  const totalPages = queueQuery.data
+    ? Math.max(1, Math.ceil(queueQuery.data.total / queueQuery.data.page_size))
+    : 1;
 
   const invalidateQueue = async () => {
     await Promise.all([
@@ -84,6 +89,17 @@ export function ReviewQueueWorkspace() {
         description={errorMessage(queueQuery.error)}
         actionLabel="Повторить"
         onAction={() => void queueQuery.refetch()}
+      />
+    );
+  }
+
+  if (items.length === 0 && page > 1) {
+    return (
+      <QueueState
+        title="На этой странице больше нет ответов"
+        description="Вернитесь на предыдущую страницу очереди."
+        actionLabel="Предыдущая страница"
+        onAction={() => setPage((current) => Math.max(1, current - 1))}
       />
     );
   }
@@ -137,6 +153,36 @@ export function ReviewQueueWorkspace() {
             </div>
           ))}
         </div>
+
+        {totalPages > 1 ? (
+          <nav className="review-queue-pagination" aria-label="Страницы очереди проверки">
+            <button
+              aria-label="Предыдущая страница"
+              className="button button-secondary button-compact"
+              disabled={page <= 1 || queueQuery.isFetching}
+              onClick={() => {
+                setSelectedId("");
+                setPage((current) => Math.max(1, current - 1));
+              }}
+              type="button"
+            >
+              Назад
+            </button>
+            <span aria-live="polite">Страница {page} из {totalPages}</span>
+            <button
+              aria-label="Следующая страница"
+              className="button button-secondary button-compact"
+              disabled={page >= totalPages || queueQuery.isFetching}
+              onClick={() => {
+                setSelectedId("");
+                setPage((current) => Math.min(totalPages, current + 1));
+              }}
+              type="button"
+            >
+              Далее
+            </button>
+          </nav>
+        ) : null}
       </aside>
 
       {selected ? (
