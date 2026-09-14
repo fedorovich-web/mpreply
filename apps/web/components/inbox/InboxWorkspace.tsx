@@ -37,6 +37,7 @@ type MessageUpdate = {
 };
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
+const inboxPageSize = 100;
 const marketplaceFilters: Array<{ value: MarketplaceFilter; label: string }> = [
   { value: "all", label: "Все" },
   { value: "wildberries", label: "Wildberries" },
@@ -103,6 +104,7 @@ export function InboxWorkspace() {
   const canManageMessages = writeRoles.has(activeOrganization.current_user_role);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [selectedId, setSelectedId] = useState("");
+  const [page, setPage] = useState(1);
   const [restoredOrganizationId, setRestoredOrganizationId] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(filters.query.trim());
 
@@ -110,6 +112,7 @@ export function InboxWorkspace() {
     const restored = readStoredFilters(activeOrganization.id);
     setFilters(restored ?? defaultFilters);
     setSelectedId("");
+    setPage(1);
     setRestoredOrganizationId(activeOrganization.id);
   }, [activeOrganization.id]);
 
@@ -141,8 +144,8 @@ export function InboxWorkspace() {
       rating_min: ratingMin,
       rating_max: ratingMax,
       search: deferredQuery || undefined,
-      page: 1,
-      page_size: 100,
+      page,
+      page_size: inboxPageSize,
     });
   }, [
     activeOrganization.id,
@@ -152,6 +155,7 @@ export function InboxWorkspace() {
     filters.rating,
     filters.status,
     filters.type,
+    page,
     user.id,
   ]);
 
@@ -167,7 +171,12 @@ export function InboxWorkspace() {
   }, [filters.rating, messagesQuery.data?.items]);
 
   const selectedMessage = visibleMessages.find((message) => message.id === selectedId) ?? visibleMessages[0] ?? null;
-  const displayedTotal = filters.rating === "no_rating" ? visibleMessages.length : messagesQuery.data?.total ?? 0;
+  const totalPages = messagesQuery.data
+    ? Math.max(1, Math.ceil(messagesQuery.data.total / messagesQuery.data.page_size))
+    : 1;
+  const displayedCountLabel = filters.rating === "no_rating"
+    ? `${visibleMessages.length} без оценки на странице`
+    : `${messagesQuery.data?.total ?? 0} обращений`;
 
   const updateMutation = useMutation({
     mutationFn: ({ messageId, status, assignedTo }: MessageUpdate) =>
@@ -207,10 +216,14 @@ export function InboxWorkspace() {
   });
 
   function updateFilter<TKey extends keyof FilterState>(key: TKey, value: FilterState[TKey]) {
+    setSelectedId("");
+    setPage(1);
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
   function resetFilters() {
+    setSelectedId("");
+    setPage(1);
     setFilters(defaultFilters);
   }
 
@@ -284,7 +297,7 @@ export function InboxWorkspace() {
       <section className="inbox-list-panel" aria-label="Список обращений">
         <div className="panel-heading panel-heading-row inbox-list-heading">
           <div>
-            <span className="panel-kicker">{displayedTotal} обращений</span>
+            <span className="panel-kicker">{displayedCountLabel}</span>
             <strong>{activeFilterCount > 0 ? "Результаты фильтра" : "Все обращения"}</strong>
           </div>
           <button
@@ -318,12 +331,47 @@ export function InboxWorkspace() {
               </div>
             ))}
           </div>
+        ) : filters.rating === "no_rating" && (messagesQuery.data?.total ?? 0) > 0 ? (
+          <EmptyState
+            description={totalPages > 1 ? "Проверьте соседние страницы очереди — сервер не поддерживает отдельный фильтр по отсутствию оценки." : "На текущей серверной выборке обращений без оценки нет."}
+            title="На этой странице обращений без оценки нет"
+          />
         ) : (
           <EmptyState
             description={activeFilterCount > 0 ? "Сбросьте часть фильтров или измените поиск." : "Новые обращения появятся здесь после синхронизации подключённых площадок."}
             title={activeFilterCount > 0 ? "По выбранным условиям ничего не найдено" : "В очереди пока нет обращений"}
           />
         )}
+
+        {!messagesQuery.isPending && !messagesQuery.error && totalPages > 1 ? (
+          <nav className="inbox-pagination" aria-label="Страницы обращений">
+            <button
+              aria-label="Предыдущая страница"
+              className="button button-secondary button-compact"
+              disabled={page <= 1 || messagesQuery.isFetching}
+              onClick={() => {
+                setSelectedId("");
+                setPage((current) => Math.max(1, current - 1));
+              }}
+              type="button"
+            >
+              Назад
+            </button>
+            <span aria-live="polite">Страница {page} из {totalPages}</span>
+            <button
+              aria-label="Следующая страница"
+              className="button button-secondary button-compact"
+              disabled={page >= totalPages || messagesQuery.isFetching}
+              onClick={() => {
+                setSelectedId("");
+                setPage((current) => Math.min(totalPages, current + 1));
+              }}
+              type="button"
+            >
+              Далее
+            </button>
+          </nav>
+        ) : null}
       </section>
 
       <aside className="inbox-detail-panel" aria-label="Карточка выбранного обращения">
