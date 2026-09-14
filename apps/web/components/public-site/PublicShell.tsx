@@ -37,8 +37,7 @@ export function PublicShell({ children }: PublicShellProps) {
           </div>
 
           <div className="public-footer-column">
-            <strong>Ресурсы</strong>
-            <Link href="/resources">Блог</Link>
+            <strong>Сервис</strong>
             <Link href="/help#start">База знаний</Link>
             <Link href="/help#faq">FAQ</Link>
             <Link href="/contacts">Контакты</Link>
