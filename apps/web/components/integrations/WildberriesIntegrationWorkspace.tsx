@@ -221,7 +221,11 @@ export function MarketplaceIntegrationWorkspace({
           ) : null}
         </section>
 
-        <section className="integration-account-detail" aria-labelledby={detailTitleId}>
+        <section
+          aria-label={selectedAccount ? undefined : `Состояние подключения ${marketplaceName}`}
+          aria-labelledby={selectedAccount ? detailTitleId : undefined}
+          className="integration-account-detail"
+        >
           {selectedAccount ? (
             <AccountDetail
               key={selectedAccount.id}
