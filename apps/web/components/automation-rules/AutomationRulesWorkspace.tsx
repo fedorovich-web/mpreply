@@ -76,6 +76,7 @@ function AutomationRulesWorkspaceContent({
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode | null>(null);
   const [editor, setEditor] = useState<RuleEditorState>(() => emptyEditor());
+  const [mutationSuccess, setMutationSuccess] = useState<string | null>(null);
   const canWrite = role === "owner" || role === "admin";
 
   const rulesQuery = useQuery({
@@ -113,9 +114,15 @@ function AutomationRulesWorkspaceContent({
         body: payload,
       });
     },
+    onMutate: () => {
+      setMutationSuccess(null);
+    },
     onSuccess: async (rule) => {
+      const successMessage = editorMode === "create" ? "Правило создано." : "Изменения сохранены.";
       setSelectedRuleId(rule.id);
       setEditorMode(null);
+      if (!filterMatchesRuleState(filter, rule.is_enabled)) setFilter("all");
+      setMutationSuccess(successMessage);
       await refreshRules();
     },
   });
@@ -132,7 +139,13 @@ function AutomationRulesWorkspaceContent({
         method: "DELETE",
       });
     },
-    onSuccess: async () => {
+    onMutate: () => {
+      setMutationSuccess(null);
+    },
+    onSuccess: async (_result, variables) => {
+      setSelectedRuleId(variables.rule.id);
+      if (!filterMatchesRuleState(filter, variables.enabled)) setFilter("all");
+      setMutationSuccess(variables.enabled ? "Правило включено." : "Правило выключено.");
       await refreshRules();
     },
   });
@@ -140,17 +153,20 @@ function AutomationRulesWorkspaceContent({
   const mutationError = saveMutation.error ?? toggleMutation.error;
 
   function startCreate() {
+    setMutationSuccess(null);
     setEditor(emptyEditor());
     setEditorMode("create");
   }
 
   function startEdit(rule: AutomationRule) {
+    setMutationSuccess(null);
     setSelectedRuleId(rule.id);
     setEditor(editorFromRule(rule));
     setEditorMode("edit");
   }
 
   function selectRule(rule: AutomationRule) {
+    setMutationSuccess(null);
     setSelectedRuleId(rule.id);
     setEditorMode(null);
   }
@@ -197,6 +213,7 @@ function AutomationRulesWorkspaceContent({
             className="automation-filter-button"
             key={value}
             onClick={() => {
+              setMutationSuccess(null);
               setFilter(value);
               setSelectedRuleId(null);
               setEditorMode(null);
@@ -295,6 +312,9 @@ function AutomationRulesWorkspaceContent({
 
       {mutationError && !editorMode ? (
         <p className="automation-action-error" role="alert">{errorMessage(mutationError)}</p>
+      ) : null}
+      {mutationSuccess && !mutationError && !editorMode ? (
+        <p className="automation-action-success" role="status">{mutationSuccess}</p>
       ) : null}
 
       <section className="automation-detail-grid">
@@ -655,6 +675,10 @@ function limitLabel(hourly: number | null, daily: number | null): string {
   if (hourly !== null) parts.push(`${hourly}/час`);
   if (daily !== null) parts.push(`${daily}/день`);
   return parts.length > 0 ? parts.join(" · ") : "Без отдельного лимита";
+}
+
+function filterMatchesRuleState(filter: RuleFilter, isEnabled: boolean): boolean {
+  return filter === "all" || (filter === "enabled" && isEnabled) || (filter === "disabled" && !isEnabled);
 }
 
 function errorMessage(error: unknown): string {
