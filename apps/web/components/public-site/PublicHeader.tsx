@@ -14,12 +14,23 @@ function isActiveNavigationItem(href: string, pathname: string): boolean {
   return pathname === href;
 }
 
+function isMockupRoute(pathname: string): boolean {
+  return (
+    pathname === "/features" ||
+    pathname === "/marketplaces" ||
+    pathname.startsWith("/marketplaces/") ||
+    pathname === "/pricing" ||
+    pathname === "/demo"
+  );
+}
+
 export function PublicHeader() {
   const pathname = usePathname();
   const menuId = useId();
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const headerCtaLabel = isMockupRoute(pathname) ? "Попробовать бесплатно" : "Создать аккаунт";
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -93,7 +104,7 @@ export function PublicHeader() {
         <div className="public-header-actions">
           <Link className="button button-secondary public-login-link" href="/auth/login">Войти</Link>
           <Link className="button button-primary public-header-cta" href="/auth/register?intent=connect-marketplace">
-            Попробовать бесплатно <span aria-hidden="true">→</span>
+            {headerCtaLabel} <span aria-hidden="true">→</span>
           </Link>
         </div>
 
@@ -127,7 +138,7 @@ export function PublicHeader() {
                 <div className="public-mobile-menu-actions">
                   <Link className="button button-secondary" href="/auth/login" onClick={closeMenu}>Войти</Link>
                   <Link className="button button-primary" href="/auth/register?intent=connect-marketplace" onClick={closeMenu}>
-                    Попробовать бесплатно →
+                    {headerCtaLabel} →
                   </Link>
                 </div>
               </div>
