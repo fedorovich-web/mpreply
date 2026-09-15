@@ -1,0 +1,182 @@
+/* Final render-scale tuning for the approved public mockups.
+   Loaded last so it wins over the legacy marketing/public theme. */
+
+.public-root {
+  --container-max-width: 1120px;
+  --public-header-height: 56px;
+  --mockup-section-base-spacing: 38px;
+}
+
+.public-root .public-header-inner {
+  min-height: var(--public-header-height);
+}
+
+.mockup-page .public-section,
+.mockup-page .public-section.public-cta-section {
+  padding-block: calc(var(--mockup-section-base-spacing) + var(--public-section-padding-extra));
+}
+
+.mockup-page .mockup-section-head,
+.mockup-page .render-section-head {
+  margin-bottom: 42px;
+}
+
+.mockup-page .mockup-section-head h2,
+.mockup-page .render-section-head h2,
+.mockup-page .detail-faq-layout h2,
+.mockup-page .pricing-final-cta h2 {
+  font-size: clamp(1.85rem, 2.6vw, 2.45rem);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+}
+
+.mockup-page .mockup-hero-copy h1,
+.mockup-page .marketplace-detail-mockup-copy h1,
+.mockup-page .pricing-mockup-hero h1,
+.mockup-page .demo-mockup-copy h1 {
+  font-size: clamp(2.35rem, 3.8vw, 3.25rem);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+}
+
+.mockup-page .mockup-hero {
+  padding-top: calc(54px + var(--public-section-padding-extra));
+  padding-bottom: calc(50px + var(--public-section-padding-extra));
+}
+
+.mockup-page .marketplace-detail-mockup-hero {
+  padding-top: calc(54px + var(--public-section-padding-extra));
+  padding-bottom: calc(48px + var(--public-section-padding-extra));
+}
+
+.mockup-page .pricing-mockup-hero {
+  padding-top: calc(48px + var(--public-section-padding-extra));
+  padding-bottom: calc(24px + var(--public-section-padding-extra));
+}
+
+.mockup-page .demo-mockup-hero {
+  padding-top: calc(52px + var(--public-section-padding-extra));
+  padding-bottom: calc(48px + var(--public-section-padding-extra));
+}
+
+.mockup-page .mockup-hero-grid,
+.mockup-page .marketplace-detail-mockup-grid,
+.mockup-page .demo-mockup-grid {
+  gap: clamp(34px, 4.5vw, 58px);
+}
+
+.mockup-page .features-mockup-scene {
+  min-height: 440px;
+}
+
+.mockup-page .marketplace-hub-scene {
+  min-height: 470px;
+}
+
+.mockup-page .marketplace-detail-render {
+  min-height: 450px;
+}
+
+.mockup-page .demo-hero-story {
+  min-height: 410px;
+}
+
+.mockup-page .features-tool-card,
+.mockup-page .marketplace-benefit-card {
+  min-height: 188px;
+  padding: 22px;
+}
+
+.mockup-page .features-workflow-card,
+.mockup-page .marketplace-connect-card {
+  min-height: 210px;
+  padding: 23px;
+}
+
+.mockup-page .marketplace-logo-card {
+  min-height: 286px;
+}
+
+.mockup-page .detail-tool-card,
+.mockup-page .detail-benefit-card {
+  min-height: 184px;
+  padding: 20px;
+}
+
+.mockup-page .detail-step-card,
+.mockup-page .demo-journey-card {
+  min-height: 194px;
+  padding: 20px;
+}
+
+.mockup-page .pricing-card {
+  min-height: 468px;
+  padding: 26px;
+}
+
+.mockup-page .pricing-card-grid {
+  margin-top: 36px;
+}
+
+.mockup-page .pricing-price {
+  margin: 20px 0 16px;
+}
+
+.mockup-page .pricing-price strong {
+  font-size: 2.35rem;
+}
+
+.mockup-page .demo-scenario-card {
+  padding: 20px;
+}
+
+.mockup-page .mockup-cta,
+.mockup-page .pricing-final-cta {
+  padding-block: 36px;
+}
+
+@media (max-width: 1040px) {
+  .mockup-page .mockup-hero-copy h1,
+  .mockup-page .marketplace-detail-mockup-copy h1,
+  .mockup-page .pricing-mockup-hero h1,
+  .mockup-page .demo-mockup-copy h1 {
+    font-size: clamp(2.25rem, 6vw, 3rem);
+  }
+}
+
+@media (max-width: 720px) {
+  .public-root {
+    --mockup-section-base-spacing: 32px;
+  }
+
+  .mockup-page .public-section,
+  .mockup-page .public-section.public-cta-section {
+    padding-block: calc(var(--mockup-section-base-spacing) + var(--public-section-padding-extra));
+  }
+
+  .mockup-page .mockup-hero,
+  .mockup-page .marketplace-detail-mockup-hero,
+  .mockup-page .demo-mockup-hero {
+    padding-top: calc(42px + var(--public-section-padding-extra));
+    padding-bottom: calc(38px + var(--public-section-padding-extra));
+  }
+
+  .mockup-page .pricing-mockup-hero {
+    padding-top: calc(42px + var(--public-section-padding-extra));
+    padding-bottom: calc(20px + var(--public-section-padding-extra));
+  }
+
+  .mockup-page .mockup-hero-copy h1,
+  .mockup-page .marketplace-detail-mockup-copy h1,
+  .mockup-page .pricing-mockup-hero h1,
+  .mockup-page .demo-mockup-copy h1 {
+    font-size: clamp(2.05rem, 11vw, 2.7rem);
+  }
+
+  .mockup-page .mockup-section-head h2,
+  .mockup-page .render-section-head h2,
+  .mockup-page .detail-faq-layout h2,
+  .mockup-page .pricing-final-cta h2 {
+    font-size: clamp(1.75rem, 8vw, 2.2rem);
+  }
+}
