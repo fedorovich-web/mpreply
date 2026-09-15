@@ -115,7 +115,54 @@
   text-decoration: underline;
 }
 
-/* Demo process timeline: render-style status icon chips instead of numbered circles. */
+/* Demo process: render-style buyer card, status icons and final answer panel. */
+.mockup-page .demo-process-message .demo-scenario-head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.mockup-page .demo-process-message .demo-scenario-head small {
+  color: #8594ad;
+  font-size: .64rem;
+}
+
+.mockup-page .demo-process-buyer-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.mockup-page .demo-process-avatar {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border: 3px solid #f1efff;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 34%, #f6c9a7 0 17%, transparent 18%),
+    radial-gradient(circle at 50% 82%, #5148e8 0 36%, transparent 37%),
+    #e9efff;
+}
+
+.mockup-page .demo-process-buyer-message p {
+  margin: 0;
+  border-radius: 12px;
+  background: #f4f5ff;
+  padding: 11px 12px;
+  color: #566b90;
+  font-size: .75rem;
+  line-height: 1.48;
+}
+
+.mockup-page .demo-process-market-link {
+  display: inline-block;
+  margin-top: 17px;
+  color: #5148e8;
+  font-size: .68rem;
+  font-weight: 700;
+}
+
 .mockup-page .demo-process-event .demo-process-event-icon {
   display: grid;
   width: 34px;
@@ -139,6 +186,33 @@
 .mockup-page .demo-process-event-icon.green {
   background: #eafaf3;
   color: #10b981;
+}
+
+.mockup-page .demo-process-event-meta {
+  display: grid;
+  gap: 1px;
+}
+
+.mockup-page .demo-process-event-meta small {
+  color: #102654;
+  font-weight: 700;
+}
+
+.mockup-page .demo-process-event-meta time {
+  color: #8797b0;
+  font-size: .6rem;
+}
+
+.mockup-page .demo-process-answer > strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mockup-page .demo-process-answer .button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 12px;
 }
 
 @media (max-width: 860px) {
