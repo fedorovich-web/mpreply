@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
 const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-fidelity.css"), "utf8");
+const finalCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
+const publicIcon = readFileSync(join(root, "components/public-site/PublicIcon.tsx"), "utf8");
 
 describe("approved marketplaces hero visual", () => {
   it("uses the real MPReply brand mark in the central hub", () => {
@@ -23,5 +25,24 @@ describe("approved marketplaces hero visual", () => {
     expect(decorativeCss).toContain(".marketplace-hero-note-primary");
     expect(decorativeCss).toContain(".marketplace-hero-note-sales");
     expect(decorativeCss).toContain(".marketplace-cta-note");
+  });
+
+  it("uses four dotted connector arms like the approved hero", () => {
+    for (const arm of ["l1", "l2", "l3", "l4"]) {
+      expect(marketplaces).toContain(`marketplace-hub-line ${arm}`);
+      expect(finalCss).toContain(`.marketplace-hub-line.${arm}`);
+    }
+  });
+
+  it("shows the render message chips below each marketplace logo", () => {
+    expect(marketplaces).toContain("marketplace-hub-card-label");
+    expect(marketplaces).toContain('name="message"');
+    expect(marketplaces).toContain('name="inbox"');
+    expect(finalCss).toContain(".marketplace-hub-card-label");
+  });
+
+  it("uses the play icon in the secondary hero action", () => {
+    expect(publicIcon).toContain('"play"');
+    expect(marketplaces).toContain('name="play"');
   });
 });
