@@ -24,6 +24,16 @@ describe("approved demo journey visual", () => {
     expect(demo).toContain('["document", "blue", "Шаблоны ответов"');
   });
 
+  it("uses status icons instead of numbered circles in the large process timeline", () => {
+    expect(publicIcon).toContain('"search"');
+    expect(demo).toContain("demo-process-event-icon");
+    expect(demo).toContain('["message", "green", "Получено"');
+    expect(demo).toContain('["search", "blue", "Анализ"');
+    expect(demo).toContain('["sparkles", "purple", "AI-черновик"');
+    expect(demo).toContain('["users", "purple", "Ожидает"');
+    expect(demo).toContain('["shield-check", "green", "Отправлено"');
+  });
+
   it("uses dedicated decorative fidelity styles", () => {
     expect(existsSync(decorativeCssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-mockup-decorative-fidelity.css"');
