@@ -67,12 +67,12 @@ const scenarios = [
   },
 ] as const;
 
-const processEvents: readonly [PublicIconName, "green" | "blue" | "purple", string, string][] = [
-  ["message", "green", "Получено", "Новое обращение поступило из Ozon"],
-  ["search", "blue", "Анализ", "Определён контекст товара и обращения"],
-  ["sparkles", "purple", "AI-черновик", "Подготовлен вариант ответа"],
-  ["users", "purple", "Ожидает", "Ответ готов к проверке сотрудником"],
-  ["shield-check", "green", "Отправлено", "Покупатель получил ответ"],
+const processEvents: readonly [PublicIconName, "green" | "blue" | "purple", string, string, string][] = [
+  ["message", "green", "Получено", "12 мар, 14:32", "Сообщение успешно получено из Ozon"],
+  ["search", "blue", "Анализ", "12 мар, 14:32", "AI анализирует контекст, товар и историю клиента"],
+  ["sparkles", "purple", "AI-черновик", "12 мар, 14:33", "Ответ готов. Ожидает проверки"],
+  ["users", "purple", "Ожидает", "12 мар, 14:34", "Вы проверили ответ"],
+  ["shield-check", "green", "Отправлено", "12 мар, 14:35", "Ответ успешно отправлен в Ozon"],
 ];
 
 const teamTools: readonly [PublicIconName, "blue" | "purple" | "orange", string, string][] = [
@@ -270,27 +270,28 @@ export default function DemoPage() {
                     alt="Ozon"
                     unoptimized
                   />
-                  <strong>Обращение #45821</strong>
+                  <div>
+                    <strong>Обращение #45821</strong>
+                    <small>12 мар 2024, 14:32</small>
+                  </div>
                 </div>
-                <small>Вопрос · только что</small>
-                <div className="demo-process-bubble">Здравствуйте! Когда будет поставка этого товара?</div>
-                <div className="detail-product-row">
-                  <span className="detail-product-thumb" aria-hidden="true" />
-                  <span>
-                    Карточка товара
-                    <br />
-                    Артикул 12345678
-                  </span>
+                <div className="demo-process-buyer-message">
+                  <span className="demo-process-avatar" aria-hidden="true" />
+                  <p>Добрый день! А этот товар будет в наличии на следующей неделе?</p>
                 </div>
+                <span className="demo-process-market-link">Открыть в маркетплейсе ↗</span>
               </div>
 
               <div className="demo-process-timeline">
-                {processEvents.map(([icon, tone, status, label]) => (
+                {processEvents.map(([icon, tone, status, time, label]) => (
                   <div className="demo-process-event" key={status}>
                     <span className={`demo-process-event-icon ${tone}`} aria-hidden="true">
                       <PublicIcon name={icon} />
                     </span>
-                    <small>{status}</small>
+                    <span className="demo-process-event-meta">
+                      <small>{status}</small>
+                      <time>{time}</time>
+                    </span>
                     <strong>{label}</strong>
                   </div>
                 ))}
@@ -298,13 +299,13 @@ export default function DemoPage() {
 
               <div className="demo-process-answer">
                 <strong>
-                  <PublicIcon name="sparkles" className="public-inline-icon" /> AI-черновик
+                  <PublicIcon name="message" className="public-inline-icon" /> Готовый ответ
                 </strong>
                 <p>
-                  Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар
-                  снова будет в наличии.
+                  Добрый день! Ожидаем поставку на следующей неделе. Мы сообщим, как только товар снова
+                  будет в наличии. Спасибо за ваш интерес! 💙
                 </p>
-                <span className="button button-primary">Проверить и отправить</span>
+                <span className="button button-secondary">Посмотреть полностью</span>
               </div>
             </div>
           </div>
