@@ -19,7 +19,7 @@ describe("final approved render details", () => {
   });
 
   it("renders the features benefit group as the soft rounded panel from the mockup", () => {
-    expect(features).toContain("features-benefits-section");
-    expect(decorativeCss).toContain(".features-benefits-section");
+    expect(features).toContain("features-benefit-grid");
+    expect(decorativeCss).toContain(":has(.features-benefit-grid)");
   });
 });
