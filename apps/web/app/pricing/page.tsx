@@ -256,7 +256,10 @@ export default function PricingPage() {
             <div className="pricing-faq">
               {faq.map(([question, answer]) => (
                 <details key={question}>
-                  <summary>{question}</summary>
+                  <summary className="pricing-faq-summary">
+                    <span>{question}</span>
+                    <span className="pricing-faq-chevron" aria-hidden="true">⌄</span>
+                  </summary>
                   <p>{answer}</p>
                 </details>
               ))}
@@ -300,9 +303,11 @@ export default function PricingPage() {
                     </span>
                   ))}
                 </div>
-                <div className="pricing-final-bubble">
+                <div className="pricing-final-review">
                   <strong>Отличный товар!</strong>
                   <span>★★★★★</span>
+                </div>
+                <div className="pricing-final-answer">
                   <p>Здравствуйте! Спасибо за отзыв! Будем рады видеть вас снова!</p>
                 </div>
                 <span className="pricing-final-sparkle">
