@@ -5,203 +5,213 @@ import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Тарифы MPReply — автоматизация ответов для маркетплейсов",
+  title: "Тарифы MPReply — от 490 ₽ в месяц",
   description:
-    "Тарифы для работы с отзывами, вопросами и сообщениями покупателей на Wildberries, Ozon, Яндекс Маркете и Авито: единая очередь, ИИ-ответы, автоматизация и командная работа.",
+    "Тарифы MPReply для работы с отзывами, вопросами и сообщениями покупателей: Старт, Профессиональный и Бизнес.",
   path: "/pricing",
 });
 
-const pricingParts = [
+const plans = [
   {
-    number: "01",
-    title: "Подключённые кабинеты",
-    text: "Добавляйте кабинеты Wildberries, Ozon, Яндекс Маркета и Авито и управляйте ими из одного рабочего пространства.",
+    name: "Старт",
+    price: "490 ₽",
+    description: "Для продавцов, которые начинают автоматизировать ответы.",
+    popular: false,
+    features: [
+      "Единая очередь обращений",
+      "AI-подготовка ответов",
+      "Шаблоны ответов",
+      "История действий",
+      "Готовые интеграции маркетплейсов",
+    ],
   },
   {
-    number: "02",
-    title: "Объём обращений",
-    text: "Учитывается фактический поток отзывов, вопросов и сообщений, которые проходят через общую очередь.",
+    name: "Профессиональный",
+    price: "990 ₽",
+    description: "Для активной работы с обращениями и автоматизацией.",
+    popular: true,
+    features: [
+      "Всё из тарифа Старт",
+      "Автоответы и сценарии",
+      "Контроль качества",
+      "Командная работа",
+      "Расширенная аналитика",
+    ],
   },
   {
-    number: "03",
-    title: "ИИ и автоматизация",
-    text: "Используйте подготовку ответов, ручную проверку и автоотправку в том объёме, который нужен вашей команде.",
+    name: "Бизнес",
+    price: "1 990 ₽",
+    description: "Для команд с несколькими площадками и большим потоком обращений.",
+    popular: false,
+    features: [
+      "Всё из тарифа Профессиональный",
+      "Расширенные правила команды",
+      "Приоритетная обработка обращений",
+      "Дополнительные рабочие сценарии",
+      "Поддержка командного процесса",
+    ],
   },
-];
+] as const;
 
-const audienceModes = [
-  ["Для продавца", "Один интерфейс для обращений с нескольких площадок, ИИ-черновики и автоматизация повторяющихся сценариев."],
-  ["Для команды", "Общая очередь, проверка сложных ответов, единые правила и прозрачные статусы обработки."],
-  ["Для агентства", "Отдельные рабочие пространства для клиентов и управление несколькими проектами без смешивания данных."],
-];
+const comparison = [
+  ["Единая очередь", "✓", "✓", "✓"],
+  ["AI-подготовка ответов", "✓", "✓", "✓"],
+  ["Шаблоны", "✓", "✓", "✓"],
+  ["Автоответы и сценарии", "—", "✓", "✓"],
+  ["Контроль качества", "—", "✓", "✓"],
+  ["Командная работа", "—", "✓", "✓"],
+  ["Расширенная аналитика", "—", "✓", "✓"],
+  ["Расширенные правила", "—", "—", "✓"],
+] as const;
 
-const pricingAnswers = [
-  ["Можно подключить несколько маркетплейсов?", "Да. Wildberries, Ozon, Яндекс Маркет и Авито работают в одном продукте, а кабинеты подключаются к общему рабочему пространству."],
-  ["Что происходит при росте объёма обращений?", "Текущие лимиты и использование видны в кабинете. При росте нагрузки можно перейти на подходящий объём без переноса рабочего процесса в другой сервис."],
-  ["Автоответы обязательны?", "Нет. Для каждого сценария можно сохранить проверку человеком и автоматизировать только ту рутину, которой команда доверяет."],
-];
+const faq = [
+  ["Можно ли попробовать MPReply бесплатно?", "Да. На старте доступен бесплатный период, чтобы подключить площадку и проверить рабочий процесс на своих обращениях."],
+  ["Какие маркетплейсы поддерживаются?", "Готовы интеграции Wildberries, Ozon, Яндекс Маркета и Авито."],
+  ["Можно ли сменить тариф?", "Да. Тариф можно изменить по мере роста нагрузки и команды."],
+  ["Нужна ли банковская карта для старта?", "Для начала бесплатного периода карта не требуется."],
+  ["Есть ли тариф для большой команды?", "Если стандартных планов недостаточно, можно обсудить индивидуальный вариант под ваш процесс."],
+  ["Что происходит с историей при смене тарифа?", "Рабочая история и обращения остаются частью вашего пространства MPReply."],
+] as const;
+
+const marketplaces = [
+  ["wb", "WB", "Wildberries"],
+  ["oz", "OZ", "Ozon"],
+  ["ym", "М", "Яндекс Маркет"],
+  ["av", "A", "Авито"],
+] as const;
 
 export default function PricingPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-pricing">
-        <div className="public-container public-subhero-grid">
-          <div className="public-subhero-copy">
-            <p className="eyebrow">Тарифы</p>
-            <h1>План под ваш объём обращений и уровень автоматизации</h1>
-            <p className="public-lead">
-              Выбирайте тариф по рабочей нагрузке: сколько кабинетов подключено, сколько обращений проходит через сервис и как команда использует ИИ и автоответы.
-            </p>
-            <div className="hero-actions">
-              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Создать аккаунт</Link>
-              <Link className="button button-secondary" href="/contacts">Уточнить условия</Link>
-            </div>
-          </div>
+      <div className="mockup-page">
+        <section className="pricing-mockup-hero">
+          <div className="public-container">
+            <p className="mockup-eyebrow">Тарифы MPReply</p>
+            <h1>Простые тарифы без скрытых платежей</h1>
+            <p>Выберите план под текущий объём работы. Все тарифы построены вокруг одного рабочего процесса MPReply.</p>
 
-          <div className="pricing-plan-scene" role="group" aria-label="Как рабочая нагрузка влияет на тариф MPReply">
-            <div className="pricing-plan-window">
-              <div className="pricing-plan-head">
-                <div>
-                  <span className="pricing-plan-head-mark" aria-hidden="true">MP</span>
-                  <strong>Рабочий объём</strong>
-                </div>
-                <span>Тариф под нагрузку</span>
-              </div>
-
-              <div className="pricing-plan-usage">
-                <div className="pricing-plan-usage-row">
-                  <div className="pricing-plan-usage-copy">
-                    <strong>Подключённые кабинеты</strong>
-                    <small>Wildberries, Ozon, Яндекс Маркет, Авито</small>
-                  </div>
-                  <div className="pricing-plan-track" aria-hidden="true"><span /></div>
-                  <small>зависит от процесса</small>
-                </div>
-                <div className="pricing-plan-usage-row">
-                  <div className="pricing-plan-usage-copy">
-                    <strong>Обращения покупателей</strong>
-                    <small>Отзывы, вопросы и сообщения</small>
-                  </div>
-                  <div className="pricing-plan-track" aria-hidden="true"><span /></div>
-                  <small>по фактической нагрузке</small>
-                </div>
-                <div className="pricing-plan-usage-row">
-                  <div className="pricing-plan-usage-copy">
-                    <strong>ИИ и автоматизация</strong>
-                    <small>Подготовка, проверка, автоотправка</small>
-                  </div>
-                  <div className="pricing-plan-track" aria-hidden="true"><span /></div>
-                  <small>по выбранному сценарию</small>
-                </div>
-              </div>
-
-              <div className="pricing-plan-note">
-                <span aria-hidden="true">↗</span>
-                <div>
-                  <strong>Использование видно в кабинете</strong>
-                  <small>Команда понимает текущую нагрузку и доступный объём до изменения тарифа.</small>
-                </div>
-              </div>
+            <div className="pricing-toggle" aria-label="Период оплаты">
+              <span>Ежемесячно</span>
+              <span>За год</span>
             </div>
 
-            <div className="pricing-plan-scale" role="group" aria-label="Типичные масштабы использования">
-              <span><strong>Продавец</strong><small>Несколько площадок, единая очередь</small></span>
-              <span><strong>Команда</strong><small>Проверка, правила и распределение работы</small></span>
-              <span><strong>Агентство</strong><small>Несколько рабочих пространств и проектов</small></span>
+            <div className="pricing-card-grid">
+              {plans.map((plan) => (
+                <article className={`pricing-card${plan.popular ? " is-popular" : ""}`} key={plan.name}>
+                  {plan.popular ? <span className="pricing-popular">Популярный</span> : null}
+                  <h2>{plan.name}</h2>
+                  <p>{plan.description}</p>
+                  <div className="pricing-price">
+                    <strong>{plan.price}</strong>
+                    <span>/ месяц</span>
+                  </div>
+                  <Link className={`button ${plan.popular ? "button-primary" : "button-secondary"}`} href="/auth/register?intent=connect-marketplace">
+                    Попробовать бесплатно
+                  </Link>
+                  <ul className="pricing-feature-list">
+                    {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+
+            <div className="pricing-custom-strip">
+              <div>
+                <strong>Нужен индивидуальный тариф?</strong>
+                <span>Обсудим объём обращений, команду и рабочие сценарии.</span>
+              </div>
+              <Link className="button button-secondary" href="/contacts">Связаться с нами</Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="public-section">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Из чего складывается тариф</p>
-            <h2>Рабочий объём важнее длинного списка функций</h2>
-            <p>Основные возможности продукта остаются частью одного процесса — меняется объём подключений и обработки.</p>
+        <section className="public-section mockup-section-soft">
+          <div className="public-container">
+            <div className="render-section-head">
+              <p className="mockup-eyebrow">Интеграции</p>
+              <h2>Все ключевые маркетплейсы уже поддерживаются</h2>
+              <p>Не нужно покупать отдельный сервис под каждую площадку — работа строится в одном интерфейсе.</p>
+            </div>
+            <div className="pricing-market-row">
+              {marketplaces.map(([tone, mark, name]) => (
+                <div className="pricing-market-chip" key={name}>
+                  <span className={`mockup-market-mark ${tone}`} aria-hidden="true">{mark}</span>
+                  <strong>{name}</strong>
+                </div>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className="pricing-model-grid">
-            {pricingParts.map((part) => (
-              <article className="pricing-model-item" key={part.number}>
-                <span>{part.number}</span>
-                <h3>{part.title}</h3>
-                <p>{part.text}</p>
-              </article>
-            ))}
+        <section className="public-section">
+          <div className="public-container">
+            <div className="render-section-head">
+              <p className="mockup-eyebrow">Сравнение тарифов</p>
+              <h2>Сравните возможности планов</h2>
+              <p>Основной рабочий процесс доступен с первого тарифа, а дополнительные уровни добавляют автоматизацию и командные возможности.</p>
+            </div>
+            <div className="pricing-comparison">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Возможность</th>
+                    <th>Старт</th>
+                    <th>Профессиональный</th>
+                    <th>Бизнес</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparison.map(([feature, start, pro, business]) => (
+                    <tr key={feature}>
+                      <td>{feature}</td>
+                      <td>{start}</td>
+                      <td>{pro}</td>
+                      <td>{business}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="public-section public-section-muted">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Под разные процессы</p>
-            <h2>Один продукт — от самостоятельного продавца до команды с несколькими проектами</h2>
-            <p>Не нужно менять рабочую схему при росте: единая очередь, правила и контроль ответов остаются знакомыми.</p>
-          </div>
-
-          <div className="audience-pricing-list">
-            {audienceModes.map(([title, text]) => (
-              <article className="audience-pricing-row" key={title}>
-                <h3>{title}</h3>
-                <p>{text}</p>
-                <span>Масштабируется вместе с нагрузкой</span>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section">
-        <div className="public-container public-two-column public-two-column-balanced">
-          <div>
-            <p className="eyebrow">Контроль без сюрпризов</p>
-            <h2>Использование и лимиты видны до того, как они станут проблемой</h2>
-            <p className="public-copy-muted">Команда видит текущую нагрузку и может заранее скорректировать тариф или правила автоматизации.</p>
-          </div>
-          <div className="public-check-list public-check-list-large">
-            <p>Объём обработанных обращений.</p>
-            <p>Использование ИИ и доступный остаток.</p>
-            <p>Подключённые кабинеты и рабочие пространства.</p>
-            <p>Переход на другой объём без смены рабочего процесса.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section public-section-muted">
-        <div className="public-container public-two-column public-two-column-feature">
-          <div>
-            <p className="eyebrow">Частые вопросы</p>
-            <h2>Что важно знать до подключения</h2>
-            <p className="public-copy-muted">Коротко о площадках, росте нагрузки и контроле автоответов.</p>
-          </div>
-          <div className="resource-note-list">
-            {pricingAnswers.map(([question, answer], index) => (
-              <article className="resource-note" key={question}>
-                <span className="resource-note-index">0{index + 1}</span>
-                <div className="resource-note-copy">
-                  <h3>{question}</h3>
+        <section className="public-section mockup-section-soft">
+          <div className="public-container">
+            <div className="render-section-head">
+              <p className="mockup-eyebrow">Вопросы о тарифах</p>
+              <h2>Частые вопросы</h2>
+            </div>
+            <div className="pricing-faq">
+              {faq.map(([question, answer]) => (
+                <details key={question}>
+                  <summary>{question}</summary>
                   <p>{answer}</p>
-                </div>
-              </article>
-            ))}
+                </details>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
-          <div>
-            <p className="eyebrow">Проверьте на своём процессе</p>
-            <h2>Подключите площадки и оцените работу с реальной очередью обращений</h2>
+        <section className="public-section public-cta-section">
+          <div className="public-container">
+            <div className="pricing-final-cta">
+              <div>
+                <p className="mockup-eyebrow">Попробуйте на своих обращениях</p>
+                <h2>Начните отвечать покупателям быстрее уже сегодня</h2>
+                <p>Подключите маркетплейс, соберите обращения в одной очереди и проверьте MPReply на реальном рабочем процессе.</p>
+                <div className="mockup-actions">
+                  <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать бесплатно</Link>
+                  <Link className="button button-secondary" href="/demo">Смотреть демо</Link>
+                </div>
+              </div>
+              <div className="pricing-final-visual" aria-hidden="true">
+                <div className="pricing-final-bubble">✦ AI подготовил ответ<br /><br />Осталось проверить и отправить покупателю.</div>
+                <div className="mockup-mascot" />
+              </div>
+            </div>
           </div>
-          <div className="cta-actions-on-dark">
-            <Link className="button button-secondary button-secondary-on-dark" href="/demo">Открыть демо</Link>
-            <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">Начать подключение</Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </PublicShell>
   );
 }
