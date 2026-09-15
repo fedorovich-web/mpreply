@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PUBLIC_ROUTES } from "./helpers/public-routes";
+import { PUBLIC_ROUTES, VISUAL_ROUTES } from "./helpers/public-routes";
 
 for (const route of PUBLIC_ROUTES) {
   test(`${route} renders a valid public page`, async ({ page }) => {
@@ -72,6 +72,17 @@ test("mobile navigation releases scroll lock when viewport becomes desktop", asy
   await expect(page.locator(".public-mobile-menu-backdrop")).toHaveCount(0);
   await expect(trigger).toBeHidden();
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("");
+});
+
+test("approved mockup pages stay light when the saved dashboard theme is dark", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("mpreply-theme", "dark"));
+
+  for (const route of VISUAL_ROUTES.filter((route) => route.path !== "/")) {
+    await page.goto(route.path, { waitUntil: "domcontentloaded" });
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(page.locator(".mockup-page")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect(page.locator(".public-header")).toHaveCSS("background-color", /rgba?\(255, 255, 255/);
+  }
 });
 
 test("auth mode links preserve only explicit safe navigation intent", async ({ page }) => {
