@@ -159,6 +159,14 @@ export default function DemoPage() {
                 <strong>Ответ готов</strong>
                 <p>Проверьте и отправьте покупателю.</p>
               </article>
+              <div className="demo-hero-note" aria-hidden="true">
+                Быстрее и проще
+                <br />
+                с заботой
+                <br />
+                о каждом клиенте
+                <span>↙</span>
+              </div>
               <div className="mockup-mascot demo-hero-mascot" aria-hidden="true" />
             </div>
           </div>
@@ -261,9 +269,7 @@ export default function DemoPage() {
                   <strong>Обращение #45821</strong>
                 </div>
                 <small>Вопрос · только что</small>
-                <div className="demo-process-bubble">
-                  Здравствуйте! Когда будет поставка этого товара?
-                </div>
+                <div className="demo-process-bubble">Здравствуйте! Когда будет поставка этого товара?</div>
                 <div className="detail-product-row">
                   <span className="detail-product-thumb" aria-hidden="true" />
                   <span>
@@ -327,7 +333,7 @@ export default function DemoPage() {
 
         <section className="public-section public-cta-section">
           <div className="public-container">
-            <div className="mockup-cta-strip">
+            <div className="mockup-cta-strip demo-cta-strip">
               <span className="mockup-cta-strip-icon" aria-hidden="true">
                 <PublicIcon name="send" />
               </span>
@@ -340,6 +346,11 @@ export default function DemoPage() {
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
               </div>
+              <span className="demo-cta-note" aria-hidden="true">
+                Убедитесь в эффективности
+                <br />
+                уже сегодня!
+              </span>
             </div>
           </div>
         </section>
