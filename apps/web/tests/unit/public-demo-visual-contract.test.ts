@@ -47,6 +47,14 @@ describe("approved demo journey visual", () => {
     expect(finalCss).toContain(".demo-process-buyer-message");
   });
 
+  it("keeps scenario cards to logo, type, body copy and link like the render", () => {
+    expect(demo).toContain("Примеры из реальной практики");
+    expect(demo).toContain("Покупатель оставил отзыв на товар. Посмотрите, как MPReply помогает корректно и вежливо ответить.");
+    expect(demo).toContain("Покупатель задаёт вопрос о товаре, доставке или наличии. Посмотрите, как MPReply формирует точный ответ.");
+    expect(demo).toContain("Личное сообщение от покупателя. Посмотрите, как MPReply учитывает контекст и историю клиента.");
+    expect(demo).not.toContain("scenario.title");
+  });
+
   it("uses dedicated decorative fidelity styles", () => {
     expect(existsSync(decorativeCssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-mockup-decorative-fidelity.css"');
