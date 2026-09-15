@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
@@ -21,97 +22,99 @@ const marketplaceLogos = {
 
 type MarketplaceLogoKey = keyof typeof marketplaceLogos;
 
-const tools = [
+type Tone = "blue" | "purple" | "green" | "orange";
+
+const tools: readonly { icon: PublicIconName; tone: Tone; title: string; text: string }[] = [
   {
-    icon: "✉",
+    icon: "inbox",
     tone: "blue",
     title: "Единая очередь обращений",
     text: "Все отзывы, вопросы и сообщения из разных маркетплейсов в одном удобном интерфейсе.",
   },
   {
-    icon: "✦",
+    icon: "sparkles",
     tone: "purple",
     title: "AI-подготовка ответов",
     text: "Искусственный интеллект помогает составлять вежливые, точные и персонализированные ответы.",
   },
   {
-    icon: "✓",
+    icon: "shield-check",
     tone: "green",
     title: "Контроль качества",
     text: "Проверка тональности, грамотности и соответствия правилам маркетплейсов.",
   },
   {
-    icon: "ϟ",
+    icon: "lightning",
     tone: "orange",
     title: "Автоответы и сценарии",
     text: "Автоматически отвечайте на типовые вопросы и настройте сценарии для разных ситуаций.",
   },
   {
-    icon: "▤",
+    icon: "document",
     tone: "blue",
     title: "Шаблоны ответов",
     text: "Создавайте и сохраняйте шаблоны для быстрых и единообразных ответов.",
   },
   {
-    icon: "▥",
+    icon: "chart",
     tone: "blue",
     title: "Аналитика",
     text: "Следите за рейтингом, динамикой отзывов и скоростью ответов. Принимайте решения на основе данных.",
   },
   {
-    icon: "●",
+    icon: "users",
     tone: "purple",
     title: "Командная работа",
     text: "Распределяйте обращения между сотрудниками, устанавливайте роли и контролируйте нагрузку.",
   },
   {
-    icon: "◷",
+    icon: "clock",
     tone: "purple",
     title: "История действий",
     text: "Полная история обращений и действий сотрудников для прозрачности и контроля.",
   },
-] as const;
+];
 
 const workflow = [
   {
-    icon: "",
+    icon: null,
     marketplaces: true,
     title: "Обращение на маркетплейсе",
     text: "Покупатель оставляет отзыв, задает вопрос или пишет сообщение.",
   },
   {
-    icon: "✉",
+    icon: "inbox" as PublicIconName,
     marketplaces: false,
     title: "Все обращения в MPReply",
     text: "Сообщения из всех подключенных площадок попадают в единую очередь.",
   },
   {
-    icon: "✦",
+    icon: "sparkles" as PublicIconName,
     marketplaces: false,
     title: "AI помогает с ответом",
     text: "MPReply предлагает подходящий вариант ответа или использует ваши шаблоны.",
   },
   {
-    icon: "➤",
+    icon: "send" as PublicIconName,
     marketplaces: false,
     title: "Довольный клиент",
     text: "Вы отправляете ответ, а клиент получает быструю и профессиональную поддержку.",
   },
 ] as const;
 
-const benefits = [
-  ["◷", "purple", "До 70% меньше времени на ответы", "Автоматизация и AI ускоряют обработку типовых обращений."],
-  ["★", "orange", "Выше рейтинг товаров", "Быстрые и качественные ответы помогают получать больше положительных отзывов."],
-  ["●", "purple", "Команда работает эффективнее", "Удобные инструменты для распределения задач и контроля качества."],
-  ["▥", "blue", "Больше продаж", "Довольные клиенты чаще возвращаются и рекомендуют ваши товары."],
-] as const;
+const benefits: readonly [PublicIconName, Tone, string, string][] = [
+  ["clock", "purple", "До 70% меньше времени на ответы", "Автоматизация и AI ускоряют обработку типовых обращений."],
+  ["star", "orange", "Выше рейтинг товаров", "Быстрые и качественные ответы помогают получать больше положительных отзывов."],
+  ["users", "purple", "Команда работает эффективнее", "Удобные инструменты для распределения задач и контроля качества."],
+  ["chart", "blue", "Больше продаж", "Довольные клиенты чаще возвращаются и рекомендуют ваши товары."],
+];
 
 const messages: readonly [MarketplaceLogoKey, string, string][] = [
   ["wb", "Подойдет ли на рост 170 см?", "12 мин назад"],
   ["oz", "Отличное качество! Быстрая доставка.", "28 мин назад"],
   ["ym", "Когда будет поставка?", "1 час назад"],
   ["av", "Можно вернуть товар?", "2 часа назад"],
-] as const;
+];
 
 function MarketplaceLogo({ marketplace, className, decorative = false }: { marketplace: MarketplaceLogoKey; className: string; decorative?: boolean }) {
   const logo = marketplaceLogos[marketplace];
@@ -185,7 +188,7 @@ export default function FeaturesPage() {
                   </div>
                   <div className="features-draft-pane">
                     <div className="features-draft-card">
-                      <strong>✦ AI предлагает ответ</strong>
+                      <strong><PublicIcon name="sparkles" className="public-inline-icon" /> AI предлагает ответ</strong>
                       <p>Быстрые и точные ответы с учетом контекста обращения и правил вашей команды.</p>
                       <span>Использовать ответ</span>
                     </div>
@@ -207,7 +210,9 @@ export default function FeaturesPage() {
             <div className="features-tool-grid">
               {tools.map((tool) => (
                 <article className="features-tool-card" key={tool.title}>
-                  <span className={`mockup-icon-chip ${tool.tone === "blue" ? "" : tool.tone}`} aria-hidden="true">{tool.icon}</span>
+                  <span className={`mockup-icon-chip ${tool.tone === "blue" ? "" : tool.tone}`} aria-hidden="true">
+                    <PublicIcon name={tool.icon} />
+                  </span>
                   <h3>{tool.title}</h3>
                   <p>{tool.text}</p>
                 </article>
@@ -236,7 +241,7 @@ export default function FeaturesPage() {
                       ))}
                     </span>
                   ) : (
-                    <span className="mockup-icon-chip" aria-hidden="true">{step.icon}</span>
+                    <span className="mockup-icon-chip" aria-hidden="true"><PublicIcon name={step.icon} /></span>
                   )}
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
@@ -255,7 +260,7 @@ export default function FeaturesPage() {
             <div className="features-benefit-grid">
               {benefits.map(([icon, tone, title, text]) => (
                 <article className="features-benefit-card" key={title}>
-                  <span className={`mockup-icon-chip features-benefit-icon ${tone === "blue" ? "" : tone}`} aria-hidden="true">{icon}</span>
+                  <span className={`mockup-icon-chip features-benefit-icon ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <strong>{title}</strong>
                   <span>{text}</span>
                 </article>
