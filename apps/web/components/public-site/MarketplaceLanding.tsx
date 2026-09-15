@@ -1,10 +1,34 @@
+import Image from "next/image";
 import Link from "next/link";
 
-import type { MarketplaceConfig } from "../../lib/site-config";
+import type { MarketplaceConfig, MarketplaceKey } from "../../lib/site-config";
 import { PublicShell } from "./PublicShell";
 
 type MarketplaceLandingProps = {
   marketplace: MarketplaceConfig;
+};
+
+const marketplaceLogos: Record<MarketplaceKey, { src: string; width: number; height: number }> = {
+  wildberries: {
+    src: "/images/marketplaces/wildberries.webp",
+    width: 432,
+    height: 188,
+  },
+  ozon: {
+    src: "/images/marketplaces/ozon.webp",
+    width: 436,
+    height: 198,
+  },
+  "yandex-market": {
+    src: "/images/marketplaces/yandex-market.webp",
+    width: 554,
+    height: 222,
+  },
+  avito: {
+    src: "/images/marketplaces/avito.webp",
+    width: 504,
+    height: 212,
+  },
 };
 
 const toolCards = [
@@ -29,6 +53,7 @@ const faq = [
 
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
   const platformLabel = marketplace.name === "Wildberries" ? "WILDBERRIES" : marketplace.name.toUpperCase();
+  const logo = marketplaceLogos[marketplace.key];
   const steps = [
     ["1", "↗", `Подключите ${marketplace.name}`, "Добавьте площадку в интеграциях и дождитесь первой синхронизации обращений."],
     ["2", "⚙", "Настройте параметры", "Задайте правила команды, роли сотрудников и сценарии, которые требуют проверки."],
@@ -62,7 +87,16 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
 
             <div className="marketplace-detail-render" role="img" aria-label={`Обработка обращения ${marketplace.name} в MPReply`}>
               <div className="detail-market-card">
-                <div className="detail-market-logo">{marketplace.name}</div>
+                <div className="detail-market-logo">
+                  <Image
+                    className="marketplace-detail-logo"
+                    src={logo.src}
+                    width={logo.width}
+                    height={logo.height}
+                    alt={marketplace.name}
+                    unoptimized
+                  />
+                </div>
                 <div className="detail-market-message">
                   <strong>Покупатель · 12 мин назад</strong>
                   Здравствуйте! Когда будет поставка этого товара?
@@ -87,7 +121,15 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                   </aside>
                   <div className="detail-question">
                     <div className="detail-question-top">
-                      <span className="mockup-market-mark wb" aria-hidden="true">{marketplace.mark}</span>
+                      <Image
+                        className="marketplace-detail-logo-small"
+                        src={logo.src}
+                        width={logo.width}
+                        height={logo.height}
+                        alt=""
+                        aria-hidden="true"
+                        unoptimized
+                      />
                       <strong>Вопрос</strong>
                       <span>12 мин назад</span>
                     </div>
