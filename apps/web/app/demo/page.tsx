@@ -184,24 +184,46 @@ export default function DemoPage() {
               aria-label="Путь обращения от покупателя до готового ответа"
             >
               <article className="demo-story-card incoming">
-                <CompactMarketplaceLogo marketplace="wb" size={34} decorative />
-                <strong>Новое сообщение от покупателя</strong>
-                <p>Здравствуйте! Когда будет поставка этого товара?</p>
+                <div className="demo-story-meta">
+                  <CompactMarketplaceLogo marketplace="wb" size={34} decorative />
+                  <div>
+                    <strong>Покупатель</strong>
+                    <small>5 мин назад</small>
+                  </div>
+                </div>
+                <p>Здравствуйте! Подскажите, когда будет поставка этого товара?</p>
               </article>
               <span className="demo-story-arrow a1" aria-hidden="true">↘</span>
               <article className="demo-story-card ai">
-                <strong>
-                  <PublicIcon name="sparkles" className="public-inline-icon" /> AI MPReply
-                </strong>
+                <div className="demo-story-meta demo-story-meta-ai">
+                  <span className="demo-story-ai-avatar" aria-hidden="true">
+                    <PublicIcon name="sparkles" />
+                  </span>
+                  <div>
+                    <strong>AI MPReply</strong>
+                    <small>Предлагает ответ</small>
+                  </div>
+                </div>
                 <p>
-                  Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар
-                  появится на складе.
+                  Здравствуйте! Ожидаем поставку на следующей неделе. Мы сообщим, как только товар снова
+                  будет в наличии! Спасибо за ваш интерес! 💙
                 </p>
               </article>
               <span className="demo-story-arrow a2" aria-hidden="true">→</span>
               <article className="demo-story-card review">
-                <strong>Ответ готов</strong>
-                <p>Проверьте и отправьте покупателю.</p>
+                <div className="demo-story-meta">
+                  <span className="demo-story-review-avatar" aria-hidden="true">
+                    <PublicIcon name="users" />
+                  </span>
+                  <div>
+                    <strong>Вы</strong>
+                    <small>Проверяете и отправляете</small>
+                  </div>
+                </div>
+                <div className="demo-story-review-bubble">
+                  <strong>Отличный ответ!</strong>
+                  <span>Отправляем ✅</span>
+                </div>
               </article>
               <div className="demo-hero-note" aria-hidden="true">
                 Быстрее и проще
@@ -266,7 +288,7 @@ export default function DemoPage() {
                   <div className="demo-scenario-head">
                     <CompactMarketplaceLogo marketplace={scenario.marketplace} size={42} />
                     <strong>{scenario.type}</strong>
-                    {scenario.popular ? <span className="pricing-popular">Популярный</span> : null}
+                    {scenario.popular ? <span className="demo-scenario-popular">Популярный</span> : null}
                   </div>
                   <p>{scenario.text}</p>
                   <a href="#demo-process">Посмотреть пример →</a>
