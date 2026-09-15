@@ -12,6 +12,13 @@
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 88%);
 }
 
+/* Marketplaces: the approved hero uses dotted connector arms around the central MPReply hub. */
+.mockup-page .marketplace-hub-line {
+  height: 0;
+  border-top: 2px dashed rgb(81 72 232 / 36%);
+  background: none;
+}
+
 /* Pricing: lavender pill kickers used throughout the approved render. */
 .mockup-page .pricing-mockup-hero .mockup-eyebrow,
 .mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow,
