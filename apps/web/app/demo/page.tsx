@@ -67,13 +67,13 @@ const scenarios = [
   },
 ] as const;
 
-const processEvents = [
-  ["1", "Получено", "Новое обращение поступило из Ozon"],
-  ["2", "Анализ", "Определён контекст товара и обращения"],
-  ["3", "AI-черновик", "Подготовлен вариант ответа"],
-  ["4", "Ожидает", "Ответ готов к проверке сотрудником"],
-  ["5", "Отправлено", "Покупатель получил ответ"],
-] as const;
+const processEvents: readonly [PublicIconName, "green" | "blue" | "purple", string, string][] = [
+  ["message", "green", "Получено", "Новое обращение поступило из Ozon"],
+  ["search", "blue", "Анализ", "Определён контекст товара и обращения"],
+  ["sparkles", "purple", "AI-черновик", "Подготовлен вариант ответа"],
+  ["users", "purple", "Ожидает", "Ответ готов к проверке сотрудником"],
+  ["shield-check", "green", "Отправлено", "Покупатель получил ответ"],
+];
 
 const teamTools: readonly [PublicIconName, "blue" | "purple" | "orange", string, string][] = [
   [
@@ -285,9 +285,11 @@ export default function DemoPage() {
               </div>
 
               <div className="demo-process-timeline">
-                {processEvents.map(([number, status, label]) => (
-                  <div className="demo-process-event" key={number}>
-                    <span>{number}</span>
+                {processEvents.map(([icon, tone, status, label]) => (
+                  <div className="demo-process-event" key={status}>
+                    <span className={`demo-process-event-icon ${tone}`} aria-hidden="true">
+                      <PublicIcon name={icon} />
+                    </span>
                     <small>{status}</small>
                     <strong>{label}</strong>
                   </div>
