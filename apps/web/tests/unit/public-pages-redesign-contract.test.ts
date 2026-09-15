@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -12,88 +12,88 @@ const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
-const resources = readFileSync(join(root, "app/resources/page.tsx"), "utf8");
 const contacts = readFileSync(join(root, "app/contacts/page.tsx"), "utf8");
 const help = readFileSync(join(root, "app/help/page.tsx"), "utf8");
 const privacy = readFileSync(join(root, "app/privacy/page.tsx"), "utf8");
 const terms = readFileSync(join(root, "app/terms/page.tsx"), "utf8");
 const authForm = readFileSync(join(root, "components/auth/AuthForm.tsx"), "utf8");
 const authCss = readFileSync(join(root, "styles/auth.css"), "utf8");
-const pagesCss = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
-const marketplacesCss = readFileSync(join(root, "styles/marketplaces-approved.css"), "utf8");
-const marketplaceDetailCss = readFileSync(join(root, "styles/marketplace-detail-approved.css"), "utf8");
-const pricingDemoCss = readFileSync(join(root, "styles/pricing-demo-approved.css"), "utf8");
-const resourcesContactsCss = readFileSync(join(root, "styles/resources-contacts-approved.css"), "utf8");
+const mockupCss = readFileSync(join(root, "styles/public-mockup-fidelity.css"), "utf8");
+const contactsCss = readFileSync(join(root, "styles/contacts-approved.css"), "utf8");
 const helpLegalCss = readFileSync(join(root, "styles/help-legal-approved.css"), "utf8");
+const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 
-describe("public page redesign", () => {
-  it("loads page-specific marketing compositions without the superseded marketplace cluster", () => {
-    expect(layout).toContain('import "../styles/marketing-pages.css"');
-    expect(pagesCss).toContain(".features-hero-scene");
-    expect(pagesCss).not.toContain(".marketplace-cluster");
-    expect(pagesCss).toContain(".marketplace-detail-story");
+describe("current public page composition", () => {
+  it("loads the render-derived mockup layer for the approved inner pages", () => {
+    expect(layout).toContain('import "../styles/public-mockup-fidelity.css"');
+    expect(layout).toContain('import "../styles/public-mockup-render-tuning.css"');
+    expect(layout).toContain('import "../styles/public-mockup-brand-fidelity.css"');
+    expect(mockupCss).toContain("--public-section-padding-extra: 15px");
   });
 
   it("does not expose obsolete planned integration messaging", () => {
-    expect(marketplaces).not.toMatch(/Планируется|production-ready|roadmap|MVP-интеграция/i);
+    expect(marketplaces).not.toMatch(/Планируется|production-ready|roadmap|MVP-интеграция|в разработке|скоро/i);
     expect(marketplaces).toContain("Wildberries, Ozon, Яндекс Маркет и Авито");
   });
 
-  it("shows integrations as one routed MPReply workspace rather than isolated marketplace cards", () => {
-    expect(layout).toContain('import "../styles/marketplaces-approved.css"');
-    expect(marketplaces).toContain("marketplace-unified-scene");
-    expect(marketplaces).toContain("marketplace-unified-window");
-    expect(marketplaces).toContain("marketplace-unified-sources");
-    expect(marketplaces).toContain("marketplace-unified-answer");
-    expect(marketplacesCss).toContain(".marketplace-unified-scene");
-    expect(marketplacesCss).toContain(".marketplace-unified-window");
+  it("uses the approved marketplaces hub with four live marketplace sources", () => {
+    expect(marketplaces).toContain("marketplaces-mockup-hero");
+    expect(marketplaces).toContain("marketplace-hub-scene");
+    expect(marketplaces).toContain("marketplace-logo-grid");
+    expect(marketplaces).toContain("marketplace-connect-steps");
+    for (const asset of ["wildberries.webp", "ozon.webp", "yandex-market.webp", "avito.webp"]) {
+      expect(marketplaces).toContain(asset);
+    }
   });
 
-  it("uses the same layered product language on every marketplace detail route", () => {
-    expect(layout).toContain('import "../styles/marketplace-detail-approved.css"');
-    expect(marketplaceLanding).toContain("marketplace-detail-scene");
-    expect(marketplaceLanding).toContain("marketplace-detail-window");
-    expect(marketplaceLanding).toContain("marketplace-detail-draft");
-    expect(marketplaceDetailCss).toContain(".marketplace-detail-scene");
-    expect(marketplaceDetailCss).toContain(".marketplace-detail-window");
+  it("uses the approved marketplace detail composition on the shared landing component", () => {
+    expect(marketplaceLanding).toContain("marketplace-detail-mockup-hero");
+    expect(marketplaceLanding).toContain("marketplace-detail-tools");
+    expect(marketplaceLanding).toContain("marketplace-detail-steps");
+    expect(marketplaceLanding).toContain("marketplace-detail-benefits");
+    expect(marketplaceLanding).toContain("marketplace-detail-faq");
   });
 
-  it("uses a product-usage composition on pricing without inventing public prices", () => {
-    expect(layout).toContain('import "../styles/pricing-demo-approved.css"');
-    expect(pricing).toContain("pricing-plan-scene");
-    expect(pricing).toContain("pricing-plan-usage");
-    expect(pricing).toContain("pricing-plan-scale");
-    expect(pricing).not.toMatch(/₽|руб(?:лей|ля)?|\$\d|€\d/i);
-    expect(pricingDemoCss).toContain(".pricing-plan-scene");
+  it("keeps pricing as coded UI with the approved public plans and prices", () => {
+    expect(pricing).toContain("pricing-mockup-hero");
+    expect(pricing).toContain("pricing-card-grid");
+    expect(pricing).toContain("pricing-comparison");
+    expect(pricing).toContain("pricing-faq");
+    for (const plan of ["Старт", "Профессиональный", "Бизнес"]) expect(pricing).toContain(plan);
+    for (const price of ["490 ₽", "990 ₽", "1 990 ₽"]) expect(pricing).toContain(price);
+    expect(pricing).not.toMatch(/pricing[^\n]{0,40}\.(?:png|jpe?g|webp)/i);
   });
 
-  it("turns the demo hero into a visible question-to-review product flow", () => {
-    expect(demo).toContain("demo-product-scene");
-    expect(demo).toContain("demo-product-question");
-    expect(demo).toContain("demo-product-draft");
-    expect(demo).toContain("demo-product-review");
-    expect(pricingDemoCss).toContain(".demo-product-scene");
+  it("uses the approved demo journey and process composition", () => {
+    expect(demo).toContain("demo-mockup-hero");
+    expect(demo).toContain("demo-journey");
+    expect(demo).toContain("demo-scenarios");
+    expect(demo).toContain("demo-process");
+    expect(demo).toContain("demo-team-tools");
+    for (const label of ["Получение обращения", "Анализ контекста", "AI-черновик", "Проверка и отправка"]) {
+      expect(demo).toContain(label);
+    }
   });
 
-  it("gives the resources route an editorial composition instead of a plain note list", () => {
-    expect(layout).toContain('import "../styles/resources-contacts-approved.css"');
-    expect(resources).toContain("resource-editorial-scene");
-    expect(resources).toContain("resource-featured-card");
-    expect(resources).toContain("resource-topic-grid");
-    expect(resourcesContactsCss).toContain(".resource-editorial-scene");
-    expect(resourcesContactsCss).toContain(".resource-featured-card");
+  it("keeps the removed resources/blog route absent", () => {
+    expect(existsSync(join(root, "app/resources/page.tsx"))).toBe(false);
+    expect(siteConfig).not.toContain('href: "/resources"');
+    expect(siteConfig).not.toContain('"/resources"');
+    expect(publicShell).not.toContain('href="/resources"');
   });
 
   it("makes support email the primary contact action without inventing response-time promises", () => {
+    expect(layout).toContain('import "../styles/contacts-approved.css"');
     expect(contacts).toContain("contact-support-scene");
     expect(contacts).toContain("contact-support-email");
     expect(contacts).toContain("siteConfig.contactEmail");
     expect(contacts).toContain("mailto:");
     expect(contacts).not.toMatch(/ответим за|ответ в течение|24\s*час/i);
-    expect(resourcesContactsCss).toContain(".contact-support-scene");
+    expect(contactsCss).toContain(".contact-support-scene");
+    expect(contactsCss).toContain(".contact-support-email");
   });
 
-  it("turns help into a task-oriented support map with concrete troubleshooting paths", () => {
+  it("keeps help task-oriented with concrete troubleshooting paths", () => {
     expect(layout).toContain('import "../styles/help-legal-approved.css"');
     expect(help).toContain("help-hero-scene");
     expect(help).toContain("help-path-list");
@@ -105,7 +105,7 @@ describe("public page redesign", () => {
     expect(helpLegalCss).toContain(".help-troubleshooting-flow");
   });
 
-  it("adds readable anchored legal layouts without changing the draft substance", () => {
+  it("keeps readable anchored legal layouts without changing the draft substance", () => {
     expect(privacy).toContain("legal-approved-layout");
     expect(privacy).toContain('id="privacy-data"');
     expect(privacy).toContain("До production-запуска требуется юридическая финализация.");
@@ -149,28 +149,19 @@ describe("public page redesign", () => {
     expect(authForm).toContain("href={alternateAuthHref}");
   });
 
-  it("uses buyer-facing workflow language instead of infrastructure jargon", () => {
-    expect(features).toMatch(/От обращения покупателя до ответа|путь обработки каждого обращения/i);
+  it("uses the current features composition and buyer-facing workflow language", () => {
+    expect(features).toContain("features-mockup-hero");
+    expect(features).toContain("features-tool-grid");
+    expect(features).toContain("features-workflow");
+    expect(features).toContain("features-benefit-grid");
     expect(features).toContain("Отзывы, вопросы и сообщения");
-    expect(features).toContain("проверку сотруднику");
     expect(features).not.toMatch(/worker-backed|идемпотентности|application layer/i);
   });
 
-  it("shows the features workflow as a layered product scene instead of a generic single card", () => {
-    expect(features).toContain("features-hero-scene");
-    expect(features).toContain("features-hero-message");
-    expect(features).toContain("features-hero-draft");
-    expect(features).toContain("features-hero-review");
-    expect(pagesCss).toContain(".features-hero-scene");
-    expect(pagesCss).toContain(".features-hero-draft");
-  });
-
-  it("uses article elements only for content with a real heading", () => {
+  it("keeps homepage semantic cleanup intact without redesigning it", () => {
     expect(home).not.toContain('<article className={`homepage-model-card');
     expect(home).not.toContain('<article className="homepage-result-card"');
     expect(homeWorkspace).not.toContain('<article className={`homepage-workspace-list-row');
     expect(homeWorkspace).not.toContain('<article className="homepage-workspace-answer"');
-    expect(features).not.toContain('<article className="features-hero-draft"');
-    expect(features).not.toContain('<article className="features-hero-review"');
   });
 });
