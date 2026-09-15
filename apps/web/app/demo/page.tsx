@@ -22,7 +22,7 @@ const logos = {
 
 const journey: readonly [PublicIconName, string, string][] = [
   [
-    "inbox",
+    "message",
     "Получение обращения",
     "Сообщение, отзыв или вопрос поступает из маркетплейса в MPReply в реальном времени.",
   ],
@@ -75,24 +75,28 @@ const processEvents = [
   ["5", "Отправлено", "Покупатель получил ответ"],
 ] as const;
 
-const teamTools: readonly [PublicIconName, string, string][] = [
+const teamTools: readonly [PublicIconName, "blue" | "purple" | "orange", string, string][] = [
   [
-    "inbox",
+    "users",
+    "purple",
     "Единая очередь обращений",
     "Все отзывы, вопросы и сообщения из подключённых маркетплейсов в одном окне.",
   ],
   [
     "document",
+    "blue",
     "Шаблоны ответов",
     "Создавайте готовые формулировки для типовых ситуаций и используйте их всей командой.",
   ],
   [
     "lightning",
+    "orange",
     "Автоответы и сценарии",
     "Автоматизируйте повторяющиеся обращения и оставляйте сложные случаи на проверку.",
   ],
   [
     "chart",
+    "blue",
     "Аналитика",
     "Следите за скоростью ответов, объёмом обращений и результатами работы команды.",
   ],
@@ -313,12 +317,9 @@ export default function DemoPage() {
             </div>
 
             <div className="demo-team-tools">
-              {teamTools.map(([icon, title, text], index) => (
+              {teamTools.map(([icon, tone, title, text]) => (
                 <article className="demo-team-tool" key={title}>
-                  <span
-                    className={`mockup-icon-chip ${index === 1 ? "purple" : index === 2 ? "orange" : ""}`}
-                    aria-hidden="true"
-                  >
+                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true">
                     <PublicIcon name={icon} />
                   </span>
                   <div>
