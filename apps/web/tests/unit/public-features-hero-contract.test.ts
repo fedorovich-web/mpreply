@@ -42,4 +42,12 @@ describe("approved features hero console", () => {
     expect(publicIcon).toContain('"play"');
     expect(features).toContain('name="play"');
   });
+
+  it("uses icon-led sidebar navigation like the approved console", () => {
+    expect(features).toContain("features-app-nav-item");
+    for (const icon of ["inbox", "star", "message", "chart", "document", "users"]) {
+      expect(features).toContain(`name="${icon}"`);
+    }
+    expect(decorativeCss).toContain(".features-app-nav-item");
+  });
 });
