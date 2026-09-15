@@ -21,6 +21,8 @@ describe("approved public footer variants", () => {
     expect(shell).toContain('name="send"');
     expect(shell).toContain('name="play"');
     expect(shell).not.toContain(">ТГ<");
+    expect(footerCss).toContain(".public-footer-socials > span > svg");
+    expect(footerCss).toContain("font-size: 13px");
   });
 
   it("shows compact footer only on non-pricing mockup pages", () => {
