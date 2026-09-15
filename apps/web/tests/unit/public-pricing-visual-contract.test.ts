@@ -38,6 +38,9 @@ describe("approved pricing final CTA visual", () => {
     expect(pricing).toContain("pricing-market-name");
     expect(integrationsCss).toContain(".pricing-market-compact");
     expect(integrationsCss).toContain(".pricing-final-logo-chip");
+    expect(ctaCss).not.toContain('img[src$="wildberries.webp"]');
+    expect(ctaCss).not.toContain('img[src$="ozon.webp"]');
+    expect(ctaCss).not.toContain('img[src$="yandex-market.webp"]');
   });
 
   it("renders FAQ chevrons at the right like the approved render", () => {
@@ -51,6 +54,7 @@ describe("approved pricing final CTA visual", () => {
     expect(pricing).toContain("pricing-final-review");
     expect(pricing).toContain("pricing-final-answer");
     expect(pricing).not.toContain("pricing-final-bubble");
+    expect(ctaCss).not.toContain(".pricing-final-bubble");
     expect(integrationsCss).toContain(".pricing-final-review");
     expect(integrationsCss).toContain(".pricing-final-answer");
   });
