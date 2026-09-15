@@ -139,7 +139,7 @@ export default function MarketplacesPage() {
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
                 <Link className="button button-secondary" href="/demo">
-                  Смотреть видео
+                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть видео
                 </Link>
               </div>
               <div className="mockup-trust-row" aria-label="Условия подключения">
@@ -156,6 +156,8 @@ export default function MarketplacesPage() {
             >
               <span className="marketplace-hub-line l1" aria-hidden="true" />
               <span className="marketplace-hub-line l2" aria-hidden="true" />
+              <span className="marketplace-hub-line l3" aria-hidden="true" />
+              <span className="marketplace-hub-line l4" aria-hidden="true" />
 
               <div className="marketplace-hub-core">
                 <div className="marketplace-hub-brand">
@@ -166,19 +168,31 @@ export default function MarketplacesPage() {
 
               <div className="marketplace-hub-card wb">
                 <MarketplaceLogo marketplace="wb" className="mockup-market-logo" decorative />
-                <span>Отзывы и вопросы</span>
+                <span className="marketplace-hub-card-label">
+                  <PublicIcon name="message" />
+                  <span>Отзывы и вопросы</span>
+                </span>
               </div>
               <div className="marketplace-hub-card oz">
                 <MarketplaceLogo marketplace="oz" className="mockup-market-logo" decorative />
-                <span>Отзывы и вопросы</span>
+                <span className="marketplace-hub-card-label">
+                  <PublicIcon name="message" />
+                  <span>Отзывы и вопросы</span>
+                </span>
               </div>
               <div className="marketplace-hub-card ym">
                 <MarketplaceLogo marketplace="ym" className="mockup-market-logo" decorative />
-                <span>Сообщения покупателей</span>
+                <span className="marketplace-hub-card-label">
+                  <PublicIcon name="inbox" />
+                  <span>Сообщения покупателей</span>
+                </span>
               </div>
               <div className="marketplace-hub-card av">
                 <MarketplaceLogo marketplace="av" className="mockup-market-logo" decorative />
-                <span>Сообщения и отзывы</span>
+                <span className="marketplace-hub-card-label">
+                  <PublicIcon name="message" />
+                  <span>Сообщения и отзывы</span>
+                </span>
               </div>
 
               <div className="marketplace-hero-note marketplace-hero-note-primary" aria-hidden="true">
