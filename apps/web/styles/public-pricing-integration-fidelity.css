@@ -1,0 +1,36 @@
+/* Pricing marketplace marks from the approved render. */
+
+.mockup-page .pricing-market-chip {
+  display: inline-flex;
+  min-width: 148px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 9px 14px;
+}
+
+.mockup-page .pricing-market-compact {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  object-fit: contain;
+}
+
+.mockup-page .pricing-market-name {
+  color: #52688d;
+  font-size: .74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mockup-page .pricing-final-logo-chip {
+  display: grid;
+  place-items: center;
+}
+
+.mockup-page .pricing-final-logo-chip .pricing-market-compact {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+}
