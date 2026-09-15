@@ -1,10 +1,13 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
+const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const ctaCss = readFileSync(join(root, "styles/public-mockup-cta-fidelity.css"), "utf8");
+const integrationsCssPath = join(root, "styles/public-pricing-integration-fidelity.css");
+const integrationsCss = existsSync(integrationsCssPath) ? readFileSync(integrationsCssPath, "utf8") : "";
 
 describe("approved pricing final CTA visual", () => {
   it("uses marketplace logos, review card and sparkle instead of the generic mascot", () => {
@@ -18,5 +21,22 @@ describe("approved pricing final CTA visual", () => {
   it("positions the decorative composition inside the pricing CTA", () => {
     expect(ctaCss).toContain(".pricing-final-logo-cloud");
     expect(ctaCss).toContain(".pricing-final-sparkle");
+  });
+
+  it("uses compact official marketplace marks in integration chips and CTA decoration", () => {
+    expect(existsSync(integrationsCssPath)).toBe(true);
+    expect(layout).toContain('import "../styles/public-pricing-integration-fidelity.css"');
+    for (const asset of [
+      "wildberries-compact.webp",
+      "ozon-compact.webp",
+      "yandex-market-compact.webp",
+      "avito-compact.webp",
+    ]) {
+      expect(pricing).toContain(asset);
+    }
+    expect(pricing).toContain("pricing-market-compact");
+    expect(pricing).toContain("pricing-market-name");
+    expect(integrationsCss).toContain(".pricing-market-compact");
+    expect(integrationsCss).toContain(".pricing-final-logo-chip");
   });
 });
