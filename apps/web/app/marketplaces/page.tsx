@@ -147,23 +147,13 @@ export default function MarketplacesPage() {
               <p className="mockup-eyebrow">Поддерживаем ведущие маркетплейсы</p>
               <h2>Популярные маркетплейсы уже в MPReply</h2>
             </div>
-
             <div className="marketplace-logo-grid">
               {integrations.map((integration) => (
                 <article className="marketplace-logo-card" key={integration.key}>
-                  <Image
-                    className="marketplace-brand-logo"
-                    src={integration.logo.src}
-                    width={integration.logo.width}
-                    height={integration.logo.height}
-                    alt={integration.name}
-                    unoptimized
-                  />
+                  <Image className="marketplace-brand-logo" src={integration.logo.src} width={integration.logo.width} height={integration.logo.height} alt={integration.name} unoptimized />
                   <p>{integration.text}</p>
                   <Link className="button button-secondary" href={integration.path}>Подробнее <span aria-hidden="true">→</span></Link>
-                  <ul>
-                    {integration.points.map((point) => <li key={point}>{point}</li>)}
-                  </ul>
+                  <ul>{integration.points.map((point) => <li key={point}>{point}</li>)}</ul>
                 </article>
               ))}
             </div>
@@ -211,13 +201,14 @@ export default function MarketplacesPage() {
 
         <section className="public-section public-cta-section">
           <div className="public-container">
-            <div className="mockup-cta">
-              <h2>Начните подключать маркетплейсы уже сегодня</h2>
-              <p>14 дней бесплатного доступа ко всем возможностям. Без карты. Никаких рисков.</p>
-              <div className="mockup-actions">
-                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                  Попробовать бесплатно <span aria-hidden="true">→</span>
-                </Link>
+            <div className="mockup-cta-strip">
+              <span className="mockup-cta-strip-icon" aria-hidden="true"><PublicIcon name="send" /></span>
+              <div className="mockup-cta-strip-copy">
+                <h2>Начните подключать маркетплейсы уже сегодня</h2>
+                <p>14 дней бесплатного доступа ко всем возможностям. Без карты. Никаких рисков.</p>
+              </div>
+              <div className="mockup-cta-strip-side">
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать бесплатно <span aria-hidden="true">→</span></Link>
               </div>
             </div>
           </div>
