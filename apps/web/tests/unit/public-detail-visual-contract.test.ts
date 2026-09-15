@@ -60,4 +60,12 @@ describe("approved marketplace detail visual", () => {
     }
     expect(heroCss).toContain(".detail-sidebar-item");
   });
+
+  it("uses the approved product thumbnail asset instead of a CSS placeholder", () => {
+    expect(detail).toContain('/images/mockups/product-shoe.webp');
+    expect(detail).toContain('className="detail-product-thumb"');
+    expect(detail).not.toContain('<span className="detail-product-thumb"');
+    expect(heroCss).toContain(".detail-product-thumb");
+    expect(heroCss).toContain("object-fit: cover");
+  });
 });
