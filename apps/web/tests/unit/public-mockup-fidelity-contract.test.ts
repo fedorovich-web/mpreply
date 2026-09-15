@@ -59,6 +59,14 @@ describe("approved public mockup fidelity", () => {
     ]) expect(features).toContain(label);
   });
 
+  it("uses real marketplace logo assets and benefit icon chips on features", () => {
+    for (const asset of ["wildberries.webp", "ozon.webp", "yandex-market.webp", "avito.webp"]) {
+      expect(features).toContain(asset);
+    }
+    expect(features).not.toContain("WB · Ozon · M · Avito");
+    expect(features).toContain("features-benefit-icon");
+  });
+
   it("implements the approved marketplaces composition with four real logo assets", () => {
     expect(marketplaces).toContain("marketplaces-mockup-hero");
     expect(marketplaces).toContain("marketplace-logo-grid");
