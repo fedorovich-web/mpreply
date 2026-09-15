@@ -99,14 +99,23 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
     ],
   ];
 
-  const faq = [
+  const faq: readonly [PublicIconName, string, string][] = [
     [
+      "link",
       `Как подключить ${marketplace.name}?`,
       `Подключение занимает несколько минут через официальный API ${marketplace.name}.`,
     ],
-    ["Можно ли добавить несколько сотрудников?", "Да. Вы можете настроить роли и права доступа для всей команды."],
-    ["Обновляются ли статусы обращений?", "Да. Статусы синхронизируются автоматически в реальном времени."],
-  ] as const;
+    [
+      "users",
+      "Можно ли добавить несколько сотрудников?",
+      "Да. Вы можете настроить роли и права доступа для всей команды.",
+    ],
+    [
+      "shield-check",
+      "Обновляются ли статусы обращений?",
+      "Да. Статусы синхронизируются автоматически в реальном времени.",
+    ],
+  ];
 
   return (
     <PublicShell>
@@ -301,9 +310,15 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               <p>Подключение {marketplace.name} к MPReply — это просто и безопасно.</p>
             </div>
             <div className="marketplace-detail-faq">
-              {faq.map(([question, answer]) => (
+              {faq.map(([icon, question, answer]) => (
                 <details key={question}>
-                  <summary>{question}</summary>
+                  <summary className="detail-faq-summary">
+                    <span className="detail-faq-icon" aria-hidden="true">
+                      <PublicIcon name={icon} />
+                    </span>
+                    <span>{question}</span>
+                    <span className="detail-faq-chevron" aria-hidden="true">⌄</span>
+                  </summary>
                   <p>{answer}</p>
                 </details>
               ))}
