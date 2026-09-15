@@ -19,6 +19,53 @@
   background: none;
 }
 
+/* Marketplace detail FAQ: icon-led horizontal rows with a chevron at the right. */
+.mockup-page .marketplace-detail-faq details {
+  padding: 0;
+  overflow: hidden;
+}
+
+.mockup-page .detail-faq-summary {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 58px;
+  padding: 10px 14px;
+  list-style: none;
+}
+
+.mockup-page .detail-faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mockup-page .detail-faq-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #f0efff;
+  color: #5148e8;
+  font-size: 17px;
+}
+
+.mockup-page .detail-faq-chevron {
+  color: #5148e8;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform .2s ease;
+}
+
+.mockup-page .marketplace-detail-faq details[open] .detail-faq-chevron {
+  transform: rotate(180deg);
+}
+
+.mockup-page .marketplace-detail-faq details > p {
+  margin: 0;
+  padding: 0 16px 14px 60px;
+}
+
 /* Pricing: lavender pill kickers used throughout the approved render. */
 .mockup-page .pricing-mockup-hero .mockup-eyebrow,
 .mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow,
@@ -286,5 +333,15 @@
 
   .mockup-page .pricing-market-chip {
     min-width: 128px;
+  }
+
+  .mockup-page .detail-faq-summary {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .mockup-page .marketplace-detail-faq details > p {
+    padding-left: 54px;
   }
 }
