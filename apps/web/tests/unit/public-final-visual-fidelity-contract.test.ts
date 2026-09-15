@@ -19,10 +19,10 @@ describe("final approved render details", () => {
     expect(pricing).toContain('name="shield-check"');
     expect(pricing).toContain('href="/help"');
     expect(pricing).toContain("Все вопросы");
-    expect(pricing).not.toContain("<strong>{marketplace.name}</strong>");
+    expect(pricing).toContain("pricing-market-compact");
+    expect(pricing).toContain("pricing-market-name");
     expect(finalCss).toContain(".pricing-hero-note");
     expect(finalCss).toContain(".pricing-custom-icon");
-    expect(finalCss).toContain(".pricing-market-chip .marketplace-detail-logo-small");
   });
 
   it("uses the lavender pill kicker treatment from the pricing render", () => {
