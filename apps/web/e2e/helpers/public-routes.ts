@@ -6,6 +6,7 @@ export const VISUAL_ROUTES = [
   { path: "/", slug: "home" },
   { path: "/features", slug: "features" },
   { path: "/marketplaces", slug: "marketplaces" },
+  { path: "/marketplaces/wildberries", slug: "marketplace-wildberries" },
   { path: "/pricing", slug: "pricing" },
   { path: "/demo", slug: "demo" },
 ] as const;
