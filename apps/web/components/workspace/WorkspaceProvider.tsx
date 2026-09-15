@@ -78,7 +78,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (userQuery.isPending || (userQuery.isSuccess && organizationsQuery.isPending)) {
-    return <WorkspaceBootState title="Загружаем workspace" description="Проверяем сессию и доступные организации." />;
+    return <WorkspaceBootState title="Загружаем рабочее пространство" description="Проверяем сессию и доступные организации." />;
   }
 
   if (userQuery.error) {
@@ -115,7 +115,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (!activeOrganization) {
-    return <WorkspaceBootState title="Выбираем workspace" description="Подготавливаем рабочее пространство." />;
+    return <WorkspaceBootState title="Выбираем организацию" description="Подготавливаем рабочее пространство." />;
   }
 
   return (
@@ -160,10 +160,10 @@ function WorkspaceOnboarding({ user }: { user: User }) {
   return (
     <main className="workspace-onboarding-page">
       <section className="workspace-onboarding-card" aria-labelledby="workspace-onboarding-title">
-        <p className="eyebrow">Первый workspace</p>
+        <p className="eyebrow">Первая организация</p>
         <h1 id="workspace-onboarding-title">Создайте организацию</h1>
         <p>
-          Аккаунт <strong>{user.email}</strong> уже создан. Теперь нужен workspace для интеграций,
+          Учётная запись <strong>{user.email}</strong> уже создана. Теперь нужна организация для интеграций,
           обращений и правил автоответов.
         </p>
         <form
@@ -186,7 +186,7 @@ function WorkspaceOnboarding({ user }: { user: User }) {
           </label>
           {createMutation.error ? <p className="form-error" role="alert">{errorMessage(createMutation.error)}</p> : null}
           <button className="button button-primary" disabled={createMutation.isPending || name.trim().length < 2} type="submit">
-            {createMutation.isPending ? "Создаём..." : "Создать workspace"}
+            {createMutation.isPending ? "Создаём..." : "Создать организацию"}
           </button>
         </form>
       </section>

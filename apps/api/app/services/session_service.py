@@ -76,11 +76,7 @@ class SessionService:
 
     async def rotate(self, raw_token: str) -> RefreshSessionGrant:
         now = self._now()
-        result = await self.session.execute(
-            select(AuthSession)
-            .where(AuthSession.token_digest == digest_auth_token(raw_token))
-            .with_for_update()
-        )
+        result = await self.session.execute(select(AuthSession).where(AuthSession.token_digest == digest_auth_token(raw_token)).with_for_update())
         auth_session = result.scalar_one_or_none()
         if auth_session is None:
             raise SessionError("invalid_refresh_session")
@@ -99,11 +95,7 @@ class SessionService:
             )
         )
         user = user_result.scalar_one_or_none()
-        if (
-            user is None
-            or user.email_verified_at is None
-            or user.auth_version != auth_session.auth_version
-        ):
+        if user is None or user.email_verified_at is None or user.auth_version != auth_session.auth_version:
             raise SessionError("invalid_refresh_session")
 
         auth_session.revoked_at = now

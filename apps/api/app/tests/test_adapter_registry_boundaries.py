@@ -43,9 +43,7 @@ def test_registry_rejects_review_question_lookup_for_avito_before_construction()
 
     assert captured.value.error_code == "unsupported_capability"
     assert captured.value.marketplace is Marketplace.AVITO
-    assert captured.value.required_streams == frozenset(
-        {MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS}
-    )
+    assert captured.value.required_streams == frozenset({MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS})
 
 
 def test_registry_returns_the_same_lifecycle_owned_credential_adapter() -> None:

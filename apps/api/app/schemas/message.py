@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class ProductSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     id: UUID
     external_id: str
     sku: str | None = None
@@ -18,7 +21,7 @@ class ProductSummary(BaseModel):
 
 
 class CustomerMessageResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
 
     id: UUID
     organization_id: UUID
@@ -44,6 +47,8 @@ class CustomerMessageResponse(BaseModel):
 
 
 class CustomerMessageListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     items: list[CustomerMessageResponse]
     total: int
     page: int
@@ -51,6 +56,31 @@ class CustomerMessageListResponse(BaseModel):
 
 
 class CustomerMessageUpdateRequest(BaseModel):
-    status: str | None = Field(default=None, max_length=64)
+    model_config = ConfigDict(extra="forbid")
+
+    status: (
+        Literal[
+            "new",
+            "imported",
+            "needs_reply",
+            "auto_rule_matched",
+            "auto_reply_pending",
+            "ai_draft_ready",
+            "safety_blocked",
+            "needs_manual_check",
+            "waiting_review",
+            "approved",
+            "sending",
+            "answered",
+            "auto_reply_sent",
+            "failed",
+            "blocked_by_marketplace",
+            "duplicate",
+            "skipped",
+            "archived",
+            "escalated",
+        ]
+        | None
+    ) = None
     assigned_to: UUID | None = None
-    priority: str | None = Field(default=None, max_length=32)
+    priority: Literal["low", "normal", "high", "urgent"] | None = None

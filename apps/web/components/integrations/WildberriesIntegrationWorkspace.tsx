@@ -74,8 +74,8 @@ export function WildberriesIntegrationWorkspace() {
   return (
     <section className="wildberries-workspace" aria-label="Управление подключениями Wildberries">
       <div className="integration-security-strip" role="note">
-        <strong>Ключи остаются на backend</strong>
-        <span>После сохранения frontend получает только маску fingerprint, без исходного API-ключа.</span>
+        <strong>Ключи остаются на сервере</strong>
+        <span>После сохранения браузер получает только маску безопасного отпечатка, без исходного API-ключа.</span>
       </div>
 
       {!canManage ? (
@@ -95,7 +95,7 @@ export function WildberriesIntegrationWorkspace() {
         <section className="integration-account-panel" aria-labelledby="wb-account-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Accounts</span>
+              <span className="panel-kicker">Кабинеты</span>
               <strong id="wb-account-list-title">Кабинеты Wildberries</strong>
             </div>
             <span className="ui-badge">{accounts.length}</span>
@@ -146,7 +146,7 @@ export function WildberriesIntegrationWorkspace() {
               }}
             >
               <div className="panel-heading">
-                <span className="panel-kicker">New account</span>
+                <span className="panel-kicker">Новый кабинет</span>
                 <strong>Добавить кабинет</strong>
               </div>
               <label>
@@ -308,7 +308,7 @@ function AccountDetail({
     <div className="integration-detail-stack">
       <div className="integration-detail-heading">
         <div>
-          <span className="panel-kicker">Selected account</span>
+          <span className="panel-kicker">Выбранный кабинет</span>
           <h2 id="wb-account-detail-title">{account.display_name}</h2>
         </div>
         <StatusBadge account={account} />
@@ -333,7 +333,7 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Settings</span>
+              <span className="panel-kicker">Настройки</span>
               <strong>Настройки кабинета</strong>
             </div>
             <label>
@@ -376,7 +376,7 @@ function AccountDetail({
             }}
           >
             <div className="panel-heading">
-              <span className="panel-kicker">Credentials</span>
+              <span className="panel-kicker">Доступ к API</span>
               <strong>Заменить API-ключ</strong>
             </div>
             <label>

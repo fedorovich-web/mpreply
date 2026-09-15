@@ -256,9 +256,7 @@ class OzonAdapter(ReviewQuestionAdapter):
                 retry_after_seconds=response.retry_after_seconds,
             )
         payload = self._object(response.data)
-        provider_reply_id = self._required_string(
-            payload.get(receipt_key) if payload is not None else None
-        )
+        provider_reply_id = self._required_string(payload.get(receipt_key) if payload is not None else None)
         if provider_reply_id is None:
             return cast(
                 AdapterResult[ProviderWriteReceipt],
@@ -398,12 +396,7 @@ class OzonAdapter(ReviewQuestionAdapter):
         records = self._object_list(payload.get(collection_key) if payload is not None else None)
         has_next = payload.get("has_next") if payload is not None else None
         last_id = payload.get("last_id") if payload is not None else None
-        if (
-            records is None
-            or len(records) > _PAGE_SIZE
-            or type(has_next) is not bool
-            or not isinstance(last_id, str)
-        ):
+        if records is None or len(records) > _PAGE_SIZE or type(has_next) is not bool or not isinstance(last_id, str):
             return cast(
                 AdapterResult[MarketplacePage[NormalizedMessage]],
                 self._malformed("Ozon returned an invalid message page"),
@@ -422,11 +415,7 @@ class OzonAdapter(ReviewQuestionAdapter):
         next_cursor: str | None = None
         if has_next:
             candidate = last_id.strip()
-            if (
-                not candidate
-                or candidate == requested_cursor
-                or not self._valid_cursor(candidate)
-            ):
+            if not candidate or candidate == requested_cursor or not self._valid_cursor(candidate):
                 return cast(
                     AdapterResult[MarketplacePage[NormalizedMessage]],
                     self._malformed("Ozon returned an invalid pagination cursor"),
@@ -636,21 +625,11 @@ class OzonAdapter(ReviewQuestionAdapter):
 
     @staticmethod
     def _valid_api_key(value: str) -> bool:
-        return bool(
-            value
-            and value == value.strip()
-            and len(value) <= 4_096
-            and all(ord(character) >= 32 for character in value)
-        )
+        return bool(value and value == value.strip() and len(value) <= 4_096 and all(ord(character) >= 32 for character in value))
 
     @staticmethod
     def _valid_cursor(value: str | None) -> bool:
-        return value is None or bool(
-            value
-            and value == value.strip()
-            and len(value) <= _MAX_CURSOR_LENGTH
-            and "\x00" not in value
-        )
+        return value is None or bool(value and value == value.strip() and len(value) <= _MAX_CURSOR_LENGTH and "\x00" not in value)
 
     @staticmethod
     def _valid_external_id(value: str) -> bool:

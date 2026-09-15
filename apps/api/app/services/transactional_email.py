@@ -62,11 +62,7 @@ def build_verification_email(
     reply_to: str = DEFAULT_SUPPORT_EMAIL,
 ) -> TransactionalEmail:
     subject = "Подтвердите email в MPReply"
-    text = (
-        "Подтвердите email, чтобы завершить регистрацию в MPReply.\n\n"
-        f"{verification_url}\n\n"
-        "Если вы не создавали аккаунт, просто проигнорируйте это письмо."
-    )
+    text = f"Подтвердите email, чтобы завершить регистрацию в MPReply.\n\n{verification_url}\n\nЕсли вы не создавали аккаунт, просто проигнорируйте это письмо."
     html = _layout(
         title="Подтвердите email",
         body="Подтвердите адрес электронной почты, чтобы завершить регистрацию в MPReply.",
@@ -94,11 +90,7 @@ def build_password_reset_email(
 ) -> TransactionalEmail:
     subject = "Сброс пароля MPReply"
     expires_label = expires_at.isoformat(timespec="minutes")
-    text = (
-        "Вы запросили сброс пароля MPReply.\n\n"
-        f"{reset_url}\n\n"
-        f"Ссылка действует до {expires_label}. Если запрос делали не вы, проигнорируйте письмо."
-    )
+    text = f"Вы запросили сброс пароля MPReply.\n\n{reset_url}\n\nСсылка действует до {expires_label}. Если запрос делали не вы, проигнорируйте письмо."
     html = _layout(
         title="Сброс пароля",
         body="Используйте ссылку ниже, чтобы задать новый пароль.",
@@ -123,10 +115,7 @@ def build_password_changed_email(
     reply_to: str = DEFAULT_SUPPORT_EMAIL,
 ) -> TransactionalEmail:
     subject = "Пароль MPReply изменён"
-    text = (
-        "Пароль вашего аккаунта MPReply был изменён.\n\n"
-        f"Если это были не вы, напишите в поддержку: {reply_to}"
-    )
+    text = f"Пароль вашего аккаунта MPReply был изменён.\n\nЕсли это были не вы, напишите в поддержку: {reply_to}"
     html = _layout(
         title="Пароль изменён",
         body="Пароль вашего аккаунта MPReply был изменён.",

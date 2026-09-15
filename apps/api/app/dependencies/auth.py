@@ -19,10 +19,11 @@ async def get_current_user(
     authorization: str | None = Header(default=None),
 ) -> User:
     token = None
-    if authorization:
-        prefix = "Bearer "
-        if authorization.startswith(prefix):
-            token = authorization[len(prefix) :].strip()
+    if authorization is not None:
+        scheme, separator, credentials = authorization.partition(" ")
+        if not separator or scheme.lower() != "bearer" or not credentials.strip():
+            raise unauthorized("Invalid authorization header")
+        token = credentials.strip()
     if not token:
         token = access_cookie
         if token:

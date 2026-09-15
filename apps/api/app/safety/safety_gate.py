@@ -55,15 +55,17 @@ class SafetyGate:
         re.compile(r"\b[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}\b"),
     )
     _BLOCK_FLAGS: ClassVar[frozenset[str]] = frozenset({"unsafe_instruction", "personal_data_exposure", "policy_violation"})
-    _MANUAL_REVIEW_FLAGS: ClassVar[frozenset[str]] = frozenset({
-        "missing_product_context",
-        "low_confidence",
-        "risky_promise",
-        "medical_or_legal_claim",
-        "unclear_customer_issue",
-        "needs_manual_review",
-        "sensitive_topic",
-    })
+    _MANUAL_REVIEW_FLAGS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "missing_product_context",
+            "low_confidence",
+            "risky_promise",
+            "medical_or_legal_claim",
+            "unclear_customer_issue",
+            "needs_manual_review",
+            "sensitive_topic",
+        }
+    )
 
     def evaluate(self, payload: SafetyInput) -> SafetyResult:
         flags = {flag.strip() for flag in payload.model_flags if flag.strip()}

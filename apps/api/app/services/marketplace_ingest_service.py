@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol, cast
+from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -284,7 +285,7 @@ def _validate_message(message: NormalizedMessage) -> None:
     if len(message.customer_photos) > _MAX_PHOTO_COUNT:
         raise InvalidNormalizedRecord("customer photo count exceeds the safe limit")
     for photo in message.customer_photos:
-        _validate_required_text(photo, field_name="customer photo URL", maximum=_MAX_URL_LENGTH)
+        _validate_https_url(photo, field_name="customer photo URL")
 
 
 def _validate_product(product: NormalizedProduct) -> None:
@@ -293,8 +294,8 @@ def _validate_product(product: NormalizedProduct) -> None:
     _validate_optional_text(product.sku, field_name="product SKU", maximum=255)
     _validate_optional_text(product.brand, field_name="product brand", maximum=255)
     _validate_optional_text(product.category, field_name="product category", maximum=255)
-    _validate_optional_text(product.image_url, field_name="product image URL", maximum=_MAX_URL_LENGTH)
-    _validate_optional_text(product.product_url, field_name="product URL", maximum=_MAX_URL_LENGTH)
+    _validate_optional_https_url(product.image_url, field_name="product image URL")
+    _validate_optional_https_url(product.product_url, field_name="product URL")
 
 
 def _validate_required_text(value: str, *, field_name: str, maximum: int) -> None:
@@ -305,6 +306,22 @@ def _validate_required_text(value: str, *, field_name: str, maximum: int) -> Non
 def _validate_optional_text(value: str | None, *, field_name: str, maximum: int) -> None:
     if value is not None:
         _validate_required_text(value, field_name=field_name, maximum=maximum)
+
+
+def _validate_optional_https_url(value: str | None, *, field_name: str) -> None:
+    if value is not None:
+        _validate_https_url(value, field_name=field_name)
+
+
+def _validate_https_url(value: str, *, field_name: str) -> None:
+    _validate_required_text(value, field_name=field_name, maximum=_MAX_URL_LENGTH)
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+    except ValueError as exc:
+        raise InvalidNormalizedRecord(f"{field_name} is invalid") from exc
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username is not None or parsed.password is not None or port not in {None, 443}:
+        raise InvalidNormalizedRecord(f"{field_name} must use an HTTPS origin")
 
 
 def _validate_aware_datetime(value: datetime, *, field_name: str) -> None:

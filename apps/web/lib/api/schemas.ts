@@ -17,7 +17,7 @@ export const authSessionSchema = z.object({
   user: userSchema,
 });
 
-export const organizationRoleSchema = z.enum(["owner", "admin", "manager", "viewer"]);
+const organizationRoleSchema = z.enum(["owner", "admin", "manager", "viewer"]);
 
 export const organizationSchema = z.object({
   id: uuidSchema,
@@ -74,7 +74,7 @@ export const automationRuleActionSchema = z.object({
   is_enabled: z.boolean(),
 });
 
-export const productSummarySchema = z.object({
+const productSummarySchema = z.object({
   id: uuidSchema,
   external_id: z.string(),
   sku: z.string().nullable(),
@@ -172,7 +172,7 @@ export const replySchema = z.object({
   updated_at: timestampSchema,
 });
 
-export const safetySummarySchema = z.object({
+const safetySummarySchema = z.object({
   decision: z.string(),
   flags: z.array(z.string()),
   reasons: z.array(z.string()),
@@ -258,10 +258,6 @@ export const marketplaceSyncSchema = z.object({
 });
 
 export type MarketplaceAccount = z.infer<typeof marketplaceAccountSchema>;
-export type MarketplaceAccountValidate = z.infer<typeof marketplaceAccountValidateSchema>;
-export type MarketplaceAccountAction = z.infer<typeof marketplaceAccountActionSchema>;
-export type MarketplaceSync = z.infer<typeof marketplaceSyncSchema>;
-
 export const messageResponseSchema = z.object({
   message: z.string(),
 });
@@ -269,17 +265,11 @@ export const messageResponseSchema = z.object({
 export type User = z.infer<typeof userSchema>;
 export type Organization = z.infer<typeof organizationSchema>;
 export type AutomationRule = z.infer<typeof automationRuleSchema>;
-export type AutomationRuleList = z.infer<typeof automationRuleListSchema>;
 export type CustomerMessage = z.infer<typeof customerMessageSchema>;
-export type CustomerMessageList = z.infer<typeof customerMessageListSchema>;
 export type AIDraft = z.infer<typeof aiDraftSchema>;
-export type AIDraftList = z.infer<typeof aiDraftListSchema>;
-export type Reply = z.infer<typeof replySchema>;
-export type SafetySummary = z.infer<typeof safetySummarySchema>;
 export type ReviewQueueItem = z.infer<typeof reviewQueueItemSchema>;
-export type ReviewQueueList = z.infer<typeof reviewQueueListSchema>;
 
-export const analyticsPeriodSchema = z.object({
+const analyticsPeriodSchema = z.object({
   start: timestampSchema,
   end: timestampSchema,
   days: z.number().int().min(1).max(366),
@@ -330,16 +320,6 @@ export const productAnalyticsSchema = z.object({
   })),
 });
 
-export const teamAnalyticsSchema = z.object({
-  period: analyticsPeriodSchema,
-  items: z.array(z.object({
-    user_id: uuidSchema,
-    email: z.string().email(),
-    name: z.string().nullable(),
-    replies_sent: z.number().int().nonnegative(),
-  })),
-});
-
 export const aiUsageAnalyticsSchema = z.object({
   period: analyticsPeriodSchema,
   drafts_generated: z.number().int().nonnegative(),
@@ -358,7 +338,7 @@ export const aiUsageAnalyticsSchema = z.object({
   })),
 });
 
-export const billingPlanSchema = z.object({
+const billingPlanSchema = z.object({
   id: uuidSchema,
   code: z.string(),
   name: z.string(),
@@ -370,7 +350,7 @@ export const billingPlanSchema = z.object({
   is_default: z.boolean(),
 });
 
-export const subscriptionSchema = z.object({
+const subscriptionSchema = z.object({
   id: uuidSchema,
   organization_id: uuidSchema,
   plan_id: uuidSchema,
@@ -413,12 +393,3 @@ export const adminOverviewSchema = z.object({
   integration_failures_24h: z.number().int().nonnegative(),
   replies_failed_24h: z.number().int().nonnegative(),
 });
-
-export type AnalyticsOverview = z.infer<typeof analyticsOverviewSchema>;
-export type MessageAnalytics = z.infer<typeof messageAnalyticsSchema>;
-export type MarketplaceAnalytics = z.infer<typeof marketplaceAnalyticsSchema>;
-export type ProductAnalytics = z.infer<typeof productAnalyticsSchema>;
-export type TeamAnalytics = z.infer<typeof teamAnalyticsSchema>;
-export type AIUsageAnalytics = z.infer<typeof aiUsageAnalyticsSchema>;
-export type BillingOverview = z.infer<typeof billingOverviewSchema>;
-export type AdminOverview = z.infer<typeof adminOverviewSchema>;

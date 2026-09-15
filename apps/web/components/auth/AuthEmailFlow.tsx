@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ApiError, apiRequest } from "../../lib/api/client";
-import { messageResponseSchema } from "../../lib/api/auth-schemas";
+import { messageResponseSchema } from "../../lib/api/schemas";
 import { AuthShell } from "./AuthShell";
 
 type AuthEmailMode = "forgot-password" | "resend-verification" | "reset-password" | "verify-email";

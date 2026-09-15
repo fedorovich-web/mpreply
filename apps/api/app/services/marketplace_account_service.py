@@ -9,12 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.base import AdapterResult, CredentialValidation
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.config import get_settings
-from app.core.errors import bad_request, forbidden, not_found, payment_required
+from app.core.errors import bad_request, conflict, forbidden, not_found, payment_required
 from app.core.security import CredentialService
 from app.models.enums import Marketplace, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.organization import OrganizationUser
 from app.models.user import User
+from app.schemas.marketplace_account import MarketplaceAccountResponse
 from app.services.audit_service import AuditService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
@@ -90,22 +92,27 @@ class MarketplaceAccountService:
             allowed_roles=_ALLOWED_READ_ROLES,
         )
         result = await self.session.execute(
-            select(MarketplaceAccount)
-            .where(MarketplaceAccount.organization_id == organization_id)
-            .order_by(MarketplaceAccount.created_at.desc())
+            select(MarketplaceAccount).where(MarketplaceAccount.organization_id == organization_id).order_by(MarketplaceAccount.created_at.desc())
         )
         return list(result.scalars().all())
 
     async def get_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
-        result = await self.session.execute(select(MarketplaceAccount).where(MarketplaceAccount.id == account_id))
+        result = await self.session.execute(
+            select(MarketplaceAccount)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == MarketplaceAccount.organization_id,
+            )
+            .where(
+                MarketplaceAccount.id == account_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_ALLOWED_READ_ROLES),
+            )
+        )
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")
-        await self.organization_service.require_membership_role(
-            organization_id=account.organization_id,
-            user_id=actor.id,
-            allowed_roles=_ALLOWED_READ_ROLES,
-        )
         return account
 
     async def update_account(
@@ -141,18 +148,22 @@ class MarketplaceAccountService:
             organization_id=account.organization_id,
             actor_user_id=actor.id,
             entity_id=str(account.id),
-            metadata={"fields_changed": [k for k, v in {
-                "display_name": display_name,
-                "seller_id": seller_id,
-                "default_response_mode": default_response_mode.value if default_response_mode else None,
-                "status": status,
-            }.items() if v is not None]},
+            metadata={
+                "fields_changed": [
+                    k
+                    for k, v in {
+                        "display_name": display_name,
+                        "seller_id": seller_id,
+                        "default_response_mode": default_response_mode.value if default_response_mode else None,
+                        "status": status,
+                    }.items()
+                    if v is not None
+                ]
+            },
         )
         return account
 
-    async def rotate_credentials(
-        self, *, actor: User, account_id: UUID, raw_credentials: str
-    ) -> MarketplaceAccount:
+    async def rotate_credentials(self, *, actor: User, account_id: UUID, raw_credentials: str) -> MarketplaceAccount:
         account = await self.get_account(actor=actor, account_id=account_id)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
@@ -215,6 +226,10 @@ class MarketplaceAccountService:
         except (ValueError, UnsupportedCapabilityError):
             raise forbidden("Marketplace adapter is not enabled yet") from None
         credential = self.credentials.decrypt(account.credentials_encrypted)
+        expected_fingerprint = account.credentials_fingerprint
+        expected_organization_id = account.organization_id
+        expected_account_id = account.id
+        seller_id = account.seller_id
         await self.audit.write(
             action="marketplace_account.credentials.used_for_validation",
             entity_type="marketplace_account",
@@ -226,7 +241,28 @@ class MarketplaceAccountService:
         # Persist the authorization/audit boundary before the provider call. This
         # also guarantees that no database transaction is held open during I/O.
         await self.session.commit()
-        result = await adapter.validate_credentials(credential, account.seller_id)
+        result = await adapter.validate_credentials(credential, seller_id)
+        current_result = await self.session.execute(
+            select(MarketplaceAccount)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == MarketplaceAccount.organization_id,
+            )
+            .where(
+                MarketplaceAccount.id == expected_account_id,
+                MarketplaceAccount.organization_id == expected_organization_id,
+                MarketplaceAccount.credentials_fingerprint == expected_fingerprint,
+                MarketplaceAccount.seller_id == seller_id,
+                MarketplaceAccount.credentials_status != "revoked",
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_ALLOWED_MANAGE_ROLES),
+            )
+            .with_for_update(of=MarketplaceAccount)
+        )
+        account = current_result.scalar_one_or_none()
+        if account is None:
+            raise conflict("Marketplace credentials changed during validation")
         now = datetime.now(UTC)
         validation = result.data if result.ok else None
         if result.ok and validation is None:
@@ -279,9 +315,7 @@ class MarketplaceAccountService:
         await self.session.flush()
         return account, result
 
-    def to_response(self, account: MarketplaceAccount):
-        from app.schemas.marketplace_account import MarketplaceAccountResponse
-
+    def to_response(self, account: MarketplaceAccount) -> MarketplaceAccountResponse:
         return MarketplaceAccountResponse(
             id=account.id,
             organization_id=account.organization_id,

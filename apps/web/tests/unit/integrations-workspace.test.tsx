@@ -89,7 +89,7 @@ describe("IntegrationsWorkspace", () => {
       "/app/integrations/wildberries",
     );
     expect(screen.getAllByText("Пока недоступно")).toHaveLength(3);
-    expect(screen.getAllByText("Без ложного обещания production readiness.")).toHaveLength(3);
+    expect(screen.getAllByText("Пока подключение недоступно.")).toHaveLength(3);
   });
 });
 

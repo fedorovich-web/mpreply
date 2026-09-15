@@ -259,12 +259,10 @@ async def test_auth_audit_metadata_omits_redundant_email(
 
     async with auth_routes.session_factory() as session:
         audit_rows = (
-            await session.execute(
-                select(AuditLog)
-                .where(AuditLog.action.in_(["auth.user.registered", "auth.user.login"]))
-                .order_by(AuditLog.created_at)
-            )
-        ).scalars().all()
+            (await session.execute(select(AuditLog).where(AuditLog.action.in_(["auth.user.registered", "auth.user.login"])).order_by(AuditLog.created_at)))
+            .scalars()
+            .all()
+        )
         assert len(audit_rows) == 2
         assert all(row.actor_user_id is not None for row in audit_rows)
         assert all(row.entity_id is not None for row in audit_rows)
@@ -336,9 +334,7 @@ async def test_registration_verification_login_refresh_logout_lifecycle(
     assert any(cookie.startswith('respio_access="";') and "Path=/" in cookie for cookie in cleared_cookies)
     assert any(cookie.startswith('respio_refresh="";') and "Path=/api/auth" in cookie for cookie in cleared_cookies)
     assert (await auth_routes.client.get("/api/auth/me")).status_code == 401
-    assert (
-        await auth_routes.client.post("/api/auth/refresh", headers={"X-CSRF-Token": "1"})
-    ).status_code == 401
+    assert (await auth_routes.client.post("/api/auth/refresh", headers={"X-CSRF-Token": "1"})).status_code == 401
 
 
 @pytest.mark.asyncio
@@ -370,9 +366,7 @@ async def test_forgot_reset_revoke_and_new_password_lifecycle(
     )
     assert reset_response.status_code == 200
     assert (await auth_routes.client.get("/api/auth/me")).status_code == 401
-    assert (
-        await auth_routes.client.post("/api/auth/refresh", headers={"X-CSRF-Token": "1"})
-    ).status_code == 401
+    assert (await auth_routes.client.post("/api/auth/refresh", headers={"X-CSRF-Token": "1"})).status_code == 401
     assert (
         await auth_routes.client.post(
             "/api/auth/login",
@@ -416,9 +410,7 @@ async def test_refresh_replay_revokes_the_rotated_session_family(
 
     assert replay_response.status_code == 401
     async with auth_routes.session_factory() as session:
-        rotated_session = (
-            await session.execute(select(AuthSession).where(AuthSession.token_digest == digest_auth_token(rotated_token)))
-        ).scalar_one()
+        rotated_session = (await session.execute(select(AuthSession).where(AuthSession.token_digest == digest_auth_token(rotated_token)))).scalar_one()
         assert rotated_session.revoked_at is not None
 
 
@@ -455,11 +447,7 @@ async def test_expired_and_malformed_action_tokens_are_rejected(
         await session.commit()
 
     async with auth_routes.session_factory() as session:
-        reset_token = (
-            await session.execute(
-                select(AuthToken).where(AuthToken.token_digest == digest_auth_token(reset_grant.raw_token))
-            )
-        ).scalar_one()
+        reset_token = (await session.execute(select(AuthToken).where(AuthToken.token_digest == digest_auth_token(reset_grant.raw_token)))).scalar_one()
         reset_token.expires_at = datetime.now(UTC) - timedelta(seconds=1)
         await session.commit()
 
@@ -509,16 +497,22 @@ async def test_login_rejects_injection_shaped_credentials_and_replaces_fixed_coo
     assert email_injection_response.status_code == 401
     assert password_injection_response.status_code == 401
     assert login_response.status_code == 200
-    assert auth_routes.client.cookies.get(
-        ACCESS_COOKIE_NAME,
-        domain="testserver.local",
-        path="/",
-    ) != fixed_access
-    assert auth_routes.client.cookies.get(
-        REFRESH_COOKIE_NAME,
-        domain="testserver.local",
-        path="/api/auth",
-    ) != "attacker-fixed-refresh"
+    assert (
+        auth_routes.client.cookies.get(
+            ACCESS_COOKIE_NAME,
+            domain="testserver.local",
+            path="/",
+        )
+        != fixed_access
+    )
+    assert (
+        auth_routes.client.cookies.get(
+            REFRESH_COOKIE_NAME,
+            domain="testserver.local",
+            path="/api/auth",
+        )
+        != "attacker-fixed-refresh"
+    )
 
 
 @pytest.mark.asyncio

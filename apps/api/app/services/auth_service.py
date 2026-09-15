@@ -189,10 +189,7 @@ class AuthService:
     async def _issue_action_token(self, *, user: User, purpose: str, ttl: timedelta) -> AuthTokenGrant | None:
         now = datetime.now(UTC)
         latest_result = await self.session.execute(
-            select(AuthToken)
-            .where(AuthToken.user_id == user.id, AuthToken.purpose == purpose)
-            .order_by(AuthToken.created_at.desc())
-            .limit(1)
+            select(AuthToken).where(AuthToken.user_id == user.id, AuthToken.purpose == purpose).order_by(AuthToken.created_at.desc()).limit(1)
         )
         latest = latest_result.scalar_one_or_none()
         cooldown = timedelta(seconds=self.settings.auth_action_token_cooldown_seconds)
@@ -238,8 +235,4 @@ class AuthService:
         return action_token
 
     async def _consume_outstanding_tokens(self, *, user_id: UUID, consumed_at: datetime) -> None:
-        await self.session.execute(
-            update(AuthToken)
-            .where(AuthToken.user_id == user_id, AuthToken.consumed_at.is_(None))
-            .values(consumed_at=consumed_at)
-        )
+        await self.session.execute(update(AuthToken).where(AuthToken.user_id == user_id, AuthToken.consumed_at.is_(None)).values(consumed_at=consumed_at))

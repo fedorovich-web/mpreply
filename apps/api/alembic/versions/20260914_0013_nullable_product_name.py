@@ -28,13 +28,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     products = sa.table("products", sa.column("name", sa.String(length=500)))
-    null_names = op.get_bind().scalar(
-        sa.select(sa.func.count()).select_from(products).where(products.c.name.is_(None))
-    )
+    null_names = op.get_bind().scalar(sa.select(sa.func.count()).select_from(products).where(products.c.name.is_(None)))
     if null_names:
-        raise RuntimeError(
-            "cannot restore products.name NOT NULL while provider products without names exist"
-        )
+        raise RuntimeError("cannot restore products.name NOT NULL while provider products without names exist")
     op.alter_column(
         "products",
         "name",

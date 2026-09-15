@@ -11,29 +11,29 @@ const marketplaceCatalog = [
   {
     key: "wildberries",
     name: "Wildberries",
-    badge: "MVP adapter",
+    badge: "Доступно в MVP",
     description: "Подключение кабинетов, проверка ключа, ручная синхронизация отзывов и вопросов.",
     available: true,
   },
   {
     key: "ozon",
     name: "Ozon",
-    badge: "Planned",
-    description: "Production adapter ещё не реализован и не объявляется готовым.",
+    badge: "Планируется",
+    description: "Подключение станет доступно после проверки официального API и рабочего цикла ответов.",
     available: false,
   },
   {
     key: "yandex_market",
     name: "Яндекс Маркет",
-    badge: "Planned",
-    description: "Будет подключён отдельным vertical slice после подтверждения API contract.",
+    badge: "Планируется",
+    description: "Подключение станет доступно после проверки официального API и сценариев публикации ответов.",
     available: false,
   },
   {
     key: "avito",
     name: "Авито",
-    badge: "Planned",
-    description: "Не включается в production до реализации и проверки реального adapter.",
+    badge: "Планируется",
+    description: "Подключение станет доступно после проверки официального API и обмена сообщениями в рабочей среде.",
     available: false,
   },
 ] as const;
@@ -102,7 +102,7 @@ export function IntegrationsWorkspace() {
                     : "Просмотреть подключения"}
                 </Link>
               ) : (
-                <span className="integration-unavailable-note">Без ложного обещания production readiness.</span>
+                <span className="integration-unavailable-note">Пока подключение недоступно.</span>
               )}
             </article>
           );

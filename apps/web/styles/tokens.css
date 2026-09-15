@@ -123,7 +123,7 @@
 	--font-size-public-hero-compact: clamp(var(--font-size-3xl), 5vw, var(--font-size-5xl));
 	--font-size-public-section-heading: clamp(var(--font-size-3xl), 4vw, var(--font-size-4xl));
 
-	/* Backward-compatible type scale */
+	/* Shared type scale */
 	--font-size-xs: var(--font-size-caption);
 	--font-size-sm: var(--font-size-body-sm);
 	--font-size-md: var(--font-size-body);

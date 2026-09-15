@@ -1,10 +1,10 @@
 import type { ZodType } from "zod";
 
-const fallbackApiBaseUrl = "http://localhost:8000";
+const localDevelopmentApiBaseUrl = "http://localhost:8000";
 const csrfHeaderValue = "1";
 const csrfProtectedMethods = new Set(["DELETE", "PATCH", "POST", "PUT"]);
 
-export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || fallbackApiBaseUrl).replace(/\/$/, "");
+const API_BASE_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 export class ApiError extends Error {
   readonly status: number;
@@ -32,6 +32,29 @@ type ApiRequestOptions = Omit<RequestInit, "body"> & {
 type SessionRefreshResult = "refreshed" | "expired" | "unavailable";
 
 let refreshInFlight: Promise<SessionRefreshResult> | null = null;
+
+function resolveApiBaseUrl(configuredValue: string | undefined): string {
+  const configuredOrigin = configuredValue?.trim();
+  if (!configuredOrigin && process.env.NODE_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is required in production");
+  }
+  const value = configuredOrigin || localDevelopmentApiBaseUrl;
+  const url = new URL(value);
+  const isLocalDevelopment =
+    url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1");
+  const isProductionOrigin = url.protocol === "https:" && url.port === "";
+  if (
+    (!isProductionOrigin && !isLocalDevelopment) ||
+    url.username !== "" ||
+    url.password !== "" ||
+    (url.pathname !== "" && url.pathname !== "/") ||
+    url.search !== "" ||
+    url.hash !== ""
+  ) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL must be an HTTPS origin or a local development origin");
+  }
+  return url.origin;
+}
 
 export async function apiRequest<T>(
   path: string,

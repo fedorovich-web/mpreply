@@ -1,9 +1,10 @@
 """initial foundation
 
 Revision ID: 20260708_0001
-Revises: 
+Revises:
 Create Date: 2026-07-08
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa

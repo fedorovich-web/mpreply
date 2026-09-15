@@ -104,8 +104,4 @@ def streams_for_scopes(
     scopes_json: Mapping[str, object],
 ) -> frozenset[MarketplaceStream]:
     scopes = validated_scope_names(scopes_json)
-    return frozenset(
-        stream
-        for stream in capability_streams
-        if read_scope_for_stream(stream) in scopes
-    )
+    return frozenset(stream for stream in capability_streams if read_scope_for_stream(stream) in scopes)

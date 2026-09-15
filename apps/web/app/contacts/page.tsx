@@ -8,7 +8,7 @@ import { siteConfig } from "../../lib/site-config";
 export const metadata: Metadata = createPageMetadata({
   title: "Контакты Respio — демо, интеграция и пилот",
   description:
-    "Связаться с Respio по вопросам демо, пилота, интеграций маркетплейсов и будущего production-подключения.",
+    "Связаться с Respio по вопросам демонстрации, пилота, интеграций маркетплейсов и будущего коммерческого подключения.",
   path: "/contacts",
 });
 

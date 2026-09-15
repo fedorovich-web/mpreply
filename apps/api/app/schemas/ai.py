@@ -10,6 +10,8 @@ AIDraftTone = Literal["neutral", "friendly", "formal", "apologetic"]
 
 
 class AIDraftGenerateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     message_id: UUID
     tone: AIDraftTone = "neutral"
     temperature: float = Field(default=0.3, ge=0.0, le=1.2)
@@ -19,7 +21,7 @@ class AIDraftGenerateRequest(BaseModel):
 
 
 class AIDraftResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
 
     id: UUID
     organization_id: UUID
@@ -40,11 +42,15 @@ class AIDraftResponse(BaseModel):
 
 
 class AIDraftListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     items: list[AIDraftResponse]
     total: int
 
 
 class AIDraftErrorResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     ok: bool = False
     error_code: str
     message: str

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -20,11 +20,31 @@ class CustomerMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "type",
             name="uq_customer_messages_external",
         ),
+        UniqueConstraint(
+            "id",
+            "organization_id",
+            name="uq_customer_messages_id_organization_id",
+        ),
+        ForeignKeyConstraint(
+            ["marketplace_account_id", "organization_id"],
+            ["marketplace_accounts.id", "marketplace_accounts.organization_id"],
+            name="fk_customer_messages_account_tenant",
+        ),
+        ForeignKeyConstraint(
+            ["product_id", "organization_id", "marketplace_account_id"],
+            ["products.id", "products.organization_id", "products.marketplace_account_id"],
+            name="fk_customer_messages_product_tenant",
+        ),
+        ForeignKeyConstraint(
+            ["organization_id", "assigned_to"],
+            ["organization_users.organization_id", "organization_users.user_id"],
+            name="fk_customer_messages_assignee_tenant",
+        ),
     )
 
     organization_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, index=True)
-    marketplace_account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("marketplace_accounts.id"), nullable=False, index=True)
-    product_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("products.id"), nullable=True, index=True)
+    marketplace_account_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)
+    product_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True, index=True)
     marketplace: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     external_id: Mapped[str] = mapped_column(String(255), nullable=False)
     type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 PROMPT_VERSION = "marketplace-reply-v1"
 ResponseTone = Literal["neutral", "friendly", "formal", "apologetic"]
@@ -14,7 +14,7 @@ class PromptBundle:
     version: str
     messages: list[dict[str, str]]
     input_hash: str
-    input_snapshot: dict[str, Any]
+    input_snapshot: dict[str, object]
 
 
 _SYSTEM_PROMPT = """Ты AI-ассистент Respio для ответов продавца на отзывы и вопросы маркетплейсов.
@@ -44,12 +44,12 @@ def build_marketplace_reply_prompt(
     message_type: str,
     customer_text: str,
     rating: int | None,
-    product: dict[str, Any] | None,
+    product: dict[str, object] | None,
     tone: ResponseTone = "neutral",
     brand_rules: str | None = None,
     knowledge_base: str | None = None,
 ) -> PromptBundle:
-    input_snapshot = {
+    input_snapshot: dict[str, object] = {
         "marketplace": marketplace,
         "message_type": message_type,
         "rating": rating,
@@ -70,8 +70,7 @@ def build_marketplace_reply_prompt(
             "answer": "Готовый текст ответа продавца. Без markdown. Без JSON внутри строки.",
             "confidence_score": "Число от 0 до 1. Ниже 0.75, если не хватает контекста.",
             "safety_flags": (
-                "Массив строк. Используй missing_product_context, risky_promise, "
-                "medical_or_legal_claim, unclear_customer_issue, needs_manual_review."
+                "Массив строк. Используй missing_product_context, risky_promise, medical_or_legal_claim, unclear_customer_issue, needs_manual_review."
             ),
         },
     }

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Float, ForeignKey, ForeignKeyConstraint, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -10,9 +10,27 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 class AutomationRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "automation_rules"
+    __table_args__ = (
+        UniqueConstraint("id", "organization_id", name="uq_automation_rules_id_organization_id"),
+        ForeignKeyConstraint(
+            ["marketplace_account_id", "organization_id"],
+            ["marketplace_accounts.id", "marketplace_accounts.organization_id"],
+            name="fk_automation_rules_account_tenant",
+        ),
+        ForeignKeyConstraint(
+            ["organization_id", "created_by"],
+            ["organization_users.organization_id", "organization_users.user_id"],
+            name="fk_automation_rules_creator_tenant",
+        ),
+        ForeignKeyConstraint(
+            ["organization_id", "updated_by"],
+            ["organization_users.organization_id", "organization_users.user_id"],
+            name="fk_automation_rules_updater_tenant",
+        ),
+    )
 
     organization_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, index=True)
-    marketplace_account_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("marketplace_accounts.id"), nullable=True, index=True)
+    marketplace_account_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     priority: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)

@@ -32,7 +32,7 @@ const messageStatusLabels: Record<string, string> = {
   new: "Новое",
   imported: "Импортировано",
   needs_reply: "Нужен ответ",
-  ai_draft_ready: "AI-черновик готов",
+  ai_draft_ready: "Черновик ИИ готов",
   waiting_review: "На проверке",
   needs_manual_check: "Нужна ручная проверка",
   approved: "Одобрено",
@@ -119,7 +119,7 @@ export function InboxWorkspace() {
   }
 
   return (
-    <section className="inbox-workspace" aria-label="Рабочая область Inbox">
+    <section className="inbox-workspace" aria-label="Очередь обращений">
       <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
         <div className="panel-heading">
           <span className="panel-kicker">Фильтры</span>
@@ -146,7 +146,7 @@ export function InboxWorkspace() {
         <FilterGroup label="Статус">
           <FilterButton active={filters.status === "all"} onClick={() => updateFilter("status", "all")}>Все</FilterButton>
           <FilterButton active={filters.status === "needs_reply"} onClick={() => updateFilter("status", "needs_reply")}>Нужен ответ</FilterButton>
-          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>AI готов</FilterButton>
+          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>Черновик готов</FilterButton>
           <FilterButton active={filters.status === "waiting_review"} onClick={() => updateFilter("status", "waiting_review")}>Проверка</FilterButton>
           <FilterButton active={filters.status === "failed"} onClick={() => updateFilter("status", "failed")}>Ошибки</FilterButton>
           <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>Эскалации</FilterButton>
@@ -193,7 +193,7 @@ export function InboxWorkspace() {
           </div>
         ) : (
           <EmptyState
-            description="Измените фильтры или синхронизируйте маркетплейс. Этот список уже загружается из backend API."
+            description="Измените фильтры или синхронизируйте маркетплейс. Список загружается с сервера."
             title="Нет обращений по выбранным фильтрам"
           />
         )}

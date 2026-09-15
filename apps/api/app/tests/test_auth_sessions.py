@@ -85,11 +85,7 @@ async def test_refresh_rotation_revokes_old_token_and_rejects_replay(
 
     assert rotated.raw_token != original.raw_token
     assert rotated.family_id == original.family_id
-    sessions = (
-        (await session.execute(select(AuthSession).order_by(AuthSession.created_at)))
-        .scalars()
-        .all()
-    )
+    sessions = (await session.execute(select(AuthSession).order_by(AuthSession.created_at))).scalars().all()
     assert len(sessions) == 2
     assert sessions[0].revoked_at is not None
     assert _utc(sessions[0].revoked_at) == now
@@ -100,11 +96,7 @@ async def test_refresh_rotation_revokes_old_token_and_rejects_replay(
     assert exc_info.value.code == "refresh_session_reused"
     await session.commit()
 
-    active_child = (
-        await session.execute(
-            select(AuthSession).where(AuthSession.token_digest == digest_auth_token(rotated.raw_token))
-        )
-    ).scalar_one()
+    active_child = (await session.execute(select(AuthSession).where(AuthSession.token_digest == digest_auth_token(rotated.raw_token)))).scalar_one()
     assert active_child.revoked_at is not None
 
 

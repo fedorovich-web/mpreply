@@ -69,9 +69,7 @@ class PlanLimitService:
                 plan = plan_result.scalar_one_or_none()
 
         if plan is None:
-            plan_result = await self.session.execute(
-                select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1)
-            )
+            plan_result = await self.session.execute(select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1))
             plan = plan_result.scalar_one_or_none()
 
         if plan is None:
@@ -174,9 +172,5 @@ class PlanLimitService:
     def month_period(now: datetime) -> tuple[datetime, datetime]:
         normalized = now.astimezone(UTC)
         start = datetime(normalized.year, normalized.month, 1, tzinfo=UTC)
-        end = (
-            datetime(normalized.year + 1, 1, 1, tzinfo=UTC)
-            if normalized.month == 12
-            else datetime(normalized.year, normalized.month + 1, 1, tzinfo=UTC)
-        )
+        end = datetime(normalized.year + 1, 1, 1, tzinfo=UTC) if normalized.month == 12 else datetime(normalized.year, normalized.month + 1, 1, tzinfo=UTC)
         return start, end

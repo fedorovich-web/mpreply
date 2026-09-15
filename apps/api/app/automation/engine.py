@@ -84,11 +84,7 @@ class AutomationRuleEngine:
                 requires_manual_review = True
                 reasons.append("Manual review required because product context is missing")
 
-            if (
-                matched_rule.stop_on_low_confidence
-                and context.confidence_score is not None
-                and context.confidence_score < matched_rule.confidence_threshold
-            ):
+            if matched_rule.stop_on_low_confidence and context.confidence_score is not None and context.confidence_score < matched_rule.confidence_threshold:
                 requires_manual_review = True
                 reasons.append("Manual review required because AI confidence is below the rule threshold")
 

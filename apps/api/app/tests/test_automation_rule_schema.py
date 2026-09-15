@@ -25,10 +25,10 @@ def test_automation_rule_schema_normalizes_keyword_lists() -> None:
 
     assert payload.include_keywords == ["доставка", "упаковка"]
 
+
 def test_automation_rule_update_schema_normalizes_keyword_lists() -> None:
     from app.schemas.automation_rule import AutomationRuleUpdateRequest
 
     payload = AutomationRuleUpdateRequest(include_keywords=[" доставка ", "ДОСТАВКА", "упаковка"])
 
     assert payload.include_keywords == ["доставка", "упаковка"]
-

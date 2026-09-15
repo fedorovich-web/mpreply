@@ -75,9 +75,7 @@ async def test_ozon_validation_normalizes_errors_without_provider_body_leakage(
     status_code: int,
     error_code: str,
 ) -> None:
-    transport = SequenceTransport(
-        [response(status_code, json={"message": "synthetic-secret must not escape"})]
-    )
+    transport = SequenceTransport([response(status_code, json={"message": "synthetic-secret must not escape"})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
         result = await OzonAdapter(client, read_retry_policy=NO_RETRY).validate_credentials(
             "synthetic-api-key",

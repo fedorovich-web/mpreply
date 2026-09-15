@@ -5,15 +5,15 @@ export default function IntegrationsPage() {
     <section className="app-page app-page-wide">
       <header className="app-header app-header-row">
         <div>
-          <p className="eyebrow">Integrations</p>
+          <p className="eyebrow">Интеграции</p>
           <h1>Подключения маркетплейсов и состояние API</h1>
           <p>
-            Respio показывает реальные кабинеты текущей организации и не выдаёт planned marketplace adapters за готовые production-интеграции.
+            Respio показывает кабинеты текущей организации. Планируемые подключения явно отделены от доступной интеграции Wildberries.
           </p>
         </div>
         <div className="app-header-actions">
-          <span className="status-badge">Encrypted credentials</span>
-          <span className="status-badge">Tenant scoped</span>
+          <span className="status-badge">Ключи зашифрованы</span>
+          <span className="status-badge">Изоляция организаций</span>
         </div>
       </header>
 

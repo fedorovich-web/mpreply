@@ -182,13 +182,19 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 AdapterResult[ExistingReplyResult],
                 self._malformed_payload("Wildberries returned an invalid message detail"),
             )
-        exists = self.is_already_answered(data)
+        try:
+            exists = self.is_already_answered(data)
+        except ValueError:
+            return cast(
+                AdapterResult[ExistingReplyResult],
+                self._malformed_payload("Wildberries returned an invalid answer state"),
+            )
         return AdapterResult(
             ok=True,
             data=ExistingReplyResult(
                 exists=exists,
                 provider_reply_id=context.external_id if exists else None,
-                provider_state=self._optional_string(data.get("state") or data.get("status")),
+                provider_state=self._optional_string(data.get("state")),
             ),
         )
 
@@ -261,28 +267,22 @@ class WildberriesAdapter(ReviewQuestionAdapter):
     def normalize_review(self, raw: dict[str, object]) -> NormalizedMessage:
         return NormalizedMessage(
             external_id=self._required_string(
-                raw.get("id") or raw.get("feedbackId") or raw.get("externalId"),
+                raw.get("id"),
                 field_name="feedback ID",
             ),
             message_type=MessageType.REVIEW,
-            rating=self._rating(
-                raw.get("productValuation") or raw.get("valuation") or raw.get("rating")
-            ),
-            customer_display_name=self._optional_string(
-                raw.get("userName") or raw.get("customerName") or raw.get("buyerName")
-            ),
+            rating=self._rating(raw.get("productValuation")),
+            customer_display_name=self._optional_string(raw.get("userName")),
             customer_text=self._required_string(
-                raw.get("text") or raw.get("reviewText") or raw.get("message"),
+                raw.get("text"),
                 field_name="feedback text",
             ),
             customer_photos=self._photos(raw),
-            marketplace_created_at=self._datetime(
-                raw.get("createdDate") or raw.get("createdAt") or raw.get("date")
-            ),
+            marketplace_created_at=self._datetime(raw.get("createdDate")),
             product=self._product_context(raw),
             metadata={
                 "source": "wildberries.feedbacks",
-                "status": raw.get("state") or raw.get("status"),
+                "status": raw.get("state"),
                 "is_answered": raw.get("isAnswered"),
             },
         )
@@ -290,42 +290,40 @@ class WildberriesAdapter(ReviewQuestionAdapter):
     def normalize_question(self, raw: dict[str, object]) -> NormalizedMessage:
         return NormalizedMessage(
             external_id=self._required_string(
-                raw.get("id") or raw.get("questionId") or raw.get("externalId"),
+                raw.get("id"),
                 field_name="question ID",
             ),
             message_type=MessageType.QUESTION,
             rating=None,
-            customer_display_name=self._optional_string(
-                raw.get("userName") or raw.get("customerName") or raw.get("buyerName")
-            ),
+            customer_display_name=self._optional_string(raw.get("userName")),
             customer_text=self._required_string(
-                raw.get("text") or raw.get("question") or raw.get("message"),
+                raw.get("text"),
                 field_name="question text",
             ),
             customer_photos=self._photos(raw),
-            marketplace_created_at=self._datetime(
-                raw.get("createdDate") or raw.get("createdAt") or raw.get("date")
-            ),
+            marketplace_created_at=self._datetime(raw.get("createdDate")),
             product=self._product_context(raw),
             metadata={
                 "source": "wildberries.questions",
-                "status": raw.get("state") or raw.get("status"),
+                "status": raw.get("state"),
                 "is_answered": raw.get("isAnswered"),
             },
         )
 
     def is_already_answered(self, payload: object) -> bool:
-        data = self._data(payload)
-        if not isinstance(data, dict):
-            return False
-        mapping = cast(dict[str, object], data)
+        if not isinstance(payload, dict):
+            raise ValueError("Wildberries answer state is malformed")
+        mapping = cast(dict[str, object], payload)
         answer = mapping.get("answer")
         if isinstance(answer, dict):
             answer_mapping = cast(dict[str, object], answer)
-            return bool(self._optional_string(answer_mapping.get("text")))
-        if isinstance(answer, str):
-            return bool(answer.strip())
-        return mapping.get("isAnswered") is True
+            return self._required_string(answer_mapping.get("text"), field_name="answer text") != ""
+        if answer is not None:
+            raise ValueError("Wildberries answer state is malformed")
+        is_answered = mapping.get("isAnswered")
+        if is_answered is not None and not isinstance(is_answered, bool):
+            raise ValueError("Wildberries answer state is malformed")
+        return is_answered is True
 
     async def _read(
         self,
@@ -410,12 +408,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
     def _parse_cursor(cursor: str | None) -> int | None:
         if cursor is None:
             return 0
-        if (
-            not cursor
-            or len(cursor) > len(str(_MAX_OFFSET))
-            or not cursor.isascii()
-            or not cursor.isdecimal()
-        ):
+        if not cursor or len(cursor) > len(str(_MAX_OFFSET)) or not cursor.isascii() or not cursor.isdecimal():
             return None
         offset = int(cursor)
         return offset if offset <= _MAX_OFFSET and str(offset) == cursor else None
@@ -435,8 +428,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 altchars=b"-_",
                 validate=True,
             )
-            payload: object = json.loads(payload_bytes)
-        except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError):
+            payload: object = json.loads(payload_bytes, object_pairs_hook=_unique_object)
+        except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError, ValueError):
             return None
         if not isinstance(payload, dict):
             return None
@@ -484,35 +477,22 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         data = cast(dict[str, object], payload).get("data")
         return cast(dict[str, object], data) if isinstance(data, dict) else None
 
-    @staticmethod
-    def _data(payload: object) -> object:
-        if isinstance(payload, dict):
-            mapping = cast(dict[str, object], payload)
-            return mapping.get("data", mapping)
-        return payload
-
     def _product_context(self, raw: dict[str, object]) -> NormalizedProduct:
         product_details_value = raw.get("productDetails")
-        product_details = (
-            cast(dict[str, object], product_details_value)
-            if isinstance(product_details_value, dict)
-            else {}
-        )
-        nm_id = raw.get("nmId") or product_details.get("nmId") or raw.get("productId")
-        imt_id = raw.get("imtId") or product_details.get("imtId")
-        supplier_article = raw.get("supplierArticle") or product_details.get("supplierArticle")
-        name = raw.get("productName") or product_details.get("productName") or raw.get("productTitle")
+        if not isinstance(product_details_value, dict):
+            raise ValueError("Wildberries product details are malformed")
+        product_details = cast(dict[str, object], product_details_value)
+        nm_id = product_details.get("nmId")
+        imt_id = product_details.get("imtId")
+        supplier_article = product_details.get("supplierArticle")
         return NormalizedProduct(
-            external_id=self._required_string(
-                nm_id or imt_id or raw.get("productExternalId"),
-                field_name="product ID",
-            ),
+            external_id=self._required_identifier(nm_id, field_name="product ID"),
             sku=self._optional_string(supplier_article),
-            name=self._required_string(name, field_name="product name"),
-            brand=self._optional_string(raw.get("brandName") or product_details.get("brandName")),
-            category=self._optional_string(raw.get("subjectName") or product_details.get("subjectName")),
-            image_url=self._optional_string(raw.get("productImageUrl") or product_details.get("imageUrl")),
-            product_url=self._optional_string(raw.get("productUrl") or product_details.get("productUrl")),
+            name=self._optional_string(product_details.get("productName")),
+            brand=self._optional_string(product_details.get("brandName")),
+            category=None,
+            image_url=None,
+            product_url=None,
             metadata={
                 key: value
                 for key, value in {
@@ -526,15 +506,24 @@ class WildberriesAdapter(ReviewQuestionAdapter):
 
     @staticmethod
     def _photos(raw: dict[str, object]) -> tuple[str, ...]:
-        value = raw.get("photoLinks") or raw.get("photos") or raw.get("photoLinksJson")
+        value = raw.get("photoLinks")
         if value is None:
             return ()
         if not isinstance(value, list):
             raise ValueError("Wildberries photo list is malformed")
         photos = cast(list[object], value)
-        if not all(isinstance(photo, str) and photo.strip() for photo in photos):
+        if len(photos) > 20:
             raise ValueError("Wildberries photo list is malformed")
-        return tuple(cast(str, photo).strip() for photo in photos)
+        full_size_urls: list[str] = []
+        for photo in photos:
+            if not isinstance(photo, dict):
+                raise ValueError("Wildberries photo list is malformed")
+            photo_mapping = cast(dict[str, object], photo)
+            full_size = WildberriesAdapter._optional_string(photo_mapping.get("fullSize"))
+            if full_size is None:
+                raise ValueError("Wildberries photo list is malformed")
+            full_size_urls.append(full_size)
+        return tuple(full_size_urls)
 
     @staticmethod
     def _datetime(value: object) -> datetime:
@@ -555,7 +544,16 @@ class WildberriesAdapter(ReviewQuestionAdapter):
     @staticmethod
     def _required_string(value: object, *, field_name: str) -> str:
         text = WildberriesAdapter._optional_string(value)
-        if text is None:
+        if text is None or len(text) > 12_000 or "\x00" in text:
+            raise ValueError(f"Wildberries {field_name} is missing")
+        return text
+
+    @staticmethod
+    def _required_identifier(value: object, *, field_name: str) -> str:
+        if isinstance(value, bool) or not isinstance(value, str | int):
+            raise ValueError(f"Wildberries {field_name} is missing")
+        text = str(value).strip()
+        if not text or len(text) > 255 or "\x00" in text:
             raise ValueError(f"Wildberries {field_name} is missing")
         return text
 
@@ -563,12 +561,10 @@ class WildberriesAdapter(ReviewQuestionAdapter):
     def _optional_string(value: object) -> str | None:
         if value is None:
             return None
-        if isinstance(value, bool):
-            return None
-        if not isinstance(value, (str, int)):
+        if not isinstance(value, str):
             return None
         text = str(value).strip()
-        return text or None
+        return text if text and len(text) <= 12_000 and "\x00" not in text else None
 
     @staticmethod
     def _rating(value: object) -> int | None:
@@ -577,7 +573,20 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         if isinstance(value, bool):
             raise ValueError("Wildberries rating is malformed")
         if isinstance(value, int):
-            return value
-        if isinstance(value, str) and value.isascii() and value.isdecimal():
-            return int(value)
-        raise ValueError("Wildberries rating is malformed")
+            rating = value
+        elif isinstance(value, str) and value.isascii() and value.isdecimal():
+            rating = int(value)
+        else:
+            raise ValueError("Wildberries rating is malformed")
+        if not 1 <= rating <= 5:
+            raise ValueError("Wildberries rating is malformed")
+        return rating
+
+
+def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate JSON key")
+        result[key] = value
+    return result

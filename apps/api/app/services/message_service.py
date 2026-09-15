@@ -8,8 +8,10 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.errors import bad_request, not_found
 from app.models.customer_message import CustomerMessage
+from app.models.organization import OrganizationUser
 from app.models.product import Product
 from app.models.user import User
+from app.schemas.message import CustomerMessageResponse, ProductSummary
 from app.services.audit_service import AuditService
 from app.services.organization_service import OrganizationService
 
@@ -79,39 +81,45 @@ class MessageService:
         )
         stmt = (
             select(CustomerMessage, Product)
-            .outerjoin(Product, CustomerMessage.product_id == Product.id)
+            .outerjoin(
+                Product,
+                (CustomerMessage.product_id == Product.id)
+                & (CustomerMessage.organization_id == Product.organization_id)
+                & (CustomerMessage.marketplace_account_id == Product.marketplace_account_id),
+            )
             .where(CustomerMessage.organization_id == organization_id, *filters)
         )
-        count_stmt = (
-            select(func.count())
-            .select_from(CustomerMessage)
-            .where(CustomerMessage.organization_id == organization_id, *filters)
-        )
+        count_stmt = select(func.count()).select_from(CustomerMessage).where(CustomerMessage.organization_id == organization_id, *filters)
         count_result = await self.session.execute(count_stmt)
         total = int(count_result.scalar_one())
 
-        result = await self.session.execute(
-            stmt.order_by(CustomerMessage.marketplace_created_at.desc())
-            .limit(page_size)
-            .offset((page - 1) * page_size)
-        )
+        result = await self.session.execute(stmt.order_by(CustomerMessage.marketplace_created_at.desc()).limit(page_size).offset((page - 1) * page_size))
         return [(row[0], row[1]) for row in result.all()], total
 
     async def get_message(self, *, actor: User, message_id: UUID) -> tuple[CustomerMessage, Product | None]:
         result = await self.session.execute(
             select(CustomerMessage, Product)
-            .outerjoin(Product, CustomerMessage.product_id == Product.id)
-            .where(CustomerMessage.id == message_id)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == CustomerMessage.organization_id,
+            )
+            .outerjoin(
+                Product,
+                (CustomerMessage.product_id == Product.id)
+                & (CustomerMessage.organization_id == Product.organization_id)
+                & (CustomerMessage.marketplace_account_id == Product.marketplace_account_id),
+            )
+            .where(
+                CustomerMessage.id == message_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_ALLOWED_READ_ROLES),
+            )
         )
         row = result.one_or_none()
         if row is None:
             raise not_found("Message not found")
         message, product = row[0], row[1]
-        await self.organization_service.require_membership_role(
-            organization_id=message.organization_id,
-            user_id=actor.id,
-            allowed_roles=_ALLOWED_READ_ROLES,
-        )
         return message, product
 
     async def update_message(
@@ -136,6 +144,15 @@ class MessageService:
             message.status = status
             changed.append("status")
         if assigned_to is not None:
+            membership_result = await self.session.execute(
+                select(OrganizationUser.id).where(
+                    OrganizationUser.organization_id == message.organization_id,
+                    OrganizationUser.user_id == assigned_to,
+                    OrganizationUser.status == "active",
+                )
+            )
+            if membership_result.scalar_one_or_none() is None:
+                raise bad_request("Assigned user must be an active organization member")
             message.assigned_to = assigned_to
             changed.append("assigned_to")
         if priority is not None:
@@ -154,9 +171,11 @@ class MessageService:
         )
         return message
 
-    def to_response(self, message: CustomerMessage, product: Product | None = None):
-        from app.schemas.message import CustomerMessageResponse, ProductSummary
-
+    def to_response(
+        self,
+        message: CustomerMessage,
+        product: Product | None = None,
+    ) -> CustomerMessageResponse:
         product_summary = None
         if product is not None:
             product_summary = ProductSummary(
@@ -220,4 +239,3 @@ class MessageService:
         if search:
             conditions.append(CustomerMessage.customer_text.ilike(f"%{search}%"))
         return conditions
-

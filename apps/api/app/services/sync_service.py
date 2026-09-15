@@ -15,11 +15,11 @@ from app.models.enums import Marketplace
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState, SyncStateStatus
+from app.models.organization import OrganizationUser
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.services.audit_service import AuditService
-from app.services.organization_service import OrganizationService
 from app.services.scheduled_sync_service import ScheduledSyncService, StreamRunResult
 
 _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
@@ -56,7 +56,6 @@ class MarketplaceSyncService:
         runner: ScheduledSyncService | None = None,
     ) -> None:
         self.session = session
-        self.organization_service = OrganizationService(session)
         self.audit = AuditService(session)
         self.registry = registry
         self.runner = runner
@@ -67,12 +66,7 @@ class MarketplaceSyncService:
         actor: User,
         account_id: UUID,
     ) -> tuple[MarketplaceAccount, SyncStats, str | None, str | None]:
-        account = await self._get_account(account_id)
-        await self.organization_service.require_membership_role(
-            organization_id=account.organization_id,
-            user_id=actor.id,
-            allowed_roles=_ALLOWED_SYNC_ROLES,
-        )
+        account = await self._get_account(actor=actor, account_id=account_id)
         if account.status != "active" or account.credentials_status != "valid":
             raise bad_request("Marketplace account is not available for sync")
         try:
@@ -236,8 +230,20 @@ class MarketplaceSyncService:
             raise RuntimeError("marketplace sync states could not be initialized")
         return [existing[stream.value] for stream in ordered_streams]
 
-    async def _get_account(self, account_id: UUID) -> MarketplaceAccount:
-        result = await self.session.execute(select(MarketplaceAccount).where(MarketplaceAccount.id == account_id))
+    async def _get_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
+        result = await self.session.execute(
+            select(MarketplaceAccount)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == MarketplaceAccount.organization_id,
+            )
+            .where(
+                MarketplaceAccount.id == account_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_ALLOWED_SYNC_ROLES),
+            )
+        )
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")

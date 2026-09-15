@@ -18,7 +18,7 @@ export const siteConfig = {
   origin: configuredOrigin || "https://respio.ru",
   contactEmail: configuredContactEmail,
   description:
-    "Respio автоматизирует ответы на отзывы и вопросы маркетплейсов: AI готовит ответ, SafetyGate проверяет риски, а спорные обращения уходят на ручную проверку.",
+    "Respio автоматизирует ответы на отзывы и вопросы маркетплейсов: ИИ готовит ответ, SafetyGate проверяет риски, а спорные обращения уходят на ручную проверку.",
   navigation: [
     { href: "/#product", label: "Продукт" },
     { href: "/features", label: "Возможности" },
@@ -38,7 +38,7 @@ export const marketplaces: MarketplaceConfig[] = [
     status: "mvp",
     statusLabel: "MVP-интеграция",
     summary:
-      "Импорт отзывов и вопросов, AI-черновики, SafetyGate, правила автоматизации и worker-backed отправка ответов.",
+      "Импорт отзывов и вопросов, черновики с помощью ИИ, SafetyGate, правила автоматизации и фоновая отправка ответов.",
   },
   {
     key: "ozon",
@@ -58,7 +58,7 @@ export const marketplaces: MarketplaceConfig[] = [
     status: "planned",
     statusLabel: "Планируется",
     summary:
-      "Архитектура адаптера подготовлена; production-подключение будет открыто после проверки API и сценариев публикации ответов.",
+      "Техническая основа подготовлена; подключение будет открыто после проверки API и публикации ответов в рабочей среде.",
   },
   {
     key: "avito",

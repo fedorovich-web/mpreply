@@ -17,7 +17,7 @@ test("viewer can read draft history but cannot generate", async ({ page }) => {
   await mockAIAssistantApi(page, "viewer");
   await page.goto("/app/ai-assistant", { waitUntil: "networkidle" });
 
-  await expect(page.getByText(/может просматривать историю, но не создавать AI-черновики/)).toBeVisible();
+  await expect(page.getByText(/может просматривать историю, но не создавать черновики/)).toBeVisible();
   await expect(page.getByText(/Сожалеем, что коробка пришла повреждённой/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Сгенерировать черновик" })).toHaveCount(0);
 });
