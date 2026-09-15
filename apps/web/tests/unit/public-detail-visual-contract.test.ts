@@ -1,12 +1,15 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const detail = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
+const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-fidelity.css"), "utf8");
 const finalCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
 const publicIcon = readFileSync(join(root, "components/public-site/PublicIcon.tsx"), "utf8");
+const heroCssPath = join(root, "styles/public-detail-hero-fidelity.css");
+const heroCss = existsSync(heroCssPath) ? readFileSync(heroCssPath, "utf8") : "";
 
 describe("approved marketplace detail visual", () => {
   it("uses the real MPReply brand mark inside the product window", () => {
@@ -49,10 +52,12 @@ describe("approved marketplace detail visual", () => {
   });
 
   it("uses icon-led sidebar navigation inside the MPReply window", () => {
+    expect(existsSync(heroCssPath)).toBe(true);
+    expect(layout).toContain('import "../styles/public-detail-hero-fidelity.css"');
     expect(detail).toContain("detail-sidebar-item");
     for (const icon of ["inbox", "star", "message", "chart", "document", "users"]) {
       expect(detail).toContain(`name="${icon}"`);
     }
-    expect(finalCss).toContain(".detail-sidebar-item");
+    expect(heroCss).toContain(".detail-sidebar-item");
   });
 });
