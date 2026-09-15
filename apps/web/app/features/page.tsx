@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { PublicShell } from "../../components/public-site/PublicShell";
@@ -10,6 +11,15 @@ export const metadata: Metadata = createPageMetadata({
     "Единая очередь обращений с Wildberries, Ozon, Яндекс Маркета и Авито, подготовка ответов с ИИ, контроль качества, автоответы, шаблоны, аналитика и командная работа.",
   path: "/features",
 });
+
+const marketplaceLogos = {
+  wb: { src: "/images/marketplaces/wildberries.webp", width: 432, height: 188, name: "Wildberries" },
+  oz: { src: "/images/marketplaces/ozon.webp", width: 436, height: 198, name: "Ozon" },
+  ym: { src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222, name: "Яндекс Маркет" },
+  av: { src: "/images/marketplaces/avito.webp", width: 504, height: 212, name: "Авито" },
+} as const;
+
+type MarketplaceLogoKey = keyof typeof marketplaceLogos;
 
 const tools = [
   {
@@ -64,40 +74,60 @@ const tools = [
 
 const workflow = [
   {
-    icon: "WB · Ozon · M · Avito",
+    icon: "",
+    marketplaces: true,
     title: "Обращение на маркетплейсе",
     text: "Покупатель оставляет отзыв, задает вопрос или пишет сообщение.",
   },
   {
     icon: "✉",
+    marketplaces: false,
     title: "Все обращения в MPReply",
     text: "Сообщения из всех подключенных площадок попадают в единую очередь.",
   },
   {
     icon: "✦",
+    marketplaces: false,
     title: "AI помогает с ответом",
     text: "MPReply предлагает подходящий вариант ответа или использует ваши шаблоны.",
   },
   {
     icon: "➤",
+    marketplaces: false,
     title: "Довольный клиент",
     text: "Вы отправляете ответ, а клиент получает быструю и профессиональную поддержку.",
   },
 ] as const;
 
 const benefits = [
-  ["До 70% меньше времени на ответы", "Автоматизация и AI ускоряют обработку типовых обращений."],
-  ["Выше рейтинг товаров", "Быстрые и качественные ответы помогают получать больше положительных отзывов."],
-  ["Команда работает эффективнее", "Удобные инструменты для распределения задач и контроля качества."],
-  ["Больше продаж", "Довольные клиенты чаще возвращаются и рекомендуют ваши товары."],
+  ["◷", "purple", "До 70% меньше времени на ответы", "Автоматизация и AI ускоряют обработку типовых обращений."],
+  ["★", "orange", "Выше рейтинг товаров", "Быстрые и качественные ответы помогают получать больше положительных отзывов."],
+  ["●", "purple", "Команда работает эффективнее", "Удобные инструменты для распределения задач и контроля качества."],
+  ["▥", "blue", "Больше продаж", "Довольные клиенты чаще возвращаются и рекомендуют ваши товары."],
 ] as const;
 
-const messages = [
-  ["wb", "WB", "Подойдет ли на рост 170 см?", "12 мин назад"],
-  ["oz", "OZON", "Отличное качество! Быстрая доставка.", "28 мин назад"],
-  ["ym", "М", "Когда будет поставка?", "1 час назад"],
-  ["av", "AV", "Можно вернуть товар?", "2 часа назад"],
+const messages: readonly [MarketplaceLogoKey, string, string][] = [
+  ["wb", "Подойдет ли на рост 170 см?", "12 мин назад"],
+  ["oz", "Отличное качество! Быстрая доставка.", "28 мин назад"],
+  ["ym", "Когда будет поставка?", "1 час назад"],
+  ["av", "Можно вернуть товар?", "2 часа назад"],
 ] as const;
+
+function MarketplaceLogo({ marketplace, className, decorative = false }: { marketplace: MarketplaceLogoKey; className: string; decorative?: boolean }) {
+  const logo = marketplaceLogos[marketplace];
+
+  return (
+    <Image
+      className={className}
+      src={logo.src}
+      width={logo.width}
+      height={logo.height}
+      alt={decorative ? "" : logo.name}
+      aria-hidden={decorative || undefined}
+      unoptimized
+    />
+  );
+}
 
 export default function FeaturesPage() {
   return (
@@ -140,9 +170,11 @@ export default function FeaturesPage() {
                       <span>Вопросы</span>
                       <span>Сообщения</span>
                     </div>
-                    {messages.map(([tone, mark, text, time]) => (
-                      <div className="features-message" key={`${mark}-${text}`}>
-                        <span className={`mockup-market-mark ${tone}`} aria-hidden="true">{mark}</span>
+                    {messages.map(([marketplace, text, time]) => (
+                      <div className="features-message" key={`${marketplace}-${text}`}>
+                        <span className="features-message-source">
+                          <MarketplaceLogo marketplace={marketplace} className="features-market-logo" />
+                        </span>
                         <div>
                           <strong>Покупатель</strong>
                           <p>{text}</p>
@@ -195,7 +227,17 @@ export default function FeaturesPage() {
               {workflow.map((step, index) => (
                 <article className="features-workflow-card" key={step.title}>
                   <span className="mockup-step-number">{index + 1}</span>
-                  <span className="mockup-icon-chip" aria-hidden="true">{step.icon}</span>
+                  {step.marketplaces ? (
+                    <span className="features-workflow-logos" aria-label="Wildberries, Ozon, Яндекс Маркет и Авито">
+                      {(Object.keys(marketplaceLogos) as MarketplaceLogoKey[]).map((marketplace) => (
+                        <span className="features-workflow-logo-chip" key={marketplace}>
+                          <MarketplaceLogo marketplace={marketplace} className="features-workflow-logo" decorative />
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="mockup-icon-chip" aria-hidden="true">{step.icon}</span>
+                  )}
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
                 </article>
@@ -211,8 +253,9 @@ export default function FeaturesPage() {
               <h2>Экономьте время и развивайте ваш бизнес</h2>
             </div>
             <div className="features-benefit-grid">
-              {benefits.map(([title, text]) => (
+              {benefits.map(([icon, tone, title, text]) => (
                 <article className="features-benefit-card" key={title}>
+                  <span className={`mockup-icon-chip features-benefit-icon ${tone === "blue" ? "" : tone}`} aria-hidden="true">{icon}</span>
                   <strong>{title}</strong>
                   <span>{text}</span>
                 </article>
@@ -235,7 +278,7 @@ export default function FeaturesPage() {
               <div className="mockup-trust-row" aria-label="Условия старта">
                 <span>Быстрое подключение</span>
                 <span>Полный доступ</span>
-                <span>Поддержка 24/7</span>
+                <span>Без карты</span>
               </div>
             </div>
           </div>
