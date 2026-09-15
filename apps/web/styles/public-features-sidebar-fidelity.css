@@ -1,0 +1,47 @@
+/* Features hero sidebar details from the approved render. */
+
+.mockup-page .features-app-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px 7px;
+  border-radius: 8px;
+  color: #7384a2;
+  font-size: .62rem;
+  font-style: normal;
+  line-height: 1.2;
+}
+
+.mockup-page .features-app-nav-item > svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: #8291aa;
+}
+
+.mockup-page .features-app-nav-item.is-active {
+  justify-content: flex-start;
+  background: #f2f1ff;
+  color: #5148e8;
+}
+
+.mockup-page .features-app-nav-item.is-active > svg {
+  color: #5148e8;
+}
+
+.mockup-page .features-app-nav-item.is-active > b {
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  margin-left: auto;
+  place-items: center;
+  border-radius: 999px;
+  background: #5148e8;
+  color: #fff;
+  font-size: .54rem;
+}
+
+.mockup-page .features-app-nav > .features-app-nav-item:not(.is-active) {
+  padding-inline: 7px;
+}
