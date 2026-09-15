@@ -41,6 +41,13 @@ describe("approved public mockup fidelity", () => {
     }
   });
 
+  it("keeps public claims inside current product truth", () => {
+    expect(marketplaceLanding).not.toContain("Поддержка 24/7");
+    expect(pricing).not.toContain("до 5 маркетплейсов");
+    expect(pricing).toContain("до 4 маркетплейсов");
+    expect(pricing).toContain("Поддерживаем ключевые маркетплейсы");
+  });
+
   it("implements the approved features composition rather than the old generic capability stack", () => {
     expect(features).toContain("features-mockup-hero");
     expect(features).toContain("features-tool-grid");
