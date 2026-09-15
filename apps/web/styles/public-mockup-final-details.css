@@ -115,6 +115,32 @@
   text-decoration: underline;
 }
 
+/* Demo process timeline: render-style status icon chips instead of numbered circles. */
+.mockup-page .demo-process-event .demo-process-event-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.mockup-page .demo-process-event-icon.blue {
+  background: #f0efff;
+  color: #5148e8;
+}
+
+.mockup-page .demo-process-event-icon.purple {
+  background: #f3f0ff;
+  color: #6f42e8;
+}
+
+.mockup-page .demo-process-event-icon.green {
+  background: #eafaf3;
+  color: #10b981;
+}
+
 @media (max-width: 860px) {
   .mockup-page .pricing-hero-note {
     display: none;
