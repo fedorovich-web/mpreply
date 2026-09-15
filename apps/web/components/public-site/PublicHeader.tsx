@@ -93,7 +93,7 @@ export function PublicHeader() {
         <div className="public-header-actions">
           <Link className="button button-secondary public-login-link" href="/auth/login">Войти</Link>
           <Link className="button button-primary public-header-cta" href="/auth/register?intent=connect-marketplace">
-            Создать аккаунт <span aria-hidden="true">→</span>
+            Попробовать бесплатно <span aria-hidden="true">→</span>
           </Link>
         </div>
 
@@ -127,7 +127,7 @@ export function PublicHeader() {
                 <div className="public-mobile-menu-actions">
                   <Link className="button button-secondary" href="/auth/login" onClick={closeMenu}>Войти</Link>
                   <Link className="button button-primary" href="/auth/register?intent=connect-marketplace" onClick={closeMenu}>
-                    Создать аккаунт →
+                    Попробовать бесплатно →
                   </Link>
                 </div>
               </div>
