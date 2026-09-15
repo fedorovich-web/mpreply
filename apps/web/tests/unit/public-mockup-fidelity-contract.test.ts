@@ -3,17 +3,18 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
-const tokens = readFileSync(join(root, "styles/tokens.css"), "utf8");
-const publicCss = readFileSync(join(root, "styles/public-site.css"), "utf8");
+const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const mockupCss = readFileSync(join(root, "styles/public-mockup-fidelity.css"), "utf8");
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 
 describe("approved public mockup fidelity", () => {
   it("adds exactly 15px to public section vertical rhythm", () => {
-    expect(tokens).toContain("--public-section-padding-extra: 15px");
-    expect(publicCss).toContain("calc(var(--public-section-spacing) + var(--public-section-padding-extra))");
-    expect(publicCss).toContain("calc(var(--space-16) + var(--public-section-padding-extra))");
+    expect(layout).toContain('import "../styles/public-mockup-fidelity.css"');
+    expect(mockupCss).toContain("--public-section-padding-extra: 15px");
+    expect(mockupCss).toContain("calc(var(--public-section-spacing) + var(--public-section-padding-extra))");
+    expect(mockupCss).toContain("calc(var(--space-16) + var(--public-section-padding-extra))");
   });
 
   it("keeps the full approved header navigation", () => {
