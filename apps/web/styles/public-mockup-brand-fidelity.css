@@ -196,3 +196,11 @@
 .mockup-page .pricing-market-chip {
   box-shadow: 0 8px 18px rgb(81 72 232 / 8%);
 }
+
+/* Later fidelity layers refine geometry, but these demo accents must stay on the approved MPReply primary. */
+.public-root:has(.mockup-page) .mockup-page .demo-scenario-popular,
+.public-root:has(.mockup-page) .mockup-page .demo-story-ai-avatar,
+.public-root:has(.mockup-page) .mockup-page .demo-story-review-avatar,
+.public-root:has(.mockup-page) .mockup-page .demo-process-event-icon.purple {
+  color: #5148e8;
+}
