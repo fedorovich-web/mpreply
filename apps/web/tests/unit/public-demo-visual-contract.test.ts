@@ -72,6 +72,13 @@ describe("approved demo journey visual", () => {
     expect(finalCss).toContain(".demo-story-review-avatar");
   });
 
+  it("left-aligns the first-step marketplace icons and uses the play icon in the demo action", () => {
+    expect(publicIcon).toContain('"play"');
+    expect(demo).toContain('name="play"');
+    expect(finalCss).toContain(".demo-journey-marketplaces");
+    expect(finalCss).toContain("margin-left: 0");
+  });
+
   it("uses dedicated decorative fidelity styles", () => {
     expect(existsSync(decorativeCssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-mockup-decorative-fidelity.css"');
