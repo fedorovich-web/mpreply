@@ -85,10 +85,34 @@ const faq = [
 ] as const;
 
 const marketplaces = [
-  { name: "Wildberries", src: "/images/marketplaces/wildberries.webp", width: 432, height: 188 },
-  { name: "Ozon", src: "/images/marketplaces/ozon.webp", width: 436, height: 198 },
-  { name: "Яндекс Маркет", src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222 },
-  { name: "Авито", src: "/images/marketplaces/avito.webp", width: 504, height: 212 },
+  {
+    name: "Wildberries",
+    src: "/images/marketplaces/wildberries.webp",
+    compactSrc: "/images/marketplaces/wildberries-compact.webp",
+    width: 432,
+    height: 188,
+  },
+  {
+    name: "Ozon",
+    src: "/images/marketplaces/ozon.webp",
+    compactSrc: "/images/marketplaces/ozon-compact.webp",
+    width: 436,
+    height: 198,
+  },
+  {
+    name: "Яндекс Маркет",
+    src: "/images/marketplaces/yandex-market.webp",
+    compactSrc: "/images/marketplaces/yandex-market-compact.webp",
+    width: 554,
+    height: 222,
+  },
+  {
+    name: "Авито",
+    src: "/images/marketplaces/avito.webp",
+    compactSrc: "/images/marketplaces/avito-compact.webp",
+    width: 504,
+    height: 212,
+  },
 ] as const;
 
 export default function PricingPage() {
@@ -167,15 +191,17 @@ export default function PricingPage() {
             </div>
             <div className="pricing-market-row">
               {marketplaces.map((marketplace) => (
-                <div className="pricing-market-chip" key={marketplace.name} aria-label={marketplace.name}>
+                <div className="pricing-market-chip" key={marketplace.name}>
                   <Image
-                    className="marketplace-detail-logo-small"
-                    src={marketplace.src}
-                    width={marketplace.width}
-                    height={marketplace.height}
-                    alt={marketplace.name}
+                    className="pricing-market-compact"
+                    src={marketplace.compactSrc}
+                    width={64}
+                    height={64}
+                    alt=""
+                    aria-hidden="true"
                     unoptimized
                   />
+                  <strong className="pricing-market-name">{marketplace.name}</strong>
                 </div>
               ))}
             </div>
@@ -264,9 +290,10 @@ export default function PricingPage() {
                   {marketplaces.slice(0, 3).map((marketplace) => (
                     <span className="pricing-final-logo-chip" key={marketplace.name}>
                       <Image
-                        src={marketplace.src}
-                        width={marketplace.width}
-                        height={marketplace.height}
+                        className="pricing-market-compact"
+                        src={marketplace.compactSrc}
+                        width={64}
+                        height={64}
                         alt=""
                         unoptimized
                       />
