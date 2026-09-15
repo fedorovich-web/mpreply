@@ -6,8 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { ApiError, apiRequest } from "../../lib/api/client";
-import { messageResponseSchema } from "../../lib/api/auth-schemas";
-import { authSessionSchema } from "../../lib/api/schemas";
+import { authSessionSchema, messageResponseSchema } from "../../lib/api/schemas";
 import { AuthShell } from "./AuthShell";
 
 type AuthMode = "login" | "register";

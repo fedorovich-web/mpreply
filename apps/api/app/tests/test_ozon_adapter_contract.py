@@ -73,9 +73,7 @@ async def test_ozon_review_page_uses_exact_cursor_contract_without_fabricating_p
 
 @pytest.mark.asyncio
 async def test_ozon_question_page_uses_exact_body_and_nullable_product_fields() -> None:
-    transport = SequenceTransport(
-        [response(200, json={"questions": [_question()], "has_next": False, "last_id": ""})]
-    )
+    transport = SequenceTransport([response(200, json={"questions": [_question()], "has_next": False, "last_id": ""})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
         result = await OzonAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
             "synthetic-api-key",
@@ -88,10 +86,7 @@ async def test_ozon_question_page_uses_exact_body_and_nullable_product_fields() 
     assert result.data is not None
     assert result.data.next_cursor is None
     assert result.data.items[0].customer_display_name == "Synthetic buyer"
-    assert transport.requests[0].read() == (
-        b'{"filter":{"status":"ALL"},"limit":100,'
-        b'"last_id":"current-question","sort_dir":"ASC"}'
-    )
+    assert transport.requests[0].read() == (b'{"filter":{"status":"ALL"},"limit":100,"last_id":"current-question","sort_dir":"ASC"}')
 
 
 @pytest.mark.parametrize(

@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.27"
-EXPECTED_ALEMBIC_HEAD = "20260911_0011"
+EXPECTED_ALEMBIC_HEAD = "20260914_0015"
 
 ERRORS: list[str] = []
 
@@ -175,6 +175,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
         ("overrides", "postcss"): "8.5.28",
+        ("overrides", "qs"): "6.16.0",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
     }
@@ -303,6 +304,7 @@ def check_deployment_contract() -> None:
         ROOT / "PRODUCT.md",
         ROOT / "DESIGN.md",
         ROOT / "AGENTS.md",
+        WEB / "knip.json",
         WEB / "vitest.config.ts",
         WEB / "vitest.setup.ts",
         WEB / "tests" / "unit" / "api-client.test.ts",

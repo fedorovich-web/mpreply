@@ -64,7 +64,7 @@ export function PublicShell({ children }: PublicShellProps) {
 
         <div className="public-container public-footer-bottom">
           <span>© {new Date().getFullYear()} Respio</span>
-          <span>Информация о планируемых интеграциях не означает их текущую production-доступность.</span>
+          <span>Информация о планируемых интеграциях не означает, что они уже доступны для подключения.</span>
         </div>
       </footer>
     </div>

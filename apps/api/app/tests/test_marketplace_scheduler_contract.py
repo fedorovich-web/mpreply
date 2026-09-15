@@ -13,6 +13,7 @@ from sqlalchemy.sql.elements import ClauseElement
 from app.models.marketplace_sync_state import MarketplaceSyncState, SyncStateStatus
 from app.services.scheduled_sync_service import (
     claim_due_marketplace_streams,
+    release_marketplace_dispatch_claim,
     take_claimed_marketplace_stream,
 )
 
@@ -126,6 +127,36 @@ async def test_worker_takeover_is_compare_and_swap_on_scheduler_lease() -> None:
     assert "UPDATE marketplace_sync_states" in sql
     assert "lease_owner LIKE" in sql
     assert claimed is state
+
+
+@pytest.mark.asyncio
+async def test_failed_broker_dispatch_releases_only_the_exact_scheduler_claim() -> None:
+    state = _state()
+    state.status = SyncStateStatus.LEASED.value
+    state.lease_owner = "scheduler:synthetic"
+    state.lease_expires_at = NOW + timedelta(minutes=5)
+    session = _Session([state])
+
+    released = await release_marketplace_dispatch_claim(
+        cast(AsyncSession, session),
+        state_id=state.id,
+        now=NOW,
+        owner="scheduler:synthetic",
+    )
+
+    statement = cast(ClauseElement, session.statements[0])
+    sql = str(
+        statement.compile(
+            dialect=postgresql.dialect(),
+            compile_kwargs={"literal_binds": False},
+        )
+    )
+    parameters = statement.compile(dialect=postgresql.dialect()).params or {}
+    assert released is True
+    assert "UPDATE marketplace_sync_states" in sql
+    assert "lease_owner =" in sql
+    assert "lease_owner LIKE" not in sql
+    assert "scheduler:synthetic" in parameters.values()
 
 
 @pytest.mark.asyncio

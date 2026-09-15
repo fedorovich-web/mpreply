@@ -14,9 +14,9 @@ export function AdminOverviewWorkspace() {
     enabled: user.is_superadmin,
   });
 
-  if (!user.is_superadmin) return <div className="workspace-inline-state workspace-inline-state-error"><strong>Доступ запрещён</strong><p>Этот раздел доступен только внутреннему superadmin Respio.</p></div>;
-  if (overviewQuery.isLoading) return <div className="workspace-inline-state"><strong>Загружаем admin overview</strong><p>Считаем системные показатели.</p></div>;
-  if (overviewQuery.error || !overviewQuery.data) return <div className="workspace-inline-state workspace-inline-state-error"><strong>Не удалось загрузить admin overview</strong><p>{overviewQuery.error instanceof Error ? overviewQuery.error.message : "Нет данных"}</p></div>;
+  if (!user.is_superadmin) return <div className="workspace-inline-state workspace-inline-state-error"><strong>Доступ запрещён</strong><p>Этот раздел доступен только системному администратору Respio.</p></div>;
+  if (overviewQuery.isLoading) return <div className="workspace-inline-state"><strong>Загружаем системную сводку</strong><p>Считаем системные показатели.</p></div>;
+  if (overviewQuery.error || !overviewQuery.data) return <div className="workspace-inline-state workspace-inline-state-error"><strong>Не удалось загрузить системную сводку</strong><p>{overviewQuery.error instanceof Error ? overviewQuery.error.message : "Нет данных"}</p></div>;
 
   const data = overviewQuery.data;
   const metrics = [
@@ -24,7 +24,7 @@ export function AdminOverviewWorkspace() {
     ["Пользователи", data.users_total, "Все зарегистрированные аккаунты"],
     ["Активные подписки", data.subscriptions_active, "active + trialing"],
     ["Usage events · 30 дней", data.usage_events_30d, "Системный usage ledger"],
-    ["AI cost · 30 дней", formatUsd(data.ai_cost_estimate_30d), "Оценка по сохранённым AI drafts"],
+    ["Расходы на ИИ · 30 дней", formatUsd(data.ai_cost_estimate_30d), "Оценка по сохранённым черновикам"],
     ["Integration failures · 24ч", data.integration_failures_24h, `${data.replies_failed_24h} failed replies`],
   ] as const;
 

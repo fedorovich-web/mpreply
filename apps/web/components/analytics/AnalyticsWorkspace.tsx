@@ -52,7 +52,7 @@ export function AnalyticsWorkspace() {
     <section className="analytics-workspace">
       <div className="analytics-toolbar">
         <div>
-          <span className="panel-kicker">Live analytics</span>
+          <span className="panel-kicker">Текущие показатели</span>
           <strong>{activeOrganization.name}</strong>
         </div>
         <label className="analytics-period-select">
@@ -64,7 +64,7 @@ export function AnalyticsWorkspace() {
       </div>
 
       {firstError ? <WorkspaceState title="Не удалось загрузить аналитику" description={errorMessage(firstError)} tone="error" /> : null}
-      {isLoading && !overviewQuery.data ? <WorkspaceState title="Считаем показатели" description="Агрегируем обращения, ответы и AI usage." /> : null}
+      {isLoading && !overviewQuery.data ? <WorkspaceState title="Считаем показатели" description="Собираем данные по обращениям, ответам и использованию ИИ." /> : null}
 
       {overviewQuery.data ? (
         <>
@@ -72,7 +72,7 @@ export function AnalyticsWorkspace() {
             <Metric label="Обращения" value={formatNumber(overviewQuery.data.total_messages)} helper={`${overviewQuery.data.new_messages} новых`} />
             <Metric label="Без ответа" value={formatNumber(overviewQuery.data.unanswered_messages)} helper={`${overviewQuery.data.answered_messages} отвечено`} tone={overviewQuery.data.unanswered_messages > 0 ? "warning" : "default"} />
             <Metric label="Ответы отправлены" value={formatNumber(overviewQuery.data.replies_sent)} helper={`${overviewQuery.data.auto_replies_sent} auto · ${overviewQuery.data.manual_replies_sent} manual`} />
-            <Metric label="AI-черновики" value={formatNumber(overviewQuery.data.ai_drafts_generated)} helper={formatAcceptance(overviewQuery.data.ai_acceptance_rate)} />
+            <Metric label="Черновики ИИ" value={formatNumber(overviewQuery.data.ai_drafts_generated)} helper={formatAcceptance(overviewQuery.data.ai_acceptance_rate)} />
             <Metric label="Среднее время ответа" value={formatDuration(overviewQuery.data.average_response_seconds)} helper="От создания обращения до отправки" />
             <Metric label="Негативные отзывы" value={formatNumber(overviewQuery.data.negative_reviews)} helper="Оценка 1–2" tone={overviewQuery.data.negative_reviews > 0 ? "danger" : "default"} />
           </section>
@@ -80,7 +80,7 @@ export function AnalyticsWorkspace() {
           <section className="analytics-panel-grid">
             <article className="analytics-panel analytics-panel-wide">
               <div className="analytics-panel-heading">
-                <div><span className="panel-kicker">Volume</span><h2>Обращения и ответы по дням</h2></div>
+                <div><span className="panel-kicker">Объём</span><h2>Обращения и ответы по дням</h2></div>
                 <div className="analytics-legend"><span><i className="legend-dot legend-imported" />Импортировано</span><span><i className="legend-dot legend-answered" />Отвечено</span></div>
               </div>
               {messagesQuery.data?.points.length ? (
@@ -99,7 +99,7 @@ export function AnalyticsWorkspace() {
             </article>
 
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">AI cost</span><h2>OpenRouter usage</h2></div></div>
+              <div className="analytics-panel-heading"><div><span className="panel-kicker">Расходы на ИИ</span><h2>Использование модели</h2></div></div>
               {aiUsageQuery.data ? (
                 <div className="analytics-summary-list">
                   <SummaryRow label="Черновики" value={formatNumber(aiUsageQuery.data.drafts_generated)} />
@@ -109,13 +109,13 @@ export function AnalyticsWorkspace() {
                   <SummaryRow label="Средняя latency" value={formatLatency(aiUsageQuery.data.average_latency_ms)} />
                   <SummaryRow label="Safety flags" value={formatNumber(aiUsageQuery.data.safety_flagged_drafts)} />
                 </div>
-              ) : <EmptyData text="AI usage пока отсутствует." />}
+              ) : <EmptyData text="Данных об использовании ИИ пока нет." />}
             </article>
           </section>
 
           <section className="analytics-panel-grid">
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">Channels</span><h2>Маркетплейсы</h2></div></div>
+              <div className="analytics-panel-heading"><div><span className="panel-kicker">Каналы</span><h2>Маркетплейсы</h2></div></div>
               {marketplacesQuery.data?.items.length ? (
                 <div className="analytics-table-wrap">
                   <table className="analytics-table"><thead><tr><th>Канал</th><th>Обращения</th><th>Отвечено</th><th>Ошибки API</th></tr></thead><tbody>
@@ -126,7 +126,7 @@ export function AnalyticsWorkspace() {
             </article>
 
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">Products</span><h2>Товары с наибольшим потоком</h2></div></div>
+              <div className="analytics-panel-heading"><div><span className="panel-kicker">Товары</span><h2>Товары с наибольшим потоком</h2></div></div>
               {productsQuery.data?.items.length ? (
                 <div className="analytics-product-list">
                   {productsQuery.data.items.slice(0, 8).map((item) => (
@@ -142,9 +142,9 @@ export function AnalyticsWorkspace() {
 
           {aiUsageQuery.data?.models.length ? (
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">Models</span><h2>Использование AI-моделей</h2></div></div>
+              <div className="analytics-panel-heading"><div><span className="panel-kicker">Модели</span><h2>Использование ИИ-моделей</h2></div></div>
               <div className="analytics-table-wrap">
-                <table className="analytics-table"><thead><tr><th>Модель</th><th>Черновики</th><th>Токены</th><th>Стоимость</th><th>Latency</th></tr></thead><tbody>
+                <table className="analytics-table"><thead><tr><th>Модель</th><th>Черновики</th><th>Токены</th><th>Стоимость</th><th>Задержка</th></tr></thead><tbody>
                   {aiUsageQuery.data.models.map((model) => <tr key={model.model}><td>{model.model}</td><td>{formatNumber(model.drafts)}</td><td>{formatNumber(model.tokens_input + model.tokens_output)}</td><td>{formatUsd(model.cost_estimate)}</td><td>{formatLatency(model.average_latency_ms)}</td></tr>)}
                 </tbody></table>
               </div>
@@ -175,7 +175,7 @@ function WorkspaceState({ title, description, tone = "default" }: { title: strin
 function formatNumber(value: number): string { return new Intl.NumberFormat("ru-RU").format(value); }
 function formatUsd(value: number): string { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 4 }).format(value); }
 function formatLatency(value: number | null): string { return value === null ? "—" : `${Math.round(value)} мс`; }
-function formatAcceptance(value: number | null): string { return value === null ? "Пока нет отправленных AI-ответов" : `${Math.round(value * 100)}% дошли до отправки`; }
+function formatAcceptance(value: number | null): string { return value === null ? "Пока нет отправленных ответов ИИ" : `${Math.round(value * 100)}% дошли до отправки`; }
 function formatDuration(value: number | null): string {
   if (value === null) return "—";
   if (value < 60) return `${Math.round(value)} сек`;

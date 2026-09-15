@@ -10,11 +10,11 @@ const navItems = [
   { href: "/app/dashboard", label: "Dashboard", description: "Сводка" },
   { href: "/app/inbox", label: "Inbox", description: "Отзывы и вопросы" },
   { href: "/app/review-queue", label: "Review Queue", description: "Ручная проверка" },
-  { href: "/app/ai-assistant", label: "AI Assistant", description: "OpenRouter" },
+  { href: "/app/ai-assistant", label: "ИИ-помощник", description: "Черновики ответов" },
   { href: "/app/automation-rules", label: "Automation Rules", description: "Auto + SafetyGate" },
   { href: "/app/integrations", label: "Integrations", description: "API-ключи" },
-  { href: "/app/integrations/wildberries", label: "Wildberries", description: "MVP adapter" },
-  { href: "/app/analytics", label: "Analytics", description: "Метрики и AI usage" },
+  { href: "/app/integrations/wildberries", label: "Wildberries", description: "Доступно в MVP" },
+  { href: "/app/analytics", label: "Аналитика", description: "Показатели и расходы ИИ" },
   { href: "/app/billing", label: "Billing", description: "Тариф и лимиты" },
 ];
 
@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="app-logo-mark" aria-hidden="true">R</span>
             <span>
               <strong>Respio</strong>
-              <small>Seller AI ops</small>
+              <small>Ответы маркетплейсов</small>
             </span>
           </Link>
         </div>
@@ -91,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="app-topbar-title">
-            <span>Auto-first workspace</span>
+            <span>Автоматизация по умолчанию</span>
             <strong>{activeOrganization.name}</strong>
           </div>
 

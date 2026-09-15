@@ -4,9 +4,9 @@ export default function AppDashboardPage() {
   return (
     <main className="app-page">
       <section className="app-header">
-        <p className="eyebrow">Workspace</p>
-        <h1>Respio workspace</h1>
-        <p>Автоответы включены по умолчанию. Sprint 1 добавляет auth, organizations и RBAC.</p>
+        <p className="eyebrow">Рабочее пространство</p>
+        <h1>Respio</h1>
+        <p>Автоматизация включена по умолчанию, а доступ к данным и действиям зависит от роли в организации.</p>
       </section>
       <section className="dashboard-cards">
         <article className="metric-card">
@@ -15,11 +15,11 @@ export default function AppDashboardPage() {
         </article>
         <article className="metric-card">
           <span>Роли</span>
-          <strong>Owner / Admin / Manager / Viewer</strong>
+          <strong>Владелец, администратор, менеджер, наблюдатель</strong>
         </article>
         <article className="metric-card">
-          <span>Следующий шаг</span>
-          <strong>Credentials encryption</strong>
+          <span>Защита подключений</span>
+          <strong>Ключи хранятся в зашифрованном виде</strong>
         </article>
       </section>
       <div className="hero-actions app-actions">
@@ -27,7 +27,7 @@ export default function AppDashboardPage() {
           Создать аккаунт
         </Link>
         <Link className="button button-secondary" href="/app/dashboard">
-          Открыть dashboard
+          Открыть рабочую панель
         </Link>
       </div>
     </main>

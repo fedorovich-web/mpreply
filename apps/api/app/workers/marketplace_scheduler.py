@@ -4,6 +4,7 @@ import asyncio
 from datetime import UTC, datetime
 
 from app.core.config import get_settings
+from app.workers.auto_reply import dispatch_due_replies
 from app.workers.marketplace_sync import enqueue_due_marketplace_streams
 
 
@@ -11,6 +12,10 @@ async def run_scheduler() -> None:
     settings = get_settings()
     while True:
         await enqueue_due_marketplace_streams(
+            datetime.now(UTC),
+            limit=settings.marketplace_scheduler_batch_size,
+        )
+        await dispatch_due_replies(
             datetime.now(UTC),
             limit=settings.marketplace_scheduler_batch_size,
         )

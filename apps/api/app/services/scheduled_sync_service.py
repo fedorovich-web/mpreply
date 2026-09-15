@@ -685,6 +685,37 @@ async def take_claimed_marketplace_stream(
         return result.scalar_one_or_none()
 
 
+async def release_marketplace_dispatch_claim(
+    session: AsyncSession,
+    *,
+    state_id: UUID,
+    now: datetime,
+    owner: str,
+) -> bool:
+    """Requeue a scheduler claim when the worker message was not published."""
+    _validate_scheduler_input(now, owner, 1)
+    if not owner.startswith("scheduler:"):
+        raise ValueError("marketplace dispatch owner must be a scheduler")
+
+    async with session.begin():
+        result = await session.execute(
+            update(MarketplaceSyncState)
+            .where(
+                MarketplaceSyncState.id == state_id,
+                MarketplaceSyncState.status == SyncStateStatus.LEASED.value,
+                MarketplaceSyncState.lease_owner == owner,
+            )
+            .values(
+                status=SyncStateStatus.IDLE.value,
+                lease_owner=None,
+                lease_expires_at=None,
+                next_run_at=now,
+            )
+            .returning(MarketplaceSyncState.id)
+        )
+        return result.scalar_one_or_none() is not None
+
+
 def _validate_scheduler_input(now: datetime, owner: str, limit: int) -> None:
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("marketplace scheduler time must be timezone-aware")

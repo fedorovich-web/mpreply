@@ -52,9 +52,7 @@ async def test_wildberries_validation_requires_writable_feedback_scope() -> None
 
 @pytest.mark.asyncio
 async def test_wildberries_review_page_uses_exact_request_and_offset_contract() -> None:
-    transport = SequenceTransport(
-        [response(200, json={"data": {"feedbacks": [_record(index) for index in range(50)]}})]
-    )
+    transport = SequenceTransport([response(200, json={"data": {"feedbacks": [_record(index) for index in range(50)]}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
         result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
             "synthetic-token",
@@ -78,7 +76,6 @@ async def test_wildberries_review_page_uses_exact_request_and_offset_contract() 
 async def test_wildberries_question_page_ends_when_provider_returns_less_than_page_size() -> None:
     question = _record()
     question["id"] = "question-1"
-    question["question"] = question.pop("text")
     transport = SequenceTransport([response(200, json={"data": {"questions": [question]}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
         result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
@@ -193,9 +190,7 @@ async def test_wildberries_maps_provider_errors_without_body_leakage(
 
 @pytest.mark.asyncio
 async def test_wildberries_existing_reply_preflight_uses_message_context() -> None:
-    transport = SequenceTransport(
-        [response(200, json={"data": {"id": "feedback-1", "answer": {"text": "Already answered"}}})]
-    )
+    transport = SequenceTransport([response(200, json={"data": {"id": "feedback-1", "answer": {"text": "Already answered"}}})])
     context = ProviderMessageContext(
         message_type=MessageType.REVIEW,
         external_id="feedback-1",
@@ -237,9 +232,7 @@ async def test_wildberries_question_reply_uses_documented_body_and_strict_succes
     request = transport.requests[0]
     assert request.method == "PATCH"
     assert request.url.path == "/api/v1/questions"
-    assert request.read().decode("utf-8") == (
-        '{"id":"question-1","text":"Synthetic answer","state":"wbRu"}'
-    )
+    assert request.read().decode("utf-8") == ('{"id":"question-1","text":"Synthetic answer","state":"wbRu"}')
 
 
 @pytest.mark.asyncio

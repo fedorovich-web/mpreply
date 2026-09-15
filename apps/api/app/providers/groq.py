@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import random
+import math
+import secrets
 import time
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import cast
 
 import httpx
@@ -28,7 +29,6 @@ class LLMCompletion:
     model: str
     usage: LLMUsage
     latency_ms: int
-    raw_response: dict[str, object]
 
 
 class GroqProviderError(RuntimeError):
@@ -76,8 +76,8 @@ class GroqProvider:
         }
 
         async with httpx.AsyncClient(timeout=self.timeout_seconds, transport=self.transport) as client:
-            response: httpx.Response | None = None
-            for attempt in range(1, self.max_attempts + 1):
+            attempt = 1
+            while True:
                 try:
                     response = await client.post(
                         f"{self.base_url}/chat/completions",
@@ -89,29 +89,26 @@ class GroqProvider:
                 except httpx.HTTPError as exc:
                     raise GroqProviderError("Groq network error", error_code="groq_network_error") from exc
 
-                if response.status_code not in _RETRYABLE_STATUS_CODES or attempt >= self.max_attempts:
+                if response.status_code not in _RETRYABLE_STATUS_CODES or attempt == self.max_attempts:
                     break
 
                 await asyncio.sleep(self._retry_delay_seconds(response=response, attempt=attempt))
-
-        if response is None:  # pragma: no cover - defensive invariant
-            raise GroqProviderError("Groq request did not produce a response", error_code="groq_network_error")
+                attempt += 1
 
         latency_ms = int((time.perf_counter() - started_at) * 1000)
-        data = self._safe_json(response)
         if not response.is_success:
             raise GroqProviderError(
-                self._safe_error_message(data),
+                "Groq rejected the request",
                 status_code=response.status_code,
                 error_code=self._map_status(response.status_code),
             )
+        data = self._strict_json_object(response)
 
         return LLMCompletion(
             text=self.extract_text(data),
-            model=str(data.get("model") or model),
+            model=_required_nonblank_string(data.get("model"), field_name="model"),
             usage=self.extract_usage(data.get("usage")),
             latency_ms=latency_ms,
-            raw_response=data,
         )
 
     def _headers(self) -> dict[str, str]:
@@ -152,21 +149,27 @@ class GroqProvider:
                 parsed = float(retry_after)
             except ValueError:
                 parsed = -1.0
-            if parsed >= 0:
+            if math.isfinite(parsed) and parsed >= 0:
                 return min(parsed, _MAX_RETRY_DELAY_SECONDS)
 
         exponential = 0.5 * (2 ** (attempt - 1))
-        jitter = random.uniform(0.0, 0.25)
+        jitter = secrets.randbelow(250_001) / 1_000_000
         return min(exponential + jitter, _MAX_RETRY_DELAY_SECONDS)
 
     @staticmethod
-    def _safe_json(response: httpx.Response) -> dict[str, object]:
+    def _strict_json_object(response: httpx.Response) -> dict[str, object]:
         try:
             payload: object = response.json()
-        except (json.JSONDecodeError, ValueError):
-            return {}
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise GroqProviderError(
+                "Groq response is not valid JSON",
+                error_code="groq_malformed_response",
+            ) from exc
         if not isinstance(payload, dict):
-            return {}
+            raise GroqProviderError(
+                "Groq response is not an object",
+                error_code="groq_malformed_response",
+            )
         return cast(dict[str, object], payload)
 
     @staticmethod
@@ -190,28 +193,28 @@ class GroqProvider:
 
     @staticmethod
     def extract_usage(raw_usage: object) -> LLMUsage:
-        usage = cast(dict[str, object], raw_usage) if isinstance(raw_usage, dict) else {}
-        cost_value = usage.get("cost")
-        cost = Decimal(str(cost_value)) if cost_value is not None else None
+        if raw_usage is None:
+            return LLMUsage(
+                prompt_tokens=None,
+                completion_tokens=None,
+                total_tokens=None,
+                cost=None,
+            )
+        if not isinstance(raw_usage, dict):
+            raise GroqProviderError(
+                "Groq usage is malformed",
+                error_code="groq_malformed_response",
+            )
+        usage = cast(dict[str, object], raw_usage)
         return LLMUsage(
-            prompt_tokens=_int_or_none(usage.get("prompt_tokens")),
-            completion_tokens=_int_or_none(usage.get("completion_tokens")),
-            total_tokens=_int_or_none(usage.get("total_tokens")),
-            cost=cost,
+            prompt_tokens=_optional_nonnegative_int(usage.get("prompt_tokens"), field_name="prompt_tokens"),
+            completion_tokens=_optional_nonnegative_int(
+                usage.get("completion_tokens"),
+                field_name="completion_tokens",
+            ),
+            total_tokens=_optional_nonnegative_int(usage.get("total_tokens"), field_name="total_tokens"),
+            cost=_optional_nonnegative_decimal(usage.get("cost"), field_name="cost"),
         )
-
-    @staticmethod
-    def _safe_error_message(data: dict[str, object]) -> str:
-        error_value = data.get("error")
-        if isinstance(error_value, dict):
-            error = cast(dict[str, object], error_value)
-            message = error.get("message")
-            if isinstance(message, str):
-                return message
-        message = data.get("message")
-        if isinstance(message, str):
-            return message
-        return "Groq returned an error"
 
     @staticmethod
     def _map_status(status_code: int) -> str:
@@ -224,16 +227,44 @@ class GroqProvider:
         return "groq_error"
 
 
-def _int_or_none(value: object) -> int | None:
+def _required_nonblank_string(value: object, *, field_name: str) -> str:
+    if not isinstance(value, str) or not value.strip() or value != value.strip():
+        raise GroqProviderError(
+            f"Groq {field_name} is malformed",
+            error_code="groq_malformed_response",
+        )
+    return value
+
+
+def _optional_nonnegative_int(value: object, *, field_name: str) -> int | None:
     if value is None:
         return None
-    if isinstance(value, bool):
-        return int(value)
-    if isinstance(value, int):
+    if type(value) is int and value >= 0:
         return value
-    if isinstance(value, float | str):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return None
-    return None
+    raise GroqProviderError(
+        f"Groq {field_name} is malformed",
+        error_code="groq_malformed_response",
+    )
+
+
+def _optional_nonnegative_decimal(value: object, *, field_name: str) -> Decimal | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int | float | str):
+        raise GroqProviderError(
+            f"Groq {field_name} is malformed",
+            error_code="groq_malformed_response",
+        )
+    try:
+        parsed = Decimal(str(value))
+    except InvalidOperation as exc:
+        raise GroqProviderError(
+            f"Groq {field_name} is malformed",
+            error_code="groq_malformed_response",
+        ) from exc
+    if not parsed.is_finite() or parsed < 0:
+        raise GroqProviderError(
+            f"Groq {field_name} is malformed",
+            error_code="groq_malformed_response",
+        )
+    return parsed

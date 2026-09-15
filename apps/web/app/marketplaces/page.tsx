@@ -13,7 +13,7 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 const adapterPrinciples = [
-  ["Проверка доступа", "Credentials валидируются на backend и не возвращаются во frontend в открытом виде."],
+  ["Проверка доступа", "API-ключи проверяются на сервере и не возвращаются в браузер в открытом виде."],
   ["Нормализация", "Отзывы, вопросы и товарный контекст приводятся к внутренним моделям Respio."],
   ["Отправка", "Marketplace-specific методы изолированы внутри adapter, а не размазаны по application layer."],
   ["Ошибки и лимиты", "Временные и терминальные ошибки разделяются, а ограничения площадки учитываются в execution flow."],
@@ -39,11 +39,11 @@ export default function MarketplacesPage() {
             <div className="readiness-summary-primary">
               <span className="public-status public-status-mvp">MVP-интеграция</span>
               <strong>{mvpMarketplace?.name ?? "Wildberries"}</strong>
-              <p>Реальный adapter, импорт отзывов и вопросов, AI draft, SafetyGate и worker-backed отправка входят в текущую техническую основу.</p>
+              <p>Рабочий адаптер, импорт отзывов и вопросов, черновики ИИ, SafetyGate и фоновая отправка входят в текущую техническую основу.</p>
             </div>
             <div className="readiness-summary-planned">
               <span>{plannedMarketplaces.length} площадки</span>
-              <p>Планируются, но не называются production-ready до отдельной технической проверки.</p>
+              <p>Планируются, но не считаются готовыми до отдельной технической проверки.</p>
             </div>
           </div>
         </div>

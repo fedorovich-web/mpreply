@@ -133,7 +133,7 @@ describe("AIAssistantWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByRole("button", { name: /Термокружка/ })).toBeInTheDocument();
-    const form = screen.getByRole("form", { name: "Настройки генерации AI-черновика" });
+    const form = screen.getByRole("form", { name: "Настройки подготовки черновика" });
     fireEvent.change(within(form).getByLabelText("Тон ответа"), { target: { value: "friendly" } });
     fireEvent.change(within(form).getByLabelText("Правила бренда"), { target: { value: "Обращаться на Вы" } });
     fireEvent.click(within(form).getByRole("button", { name: "Сгенерировать черновик" }));
@@ -171,7 +171,7 @@ describe("AIAssistantWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByText(draft.draft_text)).toBeInTheDocument();
-    expect(screen.getByText(/может просматривать историю, но не создавать AI-черновики/)).toBeInTheDocument();
+    expect(screen.getByText(/может просматривать историю, но не создавать черновики/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Сгенерировать черновик" })).not.toBeInTheDocument();
   });
 });

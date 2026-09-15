@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import cast
 from uuid import UUID
 
 import jwt
@@ -37,7 +38,7 @@ def create_access_token(
     settings = get_settings()
     now = datetime.now(UTC)
     expires_at = now + (expires_delta or timedelta(minutes=settings.auth_access_token_ttl_minutes))
-    payload: dict[str, Any] = {
+    payload: dict[str, object] = {
         "sub": str(user_id),
         "iat": int(now.timestamp()),
         "exp": int(expires_at.timestamp()),
@@ -50,9 +51,17 @@ def create_access_token(
 def decode_access_token_claims(token: str) -> AccessTokenClaims:
     settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.auth_secret_key.get_secret_value(), algorithms=["HS256"])
+        decoded: object = jwt.decode(
+            token,
+            settings.auth_secret_key.get_secret_value(),
+            algorithms=["HS256"],
+            options={"require": ["sub", "iat", "exp", "typ", "ver"]},
+        )
     except jwt.PyJWTError as exc:
         raise unauthorized("Invalid or expired session") from exc
+    if not isinstance(decoded, Mapping):
+        raise unauthorized("Invalid session payload")
+    payload = cast(Mapping[str, object], decoded)
 
     if payload.get("typ") != "access":
         raise unauthorized("Invalid session type")
@@ -64,8 +73,8 @@ def decode_access_token_claims(token: str) -> AccessTokenClaims:
     except ValueError as exc:
         raise unauthorized("Invalid session subject") from exc
 
-    auth_version = payload.get("ver", 0)
-    if not isinstance(auth_version, int) or auth_version < 0:
+    auth_version = payload.get("ver")
+    if type(auth_version) is not int or auth_version < 0:
         raise unauthorized("Invalid session version")
     return AccessTokenClaims(user_id=user_id, auth_version=auth_version)
 

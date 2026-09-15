@@ -136,7 +136,7 @@ class ReplyRetryResponse(BaseModel):
 
     queued: bool
     reply_id: UUID
-    worker_message_id: str
+    worker_message_id: str | None = None
     status: str
 
 

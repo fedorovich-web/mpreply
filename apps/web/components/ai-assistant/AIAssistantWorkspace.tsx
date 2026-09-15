@@ -101,10 +101,10 @@ export function AIAssistantWorkspace() {
     <section className="ai-workspace" aria-labelledby="ai-workspace-title">
       <header className="ai-workspace-toolbar">
         <div>
-          <p className="eyebrow">Живой AI flow</p>
-          <h2 id="ai-workspace-title">Обращение → AI-черновик → SafetyGate</h2>
+          <p className="eyebrow">Подготовка ответа</p>
+          <h2 id="ai-workspace-title">Обращение → черновик → SafetyGate</h2>
           <p>
-            Выберите отзыв или вопрос, задайте тон и контекст. Ключ OpenRouter остаётся только на backend.
+            Выберите отзыв или вопрос, задайте тон и контекст. Ключ провайдера ИИ остаётся только на сервере.
           </p>
         </div>
         <Badge tone={canGenerate ? "success" : "neutral"}>
@@ -116,14 +116,14 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-message-panel" aria-labelledby="ai-message-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Inbox context</span>
+              <span className="panel-kicker">Контекст обращения</span>
               <strong id="ai-message-list-title">Обращения</strong>
             </div>
             {messagesQuery.data ? <Badge>{messagesQuery.data.total}</Badge> : null}
           </div>
 
           {messagesQuery.isPending ? (
-            <AIState title="Загружаем обращения" description="Получаем доступные отзывы и вопросы workspace." />
+            <AIState title="Загружаем обращения" description="Получаем доступные отзывы и вопросы организации." />
           ) : messagesQuery.error ? (
             <AIState
               title="Не удалось загрузить обращения"
@@ -153,8 +153,8 @@ export function AIAssistantWorkspace() {
 
         <section className="ai-panel ai-generate-panel" aria-labelledby="ai-generate-title">
           <div className="panel-heading">
-            <span className="panel-kicker">Generate draft</span>
-            <strong id="ai-generate-title">Новый AI-черновик</strong>
+            <span className="panel-kicker">Новый черновик</span>
+            <strong id="ai-generate-title">Новый черновик</strong>
           </div>
 
           {selectedMessage ? (
@@ -162,7 +162,7 @@ export function AIAssistantWorkspace() {
               <MessageContext message={selectedMessage} />
               <form
                 className="settings-form ai-form"
-                aria-label="Настройки генерации AI-черновика"
+                aria-label="Настройки подготовки черновика"
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (canGenerate) generateMutation.mutate();
@@ -214,7 +214,7 @@ export function AIAssistantWorkspace() {
                   </button>
                 ) : (
                   <p className="ai-readonly-note">
-                    Роль {roleLabel(activeOrganization.current_user_role)} может просматривать историю, но не создавать AI-черновики.
+                    Роль {roleLabel(activeOrganization.current_user_role)} может просматривать историю, но не создавать черновики.
                   </p>
                 )}
               </form>
@@ -227,7 +227,7 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-result-panel" aria-labelledby="ai-result-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Result</span>
+              <span className="panel-kicker">Результат</span>
               <strong id="ai-result-title">Результат и SafetyGate</strong>
             </div>
             {displayedDraft ? <Badge tone={draftTone(displayedDraft)}>{confidenceLabel(displayedDraft)}</Badge> : null}
@@ -236,7 +236,7 @@ export function AIAssistantWorkspace() {
           {!selectedMessage ? (
             <AIState title="Нет выбранного обращения" description="Результат появится после выбора обращения." />
           ) : draftsQuery.isPending && !displayedDraft ? (
-            <AIState title="Загружаем историю" description="Получаем предыдущие AI-черновики этого обращения." />
+            <AIState title="Загружаем историю" description="Получаем предыдущие черновики этого обращения." />
           ) : draftsQuery.error && !displayedDraft ? (
             <AIState
               title="Не удалось загрузить черновики"
@@ -318,12 +318,12 @@ function DraftResult({ draft }: { draft: AIDraft }) {
       </div>
 
       <dl className="ai-usage-grid">
-        <div><dt>Provider</dt><dd>{draft.provider}</dd></div>
-        <div><dt>Model</dt><dd>{draft.model}</dd></div>
-        <div><dt>Prompt</dt><dd>{draft.prompt_version}</dd></div>
-        <div><dt>Confidence</dt><dd>{formatConfidence(draft.confidence_score)}</dd></div>
-        <div><dt>Tokens</dt><dd>{formatTokens(draft)}</dd></div>
-        <div><dt>Latency</dt><dd>{draft.latency_ms === null ? "—" : `${draft.latency_ms} мс`}</dd></div>
+        <div><dt>Провайдер</dt><dd>{draft.provider}</dd></div>
+        <div><dt>Модель</dt><dd>{draft.model}</dd></div>
+        <div><dt>Версия инструкции</dt><dd>{draft.prompt_version}</dd></div>
+        <div><dt>Уверенность</dt><dd>{formatConfidence(draft.confidence_score)}</dd></div>
+        <div><dt>Токены</dt><dd>{formatTokens(draft)}</dd></div>
+        <div><dt>Задержка</dt><dd>{draft.latency_ms === null ? "—" : `${draft.latency_ms} мс`}</dd></div>
       </dl>
     </div>
   );

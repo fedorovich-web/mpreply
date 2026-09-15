@@ -11,7 +11,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 ARG NEXT_PUBLIC_SITE_URL=https://respio.ru
 ARG NEXT_PUBLIC_CONTACT_EMAIL=
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+ARG NEXT_PUBLIC_API_BASE_URL
 ARG DEPLOYMENT_VERSION=local
 
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
@@ -21,7 +21,8 @@ ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN node -e "const value=process.env.NEXT_PUBLIC_API_BASE_URL; if (!value) throw new Error('NEXT_PUBLIC_API_BASE_URL build argument is required')" \
+    && npm run build
 
 FROM node:24-bookworm-slim AS runner
 

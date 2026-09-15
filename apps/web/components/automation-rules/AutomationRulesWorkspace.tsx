@@ -320,9 +320,9 @@ function AutomationRulesWorkspaceContent({
             переводят обращение на ручную проверку или блокируют автоотправку.
           </p>
           <div className="automation-decision-row" aria-label="Решения SafetyGate">
-            <span className="automation-decision automation-decision-allow">Allow</span>
-            <span className="automation-decision automation-decision-review">Manual review</span>
-            <span className="automation-decision automation-decision-block">Block</span>
+            <span className="automation-decision automation-decision-allow">Разрешить</span>
+            <span className="automation-decision automation-decision-review">На проверку</span>
+            <span className="automation-decision automation-decision-block">Заблокировать</span>
           </div>
         </article>
       </section>

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db_session
@@ -27,7 +27,6 @@ from app.schemas.reply import (
 )
 from app.services.manual_reply_service import ManualReplyService
 from app.services.reply_execution_service import ReplyExecutionService
-from app.workers.auto_reply import enqueue_auto_reply
 
 router = APIRouter(prefix="/api/replies", tags=["replies"])
 
@@ -46,13 +45,7 @@ async def enqueue_automatic_reply(
     )
     await session.commit()
 
-    worker_message_id: str | None = None
-    if result.reply is not None and result.queued and not result.duplicate:
-        worker_message_id = enqueue_auto_reply(result.reply.id)
-        result.reply.worker_message_id = worker_message_id
-        await session.commit()
-    elif result.reply is not None:
-        worker_message_id = result.reply.worker_message_id
+    worker_message_id = result.reply.worker_message_id if result.reply is not None else None
 
     response_status = result.reply.status if result.reply is not None else result.reason or "not_queued"
     return AutoReplyEnqueueResponse(
@@ -150,10 +143,6 @@ async def send_approved_manual_reply(
     await session.commit()
 
     worker_message_id = result.reply.worker_message_id
-    if not result.duplicate:
-        worker_message_id = enqueue_auto_reply(result.reply.id)
-        result.reply.worker_message_id = worker_message_id
-        await session.commit()
 
     queued = result.reply.status in {
         ReplyStatus.QUEUED.value,
@@ -172,8 +161,8 @@ async def send_approved_manual_reply(
 @router.get("/review-queue", response_model=ReviewQueueListResponse)
 async def list_manual_review_queue(
     organization_id: UUID,
-    page: int = 1,
-    page_size: int = 50,
+    page: int = Query(default=1, ge=1, le=1_000_000),
+    page_size: int = Query(default=50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> ReviewQueueListResponse:
@@ -207,7 +196,7 @@ async def list_manual_review_queue(
 @router.get("", response_model=ReplyListResponse)
 async def list_replies(
     organization_id: UUID,
-    reply_status: str | None = None,
+    reply_status: str | None = Query(default=None, min_length=1, max_length=64),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> ReplyListResponse:
@@ -240,14 +229,10 @@ async def retry_reply(
     service = ReplyExecutionService(session)
     reply = await service.prepare_retry(actor=current_user, reply_id=reply_id)
     await session.commit()
-    worker_message_id = enqueue_auto_reply(reply.id)
-    reply.worker_message_id = worker_message_id
-    reply.status = ReplyStatus.QUEUED.value
-    await session.commit()
     return ReplyRetryResponse(
         queued=True,
         reply_id=reply.id,
-        worker_message_id=worker_message_id,
+        worker_message_id=reply.worker_message_id,
         status=reply.status,
     )
 

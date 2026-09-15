@@ -132,11 +132,14 @@ def test_retry_after_parser_accepts_only_bounded_seconds_or_http_date(
     value: str,
     expected: int | None,
 ) -> None:
-    assert parse_retry_after(
-        value,
-        now=datetime(2026, 1, 1, tzinfo=UTC),
-        maximum_seconds=5,
-    ) == expected
+    assert (
+        parse_retry_after(
+            value,
+            now=datetime(2026, 1, 1, tzinfo=UTC),
+            maximum_seconds=5,
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(

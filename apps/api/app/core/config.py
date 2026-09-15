@@ -84,9 +84,10 @@ class Settings(BaseSettings):
     @property
     def trusted_hosts(self) -> list[str]:
         hosts = [*self.allowed_hosts]
-        for internal_host in ("localhost", "127.0.0.1"):
-            if internal_host not in hosts:
-                hosts.append(internal_host)
+        if self.app_env != "production":
+            for internal_host in ("localhost", "127.0.0.1"):
+                if internal_host not in hosts:
+                    hosts.append(internal_host)
         return hosts
 
     @model_validator(mode="after")
@@ -113,17 +114,36 @@ class Settings(BaseSettings):
             ("WEB_APP_URL", self.web_app_url),
             ("PUBLIC_SITE_URL", self.public_site_url),
             ("API_BASE_URL", self.api_base_url),
-            ("RESEND_API_URL", self.resend_api_url),
         ):
-            if urlparse(url).scheme != "https":
-                raise ValueError(f"Production requires HTTPS for {label}")
+            self._require_https_origin(label, url)
 
-        if not self.allowed_hosts or "*" in self.allowed_hosts:
+        self._require_fixed_external_endpoint(
+            "GROQ_BASE_URL",
+            self.groq_base_url,
+            expected_host="api.groq.com",
+            expected_path="/openai/v1",
+        )
+        self._require_fixed_external_endpoint(
+            "RESEND_API_URL",
+            self.resend_api_url,
+            expected_host="api.resend.com",
+            expected_path="/emails",
+        )
+
+        if not self.allowed_hosts or any("*" in host for host in self.allowed_hosts):
             raise ValueError("Production requires explicit ALLOWED_HOSTS without wildcard")
-        if "*" in self.cors_origins:
-            raise ValueError("Production requires explicit CORS origins without wildcard")
+        forbidden_hosts = {"localhost", "127.0.0.1", "::1", "testserver"}
+        if any(host.strip().lower() in forbidden_hosts for host in self.allowed_hosts):
+            raise ValueError("Production ALLOWED_HOSTS must not include local or test hosts")
+        if any(not host or host != host.strip() or "/" in host or ":" in host or "@" in host for host in self.allowed_hosts):
+            raise ValueError("Production ALLOWED_HOSTS must contain hostnames only")
         if not self.cors_origins:
             raise ValueError("Production requires at least one CORS origin")
+        for origin in self.cors_origins:
+            self._require_https_origin("CORS origin", origin)
+        api_host = urlparse(self.api_base_url).hostname
+        if api_host not in self.allowed_hosts:
+            raise ValueError("Production ALLOWED_HOSTS must include the API hostname")
 
         return self
 
@@ -141,6 +161,45 @@ class Settings(BaseSettings):
             Fernet(raw.encode("utf-8"))
         except (ValueError, TypeError) as exc:
             raise ValueError("CREDENTIALS_ENCRYPTION_KEY must be a valid Fernet key") from exc
+
+    @staticmethod
+    def _require_fixed_external_endpoint(
+        label: str,
+        value: str,
+        *,
+        expected_host: str,
+        expected_path: str,
+    ) -> None:
+        parsed = urlparse(value)
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != expected_host
+            or parsed.port is not None
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.path.rstrip("/") != expected_path
+            or parsed.params
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError(f"Production requires the official fixed endpoint for {label}")
+
+    @staticmethod
+    def _require_https_origin(label: str, value: str) -> None:
+        parsed = urlparse(value)
+        if (
+            value != value.strip()
+            or parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.port is not None
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.path not in {"", "/"}
+            or parsed.params
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError(f"Production requires an HTTPS origin for {label}")
 
 
 @lru_cache

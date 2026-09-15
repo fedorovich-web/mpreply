@@ -28,6 +28,7 @@ from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.organization import OrganizationUser
 from app.models.reply import Reply
 from app.models.usage_event import UsageEvent
 from app.models.user import User
@@ -152,7 +153,10 @@ class ReplyExecutionService:
             )
             return QueueAutoReplyResult(False, False, None, "semi_auto_mode", automation.matched_rule_id, None)
 
-        rule = await self._get_rule(automation.matched_rule_id)
+        rule = await self._get_rule(
+            automation.matched_rule_id,
+            organization_id=message.organization_id,
+        )
         quota = await self._check_quota(message=message, rule=rule)
         if not quota.allowed:
             self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
@@ -165,7 +169,10 @@ class ReplyExecutionService:
             return QueueAutoReplyResult(False, False, None, "quota_blocked", automation.matched_rule_id, quota.reason)
 
         idempotency_key = self.build_idempotency_key(message)
-        existing = await self._get_reply_by_idempotency_key(idempotency_key)
+        existing = await self._get_reply_by_idempotency_key(
+            idempotency_key,
+            organization_id=message.organization_id,
+        )
         if existing is not None:
             await self._write_queue_audit(
                 actor=actor,
@@ -211,12 +218,22 @@ class ReplyExecutionService:
         return QueueAutoReplyResult(True, False, reply, None, automation.matched_rule_id, None)
 
     async def get_reply(self, *, actor: User, reply_id: UUID) -> Reply:
-        reply = await self._get_reply(reply_id)
-        await self.organization_service.require_membership_role(
-            organization_id=reply.organization_id,
-            user_id=actor.id,
-            allowed_roles=_READ_ROLES,
+        result = await self.session.execute(
+            select(Reply)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == Reply.organization_id,
+            )
+            .where(
+                Reply.id == reply_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_READ_ROLES),
+            )
         )
+        reply = result.scalar_one_or_none()
+        if reply is None:
+            raise not_found("Reply not found")
         return reply
 
     async def list_replies(
@@ -256,7 +273,12 @@ class ReplyExecutionService:
         reply.next_retry_at = None
         reply.error_code = None
         reply.failed_reason = None
-        message = await self._get_message(reply.message_id)
+        reply.worker_message_id = None
+        reply.last_dispatched_at = None
+        message = await self._get_message(
+            reply.message_id,
+            organization_id=reply.organization_id,
+        )
         retry_message_target = MessageStatus.AUTO_REPLY_PENDING.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.APPROVED.value
         self._transition_message(message, retry_message_target)
         action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
@@ -272,6 +294,9 @@ class ReplyExecutionService:
 
     async def execute_reply(self, *, reply_id: UUID) -> ExecuteReplyResult:
         reply = await self._get_reply_for_update(reply_id)
+        reply.dispatch_owner = None
+        reply.dispatch_lease_expires_at = None
+        reply.last_dispatch_error_code = None
         if reply.status == ReplyStatus.SENT.value:
             await self.session.commit()
             return ExecuteReplyResult(reply.id, reply.status, False)
@@ -373,7 +398,10 @@ class ReplyExecutionService:
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         if reply.mode == ResponseMode.AUTO.value:
-            rule = await self._get_rule(reply.automation_rule_id)
+            rule = await self._get_rule(
+                reply.automation_rule_id,
+                organization_id=message.organization_id,
+            )
             quota = await self._check_quota(message=message, rule=rule)
             if not quota.allowed:
                 await self._mark_quota_blocked(reply=reply, message=message, quota=quota)
@@ -627,20 +655,32 @@ class ReplyExecutionService:
         )
         return result.scalar_one_or_none()
 
-    async def _get_reply_by_idempotency_key(self, idempotency_key: str) -> Reply | None:
-        result = await self.session.execute(select(Reply).where(Reply.idempotency_key == idempotency_key))
+    async def _get_reply_by_idempotency_key(
+        self,
+        idempotency_key: str,
+        *,
+        organization_id: UUID,
+    ) -> Reply | None:
+        result = await self.session.execute(
+            select(Reply).where(
+                Reply.idempotency_key == idempotency_key,
+                Reply.organization_id == organization_id,
+            )
+        )
         return result.scalar_one_or_none()
 
     async def _get_message(
         self,
         message_id: UUID,
         *,
-        organization_id: UUID | None = None,
+        organization_id: UUID,
     ) -> CustomerMessage:
-        statement = select(CustomerMessage).where(CustomerMessage.id == message_id)
-        if organization_id is not None:
-            statement = statement.where(CustomerMessage.organization_id == organization_id)
-        result = await self.session.execute(statement)
+        result = await self.session.execute(
+            select(CustomerMessage).where(
+                CustomerMessage.id == message_id,
+                CustomerMessage.organization_id == organization_id,
+            )
+        )
         message = result.scalar_one_or_none()
         if message is None:
             raise not_found("Customer message not found")
@@ -650,21 +690,33 @@ class ReplyExecutionService:
         self,
         account_id: UUID,
         *,
-        organization_id: UUID | None = None,
+        organization_id: UUID,
     ) -> MarketplaceAccount:
-        statement = select(MarketplaceAccount).where(MarketplaceAccount.id == account_id)
-        if organization_id is not None:
-            statement = statement.where(MarketplaceAccount.organization_id == organization_id)
-        result = await self.session.execute(statement)
+        result = await self.session.execute(
+            select(MarketplaceAccount).where(
+                MarketplaceAccount.id == account_id,
+                MarketplaceAccount.organization_id == organization_id,
+            )
+        )
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")
         return account
 
-    async def _get_rule(self, rule_id: UUID | None) -> AutomationRule | None:
+    async def _get_rule(
+        self,
+        rule_id: UUID | None,
+        *,
+        organization_id: UUID,
+    ) -> AutomationRule | None:
         if rule_id is None:
             return None
-        result = await self.session.execute(select(AutomationRule).where(AutomationRule.id == rule_id))
+        result = await self.session.execute(
+            select(AutomationRule).where(
+                AutomationRule.id == rule_id,
+                AutomationRule.organization_id == organization_id,
+            )
+        )
         return result.scalar_one_or_none()
 
     async def _check_quota(self, *, message: CustomerMessage, rule: AutomationRule | None) -> QuotaDecision:
@@ -765,6 +817,7 @@ class ReplyExecutionService:
         self._transition_message(message, message_target)
         reply.error_code = result.error_code
         reply.failed_reason = result.error_message_safe
+        reply.worker_message_id = None
         delay_seconds = min(60, 2 ** max(reply.attempt_count - 1, 0))
         reply.next_retry_at = datetime.now(UTC) + timedelta(seconds=delay_seconds)
         await self._write_integration_event(
@@ -877,7 +930,7 @@ class ReplyExecutionService:
         message: CustomerMessage,
         result: AdapterResult,
     ) -> None:
-        error_code = result.error_code or "marketplace_error"
+        error_code = result.error_code or "malformed_payload"
         if error_code in _BLOCKING_MARKETPLACE_ERRORS:
             reply_target = ReplyStatus.BLOCKED.value
             message_target = MessageStatus.BLOCKED_BY_MARKETPLACE.value
@@ -908,7 +961,10 @@ class ReplyExecutionService:
         await self.session.commit()
 
     async def _mark_final_failure(self, reply: Reply, error_code: str, reason: str) -> None:
-        message = await self._get_message(reply.message_id)
+        message = await self._get_message(
+            reply.message_id,
+            organization_id=reply.organization_id,
+        )
         if reply.status != ReplyStatus.FAILED.value:
             self._transition_reply(reply, ReplyStatus.FAILED.value)
         self._transition_message(message, MessageStatus.FAILED.value)

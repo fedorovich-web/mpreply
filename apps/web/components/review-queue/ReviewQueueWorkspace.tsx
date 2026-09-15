@@ -50,7 +50,7 @@ export function ReviewQueueWorkspace() {
   };
 
   if (queueQuery.isPending) {
-    return <QueueState title="Загружаем очередь проверки" description="Получаем реальные semi-auto ответы из backend API." />;
+    return <QueueState title="Загружаем очередь проверки" description="Получаем ответы, которым требуется решение менеджера." />;
   }
 
   if (queueQuery.error) {
@@ -175,7 +175,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
     <article className="review-editor-card">
       <div className="panel-heading panel-heading-row">
         <div>
-          <span className="panel-kicker">Reply editor</span>
+          <span className="panel-kicker">Редактор ответа</span>
           <strong>{item.message.product?.name ?? "Товар без карточки"}</strong>
         </div>
         <Badge tone={replyStatusTone(item.reply.status)}>
@@ -207,7 +207,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
             ))}
           </div>
         ) : (
-          <p>Блокирующих флагов нет. Текст повторно проверяется backend перед review, approval и send.</p>
+          <p>Блокирующих признаков нет. Сервер повторно проверит текст перед отправкой на проверку, одобрением и публикацией.</p>
         )}
         {item.safety.reasons.length > 0 ? (
           <ul className="review-safety-reasons">
@@ -289,7 +289,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
       </div>
 
       <p className="review-api-note">
-        Этот экран работает с live API: GET review-queue → PATCH draft с optimistic revision → submit-review → approve/reject → send → worker.
+        Все изменения сохраняются на сервере. Версия записи защищает ответ от перезаписи, а одобренная отправка выполняется в фоне.
       </p>
     </article>
   );

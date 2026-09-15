@@ -105,7 +105,10 @@ class AnalyticsService:
 
         average_response_result = await self.session.execute(
             select(func.avg(func.extract("epoch", Reply.sent_at - CustomerMessage.marketplace_created_at)))
-            .join(CustomerMessage, CustomerMessage.id == Reply.message_id)
+            .join(
+                CustomerMessage,
+                (CustomerMessage.id == Reply.message_id) & (CustomerMessage.organization_id == Reply.organization_id),
+            )
             .where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
@@ -219,7 +222,12 @@ class AnalyticsService:
                 func.count(CustomerMessage.id).label("messages"),
                 func.count(case(((CustomerMessage.type == "review") & (CustomerMessage.rating <= 2), 1))).label("negative_reviews"),
             )
-            .join(CustomerMessage, CustomerMessage.product_id == Product.id)
+            .join(
+                CustomerMessage,
+                (CustomerMessage.product_id == Product.id)
+                & (CustomerMessage.organization_id == Product.organization_id)
+                & (CustomerMessage.marketplace_account_id == Product.marketplace_account_id),
+            )
             .where(
                 Product.organization_id == organization_id,
                 CustomerMessage.imported_at >= period.start,
@@ -257,8 +265,7 @@ class AnalyticsService:
             .order_by(func.count(Reply.id).desc())
         )
         items = [
-            TeamAnalyticsItem(user_id=user_id, email=email, name=name, replies_sent=int(replies_sent))
-            for user_id, email, name, replies_sent in result.all()
+            TeamAnalyticsItem(user_id=user_id, email=email, name=name, replies_sent=int(replies_sent)) for user_id, email, name, replies_sent in result.all()
         ]
         return TeamAnalyticsResponse(period=period, items=items)
 

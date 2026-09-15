@@ -12,7 +12,7 @@ const implementationChecks = [
   "Подтвердить получение отзывов и вопросов в реальном кабинете",
   "Проверить отправку ответа, статусы модерации и ограничения",
   "Реализовать нормализацию, ошибки, лимиты и health-check",
-  "Пройти end-to-end тест с реальными credentials без утечки секретов",
+  "Проверить полный цикл с реальным кабинетом без утечки ключей",
 ];
 
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
@@ -51,7 +51,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <strong>{isMvp ? "Техническая основа уже существует" : "Production-доступность пока не заявляется"}</strong>
             <p>
               {isMvp
-                ? "Перед production-запуском всё равно нужны реальные API credentials, проверка scopes, rate limits и end-to-end тест с конкретным кабинетом."
+                ? "Перед коммерческим запуском всё равно нужны реальные API-ключи, проверка прав и лимитов, а также полный тест с конкретным кабинетом."
                 : "Отдельная публичная страница не означает готовую интеграцию. Сначала нужно подтвердить официальный API-контракт и фактический сценарий отправки ответов."}
             </p>
           </aside>
@@ -65,13 +65,13 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               <div className="section-heading section-heading-wide">
                 <p className="eyebrow">Что уже входит в MVP-основу</p>
                 <h2>Путь от импорта обращения до контролируемой отправки</h2>
-                <p>Это описание текущей технической реализации, а не обещание production-готовности без проверки реального кабинета.</p>
+                <p>Это описание текущей технической реализации, а не обещание готовности без проверки реального кабинета.</p>
               </div>
 
               <div className="integration-flow-list" role="group" aria-label="Этапы обработки обращения">
                 {[
                   ["01", "Получить и нормализовать", "Adapter получает отзывы и вопросы, приводит payload к внутренним моделям и подавляет дубли."],
-                  ["02", "Подготовить ответ", "AI использует необходимый контекст, а система фиксирует модель, токены, задержку и стоимость."],
+                  ["02", "Подготовить ответ", "ИИ использует необходимый контекст, а система фиксирует модель, токены, задержку и стоимость."],
                   ["03", "Проверить через SafetyGate", "Рискованные обещания, недостаток контекста и низкая уверенность могут остановить автоотправку."],
                   ["04", "Применить правила и квоты", "Учитываются тип обращения, рейтинг, ключевые слова, товары, чувствительные темы и лимиты."],
                   ["05", "Отправить через очередь", "Worker выполняет задачу, временные ошибки могут перейти в retry, результат фиксируется в audit trail."],
@@ -89,7 +89,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
           <section className="public-section public-section-muted">
             <div className="public-container public-two-column public-two-column-balanced">
               <div>
-                <p className="eyebrow">Что ещё нужно подтвердить перед production</p>
+                <p className="eyebrow">Что нужно подтвердить перед запуском</p>
                 <h2>Наличие кода — не то же самое, что проверенная интеграция</h2>
               </div>
               <div className="public-check-list public-check-list-large">
@@ -132,7 +132,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 <p>Общие внутренние модели сообщений и товаров.</p>
                 <p>SafetyGate и правила автоматизации поверх нормализованного контекста.</p>
                 <p>Очередь, повторы, ключи идемпотентности и журнал событий.</p>
-                <p>Backend-only хранение зашифрованных marketplace credentials.</p>
+                <p>Зашифрованное хранение ключей маркетплейсов только на сервере.</p>
               </div>
             </div>
           </section>

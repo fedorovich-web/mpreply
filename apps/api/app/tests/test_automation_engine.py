@@ -75,6 +75,7 @@ def test_engine_requires_manual_review_for_missing_product_context() -> None:
     assert result.requires_manual_review is True
     assert any("product context" in reason.lower() for reason in result.reasons)
 
+
 def test_rating_restricted_rule_does_not_match_question_without_rating() -> None:
     rule = AutomationRuleSnapshot(
         id=uuid4(),
@@ -99,4 +100,3 @@ def test_rating_restricted_rule_does_not_match_question_without_rating() -> None
 
     assert result.matched_rule_id is None
     assert result.mode == "auto"
-

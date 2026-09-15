@@ -46,10 +46,9 @@ async def test_wildberries_normalizes_question(wildberries_adapter: WildberriesA
     normalized = adapter.normalize_question(
         {
             "id": "q-1",
-            "question": "Подойдёт на рост 170?",
+            "text": "Подойдёт на рост 170?",
             "createdDate": "2026-07-08T10:00:00Z",
-            "nmId": 777,
-            "productName": "Куртка",
+            "productDetails": {"nmId": 777, "productName": "Куртка"},
         }
     )
 
@@ -60,6 +59,29 @@ async def test_wildberries_normalizes_question(wildberries_adapter: WildberriesA
     assert normalized.customer_text == "Подойдёт на рост 170?"
     assert isinstance(normalized.product, NormalizedProduct)
     assert normalized.product.external_id == "777"
+
+
+@pytest.mark.asyncio
+async def test_wildberries_normalizes_documented_feedback_photo_shape(
+    wildberries_adapter: WildberriesAdapter,
+) -> None:
+    normalized = wildberries_adapter.normalize_review(
+        {
+            "id": "fb-photo",
+            "text": "Фото товара",
+            "productValuation": 4,
+            "createdDate": "2026-07-08T10:00:00Z",
+            "photoLinks": [
+                {
+                    "fullSize": "https://feedbackphotos.wbstatic.net/full.webp",
+                    "miniSize": "https://feedbackphotos.wbstatic.net/mini.webp",
+                }
+            ],
+            "productDetails": {"nmId": 778, "productName": "Куртка"},
+        }
+    )
+
+    assert normalized.customer_photos == ("https://feedbackphotos.wbstatic.net/full.webp",)
 
 
 @pytest.mark.parametrize(

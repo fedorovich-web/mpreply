@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sentry_sdk
+from sentry_sdk.scrubber import DEFAULT_DENYLIST, EventScrubber
 
 from app.core.config import Settings
 
@@ -15,4 +16,19 @@ def configure_observability(settings: Settings) -> None:
         release=f"respio-api@{settings.app_version}",
         traces_sample_rate=settings.sentry_traces_sample_rate,
         send_default_pii=False,
+        event_scrubber=EventScrubber(
+            denylist=[
+                *DEFAULT_DENYLIST,
+                "access_token",
+                "refresh_token",
+                "client_secret",
+                "credentials_encrypted",
+                "raw_credentials",
+                "password_hash",
+                "set-cookie",
+                "api-key",
+            ],
+            recursive=True,
+            send_default_pii=False,
+        ),
     )

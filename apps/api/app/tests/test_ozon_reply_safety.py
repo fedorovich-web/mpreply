@@ -54,12 +54,8 @@ async def test_ozon_question_preflight_and_send_use_exact_contracts() -> None:
         "/v1/question/answer/list",
         "/v1/question/answer/create",
     ]
-    assert transport.requests[0].read() == (
-        b'{"question_id":"message-123","sku":646399170,"last_id":""}'
-    )
-    assert transport.requests[1].read() == (
-        b'{"question_id":"message-123","sku":646399170,"text":"Synthetic answer"}'
-    )
+    assert transport.requests[0].read() == (b'{"question_id":"message-123","sku":646399170,"last_id":""}')
+    assert transport.requests[1].read() == (b'{"question_id":"message-123","sku":646399170,"text":"Synthetic answer"}')
 
 
 @pytest.mark.asyncio

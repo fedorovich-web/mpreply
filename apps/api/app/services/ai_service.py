@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, cast
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -11,9 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.prompt_strategy import ResponseTone, build_marketplace_reply_prompt
 from app.core.config import get_settings
-from app.core.errors import bad_request, not_found
+from app.core.errors import bad_gateway, bad_request, not_found
 from app.models.ai_draft import AIDraft
 from app.models.customer_message import CustomerMessage
+from app.models.organization import OrganizationUser
 from app.models.product import Product
 from app.models.usage_event import UsageEvent
 from app.models.user import User
@@ -33,6 +35,26 @@ class ParsedModelOutput:
     answer: str
     confidence_score: float
     safety_flags: list[str]
+
+
+class ModelOutputError(ValueError):
+    pass
+
+
+_MODEL_SAFETY_FLAGS = frozenset(
+    {
+        "missing_product_context",
+        "risky_promise",
+        "medical_or_legal_claim",
+        "unclear_customer_issue",
+        "needs_manual_review",
+        "unsafe_instruction",
+        "personal_data_exposure",
+        "policy_violation",
+        "sensitive_topic",
+    }
+)
+_MAX_MODEL_OUTPUT_CHARS = 16_384
 
 
 class AIService:
@@ -91,9 +113,17 @@ class AIService:
             )
         except GroqProviderError as exc:
             await self._write_failure_audit(actor=actor, message=message, error_code=exc.error_code)
-            raise bad_request(str(exc)) from exc
+            raise bad_gateway("AI provider request failed") from exc
 
-        parsed = self._parse_model_output(completion.text)
+        try:
+            parsed = self._parse_model_output(completion.text)
+        except ModelOutputError as exc:
+            await self._write_failure_audit(
+                actor=actor,
+                message=message,
+                error_code="groq_malformed_response",
+            )
+            raise bad_gateway("AI provider returned an invalid response") from exc
         safety = self.safety_gate.evaluate(
             SafetyInput(
                 draft_text=parsed.answer,
@@ -171,15 +201,22 @@ class AIService:
         return list(result.scalars().all()), total
 
     async def get_draft(self, *, actor: User, draft_id: UUID) -> AIDraft:
-        result = await self.session.execute(select(AIDraft).where(AIDraft.id == draft_id))
+        result = await self.session.execute(
+            select(AIDraft)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == AIDraft.organization_id,
+            )
+            .where(
+                AIDraft.id == draft_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_READ_ROLES),
+            )
+        )
         draft = result.scalar_one_or_none()
         if draft is None:
             raise not_found("AI draft not found")
-        await self.organization_service.require_membership_role(
-            organization_id=draft.organization_id,
-            user_id=actor.id,
-            allowed_roles=_READ_ROLES,
-        )
         return draft
 
     async def _write_usage(
@@ -220,7 +257,7 @@ class AIService:
         )
 
     @staticmethod
-    def _product_context(product: Product | None) -> dict[str, Any] | None:
+    def _product_context(product: Product | None) -> dict[str, object] | None:
         if product is None:
             return None
         return {
@@ -234,32 +271,60 @@ class AIService:
 
     @staticmethod
     def _parse_model_output(raw_text: str) -> ParsedModelOutput:
+        if len(raw_text) > _MAX_MODEL_OUTPUT_CHARS:
+            raise ModelOutputError("model output exceeds the size limit")
         try:
-            parsed: object = json.loads(raw_text)
-        except json.JSONDecodeError:
-            parsed = {"answer": raw_text, "confidence_score": 0.72, "safety_flags": ["needs_manual_review"]}
-        data = cast(dict[str, object], parsed) if isinstance(parsed, dict) else {}
-        answer = str(data.get("answer") or "").strip()
-        if not answer:
-            raise bad_request("AI provider returned an empty answer")
-        confidence_score = _float_between_zero_and_one(data.get("confidence_score"))
+            parsed: object = json.loads(raw_text, object_pairs_hook=_unique_object)
+        except (json.JSONDecodeError, UnicodeError, ModelOutputError) as exc:
+            raise ModelOutputError("model output is not valid JSON") from exc
+        if not isinstance(parsed, dict):
+            raise ModelOutputError("model output must be an object")
+        data = cast(dict[str, object], parsed)
+        if set(data) != {"answer", "confidence_score", "safety_flags"}:
+            raise ModelOutputError("model output does not match the response contract")
+
+        answer_value = data["answer"]
+        if not isinstance(answer_value, str):
+            raise ModelOutputError("model answer must be a string")
+        answer = answer_value.strip()
+        if not answer or len(answer) > 12_000:
+            raise ModelOutputError("model answer length is invalid")
+
+        confidence_score = _strict_confidence_score(data["confidence_score"])
         raw_flags_value = data.get("safety_flags")
-        raw_flags = cast(list[object], raw_flags_value) if isinstance(raw_flags_value, list) else []
-        flags = [str(flag).strip() for flag in raw_flags if str(flag).strip()]
+        if not isinstance(raw_flags_value, list):
+            raise ModelOutputError("model safety flags are invalid")
+        raw_flags = cast(list[object], raw_flags_value)
+        if len(raw_flags) > 32:
+            raise ModelOutputError("model safety flags are invalid")
+        flags: list[str] = []
+        for value in raw_flags:
+            if not isinstance(value, str):
+                raise ModelOutputError("model safety flag must be a string")
+            flag = value.strip()
+            if flag not in _MODEL_SAFETY_FLAGS:
+                raise ModelOutputError("model safety flag is unsupported")
+            if flag not in flags:
+                flags.append(flag)
         return ParsedModelOutput(answer=answer, confidence_score=confidence_score, safety_flags=flags)
 
 
-def _float_between_zero_and_one(value: object) -> float:
-    if isinstance(value, bool):
-        parsed = float(value)
-    elif isinstance(value, int | float | str):
-        try:
-            parsed = float(value)
-        except ValueError:
-            return 0.75
-    else:
-        return 0.75
-    return min(max(parsed, 0.0), 1.0)
+def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ModelOutputError("model output contains duplicate keys")
+        result[key] = value
+    return result
+
+
+def _strict_confidence_score(value: object) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ModelOutputError("model confidence score must be numeric")
+    parsed = float(value)
+    if not math.isfinite(parsed) or not 0.0 <= parsed <= 1.0:
+        raise ModelOutputError("model confidence score is out of range")
+    return parsed
 
 
 def decimal_to_float(value: Decimal | float | None) -> float | None:

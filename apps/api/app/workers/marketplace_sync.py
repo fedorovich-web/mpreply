@@ -5,6 +5,9 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import dramatiq
+import structlog
+from dramatiq.errors import DramatiqError
+from redis.exceptions import RedisError
 
 from app.adapters.http import MarketplaceHttpClients
 from app.adapters.registry import create_marketplace_registry
@@ -13,11 +16,13 @@ from app.services.scheduled_sync_service import (
     ScheduledSyncService,
     StreamRunResult,
     claim_due_marketplace_streams,
+    release_marketplace_dispatch_claim,
     take_claimed_marketplace_stream,
 )
 from app.workers.broker import redis_broker
 
 BROKER = redis_broker
+logger = structlog.get_logger(__name__)
 
 
 @dramatiq.actor(queue_name="marketplace-sync", max_retries=0)
@@ -41,9 +46,22 @@ async def enqueue_due_marketplace_streams(
             owner=owner,
             limit=limit,
         )
+    dispatched: list[UUID] = []
     for state in states:
-        marketplace_sync_actor.send(str(state.id))
-    return tuple(state.id for state in states)
+        try:
+            marketplace_sync_actor.send(str(state.id))
+        except (DramatiqError, RedisError, OSError):
+            async with AsyncSessionLocal() as session:
+                await release_marketplace_dispatch_claim(
+                    session,
+                    state_id=state.id,
+                    now=now,
+                    owner=owner,
+                )
+            logger.warning("marketplace_dispatch_failed", state_id=str(state.id))
+            continue
+        dispatched.append(state.id)
+    return tuple(dispatched)
 
 
 async def _execute_claimed_stream(state_id: UUID) -> StreamRunResult | None:

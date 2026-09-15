@@ -7,10 +7,10 @@ import { billingOverviewSchema } from "../../lib/api/schemas";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const metricLabels: Record<string, string> = {
-  ai_drafts_monthly: "AI-черновики за период",
+  ai_drafts_monthly: "Черновики ИИ за период",
   replies_sent_monthly: "Отправленные ответы",
   marketplace_accounts: "Подключённые кабинеты",
-  members: "Участники workspace",
+  members: "Участники организации",
 };
 
 export function BillingWorkspace() {
@@ -29,7 +29,7 @@ export function BillingWorkspace() {
     <section className="billing-workspace">
       <article className="billing-plan-card">
         <div className="billing-plan-heading">
-          <div><span className="panel-kicker">Current plan</span><h2>{data.plan.name}</h2><p>Код плана: <code>{data.plan.code}</code></p></div>
+          <div><span className="panel-kicker">Текущий тариф</span><h2>{data.plan.name}</h2><p>Код тарифа: <code>{data.plan.code}</code></p></div>
           <span className={data.subscription?.status === "active" ? "billing-status billing-status-active" : "billing-status"}>{data.subscription?.status ?? "fallback"}</span>
         </div>
         <div className="billing-price-state">
@@ -57,9 +57,9 @@ export function BillingWorkspace() {
       </section>
 
       <article className="billing-foundation-note">
-        <span className="panel-kicker">Billing-ready</span>
+        <span className="panel-kicker">Платёжный контур</span>
         <h2>Что уже заложено</h2>
-        <p>Планы, подписки, provider IDs, период подписки, trial, cancel-at-period-end, usage evaluation и enforcement hooks для AI drafts, marketplace accounts и участников workspace.</p>
+        <p>Основа для тарифов и подписок: расчётный период, лимиты использования, кабинеты маркетплейсов и число участников организации. Подключение платёжного провайдера будет выполнено отдельно.</p>
       </article>
     </section>
   );

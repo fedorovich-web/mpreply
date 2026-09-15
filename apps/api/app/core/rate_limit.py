@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from typing import cast
 from urllib.parse import parse_qs, unquote, urlsplit
 
 from fastapi import HTTPException, Request, status
@@ -8,6 +9,18 @@ from redis.asyncio import Redis
 from redis.exceptions import RedisError
 
 from app.core.config import get_settings
+
+_RATE_LIMIT_SCRIPT = """
+local counts = {}
+for index, key in ipairs(KEYS) do
+    local count = redis.call('INCR', key)
+    if count == 1 then
+        redis.call('EXPIRE', key, ARGV[1])
+    end
+    counts[index] = count
+end
+return counts
+"""
 
 
 def _redis_from_url(url: str) -> Redis:
@@ -67,10 +80,19 @@ async def enforce_auth_rate_limit(
     )
     redis = _redis_from_url(settings.redis_url.get_secret_value())
     try:
-        for key in keys:
-            count = await redis.incr(key)
-            if count == 1:
-                await redis.expire(key, window_seconds)
+        raw_counts: object = await redis.eval(
+            _RATE_LIMIT_SCRIPT,
+            len(keys),
+            *keys,
+            window_seconds,
+        )
+        if not isinstance(raw_counts, list):
+            raise RedisError("Rate limiter returned an invalid result")
+        count_values = cast(list[object], raw_counts)
+        if len(count_values) != len(keys) or any(isinstance(value, bool) or not isinstance(value, int) for value in count_values):
+            raise RedisError("Rate limiter returned invalid counters")
+        for key, raw_count in zip(keys, count_values, strict=True):
+            count = cast(int, raw_count)
             if count > limit:
                 ttl = await redis.ttl(key)
                 retry_after = max(int(ttl), 1)

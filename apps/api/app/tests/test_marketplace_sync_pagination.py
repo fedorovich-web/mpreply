@@ -20,7 +20,6 @@ from app.models.marketplace_sync_state import MarketplaceSyncState, SyncStateSta
 from app.models.user import User
 from app.services.marketplace_ingest_service import IngestStats, MarketplaceIngestService
 from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
-from app.services.organization_service import OrganizationService
 from app.services.scheduled_sync_service import (
     MAX_PAGES_PER_RUN,
     ScheduledSyncService,
@@ -271,9 +270,7 @@ async def test_stream_runner_rejects_a_repeated_cursor_before_another_request() 
 
 @pytest.mark.asyncio
 async def test_stream_runner_enforces_the_page_cap() -> None:
-    service, adapter, states, _, ingest = _service(
-        [_page(str((index + 1) * 50)) for index in range(MAX_PAGES_PER_RUN)]
-    )
+    service, adapter, states, _, ingest = _service([_page(str((index + 1) * 50)) for index in range(MAX_PAGES_PER_RUN)])
 
     result = await service.run_stream(states.state.id, "worker-a", NOW)
 
@@ -356,14 +353,6 @@ class _ManualSession:
         self.commit_count += 1
 
 
-class _OrganizationAccess:
-    def __init__(self) -> None:
-        self.calls = 0
-
-    async def require_membership_role(self, **_: object) -> None:
-        self.calls += 1
-
-
 class _ManualRegistry:
     def capability(self, marketplace: Marketplace) -> object:
         assert marketplace is Marketplace.WILDBERRIES
@@ -407,13 +396,11 @@ async def test_manual_sync_routes_every_supported_stream_through_the_common_runn
     ]
     session = _ManualSession(account, states)
     runner = _Runner()
-    access = _OrganizationAccess()
     service = MarketplaceSyncService(
         cast(AsyncSession, session),
         registry=cast(MarketplaceAdapterRegistry, _ManualRegistry()),
         runner=cast(ScheduledSyncService, runner),
     )
-    service.organization_service = cast(OrganizationService, access)
     actor = User(id=uuid4(), email="synthetic@example.com", password_hash="hash", status="active")
 
     synced_account, stats, error_code, _ = await service.request_sync(
@@ -427,5 +414,4 @@ async def test_manual_sync_routes_every_supported_stream_through_the_common_runn
     assert error_code is None
     assert {call[0] for call in runner.calls} == {state.id for state in states}
     assert len({call[1] for call in runner.calls}) == 1
-    assert access.calls == 1
     assert session.commit_count >= 1

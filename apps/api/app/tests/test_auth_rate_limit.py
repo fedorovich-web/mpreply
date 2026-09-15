@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from fastapi import HTTPException, Request
 from pydantic import SecretStr
+from starlette.types import Scope
 
 from app.core import rate_limit as rate_limit_module
 from app.core.config import Settings
@@ -17,13 +16,19 @@ class FakeRedis:
         self.expirations: dict[str, int] = {}
         self.close_calls = 0
 
-    async def incr(self, key: str) -> int:
-        self.counts[key] = self.counts.get(key, 0) + 1
-        return self.counts[key]
-
-    async def expire(self, key: str, seconds: int) -> bool:
-        self.expirations[key] = seconds
-        return True
+    async def eval(self, script: str, numkeys: int, *values: object) -> list[int]:
+        assert script.strip()
+        keys = values[:numkeys]
+        seconds = values[numkeys]
+        assert isinstance(seconds, int)
+        result: list[int] = []
+        for key in keys:
+            assert isinstance(key, str)
+            self.counts[key] = self.counts.get(key, 0) + 1
+            if self.counts[key] == 1:
+                self.expirations[key] = seconds
+            result.append(self.counts[key])
+        return result
 
     async def ttl(self, key: str) -> int:
         return self.expirations.get(key, -1)
@@ -33,7 +38,7 @@ class FakeRedis:
 
 
 def _request(client_host: str) -> Request:
-    scope: dict[str, Any] = {
+    scope: Scope = {
         "type": "http",
         "asgi": {"version": "3.0"},
         "http_version": "1.1",
