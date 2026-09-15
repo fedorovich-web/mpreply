@@ -30,4 +30,17 @@ describe("approved render-derived public scale", () => {
     expect(tuning).toContain(".mockup-page .demo-process > div");
     expect(tuning).toContain("min-height: 230px");
   });
+
+  it("uses explicit narrow-screen hero geometry so compact desktop overrides do not overlap", () => {
+    expect(tuning).toContain(".mockup-page .marketplace-hub-scene");
+    expect(tuning).toContain("min-height: 470px");
+    expect(tuning).toContain(".mockup-page .marketplace-detail-render");
+    expect(tuning).toContain("min-height: 520px");
+    expect(tuning).toContain(".mockup-page .detail-app-window");
+    expect(tuning).toContain("top: 118px");
+    expect(tuning).toContain(".mockup-page .demo-hero-story");
+    expect(tuning).toContain("min-height: 520px");
+    expect(tuning).toContain("top: 168px");
+    expect(tuning).toContain("top: 352px");
+  });
 });
