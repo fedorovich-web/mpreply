@@ -167,28 +167,36 @@ export default function MarketplacesPage() {
               </div>
 
               <div className="marketplace-hub-card wb">
-                <MarketplaceLogo marketplace="wb" className="mockup-market-logo" decorative />
+                <span className="marketplace-hub-logo-card">
+                  <MarketplaceLogo marketplace="wb" className="mockup-market-logo" decorative />
+                </span>
                 <span className="marketplace-hub-card-label">
                   <PublicIcon name="message" />
                   <span>Отзывы и вопросы</span>
                 </span>
               </div>
               <div className="marketplace-hub-card oz">
-                <MarketplaceLogo marketplace="oz" className="mockup-market-logo" decorative />
+                <span className="marketplace-hub-logo-card">
+                  <MarketplaceLogo marketplace="oz" className="mockup-market-logo" decorative />
+                </span>
                 <span className="marketplace-hub-card-label">
                   <PublicIcon name="message" />
                   <span>Отзывы и вопросы</span>
                 </span>
               </div>
               <div className="marketplace-hub-card ym">
-                <MarketplaceLogo marketplace="ym" className="mockup-market-logo" decorative />
+                <span className="marketplace-hub-logo-card">
+                  <MarketplaceLogo marketplace="ym" className="mockup-market-logo" decorative />
+                </span>
                 <span className="marketplace-hub-card-label">
                   <PublicIcon name="inbox" />
                   <span>Сообщения покупателей</span>
                 </span>
               </div>
               <div className="marketplace-hub-card av">
-                <MarketplaceLogo marketplace="av" className="mockup-market-logo" decorative />
+                <span className="marketplace-hub-logo-card">
+                  <MarketplaceLogo marketplace="av" className="mockup-market-logo" decorative />
+                </span>
                 <span className="marketplace-hub-card-label">
                   <PublicIcon name="message" />
                   <span>Сообщения и отзывы</span>
