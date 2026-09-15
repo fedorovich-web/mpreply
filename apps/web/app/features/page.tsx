@@ -15,10 +15,26 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 const marketplaceLogos = {
-  wb: { src: "/images/marketplaces/wildberries.webp", width: 432, height: 188, name: "Wildberries" },
-  oz: { src: "/images/marketplaces/ozon.webp", width: 436, height: 198, name: "Ozon" },
-  ym: { src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222, name: "Яндекс Маркет" },
-  av: { src: "/images/marketplaces/avito.webp", width: 504, height: 212, name: "Авито" },
+  wb: {
+    src: "/images/marketplaces/wildberries.webp",
+    compactSrc: "/images/marketplaces/wildberries-compact.webp",
+    name: "Wildberries",
+  },
+  oz: {
+    src: "/images/marketplaces/ozon.webp",
+    compactSrc: "/images/marketplaces/ozon-compact.webp",
+    name: "Ozon",
+  },
+  ym: {
+    src: "/images/marketplaces/yandex-market.webp",
+    compactSrc: "/images/marketplaces/yandex-market-compact.webp",
+    name: "Яндекс Маркет",
+  },
+  av: {
+    src: "/images/marketplaces/avito.webp",
+    compactSrc: "/images/marketplaces/avito-compact.webp",
+    name: "Авито",
+  },
 } as const;
 
 type MarketplaceLogoKey = keyof typeof marketplaceLogos;
@@ -136,7 +152,7 @@ const messages: readonly [MarketplaceLogoKey, string, string, string][] = [
   ["av", "Вопрос", "Можно вернуть товар?", "2 часа назад"],
 ];
 
-function MarketplaceLogo({
+function CompactMarketplaceLogo({
   marketplace,
   className,
   decorative = false,
@@ -150,9 +166,9 @@ function MarketplaceLogo({
   return (
     <Image
       className={className}
-      src={logo.src}
-      width={logo.width}
-      height={logo.height}
+      src={logo.compactSrc}
+      width={64}
+      height={64}
       alt={decorative ? "" : logo.name}
       aria-hidden={decorative || undefined}
       unoptimized
@@ -178,7 +194,7 @@ export default function FeaturesPage() {
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
                 <Link className="button button-secondary" href="/demo">
-                  Смотреть демо
+                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть демо
                 </Link>
               </div>
               <div className="mockup-trust-row" aria-label="Условия старта">
@@ -225,7 +241,7 @@ export default function FeaturesPage() {
                     {messages.map(([marketplace, kind, text, time]) => (
                       <div className="features-message" key={`${marketplace}-${text}`}>
                         <span className="features-message-source">
-                          <MarketplaceLogo marketplace={marketplace} className="features-market-logo" />
+                          <CompactMarketplaceLogo marketplace={marketplace} className="features-market-logo" />
                         </span>
                         <div>
                           <strong>{kind}</strong>
@@ -291,7 +307,11 @@ export default function FeaturesPage() {
                     <span className="features-workflow-logos" aria-label="Wildberries, Ozon, Яндекс Маркет и Авито">
                       {(Object.keys(marketplaceLogos) as MarketplaceLogoKey[]).map((marketplace) => (
                         <span className="features-workflow-logo-chip" key={marketplace}>
-                          <MarketplaceLogo marketplace={marketplace} className="features-workflow-logo" decorative />
+                          <CompactMarketplaceLogo
+                            marketplace={marketplace}
+                            className="features-workflow-logo"
+                            decorative
+                          />
                         </span>
                       ))}
                     </span>
