@@ -39,8 +39,6 @@
   letter-spacing: -.045em;
 }
 
-/* The screenshots are compact at 1086px wide. These paddings reproduce that scale,
-   then add the requested 15px on both vertical edges. */
 .mockup-page .mockup-hero {
   padding-top: calc(34px + var(--public-section-padding-extra));
   padding-bottom: calc(25px + var(--public-section-padding-extra));
@@ -67,7 +65,6 @@
   gap: clamp(28px, 3.8vw, 48px);
 }
 
-/* Hero scene heights from the approved desktop renders. */
 .mockup-page .features-mockup-scene {
   min-height: 290px;
 }
@@ -84,7 +81,6 @@
   min-height: 300px;
 }
 
-/* Shared icon chips are visibly smaller in the renders than in the legacy theme. */
 .mockup-page .mockup-icon-chip {
   width: 44px;
   height: 44px;
@@ -92,7 +88,6 @@
   font-size: 20px;
 }
 
-/* Features / marketplaces cards. */
 .mockup-page .features-tool-card,
 .mockup-page .marketplace-benefit-card {
   min-height: 148px;
@@ -133,7 +128,6 @@
   min-height: 276px;
 }
 
-/* Marketplace detail cards. */
 .mockup-page .detail-tool-card,
 .mockup-page .detail-benefit-card {
   min-height: 148px;
@@ -171,7 +165,6 @@
   line-height: 1.48;
 }
 
-/* Detail hero scene: same composition, reduced to render proportions. */
 .mockup-page .detail-market-card {
   top: 43px;
   width: 192px;
@@ -248,7 +241,6 @@
   height: 68px;
 }
 
-/* Pricing cards are coded UI, but compact like the render. */
 .mockup-page .pricing-card {
   min-height: 390px;
   padding: 22px;
@@ -276,7 +268,6 @@
   font-size: .75rem;
 }
 
-/* Demo journey and process. */
 .mockup-page .demo-journey-card {
   min-height: 164px;
   padding: 18px;
@@ -307,7 +298,6 @@
   font-size: .67rem;
 }
 
-/* Demo hero card geometry from the approved render. */
 .mockup-page .demo-story-card {
   padding: 14px;
 }
@@ -350,7 +340,6 @@
   padding-block: 36px;
 }
 
-/* Features product scene: compact inbox window matching the render. */
 .mockup-page .features-window {
   inset: 18px 8px 20px 0;
 }
@@ -517,11 +506,106 @@
     font-size: clamp(1.75rem, 8vw, 2.2rem);
   }
 
+  .mockup-page .features-mockup-scene {
+    min-height: 320px;
+  }
+
+  .mockup-page .marketplace-hub-scene {
+    min-height: 470px;
+  }
+
+  .mockup-page .marketplace-hub-card {
+    width: 150px;
+  }
+
+  .mockup-page .marketplace-hub-core {
+    width: 104px;
+    height: 104px;
+  }
+
+  .mockup-page .marketplace-detail-render {
+    min-height: 520px;
+  }
+
+  .mockup-page .detail-market-card {
+    left: 0;
+    top: 0;
+    width: 180px;
+  }
+
+  .mockup-page .detail-app-window {
+    top: 118px;
+    right: 0;
+    width: calc(100% - 18px);
+  }
+
+  .mockup-page .detail-ai-card {
+    right: 0;
+    bottom: 4px;
+    width: 220px;
+  }
+
+  .mockup-page .detail-render-mascot {
+    right: 8px;
+    bottom: 118px;
+  }
+
+  .mockup-page .demo-hero-story {
+    min-height: 520px;
+  }
+
+  .mockup-page .demo-story-card.incoming {
+    left: 0;
+    top: 0;
+    width: min(100%, 230px);
+  }
+
+  .mockup-page .demo-story-card.ai {
+    left: 16px;
+    top: 168px;
+    width: calc(100% - 32px);
+  }
+
+  .mockup-page .demo-story-card.review {
+    right: 0;
+    top: 352px;
+    width: 220px;
+  }
+
+  .mockup-page .demo-story-arrow {
+    display: none;
+  }
+
+  .mockup-page .demo-hero-mascot {
+    right: 18px;
+    bottom: 0;
+  }
+
   .mockup-page .features-benefit-card {
     grid-template-columns: auto 1fr;
   }
 
   .mockup-page .demo-process > div {
     min-height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .mockup-page .marketplace-hub-scene {
+    min-height: 440px;
+  }
+
+  .mockup-page .marketplace-hub-card {
+    width: 136px;
+  }
+
+  .mockup-page .marketplace-hub-core {
+    width: 94px;
+    height: 94px;
+  }
+
+  .mockup-page .marketplace-detail-render,
+  .mockup-page .demo-hero-story {
+    min-height: 500px;
   }
 }
