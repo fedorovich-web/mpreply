@@ -2,11 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { MarketplaceConfig, MarketplaceKey } from "../../lib/site-config";
+import { PublicIcon, type PublicIconName } from "./PublicIcon";
 import { PublicShell } from "./PublicShell";
 
 type MarketplaceLandingProps = {
   marketplace: MarketplaceConfig;
 };
+
+type Tone = "blue" | "purple" | "green" | "orange";
 
 const marketplaceLogos: Record<MarketplaceKey, { src: string; width: number; height: number }> = {
   wildberries: { src: "/images/marketplaces/wildberries.webp", width: 432, height: 188 },
@@ -19,26 +22,26 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
   const platformLabel = marketplace.name === "Wildberries" ? "WILDBERRIES" : marketplace.name.toUpperCase();
   const logo = marketplaceLogos[marketplace.key];
 
-  const toolCards = [
-    ["✉", "blue", "Единая очередь обращений", `Все отзывы, вопросы и сообщения с ${marketplace.name} в одном удобном интерфейсе.`],
-    ["✦", "purple", "AI-черновик ответа", "Искусственный интеллект готовит вежливые, точные и персонализированные черновики ответов."],
-    ["✓", "green", "Контроль качества", `Проверка тональности, грамотности и соответствия правилам ${marketplace.name}.`],
-    ["◷", "purple", "История действий", "Полная история обращений и действий сотрудников для прозрачности и контроля."],
-  ] as const;
+  const toolCards: readonly [PublicIconName, Tone, string, string][] = [
+    ["inbox", "blue", "Единая очередь обращений", `Все отзывы, вопросы и сообщения с ${marketplace.name} в одном удобном интерфейсе.`],
+    ["sparkles", "purple", "AI-черновик ответа", "Искусственный интеллект готовит вежливые, точные и персонализированные черновики ответов."],
+    ["shield-check", "green", "Контроль качества", `Проверка тональности, грамотности и соответствия правилам ${marketplace.name}.`],
+    ["clock", "purple", "История действий", "Полная история обращений и действий сотрудников для прозрачности и контроля."],
+  ];
 
-  const steps = [
-    ["1", "↗", `Подключите ${marketplace.name}`, `Авторизуйтесь через официальный API ${marketplace.name}. Это займет пару минут.`],
-    ["2", "⚙", "Настройте параметры", "Выберите магазины, установите роли сотрудников и настройте уведомления."],
-    ["3", "▤", "Используйте AI и шаблоны", "AI подготовит черновики, а шаблоны помогут отвечать ещё быстрее."],
-    ["4", "▥", "Получайте результат", "Обрабатывайте больше обращений, повышайте рейтинг и лояльность покупателей."],
-  ] as const;
+  const steps: readonly [string, PublicIconName, string, string][] = [
+    ["1", "link", `Подключите ${marketplace.name}`, `Авторизуйтесь через официальный API ${marketplace.name}. Это займет пару минут.`],
+    ["2", "gear", "Настройте параметры", "Выберите магазины, установите роли сотрудников и настройте уведомления."],
+    ["3", "document", "Используйте AI и шаблоны", "AI подготовит черновики, а шаблоны помогут отвечать ещё быстрее."],
+    ["4", "chart", "Получайте результат", "Обрабатывайте больше обращений, повышайте рейтинг и лояльность покупателей."],
+  ];
 
-  const dailyBenefits = [
-    ["ϟ", "orange", "Больше скорости", "Отвечайте на обращения быстрее и не теряйте покупателей."],
-    ["●", "purple", "Прозрачность работы", "Видите, кто и на что отвечает. Контролируйте нагрузку и качество."],
-    ["▤", "blue", "Удобные шаблоны", "Создавайте и сохраняйте шаблоны ответов для типовых ситуаций."],
-    ["▥", "blue", "Полезная аналитика", "Следите за рейтингом, динамикой отзывов и скоростью ответов. Принимайте решения на основе данных."],
-  ] as const;
+  const dailyBenefits: readonly [PublicIconName, Tone, string, string][] = [
+    ["lightning", "orange", "Больше скорости", "Отвечайте на обращения быстрее и не теряйте покупателей."],
+    ["users", "purple", "Прозрачность работы", "Видите, кто и на что отвечает. Контролируйте нагрузку и качество."],
+    ["document", "blue", "Удобные шаблоны", "Создавайте и сохраняйте шаблоны ответов для типовых ситуаций."],
+    ["chart", "blue", "Полезная аналитика", "Следите за рейтингом, динамикой отзывов и скоростью ответов. Принимайте решения на основе данных."],
+  ];
 
   const faq = [
     [`Как подключить ${marketplace.name}?`, `Подключение занимает несколько минут через официальный API ${marketplace.name}.`],
@@ -86,7 +89,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               </div>
 
               <div className="detail-app-window">
-                <div className="detail-app-top"><span aria-hidden="true">▰</span> MPReply</div>
+                <div className="detail-app-top">MPReply</div>
                 <div className="detail-app-body">
                   <aside className="detail-sidebar" aria-hidden="true">
                     <strong>Все обращения · 24</strong>
@@ -110,7 +113,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               </div>
 
               <div className="detail-ai-card">
-                <strong>AI ✦</strong>
+                <strong><PublicIcon name="sparkles" className="public-inline-icon" /> AI</strong>
                 <p>Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар появится на складе.</p>
                 <span>Использовать ответ</span>
               </div>
@@ -129,7 +132,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="marketplace-detail-tools">
               {toolCards.map(([icon, tone, title, text]) => (
                 <article className="detail-tool-card" key={title}>
-                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true">{icon}</span>
+                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </article>
@@ -149,7 +152,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               {steps.map(([number, icon, title, text], index) => (
                 <article className="detail-step-card" key={number}>
                   <span className="detail-step-number">{number}</span>
-                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true">{icon}</span>
+                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </article>
@@ -168,7 +171,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="marketplace-detail-benefits">
               {dailyBenefits.map(([icon, tone, title, text]) => (
                 <article className="detail-benefit-card" key={title}>
-                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true">{icon}</span>
+                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </article>
