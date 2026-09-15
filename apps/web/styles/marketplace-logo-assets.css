@@ -1,0 +1,138 @@
+/* Marketplace raster logo assets: approved mockup crops stored as WebP quality 85. */
+
+.mockup-market-logo,
+.marketplace-brand-logo,
+.marketplace-detail-logo,
+.marketplace-detail-logo-small {
+  display: block;
+  width: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+.marketplace-hub-card .mockup-market-logo {
+  height: 44px;
+  max-width: 148px;
+  justify-self: start;
+  transform-origin: left center;
+}
+
+.marketplace-hub-card.wb .mockup-market-logo {
+  clip-path: inset(22% 4% 1% 4%);
+  transform: scale(1.08);
+}
+
+.marketplace-hub-card.oz .mockup-market-logo {
+  clip-path: inset(29% 5% 5% 5%);
+  transform: scale(1.12);
+}
+
+.marketplace-hub-card.ym .mockup-market-logo {
+  clip-path: inset(28% 12% 8% 12%);
+  transform: scale(1.13);
+}
+
+.marketplace-hub-card.av .mockup-market-logo {
+  clip-path: inset(28% 13% 8% 13%);
+  transform: scale(1.13);
+}
+
+.marketplace-brand-logo {
+  height: 58px;
+  max-width: 205px;
+  margin: -4px 0 4px;
+  object-position: left center;
+  transform-origin: left center;
+}
+
+.marketplace-logo-card:nth-child(1) .marketplace-brand-logo {
+  clip-path: inset(22% 4% 1% 4%);
+  transform: scale(1.08);
+}
+
+.marketplace-logo-card:nth-child(2) .marketplace-brand-logo {
+  clip-path: inset(29% 5% 5% 5%);
+  transform: scale(1.12);
+}
+
+.marketplace-logo-card:nth-child(3) .marketplace-brand-logo {
+  clip-path: inset(28% 12% 8% 12%);
+  transform: scale(1.13);
+}
+
+.marketplace-logo-card:nth-child(4) .marketplace-brand-logo {
+  clip-path: inset(28% 13% 8% 13%);
+  transform: scale(1.13);
+}
+
+.detail-market-logo {
+  display: grid;
+  min-height: 66px;
+  place-items: center;
+  overflow: hidden;
+}
+
+.marketplace-detail-logo {
+  height: 64px;
+  max-width: 220px;
+  transform-origin: center;
+}
+
+.marketplace-detail-logo[src$="wildberries.webp"] {
+  clip-path: inset(22% 4% 1% 4%);
+  transform: scale(1.08);
+}
+
+.marketplace-detail-logo[src$="ozon.webp"] {
+  clip-path: inset(29% 5% 5% 5%);
+  transform: scale(1.12);
+}
+
+.marketplace-detail-logo[src$="yandex-market.webp"] {
+  clip-path: inset(28% 12% 8% 12%);
+  transform: scale(1.13);
+}
+
+.marketplace-detail-logo[src$="avito.webp"] {
+  clip-path: inset(28% 13% 8% 13%);
+  transform: scale(1.13);
+}
+
+.marketplace-detail-logo-small {
+  width: 72px;
+  height: 34px;
+  flex: 0 0 auto;
+  transform-origin: center;
+}
+
+.marketplace-detail-logo-small[src$="wildberries.webp"] {
+  clip-path: inset(22% 4% 1% 4%);
+  transform: scale(1.08);
+}
+
+.marketplace-detail-logo-small[src$="ozon.webp"] {
+  clip-path: inset(29% 5% 5% 5%);
+  transform: scale(1.12);
+}
+
+.marketplace-detail-logo-small[src$="yandex-market.webp"] {
+  clip-path: inset(28% 12% 8% 12%);
+  transform: scale(1.13);
+}
+
+.marketplace-detail-logo-small[src$="avito.webp"] {
+  clip-path: inset(28% 13% 8% 13%);
+  transform: scale(1.13);
+}
+
+@media (max-width: 720px) {
+  .marketplace-hub-card .mockup-market-logo {
+    height: 38px;
+    max-width: 126px;
+  }
+
+  .marketplace-brand-logo {
+    height: 54px;
+    max-width: 190px;
+  }
+}
