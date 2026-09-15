@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { PublicShell } from "../../components/public-site/PublicShell";
@@ -15,69 +16,78 @@ const plans = [
   {
     name: "Старт",
     price: "490 ₽",
-    description: "Для продавцов, которые начинают автоматизировать ответы.",
+    description: "Для небольших магазинов и первого опыта",
     popular: false,
     features: [
-      "Единая очередь обращений",
-      "AI-подготовка ответов",
+      "До 500 сообщений в месяц",
+      "1 пользователь",
+      "Подключение до 2 маркетплейсов",
+      "Базовые AI-ответы",
       "Шаблоны ответов",
-      "История действий",
-      "Готовые интеграции маркетплейсов",
+      "Стандартная поддержка",
     ],
   },
   {
     name: "Профессиональный",
     price: "990 ₽",
-    description: "Для активной работы с обращениями и автоматизацией.",
+    description: "Для активно растущих продавцов",
     popular: true,
     features: [
-      "Всё из тарифа Старт",
-      "Автоответы и сценарии",
-      "Контроль качества",
-      "Командная работа",
-      "Расширенная аналитика",
+      "До 2 000 сообщений в месяц",
+      "До 3 пользователей",
+      "Подключение до 5 маркетплейсов",
+      "Расширенные AI-ответы",
+      "Автоответы и правила",
+      "Аналитика и отчёты",
+      "Приоритетная поддержка",
     ],
   },
   {
     name: "Бизнес",
     price: "1 990 ₽",
-    description: "Для команд с несколькими площадками и большим потоком обращений.",
+    description: "Для больших команд",
     popular: false,
     features: [
-      "Всё из тарифа Профессиональный",
-      "Расширенные правила команды",
-      "Приоритетная обработка обращений",
-      "Дополнительные рабочие сценарии",
-      "Поддержка командного процесса",
+      "До 10 000 сообщений в месяц",
+      "Неограниченное число пользователей",
+      "Подключение всех маркетплейсов",
+      "Продвинутая аналитика",
+      "Гибкие правила и автоответы",
+      "API-доступ (по запросу)",
+      "Персональный менеджер",
     ],
   },
 ] as const;
 
 const comparison = [
-  ["Единая очередь", "✓", "✓", "✓"],
-  ["AI-подготовка ответов", "✓", "✓", "✓"],
-  ["Шаблоны", "✓", "✓", "✓"],
-  ["Автоответы и сценарии", "—", "✓", "✓"],
-  ["Контроль качества", "—", "✓", "✓"],
-  ["Командная работа", "—", "✓", "✓"],
-  ["Расширенная аналитика", "—", "✓", "✓"],
-  ["Расширенные правила", "—", "—", "✓"],
+  ["Сообщений в месяц", "до 500", "до 2 000", "до 10 000"],
+  ["Пользователи", "1", "до 3", "неограниченно"],
+  ["Маркетплейсы", "до 2", "до 5", "все"],
+  ["AI-ответы", "Базовые", "Расширенные", "Продвинутые"],
+  ["Автоответы", "—", "✓", "✓"],
+  ["Аналитика и отчёты", "—", "✓", "✓"],
+  ["Шаблоны ответов", "✓", "✓", "✓"],
+  ["API-доступ", "—", "—", "✓"],
+  ["Персональный менеджер", "—", "—", "✓"],
+  ["Поддержка", "Стандартная", "Приоритетная", "Персональная"],
 ] as const;
 
 const faq = [
-  ["Можно ли попробовать MPReply бесплатно?", "Да. На старте доступен бесплатный период, чтобы подключить площадку и проверить рабочий процесс на своих обращениях."],
-  ["Какие маркетплейсы поддерживаются?", "Готовы интеграции Wildberries, Ozon, Яндекс Маркета и Авито."],
-  ["Можно ли сменить тариф?", "Да. Тариф можно изменить по мере роста нагрузки и команды."],
-  ["Нужна ли банковская карта для старта?", "Для начала бесплатного периода карта не требуется."],
-  ["Есть ли тариф для большой команды?", "Если стандартных планов недостаточно, можно обсудить индивидуальный вариант под ваш процесс."],
-  ["Что происходит с историей при смене тарифа?", "Рабочая история и обращения остаются частью вашего пространства MPReply."],
+  ["Можно ли попробовать бесплатно?", "Да. Доступен бесплатный период, чтобы проверить MPReply на своих обращениях."],
+  ["Можно ли поменять тариф позже?", "Да. Вы сможете перейти на другой тариф по мере роста магазина и команды."],
+  ["Какие маркетплейсы поддерживаются?", "MPReply поддерживает готовые интеграции с Wildberries, Ozon, Яндекс Маркетом и Авито."],
+  ["Есть ли скидка при оплате за год?", "Да. При ежегодной оплате действует скидка 20%."],
+  ["Как считается лимит сообщений?", "В лимит входят обработанные обращения покупателей за расчётный период."],
+  ["Можно ли добавить больше пользователей?", "Да. На тарифе Бизнес число пользователей не ограничено."],
+  ["Предоставляете ли вы закрывающие документы?", "Да. Для юридических лиц доступны необходимые закрывающие документы."],
+  ["Есть ли возврат средств?", "Условия возврата зависят от периода оплаты и фактического использования сервиса."],
 ] as const;
 
 const marketplaces = [
-  ["wb", "WB", "Wildberries"],
-  ["oz", "OZ", "Ozon"],
-  ["ym", "М", "Яндекс Маркет"],
-  ["av", "A", "Авито"],
+  { name: "Wildberries", src: "/images/marketplaces/wildberries.webp", width: 432, height: 188 },
+  { name: "Ozon", src: "/images/marketplaces/ozon.webp", width: 436, height: 198 },
+  { name: "Яндекс Маркет", src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222 },
+  { name: "Авито", src: "/images/marketplaces/avito.webp", width: 504, height: 212 },
 ] as const;
 
 export default function PricingPage() {
@@ -86,13 +96,13 @@ export default function PricingPage() {
       <div className="mockup-page">
         <section className="pricing-mockup-hero">
           <div className="public-container">
-            <p className="mockup-eyebrow">Тарифы MPReply</p>
-            <h1>Простые тарифы без скрытых платежей</h1>
-            <p>Выберите план под текущий объём работы. Все тарифы построены вокруг одного рабочего процесса MPReply.</p>
+            <p className="mockup-eyebrow">Тарифы</p>
+            <h1>Простые и выгодные тарифы</h1>
+            <p>Выберите подходящий план и начните экономить время на работе с отзывами и сообщениями уже сегодня.</p>
 
             <div className="pricing-toggle" aria-label="Период оплаты">
               <span>Ежемесячно</span>
-              <span>За год</span>
+              <span>Ежегодно · -20%</span>
             </div>
 
             <div className="pricing-card-grid">
@@ -103,10 +113,10 @@ export default function PricingPage() {
                   <p>{plan.description}</p>
                   <div className="pricing-price">
                     <strong>{plan.price}</strong>
-                    <span>/ месяц</span>
+                    <span>/ мес</span>
                   </div>
                   <Link className={`button ${plan.popular ? "button-primary" : "button-secondary"}`} href="/auth/register?intent=connect-marketplace">
-                    Попробовать бесплатно
+                    Начать бесплатно
                   </Link>
                   <ul className="pricing-feature-list">
                     {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
@@ -118,9 +128,9 @@ export default function PricingPage() {
             <div className="pricing-custom-strip">
               <div>
                 <strong>Нужен индивидуальный тариф?</strong>
-                <span>Обсудим объём обращений, команду и рабочие сценарии.</span>
+                <span>Если у вас особые требования или очень большие объёмы — свяжитесь с нами, и мы подготовим персональное предложение.</span>
               </div>
-              <Link className="button button-secondary" href="/contacts">Связаться с нами</Link>
+              <Link className="button button-secondary" href="/contacts">Связаться</Link>
             </div>
           </div>
         </section>
@@ -129,32 +139,32 @@ export default function PricingPage() {
           <div className="public-container">
             <div className="render-section-head">
               <p className="mockup-eyebrow">Интеграции</p>
-              <h2>Все ключевые маркетплейсы уже поддерживаются</h2>
-              <p>Не нужно покупать отдельный сервис под каждую площадку — работа строится в одном интерфейсе.</p>
+              <h2>Поддерживаем все популярные маркетплейсы</h2>
+              <p>Подключите свои кабинеты за несколько минут и начинайте работать в едином окне.</p>
             </div>
             <div className="pricing-market-row">
-              {marketplaces.map(([tone, mark, name]) => (
-                <div className="pricing-market-chip" key={name}>
-                  <span className={`mockup-market-mark ${tone}`} aria-hidden="true">{mark}</span>
-                  <strong>{name}</strong>
+              {marketplaces.map((marketplace) => (
+                <div className="pricing-market-chip" key={marketplace.name}>
+                  <Image className="marketplace-detail-logo-small" src={marketplace.src} width={marketplace.width} height={marketplace.height} alt={marketplace.name} unoptimized />
+                  <strong>{marketplace.name}</strong>
                 </div>
               ))}
             </div>
+            <p className="pricing-market-note">Постоянно добавляем новые интеграции по запросам пользователей.</p>
           </div>
         </section>
 
         <section className="public-section">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Сравнение тарифов</p>
-              <h2>Сравните возможности планов</h2>
-              <p>Основной рабочий процесс доступен с первого тарифа, а дополнительные уровни добавляют автоматизацию и командные возможности.</p>
+              <p className="mockup-eyebrow">Сравнение</p>
+              <h2>Сравните тарифы и выберите свой</h2>
             </div>
             <div className="pricing-comparison">
               <table>
                 <thead>
                   <tr>
-                    <th>Возможность</th>
+                    <th>Возможности</th>
                     <th>Старт</th>
                     <th>Профессиональный</th>
                     <th>Бизнес</th>
@@ -177,8 +187,8 @@ export default function PricingPage() {
 
         <section className="public-section mockup-section-soft">
           <div className="public-container">
-            <div className="render-section-head">
-              <p className="mockup-eyebrow">Вопросы о тарифах</p>
+            <div className="render-section-head pricing-faq-head">
+              <p className="mockup-eyebrow">Вопросы</p>
               <h2>Частые вопросы</h2>
             </div>
             <div className="pricing-faq">
@@ -196,16 +206,21 @@ export default function PricingPage() {
           <div className="public-container">
             <div className="pricing-final-cta">
               <div>
-                <p className="mockup-eyebrow">Попробуйте на своих обращениях</p>
-                <h2>Начните отвечать покупателям быстрее уже сегодня</h2>
-                <p>Подключите маркетплейс, соберите обращения в одной очереди и проверьте MPReply на реальном рабочем процессе.</p>
+                <p className="mockup-eyebrow">Начните сегодня</p>
+                <h2>Попробуйте MPReply бесплатно</h2>
+                <p>Подключите маркетплейсы, настройте ответы и оцените, как это экономит ваше время.</p>
                 <div className="mockup-actions">
                   <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать бесплатно</Link>
-                  <Link className="button button-secondary" href="/demo">Смотреть демо</Link>
+                  <Link className="button button-secondary" href="/demo">Посмотреть демо</Link>
+                </div>
+                <div className="mockup-trust-row" aria-label="Условия старта">
+                  <span>14 дней бесплатно</span>
+                  <span>Без карты</span>
+                  <span>Быстрый старт</span>
                 </div>
               </div>
               <div className="pricing-final-visual" aria-hidden="true">
-                <div className="pricing-final-bubble">✦ AI подготовил ответ<br /><br />Осталось проверить и отправить покупателю.</div>
+                <div className="pricing-final-bubble">Отличный товар! ★★★★★<br /><br />Здравствуйте! Спасибо за отзыв! Будем рады видеть вас снова!</div>
                 <div className="mockup-mascot" />
               </div>
             </div>
