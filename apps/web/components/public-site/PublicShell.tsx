@@ -23,7 +23,7 @@ function FooterSocials() {
   return (
     <div className="public-footer-socials" aria-hidden="true">
       <span><PublicIcon name="send" /></span>
-      <span>VK</span>
+      <span><PublicIcon name="vk" /></span>
       <span><PublicIcon name="play" /></span>
     </div>
   );
