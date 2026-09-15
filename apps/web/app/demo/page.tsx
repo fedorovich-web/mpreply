@@ -14,11 +14,62 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 const logos = {
-  wb: { name: "Wildberries", src: "/images/marketplaces/wildberries.webp", width: 432, height: 188 },
-  oz: { name: "Ozon", src: "/images/marketplaces/ozon.webp", width: 436, height: 198 },
-  ym: { name: "Яндекс Маркет", src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222 },
-  av: { name: "Авито", src: "/images/marketplaces/avito.webp", width: 504, height: 212 },
+  wb: {
+    name: "Wildberries",
+    src: "/images/marketplaces/wildberries.webp",
+    compactSrc: "/images/marketplaces/wildberries-compact.webp",
+    width: 432,
+    height: 188,
+  },
+  oz: {
+    name: "Ozon",
+    src: "/images/marketplaces/ozon.webp",
+    compactSrc: "/images/marketplaces/ozon-compact.webp",
+    width: 436,
+    height: 198,
+  },
+  ym: {
+    name: "Яндекс Маркет",
+    src: "/images/marketplaces/yandex-market.webp",
+    compactSrc: "/images/marketplaces/yandex-market-compact.webp",
+    width: 554,
+    height: 222,
+  },
+  av: {
+    name: "Авито",
+    src: "/images/marketplaces/avito.webp",
+    compactSrc: "/images/marketplaces/avito-compact.webp",
+    width: 504,
+    height: 212,
+  },
 } as const;
+
+type MarketplaceLogoKey = keyof typeof logos;
+
+function CompactMarketplaceLogo({
+  marketplace,
+  size = 36,
+  decorative = false,
+}: {
+  marketplace: MarketplaceLogoKey;
+  size?: number;
+  decorative?: boolean;
+}) {
+  const logo = logos[marketplace];
+
+  return (
+    <Image
+      className="demo-marketplace-compact"
+      src={logo.compactSrc}
+      width={64}
+      height={64}
+      alt={decorative ? "" : logo.name}
+      aria-hidden={decorative || undefined}
+      unoptimized
+      style={{ width: size, height: size, objectFit: "contain" }}
+    />
+  );
+}
 
 const journey: readonly [PublicIconName, string, string][] = [
   [
@@ -45,21 +96,21 @@ const journey: readonly [PublicIconName, string, string][] = [
 
 const scenarios = [
   {
-    logo: logos.wb,
+    marketplace: "wb" as MarketplaceLogoKey,
     type: "Отзыв",
     popular: true,
     title: "Покупатель оставил отзыв о товаре",
     text: "MPReply получает отзыв, анализирует тональность и предлагает подходящий ответ.",
   },
   {
-    logo: logos.oz,
+    marketplace: "oz" as MarketplaceLogoKey,
     type: "Вопрос",
     popular: false,
     title: "Покупатель спрашивает о наличии и доставке",
     text: "Система учитывает товарный контекст и помогает быстро подготовить точный ответ.",
   },
   {
-    logo: logos.ym,
+    marketplace: "ym" as MarketplaceLogoKey,
     type: "Сообщение",
     popular: false,
     title: "Личное сообщение от покупателя",
@@ -136,15 +187,7 @@ export default function DemoPage() {
               aria-label="Путь обращения от покупателя до готового ответа"
             >
               <article className="demo-story-card incoming">
-                <Image
-                  className="marketplace-detail-logo-small"
-                  src={logos.wb.src}
-                  width={logos.wb.width}
-                  height={logos.wb.height}
-                  alt=""
-                  aria-hidden="true"
-                  unoptimized
-                />
+                <CompactMarketplaceLogo marketplace="wb" size={34} decorative />
                 <strong>Новое сообщение от покупателя</strong>
                 <p>Здравствуйте! Когда будет поставка этого товара?</p>
               </article>
@@ -196,16 +239,9 @@ export default function DemoPage() {
 
                   {index === 0 ? (
                     <div className="demo-journey-marketplaces" aria-label="Готовые интеграции маркетплейсов">
-                      {Object.values(logos).map((logo) => (
-                        <span className="demo-journey-marketplace-chip" key={logo.name}>
-                          <Image
-                            src={logo.src}
-                            width={logo.width}
-                            height={logo.height}
-                            alt=""
-                            aria-hidden="true"
-                            unoptimized
-                          />
+                      {(Object.keys(logos) as MarketplaceLogoKey[]).map((marketplace) => (
+                        <span className="demo-journey-marketplace-chip" key={marketplace}>
+                          <CompactMarketplaceLogo marketplace={marketplace} size={30} decorative />
                         </span>
                       ))}
                     </div>
@@ -231,14 +267,7 @@ export default function DemoPage() {
                   key={scenario.type}
                 >
                   <div className="demo-scenario-head">
-                    <Image
-                      className="marketplace-detail-logo-small"
-                      src={scenario.logo.src}
-                      width={scenario.logo.width}
-                      height={scenario.logo.height}
-                      alt={scenario.logo.name}
-                      unoptimized
-                    />
+                    <CompactMarketplaceLogo marketplace={scenario.marketplace} size={42} />
                     <strong>{scenario.type}</strong>
                     {scenario.popular ? <span className="pricing-popular">Популярный</span> : null}
                   </div>
@@ -262,14 +291,7 @@ export default function DemoPage() {
             <div className="demo-process">
               <div className="demo-process-message">
                 <div className="demo-scenario-head">
-                  <Image
-                    className="marketplace-detail-logo-small"
-                    src={logos.oz.src}
-                    width={logos.oz.width}
-                    height={logos.oz.height}
-                    alt="Ozon"
-                    unoptimized
-                  />
+                  <CompactMarketplaceLogo marketplace="oz" size={38} />
                   <div>
                     <strong>Обращение #45821</strong>
                     <small>12 мар 2024, 14:32</small>
