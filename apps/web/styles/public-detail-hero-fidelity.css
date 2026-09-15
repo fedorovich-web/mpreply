@@ -1,0 +1,47 @@
+/* Marketplace detail hero refinements from the approved render. */
+
+.mockup-page .detail-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 5px 6px;
+  border-radius: 7px;
+  color: #7384a2;
+  font-size: .64rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.mockup-page .detail-sidebar-item > svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  color: #8291aa;
+}
+
+.mockup-page .detail-sidebar-item > b {
+  margin-left: auto;
+  color: #7384a2;
+  font-size: .58rem;
+  font-weight: 700;
+}
+
+.mockup-page .detail-sidebar-item.is-active {
+  background: #f2f1ff;
+  color: #5148e8;
+  font-weight: 700;
+}
+
+.mockup-page .detail-sidebar-item.is-active > svg,
+.mockup-page .detail-sidebar-item.is-active > b {
+  color: #5148e8;
+}
+
+.mockup-page .marketplace-detail-compact-logo {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  object-fit: contain;
+}
