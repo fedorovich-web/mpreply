@@ -8,9 +8,11 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const css = readFileSync(join(root, "styles/public-header-fidelity.css"), "utf8");
 
 describe("approved mockup header fidelity", () => {
-  it("uses the render CTA wording on desktop and mobile", () => {
+  it("uses the render CTA wording only on the five mockup route families", () => {
     expect(header).toContain("Попробовать бесплатно");
-    expect(header).not.toContain("Создать аккаунт");
+    expect(header).toContain("Создать аккаунт");
+    expect(header).toContain("isMockupRoute");
+    expect(header).toContain('pathname.startsWith("/marketplaces/")');
   });
 
   it("matches compact mockup header chrome without changing routing logic", () => {
