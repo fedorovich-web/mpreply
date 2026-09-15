@@ -18,6 +18,11 @@
   --color-border-subtle: #dceafa;
   --color-border-strong: #bfd6f3;
 
+  /* Retarget legacy render tokens to the approved MPReply brand on these pages. */
+  --mockup-blue: #5148e8;
+  --mockup-blue-deep: #443bcf;
+  --mockup-sky: #5148e8;
+
   --color-brand-primary: #5148e8;
   --color-brand-primary-hover: #443bcf;
   --color-brand-primary-active: #3d35c0;
