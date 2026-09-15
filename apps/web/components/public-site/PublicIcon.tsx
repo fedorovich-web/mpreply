@@ -2,6 +2,7 @@ import type { SVGProps } from "react";
 
 export type PublicIconName =
   | "inbox"
+  | "message"
   | "sparkles"
   | "shield-check"
   | "lightning"
@@ -27,6 +28,13 @@ function IconPaths({ name }: { name: PublicIconName }) {
           <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
           <path d="m5 7 7 5.2L19 7" />
           <path d="m5 17 4.7-4.2M19 17l-4.7-4.2" />
+        </>
+      );
+    case "message":
+      return (
+        <>
+          <path d="M5.5 5.5h13a2.5 2.5 0 0 1 2.5 2.5v6.2a2.5 2.5 0 0 1-2.5 2.5h-7.4L6.2 20v-3.3h-.7A2.5 2.5 0 0 1 3 14.2V8a2.5 2.5 0 0 1 2.5-2.5Z" />
+          <path d="M7.5 10h9M7.5 13.2h6.2" />
         </>
       );
     case "sparkles":
