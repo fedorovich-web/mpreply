@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
@@ -54,18 +55,18 @@ const integrations = [
   },
 ] as const;
 
-const benefits = [
-  ["✉", "Единая очередь обращений", "Все отзывы, вопросы и сообщения из Wildberries, Ozon, Яндекс Маркета и Авито в одном удобном интерфейсе."],
-  ["↻", "Статусы и синхронизация", "Автоматически обновляем статусы, синхронизируем данные и не даём потерять ни одно обращение."],
-  ["✦", "AI-подготовка ответов", "Искусственный интеллект помогает составлять вежливые, точные и персонализированные ответы."],
-  ["●", "Командная работа", "Распределяйте обращения между сотрудниками, настраивайте роли и контролируйте нагрузку."],
-] as const;
+const benefits: readonly [PublicIconName, string, string, string][] = [
+  ["inbox", "blue", "Единая очередь обращений", "Все отзывы, вопросы и сообщения из Wildberries, Ozon, Яндекс Маркета и Авито в одном удобном интерфейсе."],
+  ["sync", "blue", "Статусы и синхронизация", "Автоматически обновляем статусы, синхронизируем данные и не даём потерять ни одно обращение."],
+  ["sparkles", "purple", "AI-подготовка ответов", "Искусственный интеллект помогает составлять вежливые, точные и персонализированные ответы."],
+  ["users", "purple", "Командная работа", "Распределяйте обращения между сотрудниками, настраивайте роли и контролируйте нагрузку."],
+];
 
-const connectSteps = [
-  ["1", "Выберите маркетплейсы", "Отметьте нужные площадки и нажмите «Подключить»."],
-  ["2", "Авторизуйтесь", "Пройдите безопасную авторизацию на площадках за пару минут."],
-  ["3", "Начните работать", "Все обращения появятся в MPReply. Отвечайте быстрее, повышайте рейтинг и увеличивайте продажи."],
-] as const;
+const connectSteps: readonly [string, PublicIconName, string, string][] = [
+  ["1", "link", "Выберите маркетплейсы", "Отметьте нужные площадки и нажмите «Подключить»."],
+  ["2", "gear", "Авторизуйтесь", "Пройдите безопасную авторизацию на площадках за пару минут."],
+  ["3", "chart", "Начните работать", "Все обращения появятся в MPReply. Отвечайте быстрее, повышайте рейтинг и увеличивайте продажи."],
+];
 
 function MarketplaceLogo({ marketplace, className, decorative = false }: {
   marketplace: keyof typeof marketplaceLogos;
@@ -177,9 +178,9 @@ export default function MarketplacesPage() {
               <p>Подключите все маркетплейсы к MPReply и работайте с обращениями проще, быстрее и эффективнее.</p>
             </div>
             <div className="marketplace-benefits-grid">
-              {benefits.map(([icon, title, text], index) => (
+              {benefits.map(([icon, tone, title, text]) => (
                 <article className="marketplace-benefit-card" key={title}>
-                  <span className={`mockup-icon-chip ${index === 2 || index === 3 ? "purple" : ""}`} aria-hidden="true">{icon}</span>
+                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </article>
@@ -196,12 +197,10 @@ export default function MarketplacesPage() {
               <p>Подключите все нужные маркетплейсы и начните работать с обращениями уже сегодня.</p>
             </div>
             <div className="marketplace-connect-steps">
-              {connectSteps.map(([number, title, text], index) => (
+              {connectSteps.map(([number, icon, title, text], index) => (
                 <article className="marketplace-connect-card" key={number}>
                   <span className="mockup-step-number">{number}</span>
-                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true">
-                    {index === 0 ? "↗" : index === 1 ? "⚙" : "▥"}
-                  </span>
+                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </article>
