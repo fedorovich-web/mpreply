@@ -22,6 +22,7 @@ describe("final approved render details", () => {
     expect(pricing).not.toContain("<strong>{marketplace.name}</strong>");
     expect(finalCss).toContain(".pricing-hero-note");
     expect(finalCss).toContain(".pricing-custom-icon");
+    expect(finalCss).toContain(".pricing-market-chip .marketplace-detail-logo-small");
   });
 
   it("renders the features benefit group as the soft rounded panel from the mockup", () => {
