@@ -6,6 +6,7 @@ const root = process.cwd();
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const mockupCss = readFileSync(join(root, "styles/public-mockup-fidelity.css"), "utf8");
 const spacingCss = readFileSync(join(root, "styles/public-section-spacing.css"), "utf8");
+const tuningCss = readFileSync(join(root, "styles/public-mockup-render-tuning.css"), "utf8");
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
 const marketplaceLanding = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
@@ -14,16 +15,24 @@ const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 
 describe("approved public mockup fidelity", () => {
-  it("adds exactly 15px to public section vertical rhythm", () => {
+  it("adds exactly 15px to the render-derived public section rhythm", () => {
     expect(layout).toContain('import "../styles/public-mockup-fidelity.css"');
     expect(layout).toContain('import "../styles/public-section-spacing.css"');
+    expect(layout).toContain('import "../styles/public-mockup-render-tuning.css"');
     expect(mockupCss).toContain("--public-section-padding-extra: 15px");
-    expect(mockupCss).toContain("calc(var(--public-section-spacing) + var(--public-section-padding-extra))");
     expect(spacingCss).toContain(".public-cta-section");
-    expect(spacingCss).toContain("padding-block: calc(var(--public-section-spacing) + var(--public-section-padding-extra))");
+    expect(tuningCss).toContain("--mockup-section-base-spacing: 38px");
+    expect(tuningCss).toContain("calc(var(--mockup-section-base-spacing) + var(--public-section-padding-extra))");
     for (const hero of [".mockup-hero", ".marketplace-detail-mockup-hero", ".pricing-mockup-hero", ".demo-mockup-hero"]) {
-      expect(spacingCss).toContain(hero);
+      expect(tuningCss).toContain(hero);
     }
+  });
+
+  it("keeps render-scale desktop typography and container proportions", () => {
+    expect(tuningCss).toContain("--container-max-width: 1120px");
+    expect(tuningCss).toContain("--public-header-height: 56px");
+    expect(tuningCss).toContain("clamp(2.35rem, 3.8vw, 3.25rem)");
+    expect(tuningCss).toContain("clamp(1.85rem, 2.6vw, 2.45rem)");
   });
 
   it("keeps the full approved header navigation", () => {
