@@ -167,7 +167,7 @@ export default function PricingPage() {
             </div>
             <div className="pricing-market-row">
               {marketplaces.map((marketplace) => (
-                <div className="pricing-market-chip" key={marketplace.name}>
+                <div className="pricing-market-chip" key={marketplace.name} aria-label={marketplace.name}>
                   <Image
                     className="marketplace-detail-logo-small"
                     src={marketplace.src}
@@ -176,7 +176,6 @@ export default function PricingPage() {
                     alt={marketplace.name}
                     unoptimized
                   />
-                  <strong>{marketplace.name}</strong>
                 </div>
               ))}
             </div>
