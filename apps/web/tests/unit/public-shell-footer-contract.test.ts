@@ -8,10 +8,13 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const footerCss = readFileSync(join(root, "styles/public-compact-footer.css"), "utf8");
 
 describe("approved public footer variants", () => {
-  it("renders both default and compact footer structures from one shell", () => {
+  it("renders default, compact and pricing-specific footer structures from one shell", () => {
     expect(shell).toContain("public-footer-default");
     expect(shell).toContain("public-footer-compact");
+    expect(shell).toContain("public-footer-pricing");
     expect(shell).toContain("Ближе к вашим клиентам");
+    expect(shell).toContain("г. Майкоп, ул. Чкалова, 65, помещение 17А");
+    expect(shell).toContain("Ежедневно 09:00–18:00 МСК");
   });
 
   it("shows compact footer only on non-pricing mockup pages", () => {
@@ -21,7 +24,12 @@ describe("approved public footer variants", () => {
     expect(footerCss).toContain(".public-footer-compact");
   });
 
-  it("loads compact footer styling after the public fidelity layers", () => {
+  it("shows the dedicated large footer only on pricing", () => {
+    expect(footerCss).toContain(":has(.pricing-mockup-hero)");
+    expect(footerCss).toContain(".public-footer-pricing");
+  });
+
+  it("loads footer styling after the public fidelity layers", () => {
     expect(layout).toContain('import "../styles/public-compact-footer.css"');
   });
 });
