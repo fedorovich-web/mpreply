@@ -19,12 +19,15 @@ const brandFidelityPath = join(root, "styles/public-mockup-brand-fidelity.css");
 const brandFidelityCss = existsSync(brandFidelityPath) ? readFileSync(brandFidelityPath, "utf8") : "";
 
 describe("approved public mockup fidelity", () => {
-  it("adds exactly 15px to the render-derived public section rhythm", () => {
+  it("adds exactly 15px to the render-derived mockup section rhythm without changing homepage sections", () => {
     expect(layout).toContain('import "../styles/public-mockup-fidelity.css"');
     expect(layout).toContain('import "../styles/public-section-spacing.css"');
     expect(layout).toContain('import "../styles/public-mockup-render-tuning.css"');
     expect(mockupCss).toContain("--public-section-padding-extra: 15px");
-    expect(spacingCss).toContain(".public-cta-section");
+    expect(mockupCss).toContain(".mockup-page .public-section");
+    expect(mockupCss).not.toMatch(/(^|\n)\.public-section\s*\{/);
+    expect(spacingCss).toContain(".mockup-page .public-cta-section");
+    expect(spacingCss).not.toMatch(/(^|\n)\.public-cta-section\s*\{/);
     expect(tuningCss).toContain("--mockup-section-base-spacing: 38px");
     expect(tuningCss).toContain("calc(var(--mockup-section-base-spacing) + var(--public-section-padding-extra))");
     for (const hero of [".mockup-hero", ".marketplace-detail-mockup-hero", ".pricing-mockup-hero", ".demo-mockup-hero"]) {
