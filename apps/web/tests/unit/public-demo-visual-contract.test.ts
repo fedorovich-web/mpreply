@@ -55,6 +55,23 @@ describe("approved demo journey visual", () => {
     expect(demo).not.toContain("scenario.title");
   });
 
+  it("renders the popular scenario badge inline instead of reusing pricing positioning", () => {
+    expect(demo).toContain("demo-scenario-popular");
+    expect(demo).not.toContain('<span className="pricing-popular">Популярный</span>');
+    expect(finalCss).toContain(".demo-scenario-popular");
+  });
+
+  it("matches the hero cards labels and hierarchy from the approved render", () => {
+    expect(demo).toContain("demo-story-meta");
+    expect(demo).toContain("Покупатель");
+    expect(demo).toContain("5 мин назад");
+    expect(demo).toContain("Предлагает ответ");
+    expect(demo).toContain("Проверяете и отправляете");
+    expect(demo).toContain("Отличный ответ!");
+    expect(finalCss).toContain(".demo-story-meta");
+    expect(finalCss).toContain(".demo-story-review-avatar");
+  });
+
   it("uses dedicated decorative fidelity styles", () => {
     expect(existsSync(decorativeCssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-mockup-decorative-fidelity.css"');
