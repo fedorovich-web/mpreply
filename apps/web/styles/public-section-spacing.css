@@ -1,0 +1,32 @@
+/* User-approved spacing delta: +15px to top and bottom of every public page section. */
+
+.public-cta-section {
+  padding-block: calc(var(--public-section-spacing) + var(--public-section-padding-extra));
+}
+
+.mockup-hero {
+  padding-top: calc(clamp(78px, 9vw, 122px) + var(--public-section-padding-extra));
+  padding-bottom: calc(clamp(72px, 8vw, 110px) + var(--public-section-padding-extra));
+}
+
+.marketplace-detail-mockup-hero {
+  padding-top: calc(clamp(76px, 8vw, 112px) + var(--public-section-padding-extra));
+  padding-bottom: calc(clamp(64px, 7vw, 94px) + var(--public-section-padding-extra));
+}
+
+.pricing-mockup-hero {
+  padding-top: calc(clamp(72px, 8vw, 105px) + var(--public-section-padding-extra));
+  padding-bottom: calc(34px + var(--public-section-padding-extra));
+}
+
+.demo-mockup-hero {
+  padding-top: calc(clamp(72px, 8vw, 108px) + var(--public-section-padding-extra));
+  padding-bottom: calc(clamp(60px, 7vw, 92px) + var(--public-section-padding-extra));
+}
+
+@media (max-width: 720px) {
+  .mockup-hero {
+    padding-top: calc(68px + var(--public-section-padding-extra));
+    padding-bottom: calc(64px + var(--public-section-padding-extra));
+  }
+}
