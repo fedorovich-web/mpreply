@@ -9,6 +9,15 @@ type PublicShellProps = {
   children: ReactNode;
 };
 
+function FooterLogo() {
+  return (
+    <Link className="public-footer-logo" href="/" aria-label="MPReply — главная">
+      <PublicBrandMark />
+      <strong>MPReply</strong>
+    </Link>
+  );
+}
+
 export function PublicShell({ children }: PublicShellProps) {
   return (
     <div className="public-root">
@@ -18,13 +27,10 @@ export function PublicShell({ children }: PublicShellProps) {
 
       <main id="main-content">{children}</main>
 
-      <footer className="public-footer">
+      <footer className="public-footer public-footer-default">
         <div className="public-container public-footer-main">
           <div className="public-footer-brand">
-            <Link className="public-footer-logo" href="/" aria-label="MPReply — главная">
-              <PublicBrandMark />
-              <strong>MPReply</strong>
-            </Link>
+            <FooterLogo />
             <p>Автоответы на отзывы, вопросы и сообщения покупателей на маркетплейсах.</p>
           </div>
 
@@ -57,6 +63,34 @@ export function PublicShell({ children }: PublicShellProps) {
             <Link href="/privacy">Политика конфиденциальности</Link>
             <Link href="/terms">Условия использования</Link>
           </nav>
+        </div>
+      </footer>
+
+      <footer className="public-footer public-footer-compact" aria-label="Навигация в подвале">
+        <div className="public-container public-footer-compact-inner">
+          <div className="public-footer-compact-brand">
+            <FooterLogo />
+            <span>Ближе к вашим клиентам</span>
+          </div>
+
+          <nav className="public-footer-compact-nav" aria-label="Разделы сайта">
+            <Link href="/features">Возможности</Link>
+            <Link href="/marketplaces">Интеграции</Link>
+            <Link href="/pricing">Тарифы</Link>
+            <Link href="/demo">Демо</Link>
+            <Link href="/help">Помощь</Link>
+            <Link href="/contacts">Контакты</Link>
+          </nav>
+
+          <div className="public-footer-compact-meta">
+            <div className="public-footer-socials" aria-hidden="true">
+              <span>ТГ</span>
+              <span>VK</span>
+              <span>▶</span>
+            </div>
+            <i aria-hidden="true" />
+            <span>© {new Date().getFullYear()} MPReply<br />Все права защищены.</span>
+          </div>
         </div>
       </footer>
     </div>
