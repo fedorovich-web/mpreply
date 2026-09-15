@@ -7,6 +7,9 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const mockupCss = readFileSync(join(root, "styles/public-mockup-fidelity.css"), "utf8");
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
+const marketplaceLanding = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
+const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
+const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 
 describe("approved public mockup fidelity", () => {
@@ -46,5 +49,36 @@ describe("approved public mockup fidelity", () => {
     expect(marketplaces).toContain("marketplace-benefits-grid");
     expect(marketplaces).toContain("marketplace-connect-steps");
     for (const name of ["Wildberries", "Ozon", "Яндекс Маркет", "Авито"]) expect(marketplaces).toContain(name);
+  });
+
+  it("implements the approved marketplace detail composition", () => {
+    expect(marketplaceLanding).toContain("marketplace-detail-mockup-hero");
+    expect(marketplaceLanding).toContain("marketplace-detail-tools");
+    expect(marketplaceLanding).toContain("marketplace-detail-steps");
+    expect(marketplaceLanding).toContain("marketplace-detail-benefits");
+    expect(marketplaceLanding).toContain("marketplace-detail-faq");
+    for (const label of ["Единая очередь обращений", "AI-черновик ответа", "Контроль качества", "История действий"]) {
+      expect(marketplaceLanding).toContain(label);
+    }
+  });
+
+  it("implements pricing exactly as coded plan cards, not a raster pricing image", () => {
+    expect(pricing).toContain("pricing-mockup-hero");
+    expect(pricing).toContain("pricing-card-grid");
+    expect(pricing).toContain("pricing-comparison");
+    expect(pricing).toContain("pricing-faq");
+    for (const price of ["490 ₽", "990 ₽", "1 990 ₽"]) expect(pricing).toContain(price);
+    for (const plan of ["Старт", "Профессиональный", "Бизнес"]) expect(pricing).toContain(plan);
+  });
+
+  it("implements the approved demo story and scenarios", () => {
+    expect(demo).toContain("demo-mockup-hero");
+    expect(demo).toContain("demo-journey");
+    expect(demo).toContain("demo-scenarios");
+    expect(demo).toContain("demo-process");
+    expect(demo).toContain("demo-team-tools");
+    for (const label of ["Получение обращения", "Анализ контекста", "AI-черновик", "Проверка и отправка"]) {
+      expect(demo).toContain(label);
+    }
   });
 });
