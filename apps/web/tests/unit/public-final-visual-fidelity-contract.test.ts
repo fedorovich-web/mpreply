@@ -25,6 +25,13 @@ describe("final approved render details", () => {
     expect(finalCss).toContain(".pricing-market-chip .marketplace-detail-logo-small");
   });
 
+  it("uses the lavender pill kicker treatment from the pricing render", () => {
+    expect(finalCss).toContain(".pricing-mockup-hero .mockup-eyebrow");
+    expect(finalCss).toContain(".mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow");
+    expect(finalCss).toContain(".pricing-faq-heading .mockup-eyebrow");
+    expect(finalCss).toContain("::before");
+  });
+
   it("renders the features benefit group as the soft rounded panel from the mockup", () => {
     expect(features).toContain("features-benefit-grid");
     expect(finalCss).toContain(":has(.features-benefit-grid)");
