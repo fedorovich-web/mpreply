@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-fidelity.css"), "utf8");
+const publicIcon = readFileSync(join(root, "components/public-site/PublicIcon.tsx"), "utf8");
 
 describe("approved features hero console", () => {
   it("uses the sidebar plus unified queue composition from the render", () => {
@@ -23,5 +24,22 @@ describe("approved features hero console", () => {
     expect(features).toContain("Быстрые и точные ответы");
     expect(decorativeCss).toContain(".features-hero-note-primary");
     expect(decorativeCss).toContain(".features-hero-note-ai");
+  });
+
+  it("uses the compact marketplace marks from the approved render", () => {
+    for (const asset of [
+      "wildberries-compact.webp",
+      "ozon-compact.webp",
+      "yandex-market-compact.webp",
+      "avito-compact.webp",
+    ]) {
+      expect(features).toContain(asset);
+    }
+    expect(features).toContain("CompactMarketplaceLogo");
+  });
+
+  it("uses the play icon in the secondary demo action", () => {
+    expect(publicIcon).toContain('"play"');
+    expect(features).toContain('name="play"');
   });
 });
