@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
@@ -18,12 +19,12 @@ const logos = {
   ym: { name: "Яндекс Маркет", src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222 },
 } as const;
 
-const journey = [
-  ["✉", "Получение обращения", "Сообщение, отзыв или вопрос поступает из маркетплейса в MPReply в реальном времени."],
-  ["▤", "Анализ контекста", "ИИ и система анализируют содержание обращения, историю клиента и товар, чтобы учесть все детали."],
-  ["✦", "AI-черновик", "MPReply предлагает готовый ответ с учётом правил бренда и специфики маркетплейса."],
-  ["➤", "Проверка и отправка", "Вы проверяете, при необходимости редактируете и отправляете ответ в маркетплейс — прямо из MPReply."],
-] as const;
+const journey: readonly [PublicIconName, string, string][] = [
+  ["inbox", "Получение обращения", "Сообщение, отзыв или вопрос поступает из маркетплейса в MPReply в реальном времени."],
+  ["document", "Анализ контекста", "ИИ и система анализируют содержание обращения, историю клиента и товар, чтобы учесть все детали."],
+  ["sparkles", "AI-черновик", "MPReply предлагает готовый ответ с учётом правил бренда и специфики маркетплейса."],
+  ["send", "Проверка и отправка", "Вы проверяете, при необходимости редактируете и отправляете ответ в маркетплейс — прямо из MPReply."],
+];
 
 const scenarios = [
   {
@@ -57,12 +58,12 @@ const processEvents = [
   ["5", "Отправлено", "Покупатель получил ответ"],
 ] as const;
 
-const teamTools = [
-  ["✉", "Единая очередь обращений", "Все отзывы, вопросы и сообщения из подключённых маркетплейсов в одном окне."],
-  ["▤", "Шаблоны ответов", "Создавайте готовые формулировки для типовых ситуаций и используйте их всей командой."],
-  ["ϟ", "Автоответы и сценарии", "Автоматизируйте повторяющиеся обращения и оставляйте сложные случаи на проверку."],
-  ["▥", "Аналитика", "Следите за скоростью ответов, объёмом обращений и результатами работы команды."],
-] as const;
+const teamTools: readonly [PublicIconName, string, string][] = [
+  ["inbox", "Единая очередь обращений", "Все отзывы, вопросы и сообщения из подключённых маркетплейсов в одном окне."],
+  ["document", "Шаблоны ответов", "Создавайте готовые формулировки для типовых ситуаций и используйте их всей командой."],
+  ["lightning", "Автоответы и сценарии", "Автоматизируйте повторяющиеся обращения и оставляйте сложные случаи на проверку."],
+  ["chart", "Аналитика", "Следите за скоростью ответов, объёмом обращений и результатами работы команды."],
+];
 
 export default function DemoPage() {
   return (
@@ -97,7 +98,7 @@ export default function DemoPage() {
               </article>
               <span className="demo-story-arrow a1" aria-hidden="true">↘</span>
               <article className="demo-story-card ai">
-                <strong>✦ AI MPReply</strong>
+                <strong><PublicIcon name="sparkles" className="public-inline-icon" /> AI MPReply</strong>
                 <p>Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар появится на складе.</p>
               </article>
               <span className="demo-story-arrow a2" aria-hidden="true">→</span>
@@ -121,7 +122,7 @@ export default function DemoPage() {
               {journey.map(([icon, title, text], index) => (
                 <article className="demo-journey-card" key={title}>
                   <span className="mockup-step-number">{index + 1}</span>
-                  <span className={`mockup-icon-chip ${index === 2 ? "purple" : ""}`} aria-hidden="true">{icon}</span>
+                  <span className={`mockup-icon-chip ${index === 2 ? "purple" : ""}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </article>
@@ -186,7 +187,7 @@ export default function DemoPage() {
               </div>
 
               <div className="demo-process-answer">
-                <strong>✦ AI-черновик</strong>
+                <strong><PublicIcon name="sparkles" className="public-inline-icon" /> AI-черновик</strong>
                 <p>Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар снова будет в наличии.</p>
                 <span className="button button-primary">Проверить и отправить</span>
               </div>
@@ -204,7 +205,7 @@ export default function DemoPage() {
             <div className="demo-team-tools">
               {teamTools.map(([icon, title, text], index) => (
                 <article className="demo-team-tool" key={title}>
-                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : index === 2 ? "orange" : ""}`} aria-hidden="true">{icon}</span>
+                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : index === 2 ? "orange" : ""}`} aria-hidden="true"><PublicIcon name={icon} /></span>
                   <div>
                     <strong>{title}</strong>
                     <span>{text}</span>
