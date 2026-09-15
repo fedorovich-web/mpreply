@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { PublicShell } from "../../components/public-site/PublicShell";
@@ -11,6 +12,29 @@ export const metadata: Metadata = createPageMetadata({
   path: "/marketplaces",
 });
 
+const marketplaceLogos = {
+  wb: {
+    src: "/images/marketplaces/wildberries.webp",
+    width: 432,
+    height: 188,
+  },
+  oz: {
+    src: "/images/marketplaces/ozon.webp",
+    width: 436,
+    height: 198,
+  },
+  ym: {
+    src: "/images/marketplaces/yandex-market.webp",
+    width: 554,
+    height: 222,
+  },
+  av: {
+    src: "/images/marketplaces/avito.webp",
+    width: 504,
+    height: 212,
+  },
+} as const;
+
 const integrations = [
   {
     key: "wb",
@@ -18,6 +42,7 @@ const integrations = [
     path: "/marketplaces/wildberries",
     text: "Отзывы, вопросы и сообщения покупателей — в единой очереди MPReply.",
     points: ["Отзывы и вопросы", "Сообщения покупателей", "Ответы и статусы"],
+    logo: marketplaceLogos.wb,
   },
   {
     key: "oz",
@@ -25,6 +50,7 @@ const integrations = [
     path: "/marketplaces/ozon",
     text: "Работайте с обращениями Ozon по тем же правилам, что и с другими площадками.",
     points: ["Единый поток обращений", "Контекст товара", "Проверка перед отправкой"],
+    logo: marketplaceLogos.oz,
   },
   {
     key: "ym",
@@ -32,6 +58,7 @@ const integrations = [
     path: "/marketplaces/yandex-market",
     text: "Получайте обращения Яндекс Маркета и обрабатывайте их без отдельного рабочего процесса.",
     points: ["Отзывы и вопросы", "Общий статус обработки", "История действий"],
+    logo: marketplaceLogos.ym,
   },
   {
     key: "av",
@@ -39,6 +66,7 @@ const integrations = [
     path: "/marketplaces/avito",
     text: "Сообщения покупателей Авито становятся частью общей очереди и командной работы.",
     points: ["Сообщения покупателей", "AI-подготовка ответа", "Единые правила команды"],
+    logo: marketplaceLogos.av,
   },
 ] as const;
 
@@ -54,6 +82,31 @@ const connectSteps = [
   ["2", "Подтвердите подключение", "Добавьте данные подключения в защищённой форме и дождитесь успешной синхронизации."],
   ["3", "Работайте в одной системе", "Новые обращения появляются в MPReply и проходят единый процесс подготовки и отправки ответа."],
 ] as const;
+
+function MarketplaceLogo({
+  marketplace,
+  className,
+  decorative = false,
+}: {
+  marketplace: keyof typeof marketplaceLogos;
+  className: string;
+  decorative?: boolean;
+}) {
+  const logo = marketplaceLogos[marketplace];
+  const integration = integrations.find((item) => item.key === marketplace);
+
+  return (
+    <Image
+      className={className}
+      src={logo.src}
+      width={logo.width}
+      height={logo.height}
+      alt={decorative ? "" : integration?.name ?? ""}
+      aria-hidden={decorative || undefined}
+      unoptimized
+    />
+  );
+}
 
 export default function MarketplacesPage() {
   return (
@@ -87,22 +140,22 @@ export default function MarketplacesPage() {
               <span className="marketplace-hub-line l2" aria-hidden="true" />
               <div className="marketplace-hub-core">MPReply</div>
               <div className="marketplace-hub-card wb">
-                <span className="mockup-market-mark wb" aria-hidden="true">WB</span>
+                <MarketplaceLogo marketplace="wb" className="mockup-market-logo" decorative />
                 <strong>Wildberries</strong>
                 <span>Отзывы · вопросы · сообщения</span>
               </div>
               <div className="marketplace-hub-card oz">
-                <span className="mockup-market-mark oz" aria-hidden="true">OZ</span>
+                <MarketplaceLogo marketplace="oz" className="mockup-market-logo" decorative />
                 <strong>Ozon</strong>
                 <span>Отзывы · вопросы · сообщения</span>
               </div>
               <div className="marketplace-hub-card ym">
-                <span className="mockup-market-mark ym" aria-hidden="true">М</span>
+                <MarketplaceLogo marketplace="ym" className="mockup-market-logo" decorative />
                 <strong>Яндекс Маркет</strong>
                 <span>Обращения покупателей</span>
               </div>
               <div className="marketplace-hub-card av">
-                <span className="mockup-market-mark av" aria-hidden="true">A</span>
+                <MarketplaceLogo marketplace="av" className="mockup-market-logo" decorative />
                 <strong>Авито</strong>
                 <span>Сообщения · отзывы</span>
               </div>
@@ -122,7 +175,14 @@ export default function MarketplacesPage() {
             <div className="marketplace-logo-grid">
               {integrations.map((integration) => (
                 <article className="marketplace-logo-card" key={integration.key}>
-                  <div className={`marketplace-brand-wordmark ${integration.key}`}>{integration.name}</div>
+                  <Image
+                    className="marketplace-brand-logo"
+                    src={integration.logo.src}
+                    width={integration.logo.width}
+                    height={integration.logo.height}
+                    alt={integration.name}
+                    unoptimized
+                  />
                   <p>{integration.text}</p>
                   <ul>
                     {integration.points.map((point) => <li key={point}>{point}</li>)}
