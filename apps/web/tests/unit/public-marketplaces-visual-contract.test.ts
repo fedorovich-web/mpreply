@@ -34,10 +34,12 @@ describe("approved marketplaces hero visual", () => {
     }
   });
 
-  it("shows the render message chips below each marketplace logo", () => {
+  it("uses separate logo and message cards for each marketplace", () => {
+    expect(marketplaces).toContain("marketplace-hub-logo-card");
     expect(marketplaces).toContain("marketplace-hub-card-label");
     expect(marketplaces).toContain('name="message"');
     expect(marketplaces).toContain('name="inbox"');
+    expect(finalCss).toContain(".marketplace-hub-logo-card");
     expect(finalCss).toContain(".marketplace-hub-card-label");
   });
 
