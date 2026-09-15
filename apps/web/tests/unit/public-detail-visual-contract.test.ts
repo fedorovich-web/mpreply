@@ -6,6 +6,7 @@ const root = process.cwd();
 const detail = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
 const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-fidelity.css"), "utf8");
 const finalCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
+const publicIcon = readFileSync(join(root, "components/public-site/PublicIcon.tsx"), "utf8");
 
 describe("approved marketplace detail visual", () => {
   it("uses the real MPReply brand mark inside the product window", () => {
@@ -28,5 +29,30 @@ describe("approved marketplace detail visual", () => {
     expect(detail).toContain('["shield-check", "Обновляются ли статусы обращений?"');
     expect(finalCss).toContain(".detail-faq-summary");
     expect(finalCss).toContain(".detail-faq-icon");
+  });
+
+  it("uses the play icon in the secondary hero action", () => {
+    expect(publicIcon).toContain('"play"');
+    expect(detail).toContain('name="play"');
+  });
+
+  it("uses compact marketplace marks inside the app question card", () => {
+    for (const asset of [
+      "wildberries-compact.webp",
+      "ozon-compact.webp",
+      "yandex-market-compact.webp",
+      "avito-compact.webp",
+    ]) {
+      expect(detail).toContain(asset);
+    }
+    expect(detail).toContain("marketplace-detail-compact-logo");
+  });
+
+  it("uses icon-led sidebar navigation inside the MPReply window", () => {
+    expect(detail).toContain("detail-sidebar-item");
+    for (const icon of ["inbox", "star", "message", "chart", "document", "users"]) {
+      expect(detail).toContain(`name="${icon}"`);
+    }
+    expect(finalCss).toContain(".detail-sidebar-item");
   });
 });
