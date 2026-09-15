@@ -8,6 +8,7 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const publicIcon = readFileSync(join(root, "components/public-site/PublicIcon.tsx"), "utf8");
 const decorativeCssPath = join(root, "styles/public-mockup-decorative-fidelity.css");
 const decorativeCss = existsSync(decorativeCssPath) ? readFileSync(decorativeCssPath, "utf8") : "";
+const finalCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
 
 describe("approved demo journey visual", () => {
   it("shows all four ready marketplace logos in the first journey step", () => {
@@ -32,6 +33,8 @@ describe("approved demo journey visual", () => {
     expect(demo).toContain('["sparkles", "purple", "AI-черновик"');
     expect(demo).toContain('["users", "purple", "Ожидает"');
     expect(demo).toContain('["shield-check", "green", "Отправлено"');
+    expect(finalCss).toContain(".demo-process-event-icon.green");
+    expect(finalCss).toContain(".demo-process-event-icon.purple");
   });
 
   it("uses dedicated decorative fidelity styles", () => {
