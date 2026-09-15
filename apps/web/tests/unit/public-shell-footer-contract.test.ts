@@ -4,29 +4,21 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const shell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
-const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
-const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8");
-const detail = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
-const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
-const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const footerCss = readFileSync(join(root, "styles/public-compact-footer.css"), "utf8");
 
 describe("approved public footer variants", () => {
-  it("provides the compact render footer without replacing the default footer globally", () => {
-    expect(shell).toContain('footerVariant?: "default" | "compact"');
+  it("renders both default and compact footer structures from one shell", () => {
+    expect(shell).toContain("public-footer-default");
     expect(shell).toContain("public-footer-compact");
     expect(shell).toContain("Ближе к вашим клиентам");
   });
 
-  it("uses compact footer on the four compact-footer mockups", () => {
-    for (const page of [features, marketplaces, detail, demo]) {
-      expect(page).toContain('<PublicShell footerVariant="compact">');
-    }
-  });
-
-  it("keeps pricing on the full footer render", () => {
-    expect(pricing).toContain("<PublicShell>");
-    expect(pricing).not.toContain('footerVariant="compact"');
+  it("shows compact footer only on non-pricing mockup pages", () => {
+    expect(footerCss).toContain(":has(.mockup-page)");
+    expect(footerCss).toContain(":not(:has(.pricing-mockup-hero))");
+    expect(footerCss).toContain(".public-footer-default");
+    expect(footerCss).toContain(".public-footer-compact");
   });
 
   it("loads compact footer styling after the public fidelity layers", () => {
