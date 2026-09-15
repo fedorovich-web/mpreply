@@ -30,6 +30,7 @@ import "../styles/public-mockup-brand-fidelity.css";
 import "../styles/public-mockup-cta-fidelity.css";
 import "../styles/public-mockup-decorative-fidelity.css";
 import "../styles/public-mockup-final-details.css";
+import "../styles/public-mockup-mascot.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
