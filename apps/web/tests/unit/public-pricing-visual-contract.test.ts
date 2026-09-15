@@ -39,4 +39,19 @@ describe("approved pricing final CTA visual", () => {
     expect(integrationsCss).toContain(".pricing-market-compact");
     expect(integrationsCss).toContain(".pricing-final-logo-chip");
   });
+
+  it("renders FAQ chevrons at the right like the approved render", () => {
+    expect(pricing).toContain("pricing-faq-summary");
+    expect(pricing).toContain("pricing-faq-chevron");
+    expect(integrationsCss).toContain(".pricing-faq-summary");
+    expect(integrationsCss).toContain(".pricing-faq-chevron");
+  });
+
+  it("splits the CTA review and reply into separate cards", () => {
+    expect(pricing).toContain("pricing-final-review");
+    expect(pricing).toContain("pricing-final-answer");
+    expect(pricing).not.toContain("pricing-final-bubble");
+    expect(integrationsCss).toContain(".pricing-final-review");
+    expect(integrationsCss).toContain(".pricing-final-answer");
+  });
 });
