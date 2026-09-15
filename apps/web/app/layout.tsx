@@ -34,6 +34,7 @@ import "../styles/public-mockup-mascot.css";
 import "../styles/public-features-sidebar-fidelity.css";
 import "../styles/public-detail-hero-fidelity.css";
 import "../styles/public-pricing-integration-fidelity.css";
+import "../styles/public-compact-footer.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
