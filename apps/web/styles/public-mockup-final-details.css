@@ -206,6 +206,13 @@
   text-decoration: underline;
 }
 
+/* Demo journey marketplace icons sit left-aligned beneath the first-step copy. */
+.mockup-page .demo-journey-marketplaces {
+  margin-left: 0;
+  margin-right: 0;
+  justify-content: flex-start;
+}
+
 /* Demo scenarios: the popular badge is inline beside the type, not absolutely positioned like pricing. */
 .mockup-page .demo-scenario-popular {
   display: inline-flex;
