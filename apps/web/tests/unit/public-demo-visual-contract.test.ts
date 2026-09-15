@@ -37,6 +37,16 @@ describe("approved demo journey visual", () => {
     expect(finalCss).toContain(".demo-process-event-icon.purple");
   });
 
+  it("matches the approved full-process message and ready-answer cards", () => {
+    expect(demo).toContain("12 мар 2024, 14:32");
+    expect(demo).toContain("demo-process-buyer-message");
+    expect(demo).toContain("Открыть в маркетплейсе");
+    expect(demo).toContain("Готовый ответ");
+    expect(demo).toContain("Посмотреть полностью");
+    expect(demo).not.toContain("detail-product-row");
+    expect(finalCss).toContain(".demo-process-buyer-message");
+  });
+
   it("uses dedicated decorative fidelity styles", () => {
     expect(existsSync(decorativeCssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-mockup-decorative-fidelity.css"');
