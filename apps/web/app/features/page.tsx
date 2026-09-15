@@ -5,213 +5,248 @@ import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Автоответы на отзывы, вопросы и сообщения — возможности MPReply",
+  title: "Возможности MPReply — обращения, ИИ-ответы и автоматизация",
   description:
-    "Единая очередь обращений с Wildberries, Ozon, Яндекс Маркета и Авито, ответы с помощью ИИ, правила автоматизации, проверка сотрудником и контроль отправки.",
+    "Единая очередь обращений с Wildberries, Ozon, Яндекс Маркета и Авито, подготовка ответов с ИИ, контроль качества, автоответы, шаблоны, аналитика и командная работа.",
   path: "/features",
 });
 
-const capabilityGroups = [
+const tools = [
   {
-    number: "01",
-    title: "Соберите обращения в одну очередь",
-    text: "Отзывы, вопросы и сообщения с подключённых площадок приходят в единое рабочее пространство. Сотрудник сразу видит источник, тип обращения, товар и текущее состояние.",
-    points: ["Wildberries, Ozon, Яндекс Маркет и Авито", "Фильтры по площадке, типу и статусу", "Контекст обращения без лишних переходов"],
+    icon: "✉",
+    tone: "blue",
+    title: "Единая очередь обращений",
+    text: "Отзывы, вопросы и сообщения со всех подключённых площадок собраны в одном окне.",
   },
   {
-    number: "02",
-    title: "Получите готовый черновик ответа",
-    text: "ИИ помогает подготовить ответ с учётом доступного контекста товара, самого обращения, правил команды и заданного тона коммуникации.",
-    points: ["Черновик рядом с обращением", "Контекст товара и диалога", "Редактирование перед отправкой"],
+    icon: "✦",
+    tone: "purple",
+    title: "AI-подготовка ответов",
+    text: "Получайте готовый черновик с учётом обращения, товара, истории и тона бренда.",
   },
   {
-    number: "03",
-    title: "Оставьте человеку только нужные случаи",
-    text: "Типовые сценарии можно автоматизировать, а неоднозначные, чувствительные или важные обращения отправлять на проверку сотруднику.",
-    points: ["Автоотправка по понятным правилам", "Отдельная очередь на проверку", "Контроль исключений и чувствительных тем"],
+    icon: "✓",
+    tone: "green",
+    title: "Контроль качества",
+    text: "Проверяйте чувствительные и нестандартные ответы перед отправкой покупателю.",
   },
   {
-    number: "04",
-    title: "Отправьте ответ и сохраните историю",
-    text: "После решения сотрудник видит итоговый статус обработки и может вернуться к истории действий, если нужно проверить конкретный случай.",
-    points: ["Понятные статусы обработки", "Контроль ошибок отправки", "История значимых действий"],
+    icon: "ϟ",
+    tone: "orange",
+    title: "Автоответы и сценарии",
+    text: "Автоматизируйте типовые обращения и оставляйте исключения сотруднику.",
   },
-];
+  {
+    icon: "▤",
+    tone: "blue",
+    title: "Шаблоны ответов",
+    text: "Используйте единые формулировки команды и быстро адаптируйте их под ситуацию.",
+  },
+  {
+    icon: "▥",
+    tone: "blue",
+    title: "Аналитика",
+    text: "Следите за потоком обращений, ответами и результатами работы в одном месте.",
+  },
+  {
+    icon: "●",
+    tone: "purple",
+    title: "Командная работа",
+    text: "Распределяйте обращения и сохраняйте общий стандарт коммуникации для всей команды.",
+  },
+  {
+    icon: "◷",
+    tone: "purple",
+    title: "История действий",
+    text: "Видите, что происходило с обращением: подготовка, проверка, отправка и статус.",
+  },
+] as const;
 
-const consoleRows = [
-  ["Отзыв · 5 звёзд", "Черновик готов", "Автоответ", "Готов к отправке"],
-  ["Вопрос о гарантии", "Нужна проверка", "Менеджер", "На проверке"],
-  ["Сообщение покупателя", "Черновик готов", "Правило команды", "В работе"],
-];
+const workflow = [
+  {
+    icon: "✉",
+    title: "Обращение на маркетплейсе",
+    text: "Покупатель оставляет отзыв, вопрос или сообщение на подключённой площадке.",
+  },
+  {
+    icon: "▤",
+    title: "Все обращения в MPReply",
+    text: "Сервис собирает их в единую очередь с площадкой, товаром и нужным контекстом.",
+  },
+  {
+    icon: "✦",
+    title: "AI помогает с ответом",
+    text: "MPReply готовит черновик по правилам команды — автоматически или для проверки.",
+  },
+  {
+    icon: "➤",
+    title: "Довольный клиент",
+    text: "Готовый ответ отправляется покупателю, а результат и история остаются в системе.",
+  },
+] as const;
 
-const controlScenarios = [
-  ["Повторяющиеся обращения", "Можно автоматизировать после настройки правил и тона ответа."],
-  ["Неоднозначные вопросы", "Оставляйте на проверку, чтобы сотрудник видел контекст и принимал решение."],
-  ["Негатив и чувствительные темы", "Выделяйте в отдельный сценарий и не отправляйте без нужного контроля."],
-  ["Несколько площадок", "Используйте один рабочий процесс вместо отдельных привычек для каждого кабинета."],
-];
+const benefits = [
+  ["Быстрее отвечайте", "Все обращения и следующий шаг уже перед глазами команды."],
+  ["Держите качество", "Тон бренда, правила и ручная проверка работают в одном процессе."],
+  ["Снимайте рутину", "Повторяющиеся сценарии можно автоматизировать без потери контроля."],
+  ["Видите результат", "Статусы и история действий помогают разбирать каждый случай."],
+] as const;
+
+const messages = [
+  ["wb", "WB", "Подойдёт ли размер 42 на рост 170?", "2 мин"],
+  ["oz", "OZ", "Когда будет в наличии?", "15 мин"],
+  ["ym", "М", "Спасибо, всё подошло!", "1 час"],
+  ["av", "A", "Можно узнать состав материала?", "2 часа"],
+] as const;
 
 export default function FeaturesPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-featured">
-        <div className="public-container public-subhero-grid">
-          <div className="public-subhero-copy">
-            <p className="eyebrow">Возможности</p>
-            <h1>От обращения покупателя до ответа — в одном рабочем процессе</h1>
-            <p className="public-lead">
-              Собирайте отзывы, вопросы и сообщения, получайте контекстный черновик ответа и автоматизируйте только те сценарии, которым доверяет команда.
-            </p>
-            <div className="hero-actions">
-              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                Начать подключение
-              </Link>
-              <Link className="button button-secondary" href="/demo">
-                Посмотреть интерфейс
-              </Link>
-            </div>
-          </div>
-
-          <div className="features-hero-scene" role="group" aria-label="Путь обращения от покупателя до готового ответа">
-            <div className="features-hero-glow" aria-hidden="true" />
-            <div className="features-hero-orbit features-hero-orbit-a" aria-hidden="true" />
-            <div className="features-hero-orbit features-hero-orbit-b" aria-hidden="true" />
-
-            <article className="features-hero-message">
-              <div className="features-hero-card-head">
-                <span>Wildberries · Вопрос</span>
-                <strong>Новый</strong>
+      <div className="mockup-page">
+        <section className="features-mockup-hero mockup-hero">
+          <div className="public-container mockup-hero-grid">
+            <div className="mockup-hero-copy">
+              <p className="mockup-eyebrow">Больше возможностей — больше довольных клиентов</p>
+              <h1>
+                Все возможности MPReply для работы с <span className="mockup-highlight">обращениями покупателей</span>
+              </h1>
+              <p>
+                Собирайте отзывы, вопросы и сообщения в одном окне, готовьте качественные ответы с помощью ИИ и автоматизируйте повторяющиеся сценарии без потери контроля.
+              </p>
+              <div className="mockup-actions">
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+                  Попробовать бесплатно <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="button button-secondary" href="/demo">
+                  Смотреть демо
+                </Link>
               </div>
-              <h2>«Подойдёт ли этот размер на рост 174 см?»</h2>
-              <p>Товар найден · размерная сетка доступна</p>
-              <div className="features-hero-context" role="group" aria-label="Доступный контекст">
-                <span>Карточка товара</span>
-                <span>История обращения</span>
-              </div>
-            </article>
-
-            <div className="features-hero-draft">
-              <div className="features-hero-draft-title">
-                <span aria-hidden="true">✦</span>
-                <strong>Ответ с помощью ИИ</strong>
-                <small>Черновик</small>
-              </div>
-              <p>Для роста 174 см размер M обычно подходит. Для более свободной посадки проверьте параметры в таблице размеров.</p>
-              <div className="features-hero-draft-actions" aria-hidden="true">
-                <span>Дружелюбный⌄</span>
-                <b>Отправить&nbsp; →</b>
+              <div className="mockup-trust-row" aria-label="Условия старта">
+                <span>14 дней бесплатно</span>
+                <span>Без карты</span>
+                <span>Быстрое подключение</span>
               </div>
             </div>
 
-            <div className="features-hero-review">
-              <span className="features-hero-review-icon" aria-hidden="true">✓</span>
-              <div>
-                <small>Правило команды</small>
-                <strong>Нужна проверка</strong>
-                <p>Ответ останется у менеджера до подтверждения.</p>
-              </div>
-            </div>
-
-            <div className="features-hero-sources" role="group" aria-label="Поддерживаемые площадки">
-              <span className="is-wb">WB</span>
-              <span className="is-ozon">OZ</span>
-              <span className="is-market">М</span>
-              <span className="is-avito">A</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Один рабочий цикл</p>
-            <h2>Не набор функций, а понятный путь обработки каждого обращения</h2>
-            <p>Площадка, контекст, черновик, решение сотрудника и отправка остаются связаны в одной карточке и одной очереди.</p>
-          </div>
-
-          <div className="capability-stack">
-            {capabilityGroups.map((group) => (
-              <article className="capability-row" key={group.number}>
-                <span className="capability-index">{group.number}</span>
-                <div className="capability-copy">
-                  <h3>{group.title}</h3>
-                  <p>{group.text}</p>
+            <div className="features-mockup-scene" role="img" aria-label="Единая очередь MPReply с обращениями и подготовленным ответом">
+              <div className="features-window">
+                <div className="features-window-top">
+                  <strong>Все обращения</strong>
+                  <span>24 обращения</span>
                 </div>
-                <ul className="capability-points">
-                  {group.points.map((point) => <li key={point}>{point}</li>)}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section public-section-muted">
-        <div className="public-container public-two-column public-two-column-feature">
-          <div>
-            <p className="eyebrow">Рабочее место команды</p>
-            <h2>Главное по обращению видно рядом — без прыжков между кабинетами</h2>
-            <p className="public-copy-muted">
-              Сотрудник видит площадку, покупателя, товар, исходное обращение, состояние обработки и следующий шаг в одном интерфейсе.
-            </p>
-          </div>
-
-          <div className="product-console" role="group" aria-label="Пример очереди MPReply">
-            <div className="product-console-head">
-              <div>
-                <span className="operations-live-dot" aria-hidden="true" />
-                <strong>Все обращения</strong>
-              </div>
-              <span>единая очередь</span>
-            </div>
-            <div className="product-console-columns" aria-hidden="true">
-              <span>Обращение</span><span>Подготовка</span><span>Действие</span><span>Статус</span>
-            </div>
-            <div className="product-console-rows">
-              {consoleRows.map(([message, decision, action, status]) => (
-                <div className="product-console-row" key={message}>
-                  <strong>{message}</strong>
-                  <span>{decision}</span>
-                  <span>{action}</span>
-                  <span>{status}</span>
+                <div className="features-window-body">
+                  <div className="features-feed">
+                    <div className="features-feed-tabs" aria-hidden="true">
+                      <span>Все</span>
+                      <span>Отзывы</span>
+                      <span>Вопросы</span>
+                      <span>Сообщения</span>
+                    </div>
+                    {messages.map(([tone, mark, text, time]) => (
+                      <div className="features-message" key={`${mark}-${text}`}>
+                        <span className={`mockup-market-mark ${tone}`} aria-hidden="true">{mark}</span>
+                        <div>
+                          <strong>Покупатель</strong>
+                          <p>{text}</p>
+                        </div>
+                        <small>{time}</small>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="features-draft-pane">
+                    <div className="features-draft-card">
+                      <strong>✦ AI предлагает ответ</strong>
+                      <p>
+                        Да, размер 42 обычно подходит на рост 168–172 см. Если нужна более точная рекомендация, уточните параметры — поможем подобрать размер.
+                      </p>
+                      <span>Использовать ответ</span>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div className="mockup-mascot" aria-hidden="true" />
+            </div>
+          </div>
+        </section>
+
+        <section className="public-section">
+          <div className="public-container">
+            <div className="mockup-section-head">
+              <p className="mockup-eyebrow">Возможности</p>
+              <h2>Все инструменты для эффективной работы</h2>
+              <p>MPReply объединяет ежедневную работу с обращениями — от получения сообщения до отправленного ответа и истории результата.</p>
+            </div>
+            <div className="features-tool-grid">
+              {tools.map((tool) => (
+                <article className="features-tool-card" key={tool.title}>
+                  <span className={`mockup-icon-chip ${tool.tone === "blue" ? "" : tool.tone}`} aria-hidden="true">{tool.icon}</span>
+                  <h3>{tool.title}</h3>
+                  <p>{tool.text}</p>
+                </article>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="public-section">
-        <div className="public-container public-two-column public-two-column-balanced">
-          <div>
-            <p className="eyebrow">Контроль автоматизации</p>
-            <h2>Автоматизируйте рутину. Решения с риском оставляйте человеку.</h2>
-            <p className="public-copy-muted">Правила определяют не только когда можно отправить ответ автоматически, но и когда система должна остановиться и передать случай сотруднику.</p>
+        <section className="public-section mockup-section-soft">
+          <div className="public-container">
+            <div className="mockup-section-head">
+              <p className="mockup-eyebrow">Как это работает</p>
+              <h2>От обращения до довольного клиента</h2>
+              <p>Четыре понятных шага вместо переключения между кабинетами, копирования контекста и ручной рутины.</p>
+            </div>
+            <div className="features-workflow">
+              {workflow.map((step, index) => (
+                <article className="features-workflow-card" key={step.title}>
+                  <span className="mockup-step-number">{index + 1}</span>
+                  <span className="mockup-icon-chip" aria-hidden="true">{step.icon}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </article>
+              ))}
+            </div>
           </div>
-          <div className="audience-pricing-list">
-            {controlScenarios.map(([title, text]) => (
-              <article className="audience-pricing-row" key={title}>
-                <h3>{title}</h3>
-                <p>{text}</p>
-                <span>Контроль остаётся у команды</span>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
-          <div>
-            <p className="eyebrow">Посмотрите продукт в действии</p>
-            <h2>Пройдите путь от входящего обращения до готового ответа</h2>
+        <section className="public-section">
+          <div className="public-container">
+            <div className="mockup-section-head">
+              <p className="mockup-eyebrow">Почему команды выбирают MPReply</p>
+              <h2>Экономьте время и развивайте ваш бизнес</h2>
+              <p>Сервис снимает повторяющиеся действия, но оставляет команде контроль там, где он действительно нужен.</p>
+            </div>
+            <div className="features-benefit-grid">
+              {benefits.map(([title, text]) => (
+                <article className="features-benefit-card" key={title}>
+                  <strong>{title}</strong>
+                  <span>{text}</span>
+                </article>
+              ))}
+            </div>
           </div>
-          <Link className="button button-primary button-on-dark" href="/demo">
-            Открыть демо
-          </Link>
-        </div>
-      </section>
+        </section>
+
+        <section className="public-section public-cta-section">
+          <div className="public-container">
+            <div className="mockup-cta">
+              <p className="mockup-eyebrow">Начните сейчас</p>
+              <h2>Начните использовать все возможности MPReply</h2>
+              <p>Подключите маркетплейсы и соберите работу с отзывами, вопросами и сообщениями в одном понятном процессе.</p>
+              <div className="mockup-actions">
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+                  Попробовать бесплатно <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="button button-secondary" href="/demo">Смотреть демо</Link>
+              </div>
+              <div className="mockup-trust-row" aria-label="Условия старта">
+                <span>14 дней бесплатно</span>
+                <span>Без карты</span>
+                <span>Быстрое подключение</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </PublicShell>
   );
 }
