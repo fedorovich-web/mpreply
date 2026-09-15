@@ -1,11 +1,14 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
+const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-fidelity.css"), "utf8");
 const publicIcon = readFileSync(join(root, "components/public-site/PublicIcon.tsx"), "utf8");
+const sidebarCssPath = join(root, "styles/public-features-sidebar-fidelity.css");
+const sidebarCss = existsSync(sidebarCssPath) ? readFileSync(sidebarCssPath, "utf8") : "";
 
 describe("approved features hero console", () => {
   it("uses the sidebar plus unified queue composition from the render", () => {
@@ -44,10 +47,12 @@ describe("approved features hero console", () => {
   });
 
   it("uses icon-led sidebar navigation like the approved console", () => {
+    expect(existsSync(sidebarCssPath)).toBe(true);
+    expect(layout).toContain('import "../styles/public-features-sidebar-fidelity.css"');
     expect(features).toContain("features-app-nav-item");
     for (const icon of ["inbox", "star", "message", "chart", "document", "users"]) {
       expect(features).toContain(`name="${icon}"`);
     }
-    expect(decorativeCss).toContain(".features-app-nav-item");
+    expect(sidebarCss).toContain(".features-app-nav-item");
   });
 });
