@@ -16,6 +16,7 @@ export type PublicIconName =
   | "link"
   | "gear"
   | "send"
+  | "vk"
   | "star";
 
 type PublicIconProps = Omit<SVGProps<SVGSVGElement>, "name"> & {
@@ -133,6 +134,14 @@ function IconPaths({ name }: { name: PublicIconName }) {
           <path d="m3.5 4.5 17 7.5-17 7.5 2.4-6.1L14 12l-8.1-1.4-2.4-6.1Z" />
           <path d="M5.9 10.6 14 12l-8.1 1.4" />
         </>
+      );
+    case "vk":
+      return (
+        <path
+          d="M6.79 7.3H4.05c.13 6.24 3.25 9.99 8.72 9.99h.31v-3.57c2.01.2 3.53 1.67 4.14 3.57h2.84c-.78-2.84-2.83-4.41-4.11-5.01 1.28-.74 3.08-2.54 3.51-4.98h-2.58c-.56 1.98-2.22 3.78-3.8 3.95V7.3H10.5v6.92c-1.6-.4-3.62-2.34-3.71-6.92Z"
+          fill="currentColor"
+          stroke="none"
+        />
       );
     case "star":
       return <path d="m12 3.3 2.55 5.15 5.7.83-4.12 4.02.97 5.68L12 16.3l-5.1 2.68.97-5.68-4.12-4.02 5.7-.83L12 3.3Z" />;
