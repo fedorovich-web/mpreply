@@ -73,6 +73,21 @@
   line-height: 1.45;
 }
 
+/* Pricing integrations use the approved full wordmark assets without duplicate text labels. */
+.mockup-page .pricing-market-chip {
+  min-width: 148px;
+  justify-content: center;
+  padding-inline: 18px;
+}
+
+.mockup-page .pricing-market-chip .marketplace-detail-logo-small {
+  width: auto;
+  height: 34px;
+  max-width: 128px;
+  clip-path: none;
+  transform: none;
+}
+
 /* Pricing FAQ heading is left-aligned with the help link at the right. */
 .mockup-page .pricing-faq-heading {
   display: flex;
@@ -123,5 +138,9 @@
 
   .mockup-page .pricing-faq-heading {
     align-items: flex-start;
+  }
+
+  .mockup-page .pricing-market-chip {
+    min-width: 128px;
   }
 }
