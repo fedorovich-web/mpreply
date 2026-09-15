@@ -23,6 +23,7 @@ import "../styles/help-legal-approved.css";
 import "../styles/homepage-approved.css";
 import "../styles/public-mockup-fidelity.css";
 import "../styles/public-mockup-pages.css";
+import "../styles/marketplace-logo-assets.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
