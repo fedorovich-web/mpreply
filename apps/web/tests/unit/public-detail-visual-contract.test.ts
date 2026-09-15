@@ -68,4 +68,11 @@ describe("approved marketplace detail visual", () => {
     expect(heroCss).toContain("background-size: cover");
     expect(heroCss).not.toContain("linear-gradient(145deg, #d7e4f7, #8797af)");
   });
+
+  it("keeps the marketplace logo card white and draws the dotted handoff path from the render", () => {
+    expect(heroCss).toContain(".detail-market-logo");
+    expect(heroCss).toContain("background: #fff");
+    expect(heroCss).toContain(".detail-market-card::after");
+    expect(heroCss).toContain("border-bottom: 2px dashed");
+  });
 });
