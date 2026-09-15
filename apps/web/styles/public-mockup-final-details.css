@@ -12,6 +12,43 @@
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 88%);
 }
 
+/* Pricing: lavender pill kickers used throughout the approved render. */
+.mockup-page .pricing-mockup-hero .mockup-eyebrow,
+.mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow,
+.mockup-page .pricing-faq-heading .mockup-eyebrow,
+.mockup-page .pricing-final-cta .mockup-eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: #f0efff;
+  color: #5148e8;
+  padding: 5px 9px;
+  font-size: .61rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+}
+
+.mockup-page .pricing-mockup-hero .mockup-eyebrow {
+  margin-inline: auto;
+}
+
+.mockup-page .pricing-mockup-hero .mockup-eyebrow::before,
+.mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow::before,
+.mockup-page .pricing-faq-heading .mockup-eyebrow::before,
+.mockup-page .pricing-final-cta .mockup-eyebrow::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  content: "";
+}
+
 /* Pricing: helper annotation beside the period switch. */
 .mockup-page .pricing-toggle-wrap {
   position: relative;
