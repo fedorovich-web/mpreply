@@ -93,6 +93,50 @@ export function PublicShell({ children }: PublicShellProps) {
           </div>
         </div>
       </footer>
+
+      <footer className="public-footer public-footer-pricing" aria-label="Информация о MPReply">
+        <div className="public-container public-footer-pricing-main">
+          <div className="public-footer-pricing-brand">
+            <FooterLogo />
+            <p>Автоматическая обработка отзывов, вопросов и сообщений на маркетплейсах.</p>
+            <div className="public-footer-socials" aria-hidden="true">
+              <span>ТГ</span>
+              <span>▶</span>
+              <span>VK</span>
+            </div>
+          </div>
+
+          <div className="public-footer-pricing-column">
+            <strong>Продукт</strong>
+            <Link href="/features">Возможности</Link>
+            <Link href="/pricing">Тарифы</Link>
+            <Link href="/marketplaces">Интеграции</Link>
+            <Link href="/demo">Демо</Link>
+          </div>
+
+          <div className="public-footer-pricing-column">
+            <strong>Поддержка</strong>
+            <Link href="/help">Помощь</Link>
+            <Link href="/marketplaces">Интеграции</Link>
+            <Link href="/contacts">Связаться с нами</Link>
+          </div>
+
+          <div className="public-footer-pricing-column public-footer-pricing-contacts">
+            <strong>Контакты</strong>
+            <span>г. Майкоп, ул. Чкалова, 65,<br />помещение 17А</span>
+            <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
+            <span>Ежедневно 09:00–18:00 МСК</span>
+          </div>
+        </div>
+
+        <div className="public-container public-footer-pricing-bottom">
+          <span>© {new Date().getFullYear()} MPReply. Все права защищены.</span>
+          <nav aria-label="Документы">
+            <Link href="/privacy">Политика конфиденциальности</Link>
+            <Link href="/terms">Условия использования</Link>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }
