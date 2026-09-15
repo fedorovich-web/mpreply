@@ -27,7 +27,9 @@ export const siteConfig = {
     { href: "/features", label: "Возможности" },
     { href: "/marketplaces", label: "Интеграции" },
     { href: "/pricing", label: "Тарифы" },
+    { href: "/demo", label: "Демо" },
     { href: "/help", label: "Помощь" },
+    { href: "/contacts", label: "Контакты" },
   ],
 } as const;
 
