@@ -168,7 +168,7 @@ export default function DemoPage() {
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
                 <Link className="button button-secondary" href="#demo-process">
-                  Смотреть демо
+                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть демо
                 </Link>
               </div>
               <div className="mockup-trust-row">
