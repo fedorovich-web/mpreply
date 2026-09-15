@@ -19,6 +19,7 @@ describe("final approved render details", () => {
     expect(pricing).toContain('name="shield-check"');
     expect(pricing).toContain('href="/help"');
     expect(pricing).toContain("Все вопросы");
+    expect(pricing).not.toContain("<strong>{marketplace.name}</strong>");
     expect(finalCss).toContain(".pricing-hero-note");
     expect(finalCss).toContain(".pricing-custom-icon");
   });
