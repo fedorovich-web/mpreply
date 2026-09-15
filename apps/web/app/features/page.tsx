@@ -216,16 +216,18 @@ export default function FeaturesPage() {
                     <strong>MPReply</strong>
                   </div>
                   <nav className="features-app-nav">
-                    <strong>
-                      Все обращения <b>24</b>
+                    <strong className="features-app-nav-item is-active">
+                      <PublicIcon name="inbox" />
+                      Все обращения
+                      <b>24</b>
                     </strong>
-                    <span>Отзывы</span>
-                    <span>Вопросы</span>
-                    <span>Сообщения</span>
+                    <span className="features-app-nav-item"><PublicIcon name="star" />Отзывы</span>
+                    <span className="features-app-nav-item"><PublicIcon name="message" />Вопросы</span>
+                    <span className="features-app-nav-item"><PublicIcon name="message" />Сообщения</span>
                     <i />
-                    <span>Аналитика</span>
-                    <span>Шаблоны</span>
-                    <span>Команда</span>
+                    <span className="features-app-nav-item"><PublicIcon name="chart" />Аналитика</span>
+                    <span className="features-app-nav-item"><PublicIcon name="document" />Шаблоны</span>
+                    <span className="features-app-nav-item"><PublicIcon name="users" />Команда</span>
                   </nav>
                 </aside>
 
