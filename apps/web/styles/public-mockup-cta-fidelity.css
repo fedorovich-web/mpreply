@@ -1,0 +1,115 @@
+/* Horizontal CTA strips used by the approved inner-page mockups. */
+
+.mockup-page .mockup-cta-strip {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  overflow: hidden;
+  border: 1px solid #e2dfff;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 90% 18%, rgb(99 91 255 / 15%), transparent 28%),
+    linear-gradient(125deg, #faf9ff 0%, #efedff 100%);
+  padding: 18px 22px;
+  box-shadow: 0 20px 48px rgb(81 72 232 / 9%);
+}
+
+.mockup-page .mockup-cta-strip-icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border: 1px solid #e4e1ff;
+  border-radius: 15px;
+  background: #fff;
+  color: #5148e8;
+  font-size: 28px;
+  box-shadow: 0 10px 24px rgb(81 72 232 / 12%);
+}
+
+.mockup-page .mockup-cta-strip-copy {
+  min-width: 0;
+}
+
+.mockup-page .mockup-cta-strip-copy .mockup-eyebrow {
+  margin-bottom: 7px;
+}
+
+.mockup-page .mockup-cta-strip-copy h2 {
+  margin: 0;
+  color: #071846;
+  font-size: clamp(1.25rem, 2.1vw, 1.8rem);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+
+.mockup-page .mockup-cta-strip-copy p:not(.mockup-eyebrow) {
+  margin: 5px 0 0;
+  color: #687c9d;
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
+.mockup-page .mockup-cta-strip-side {
+  display: grid;
+  min-width: 300px;
+  gap: 8px;
+  justify-items: end;
+}
+
+.mockup-page .mockup-cta-strip-side .button {
+  min-width: 280px;
+  justify-content: center;
+}
+
+.mockup-page .mockup-cta-strip-side .mockup-trust-row {
+  justify-content: flex-end;
+  gap: 14px;
+  margin: 0;
+  font-size: .68rem;
+}
+
+.mockup-page .mockup-cta-strip-side .mockup-trust-row span::before {
+  margin-right: 5px;
+}
+
+@media (max-width: 860px) {
+  .mockup-page .mockup-cta-strip {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .mockup-page .mockup-cta-strip-side {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    justify-items: stretch;
+  }
+
+  .mockup-page .mockup-cta-strip-side .button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mockup-page .mockup-cta-strip-side .mockup-trust-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .mockup-page .mockup-cta-strip {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .mockup-page .mockup-cta-strip-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 25px;
+  }
+
+  .mockup-page .mockup-cta-strip-side {
+    grid-column: auto;
+  }
+}
