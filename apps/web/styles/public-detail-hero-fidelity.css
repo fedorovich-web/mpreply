@@ -46,6 +46,30 @@
   object-fit: contain;
 }
 
+/* Marketplace card in the render is a white logo surface, not a synthetic brand gradient. */
+.mockup-page .detail-market-logo {
+  border: 1px solid #eceff6;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 92%);
+}
+
+.mockup-page .detail-market-card::after {
+  position: absolute;
+  right: -94px;
+  bottom: -11px;
+  width: 104px;
+  height: 54px;
+  border-right: 2px dashed rgb(81 72 232 / 70%);
+  border-bottom: 2px dashed rgb(81 72 232 / 70%);
+  border-radius: 0 0 42px 0;
+  color: #5148e8;
+  content: "↗";
+  font-size: 19px;
+  line-height: 1;
+  text-align: right;
+  pointer-events: none;
+}
+
 /* Decorative product thumbnail cropped from the approved Wildberries render. */
 .mockup-page .detail-product-thumb {
   display: block;
@@ -58,4 +82,10 @@
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+}
+
+@media (max-width: 720px) {
+  .mockup-page .detail-market-card::after {
+    display: none;
+  }
 }
