@@ -24,6 +24,7 @@ import "../styles/homepage-approved.css";
 import "../styles/public-mockup-fidelity.css";
 import "../styles/public-mockup-pages.css";
 import "../styles/marketplace-logo-assets.css";
+import "../styles/public-section-spacing.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
