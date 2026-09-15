@@ -99,22 +99,19 @@ const scenarios = [
     marketplace: "wb" as MarketplaceLogoKey,
     type: "Отзыв",
     popular: true,
-    title: "Покупатель оставил отзыв о товаре",
-    text: "MPReply получает отзыв, анализирует тональность и предлагает подходящий ответ.",
+    text: "Покупатель оставил отзыв на товар. Посмотрите, как MPReply помогает корректно и вежливо ответить.",
   },
   {
     marketplace: "oz" as MarketplaceLogoKey,
     type: "Вопрос",
     popular: false,
-    title: "Покупатель спрашивает о наличии и доставке",
-    text: "Система учитывает товарный контекст и помогает быстро подготовить точный ответ.",
+    text: "Покупатель задаёт вопрос о товаре, доставке или наличии. Посмотрите, как MPReply формирует точный ответ.",
   },
   {
     marketplace: "ym" as MarketplaceLogoKey,
     type: "Сообщение",
     popular: false,
-    title: "Личное сообщение от покупателя",
-    text: "MPReply показывает историю общения и контекст, чтобы команда ответила без переключения между кабинетами.",
+    text: "Личное сообщение от покупателя. Посмотрите, как MPReply учитывает контекст и историю клиента.",
   },
 ] as const;
 
@@ -255,7 +252,7 @@ export default function DemoPage() {
         <section className="public-section mockup-section-soft">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Сценарии</p>
+              <p className="mockup-eyebrow">Примеры из реальной практики</p>
               <h2>Попробуйте разные сценарии</h2>
               <p>Выберите тип обращения, чтобы увидеть, как MPReply помогает на каждом этапе.</p>
             </div>
@@ -271,7 +268,6 @@ export default function DemoPage() {
                     <strong>{scenario.type}</strong>
                     {scenario.popular ? <span className="pricing-popular">Популярный</span> : null}
                   </div>
-                  <h3>{scenario.title}</h3>
                   <p>{scenario.text}</p>
                   <a href="#demo-process">Посмотреть пример →</a>
                 </article>
