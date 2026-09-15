@@ -1,6 +1,6 @@
-/* User-approved spacing delta: +15px to top and bottom of every public page section. */
+/* User-approved spacing delta: +15px to top and bottom of every approved mockup page section. */
 
-.public-cta-section {
+.mockup-page .public-cta-section {
   padding-block: calc(var(--public-section-spacing) + var(--public-section-padding-extra));
 }
 
