@@ -44,6 +44,9 @@ describe("approved public mockup fidelity", () => {
     expect(layout).toContain('import "../styles/public-mockup-brand-fidelity.css"');
     for (const color of ["#5148e8", "#635bff", "#5964ff"]) expect(brandFidelityCss.toLowerCase()).toContain(color);
     expect(brandFidelityCss.toLowerCase()).not.toContain("#0ea5e9");
+    expect(brandFidelityCss).toContain("--mockup-blue: #5148e8");
+    expect(brandFidelityCss).toContain("--mockup-blue-deep: #443bcf");
+    expect(brandFidelityCss).toContain("--mockup-sky: #5148e8");
     expect(brandFidelityCss).toContain("linear-gradient(110deg");
     expect(brandFidelityCss).toContain(".public-root:has(.mockup-page)");
   });
