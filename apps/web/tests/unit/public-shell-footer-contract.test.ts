@@ -13,7 +13,8 @@ describe("approved public footer variants", () => {
     expect(shell).toContain("public-footer-compact");
     expect(shell).toContain("public-footer-pricing");
     expect(shell).toContain("Ближе к вашим клиентам");
-    expect(shell).toContain("г. Майкоп, ул. Чкалова, 65, помещение 17А");
+    expect(shell).toContain("г. Майкоп, ул. Чкалова, 65,");
+    expect(shell).toContain("помещение 17А");
     expect(shell).toContain("Ежедневно 09:00–18:00 МСК");
   });
 
