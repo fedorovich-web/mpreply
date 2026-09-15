@@ -45,3 +45,17 @@
   flex: 0 0 34px;
   object-fit: contain;
 }
+
+/* Decorative product thumbnail cropped from the approved Wildberries render. */
+.mockup-page .detail-product-thumb {
+  display: block;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 10px;
+  background-color: #f4f6fb;
+  background-image: url("/images/mockups/product-shoe.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
