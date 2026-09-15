@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { PublicIcon } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
@@ -111,25 +112,15 @@ export default function PricingPage() {
                   {plan.popular ? <span className="pricing-popular">Популярный</span> : null}
                   <h2>{plan.name}</h2>
                   <p>{plan.description}</p>
-                  <div className="pricing-price">
-                    <strong>{plan.price}</strong>
-                    <span>/ мес</span>
-                  </div>
-                  <Link className={`button ${plan.popular ? "button-primary" : "button-secondary"}`} href="/auth/register?intent=connect-marketplace">
-                    Начать бесплатно
-                  </Link>
-                  <ul className="pricing-feature-list">
-                    {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
-                  </ul>
+                  <div className="pricing-price"><strong>{plan.price}</strong><span>/ мес</span></div>
+                  <Link className={`button ${plan.popular ? "button-primary" : "button-secondary"}`} href="/auth/register?intent=connect-marketplace">Начать бесплатно</Link>
+                  <ul className="pricing-feature-list">{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
                 </article>
               ))}
             </div>
 
             <div className="pricing-custom-strip">
-              <div>
-                <strong>Нужен индивидуальный тариф?</strong>
-                <span>Если у вас особые требования или очень большие объёмы — свяжитесь с нами, и мы подготовим персональное предложение.</span>
-              </div>
+              <div><strong>Нужен индивидуальный тариф?</strong><span>Если у вас особые требования или очень большие объёмы — свяжитесь с нами, и мы подготовим персональное предложение.</span></div>
               <Link className="button button-secondary" href="/contacts">Связаться</Link>
             </div>
           </div>
@@ -137,68 +128,23 @@ export default function PricingPage() {
 
         <section className="public-section mockup-section-soft">
           <div className="public-container">
-            <div className="render-section-head">
-              <p className="mockup-eyebrow">Интеграции</p>
-              <h2>Поддерживаем ключевые маркетплейсы</h2>
-              <p>Wildberries, Ozon, Яндекс Маркет и Авито уже готовы к подключению в одном рабочем окне.</p>
-            </div>
-            <div className="pricing-market-row">
-              {marketplaces.map((marketplace) => (
-                <div className="pricing-market-chip" key={marketplace.name}>
-                  <Image className="marketplace-detail-logo-small" src={marketplace.src} width={marketplace.width} height={marketplace.height} alt={marketplace.name} unoptimized />
-                  <strong>{marketplace.name}</strong>
-                </div>
-              ))}
-            </div>
+            <div className="render-section-head"><p className="mockup-eyebrow">Интеграции</p><h2>Поддерживаем ключевые маркетплейсы</h2><p>Wildberries, Ozon, Яндекс Маркет и Авито уже готовы к подключению в одном рабочем окне.</p></div>
+            <div className="pricing-market-row">{marketplaces.map((marketplace) => <div className="pricing-market-chip" key={marketplace.name}><Image className="marketplace-detail-logo-small" src={marketplace.src} width={marketplace.width} height={marketplace.height} alt={marketplace.name} unoptimized /><strong>{marketplace.name}</strong></div>)}</div>
             <p className="pricing-market-note">Сейчас доступны четыре готовые интеграции: Wildberries, Ozon, Яндекс Маркет и Авито.</p>
           </div>
         </section>
 
         <section className="public-section">
           <div className="public-container">
-            <div className="render-section-head">
-              <p className="mockup-eyebrow">Сравнение</p>
-              <h2>Сравните тарифы и выберите свой</h2>
-            </div>
-            <div className="pricing-comparison">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Возможности</th>
-                    <th>Старт</th>
-                    <th>Профессиональный</th>
-                    <th>Бизнес</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparison.map(([feature, start, pro, business]) => (
-                    <tr key={feature}>
-                      <td>{feature}</td>
-                      <td>{start}</td>
-                      <td>{pro}</td>
-                      <td>{business}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <div className="render-section-head"><p className="mockup-eyebrow">Сравнение</p><h2>Сравните тарифы и выберите свой</h2></div>
+            <div className="pricing-comparison"><table><thead><tr><th>Возможности</th><th>Старт</th><th>Профессиональный</th><th>Бизнес</th></tr></thead><tbody>{comparison.map(([feature, start, pro, business]) => <tr key={feature}><td>{feature}</td><td>{start}</td><td>{pro}</td><td>{business}</td></tr>)}</tbody></table></div>
           </div>
         </section>
 
         <section className="public-section mockup-section-soft">
           <div className="public-container">
-            <div className="render-section-head pricing-faq-head">
-              <p className="mockup-eyebrow">Вопросы</p>
-              <h2>Частые вопросы</h2>
-            </div>
-            <div className="pricing-faq">
-              {faq.map(([question, answer]) => (
-                <details key={question}>
-                  <summary>{question}</summary>
-                  <p>{answer}</p>
-                </details>
-              ))}
-            </div>
+            <div className="render-section-head pricing-faq-head"><p className="mockup-eyebrow">Вопросы</p><h2>Частые вопросы</h2></div>
+            <div className="pricing-faq">{faq.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
           </div>
         </section>
 
@@ -213,15 +159,22 @@ export default function PricingPage() {
                   <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать бесплатно</Link>
                   <Link className="button button-secondary" href="/demo">Посмотреть демо</Link>
                 </div>
-                <div className="mockup-trust-row" aria-label="Условия старта">
-                  <span>14 дней бесплатно</span>
-                  <span>Без карты</span>
-                  <span>Быстрый старт</span>
-                </div>
+                <div className="mockup-trust-row" aria-label="Условия старта"><span>14 дней бесплатно</span><span>Без карты</span><span>Быстрый старт</span></div>
               </div>
               <div className="pricing-final-visual" aria-hidden="true">
-                <div className="pricing-final-bubble">Отличный товар! ★★★★★<br /><br />Здравствуйте! Спасибо за отзыв! Будем рады видеть вас снова!</div>
-                <div className="mockup-mascot" />
+                <div className="pricing-final-logo-cloud">
+                  {marketplaces.slice(0, 3).map((marketplace) => (
+                    <span className="pricing-final-logo-chip" key={marketplace.name}>
+                      <Image src={marketplace.src} width={marketplace.width} height={marketplace.height} alt="" unoptimized />
+                    </span>
+                  ))}
+                </div>
+                <div className="pricing-final-bubble">
+                  <strong>Отличный товар!</strong>
+                  <span>★★★★★</span>
+                  <p>Здравствуйте! Спасибо за отзыв! Будем рады видеть вас снова!</p>
+                </div>
+                <span className="pricing-final-sparkle"><PublicIcon name="sparkles" /></span>
               </div>
             </div>
           </div>
