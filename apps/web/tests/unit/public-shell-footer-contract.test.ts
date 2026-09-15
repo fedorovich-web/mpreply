@@ -17,10 +17,12 @@ describe("approved public footer variants", () => {
     expect(shell).toContain("Ежедневно 09:00–18:00 МСК");
   });
 
-  it("uses proper send/play glyphs instead of footer text placeholders", () => {
+  it("uses proper social glyphs instead of footer text placeholders", () => {
     expect(shell).toContain('name="send"');
+    expect(shell).toContain('name="vk"');
     expect(shell).toContain('name="play"');
     expect(shell).not.toContain(">ТГ<");
+    expect(shell).not.toContain(">VK<");
     expect(footerCss).toContain(".public-footer-socials > span > svg");
     expect(footerCss).toContain("font-size: 13px");
   });
