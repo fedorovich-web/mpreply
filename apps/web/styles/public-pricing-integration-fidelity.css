@@ -1,4 +1,4 @@
-/* Pricing marketplace marks from the approved render. */
+/* Pricing marketplace marks and small render-specific details. */
 
 .mockup-page .pricing-market-chip {
   display: inline-flex;
@@ -33,4 +33,91 @@
   width: 42px;
   height: 42px;
   flex-basis: 42px;
+  clip-path: none;
+  transform: none;
+}
+
+/* FAQ rows: question on the left, chevron at the far right. */
+.mockup-page .pricing-faq-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  list-style: none;
+}
+
+.mockup-page .pricing-faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mockup-page .pricing-faq-chevron {
+  flex: 0 0 auto;
+  color: #5148e8;
+  font-size: 16px;
+  line-height: 1;
+  transition: transform .2s ease;
+}
+
+.mockup-page .pricing-faq details[open] .pricing-faq-chevron {
+  transform: rotate(180deg);
+}
+
+/* CTA illustration: review and reply are two separate floating cards. */
+.mockup-page .pricing-final-review,
+.mockup-page .pricing-final-answer {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid #e7e5ff;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgb(81 72 232 / 10%);
+}
+
+.mockup-page .pricing-final-review {
+  top: 64px;
+  left: 18px;
+  width: 174px;
+  padding: 10px 13px;
+}
+
+.mockup-page .pricing-final-review strong {
+  display: block;
+  color: #102554;
+  font-size: .7rem;
+}
+
+.mockup-page .pricing-final-review span {
+  display: block;
+  margin-top: 3px;
+  color: #f59e0b;
+  font-size: .66rem;
+  letter-spacing: .06em;
+}
+
+.mockup-page .pricing-final-answer {
+  top: 118px;
+  left: 48px;
+  width: min(230px, calc(100% - 62px));
+  padding: 11px 13px;
+}
+
+.mockup-page .pricing-final-answer p {
+  margin: 0;
+  color: #64799b;
+  font-size: .68rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .mockup-page .pricing-market-chip {
+    min-width: 132px;
+  }
+
+  .mockup-page .pricing-final-review {
+    left: 0;
+  }
+
+  .mockup-page .pricing-final-answer {
+    left: 28px;
+  }
 }
