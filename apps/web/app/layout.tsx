@@ -28,6 +28,7 @@ import "../styles/public-section-spacing.css";
 import "../styles/public-mockup-render-tuning.css";
 import "../styles/public-mockup-brand-fidelity.css";
 import "../styles/public-mockup-cta-fidelity.css";
+import "../styles/public-mockup-decorative-fidelity.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
