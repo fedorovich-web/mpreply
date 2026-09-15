@@ -57,163 +57,54 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="marketplace-detail-mockup-copy">
               <p className="mockup-eyebrow">{platformLabel} + MPReply</p>
               <h1>Работайте с отзывами, вопросами и сообщениями {marketplace.name} быстрее</h1>
-              <p>
-                Подключите {marketplace.name} к MPReply и обрабатывайте все обращения покупателей в одном месте — с помощью AI, шаблонов и удобной командной работы.
-              </p>
+              <p>Подключите {marketplace.name} к MPReply и обрабатывайте все обращения покупателей в одном месте — с помощью AI, шаблонов и удобной командной работы.</p>
               <div className="mockup-actions">
-                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                  Подключить {marketplace.name} бесплатно <span aria-hidden="true">→</span>
-                </Link>
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Подключить {marketplace.name} бесплатно <span aria-hidden="true">→</span></Link>
                 <Link className="button button-secondary" href="/demo">Смотреть видео</Link>
               </div>
-              <div className="mockup-trust-row">
-                <span>14 дней бесплатно</span>
-                <span>Быстрое подключение</span>
-                <span>Без карты</span>
-              </div>
+              <div className="mockup-trust-row"><span>14 дней бесплатно</span><span>Быстрое подключение</span><span>Без карты</span></div>
             </div>
 
             <div className="marketplace-detail-render" role="img" aria-label={`Обработка обращения ${marketplace.name} в MPReply`}>
               <div className="detail-market-card">
-                <div className="detail-market-logo">
-                  <Image className="marketplace-detail-logo" src={logo.src} width={logo.width} height={logo.height} alt={marketplace.name} unoptimized />
-                </div>
-                <div className="detail-market-message">
-                  <strong>Покупатель · 12 мин назад</strong>
-                  Здравствуйте! Когда будет поставка этого товара?
-                </div>
-                <div className="detail-product-row">
-                  <span className="detail-product-thumb" aria-hidden="true" />
-                  <span>Кроссовки женские<br />Арт. 12345678</span>
-                </div>
+                <div className="detail-market-logo"><Image className="marketplace-detail-logo" src={logo.src} width={logo.width} height={logo.height} alt={marketplace.name} unoptimized /></div>
+                <div className="detail-market-message"><strong>Покупатель · 12 мин назад</strong>Здравствуйте! Когда будет поставка этого товара?</div>
+                <div className="detail-product-row"><span className="detail-product-thumb" aria-hidden="true" /><span>Кроссовки женские<br />Арт. 12345678</span></div>
               </div>
 
               <div className="detail-app-window">
                 <div className="detail-app-top">MPReply</div>
                 <div className="detail-app-body">
-                  <aside className="detail-sidebar" aria-hidden="true">
-                    <strong>Все обращения · 24</strong>
-                    <span>Отзывы · 6</span>
-                    <span>Вопросы · 8</span>
-                    <span>Сообщения · 10</span>
-                    <span>Аналитика</span>
-                    <span>Шаблоны</span>
-                    <span>Команда</span>
-                  </aside>
-                  <div className="detail-question">
-                    <div className="detail-question-top">
-                      <Image className="marketplace-detail-logo-small" src={logo.src} width={logo.width} height={logo.height} alt="" aria-hidden="true" unoptimized />
-                      <strong>Вопрос</strong>
-                      <span>12 мин назад</span>
-                    </div>
-                    <h3>Здравствуйте! Когда будет поставка этого товара?</h3>
-                    <p>Контекст товара и обращения уже доступен в рабочем окне.</p>
-                  </div>
+                  <aside className="detail-sidebar" aria-hidden="true"><strong>Все обращения · 24</strong><span>Отзывы · 6</span><span>Вопросы · 8</span><span>Сообщения · 10</span><span>Аналитика</span><span>Шаблоны</span><span>Команда</span></aside>
+                  <div className="detail-question"><div className="detail-question-top"><Image className="marketplace-detail-logo-small" src={logo.src} width={logo.width} height={logo.height} alt="" aria-hidden="true" unoptimized /><strong>Вопрос</strong><span>12 мин назад</span></div><h3>Здравствуйте! Когда будет поставка этого товара?</h3><p>Контекст товара и обращения уже доступен в рабочем окне.</p></div>
                 </div>
               </div>
 
-              <div className="detail-ai-card">
-                <strong><PublicIcon name="sparkles" className="public-inline-icon" /> AI</strong>
-                <p>Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар появится на складе.</p>
-                <span>Использовать ответ</span>
-              </div>
+              <div className="detail-ai-card"><strong><PublicIcon name="sparkles" className="public-inline-icon" /> AI</strong><p>Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар появится на складе.</p><span>Использовать ответ</span></div>
               <div className="mockup-mascot detail-render-mascot" aria-hidden="true" />
             </div>
           </div>
         </section>
 
-        <section className="public-section">
-          <div className="public-container">
-            <div className="render-section-head">
-              <p className="mockup-eyebrow">Возможности интеграции</p>
-              <h2>Всё, что нужно для работы с {marketplace.name}</h2>
-              <p>MPReply объединяет обращения с {marketplace.name} и даёт вашей команде инструменты для быстрой, качественной и удобной обработки.</p>
-            </div>
-            <div className="marketplace-detail-tools">
-              {toolCards.map(([icon, tone, title, text]) => (
-                <article className="detail-tool-card" key={title}>
-                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        <section className="public-section"><div className="public-container"><div className="render-section-head"><p className="mockup-eyebrow">Возможности интеграции</p><h2>Всё, что нужно для работы с {marketplace.name}</h2><p>MPReply объединяет обращения с {marketplace.name} и даёт вашей команде инструменты для быстрой, качественной и удобной обработки.</p></div><div className="marketplace-detail-tools">{toolCards.map(([icon, tone, title, text]) => <article className="detail-tool-card" key={title}><span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
 
-        <section className="public-section mockup-section-soft">
-          <div className="public-container">
-            <div className="render-section-head">
-              <p className="mockup-eyebrow">Как это работает</p>
-              <h2>От подключения до первых ответов</h2>
-              <p>Подключите {marketplace.name} и начните обрабатывать обращения всего за несколько шагов.</p>
-            </div>
-            <div className="marketplace-detail-steps">
-              {steps.map(([number, icon, title, text], index) => (
-                <article className="detail-step-card" key={number}>
-                  <span className="detail-step-number">{number}</span>
-                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true"><PublicIcon name={icon} /></span>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        <section className="public-section mockup-section-soft"><div className="public-container"><div className="render-section-head"><p className="mockup-eyebrow">Как это работает</p><h2>От подключения до первых ответов</h2><p>Подключите {marketplace.name} и начните обрабатывать обращения всего за несколько шагов.</p></div><div className="marketplace-detail-steps">{steps.map(([number, icon, title, text], index) => <article className="detail-step-card" key={number}><span className="detail-step-number">{number}</span><span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true"><PublicIcon name={icon} /></span><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
 
-        <section className="public-section">
-          <div className="public-container">
-            <div className="render-section-head">
-              <p className="mockup-eyebrow">Что получает команда</p>
-              <h2>Эффективная работа каждый день</h2>
-              <p>Инструменты MPReply помогают вашей команде экономить время и достигать лучших результатов.</p>
-            </div>
-            <div className="marketplace-detail-benefits">
-              {dailyBenefits.map(([icon, tone, title, text]) => (
-                <article className="detail-benefit-card" key={title}>
-                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        <section className="public-section"><div className="public-container"><div className="render-section-head"><p className="mockup-eyebrow">Что получает команда</p><h2>Эффективная работа каждый день</h2><p>Инструменты MPReply помогают вашей команде экономить время и достигать лучших результатов.</p></div><div className="marketplace-detail-benefits">{dailyBenefits.map(([icon, tone, title, text]) => <article className="detail-benefit-card" key={title}><span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true"><PublicIcon name={icon} /></span><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
 
-        <section className="public-section mockup-section-soft">
-          <div className="public-container detail-faq-layout">
-            <div>
-              <p className="mockup-eyebrow">Готовы к подключению?</p>
-              <h2>Частые вопросы</h2>
-              <p>Подключение {marketplace.name} к MPReply — это просто и безопасно.</p>
-            </div>
-            <div className="marketplace-detail-faq">
-              {faq.map(([question, answer]) => (
-                <details key={question}>
-                  <summary>{question}</summary>
-                  <p>{answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
+        <section className="public-section mockup-section-soft"><div className="public-container detail-faq-layout"><div><p className="mockup-eyebrow">Готовы к подключению?</p><h2>Частые вопросы</h2><p>Подключение {marketplace.name} к MPReply — это просто и безопасно.</p></div><div className="marketplace-detail-faq">{faq.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></div></section>
 
         <section className="public-section public-cta-section">
           <div className="public-container">
-            <div className="detail-cta-bar">
-              <div>
+            <div className="mockup-cta-strip">
+              <span className="mockup-cta-strip-icon" aria-hidden="true"><PublicIcon name="send" /></span>
+              <div className="mockup-cta-strip-copy">
                 <h2>Начните работать с {marketplace.name} уже сегодня</h2>
                 <p>14 дней бесплатного доступа ко всем возможностям. Без карты. Без риска.</p>
               </div>
-              <div className="mockup-actions">
-                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                  Подключить {marketplace.name} бесплатно <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-              <div className="mockup-trust-row" aria-label="Условия старта">
-                <span>Быстрое подключение</span>
-                <span>Полный доступ</span>
-                <span>Поддержка ежедневно 09:00–18:00 МСК</span>
+              <div className="mockup-cta-strip-side">
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Подключить {marketplace.name} бесплатно <span aria-hidden="true">→</span></Link>
+                <div className="mockup-trust-row" aria-label="Условия старта"><span>Быстрое подключение</span><span>Полный доступ</span><span>Поддержка ежедневно 09:00–18:00 МСК</span></div>
               </div>
             </div>
           </div>
