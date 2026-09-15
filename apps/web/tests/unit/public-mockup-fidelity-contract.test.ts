@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -13,6 +13,8 @@ const marketplaceLanding = readFileSync(join(root, "components/public-site/Marke
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
+const publicIconPath = join(root, "components/public-site/PublicIcon.tsx");
+const publicIcon = existsSync(publicIconPath) ? readFileSync(publicIconPath, "utf8") : "";
 
 describe("approved public mockup fidelity", () => {
   it("adds exactly 15px to the render-derived public section rhythm", () => {
@@ -46,6 +48,22 @@ describe("approved public mockup fidelity", () => {
     expect(pricing).not.toContain("до 5 маркетплейсов");
     expect(pricing).toContain("до 4 маркетплейсов");
     expect(pricing).toContain("Поддерживаем ключевые маркетплейсы");
+  });
+
+  it("uses one reusable polished SVG icon component instead of unicode glyph icons", () => {
+    expect(existsSync(publicIconPath)).toBe(true);
+    for (const name of ["inbox", "sparkles", "shield-check", "lightning", "document", "chart", "users", "clock", "sync", "link", "gear", "send", "star"]) {
+      expect(publicIcon).toContain(`\"${name}\"`);
+    }
+    for (const page of [features, marketplaces, marketplaceLanding, demo]) {
+      expect(page).toContain("PublicIcon");
+    }
+    for (const glyph of ["✉", "✦", "ϟ", "▤", "▥", "◷", "⚙", "↻"]) {
+      expect(features).not.toContain(glyph);
+      expect(marketplaces).not.toContain(glyph);
+      expect(marketplaceLanding).not.toContain(glyph);
+      expect(demo).not.toContain(glyph);
+    }
   });
 
   it("implements the approved features composition rather than the old generic capability stack", () => {
