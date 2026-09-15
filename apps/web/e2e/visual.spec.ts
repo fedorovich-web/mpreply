@@ -5,7 +5,16 @@ const RESPONSIVE_VIEWPORTS = [
   { name: "render-width", width: 1086, height: 1000 },
   { name: "tablet-landscape", width: 1024, height: 900 },
   { name: "tablet-portrait", width: 768, height: 1024 },
+  { name: "pricing-render-width", width: 755, height: 1000 },
   { name: "mobile-wide", width: 430, height: 932 },
+] as const;
+
+const APPROVED_RENDER_VIEWPORTS = [
+  { path: "/features", slug: "features", width: 1086, height: 1000 },
+  { path: "/marketplaces", slug: "marketplaces", width: 1086, height: 1000 },
+  { path: "/marketplaces/wildberries", slug: "marketplace-wildberries", width: 1086, height: 1000 },
+  { path: "/pricing", slug: "pricing", width: 755, height: 1000 },
+  { path: "/demo", slug: "demo", width: 1086, height: 1000 },
 ] as const;
 
 for (const route of VISUAL_ROUTES) {
@@ -21,6 +30,20 @@ for (const route of VISUAL_ROUTES) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(route.path, { waitUntil: "networkidle" });
     await expect(page).toHaveScreenshot(`${route.slug}-mobile.png`, { fullPage: true });
+  });
+}
+
+for (const render of APPROVED_RENDER_VIEWPORTS) {
+  test(`${render.slug} captures the approved source width`, async ({ page }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: render.width, height: render.height });
+    const response = await page.goto(render.path, { waitUntil: "networkidle" });
+    expect(response?.ok(), `${render.path} should render at its approved source width`).toBe(true);
+
+    await testInfo.attach(`${render.slug}-approved-source-width.png`, {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
   });
 }
 
