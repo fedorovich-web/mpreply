@@ -206,6 +206,87 @@
   text-decoration: underline;
 }
 
+/* Demo scenarios: the popular badge is inline beside the type, not absolutely positioned like pricing. */
+.mockup-page .demo-scenario-popular {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #f0efff;
+  color: #6f42e8;
+  padding: 4px 8px;
+  font-size: .62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Demo hero: compact metadata rows and final review bubble from the approved render. */
+.mockup-page .demo-story-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.mockup-page .demo-story-meta > div {
+  display: grid;
+  gap: 1px;
+}
+
+.mockup-page .demo-story-meta strong {
+  margin: 0;
+  color: #102554;
+  font-size: .75rem;
+}
+
+.mockup-page .demo-story-meta small {
+  color: #8594ad;
+  font-size: .58rem;
+}
+
+.mockup-page .demo-story-ai-avatar,
+.mockup-page .demo-story-review-avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 17px;
+}
+
+.mockup-page .demo-story-ai-avatar {
+  background: #f3f0ff;
+  color: #6f42e8;
+}
+
+.mockup-page .demo-story-review-avatar {
+  background: #eaf5ff;
+  color: #1672ee;
+}
+
+.mockup-page .demo-story-card.review {
+  padding: 14px;
+}
+
+.mockup-page .demo-story-review-bubble {
+  display: grid;
+  gap: 4px;
+  border-radius: 12px;
+  background: #f4f5ff;
+  padding: 11px 12px;
+}
+
+.mockup-page .demo-story-review-bubble strong {
+  margin: 0;
+  color: #102554;
+  font-size: .72rem;
+}
+
+.mockup-page .demo-story-review-bubble span {
+  color: #60749a;
+  font-size: .64rem;
+}
+
 /* Demo process: render-style buyer card, status icons and final answer panel. */
 .mockup-page .demo-process-message .demo-scenario-head > div {
   display: grid;
