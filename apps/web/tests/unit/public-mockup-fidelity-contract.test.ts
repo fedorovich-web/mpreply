@@ -15,6 +15,8 @@ const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 const publicIconPath = join(root, "components/public-site/PublicIcon.tsx");
 const publicIcon = existsSync(publicIconPath) ? readFileSync(publicIconPath, "utf8") : "";
+const brandFidelityPath = join(root, "styles/public-mockup-brand-fidelity.css");
+const brandFidelityCss = existsSync(brandFidelityPath) ? readFileSync(brandFidelityPath, "utf8") : "";
 
 describe("approved public mockup fidelity", () => {
   it("adds exactly 15px to the render-derived public section rhythm", () => {
@@ -35,6 +37,15 @@ describe("approved public mockup fidelity", () => {
     expect(tuningCss).toContain("--public-header-height: 56px");
     expect(tuningCss).toContain("clamp(2.35rem, 3.8vw, 3.25rem)");
     expect(tuningCss).toContain("clamp(1.85rem, 2.6vw, 2.45rem)");
+  });
+
+  it("uses the approved MPReply violet gradient on mockup pages without turquoise", () => {
+    expect(existsSync(brandFidelityPath)).toBe(true);
+    expect(layout).toContain('import "../styles/public-mockup-brand-fidelity.css"');
+    for (const color of ["#5148e8", "#635bff", "#5964ff"]) expect(brandFidelityCss.toLowerCase()).toContain(color);
+    expect(brandFidelityCss.toLowerCase()).not.toContain("#0ea5e9");
+    expect(brandFidelityCss).toContain("linear-gradient(110deg");
+    expect(brandFidelityCss).toContain(".public-root:has(.mockup-page)");
   });
 
   it("keeps the full approved header navigation", () => {
