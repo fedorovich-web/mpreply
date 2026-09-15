@@ -135,6 +135,122 @@
   padding-block: 36px;
 }
 
+/* Features: real marketplace logos instead of letter placeholders. */
+.mockup-page .features-message-source {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #e4ecf8;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.mockup-page .features-market-logo {
+  display: block;
+  width: 42px;
+  height: 30px;
+  object-fit: contain;
+  transform-origin: center;
+}
+
+.mockup-page .features-market-logo[src$="wildberries.webp"] {
+  clip-path: inset(22% 4% 1% 4%);
+  transform: scale(1.18);
+}
+
+.mockup-page .features-market-logo[src$="ozon.webp"] {
+  clip-path: inset(29% 5% 5% 5%);
+  transform: scale(1.22);
+}
+
+.mockup-page .features-market-logo[src$="yandex-market.webp"] {
+  clip-path: inset(28% 12% 8% 12%);
+  transform: scale(1.26);
+}
+
+.mockup-page .features-market-logo[src$="avito.webp"] {
+  clip-path: inset(28% 13% 8% 13%);
+  transform: scale(1.24);
+}
+
+.mockup-page .features-workflow-logos {
+  display: flex;
+  width: fit-content;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.mockup-page .features-workflow-logo-chip {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgb(37 99 235 / 10%);
+}
+
+.mockup-page .features-workflow-logo-chip + .features-workflow-logo-chip {
+  margin-left: -8px;
+}
+
+.mockup-page .features-workflow-logo {
+  display: block;
+  width: 48px;
+  height: 32px;
+  object-fit: contain;
+  transform-origin: center;
+}
+
+.mockup-page .features-workflow-logo[src$="wildberries.webp"] {
+  clip-path: inset(22% 4% 1% 4%);
+  transform: scale(1.16);
+}
+
+.mockup-page .features-workflow-logo[src$="ozon.webp"] {
+  clip-path: inset(29% 5% 5% 5%);
+  transform: scale(1.2);
+}
+
+.mockup-page .features-workflow-logo[src$="yandex-market.webp"] {
+  clip-path: inset(28% 12% 8% 12%);
+  transform: scale(1.2);
+}
+
+.mockup-page .features-workflow-logo[src$="avito.webp"] {
+  clip-path: inset(28% 13% 8% 13%);
+  transform: scale(1.2);
+}
+
+.mockup-page .features-benefit-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 14px;
+  align-items: start;
+}
+
+.mockup-page .features-benefit-icon {
+  grid-row: 1 / span 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 20px;
+}
+
+.mockup-page .features-benefit-card strong {
+  align-self: end;
+  margin: 0 0 4px;
+}
+
+.mockup-page .features-benefit-card > span:last-child {
+  grid-column: 2;
+}
+
 @media (max-width: 1040px) {
   .mockup-page .mockup-hero-copy h1,
   .mockup-page .marketplace-detail-mockup-copy h1,
@@ -178,5 +294,9 @@
   .mockup-page .detail-faq-layout h2,
   .mockup-page .pricing-final-cta h2 {
     font-size: clamp(1.75rem, 8vw, 2.2rem);
+  }
+
+  .mockup-page .features-benefit-card {
+    grid-template-columns: auto 1fr;
   }
 }
