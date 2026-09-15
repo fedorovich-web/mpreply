@@ -21,6 +21,7 @@ import "../styles/pricing-demo-approved.css";
 import "../styles/contacts-approved.css";
 import "../styles/help-legal-approved.css";
 import "../styles/homepage-approved.css";
+import "../styles/public-mockup-fidelity.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
