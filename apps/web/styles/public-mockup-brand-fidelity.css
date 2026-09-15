@@ -1,7 +1,23 @@
 /* Approved MPReply palette for the public mockup-derived pages only.
-   This file is intentionally loaded last and does not recolor the approved homepage or dashboard. */
+   This file is intentionally loaded after the legacy theme and does not recolor the approved homepage or dashboard. */
 
 .public-root:has(.mockup-page) {
+  /* The supplied renders are light-only presentation surfaces. Keep them stable even when dashboard theme=dark. */
+  --color-bg-page: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-subtle: #f7f8ff;
+  --color-public-page: #ffffff;
+  --color-public-section: #ffffff;
+  --color-public-section-subtle: #f7f8ff;
+  --color-public-header: rgb(255 255 255 / 96%);
+  --color-public-footer: #ffffff;
+  --color-text-primary: #071846;
+  --color-text-secondary: #50648a;
+  --color-text-muted: #6f82a7;
+  --color-border-subtle: #dceafa;
+  --color-border-strong: #bfd6f3;
+
   --color-brand-primary: #5148e8;
   --color-brand-primary-hover: #443bcf;
   --color-brand-primary-active: #3d35c0;
