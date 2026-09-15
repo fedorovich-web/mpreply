@@ -61,11 +61,11 @@ describe("approved marketplace detail visual", () => {
     expect(heroCss).toContain(".detail-sidebar-item");
   });
 
-  it("uses the approved product thumbnail asset instead of a CSS placeholder", () => {
-    expect(detail).toContain('/images/mockups/product-shoe.webp');
+  it("uses the approved product thumbnail asset instead of the fake gradient placeholder", () => {
     expect(detail).toContain('className="detail-product-thumb"');
-    expect(detail).not.toContain('<span className="detail-product-thumb"');
     expect(heroCss).toContain(".detail-product-thumb");
-    expect(heroCss).toContain("object-fit: cover");
+    expect(heroCss).toContain('background-image: url("/images/mockups/product-shoe.webp")');
+    expect(heroCss).toContain("background-size: cover");
+    expect(heroCss).not.toContain("linear-gradient(145deg, #d7e4f7, #8797af)");
   });
 });
