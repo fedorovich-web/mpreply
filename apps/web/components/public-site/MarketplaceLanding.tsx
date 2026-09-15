@@ -12,11 +12,31 @@ type MarketplaceLandingProps = {
 
 type Tone = "blue" | "purple" | "green" | "orange";
 
-const marketplaceLogos: Record<MarketplaceKey, { src: string; width: number; height: number }> = {
-  wildberries: { src: "/images/marketplaces/wildberries.webp", width: 432, height: 188 },
-  ozon: { src: "/images/marketplaces/ozon.webp", width: 436, height: 198 },
-  "yandex-market": { src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222 },
-  avito: { src: "/images/marketplaces/avito.webp", width: 504, height: 212 },
+const marketplaceLogos: Record<MarketplaceKey, { src: string; compactSrc: string; width: number; height: number }> = {
+  wildberries: {
+    src: "/images/marketplaces/wildberries.webp",
+    compactSrc: "/images/marketplaces/wildberries-compact.webp",
+    width: 432,
+    height: 188,
+  },
+  ozon: {
+    src: "/images/marketplaces/ozon.webp",
+    compactSrc: "/images/marketplaces/ozon-compact.webp",
+    width: 436,
+    height: 198,
+  },
+  "yandex-market": {
+    src: "/images/marketplaces/yandex-market.webp",
+    compactSrc: "/images/marketplaces/yandex-market-compact.webp",
+    width: 554,
+    height: 222,
+  },
+  avito: {
+    src: "/images/marketplaces/avito.webp",
+    compactSrc: "/images/marketplaces/avito-compact.webp",
+    width: 504,
+    height: 212,
+  },
 };
 
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
@@ -134,7 +154,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                   Подключить {marketplace.name} бесплатно <span aria-hidden="true">→</span>
                 </Link>
                 <Link className="button button-secondary" href="/demo">
-                  Смотреть видео
+                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть видео
                 </Link>
               </div>
               <div className="mockup-trust-row">
@@ -183,21 +203,25 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 </div>
                 <div className="detail-app-body">
                   <aside className="detail-sidebar" aria-hidden="true">
-                    <strong>Все обращения · 24</strong>
-                    <span>Отзывы · 6</span>
-                    <span>Вопросы · 8</span>
-                    <span>Сообщения · 10</span>
-                    <span>Аналитика</span>
-                    <span>Шаблоны</span>
-                    <span>Команда</span>
+                    <strong className="detail-sidebar-item is-active">
+                      <PublicIcon name="inbox" />
+                      Все обращения
+                      <b>24</b>
+                    </strong>
+                    <span className="detail-sidebar-item"><PublicIcon name="star" />Отзывы <b>6</b></span>
+                    <span className="detail-sidebar-item"><PublicIcon name="message" />Вопросы <b>8</b></span>
+                    <span className="detail-sidebar-item"><PublicIcon name="message" />Сообщения <b>10</b></span>
+                    <span className="detail-sidebar-item"><PublicIcon name="chart" />Аналитика</span>
+                    <span className="detail-sidebar-item"><PublicIcon name="document" />Шаблоны</span>
+                    <span className="detail-sidebar-item"><PublicIcon name="users" />Команда</span>
                   </aside>
                   <div className="detail-question">
                     <div className="detail-question-top">
                       <Image
-                        className="marketplace-detail-logo-small"
-                        src={logo.src}
-                        width={logo.width}
-                        height={logo.height}
+                        className="marketplace-detail-compact-logo"
+                        src={logo.compactSrc}
+                        width={64}
+                        height={64}
                         alt=""
                         aria-hidden="true"
                         unoptimized
