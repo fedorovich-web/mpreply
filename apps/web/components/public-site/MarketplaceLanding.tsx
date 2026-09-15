@@ -9,56 +9,41 @@ type MarketplaceLandingProps = {
 };
 
 const marketplaceLogos: Record<MarketplaceKey, { src: string; width: number; height: number }> = {
-  wildberries: {
-    src: "/images/marketplaces/wildberries.webp",
-    width: 432,
-    height: 188,
-  },
-  ozon: {
-    src: "/images/marketplaces/ozon.webp",
-    width: 436,
-    height: 198,
-  },
-  "yandex-market": {
-    src: "/images/marketplaces/yandex-market.webp",
-    width: 554,
-    height: 222,
-  },
-  avito: {
-    src: "/images/marketplaces/avito.webp",
-    width: 504,
-    height: 212,
-  },
+  wildberries: { src: "/images/marketplaces/wildberries.webp", width: 432, height: 188 },
+  ozon: { src: "/images/marketplaces/ozon.webp", width: 436, height: 198 },
+  "yandex-market": { src: "/images/marketplaces/yandex-market.webp", width: 554, height: 222 },
+  avito: { src: "/images/marketplaces/avito.webp", width: 504, height: 212 },
 };
-
-const toolCards = [
-  ["✉", "blue", "Единая очередь обращений", "Все отзывы, вопросы и сообщения находятся в одном удобном интерфейсе."],
-  ["✦", "purple", "AI-черновик ответа", "ИИ готовит релевантные черновики ответов с учётом контекста обращения."],
-  ["✓", "green", "Контроль качества", "Проверяйте формулировку и при необходимости редактируйте ответ перед отправкой."],
-  ["◷", "purple", "История действий", "Полная история обращений и действий сотрудников для прозрачности и контроля."],
-] as const;
-
-const dailyBenefits = [
-  ["ϟ", "orange", "Больше скорости", "Отвечайте на обращения быстрее и не теряйте покупателей."],
-  ["●", "purple", "Прозрачность работы", "Видите, кто и на что отвечает. Контролируйте нагрузку и качество."],
-  ["▤", "blue", "Удобные шаблоны", "Создавайте и сохраняйте шаблоны ответов для типовых ситуаций."],
-  ["▥", "blue", "Полезная аналитика", "Следите за динамикой обращений и результатом работы команды."],
-] as const;
-
-const faq = [
-  ["Как подключить площадку?", "Выберите площадку в интеграциях, добавьте данные подключения и дождитесь успешной синхронизации."],
-  ["Можно ли добавить несколько сотрудников?", "Да. Команда работает в одном пространстве, а обращения и действия остаются видимыми в общем процессе."],
-  ["Обновляются ли статусы обращений?", "Да. Статусы синхронизируются с интеграцией, а история действий сохраняется внутри MPReply."],
-] as const;
 
 export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
   const platformLabel = marketplace.name === "Wildberries" ? "WILDBERRIES" : marketplace.name.toUpperCase();
   const logo = marketplaceLogos[marketplace.key];
+
+  const toolCards = [
+    ["✉", "blue", "Единая очередь обращений", `Все отзывы, вопросы и сообщения с ${marketplace.name} в одном удобном интерфейсе.`],
+    ["✦", "purple", "AI-черновик ответа", "Искусственный интеллект готовит вежливые, точные и персонализированные черновики ответов."],
+    ["✓", "green", "Контроль качества", `Проверка тональности, грамотности и соответствия правилам ${marketplace.name}.`],
+    ["◷", "purple", "История действий", "Полная история обращений и действий сотрудников для прозрачности и контроля."],
+  ] as const;
+
   const steps = [
-    ["1", "↗", `Подключите ${marketplace.name}`, "Добавьте площадку в интеграциях и дождитесь первой синхронизации обращений."],
-    ["2", "⚙", "Настройте параметры", "Задайте правила команды, роли сотрудников и сценарии, которые требуют проверки."],
-    ["3", "▤", "Используйте AI и шаблоны", "Получайте черновики ответов и используйте готовые формулировки для типовых ситуаций."],
-    ["4", "▥", "Получайте результат", "Обрабатывайте больше обращений, сохраняйте качество и контролируйте историю действий."],
+    ["1", "↗", `Подключите ${marketplace.name}`, `Авторизуйтесь через официальный API ${marketplace.name}. Это займет пару минут.`],
+    ["2", "⚙", "Настройте параметры", "Выберите магазины, установите роли сотрудников и настройте уведомления."],
+    ["3", "▤", "Используйте AI и шаблоны", "AI подготовит черновики, а шаблоны помогут отвечать ещё быстрее."],
+    ["4", "▥", "Получайте результат", "Обрабатывайте больше обращений, повышайте рейтинг и лояльность покупателей."],
+  ] as const;
+
+  const dailyBenefits = [
+    ["ϟ", "orange", "Больше скорости", "Отвечайте на обращения быстрее и не теряйте покупателей."],
+    ["●", "purple", "Прозрачность работы", "Видите, кто и на что отвечает. Контролируйте нагрузку и качество."],
+    ["▤", "blue", "Удобные шаблоны", "Создавайте и сохраняйте шаблоны ответов для типовых ситуаций."],
+    ["▥", "blue", "Полезная аналитика", "Следите за рейтингом, динамикой отзывов и скоростью ответов. Принимайте решения на основе данных."],
+  ] as const;
+
+  const faq = [
+    [`Как подключить ${marketplace.name}?`, `Подключение занимает несколько минут через официальный API ${marketplace.name}.`],
+    ["Можно ли добавить несколько сотрудников?", "Да. Вы можете настроить роли и права доступа для всей команды."],
+    ["Обновляются ли статусы обращений?", "Да. Статусы синхронизируются автоматически в реальном времени."],
   ] as const;
 
   return (
@@ -70,13 +55,13 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               <p className="mockup-eyebrow">{platformLabel} + MPReply</p>
               <h1>Работайте с отзывами, вопросами и сообщениями {marketplace.name} быстрее</h1>
               <p>
-                Подключите {marketplace.name} к MPReply и обрабатывайте обращения покупателей в одном месте — с AI-подготовкой ответа, шаблонами и командной проверкой.
+                Подключите {marketplace.name} к MPReply и обрабатывайте все обращения покупателей в одном месте — с помощью AI, шаблонов и удобной командной работы.
               </p>
               <div className="mockup-actions">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                   Подключить {marketplace.name} бесплатно <span aria-hidden="true">→</span>
                 </Link>
-                <Link className="button button-secondary" href="/demo">Смотреть демо</Link>
+                <Link className="button button-secondary" href="/demo">Смотреть видео</Link>
               </div>
               <div className="mockup-trust-row">
                 <span>14 дней бесплатно</span>
@@ -88,14 +73,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="marketplace-detail-render" role="img" aria-label={`Обработка обращения ${marketplace.name} в MPReply`}>
               <div className="detail-market-card">
                 <div className="detail-market-logo">
-                  <Image
-                    className="marketplace-detail-logo"
-                    src={logo.src}
-                    width={logo.width}
-                    height={logo.height}
-                    alt={marketplace.name}
-                    unoptimized
-                  />
+                  <Image className="marketplace-detail-logo" src={logo.src} width={logo.width} height={logo.height} alt={marketplace.name} unoptimized />
                 </div>
                 <div className="detail-market-message">
                   <strong>Покупатель · 12 мин назад</strong>
@@ -103,7 +81,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 </div>
                 <div className="detail-product-row">
                   <span className="detail-product-thumb" aria-hidden="true" />
-                  <span>Карточка товара<br />Артикул 12345678</span>
+                  <span>Кроссовки женские<br />Арт. 12345678</span>
                 </div>
               </div>
 
@@ -112,24 +90,16 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 <div className="detail-app-body">
                   <aside className="detail-sidebar" aria-hidden="true">
                     <strong>Все обращения · 24</strong>
-                    <span>Отзывы</span>
-                    <span>Вопросы</span>
-                    <span>Сообщения</span>
+                    <span>Отзывы · 6</span>
+                    <span>Вопросы · 8</span>
+                    <span>Сообщения · 10</span>
                     <span>Аналитика</span>
                     <span>Шаблоны</span>
                     <span>Команда</span>
                   </aside>
                   <div className="detail-question">
                     <div className="detail-question-top">
-                      <Image
-                        className="marketplace-detail-logo-small"
-                        src={logo.src}
-                        width={logo.width}
-                        height={logo.height}
-                        alt=""
-                        aria-hidden="true"
-                        unoptimized
-                      />
+                      <Image className="marketplace-detail-logo-small" src={logo.src} width={logo.width} height={logo.height} alt="" aria-hidden="true" unoptimized />
                       <strong>Вопрос</strong>
                       <span>12 мин назад</span>
                     </div>
@@ -154,7 +124,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="render-section-head">
               <p className="mockup-eyebrow">Возможности интеграции</p>
               <h2>Всё, что нужно для работы с {marketplace.name}</h2>
-              <p>MPReply объединяет обращения с {marketplace.name} и даёт команде инструменты для быстрой и контролируемой обработки.</p>
+              <p>MPReply объединяет обращения с {marketplace.name} и даёт вашей команде инструменты для быстрой, качественной и удобной обработки.</p>
             </div>
             <div className="marketplace-detail-tools">
               {toolCards.map(([icon, tone, title, text]) => (
@@ -173,7 +143,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="render-section-head">
               <p className="mockup-eyebrow">Как это работает</p>
               <h2>От подключения до первых ответов</h2>
-              <p>Подключите {marketplace.name} и начните обрабатывать обращения в едином процессе MPReply.</p>
+              <p>Подключите {marketplace.name} и начните обрабатывать обращения всего за несколько шагов.</p>
             </div>
             <div className="marketplace-detail-steps">
               {steps.map(([number, icon, title, text], index) => (
@@ -193,7 +163,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="render-section-head">
               <p className="mockup-eyebrow">Что получает команда</p>
               <h2>Эффективная работа каждый день</h2>
-              <p>Инструменты MPReply помогают экономить время и сохранять стабильный стандарт ответов.</p>
+              <p>Инструменты MPReply помогают вашей команде экономить время и достигать лучших результатов.</p>
             </div>
             <div className="marketplace-detail-benefits">
               {dailyBenefits.map(([icon, tone, title, text]) => (
@@ -212,7 +182,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div>
               <p className="mockup-eyebrow">Готовы к подключению?</p>
               <h2>Частые вопросы</h2>
-              <p>Подключение {marketplace.name} к MPReply встроено в обычный onboarding продукта.</p>
+              <p>Подключение {marketplace.name} к MPReply — это просто и безопасно.</p>
             </div>
             <div className="marketplace-detail-faq">
               {faq.map(([question, answer]) => (
@@ -230,12 +200,17 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div className="detail-cta-bar">
               <div>
                 <h2>Начните работать с {marketplace.name} уже сегодня</h2>
-                <p>14 дней бесплатного доступа ко всем возможностям. Без карты.</p>
+                <p>14 дней бесплатного доступа ко всем возможностям. Без карты. Без риска.</p>
               </div>
               <div className="mockup-actions">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                   Подключить {marketplace.name} бесплатно <span aria-hidden="true">→</span>
                 </Link>
+              </div>
+              <div className="mockup-trust-row" aria-label="Условия старта">
+                <span>Быстрое подключение</span>
+                <span>Полный доступ</span>
+                <span>Поддержка 24/7</span>
               </div>
             </div>
           </div>
