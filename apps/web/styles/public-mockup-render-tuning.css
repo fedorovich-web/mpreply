@@ -1,5 +1,5 @@
-/* Final render-scale tuning for the approved public mockups.
-   Loaded last so it wins over the legacy marketing/public theme. */
+/* Render-derived scale tuning for the approved public mockups.
+   Keeps the user's +15px section rhythm while removing oversized legacy dimensions. */
 
 .public-root {
   --container-max-width: 1120px;
@@ -39,95 +39,310 @@
   letter-spacing: -.045em;
 }
 
+/* The screenshots are compact at 1086px wide. These paddings reproduce that scale,
+   then add the requested 15px on both vertical edges. */
 .mockup-page .mockup-hero {
-  padding-top: calc(54px + var(--public-section-padding-extra));
-  padding-bottom: calc(50px + var(--public-section-padding-extra));
+  padding-top: calc(34px + var(--public-section-padding-extra));
+  padding-bottom: calc(25px + var(--public-section-padding-extra));
 }
 
 .mockup-page .marketplace-detail-mockup-hero {
-  padding-top: calc(54px + var(--public-section-padding-extra));
-  padding-bottom: calc(48px + var(--public-section-padding-extra));
+  padding-top: calc(30px + var(--public-section-padding-extra));
+  padding-bottom: calc(22px + var(--public-section-padding-extra));
 }
 
 .mockup-page .pricing-mockup-hero {
-  padding-top: calc(48px + var(--public-section-padding-extra));
+  padding-top: calc(42px + var(--public-section-padding-extra));
   padding-bottom: calc(24px + var(--public-section-padding-extra));
 }
 
 .mockup-page .demo-mockup-hero {
-  padding-top: calc(52px + var(--public-section-padding-extra));
-  padding-bottom: calc(48px + var(--public-section-padding-extra));
+  padding-top: calc(30px + var(--public-section-padding-extra));
+  padding-bottom: calc(22px + var(--public-section-padding-extra));
 }
 
 .mockup-page .mockup-hero-grid,
 .mockup-page .marketplace-detail-mockup-grid,
 .mockup-page .demo-mockup-grid {
-  gap: clamp(34px, 4.5vw, 58px);
+  gap: clamp(28px, 3.8vw, 48px);
 }
 
+/* Hero scene heights from the approved desktop renders. */
 .mockup-page .features-mockup-scene {
-  min-height: 440px;
+  min-height: 290px;
 }
 
 .mockup-page .marketplace-hub-scene {
-  min-height: 470px;
+  min-height: 330px;
 }
 
 .mockup-page .marketplace-detail-render {
-  min-height: 450px;
+  min-height: 340px;
 }
 
 .mockup-page .demo-hero-story {
-  min-height: 410px;
+  min-height: 300px;
 }
 
+/* Shared icon chips are visibly smaller in the renders than in the legacy theme. */
+.mockup-page .mockup-icon-chip {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 20px;
+}
+
+/* Features / marketplaces cards. */
 .mockup-page .features-tool-card,
 .mockup-page .marketplace-benefit-card {
-  min-height: 188px;
-  padding: 22px;
+  min-height: 148px;
+  padding: 18px;
+}
+
+.mockup-page .features-tool-card h3,
+.mockup-page .marketplace-benefit-card h3 {
+  margin: 14px 0 6px;
+  font-size: .9rem;
+}
+
+.mockup-page .features-tool-card p,
+.mockup-page .marketplace-benefit-card p {
+  font-size: .74rem;
+  line-height: 1.5;
 }
 
 .mockup-page .features-workflow-card,
 .mockup-page .marketplace-connect-card {
-  min-height: 210px;
-  padding: 23px;
+  min-height: 150px;
+  padding: 18px;
+}
+
+.mockup-page .features-workflow-card h3,
+.mockup-page .marketplace-connect-card h3 {
+  margin: 14px 0 6px;
+  font-size: .9rem;
+}
+
+.mockup-page .features-workflow-card p,
+.mockup-page .marketplace-connect-card p {
+  font-size: .72rem;
+  line-height: 1.48;
 }
 
 .mockup-page .marketplace-logo-card {
-  min-height: 286px;
+  min-height: 276px;
 }
 
+/* Marketplace detail cards. */
 .mockup-page .detail-tool-card,
 .mockup-page .detail-benefit-card {
-  min-height: 184px;
-  padding: 20px;
+  min-height: 148px;
+  padding: 18px;
 }
 
-.mockup-page .detail-step-card,
-.mockup-page .demo-journey-card {
-  min-height: 194px;
-  padding: 20px;
+.mockup-page .detail-tool-card h3,
+.mockup-page .detail-benefit-card h3 {
+  margin: 14px 0 6px;
+  font-size: .9rem;
 }
 
+.mockup-page .detail-tool-card p,
+.mockup-page .detail-benefit-card p {
+  font-size: .73rem;
+  line-height: 1.5;
+}
+
+.mockup-page .detail-step-card {
+  min-height: 150px;
+  padding: 18px;
+}
+
+.mockup-page .detail-step-card .mockup-icon-chip {
+  margin: 4px 0 12px;
+}
+
+.mockup-page .detail-step-card h3 {
+  margin-bottom: 6px;
+  font-size: .88rem;
+}
+
+.mockup-page .detail-step-card p {
+  font-size: .72rem;
+  line-height: 1.48;
+}
+
+/* Detail hero scene: same composition, reduced to render proportions. */
+.mockup-page .detail-market-card {
+  top: 43px;
+  width: 192px;
+  padding: 14px;
+}
+
+.mockup-page .detail-market-logo {
+  min-height: 54px;
+}
+
+.mockup-page .detail-market-message {
+  margin-top: 10px;
+  padding: 9px;
+  font-size: .64rem;
+}
+
+.mockup-page .detail-product-row {
+  margin-top: 8px;
+  font-size: .6rem;
+}
+
+.mockup-page .detail-product-thumb {
+  width: 40px;
+  height: 40px;
+}
+
+.mockup-page .detail-app-window {
+  top: 8px;
+  width: 320px;
+  min-height: 320px;
+  border-radius: 21px;
+}
+
+.mockup-page .detail-app-body {
+  grid-template-columns: 104px minmax(0, 1fr);
+  min-height: 260px;
+}
+
+.mockup-page .detail-sidebar {
+  gap: 8px;
+  padding: 12px 9px;
+  font-size: .58rem;
+}
+
+.mockup-page .detail-question {
+  padding: 14px 13px;
+}
+
+.mockup-page .detail-question h3 {
+  margin: 10px 0 6px;
+  font-size: .76rem;
+}
+
+.mockup-page .detail-question p {
+  font-size: .64rem;
+}
+
+.mockup-page .detail-ai-card {
+  right: -2px;
+  bottom: 4px;
+  width: 218px;
+  padding: 13px;
+}
+
+.mockup-page .detail-ai-card p {
+  margin: 7px 0 9px;
+  font-size: .63rem;
+}
+
+.mockup-page .detail-render-mascot {
+  right: -18px;
+  bottom: 92px;
+  width: 68px;
+  height: 68px;
+}
+
+/* Pricing cards are coded UI, but compact like the render. */
 .mockup-page .pricing-card {
-  min-height: 468px;
-  padding: 26px;
+  min-height: 390px;
+  padding: 22px;
 }
 
 .mockup-page .pricing-card-grid {
-  margin-top: 36px;
+  margin-top: 32px;
+}
+
+.mockup-page .pricing-card > p {
+  min-height: 36px;
 }
 
 .mockup-page .pricing-price {
-  margin: 20px 0 16px;
+  margin: 16px 0 14px;
 }
 
 .mockup-page .pricing-price strong {
-  font-size: 2.35rem;
+  font-size: 2.25rem;
+}
+
+.mockup-page .pricing-feature-list {
+  gap: 7px;
+  margin-top: 16px;
+  font-size: .75rem;
+}
+
+/* Demo journey and process. */
+.mockup-page .demo-journey-card {
+  min-height: 164px;
+  padding: 18px;
+}
+
+.mockup-page .demo-journey-card h3 {
+  margin: 13px 0 6px;
+  font-size: .9rem;
+}
+
+.mockup-page .demo-journey-card p {
+  font-size: .72rem;
+  line-height: 1.48;
 }
 
 .mockup-page .demo-scenario-card {
-  padding: 20px;
+  padding: 18px;
+}
+
+.mockup-page .demo-process > div {
+  min-height: 230px;
+  padding: 18px;
+}
+
+.mockup-page .demo-process-event {
+  grid-template-columns: 36px 92px 1fr;
+  gap: 8px;
+  font-size: .67rem;
+}
+
+/* Demo hero card geometry from the approved render. */
+.mockup-page .demo-story-card {
+  padding: 14px;
+}
+
+.mockup-page .demo-story-card.incoming {
+  left: 8px;
+  top: 14px;
+  width: 208px;
+}
+
+.mockup-page .demo-story-card.ai {
+  left: 118px;
+  top: 112px;
+  width: 258px;
+}
+
+.mockup-page .demo-story-card.review {
+  right: 0;
+  top: 42px;
+  width: 190px;
+}
+
+.mockup-page .demo-story-arrow.a1 {
+  left: 213px;
+  top: 67px;
+}
+
+.mockup-page .demo-story-arrow.a2 {
+  right: 177px;
+  top: 146px;
+}
+
+.mockup-page .demo-hero-mascot {
+  right: 35px;
+  bottom: 0;
 }
 
 .mockup-page .mockup-cta,
@@ -135,96 +350,89 @@
   padding-block: 36px;
 }
 
-/* Features: real marketplace logos instead of letter placeholders. */
+/* Features product scene: compact inbox window matching the render. */
+.mockup-page .features-window {
+  inset: 18px 8px 20px 0;
+}
+
+.mockup-page .features-app-sidebar {
+  gap: 12px;
+  padding: 13px 9px;
+}
+
+.mockup-page .features-app-main {
+  padding: 13px 14px 14px;
+}
+
+.mockup-page .features-feed-tabs {
+  gap: 5px;
+  margin-bottom: 7px;
+}
+
+.mockup-page .features-feed-tabs span {
+  padding: 4px 7px;
+  font-size: .57rem;
+}
+
+.mockup-page .features-message {
+  grid-template-columns: 32px 1fr auto;
+  gap: 8px;
+  padding: 7px 5px;
+}
+
 .mockup-page .features-message-source {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid #e4ecf8;
-  border-radius: 11px;
-  background: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
 }
 
 .mockup-page .features-market-logo {
-  display: block;
-  width: 42px;
+  width: 30px;
   height: 30px;
   object-fit: contain;
-  transform-origin: center;
 }
 
-.mockup-page .features-market-logo[src$="wildberries.webp"] {
-  clip-path: inset(22% 4% 1% 4%);
-  transform: scale(1.18);
+.mockup-page .features-message strong {
+  font-size: .68rem;
 }
 
-.mockup-page .features-market-logo[src$="ozon.webp"] {
-  clip-path: inset(29% 5% 5% 5%);
-  transform: scale(1.22);
+.mockup-page .features-message p {
+  margin-top: 2px;
+  font-size: .59rem;
 }
 
-.mockup-page .features-market-logo[src$="yandex-market.webp"] {
-  clip-path: inset(28% 12% 8% 12%);
-  transform: scale(1.26);
-}
-
-.mockup-page .features-market-logo[src$="avito.webp"] {
-  clip-path: inset(28% 13% 8% 13%);
-  transform: scale(1.24);
+.mockup-page .features-message small {
+  font-size: .54rem;
 }
 
 .mockup-page .features-workflow-logos {
   display: flex;
   width: fit-content;
-  margin: 0 auto;
   align-items: center;
   justify-content: center;
+  margin: 0 auto;
 }
 
 .mockup-page .features-workflow-logo-chip {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   place-items: center;
   overflow: hidden;
   border: 3px solid #fff;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 8px 18px rgb(37 99 235 / 10%);
+  box-shadow: 0 8px 18px rgb(81 72 232 / 10%);
 }
 
 .mockup-page .features-workflow-logo-chip + .features-workflow-logo-chip {
-  margin-left: -8px;
+  margin-left: -7px;
 }
 
 .mockup-page .features-workflow-logo {
-  display: block;
-  width: 48px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
-  transform-origin: center;
-}
-
-.mockup-page .features-workflow-logo[src$="wildberries.webp"] {
-  clip-path: inset(22% 4% 1% 4%);
-  transform: scale(1.16);
-}
-
-.mockup-page .features-workflow-logo[src$="ozon.webp"] {
-  clip-path: inset(29% 5% 5% 5%);
-  transform: scale(1.2);
-}
-
-.mockup-page .features-workflow-logo[src$="yandex-market.webp"] {
-  clip-path: inset(28% 12% 8% 12%);
-  transform: scale(1.2);
-}
-
-.mockup-page .features-workflow-logo[src$="avito.webp"] {
-  clip-path: inset(28% 13% 8% 13%);
-  transform: scale(1.2);
 }
 
 .mockup-page .features-benefit-card {
@@ -260,6 +468,19 @@
   }
 }
 
+@media (max-width: 860px) {
+  .mockup-page .features-mockup-scene,
+  .mockup-page .marketplace-hub-scene,
+  .mockup-page .marketplace-detail-render,
+  .mockup-page .demo-hero-story {
+    min-height: 320px;
+  }
+
+  .mockup-page .detail-app-window {
+    width: min(76vw, 330px);
+  }
+}
+
 @media (max-width: 720px) {
   .public-root {
     --mockup-section-base-spacing: 32px;
@@ -273,12 +494,12 @@
   .mockup-page .mockup-hero,
   .mockup-page .marketplace-detail-mockup-hero,
   .mockup-page .demo-mockup-hero {
-    padding-top: calc(42px + var(--public-section-padding-extra));
-    padding-bottom: calc(38px + var(--public-section-padding-extra));
+    padding-top: calc(28px + var(--public-section-padding-extra));
+    padding-bottom: calc(24px + var(--public-section-padding-extra));
   }
 
   .mockup-page .pricing-mockup-hero {
-    padding-top: calc(42px + var(--public-section-padding-extra));
+    padding-top: calc(32px + var(--public-section-padding-extra));
     padding-bottom: calc(20px + var(--public-section-padding-extra));
   }
 
@@ -298,5 +519,9 @@
 
   .mockup-page .features-benefit-card {
     grid-template-columns: auto 1fr;
+  }
+
+  .mockup-page .demo-process > div {
+    min-height: auto;
   }
 }
