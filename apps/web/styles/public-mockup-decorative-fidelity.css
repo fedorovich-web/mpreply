@@ -1,5 +1,166 @@
 /* Decorative details that are present in the approved public renders. */
 
+/* Features hero console: sidebar + unified queue, matching the approved render. */
+.mockup-page .features-window {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  inset: 26px 8px 28px 0;
+}
+
+.mockup-page .features-app-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 17px;
+  border-right: 1px solid #edf2fa;
+  background: #fff;
+  padding: 17px 12px;
+}
+
+.mockup-page .features-app-brand,
+.mockup-page .detail-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #071846;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.mockup-page .features-app-brand .public-brand-mark,
+.mockup-page .detail-app-brand .public-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
+  box-shadow: 0 6px 14px rgb(81 72 232 / 18%);
+}
+
+.mockup-page .features-app-nav {
+  display: grid;
+  gap: 10px;
+  color: #7384a2;
+  font-size: .62rem;
+}
+
+.mockup-page .features-app-nav strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 8px;
+  background: #f2f1ff;
+  color: #5148e8;
+  padding: 8px 7px;
+}
+
+.mockup-page .features-app-nav strong b {
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 999px;
+  background: #5148e8;
+  color: #fff;
+  font-size: .54rem;
+}
+
+.mockup-page .features-app-nav span {
+  padding-inline: 7px;
+}
+
+.mockup-page .features-app-nav i {
+  height: 1px;
+  background: #edf2fa;
+}
+
+.mockup-page .features-app-main {
+  padding: 17px 18px 18px;
+  background: #fff;
+}
+
+.mockup-page .features-app-main .features-feed-tabs {
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.mockup-page .features-app-main .features-feed-tabs span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f5f6fb;
+  color: #7184a5;
+}
+
+.mockup-page .features-app-main .features-feed-tabs span:first-child {
+  background: #efefff;
+  color: #5148e8;
+}
+
+.mockup-page .features-app-main .features-feed-tabs b {
+  font-size: .54rem;
+}
+
+.mockup-page .features-app-main .features-feed {
+  border-right: 0;
+  padding: 0;
+}
+
+/* Handwritten-style annotations are DOM text, not baked into raster assets. */
+.mockup-page .features-hero-note,
+.mockup-page .marketplace-hero-note,
+.mockup-page .marketplace-cta-note,
+.mockup-page .detail-hero-note {
+  position: absolute;
+  z-index: 6;
+  color: #5148e8;
+  font-family: "Comic Sans MS", "Segoe Print", cursive;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: .01em;
+  pointer-events: none;
+}
+
+.mockup-page .features-hero-note-primary {
+  top: 38px;
+  right: -12px;
+  font-size: .74rem;
+  transform: rotate(-7deg);
+}
+
+.mockup-page .features-hero-note-primary span,
+.mockup-page .features-hero-note-ai span,
+.mockup-page .detail-hero-note span {
+  position: absolute;
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+}
+
+.mockup-page .features-hero-note-primary span {
+  left: -25px;
+  bottom: -23px;
+  font-size: 27px;
+  transform: rotate(12deg);
+}
+
+.mockup-page .features-hero-note-ai {
+  right: -24px;
+  bottom: 53px;
+  border: 1px solid #ebe8ff;
+  border-radius: 11px;
+  background: rgb(255 255 255 / 92%);
+  padding: 8px 10px;
+  font-size: .63rem;
+  box-shadow: 0 10px 24px rgb(81 72 232 / 10%);
+  transform: rotate(-5deg);
+}
+
+.mockup-page .features-hero-note-ai span {
+  left: -22px;
+  bottom: -20px;
+  font-size: 25px;
+  transform: rotate(20deg);
+}
+
 /* Demo journey marketplace chips. */
 .mockup-page .demo-journey-marketplaces {
   display: flex;
@@ -81,19 +242,6 @@
   letter-spacing: -.03em;
 }
 
-/* Handwritten-style annotations are DOM text, not baked into raster assets. */
-.mockup-page .marketplace-hero-note,
-.mockup-page .marketplace-cta-note {
-  position: absolute;
-  z-index: 6;
-  color: #5148e8;
-  font-family: "Comic Sans MS", "Segoe Print", cursive;
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: .01em;
-  pointer-events: none;
-}
-
 .mockup-page .marketplace-hero-note-primary {
   top: 42px;
   left: 55%;
@@ -144,10 +292,39 @@
   transform: rotate(-6deg);
 }
 
+/* Marketplace detail: real brand in the app chrome plus the render annotation. */
+.mockup-page .detail-app-top {
+  padding: 12px 16px;
+}
+
+.mockup-page .detail-app-brand .public-brand-mark {
+  width: 29px;
+  height: 29px;
+}
+
+.mockup-page .detail-hero-note {
+  top: 36px;
+  right: -29px;
+  width: 122px;
+  font-size: .68rem;
+  transform: rotate(-6deg);
+}
+
+.mockup-page .detail-hero-note span {
+  left: -20px;
+  bottom: -26px;
+  font-size: 29px;
+  transform: rotate(16deg);
+}
+
 @media (max-width: 1040px) {
   .mockup-page .marketplace-hero-note-primary {
     left: auto;
     right: 20%;
+  }
+
+  .mockup-page .features-hero-note-primary {
+    right: 6%;
   }
 }
 
@@ -162,8 +339,19 @@
 }
 
 @media (max-width: 720px) {
+  .mockup-page .features-window {
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  .mockup-page .features-app-sidebar {
+    padding: 14px 8px;
+  }
+
+  .mockup-page .features-hero-note-primary,
+  .mockup-page .features-hero-note-ai,
   .mockup-page .marketplace-hero-note-primary,
-  .mockup-page .marketplace-hero-note-sales {
+  .mockup-page .marketplace-hero-note-sales,
+  .mockup-page .detail-hero-note {
     display: none;
   }
 }
