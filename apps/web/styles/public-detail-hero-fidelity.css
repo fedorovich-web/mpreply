@@ -84,8 +84,37 @@
   background-size: cover;
 }
 
+/* The approved detail FAQ uses compact rows rather than full-height cards. */
+.mockup-page .detail-faq-summary {
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 46px;
+  padding: 6px 12px;
+}
+
+.mockup-page .detail-faq-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.mockup-page .marketplace-detail-faq details > p {
+  padding: 0 12px 10px 50px;
+}
+
 @media (max-width: 720px) {
   .mockup-page .detail-market-card::after {
     display: none;
+  }
+
+  .mockup-page .detail-faq-summary {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding-inline: 10px;
+  }
+
+  .mockup-page .marketplace-detail-faq details > p {
+    padding-left: 47px;
   }
 }
