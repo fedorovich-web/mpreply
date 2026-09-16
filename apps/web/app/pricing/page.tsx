@@ -115,6 +115,10 @@ const marketplaces = [
   },
 ] as const;
 
+function renderComparisonValue(value: string) {
+  return value === "✓" ? <span className="pricing-comparison-check">✓</span> : value;
+}
+
 export default function PricingPage() {
   return (
     <PublicShell>
@@ -231,9 +235,9 @@ export default function PricingPage() {
                   {comparison.map(([feature, start, pro, business]) => (
                     <tr key={feature}>
                       <td>{feature}</td>
-                      <td>{start}</td>
-                      <td>{pro}</td>
-                      <td>{business}</td>
+                      <td>{renderComparisonValue(start)}</td>
+                      <td>{renderComparisonValue(pro)}</td>
+                      <td>{renderComparisonValue(business)}</td>
                     </tr>
                   ))}
                 </tbody>
