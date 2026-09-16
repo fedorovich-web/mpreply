@@ -27,4 +27,12 @@ describe("approved horizontal public CTA strips", () => {
     expect(css).toContain(".mockup-cta-strip-side");
     expect(css).toContain("@media (max-width: 720px)");
   });
+
+  it("renders trust ticks as soft circular badges like the approved renders", () => {
+    expect(css).toContain(".mockup-page .mockup-trust-row span::before");
+    expect(css).toContain("display: inline-grid");
+    expect(css).toContain("border-radius: 999px");
+    expect(css).toContain("background: #eeedff");
+    expect(css).toContain("color: #5148e8");
+  });
 });
