@@ -45,4 +45,9 @@ describe("final approved render details", () => {
     expect(features).toContain('index === 2 ? "purple" : ""');
     expect(features).toMatch(/\[\s*"star",\s*"blue",\s*"Выше рейтинг товаров"/);
   });
+
+  it("uses the message bubble for reviews in the approved features sidebar", () => {
+    expect(features).toContain('<span className="features-app-nav-item"><PublicIcon name="message" />Отзывы</span>');
+    expect(features).not.toContain('<span className="features-app-nav-item"><PublicIcon name="star" />Отзывы</span>');
+  });
 });
