@@ -59,6 +59,12 @@ describe("approved marketplace detail visual", () => {
     expect(heroCss).toContain("radial-gradient");
   });
 
+  it("keeps the approved Wildberries app question card free of the extra context row", () => {
+    expect(detail).toContain("Контекст товара и обращения уже доступен в рабочем окне.");
+    expect(heroCss).toContain(':has(.marketplace-detail-logo[src$="/wildberries.webp"]) .detail-question > p');
+    expect(heroCss).toContain("display: none");
+  });
+
   it("keeps the CTA support badge truthful and compact", () => {
     expect(detail).toContain("<span>Поддержка ежедневно</span>");
     expect(detail).not.toContain("Поддержка 24/7");
