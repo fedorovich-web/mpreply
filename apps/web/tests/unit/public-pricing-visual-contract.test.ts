@@ -6,6 +6,7 @@ const root = process.cwd();
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const ctaCss = readFileSync(join(root, "styles/public-mockup-cta-fidelity.css"), "utf8");
+const finalCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
 const integrationsCssPath = join(root, "styles/public-pricing-integration-fidelity.css");
 const integrationsCss = existsSync(integrationsCssPath) ? readFileSync(integrationsCssPath, "utf8") : "";
 
@@ -41,6 +42,8 @@ describe("approved pricing final CTA visual", () => {
     expect(ctaCss).not.toContain('img[src$="wildberries.webp"]');
     expect(ctaCss).not.toContain('img[src$="ozon.webp"]');
     expect(ctaCss).not.toContain('img[src$="yandex-market.webp"]');
+    expect(finalCss).not.toContain("marketplace-detail-logo-small");
+    expect(finalCss).not.toContain("approved full wordmark assets without duplicate text labels");
   });
 
   it("keeps Professional body values dark while retaining branded checkmarks", () => {
