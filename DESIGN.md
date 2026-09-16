@@ -6,7 +6,7 @@ Status: authoritative visual and UX source of truth for the public site, authent
 
 **Clear marketplace operations in one coherent MPReply product.**
 
-The latest approved light-blue MPReply homepage preview is the visual source of truth. Public pages and the authenticated product must look related: same palette, typography, component character and spacing logic, adapted to different information densities.
+The latest approved MPReply public previews are the visual source of truth. For the current secondary-page fidelity pass, the approved handoff renders for `/features`, `/marketplaces`, marketplace detail, `/pricing` and `/demo` take precedence over older visual descriptions. Public pages and the authenticated product must look related: same palette, typography, component character and spacing logic, adapted to different information densities.
 
 Accessibility, semantics, performance and responsive fixes must preserve the approved composition and hierarchy unless a design change is explicitly approved.
 
@@ -14,13 +14,14 @@ Accessibility, semantics, performance and responsive fixes must preserve the app
 
 Primary brand family:
 
-- deep blue: `#1E40AF`;
-- strong blue: `#1D4ED8`;
-- primary: `#2563EB`;
-- sky accent: `#0EA5E9`;
-- light sky accent: `#7DD3FC`.
+- primary action: `#5148E8`;
+- action gradient middle stop: `#635BFF`;
+- action gradient end stop: `#5964FF`;
+- primary hover/deeper accent: `#443BCF`;
+- primary active accent: `#3D35C0`;
+- approved primary action gradient: `linear-gradient(110deg, #5148E8 0%, #635BFF 58%, #5964FF 100%)`.
 
-Use white and cool near-white surfaces with dark navy text. Success, warning and danger are semantic colors and remain separate from the brand palette.
+`#635BFF` is a gradient stop, not a standalone secondary brand color. Use white and cool near-white/lavender surfaces with dark navy text. Success, warning and danger are semantic colors and remain separate from the brand palette.
 
 Reusable visual primitives belong in shared CSS custom properties: colors, surfaces, borders, radii, shadows, section rhythm, focus rings, transitions and public gradients.
 
@@ -36,11 +37,13 @@ Use:
 - generous whitespace;
 - strong editorial hierarchy;
 - realistic MPReply product artifacts;
-- restrained blue/sky accents;
+- restrained violet/indigo brand accents;
 - different compositions between sections/pages;
 - one clear primary conversion action per context.
 
 Major public desktop sections should usually preserve approximately **112–160px** of vertical separation where the approved composition calls for it.
+
+For the five approved handoff page families, vertical section padding is the approved render spacing + 15px at the top and +15px at the bottom. Do not apply that increment twice through overlapping fidelity layers.
 
 Avoid:
 - card-everything layouts;
@@ -83,6 +86,7 @@ Do not give equal visual weight to every metric, filter and control.
 - Content width stays near the approved 1180–1240px range where existing containers use it.
 - Alternate white/cool near-white surfaces only when composition benefits from it.
 - Keep the latest approved section padding rather than compressing the page after unrelated fixes.
+- On the current approved handoff pages, preserve the render-derived spacing and then add exactly 15px above and 15px below each section.
 
 ## Homepage visual contract
 
@@ -114,9 +118,11 @@ Every public route uses the same visual language but gets a composition appropri
 - marketplace detail pages: unique marketplace-specific content and structure.
 - `/pricing`: clear commercial explanation without invented prices.
 - `/demo`: realistic product workflow.
-- `/resources`: editorial/SEO entry point.
+- `/help`: task-oriented support and FAQ entry point.
 - `/contacts`: focused onboarding/sales contact.
 - `/privacy`, `/terms`: readable legal typography without marketing distortion.
+
+For `/features`, marketplace detail and `/demo`, keep meaningful UI, text, tables, buttons and interaction code-driven. Raster assets are allowed only for approved visual assets and for icon replacements that are demonstrably closer to the supplied renders. One raster asset must remain one file; do not introduce sprites or combined raster UI panels.
 
 Do not solve every page with the same hero + three cards + CTA template.
 
@@ -191,6 +197,8 @@ At 320px and 390px:
 - dense tables become suitable mobile patterns rather than squeezed columns;
 - critical state is never hover-only;
 - long Russian labels/headings wrap intentionally.
+
+For public handoff fidelity, explicitly review 1086px, 1024px, 768px and 430px layouts in addition to normal desktop/mobile baselines. The pixel width of an exported reference image is not by itself a responsive breakpoint specification.
 
 ## Motion
 
