@@ -39,9 +39,28 @@ The product UI supports Wildberries, Ozon, Yandex Market and Avito.
 
 All four may be shown as available in the product experience. Public production claims must be released together with the backend/runtime certification that makes those claims true in production.
 
+The approved public tariff presentation is:
+- `Старт` — `490 ₽ / мес`;
+- `Профессиональный` — `990 ₽ / мес`;
+- `Бизнес` — `1 990 ₽ / мес`;
+- annual payment presentation — `-20%`;
+- trial presentation — `14 дней`.
+
+Do not invent extra prices, crossed-out anchors, discounts, urgency or trial terms beyond that approved presentation. Payment-provider wiring remains a separate launch-stage task.
+
 Exact AI provider/model names must not be used as marketing proof unless verified on the deployment branch.
 
 Do not expose credential, worker, adapter, provider, tenant or internal safety-pipeline vocabulary as primary seller-facing copy.
+
+## Visual source of truth
+
+For the current secondary-page fidelity pass, the supplied approved renders for `/features`, `/marketplaces`, marketplace detail, `/pricing` and `/demo` are the visual source of truth.
+
+- Do not redesign those pages "by inspiration".
+- Preserve meaningful UI, headings, tables, buttons and interactions as code.
+- Use raster only for approved visual assets or icon replacements that are demonstrably closer to the supplied render.
+- One raster asset is one file; do not create sprites or combined raster UI panels.
+- Vertical padding for each approved section is render spacing + 15px at the top and +15px at the bottom. Do not apply the increment twice through overlapping CSS layers.
 
 ## competitor-informed copy
 
@@ -90,9 +109,9 @@ If not, rewrite it.
 | `/marketplaces/ozon` | Ozon communication automation | marketplace-specific search + conversion |
 | `/marketplaces/yandex-market` | Yandex Market communication automation | marketplace-specific search + conversion |
 | `/marketplaces/avito` | Avito buyer communication | marketplace-specific search + conversion |
-| `/pricing` | commercial evaluation | explain plan/usage model honestly |
+| `/pricing` | commercial evaluation | present the approved tariff options and limits clearly |
 | `/demo` | product evaluation | show realistic MPReply workflow before signup |
-| `/resources` | educational/SEO discovery | editorial hub / Blog |
+| `/help` | support + FAQ | task-oriented help, troubleshooting and common questions |
 | `/contacts` | qualified contact | collect useful onboarding context |
 | `/privacy`, `/terms` | legal trust | readable accurate legal pages |
 
@@ -147,15 +166,15 @@ Each page should address:
 
 ## `/pricing`
 
-No invented numbers or fake plan comparisons.
+Use the approved public tariff presentation as the commercial source of truth for this redesign:
 
-Until real public pricing is configured, explain:
-- what product usage dimensions can affect a plan;
-- what kinds of teams/workloads the commercial model needs to accommodate;
-- what is included conceptually only when supported;
-- the next contact/account action.
+- `Старт` — `490 ₽ / мес`;
+- `Профессиональный` — `990 ₽ / мес`;
+- `Бизнес` — `1 990 ₽ / мес`;
+- annual payment — `-20%`;
+- free access period — `14 дней`.
 
-Never use fake `most popular`, crossed-out prices, invented annual discounts or unverified trial periods.
+Keep the current approved plan limits, comparison table, integrations, FAQ and final CTA code-driven. Do not add additional prices, discounts, checkout/payment actions, fake urgency or new commercial claims that are not in the approved source.
 
 ## `/demo`
 
@@ -171,21 +190,17 @@ Use realistic examples for:
 
 Do not turn demo into a fictional dashboard with unsupported features or metrics.
 
-## `/resources` / Blog
+## `/help`
 
-Use the public label `Блог` unless a later editorial decision changes it.
+The help page is task-oriented rather than a generic editorial hub. It should cover:
+- connecting the four supported marketplaces;
+- working with the unified queue;
+- review and automation rules;
+- troubleshooting common integration/response states;
+- concise FAQ;
+- a clear support/contact path.
 
-The page is an editorial/SEO entry point, not a generic resource-card dump. Content clusters should answer real seller queries such as:
-- автоответы на отзывы;
-- ответы на отзывы Wildberries;
-- ответы на отзывы Ozon;
-- ответы на вопросы покупателей;
-- работа с негативными отзывами;
-- ИИ для ответов на отзывы;
-- единое окно для маркетплейсов;
-- автоматизация общения с покупателями.
-
-Do not mass-produce thin pages to cover keywords.
+Do not reintroduce `/resources` or a Blog route unless the user explicitly approves a new information-architecture change.
 
 ## `/contacts`
 
@@ -199,14 +214,15 @@ Ask only for information useful to a real onboarding/sales conversation, such as
 
 Use one primary action per conversion context and make labels describe the next state.
 
-Examples:
+Approved public-site CTA language includes:
+- `Попробовать бесплатно` for the approved `14 дней` free-access presentation;
 - `Создать аккаунт`;
 - `Посмотреть демо`;
 - `Посмотреть интеграции`;
 - `Обсудить подключение`;
-- marketplace-specific `Подключить Ozon` only where that action is actually the next state.
+- marketplace-specific `Подключить <marketplace>` where that action is actually the next state.
 
-Do not promise `Попробовать бесплатно` unless a real free/trial offer exists.
+Do not invent additional trial conditions or payment promises beyond the approved commercial source.
 
 ## Credibility policy
 
@@ -215,14 +231,15 @@ Allowed:
 - real workflow mechanics;
 - real supported marketplace names;
 - verified security/control behavior;
-- explicit limitations.
+- explicit limitations;
+- approved public tariff/trial presentation documented above.
 
 Forbidden:
 - fabricated client logos or testimonials;
 - fake customer counts;
 - unsupported percentage/time savings;
 - fake ratings/awards;
-- invented prices/discounts;
+- additional prices/discounts/trial terms not in the approved source;
 - fake urgency;
 - unverified production/provider/model claims.
 
@@ -236,9 +253,11 @@ Public pages are intentionally composed at 320px and 390px:
 - long Russian headings wrap deliberately;
 - decorative imagery never pushes core copy/action below unusable fold lengths.
 
+For the approved handoff pages, also review 1086px, 1024px, 768px and 430px layouts. The exported PNG width alone is not a breakpoint specification.
+
 ## Acceptance criteria
 
-- All public pages use the approved MPReply blue design language.
+- All public pages use the approved MPReply brand design language.
 - Every page has a distinct purpose and composition.
 - Copy is grounded in competitor/category research and real product truth.
 - The core `автоматически или после проверки` control model is understandable without internal jargon.
