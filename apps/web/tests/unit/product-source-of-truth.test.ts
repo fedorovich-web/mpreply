@@ -28,11 +28,16 @@ describe("MPReply authoritative product documentation", () => {
     expect(adr).not.toMatch(/roadmap\/planned|not represented as production-ready/i);
   });
 
-  it("defines the approved blue design direction and dashboard UX", () => {
-    expect(design).toContain("# MPReply");
-    expect(design).toContain("#2563EB");
+  it("defines the approved MPReply brand direction and dashboard UX", () => {
+    expect(design).toContain("#5148E8");
+    expect(design).toContain("#635BFF");
+    expect(design).toContain("#5964FF");
+    expect(design).toContain("linear-gradient(110deg, #5148E8 0%, #635BFF 58%, #5964FF 100%)");
     expect(design).toContain("112–160px");
     expect(design).toContain("What needs attention");
+    expect(design).toContain("render spacing + 15px");
+    expect(design).not.toContain("#2563EB");
+    expect(design).not.toContain("/resources");
     expect(design).not.toContain("Primary violet: `#6F33AB`");
     expect(design).not.toContain("Impeccable contract");
   });
