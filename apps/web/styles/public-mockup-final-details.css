@@ -458,6 +458,16 @@
   gap: 7px;
 }
 
+.mockup-page .demo-process-answer > strong > svg {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #5148e8;
+  padding: 6px;
+}
+
 .mockup-page .demo-process-answer .button {
   width: 100%;
   justify-content: center;
