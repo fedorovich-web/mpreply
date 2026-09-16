@@ -122,7 +122,7 @@ const benefits: readonly [PublicIconName, Tone, string, string][] = [
   [
     "clock",
     "purple",
-    "До 70% меньше времени на ответы",
+    "Меньше времени на ответы",
     "Автоматизация и AI ускоряют обработку типовых обращений.",
   ],
   [
