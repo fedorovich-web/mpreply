@@ -48,7 +48,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       "inbox",
       "blue",
       "Единая очередь обращений",
-      `Все отзывы, вопросы и сообщения с ${marketplace.name} в одном удобном интерфейсе.`,
+      `Доступные отзывы, вопросы и сообщения с ${marketplace.name} в одном удобном интерфейсе.`,
     ],
     [
       "sparkles",
@@ -66,7 +66,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       "clock",
       "purple",
       "История действий",
-      "Полная история обращений и действий сотрудников для прозрачности и контроля.",
+      "История обращений и действий сотрудников помогает сохранять прозрачность работы команды.",
     ],
   ];
 
@@ -75,7 +75,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       "1",
       "link",
       `Подключите ${marketplace.name}`,
-      `Авторизуйтесь через официальный API ${marketplace.name}. Это займет пару минут.`,
+      `Авторизуйтесь через доступный способ подключения ${marketplace.name}.`,
     ],
     [
       "2",
@@ -93,12 +93,12 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       "4",
       "chart",
       "Получайте результат",
-      "Обрабатывайте больше обращений, повышайте рейтинг и лояльность покупателей.",
+      "Работайте с обращениями в одной очереди, сохраняйте статусы и историю действий команды.",
     ],
   ];
 
   const dailyBenefits: readonly [PublicIconName, Tone, string, string][] = [
-    ["lightning", "orange", "Больше скорости", "Отвечайте на обращения быстрее и не теряйте покупателей."],
+    ["lightning", "orange", "Больше скорости", "Отвечайте на обращения быстрее и сокращайте ручную рутину."],
     [
       "users",
       "purple",
@@ -123,7 +123,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
     [
       "link",
       `Как подключить ${marketplace.name}?`,
-      `Подключение занимает несколько минут через официальный API ${marketplace.name}.`,
+      `Подключение выполняется через доступный для интеграции способ авторизации ${marketplace.name}.`,
     ],
     [
       "users",
@@ -133,7 +133,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
     [
       "shield-check",
       "Обновляются ли статусы обращений?",
-      "Да. Статусы синхронизируются автоматически в реальном времени.",
+      "Да. MPReply синхронизирует доступные статусы обращений через интеграцию.",
     ],
   ];
 
@@ -144,9 +144,9 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
           <div className="public-container marketplace-detail-mockup-grid">
             <div className="marketplace-detail-mockup-copy">
               <p className="mockup-eyebrow">{platformLabel} + MPReply</p>
-              <h1>Работайте с отзывами, вопросами и сообщениями {marketplace.name} быстрее</h1>
+              <h1>Работайте с обращениями {marketplace.name} быстрее</h1>
               <p>
-                Подключите {marketplace.name} к MPReply и обрабатывайте все обращения покупателей в одном
+                Подключите {marketplace.name} к MPReply и обрабатывайте доступные обращения покупателей в одном
                 месте — с помощью AI, шаблонов и удобной командной работы.
               </p>
               <div className="mockup-actions">
@@ -358,7 +358,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               </span>
               <div className="mockup-cta-strip-copy">
                 <h2>Начните работать с {marketplace.name} уже сегодня</h2>
-                <p>14 дней бесплатного доступа ко всем возможностям. Без карты. Без риска.</p>
+                <p>14 дней бесплатного доступа. Без карты.</p>
               </div>
               <div className="mockup-cta-strip-side">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
