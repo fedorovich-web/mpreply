@@ -5,14 +5,15 @@ import { describe, expect, it } from "vitest";
 const publicCss = readFileSync(join(process.cwd(), "styles/public-site.css"), "utf8");
 
 describe("public site shared stylesheet", () => {
-  it("keeps live shared public route primitives", () => {
+  it("keeps live shared shell, help, legal and contact primitives", () => {
     for (const selector of [
       ".public-subhero",
-      ".capability-stack",
-      ".product-console",
-      ".operations-live-dot",
       ".public-mobile-navigation",
       ".public-footer",
+      ".public-cta-card",
+      ".legal-hero",
+      ".legal-warning",
+      ".contact-path",
     ]) {
       expect(publicCss).toContain(selector);
     }
