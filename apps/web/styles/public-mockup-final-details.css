@@ -81,6 +81,29 @@
   font-size: inherit;
 }
 
+/* Marketplace integration cards use the circular brand checks from the approved render. */
+.mockup-page .marketplace-logo-card li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mockup-page .marketplace-logo-card li::before {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  place-items: center;
+  margin: 1px 0 0;
+  border-radius: 999px;
+  background: #f0efff;
+  color: #5148e8;
+  content: "✓";
+  font-size: .56rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
 /* Marketplace detail FAQ: icon-led horizontal rows with a chevron at the right. */
 .mockup-page .marketplace-detail-faq details {
   padding: 0;
