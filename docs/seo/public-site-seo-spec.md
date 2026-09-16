@@ -4,7 +4,7 @@
 
 Build qualified organic visibility for MPReply around marketplace customer communication, auto-replies, reviews, buyer questions and messages while preserving useful page intent and product truth.
 
-Traffic volume alone is not success. Search pages must help marketplace sellers understand the product and move toward a relevant commercial or educational next step.
+Traffic volume alone is not success. Search pages must help marketplace sellers understand the product and move toward a relevant commercial or support next step.
 
 ## Principles
 
@@ -12,9 +12,10 @@ Traffic volume alone is not success. Search pages must help marketplace sellers 
 - Product/release truth outranks keyword opportunity.
 - Native Russian, no keyword stuffing.
 - No doorway pages or marketplace pages created by name replacement.
-- Commercial pages explain the product; editorial pages answer genuine seller questions.
+- Commercial pages explain the product; support content answers genuine seller questions.
 - Exact AI provider/model names are not SEO proof unless verified in the deployment runtime.
 - No invented ratings, offer data, customer counts, review counts or organization facts for schema.
+- Approved tariff/trial facts may be used only exactly as defined by the current product source of truth; do not extrapolate new commercial claims for snippets.
 
 ## Research requirement
 
@@ -56,7 +57,7 @@ Competitor research informs structure and vocabulary, never verbatim copying.
 
 Do not place every spelling variant in visible headings. Use natural Russian and page-specific query intent.
 
-### Educational/editorial cluster
+### Educational/support cluster
 
 - как отвечать на отзывы покупателей;
 - ответы на негативные отзывы;
@@ -120,7 +121,14 @@ The page must reflect the communication types and workflow that are actually sup
 
 Intent: commercial/pricing evaluation.
 
-Do not invent prices, discounts, tiers or trial periods for SEO snippets.
+The approved public tariff presentation may be reflected in page metadata/snippets where useful and accurate:
+- `Старт` — `490 ₽ / мес`;
+- `Профессиональный` — `990 ₽ / мес`;
+- `Бизнес` — `1 990 ₽ / мес`;
+- annual payment presentation — `-20%`;
+- approved trial presentation — `14 дней`.
+
+Do not invent additional prices, discounts, tiers, crossed-out anchors or trial conditions for SEO snippets.
 
 ### `/demo`
 
@@ -128,11 +136,11 @@ Intent: product-demo evaluation.
 
 Explain what the visitor can see/understand in the demo; avoid keyword-heavy marketing copy.
 
-### `/resources`
+### `/help`
 
-Intent: educational discovery and topical authority.
+Intent: support, troubleshooting and FAQ discovery.
 
-Public navigation label: `Блог` unless later changed. This route is the editorial hub for useful seller content and internal links to relevant product pages.
+Use task-oriented help around marketplace connection, unified queue, review/automation rules and common operational states. Do not reintroduce `/resources` or a Blog route unless the information architecture is explicitly changed later.
 
 ### `/contacts`
 
@@ -144,13 +152,13 @@ Intent: legal trust. These should be indexable only according to the broader sit
 
 ## Page-level SEO brief
 
-Every indexable commercial/editorial page needs:
+Every indexable commercial/support page needs:
 
 - one primary intent;
 - primary semantic cluster;
 - target seller segment;
 - concrete pain/question;
-- MPReply mechanism or editorial answer;
+- MPReply mechanism or useful answer;
 - evidence/limitations;
 - one useful CTA or next route;
 - intentional internal links;
@@ -197,7 +205,7 @@ Potential types:
 Never invent:
 - aggregate ratings;
 - review counts;
-- offers/prices;
+- offers/prices beyond the approved public tariff facts;
 - company data;
 - awards;
 - customers.
@@ -209,7 +217,7 @@ Create intentional links between:
 - homepage/features ↔ marketplace hub;
 - marketplace hub ↔ each marketplace page;
 - marketplace pages ↔ demo/pricing/account/contact where relevant;
-- Blog/editorial content ↔ the most relevant commercial page;
+- help content ↔ the most relevant commercial page;
 - features ↔ the integration/workflow that proves the feature.
 
 Use descriptive anchor text. Do not repeat `Подробнее` as the default link label.
