@@ -40,14 +40,14 @@ describe("approved horizontal public CTA strips", () => {
     expect(css).toContain("display: inline-grid");
     expect(css).toContain("border-radius: 999px");
     expect(css).toContain("background: #eeedff");
-    expect(css).toContain("color: #5148e8");
+    expect(css).toContain("color: var(--color-brand-primary)");
   });
 
   it("uses the fast-connect glyph for the third hero trust item only on marketplaces and demo", () => {
     expect(css).toContain(".marketplaces-mockup-hero .mockup-trust-row span:nth-child(3)::before");
     expect(css).toContain(".demo-mockup-hero .mockup-trust-row span:nth-child(3)::before");
     expect(css).toContain("content: ''");
-    expect(css).toContain("linear-gradient(90deg, #5148e8 0 0)");
+    expect(css).toContain("linear-gradient(90deg, var(--color-brand-primary) 0 0)");
   });
 
   it("draws the handwritten CTA arrows shown on marketplaces and demo", () => {
@@ -55,7 +55,7 @@ describe("approved horizontal public CTA strips", () => {
     expect(layout).toContain('import "../styles/public-mockup-decorative-fidelity.css"');
     expect(decorativeCss).toContain(".marketplace-cta-note::before");
     expect(decorativeCss).toContain(".demo-cta-note::before");
-    expect(decorativeCss).toContain("border-top: 2px solid #5148e8");
+    expect(decorativeCss).toContain("border-top: 2px solid var(--color-brand-primary)");
     expect(decorativeCss).toContain("transform: rotate(-24deg)");
   });
 });
