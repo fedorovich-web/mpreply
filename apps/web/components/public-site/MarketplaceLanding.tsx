@@ -212,7 +212,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                     <span className="detail-sidebar-item"><PublicIcon name="message" />Вопросы <b>8</b></span>
                     <span className="detail-sidebar-item"><PublicIcon name="message" />Сообщения <b>10</b></span>
                     <span className="detail-sidebar-item"><PublicIcon name="chart" />Аналитика</span>
-                    <span className="detail-sidebar-item"><PublicIcon name="document" />Шаблоны</span>
+                    <span className="detail-sidebar-item"><PublicIcon name="archive" />Шаблоны</span>
                     <span className="detail-sidebar-item"><PublicIcon name="users" />Команда</span>
                   </aside>
                   <div className="detail-question">
