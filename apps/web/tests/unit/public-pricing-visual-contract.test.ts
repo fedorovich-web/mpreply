@@ -51,7 +51,7 @@ describe("approved pricing final CTA visual", () => {
     expect(integrationsCss).toContain("color: #52688d");
     expect(pricing).toContain("pricing-comparison-check");
     expect(integrationsCss).toContain(".pricing-comparison-check");
-    expect(integrationsCss).toContain("color: #5148e8");
+    expect(integrationsCss).toContain("color: var(--color-brand-primary)");
   });
 
   it("draws the individual-plan padlock shown in the approved render", () => {
