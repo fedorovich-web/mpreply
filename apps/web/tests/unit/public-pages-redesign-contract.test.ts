@@ -158,6 +158,11 @@ describe("current public page composition", () => {
     expect(features).not.toMatch(/worker-backed|идемпотентности|application layer/i);
   });
 
+  it("does not publish fabricated quantified feature savings", () => {
+    expect(features).not.toMatch(/\b\d+%\b[^\n]{0,80}времен/i);
+    expect(features).not.toContain("До 70% меньше времени на ответы");
+  });
+
   it("keeps homepage semantic cleanup intact without redesigning it", () => {
     expect(home).not.toContain('<article className={`homepage-model-card');
     expect(home).not.toContain('<article className="homepage-result-card"');
