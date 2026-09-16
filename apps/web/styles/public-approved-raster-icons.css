@@ -1,0 +1,33 @@
+/* Selective approved raster icons from the 2026-09 inner-page renders. */
+
+.mockup-page .features-tool-card:nth-child(-n+5) .mockup-icon-chip {
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 54px 54px;
+  color: transparent;
+}
+
+.mockup-page .features-tool-card:nth-child(-n+5) .mockup-icon-chip > svg {
+  display: none;
+}
+
+.mockup-page .features-tool-card:nth-child(1) .mockup-icon-chip {
+  background-image: url("/images/mockups/features-icons/01-unified-inbox.webp");
+}
+
+.mockup-page .features-tool-card:nth-child(2) .mockup-icon-chip {
+  background-image: url("/images/mockups/features-icons/02-ai-sparkles.webp");
+}
+
+.mockup-page .features-tool-card:nth-child(3) .mockup-icon-chip {
+  background-image: url("/images/mockups/features-icons/03-quality-shield.webp");
+}
+
+.mockup-page .features-tool-card:nth-child(4) .mockup-icon-chip {
+  background-image: url("/images/mockups/features-icons/04-auto-replies-lightning.webp");
+}
+
+.mockup-page .features-tool-card:nth-child(5) .mockup-icon-chip {
+  background-image: url("/images/mockups/features-icons/05-templates-document.webp");
+}
