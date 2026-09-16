@@ -226,7 +226,7 @@ export default function FeaturesPage() {
                     <span className="features-app-nav-item"><PublicIcon name="message" />Сообщения</span>
                     <i />
                     <span className="features-app-nav-item"><PublicIcon name="chart" />Аналитика</span>
-                    <span className="features-app-nav-item"><PublicIcon name="document" />Шаблоны</span>
+                    <span className="features-app-nav-item"><PublicIcon name="archive" />Шаблоны</span>
                     <span className="features-app-nav-item"><PublicIcon name="users" />Команда</span>
                   </nav>
                 </aside>
