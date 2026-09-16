@@ -46,8 +46,8 @@ describe("approved marketplaces hero visual", () => {
   it("uses the circular brand check badges from the integration cards", () => {
     expect(finalCss).toContain(".marketplace-logo-card li::before");
     expect(finalCss).toContain("border-radius: 999px");
-    expect(finalCss).toContain("background: #f0efff");
-    expect(finalCss).toContain("color: #5148e8");
+    expect(finalCss).toContain("background: var(--color-brand-soft)");
+    expect(finalCss).toContain("color: var(--color-brand-primary)");
   });
 
   it("uses the play icon in the secondary hero action", () => {
