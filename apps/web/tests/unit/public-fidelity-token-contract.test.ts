@@ -6,12 +6,21 @@ const root = process.cwd();
 const brandCss = readFileSync(join(root, "styles/public-mockup-brand-fidelity.css"), "utf8");
 const ctaCss = readFileSync(join(root, "styles/public-mockup-cta-fidelity.css"), "utf8");
 const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-fidelity.css"), "utf8");
+const finalDetailsCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
 const detailCss = readFileSync(join(root, "styles/public-detail-hero-fidelity.css"), "utf8");
 const pricingCss = readFileSync(join(root, "styles/public-pricing-integration-fidelity.css"), "utf8");
 const headerCss = readFileSync(join(root, "styles/public-header-fidelity.css"), "utf8");
 const footerCss = readFileSync(join(root, "styles/public-compact-footer.css"), "utf8");
 
-const tokenizedLateLayers = [ctaCss, decorativeCss, detailCss, pricingCss, headerCss, footerCss] as const;
+const tokenizedLateLayers = [
+  ctaCss,
+  decorativeCss,
+  finalDetailsCss,
+  detailCss,
+  pricingCss,
+  headerCss,
+  footerCss,
+] as const;
 
 describe("public handoff fidelity token usage", () => {
   it("defines the approved brand primitives once in the scoped brand layer", () => {
@@ -25,6 +34,11 @@ describe("public handoff fidelity token usage", () => {
       expect(source).not.toMatch(/#5148e8/i);
       expect(source).toContain("var(--color-brand-primary)");
     }
+  });
+
+  it("uses the shared brand-soft token for repeated approved lavender surfaces", () => {
+    expect(finalDetailsCss).not.toMatch(/#f0efff/i);
+    expect(finalDetailsCss).toContain("var(--color-brand-soft)");
   });
 
   it("uses the shared action gradient where the approved gradient is repeated", () => {
