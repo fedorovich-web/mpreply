@@ -12,8 +12,11 @@ const cssPath = join(root, "styles/public-mockup-cta-fidelity.css");
 const css = existsSync(cssPath) ? readFileSync(cssPath, "utf8") : "";
 
 describe("approved horizontal public CTA strips", () => {
-  it("uses one strip composition on features, marketplaces, detail and demo", () => {
-    for (const page of [features, marketplaces, detail, demo]) {
+  it("keeps the leading send tile only on renders that actually show it", () => {
+    expect(features).toContain("mockup-cta-strip features-cta-strip");
+    expect(features).not.toContain("mockup-cta-strip-icon");
+
+    for (const page of [marketplaces, detail, demo]) {
       expect(page).toContain("mockup-cta-strip");
       expect(page).toContain("mockup-cta-strip-icon");
       expect(page).toContain('name="send"');
@@ -24,6 +27,8 @@ describe("approved horizontal public CTA strips", () => {
     expect(existsSync(cssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-mockup-cta-fidelity.css"');
     expect(css).toContain("grid-template-columns: 56px minmax(0, 1fr) auto");
+    expect(css).toContain(".mockup-page .features-cta-strip");
+    expect(css).toContain("grid-template-columns: minmax(0, 1fr) auto");
     expect(css).toContain(".mockup-cta-strip-side");
     expect(css).toContain("@media (max-width: 720px)");
   });
