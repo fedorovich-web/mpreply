@@ -116,11 +116,11 @@ const scenarios = [
 ] as const;
 
 const processEvents: readonly [PublicIconName, "green" | "blue" | "purple", string, string, string][] = [
-  ["message", "green", "Получено", "12 мар, 14:32", "Сообщение успешно получено из Ozon"],
+  ["download", "green", "Получено", "12 мар, 14:32", "Сообщение успешно получено из Ozon"],
   ["search", "blue", "Анализ", "12 мар, 14:32", "AI анализирует контекст, товар и историю клиента"],
   ["sparkles", "purple", "AI-черновик", "12 мар, 14:33", "Ответ готов. Ожидает проверки"],
   ["users", "purple", "Ожидает", "12 мар, 14:34", "Вы проверили ответ"],
-  ["shield-check", "green", "Отправлено", "12 мар, 14:35", "Ответ успешно отправлен в Ozon"],
+  ["check-circle", "green", "Отправлено", "12 мар, 14:35", "Ответ успешно отправлен в Ozon"],
 ];
 
 const teamTools: readonly [PublicIconName, "blue" | "purple" | "orange", string, string][] = [
