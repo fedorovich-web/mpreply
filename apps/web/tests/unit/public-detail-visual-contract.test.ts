@@ -24,6 +24,14 @@ describe("approved marketplace detail visual", () => {
     expect(decorativeCss).toContain(".detail-hero-note");
   });
 
+  it("does not make unsupported timing, realtime or universal-coverage claims", () => {
+    expect(detail).not.toMatch(/пару минут|несколько минут|в реальном времени/i);
+    expect(detail).not.toContain("Все отзывы, вопросы и сообщения");
+    expect(detail).not.toContain("обрабатывайте все обращения покупателей");
+    expect(detail).toContain("Доступные отзывы, вопросы и сообщения");
+    expect(detail).toContain("доступные обращения покупателей");
+  });
+
   it("matches the icon-led FAQ rows from the approved render", () => {
     expect(detail).toContain("detail-faq-summary");
     expect(detail).toContain("detail-faq-icon");
