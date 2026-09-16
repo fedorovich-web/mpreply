@@ -34,6 +34,14 @@ describe("approved marketplace detail visual", () => {
     expect(finalCss).toContain(".detail-faq-icon");
   });
 
+  it("keeps FAQ rows compact like the approved Wildberries render", () => {
+    expect(heroCss).toContain(".detail-faq-summary");
+    expect(heroCss).toContain("min-height: 46px");
+    expect(heroCss).toContain(".detail-faq-icon");
+    expect(heroCss).toContain("width: 28px");
+    expect(heroCss).toContain("height: 28px");
+  });
+
   it("uses the play icon in the secondary hero action", () => {
     expect(publicIcon).toContain('"play"');
     expect(detail).toContain('name="play"');
