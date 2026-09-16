@@ -25,14 +25,16 @@ describe("approved demo journey visual", () => {
     expect(demo).toContain('["document", "blue", "Шаблоны ответов"');
   });
 
-  it("uses status icons instead of numbered circles in the large process timeline", () => {
-    expect(publicIcon).toContain('"search"');
+  it("uses the approved status icons in the large process timeline", () => {
+    for (const icon of ["download", "search", "sparkles", "users", "check-circle"]) {
+      expect(publicIcon).toContain(`"${icon}"`);
+    }
     expect(demo).toContain("demo-process-event-icon");
-    expect(demo).toContain('["message", "green", "Получено"');
+    expect(demo).toContain('["download", "green", "Получено"');
     expect(demo).toContain('["search", "blue", "Анализ"');
     expect(demo).toContain('["sparkles", "purple", "AI-черновик"');
     expect(demo).toContain('["users", "purple", "Ожидает"');
-    expect(demo).toContain('["shield-check", "green", "Отправлено"');
+    expect(demo).toContain('["check-circle", "green", "Отправлено"');
     expect(finalCss).toContain(".demo-process-event-icon.green");
     expect(finalCss).toContain(".demo-process-event-icon.purple");
   });
