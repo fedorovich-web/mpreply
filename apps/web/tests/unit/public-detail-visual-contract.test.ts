@@ -82,15 +82,16 @@ describe("approved marketplace detail visual", () => {
     expect(detail).toContain("marketplace-detail-compact-logo");
   });
 
-  it("uses icon-led sidebar navigation inside the MPReply window", () => {
+  it("uses the approved bubble and archive sidebar navigation glyphs", () => {
     expect(existsSync(heroCssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-detail-hero-fidelity.css"');
     expect(detail).toContain("detail-sidebar-item");
-    for (const icon of ["inbox", "message", "chart", "document", "users"]) {
-      expect(detail).toContain(`name="${icon}"`);
+    for (const icon of ["inbox", "message", "chart", "archive", "users"]) {
+      expect(publicIcon).toContain(`"${icon}"`);
     }
     expect(detail).toContain('<span className="detail-sidebar-item"><PublicIcon name="message" />Отзывы <b>6</b></span>');
     expect(detail).not.toContain('<span className="detail-sidebar-item"><PublicIcon name="star" />Отзывы <b>6</b></span>');
+    expect(detail).toContain('<span className="detail-sidebar-item"><PublicIcon name="archive" />Шаблоны</span>');
     expect(heroCss).toContain(".detail-sidebar-item");
   });
 
