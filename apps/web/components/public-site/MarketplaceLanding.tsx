@@ -208,7 +208,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                       Все обращения
                       <b>24</b>
                     </strong>
-                    <span className="detail-sidebar-item"><PublicIcon name="star" />Отзывы <b>6</b></span>
+                    <span className="detail-sidebar-item"><PublicIcon name="message" />Отзывы <b>6</b></span>
                     <span className="detail-sidebar-item"><PublicIcon name="message" />Вопросы <b>8</b></span>
                     <span className="detail-sidebar-item"><PublicIcon name="message" />Сообщения <b>10</b></span>
                     <span className="detail-sidebar-item"><PublicIcon name="chart" />Аналитика</span>
