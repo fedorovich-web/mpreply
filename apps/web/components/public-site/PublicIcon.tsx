@@ -11,6 +11,7 @@ export type PublicIconName =
   | "shield-check"
   | "lightning"
   | "document"
+  | "archive"
   | "chart"
   | "users"
   | "clock"
@@ -94,6 +95,14 @@ function IconPaths({ name }: { name: PublicIconName }) {
           <path d="M6 3.5h8l4 4V20.5H6V3.5Z" />
           <path d="M14 3.5v4h4" />
           <path d="M9 11h6M9 14.5h6M9 18h4" />
+        </>
+      );
+    case "archive":
+      return (
+        <>
+          <path d="M5.2 7.2h13.6v12.1H5.2V7.2Z" />
+          <path d="M4 4.5h16v3H4v-3Z" />
+          <path d="M9.2 11.1h5.6" />
         </>
       );
     case "chart":
