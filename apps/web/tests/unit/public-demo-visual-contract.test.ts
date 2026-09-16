@@ -49,6 +49,13 @@ describe("approved demo journey visual", () => {
     expect(finalCss).toContain(".demo-process-buyer-message");
   });
 
+  it("renders the ready-answer message icon inside the soft blue tile from the approved process card", () => {
+    expect(demo).toContain('name="message" className="public-inline-icon"');
+    expect(finalCss).toContain(".demo-process-answer > strong > svg");
+    expect(finalCss).toContain("background: #eef2ff");
+    expect(finalCss).toContain("border-radius: 8px");
+  });
+
   it("keeps scenario cards to logo, type, body copy and link like the render", () => {
     expect(demo).toContain("Примеры из реальной практики");
     expect(demo).toContain("Покупатель оставил отзыв на товар. Посмотрите, как MPReply помогает корректно и вежливо ответить.");
