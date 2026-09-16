@@ -4,6 +4,8 @@ export type PublicIconName =
   | "inbox"
   | "message"
   | "search"
+  | "download"
+  | "check-circle"
   | "play"
   | "sparkles"
   | "shield-check"
@@ -45,6 +47,21 @@ function IconPaths({ name }: { name: PublicIconName }) {
         <>
           <circle cx="10.5" cy="10.5" r="5.5" />
           <path d="m14.6 14.6 4.2 4.2" />
+        </>
+      );
+    case "download":
+      return (
+        <>
+          <path d="M12 4v10" />
+          <path d="m8.2 10.5 3.8 3.8 3.8-3.8" />
+          <path d="M5 18.5h14" />
+        </>
+      );
+    case "check-circle":
+      return (
+        <>
+          <circle cx="12" cy="12" r="8.2" />
+          <path d="m8.2 12.1 2.4 2.4 5.2-5.3" />
         </>
       );
     case "play":
