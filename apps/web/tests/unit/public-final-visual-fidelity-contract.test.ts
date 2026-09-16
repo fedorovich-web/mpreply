@@ -40,4 +40,9 @@ describe("final approved render details", () => {
     expect(features).toContain("features-benefit-grid");
     expect(finalCss).toContain(":has(.features-benefit-grid)");
   });
+
+  it("keeps the approved features workflow and benefit icon tones", () => {
+    expect(features).toContain('index === 2 ? "purple" : ""');
+    expect(features).toMatch(/\[\s*"star",\s*"blue",\s*"Выше рейтинг товаров"/);
+  });
 });
