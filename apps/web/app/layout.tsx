@@ -36,6 +36,7 @@ import "../styles/public-detail-hero-fidelity.css";
 import "../styles/public-pricing-integration-fidelity.css";
 import "../styles/public-compact-footer.css";
 import "../styles/public-header-fidelity.css";
+import "../styles/public-approved-raster-icons.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.origin),
