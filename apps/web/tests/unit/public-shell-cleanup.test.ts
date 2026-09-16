@@ -10,12 +10,14 @@ const marketingCss = readFileSync(join(root, "styles/marketing-site.css"), "utf8
 const homepageCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
 
 describe("public shell cleanup", () => {
-  it("does not render fake social controls or decorative social placeholders", () => {
-    expect(shell).not.toContain("public-footer-socials");
+  it("renders the approved footer social icons without fake placeholder glyphs", () => {
+    expect(shell).toContain('className="public-footer-socials"');
+    expect(shell).toContain('<PublicIcon name="send" />');
+    expect(shell).toContain('<PublicIcon name="vk" />');
+    expect(shell).toContain('<PublicIcon name="play" />');
     expect(shell).not.toContain("<span>➤</span>");
     expect(shell).not.toContain("<span>◉</span>");
     expect(shell).not.toContain("<span>VK</span>");
-    expect(homepageCss).not.toContain(".public-footer-socials");
   });
 
   it("does not label contact fallbacks as company pages that do not exist", () => {
