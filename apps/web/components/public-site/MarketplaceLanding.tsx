@@ -367,7 +367,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 <div className="mockup-trust-row" aria-label="Условия старта">
                   <span>Быстрое подключение</span>
                   <span>Полный доступ</span>
-                  <span>Поддержка ежедневно 09:00–18:00 МСК</span>
+                  <span>Поддержка ежедневно</span>
                 </div>
               </div>
             </div>
