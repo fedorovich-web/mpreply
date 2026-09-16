@@ -70,6 +70,25 @@
   pointer-events: none;
 }
 
+/* Buyer metadata in the approved card starts with a soft user/avatar badge. */
+.mockup-page .detail-market-message strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mockup-page .detail-market-message strong::before {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 8px;
+  background-color: #f0efff;
+  background-image:
+    radial-gradient(circle at 50% 36%, #5148e8 0 19%, transparent 21%),
+    radial-gradient(ellipse at 50% 86%, #5148e8 0 31%, transparent 33%);
+  content: '';
+}
+
 /* Decorative product thumbnail cropped from the approved Wildberries render. */
 .mockup-page .detail-product-thumb {
   display: block;
