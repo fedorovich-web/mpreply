@@ -23,11 +23,11 @@
 .mockup-page .features-app-nav-item.is-active {
   justify-content: flex-start;
   background: #f2f1ff;
-  color: #5148e8;
+  color: var(--color-brand-primary);
 }
 
 .mockup-page .features-app-nav-item.is-active > svg {
-  color: #5148e8;
+  color: var(--color-brand-primary);
 }
 
 .mockup-page .features-app-nav-item.is-active > b {
@@ -37,7 +37,7 @@
   margin-left: auto;
   place-items: center;
   border-radius: 999px;
-  background: #5148e8;
+  background: var(--color-brand-primary);
   color: #fff;
   font-size: .54rem;
 }
