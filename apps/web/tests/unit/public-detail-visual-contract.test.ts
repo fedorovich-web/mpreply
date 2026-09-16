@@ -29,7 +29,7 @@ describe("approved marketplace detail visual", () => {
     expect(detail).toContain("detail-faq-icon");
     expect(detail).toContain('["link", `Как подключить ${marketplace.name}?`');
     expect(detail).toContain('["users", "Можно ли добавить несколько сотрудников?"');
-    expect(detail).toContain('["shield-check", "Обновляются ли статусы обращений?"');
+    expect(detail).toContain("Обновляются ли статусы обращений?");
     expect(finalCss).toContain(".detail-faq-summary");
     expect(finalCss).toContain(".detail-faq-icon");
   });
@@ -40,6 +40,14 @@ describe("approved marketplace detail visual", () => {
     expect(heroCss).toContain(".detail-faq-icon");
     expect(heroCss).toContain("width: 28px");
     expect(heroCss).toContain("height: 28px");
+  });
+
+  it("renders the status FAQ as the filled check-circle shown in the approved render", () => {
+    expect(heroCss).toContain("details:nth-of-type(3) .detail-faq-icon > svg");
+    expect(heroCss).toContain("display: none");
+    expect(heroCss).toContain("details:nth-of-type(3) .detail-faq-icon::before");
+    expect(heroCss).toContain("content: '✓'");
+    expect(heroCss).toContain("border-radius: 999px");
   });
 
   it("uses the play icon in the secondary hero action", () => {
