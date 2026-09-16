@@ -34,5 +34,13 @@ describe("approved public raster asset integrity", () => {
 
   it("keeps the approved raster set intentionally limited to the 15 handoff assets", () => {
     expect(approvedRasterAssets).toHaveLength(15);
+    expect(css.match(/background-image:\s*url\(/g) ?? []).toHaveLength(15);
+  });
+
+  it("scopes every raster mapping to approved mockup pages so dashboard and homepage icon chips cannot inherit it", () => {
+    const rasterBlocks = css.match(/[^{}]+\{[^{}]*background-image:\s*url\([^{}]*\}/g) ?? [];
+    expect(rasterBlocks).toHaveLength(15);
+    for (const block of rasterBlocks) expect(block.trim()).toMatch(/^\.mockup-page/);
+    expect(css).not.toMatch(/^\.mockup-icon-chip\b/m);
   });
 });
