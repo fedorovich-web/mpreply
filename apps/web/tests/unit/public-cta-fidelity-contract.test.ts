@@ -10,6 +10,8 @@ const demo = readFileSync(join(root, "app/demo/page.tsx"), "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const cssPath = join(root, "styles/public-mockup-cta-fidelity.css");
 const css = existsSync(cssPath) ? readFileSync(cssPath, "utf8") : "";
+const decorativeCssPath = join(root, "styles/public-mockup-decorative-fidelity.css");
+const decorativeCss = existsSync(decorativeCssPath) ? readFileSync(decorativeCssPath, "utf8") : "";
 
 describe("approved horizontal public CTA strips", () => {
   it("keeps the leading send tile only on renders that actually show it", () => {
@@ -46,5 +48,14 @@ describe("approved horizontal public CTA strips", () => {
     expect(css).toContain(".demo-mockup-hero .mockup-trust-row span:nth-child(3)::before");
     expect(css).toContain("content: ''");
     expect(css).toContain("linear-gradient(90deg, #5148e8 0 0)");
+  });
+
+  it("draws the handwritten CTA arrows shown on marketplaces and demo", () => {
+    expect(existsSync(decorativeCssPath)).toBe(true);
+    expect(layout).toContain('import "../styles/public-mockup-decorative-fidelity.css"');
+    expect(decorativeCss).toContain(".marketplace-cta-note::before");
+    expect(decorativeCss).toContain(".demo-cta-note::before");
+    expect(decorativeCss).toContain("border-top: 2px solid #5148e8");
+    expect(decorativeCss).toContain("transform: rotate(-24deg)");
   });
 });
