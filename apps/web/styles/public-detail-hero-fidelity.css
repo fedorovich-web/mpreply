@@ -99,6 +99,23 @@
   font-size: 14px;
 }
 
+.mockup-page .marketplace-detail-faq details:nth-of-type(3) .detail-faq-icon {
+  border-radius: 999px;
+  background: #5148e8;
+  color: #fff;
+}
+
+.mockup-page .marketplace-detail-faq details:nth-of-type(3) .detail-faq-icon > svg {
+  display: none;
+}
+
+.mockup-page .marketplace-detail-faq details:nth-of-type(3) .detail-faq-icon::before {
+  content: '✓';
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .mockup-page .marketplace-detail-faq details > p {
   padding: 0 12px 10px 50px;
 }
