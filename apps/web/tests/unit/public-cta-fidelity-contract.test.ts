@@ -40,4 +40,11 @@ describe("approved horizontal public CTA strips", () => {
     expect(css).toContain("background: #eeedff");
     expect(css).toContain("color: #5148e8");
   });
+
+  it("uses the fast-connect glyph for the third hero trust item only on marketplaces and demo", () => {
+    expect(css).toContain(".marketplaces-mockup-hero .mockup-trust-row span:nth-child(3)::before");
+    expect(css).toContain(".demo-mockup-hero .mockup-trust-row span:nth-child(3)::before");
+    expect(css).toContain("content: ''");
+    expect(css).toContain("linear-gradient(90deg, #5148e8 0 0)");
+  });
 });
