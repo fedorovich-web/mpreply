@@ -36,6 +36,14 @@ describe("current public page composition", () => {
     expect(marketplaces).toContain("Wildberries, Ozon, Яндекс Маркет и Авито");
   });
 
+  it("does not publish unsupported marketplace reliability or coverage proof", () => {
+    for (const unsupportedClaim of ["Стабильная работа", "Все типы обращений", "Полная интеграция", "в реальном времени"]) {
+      expect(marketplaces).not.toContain(unsupportedClaim);
+    }
+    expect(marketplaces).toContain("Статусы и синхронизация");
+    expect(marketplaces).toContain("Доступные типы обращений");
+  });
+
   it("uses the approved marketplaces hub with four live marketplace sources", () => {
     expect(marketplaces).toContain("marketplaces-mockup-hero");
     expect(marketplaces).toContain("marketplace-hub-scene");
