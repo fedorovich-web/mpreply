@@ -43,6 +43,11 @@ describe("approved pricing final CTA visual", () => {
     expect(ctaCss).not.toContain('img[src$="yandex-market.webp"]');
   });
 
+  it("keeps Professional body values dark while retaining the lavender column emphasis", () => {
+    expect(integrationsCss).toContain(".pricing-comparison tbody td:nth-child(3)");
+    expect(integrationsCss).toContain("color: #52688d");
+  });
+
   it("renders FAQ chevrons at the right like the approved render", () => {
     expect(pricing).toContain("pricing-faq-summary");
     expect(pricing).toContain("pricing-faq-chevron");
