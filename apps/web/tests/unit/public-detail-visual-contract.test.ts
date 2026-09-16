@@ -59,6 +59,12 @@ describe("approved marketplace detail visual", () => {
     expect(heroCss).toContain("radial-gradient");
   });
 
+  it("keeps the CTA support badge truthful and compact", () => {
+    expect(detail).toContain("<span>Поддержка ежедневно</span>");
+    expect(detail).not.toContain("Поддержка 24/7");
+    expect(detail).not.toContain("<span>Поддержка ежедневно 09:00–18:00 МСК</span>");
+  });
+
   it("uses the play icon in the secondary hero action", () => {
     expect(publicIcon).toContain('"play"');
     expect(detail).toContain('name="play"');
