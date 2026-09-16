@@ -85,7 +85,7 @@
 
 .public-root .public-footer-compact-nav a:hover,
 .public-root .public-footer-pricing a:hover {
-  color: #5148e8;
+  color: var(--color-brand-primary);
 }
 
 .public-root .public-footer-compact-meta {
