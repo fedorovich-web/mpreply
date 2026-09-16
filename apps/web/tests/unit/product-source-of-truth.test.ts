@@ -43,15 +43,18 @@ describe("MPReply authoritative product documentation", () => {
   });
 
   it("keeps the approved public route and tariff presentation authoritative", () => {
-    expect(product).toContain("/help");
-    expect(publicBrief).toContain("/help");
-    expect(product).not.toContain("/resources");
-    expect(publicBrief).not.toContain("/resources");
+    for (const source of [product, publicBrief, seo]) {
+      expect(source).toContain("/help");
+      expect(source).not.toContain("/resources");
+    }
 
     for (const approvedCommercialFact of ["490 ₽", "990 ₽", "1 990 ₽", "20%", "14 дней"]) {
       expect(product).toContain(approvedCommercialFact);
       expect(publicBrief).toContain(approvedCommercialFact);
     }
+
+    expect(seo).toContain("490 ₽");
+    expect(seo).toContain("14 дней");
   });
 
   it("keeps agent instructions objective and current", () => {
