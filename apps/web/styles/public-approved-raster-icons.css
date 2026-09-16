@@ -66,3 +66,38 @@
 .mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card:nth-child(4) .mockup-icon-chip {
   background-image: url("/images/mockups/wildberries-icons/05-analytics.webp");
 }
+
+/* Demo journey plus the first team tool use the approved raster treatments. */
+.mockup-page .demo-journey .demo-journey-card .mockup-icon-chip,
+.mockup-page .demo-team-tools .demo-team-tool:nth-child(1) .mockup-icon-chip {
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 54px 54px;
+  color: transparent;
+}
+
+.mockup-page .demo-journey .demo-journey-card .mockup-icon-chip > svg,
+.mockup-page .demo-team-tools .demo-team-tool:nth-child(1) .mockup-icon-chip > svg {
+  display: none;
+}
+
+.mockup-page .demo-journey .demo-journey-card:nth-child(1) .mockup-icon-chip {
+  background-image: url("/images/mockups/demo-icons/01-receive-chat.webp");
+}
+
+.mockup-page .demo-journey .demo-journey-card:nth-child(2) .mockup-icon-chip {
+  background-image: url("/images/mockups/demo-icons/02-context-document.webp");
+}
+
+.mockup-page .demo-journey .demo-journey-card:nth-child(3) .mockup-icon-chip {
+  background-image: url("/images/mockups/demo-icons/03-ai-sparkles.webp");
+}
+
+.mockup-page .demo-journey .demo-journey-card:nth-child(4) .mockup-icon-chip {
+  background-image: url("/images/mockups/demo-icons/04-review-send.webp");
+}
+
+.mockup-page .demo-team-tools .demo-team-tool:nth-child(1) .mockup-icon-chip {
+  background-image: url("/images/mockups/demo-icons/05-unified-queue-team.webp");
+}
