@@ -31,6 +31,11 @@
   box-shadow: 0 20px 48px rgb(81 72 232 / 9%);
 }
 
+.mockup-page .features-cta-strip {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 18px 22px 18px 60px;
+}
+
 .mockup-page .mockup-cta-strip-icon {
   display: grid;
   width: 56px;
@@ -147,6 +152,11 @@
 @media (max-width: 860px) {
   .mockup-page .mockup-cta-strip {
     grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .mockup-page .features-cta-strip {
+    grid-template-columns: 1fr;
+    padding-left: 22px;
   }
 
   .mockup-page .mockup-cta-strip-side {
