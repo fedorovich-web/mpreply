@@ -355,10 +355,7 @@ export default function FeaturesPage() {
 
         <section className="public-section public-cta-section">
           <div className="public-container">
-            <div className="mockup-cta-strip">
-              <span className="mockup-cta-strip-icon" aria-hidden="true">
-                <PublicIcon name="send" />
-              </span>
+            <div className="mockup-cta-strip features-cta-strip">
               <div className="mockup-cta-strip-copy">
                 <p className="mockup-eyebrow">Готовы попробовать?</p>
                 <h2>Начните использовать все возможности MPReply</h2>
