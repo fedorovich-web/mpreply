@@ -31,3 +31,38 @@
 .mockup-page .features-tool-card:nth-child(5) .mockup-icon-chip {
   background-image: url("/images/mockups/features-icons/05-templates-document.webp");
 }
+
+/* Wildberries-only approved raster icons. The shared landing stays SVG-driven for other marketplaces. */
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip,
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card .mockup-icon-chip {
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 54px 54px;
+  color: transparent;
+}
+
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip > svg,
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card .mockup-icon-chip > svg {
+  display: none;
+}
+
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip {
+  background-image: url("/images/mockups/wildberries-icons/01-history-actions.webp");
+}
+
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card:nth-child(1) .mockup-icon-chip {
+  background-image: url("/images/mockups/wildberries-icons/02-more-speed.webp");
+}
+
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card:nth-child(2) .mockup-icon-chip {
+  background-image: url("/images/mockups/wildberries-icons/03-team-transparency.webp");
+}
+
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card:nth-child(3) .mockup-icon-chip {
+  background-image: url("/images/mockups/wildberries-icons/04-templates.webp");
+}
+
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card:nth-child(4) .mockup-icon-chip {
+  background-image: url("/images/mockups/wildberries-icons/05-analytics.webp");
+}
