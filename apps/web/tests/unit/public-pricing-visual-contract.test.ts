@@ -51,6 +51,14 @@ describe("approved pricing final CTA visual", () => {
     expect(integrationsCss).toContain("color: #5148e8");
   });
 
+  it("draws the individual-plan padlock shown in the approved render", () => {
+    expect(pricing).toContain("pricing-custom-icon");
+    expect(integrationsCss).toContain(".pricing-custom-icon > svg");
+    expect(integrationsCss).toContain("display: none");
+    expect(integrationsCss).toContain(".pricing-custom-icon::before");
+    expect(integrationsCss).toContain(".pricing-custom-icon::after");
+  });
+
   it("renders FAQ chevrons at the right like the approved render", () => {
     expect(pricing).toContain("pricing-faq-summary");
     expect(pricing).toContain("pricing-faq-chevron");
