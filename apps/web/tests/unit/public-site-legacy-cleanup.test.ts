@@ -12,14 +12,13 @@ describe("public site shared stylesheet", () => {
       ".product-console",
       ".operations-live-dot",
       ".public-mobile-navigation",
-      ".faq-item",
       ".public-footer",
     ]) {
       expect(publicCss).toContain(selector);
     }
   });
 
-  it("does not keep retired homepage, theme or planned-marketplace CSS", () => {
+  it("does not keep retired homepage, theme or generic FAQ CSS", () => {
     for (const retiredSelector of [
       ".theme-toggle",
       ".public-hero-flow",
@@ -31,6 +30,7 @@ describe("public site shared stylesheet", () => {
       ".public-status-planned",
       ".readiness-summary-planned",
       ".integration-status-panel-planned",
+      ".faq-item",
     ]) {
       expect(publicCss).not.toContain(retiredSelector);
     }
