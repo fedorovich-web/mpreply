@@ -125,37 +125,21 @@ describe("public CSS legacy contract", () => {
     );
   });
 
-  it("keeps current shared public compositions available", () => {
+  it("keeps only currently used shared public compositions available", () => {
     for (const selector of [
-      ".marketplace-readiness-row-supported",
-      ".marketplace-flow-layout",
-      ".marketplace-detail-story",
-      ".integration-flow-row",
-      ".demo-flow-row",
-      ".capability-index",
-      ".resource-note-index",
-      ".contact-path-primary",
-      ".demo-decision-copy",
-      ".demo-decision-badge",
-      ".pricing-model-item",
-      ".public-cta-card",
+      ".public-root .public-subhero",
+      ".public-root .contact-path-primary",
+      ".public-root .public-cta-card",
     ]) {
       expect(marketingPagesCss).toContain(selector);
     }
 
     for (const selector of [
-      ".public-status-supported",
       ".public-subhero",
       ".section-heading",
-      ".public-two-column",
       ".public-cta-card",
       ".legal-hero",
       ".legal-warning",
-      ".marketplace-readiness-row",
-      ".integration-flow-row",
-      ".demo-flow-row",
-      ".pricing-model-grid",
-      ".resource-note",
       ".contact-path",
     ]) {
       expect(publicSiteCss).toContain(selector);
