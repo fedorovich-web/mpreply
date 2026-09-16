@@ -1,5 +1,21 @@
 /* Horizontal CTA strips used by the approved inner-page mockups. */
 
+.mockup-page .mockup-trust-row span::before {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  place-items: center;
+  border-radius: 999px;
+  background: #eeedff;
+  color: #5148e8;
+  content: '✓';
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: -2px;
+}
+
 .mockup-page .mockup-cta-strip {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr) auto;
