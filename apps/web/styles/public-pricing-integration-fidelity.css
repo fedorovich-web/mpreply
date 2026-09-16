@@ -37,6 +37,11 @@
   transform: none;
 }
 
+/* Keep the Professional column highlighted by surface/header, not by recoloring every body value. */
+.mockup-page .pricing-comparison tbody td:nth-child(3) {
+  color: #52688d;
+}
+
 /* FAQ rows: question on the left, chevron at the far right. */
 .mockup-page .pricing-faq-summary {
   display: flex;
