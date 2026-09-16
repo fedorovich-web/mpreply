@@ -103,6 +103,11 @@
   background-size: cover;
 }
 
+/* The approved Wildberries app question card has no secondary context row. */
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .detail-question > p {
+  display: none;
+}
+
 /* The approved detail FAQ uses compact rows rather than full-height cards. */
 .mockup-page .detail-faq-summary {
   grid-template-columns: 28px minmax(0, 1fr) auto;
