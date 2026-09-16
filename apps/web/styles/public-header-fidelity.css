@@ -33,7 +33,7 @@
 }
 
 .public-root:has(.mockup-page) .public-nav a[aria-current="page"] {
-  color: #5148e8;
+  color: var(--color-brand-primary);
 }
 
 .public-root:has(.mockup-page) .public-nav a[aria-current="page"]::after {
@@ -43,7 +43,7 @@
   left: 0;
   height: 2px;
   border-radius: 999px;
-  background: #5148e8;
+  background: var(--color-brand-primary);
   content: "";
 }
 
@@ -67,11 +67,11 @@
 .public-root:has(.mockup-page) .public-login-link:hover {
   border-color: transparent;
   background: transparent;
-  color: #5148e8;
+  color: var(--color-brand-primary);
 }
 
 .public-root:has(.mockup-page) .public-header-cta {
-  background: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
+  background: var(--gradient-mpreply-action);
   box-shadow: 0 7px 18px rgb(81 72 232 / 18%);
 }
 
