@@ -7,6 +7,7 @@ const brandCss = readFileSync(join(root, "styles/public-mockup-brand-fidelity.cs
 const ctaCss = readFileSync(join(root, "styles/public-mockup-cta-fidelity.css"), "utf8");
 const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-fidelity.css"), "utf8");
 const finalDetailsCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
+const featuresSidebarCss = readFileSync(join(root, "styles/public-features-sidebar-fidelity.css"), "utf8");
 const detailCss = readFileSync(join(root, "styles/public-detail-hero-fidelity.css"), "utf8");
 const pricingCss = readFileSync(join(root, "styles/public-pricing-integration-fidelity.css"), "utf8");
 const headerCss = readFileSync(join(root, "styles/public-header-fidelity.css"), "utf8");
@@ -16,6 +17,7 @@ const tokenizedLateLayers = [
   ctaCss,
   decorativeCss,
   finalDetailsCss,
+  featuresSidebarCss,
   detailCss,
   pricingCss,
   headerCss,
