@@ -42,6 +42,18 @@ describe("MPReply authoritative product documentation", () => {
     expect(design).not.toContain("Impeccable contract");
   });
 
+  it("keeps the approved public route and tariff presentation authoritative", () => {
+    expect(product).toContain("/help");
+    expect(publicBrief).toContain("/help");
+    expect(product).not.toContain("/resources");
+    expect(publicBrief).not.toContain("/resources");
+
+    for (const approvedCommercialFact of ["490 ₽", "990 ₽", "1 990 ₽", "20%", "14 дней"]) {
+      expect(product).toContain(approvedCommercialFact);
+      expect(publicBrief).toContain(approvedCommercialFact);
+    }
+  });
+
   it("keeps agent instructions objective and current", () => {
     expect(agents).toContain("MPReply");
     expect(agents).toContain("npm run test:visual");
