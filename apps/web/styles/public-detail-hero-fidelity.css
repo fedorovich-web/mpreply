@@ -29,13 +29,13 @@
 
 .mockup-page .detail-sidebar-item.is-active {
   background: #f2f1ff;
-  color: #5148e8;
+  color: var(--color-brand-primary);
   font-weight: 700;
 }
 
 .mockup-page .detail-sidebar-item.is-active > svg,
 .mockup-page .detail-sidebar-item.is-active > b {
-  color: #5148e8;
+  color: var(--color-brand-primary);
 }
 
 .mockup-page .marketplace-detail-compact-logo {
@@ -62,7 +62,7 @@
   border-right: 2px dashed rgb(81 72 232 / 70%);
   border-bottom: 2px dashed rgb(81 72 232 / 70%);
   border-radius: 0 0 42px 0;
-  color: #5148e8;
+  color: var(--color-brand-primary);
   content: "↗";
   font-size: 19px;
   line-height: 1;
@@ -82,10 +82,10 @@
   height: 24px;
   flex: 0 0 24px;
   border-radius: 8px;
-  background-color: #f0efff;
+  background-color: var(--color-brand-soft);
   background-image:
-    radial-gradient(circle at 50% 36%, #5148e8 0 19%, transparent 21%),
-    radial-gradient(ellipse at 50% 86%, #5148e8 0 31%, transparent 33%);
+    radial-gradient(circle at 50% 36%, var(--color-brand-primary) 0 19%, transparent 21%),
+    radial-gradient(ellipse at 50% 86%, var(--color-brand-primary) 0 31%, transparent 33%);
   content: '';
 }
 
@@ -125,7 +125,7 @@
 
 .mockup-page .marketplace-detail-faq details:nth-of-type(3) .detail-faq-icon {
   border-radius: 999px;
-  background: #5148e8;
+  background: var(--color-brand-primary);
   color: #fff;
 }
 
