@@ -331,6 +331,34 @@
   transform: rotate(-6deg);
 }
 
+/* Approved CTA notes include a curved handwritten arrow pointing back to the button. */
+.mockup-page .marketplace-cta-note::before,
+.mockup-page .demo-cta-note::before {
+  position: absolute;
+  left: -38px;
+  top: 12px;
+  width: 30px;
+  height: 18px;
+  border-top: 2px solid #5148e8;
+  border-left: 2px solid #5148e8;
+  border-radius: 20px 0 0 0;
+  content: '';
+  transform: rotate(-24deg);
+}
+
+.mockup-page .marketplace-cta-note::after,
+.mockup-page .demo-cta-note::after {
+  position: absolute;
+  left: -41px;
+  top: 23px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #5148e8;
+  border-left: 2px solid #5148e8;
+  content: '';
+  transform: rotate(20deg);
+}
+
 /* Marketplace detail: real brand in the app chrome plus the render annotation. */
 .mockup-page .detail-app-top {
   padding: 12px 16px;
