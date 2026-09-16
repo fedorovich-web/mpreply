@@ -7,22 +7,26 @@ const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
 const features = readFileSync(join(root, "app/features/page.tsx"), "utf8");
 const finalCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
+const pricingCss = readFileSync(join(root, "styles/public-pricing-integration-fidelity.css"), "utf8");
 
 describe("final approved render details", () => {
-  it("loads the last visual override after all public mockup layers", () => {
+  it("loads the shared final-details layer and the later page-scoped pricing refinement", () => {
     expect(layout).toContain('import "../styles/public-mockup-final-details.css"');
+    expect(layout).toContain('import "../styles/public-pricing-integration-fidelity.css"');
   });
 
   it("keeps the pricing helper details from the approved mockup", () => {
     expect(pricing).toContain("pricing-hero-note");
     expect(pricing).toContain("pricing-custom-icon");
-    expect(pricing).toContain('name="shield-check"');
     expect(pricing).toContain('href="/help"');
     expect(pricing).toContain("Все вопросы");
     expect(pricing).toContain("pricing-market-compact");
     expect(pricing).toContain("pricing-market-name");
     expect(finalCss).toContain(".pricing-hero-note");
     expect(finalCss).toContain(".pricing-custom-icon");
+    expect(pricingCss).toContain(".pricing-custom-icon > svg");
+    expect(pricingCss).toContain(".pricing-custom-icon::before");
+    expect(pricingCss).toContain(".pricing-custom-icon::after");
   });
 
   it("uses the lavender pill kicker treatment from the pricing render", () => {
