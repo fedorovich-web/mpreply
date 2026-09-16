@@ -31,4 +31,9 @@ describe("approved selective raster icon fidelity", () => {
     expect(css).not.toContain(".features-tool-card:nth-child(7)");
     expect(css).not.toContain(".features-tool-card:nth-child(8)");
   });
+
+  it("fits raster artwork to the 44px render-tuned icon chip without cropping", () => {
+    expect(css.match(/background-size: 44px 44px/g) ?? []).toHaveLength(3);
+    expect(css).not.toContain("background-size: 54px 54px");
+  });
 });
