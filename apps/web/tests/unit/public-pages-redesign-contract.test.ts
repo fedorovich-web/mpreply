@@ -167,7 +167,7 @@ describe("current public page composition", () => {
   });
 
   it("does not publish fabricated quantified feature savings", () => {
-    expect(features).not.toMatch(/\b\d+%\b[^\n]{0,80}времен/i);
+    expect(features).not.toMatch(/\d+\s*%[^\n]{0,80}времен/i);
     expect(features).not.toContain("До 70% меньше времени на ответы");
   });
 
