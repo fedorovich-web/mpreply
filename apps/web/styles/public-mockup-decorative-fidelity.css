@@ -32,7 +32,7 @@
   width: 28px;
   height: 28px;
   border-radius: 9px;
-  background: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
+  background: var(--gradient-mpreply-action);
   box-shadow: 0 6px 14px rgb(81 72 232 / 18%);
 }
 
@@ -49,7 +49,7 @@
   justify-content: space-between;
   border-radius: 8px;
   background: #f2f1ff;
-  color: #5148e8;
+  color: var(--color-brand-primary);
   padding: 8px 7px;
 }
 
@@ -59,7 +59,7 @@
   height: 19px;
   place-items: center;
   border-radius: 999px;
-  background: #5148e8;
+  background: var(--color-brand-primary);
   color: #fff;
   font-size: .54rem;
 }
@@ -93,7 +93,7 @@
 
 .mockup-page .features-app-main .features-feed-tabs span:first-child {
   background: #efefff;
-  color: #5148e8;
+  color: var(--color-brand-primary);
 }
 
 .mockup-page .features-app-main .features-feed-tabs b {
@@ -114,7 +114,7 @@
 .mockup-page .demo-cta-note {
   position: absolute;
   z-index: 6;
-  color: #5148e8;
+  color: var(--color-brand-primary);
   font-family: "Comic Sans MS", "Segoe Print", cursive;
   font-weight: 700;
   line-height: 1.08;
@@ -270,7 +270,7 @@
   width: 50px;
   height: 50px;
   border-radius: 15px;
-  background: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
+  background: var(--gradient-mpreply-action);
   box-shadow: 0 9px 20px rgb(81 72 232 / 22%);
 }
 
@@ -339,8 +339,8 @@
   top: 12px;
   width: 30px;
   height: 18px;
-  border-top: 2px solid #5148e8;
-  border-left: 2px solid #5148e8;
+  border-top: 2px solid var(--color-brand-primary);
+  border-left: 2px solid var(--color-brand-primary);
   border-radius: 20px 0 0 0;
   content: '';
   transform: rotate(-24deg);
@@ -353,8 +353,8 @@
   top: 23px;
   width: 8px;
   height: 8px;
-  border-bottom: 2px solid #5148e8;
-  border-left: 2px solid #5148e8;
+  border-bottom: 2px solid var(--color-brand-primary);
+  border-left: 2px solid var(--color-brand-primary);
   content: '';
   transform: rotate(20deg);
 }
