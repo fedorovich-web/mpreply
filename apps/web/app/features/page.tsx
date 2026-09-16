@@ -221,7 +221,7 @@ export default function FeaturesPage() {
                       Все обращения
                       <b>24</b>
                     </strong>
-                    <span className="features-app-nav-item"><PublicIcon name="star" />Отзывы</span>
+                    <span className="features-app-nav-item"><PublicIcon name="message" />Отзывы</span>
                     <span className="features-app-nav-item"><PublicIcon name="message" />Вопросы</span>
                     <span className="features-app-nav-item"><PublicIcon name="message" />Сообщения</span>
                     <i />
