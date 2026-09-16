@@ -127,7 +127,7 @@ const benefits: readonly [PublicIconName, Tone, string, string][] = [
   ],
   [
     "star",
-    "orange",
+    "blue",
     "Выше рейтинг товаров",
     "Быстрые и качественные ответы помогают получать больше положительных отзывов.",
   ],
@@ -318,7 +318,7 @@ export default function FeaturesPage() {
                       ))}
                     </span>
                   ) : (
-                    <span className="mockup-icon-chip" aria-hidden="true">
+                    <span className={`mockup-icon-chip ${index === 2 ? "purple" : ""}`} aria-hidden="true">
                       <PublicIcon name={step.icon} />
                     </span>
                   )}
