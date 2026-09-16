@@ -50,6 +50,15 @@ describe("approved marketplace detail visual", () => {
     expect(heroCss).toContain("border-radius: 999px");
   });
 
+  it("renders the buyer metadata with the soft user badge shown in the approved hero card", () => {
+    expect(detail).toContain("Покупатель · 12 мин назад");
+    expect(heroCss).toContain(".detail-market-message strong");
+    expect(heroCss).toContain(".detail-market-message strong::before");
+    expect(heroCss).toContain("border-radius: 8px");
+    expect(heroCss).toContain("background-image:");
+    expect(heroCss).toContain("radial-gradient");
+  });
+
   it("uses the play icon in the secondary hero action", () => {
     expect(publicIcon).toContain('"play"');
     expect(detail).toContain('name="play"');
