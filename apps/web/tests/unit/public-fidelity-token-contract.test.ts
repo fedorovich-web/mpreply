@@ -12,6 +12,8 @@ const detailCss = readFileSync(join(root, "styles/public-detail-hero-fidelity.cs
 const pricingCss = readFileSync(join(root, "styles/public-pricing-integration-fidelity.css"), "utf8");
 const headerCss = readFileSync(join(root, "styles/public-header-fidelity.css"), "utf8");
 const footerCss = readFileSync(join(root, "styles/public-compact-footer.css"), "utf8");
+const mascotCss = readFileSync(join(root, "styles/public-mockup-mascot.css"), "utf8");
+const rasterCss = readFileSync(join(root, "styles/public-approved-raster-icons.css"), "utf8");
 
 const tokenizedLateLayers = [
   ctaCss,
@@ -36,6 +38,10 @@ describe("public handoff fidelity token usage", () => {
       expect(source).not.toMatch(/#5148e8/i);
       expect(source).toContain("var(--color-brand-primary)");
     }
+  });
+
+  it("keeps non-color late layers from reintroducing a raw primary override", () => {
+    for (const source of [mascotCss, rasterCss]) expect(source).not.toMatch(/#5148e8/i);
   });
 
   it("uses the shared brand-soft token for repeated approved lavender surfaces", () => {
