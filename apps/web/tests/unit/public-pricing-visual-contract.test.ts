@@ -43,9 +43,12 @@ describe("approved pricing final CTA visual", () => {
     expect(ctaCss).not.toContain('img[src$="yandex-market.webp"]');
   });
 
-  it("keeps Professional body values dark while retaining the lavender column emphasis", () => {
+  it("keeps Professional body values dark while retaining branded checkmarks", () => {
     expect(integrationsCss).toContain(".pricing-comparison tbody td:nth-child(3)");
     expect(integrationsCss).toContain("color: #52688d");
+    expect(pricing).toContain("pricing-comparison-check");
+    expect(integrationsCss).toContain(".pricing-comparison-check");
+    expect(integrationsCss).toContain("color: #5148e8");
   });
 
   it("renders FAQ chevrons at the right like the approved render", () => {
