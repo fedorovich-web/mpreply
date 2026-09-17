@@ -7,9 +7,9 @@
   padding-top: clamp(4.75rem, 6vw, 6.25rem);
   padding-bottom: clamp(4.5rem, 6vw, 6rem);
   background:
-    radial-gradient(circle at 84% 16%, rgb(37 99 235 / 10%), transparent 24rem),
-    radial-gradient(circle at 70% 76%, rgb(14 165 233 / 7%), transparent 22rem),
-    linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    radial-gradient(circle at 84% 16%, rgb(81 72 232 / 10%), transparent 24rem),
+    radial-gradient(circle at 70% 76%, rgb(99 91 255 / 7%), transparent 22rem),
+    linear-gradient(180deg, #fff 0%, #fcfbff 100%);
 }
 
 .public-subhero-pricing .public-subhero-grid,
@@ -49,7 +49,7 @@
   inset: 1.4rem -0.8rem 1rem 2.4rem;
   z-index: -2;
   border-radius: 43% 57% 49% 51%;
-  background: linear-gradient(145deg, rgb(224 240 255 / 84%), rgb(237 247 255 / 58%) 55%, rgb(238 242 255 / 40%));
+  background: linear-gradient(145deg, rgb(237 234 255 / 84%), rgb(246 244 255 / 58%) 55%, rgb(239 241 255 / 40%));
   content: '';
   transform: rotate(-6deg);
 }
@@ -63,7 +63,7 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: 1.05rem;
   background: var(--color-bg-surface);
-  box-shadow: 0 28px 70px rgb(31 82 150 / 14%);
+  box-shadow: 0 28px 70px rgb(81 72 232 / 12%);
 }
 
 .pricing-plan-head {
@@ -213,7 +213,7 @@
   border-radius: 0.75rem;
   background: rgb(255 255 255 / 96%);
   padding: 0.72rem;
-  box-shadow: 0 12px 30px rgb(35 87 153 / 10%);
+  box-shadow: 0 12px 30px rgb(81 72 232 / 9%);
 }
 
 .pricing-plan-scale strong {
@@ -279,7 +279,7 @@
   inset: 1.8rem -1rem 1.2rem 2.8rem;
   z-index: -3;
   border-radius: 48% 52% 45% 55%;
-  background: linear-gradient(145deg, rgb(225 241 255 / 84%), rgb(236 247 255 / 54%) 58%, rgb(239 241 255 / 46%));
+  background: linear-gradient(145deg, rgb(238 235 255 / 84%), rgb(246 244 255 / 54%) 58%, rgb(241 239 255 / 46%));
   content: '';
   transform: rotate(-7deg);
 }
@@ -293,7 +293,7 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: 1.05rem;
   background: var(--color-bg-surface);
-  box-shadow: 0 28px 72px rgb(31 82 150 / 14%);
+  box-shadow: 0 28px 72px rgb(81 72 232 / 12%);
 }
 
 .demo-product-window-head {
@@ -344,7 +344,7 @@
   align-content: start;
   gap: 0.35rem;
   border-right: 1px solid var(--color-border-subtle);
-  background: #fbfdff;
+  background: #fcfbff;
   padding: 0.9rem 0.65rem;
 }
 
@@ -431,7 +431,7 @@
   border-radius: 0.9rem;
   background: rgb(255 255 255 / 98%);
   padding: 1rem;
-  box-shadow: 0 18px 42px rgb(35 87 153 / 14%);
+  box-shadow: 0 18px 42px rgb(81 72 232 / 12%);
 }
 
 .demo-product-draft-head {
