@@ -8,7 +8,7 @@ const marketplaces = readFileSync(join(root, "app/marketplaces/page.tsx"), "utf8
 const combined = `${features}\n${marketplaces}`;
 
 describe("public commercial uplift copy contract", () => {
-  it("does not promise unverified sales, rating, recommendation or satisfaction uplift", () => {
+  it("does not promise unverified sales, rating, recommendation, satisfaction or efficiency uplift", () => {
     for (const unsupportedClaim of [
       "Больше продаж",
       "Выше рейтинг товаров",
@@ -19,6 +19,9 @@ describe("public commercial uplift copy contract", () => {
       "От обращения до довольного клиента",
       "Довольный клиент",
       "сделать ваших клиентов счастливее",
+      "Команда работает эффективнее",
+      "Экономьте время и развивайте ваш бизнес",
+      "проще, быстрее и эффективнее",
     ]) {
       expect(combined).not.toContain(unsupportedClaim);
     }
@@ -31,13 +34,15 @@ describe("public commercial uplift copy contract", () => {
       "Единый стандарт ответов",
       "Понятная работа команды",
       "Контроль исключений",
+      "Что меняется в ежедневной работе",
     ]) {
       expect(features).toContain(groundedCopy);
     }
   });
 
-  it("keeps the marketplace hero annotation operational rather than commercial", () => {
+  it("keeps marketplace copy operational rather than commercial", () => {
     expect(marketplaces).toContain("Одна очередь");
     expect(marketplaces).toContain("для команды");
+    expect(marketplaces).toContain("в одном рабочем процессе");
   });
 });
