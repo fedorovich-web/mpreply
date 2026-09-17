@@ -3,7 +3,7 @@
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 type WorkspaceTab = "reviews" | "questions" | "messages" | "all";
-type WorkspaceTone = "green" | "blue" | "cyan";
+type WorkspaceTone = "green" | "violet";
 
 type WorkspaceFilter = {
   icon: string;
@@ -51,7 +51,7 @@ const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
     label: "Вопросы",
     icon: "◎",
     answer: "Спасибо за вопрос! Подготовили ответ с учётом карточки товара и доступной информации.",
-    tone: "blue",
+    tone: "violet",
     filters: [
       { icon: "▧", label: "Все вопросы", count: 34 },
       { icon: "?", label: "Новые", count: 12 },
@@ -69,7 +69,7 @@ const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
     label: "Сообщения",
     icon: "▱",
     answer: "Здравствуйте! Сообщение получено. Ответ подготовлен с учётом контекста обращения.",
-    tone: "cyan",
+    tone: "violet",
     filters: [
       { icon: "▧", label: "Все сообщения", count: 28 },
       { icon: "●", label: "Новые", count: 8 },
@@ -87,7 +87,7 @@ const workspaceStates: Record<WorkspaceTab, WorkspaceState> = {
     label: "Все обращения",
     icon: "◇",
     answer: "MPReply объединяет отзывы, вопросы и сообщения в одной очереди и помогает отвечать без лишних переключений.",
-    tone: "blue",
+    tone: "violet",
     filters: [
       { icon: "▧", label: "Все обращения", count: 118 },
       { icon: "☆", label: "Отзывы", count: 56 },
