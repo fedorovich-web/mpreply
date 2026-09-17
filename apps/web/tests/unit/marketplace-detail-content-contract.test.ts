@@ -61,6 +61,26 @@ describe("marketplace detail content contract", () => {
     expect(landing).not.toContain("Арт. 12345678");
   });
 
+  it("renders marketplace-specific sidebar composition and active queue", () => {
+    expect(content).toContain("export type MarketplaceDetailSidebarItem");
+    expect(content).toContain("sidebarItems: readonly MarketplaceDetailSidebarItem[]");
+    expect(landing).toContain("detailContent.sidebarItems.map");
+    expect(landing).toContain("item.active ? \"detail-sidebar-item is-active\" : \"detail-sidebar-item\"");
+
+    for (const platformSpecificLabel of [
+      "Вопросы WB",
+      "Отзывы Ozon",
+      "Чаты Маркета",
+      "Новые диалоги",
+    ]) {
+      expect(content).toContain(platformSpecificLabel);
+    }
+
+    expect(landing).not.toContain("Отзывы <b>6</b>");
+    expect(landing).not.toContain("Вопросы <b>8</b>");
+    expect(landing).not.toContain("Сообщения <b>10</b>");
+  });
+
   it("keeps public claims within the approved product and trial boundary", () => {
     for (const unsupportedClaim of [
       "Без карты",
