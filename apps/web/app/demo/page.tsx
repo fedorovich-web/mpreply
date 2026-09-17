@@ -389,6 +389,9 @@ export default function DemoPage() {
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
+                <Link className="text-link" href="/marketplaces">
+                  Посмотреть интеграции →
+                </Link>
               </div>
               <span className="demo-cta-note" aria-hidden="true">
                 Убедитесь в эффективности
