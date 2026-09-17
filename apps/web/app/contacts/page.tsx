@@ -1,128 +1,124 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ContactMailForm } from "../../components/public-site/ContactMailForm";
+import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 import { siteConfig } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Контакты MPReply — подключение маркетплейсов и помощь",
+  title: "Контакты MPReply — поддержка, демо и подключение",
   description:
-    "Связаться с MPReply по вопросам подключения Wildberries, Ozon, Яндекс Маркета и Авито, настройки автоматизации, демо и работы с обращениями покупателей.",
+    "Свяжитесь с MPReply по вопросам подключения маркетплейсов, настройки автоматизации, демо и работы с обращениями покупателей.",
   path: "/contacts",
 });
+
+const contactCards: readonly [PublicIconName, string, string][] = [
+  ["gear", "Техническая поддержка", "Поможем с подключением, настройкой и вопросами по работе MPReply."],
+  ["chart", "Запросить демо", "Покажем рабочий процесс MPReply на понятном сценарии обращения."],
+  ["link", "Партнёрство", "Обсудим интеграции, совместные проекты и рабочие сценарии для команд."],
+  ["message", "Общие вопросы", "Ответим на вопросы о возможностях, тарифах и использовании сервиса."],
+];
 
 export default function ContactsPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-contacts contacts-approved-hero">
-        <div className="public-container public-subhero-grid contacts-hero-grid">
-          <div className="public-subhero-copy">
-            <p className="eyebrow">Помощь и контакты</p>
-            <h1>Поможем подключить площадки и настроить рабочий сценарий</h1>
-            <p className="public-lead">
-              Расскажите, с какими маркетплейсами работаете, какие обращения занимают больше всего времени и где хотите сохранить проверку сотрудником.
-            </p>
-            <div className="hero-actions">
-              <a className="button button-primary" href={`mailto:${siteConfig.contactEmail}`}>Написать в поддержку</a>
-              <Link className="button button-secondary" href="/demo">Открыть демо</Link>
+      <div className="contacts-render-page">
+        <section className="contacts-render-hero">
+          <div className="public-container contacts-render-hero-grid">
+            <div className="contacts-render-hero-copy">
+              <p className="contacts-render-eyebrow">КОНТАКТЫ</p>
+              <h1>Свяжитесь с нами</h1>
+              <p>
+                Задайте вопрос, запросите демо или обсудите подключение MPReply. Для всех публичных обращений
+                используем один адрес поддержки — <strong>support@mpreply.ru</strong>.
+              </p>
+              <div className="contacts-render-trust" aria-label="Как мы работаем с обращениями">
+                <span><PublicIcon name="users" />Один канал поддержки</span>
+                <span><PublicIcon name="clock" />Ответ в рабочее время</span>
+                <span><PublicIcon name="shield-check" />По делу и с контекстом</span>
+              </div>
+            </div>
+
+            <div className="contacts-render-hero-scene" aria-hidden="true">
+              <span className="contacts-render-scene-chip contacts-render-scene-mail"><PublicIcon name="inbox" /></span>
+              <span className="contacts-render-scene-chip contacts-render-scene-help"><PublicIcon name="message" /></span>
+              <div className="contacts-render-scene-bubble">
+                <PublicIcon name="message" />
+                <span><i /> <i /> <i /></span>
+              </div>
+              <div className="contacts-render-scene-status"><i />На связи по вопросам MPReply</div>
+              <div className="contacts-render-scene-note">support@mpreply.ru</div>
             </div>
           </div>
+        </section>
 
-          <div className="contact-support-scene" role="group" aria-label="Связаться с поддержкой MPReply">
-            <div className="contact-support-window">
-              <div className="contact-support-head">
+        <section className="contacts-render-channels">
+          <div className="public-container contacts-render-channel-grid">
+            {contactCards.map(([icon, title, text]) => (
+              <article className="contacts-render-channel-card" key={title}>
+                <span className="contacts-render-channel-icon" aria-hidden="true"><PublicIcon name={icon} /></span>
+                <h2>{title}</h2>
+                <p>{text}</p>
+                <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}<span aria-hidden="true">→</span></a>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="contacts-render-main">
+          <div className="public-container contacts-render-main-grid">
+            <div className="contacts-render-form-card">
+              <div className="contacts-render-section-head">
+                <h2>Напишите нам</h2>
+                <p>Заполните поля — мы подготовим письмо в вашем почтовом приложении.</p>
+              </div>
+              <ContactMailForm supportEmail={siteConfig.contactEmail} />
+            </div>
+
+            <aside className="contacts-render-info-column" aria-label="Контактная информация MPReply">
+              <article className="contacts-render-office-card">
+                <div className="contacts-render-info-icon"><PublicIcon name="link" /></div>
                 <div>
-                  <span className="contact-support-mark" aria-hidden="true">MP</span>
-                  <div>
-                    <strong>Поддержка MPReply</strong>
-                    <small>Вопросы по продукту и подключению</small>
-                  </div>
+                  <h2>Наш офис</h2>
+                  <p>г. Майкоп, ул. Чкалова, 65,<br />помещение 17А</p>
+                  <span className="contacts-render-office-label">г. Майкоп</span>
                 </div>
-                <span>support</span>
-              </div>
-
-              <div className="contact-support-body">
-                <span className="contact-support-label">Основной email</span>
-                <a className="contact-support-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-                <p>Подходит для вопросов по подключению площадок, настройке рабочего процесса, демо и работе с обращениями.</p>
-
-                <div className="contact-support-facts" aria-label="Контактная информация">
-                  <div className="contact-support-fact">
-                    <span>Офис</span>
-                    <strong>г. Майкоп, ул. Чкалова, 65, помещение 17А</strong>
-                  </div>
-                  <div className="contact-support-fact">
-                    <span>Режим работы</span>
-                    <strong>Ежедневно, 09:00–18:00 (МСК)</strong>
-                  </div>
+                <div className="contacts-render-office-visual" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                  <b>MP</b>
                 </div>
-              </div>
+              </article>
 
-              <div className="contact-support-checklist" aria-label="Что полезно указать в обращении">
-                <strong>Чтобы быстрее разобраться в вопросе</strong>
-                <span>Укажите маркетплейс и кратко опишите ситуацию.</span>
-                <span>Приложите скриншот ошибки или нужного экрана, если он помогает понять контекст.</span>
-                <span>Не отправляйте пароли, секретные ключи и другие чувствительные данные.</span>
-              </div>
+              <article className="contacts-render-info-card">
+                <span className="contacts-render-info-icon"><PublicIcon name="lightning" /></span>
+                <div><h2>Поддержка</h2><p>Пишете на <strong>support@mpreply.ru</strong> — другого публичного канала поддержки нет.</p></div>
+              </article>
+
+              <article className="contacts-render-info-card">
+                <span className="contacts-render-info-icon"><PublicIcon name="clock" /></span>
+                <div><h2>Режим работы</h2><p>Ежедневно: 09:00–18:00 (МСК)</p></div>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section className="contacts-render-final">
+          <div className="public-container contacts-render-final-card">
+            <div>
+              <p className="contacts-render-eyebrow">ОСТАЛИСЬ ВОПРОСЫ?</p>
+              <h2>Готовы обсудить подключение?</h2>
+              <p>Опишите задачу, маркетплейсы и рабочий сценарий — ответим по существу.</p>
             </div>
-
-            <Link className="contact-support-route contact-support-route-demo" href="/demo">
-              <span aria-hidden="true">▶</span>
-              <div><strong>Нужно сначала посмотреть продукт?</strong><small>Откройте демо рабочего процесса.</small></div>
-            </Link>
-            <Link className="contact-support-route contact-support-route-connect" href="/auth/register?intent=connect-marketplace">
-              <span aria-hidden="true">↗</span>
-              <div><strong>Готовы подключать площадки?</strong><small>Начните с создания аккаунта.</small></div>
-            </Link>
+            <a className="button button-primary" href={`mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("MPReply: обсуждение подключения")}`}>
+              Написать в поддержку <span aria-hidden="true">→</span>
+            </a>
           </div>
-        </div>
-      </section>
-
-      <section className="public-section contacts-path-section">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Выберите следующий шаг</p>
-            <h2>Поддержка, демо и подключение — без лишних переходов</h2>
-            <p>Если вопрос уже сформулирован — пишите на email. Если только знакомитесь с продуктом — начните с демо или интеграций.</p>
-          </div>
-
-          <div className="contact-paths">
-            <article className="contact-path contact-path-primary">
-              <span>01</span>
-              <div>
-                <h3>Задать вопрос поддержке</h3>
-                <p>Подключение площадок, настройка автоматизации, рабочий процесс и другие вопросы по MPReply.</p>
-              </div>
-              <a className="button button-primary" href={`mailto:${siteConfig.contactEmail}`}>Написать письмо</a>
-            </article>
-            <article className="contact-path">
-              <span>02</span>
-              <div>
-                <h3>Посмотреть продукт в работе</h3>
-                <p>Разберите путь обращения: контекст, черновик ответа, правила, проверка и отправка.</p>
-              </div>
-              <Link className="button button-secondary" href="/demo">Открыть демо</Link>
-            </article>
-            <article className="contact-path">
-              <span>03</span>
-              <div>
-                <h3>Подключить нужные площадки</h3>
-                <p>Wildberries, Ozon, Яндекс Маркет и Авито доступны в одном рабочем пространстве.</p>
-              </div>
-              <Link className="button button-secondary" href="/marketplaces">Все интеграции</Link>
-            </article>
-            <article className="contact-path">
-              <span>04</span>
-              <div>
-                <h3>Начать с реальной очереди</h3>
-                <p>Создайте аккаунт, подключите кабинеты и настройте автоматизацию под правила вашей команды.</p>
-              </div>
-              <Link className="button button-secondary" href="/auth/register?intent=connect-marketplace">Начать подключение</Link>
-            </article>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </PublicShell>
   );
 }
