@@ -5,9 +5,9 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Автоответы покупателям Яндекс Маркета с ИИ",
+  title: "Отзывы, вопросы и чаты Яндекс Маркета — единая очередь",
   description:
-    "MPReply для Яндекс Маркета: собирайте обращения в единой очереди, готовьте ответы с помощью ИИ и управляйте автоматической отправкой из одного рабочего пространства.",
+    "MPReply объединяет доступные отзывы, вопросы и чаты Яндекс Маркета в одном рабочем процессе с ИИ-черновиками и контролем перед отправкой.",
   path: "/marketplaces/yandex-market",
 });
 
