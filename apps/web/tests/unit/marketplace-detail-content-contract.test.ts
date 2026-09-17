@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const content = readFileSync(join(root, "lib/marketplace-detail-content.ts"), "utf8");
 const landing = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
+const detailHeroStyles = readFileSync(join(root, "styles/public-detail-hero-fidelity.css"), "utf8");
 
 describe("marketplace detail content contract", () => {
   it("defines distinct content for every supported marketplace", () => {
@@ -59,6 +60,20 @@ describe("marketplace detail content contract", () => {
 
     expect(landing).not.toContain("Здравствуйте! Когда будет поставка этого товара?");
     expect(landing).not.toContain("Арт. 12345678");
+  });
+
+  it("renders a context-specific visual instead of showing the shoe for every marketplace", () => {
+    expect(content).toContain('sampleVisual: "product" | "review" | "order" | "listing"');
+    for (const visual of ["product", "review", "order", "listing"]) {
+      expect(content).toContain(`sampleVisual: "${visual}"`);
+    }
+
+    expect(landing).toContain("detailContent.sampleVisual");
+    expect(landing).toContain("sampleVisualIcons");
+    expect(detailHeroStyles).toContain(".detail-product-thumb.is-product");
+    expect(detailHeroStyles).toContain('url("/images/mockups/product-shoe.webp")');
+    expect(detailHeroStyles).toContain(".detail-product-thumb:not(.is-product)");
+    expect(landing).not.toContain('<span className="detail-product-thumb" aria-hidden="true" />');
   });
 
   it("renders marketplace-specific sidebar composition and active queue", () => {
