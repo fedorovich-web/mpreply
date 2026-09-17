@@ -248,7 +248,7 @@ export default function HomePage() {
               <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать бесплатно&nbsp; →</Link>
               <Link className="button button-secondary homepage-demo-button" href="/demo"><span aria-hidden="true">▶</span> Посмотреть демо</Link>
             </div>
-            <div className="homepage-final-benefits" role="group" aria-label="Преимущества подключения"><span>✓ Без карты</span><span>✓ Контроль автоматизации</span><span>✓ Быстрое подключение</span></div>
+            <div className="homepage-final-benefits" role="group" aria-label="Преимущества подключения"><span>✓ 14 дней бесплатно</span><span>✓ Контроль автоматизации</span><span>✓ Быстрое подключение</span></div>
           </div>
           <div className="homepage-cta-scene" aria-hidden="true">
             <div className="homepage-cta-stack homepage-cta-stack-a"><b>WB</b><span /><span /><span /></div>
