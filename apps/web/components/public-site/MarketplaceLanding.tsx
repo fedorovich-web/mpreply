@@ -99,15 +99,13 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                   />
                 </div>
                 <div className="detail-market-message">
-                  <strong>Покупатель · 12 мин назад</strong>
-                  Здравствуйте! Когда будет поставка этого товара?
+                  <strong>{detailContent.sampleType} · 12 мин назад</strong>
+                  {detailContent.sampleMessage}
                 </div>
                 <div className="detail-product-row">
                   <span className="detail-product-thumb" aria-hidden="true" />
                   <span>
-                    Кроссовки женские
-                    <br />
-                    Арт. 12345678
+                    <MultilineText value={detailContent.sampleContext} />
                   </span>
                 </div>
               </div>
@@ -144,11 +142,11 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                         aria-hidden="true"
                         unoptimized
                       />
-                      <strong>Вопрос</strong>
+                      <strong>{detailContent.sampleType}</strong>
                       <span>12 мин назад</span>
                     </div>
-                    <h3>Здравствуйте! Когда будет поставка этого товара?</h3>
-                    <p>Контекст товара и обращения уже доступен в рабочем окне.</p>
+                    <h3>{detailContent.sampleMessage}</h3>
+                    <p>{detailContent.sampleContext.replace("\n", " · ")}</p>
                   </div>
                 </div>
               </div>
@@ -157,10 +155,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 <strong>
                   <PublicIcon name="sparkles" className="public-inline-icon" /> ИИ
                 </strong>
-                <p>
-                  Здравствуйте! Поставка ожидается в ближайшее время. Мы сообщим, как только товар появится
-                  на складе.
-                </p>
+                <p>{detailContent.sampleReply}</p>
                 <span>Использовать ответ</span>
               </div>
 
