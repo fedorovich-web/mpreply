@@ -2,43 +2,43 @@
 	--color-bg-page: #ffffff;
 	--color-bg-surface: #ffffff;
 	--color-bg-elevated: #ffffff;
-	--color-bg-subtle: #f7fbff;
-	--color-bg-brand-soft: #eff6ff;
+	--color-bg-subtle: #f8f7ff;
+	--color-bg-brand-soft: #f0efff;
 	--color-text-primary: #071846;
 	--color-text-secondary: #50648a;
 	--color-text-muted: #6f82a7;
-	--color-kicker-text: #1d4ed8;
-	--color-border-subtle: #dceafa;
-	--color-border-strong: #bfd6f3;
-	--color-brand-primary: #2563eb;
-	--color-brand-primary-hover: #1d4ed8;
-	--color-brand-accent: #0ea5e9;
-	--color-brand-text-on-soft: #1d4ed8;
-	--color-brand-soft: #eff6ff;
-	--color-brand-soft-strong: #dbeafe;
-	--color-focus-ring: #2563eb;
+	--color-kicker-text: #5148e8;
+	--color-border-subtle: #e3e0f6;
+	--color-border-strong: #c9c3ee;
+	--color-brand-primary: #5148e8;
+	--color-brand-primary-hover: #443bcf;
+	--color-brand-accent: #5148e8;
+	--color-brand-text-on-soft: #443bcf;
+	--color-brand-soft: #f0efff;
+	--color-brand-soft-strong: #e3e0ff;
+	--color-focus-ring: #5148e8;
 	--color-surface-dark: #071846;
 	--color-text-on-dark: #f8fbff;
 	--color-public-page: #ffffff;
 	--color-public-section: #ffffff;
-	--color-public-section-subtle: #f7fbff;
+	--color-public-section-subtle: #f8f7ff;
 	--color-public-header: rgb(255 255 255 / 96%);
-	--color-public-footer: #f8fbff;
-	--gradient-public-blue: linear-gradient(110deg, #1e40af 0%, #2563eb 43%, #0ea5e9 75%, #7dd3fc 100%);
-	--gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #f5faff 100%);
-	--gradient-public-cta: linear-gradient(115deg, #1e40af 0%, #2563eb 52%, #0ea5e9 100%);
+	--color-public-footer: #fbfaff;
+	--gradient-public-blue: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
+	--gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+	--gradient-public-cta: linear-gradient(115deg, #3d35c0 0%, #5148e8 52%, #635bff 100%);
 	--public-section-spacing: clamp(6rem, 10vw, 9rem);
-	--shadow-public-card: 0 24px 60px rgb(26 73 145 / 10%);
-	--shadow-public-cta: 0 30px 72px rgb(30 64 175 / 20%);
-	--shadow-public-button: 0 10px 24px rgb(37 99 235 / 20%);
-	--shadow-public-button-hover: 0 14px 30px rgb(37 99 235 / 24%);
-	--shadow-public-brand-mark: 0 8px 18px rgb(37 99 235 / 20%);
+	--shadow-public-card: 0 24px 60px rgb(49 43 112 / 10%);
+	--shadow-public-cta: 0 30px 72px rgb(81 72 232 / 20%);
+	--shadow-public-button: 0 10px 24px rgb(81 72 232 / 20%);
+	--shadow-public-button-hover: 0 14px 30px rgb(81 72 232 / 24%);
+	--shadow-public-brand-mark: 0 8px 18px rgb(81 72 232 / 20%);
 	background: var(--color-public-page);
 	color: var(--color-text-primary);
 }
 
 .public-root .public-header {
-	border-bottom-color: rgb(191 214 243 / 70%);
+	border-bottom-color: rgb(201 195 238 / 70%);
 	background: rgb(255 255 255 / 94%);
 }
 
@@ -83,7 +83,7 @@
 
 .public-root .button-secondary:hover {
 	border-color: var(--color-brand-primary);
-	background: #f8fbff;
+	background: #f8f7ff;
 }
 
 .public-root .public-section {
@@ -92,7 +92,7 @@
 
 .public-root .public-footer {
 	border-top-color: var(--color-border-subtle);
-	background: #f8fbff;
+	background: #fbfaff;
 }
 
 .public-root .public-footer-brand p,
