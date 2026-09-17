@@ -38,6 +38,12 @@ const marketplaceLogos: Record<MarketplaceKey, { src: string; compactSrc: string
   },
 };
 
+const sampleVisualIcons = {
+  review: "star",
+  order: "archive",
+  listing: "message",
+} as const;
+
 function MultilineText({ value }: { value: string }) {
   const lines = value.split("\n");
 
@@ -57,6 +63,8 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
   const platformLabel = marketplace.name === "Wildberries" ? "WILDBERRIES" : marketplace.name.toUpperCase();
   const logo = marketplaceLogos[marketplace.key];
   const detailContent = getMarketplaceDetailContent(marketplace.key);
+  const sampleVisual = detailContent.sampleVisual;
+  const sampleVisualIcon = sampleVisual === "product" ? null : sampleVisualIcons[sampleVisual];
 
   return (
     <PublicShell>
@@ -103,7 +111,9 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                   {detailContent.sampleMessage}
                 </div>
                 <div className="detail-product-row">
-                  <span className="detail-product-thumb" aria-hidden="true" />
+                  <span className={`detail-product-thumb is-${sampleVisual}`} aria-hidden="true">
+                    {sampleVisualIcon ? <PublicIcon name={sampleVisualIcon} /> : null}
+                  </span>
                   <span>
                     <MultilineText value={detailContent.sampleContext} />
                   </span>
