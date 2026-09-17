@@ -210,9 +210,9 @@ export default function MarketplacesPage() {
                 <span>↙</span>
               </div>
               <div className="marketplace-hero-note marketplace-hero-note-sales" aria-hidden="true">
-                Больше продаж
+                Одна очередь
                 <br />
-                с MPReply! ♥
+                для команды
               </div>
               <div className="mockup-mascot" aria-hidden="true" />
             </div>
@@ -255,7 +255,7 @@ export default function MarketplacesPage() {
             <div className="mockup-section-head">
               <p className="mockup-eyebrow">Преимущества интеграции</p>
               <h2>Что даёт единая интеграция</h2>
-              <p>Подключите все маркетплейсы к MPReply и работайте с обращениями проще, быстрее и эффективнее.</p>
+              <p>Подключите нужные маркетплейсы к MPReply и работайте с обращениями в одном рабочем процессе.</p>
             </div>
             <div className="marketplace-benefits-grid">
               {benefits.map(([icon, tone, title, text]) => (
@@ -312,9 +312,9 @@ export default function MarketplacesPage() {
                 </Link>
               </div>
               <span className="marketplace-cta-note" aria-hidden="true">
-                Больше возможностей
+                Все площадки
                 <br />
-                для вашего бизнеса
+                в одном процессе
               </span>
             </div>
           </div>
