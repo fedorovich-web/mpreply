@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 type WorkspaceTab = "reviews" | "questions" | "messages" | "all";
@@ -200,6 +201,7 @@ export function HomeWorkspaceTabs() {
             <span>Дружелюбный⌄</span>
             <b>Отправить&nbsp; →</b>
           </div>
+          <Link className="text-link" href="/features">Все возможности MPReply →</Link>
         </div>
       </div>
     </div>
