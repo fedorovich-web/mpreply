@@ -55,4 +55,11 @@ describe("public handoff fidelity token usage", () => {
       expect(source).toContain("var(--gradient-mpreply-action)");
     }
   });
+
+  it("keeps generic demo fidelity accents on the shared violet brand tokens", () => {
+    expect(finalDetailsCss).not.toMatch(/#(?:1672ee|eaf5ff|e9efff|eef2ff|6f42e8)/i);
+    expect(finalDetailsCss).toMatch(/\.demo-story-review-avatar\s*\{[^}]*background:\s*var\(--color-brand-soft\);[^}]*color:\s*var\(--color-brand-primary\);/s);
+    expect(finalDetailsCss).toMatch(/\.demo-process-avatar\s*\{[^}]*var\(--color-brand-soft\);[^}]*\}/s);
+    expect(finalDetailsCss).toMatch(/\.demo-process-answer > strong > svg\s*\{[^}]*background:\s*var\(--color-brand-soft\);[^}]*color:\s*var\(--color-brand-primary\);/s);
+  });
 });
