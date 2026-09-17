@@ -9,6 +9,7 @@ function source(path: string) {
 }
 
 const home = source("app/page.tsx");
+const homeWorkspace = source("components/public-site/HomeWorkspaceTabs.tsx");
 const features = source("app/features/page.tsx");
 const marketplaces = source("app/marketplaces/page.tsx");
 const pricing = source("app/pricing/page.tsx");
@@ -30,7 +31,8 @@ describe("public internal link graph contract", () => {
   });
 
   it("connects the core commercial journey with contextual links", () => {
-    expect(home).toContain('href="/features"');
+    expect(home).toContain("<HomeWorkspaceTabs />");
+    expect(homeWorkspace).toContain('href="/features"');
     expect(home).toContain("href={marketplace.path}");
 
     expect(features).toContain('href="/marketplaces"');
