@@ -52,6 +52,8 @@ Exact AI provider/model names must not be used as marketing proof unless verifie
 
 Do not expose credential, worker, adapter, provider, tenant or internal safety-pipeline vocabulary as primary seller-facing copy.
 
+MPReply has no public blog. Do not create a `/blog` route, render `Блог` in public navigation or footers, or repurpose `/help` as an editorial/blog section.
+
 ## Visual source of truth
 
 For the current secondary-page fidelity pass, the supplied approved renders for `/features`, `/marketplaces`, marketplace detail, `/pricing` and `/demo` are the visual source of truth.
@@ -200,7 +202,7 @@ The help page is task-oriented rather than a generic editorial hub. It should co
 - concise FAQ;
 - a clear support/contact path.
 
-Do not reintroduce `/resources` or a Blog route unless the user explicitly approves a new information-architecture change.
+MPReply has no public blog. Keep `/help` strictly task-oriented; do not create `/blog`, `/resources`, editorial feeds, news posts or blog-style navigation.
 
 ## `/contacts`
 
