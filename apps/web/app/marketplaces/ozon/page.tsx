@@ -5,9 +5,9 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Автоответы на отзывы и вопросы Ozon с ИИ",
+  title: "Обращения покупателей Ozon — отзывы, вопросы и чаты",
   description:
-    "MPReply для Ozon: единая очередь обращений покупателей, ИИ-подготовка ответов, правила автоматизации и контроль перед отправкой.",
+    "Собирайте поддерживаемые отзывы, вопросы и чаты Ozon в одной очереди MPReply, готовьте ответы с помощью ИИ и оставляйте сложные случаи на проверку менеджеру.",
   path: "/marketplaces/ozon",
 });
 
