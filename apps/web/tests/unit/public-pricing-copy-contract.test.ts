@@ -12,7 +12,7 @@ describe("public pricing copy contract", () => {
     }
   });
 
-  it("does not invent trial, billing, refund or document conditions", () => {
+  it("does not invent trial, billing, refund, document or extra-tariff conditions", () => {
     for (const unsupportedClaim of [
       "Без карты",
       "Есть ли возврат средств?",
@@ -21,6 +21,11 @@ describe("public pricing copy contract", () => {
       "закрывающие документы",
       "Можно ли поменять тариф позже?",
       "перейти на другой тариф",
+      "индивидуальный тариф",
+      "персональное предложение",
+      "Полный доступ",
+      "ко всем возможностям",
+      "Никаких рисков",
     ]) {
       expect(pricing).not.toContain(unsupportedClaim);
     }
