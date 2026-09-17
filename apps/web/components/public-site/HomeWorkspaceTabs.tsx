@@ -1,25 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 type WorkspaceTab = "reviews" | "questions" | "messages" | "all";
 type WorkspaceTone = "green" | "violet";
 
-type WorkspaceFilter = {
-  icon: string;
-  label: string;
-  count: number;
-};
-
-type WorkspaceRow = {
-  initials: string;
-  name: string;
-  rating?: string;
-  text: string;
-  time: string;
-};
-
+type WorkspaceFilter = { icon: string; label: string; count: number };
+type WorkspaceRow = { initials: string; name: string; rating?: string; text: string; time: string };
 type WorkspaceState = {
   label: string;
   icon: string;
@@ -121,13 +108,11 @@ export function HomeWorkspaceTabs() {
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, key: WorkspaceTab) => {
     const currentIndex = tabOrder.indexOf(key);
     let target: WorkspaceTab | null = null;
-
     if (event.key === "ArrowRight") target = tabOrder[(currentIndex + 1) % tabOrder.length];
     if (event.key === "ArrowLeft") target = tabOrder[(currentIndex - 1 + tabOrder.length) % tabOrder.length];
     if (event.key === "Home") target = tabOrder[0];
     if (event.key === "End") target = tabOrder[tabOrder.length - 1];
     if (!target) return;
-
     event.preventDefault();
     activateAndFocus(target);
   };
@@ -138,43 +123,19 @@ export function HomeWorkspaceTabs() {
         {tabOrder.map((key) => {
           const item = workspaceStates[key];
           const selected = key === activeTab;
-
           return (
-            <button
-              key={key}
-              id={`${id}-${key}-tab`}
-              className="homepage-workspace-tab"
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              aria-controls={panelId}
-              tabIndex={selected ? 0 : -1}
-              ref={(node) => {
-                tabRefs.current[key] = node;
-              }}
-              onClick={() => setActiveTab(key)}
-              onKeyDown={(event) => handleTabKeyDown(event, key)}
-            >
+            <button key={key} id={`${id}-${key}-tab`} className="homepage-workspace-tab" type="button" role="tab" aria-selected={selected} aria-controls={panelId} tabIndex={selected ? 0 : -1} ref={(node) => { tabRefs.current[key] = node; }} onClick={() => setActiveTab(key)} onKeyDown={(event) => handleTabKeyDown(event, key)}>
               <span aria-hidden="true">{item.icon}</span>{item.label}
             </button>
           );
         })}
       </div>
 
-      <div
-        id={panelId}
-        className="homepage-workspace-panel"
-        role="tabpanel"
-        aria-labelledby={`${id}-${activeTab}-tab`}
-      >
+      <div id={panelId} className="homepage-workspace-panel" role="tabpanel" aria-labelledby={`${id}-${activeTab}-tab`}>
         <aside className="homepage-workspace-queue" aria-label="Фильтры обращений">
           <strong>{active.label}</strong>
           {active.filters.map((filter, index) => (
-            <div className={`homepage-workspace-filter${index === 0 ? " is-active" : ""}`} key={filter.label}>
-              <span aria-hidden="true">{filter.icon}</span>
-              <b>{filter.label}</b>
-              <small>{filter.count}</small>
-            </div>
+            <div className={`homepage-workspace-filter${index === 0 ? " is-active" : ""}`} key={filter.label}><span aria-hidden="true">{filter.icon}</span><b>{filter.label}</b><small>{filter.count}</small></div>
           ))}
         </aside>
 
@@ -182,26 +143,16 @@ export function HomeWorkspaceTabs() {
           {active.rows.map((row, index) => (
             <div role="listitem" className={`homepage-workspace-list-row${index === 0 ? " is-active" : ""}`} key={`${activeTab}-${row.name}`}>
               <span className="homepage-workspace-list-avatar" aria-hidden="true">{row.initials}</span>
-              <div>
-                <strong>{row.name}{row.rating ? <> <span>{row.rating}</span></> : null}</strong>
-                <p>{row.text}</p>
-              </div>
+              <div><strong>{row.name}{row.rating ? <> <span>{row.rating}</span></> : null}</strong><p>{row.text}</p></div>
               <span className="homepage-workspace-time">{row.time}</span>
             </div>
           ))}
         </div>
 
         <div className="homepage-workspace-answer" role="group" aria-label="Подготовленный ответ">
-          <div className="homepage-workspace-answer-head">
-            <span className={`homepage-workspace-answer-dot is-${active.tone}`} aria-hidden="true" />
-            <strong>Ответ с помощью ИИ</strong>
-          </div>
+          <div className="homepage-workspace-answer-head"><span className={`homepage-workspace-answer-dot is-${active.tone}`} aria-hidden="true" /><strong>Ответ с помощью ИИ</strong></div>
           <p>{active.answer}</p>
-          <div className="homepage-workspace-answer-actions" aria-hidden="true">
-            <span>Дружелюбный⌄</span>
-            <b>Отправить&nbsp; →</b>
-          </div>
-          <Link className="text-link" href="/features">Все возможности MPReply →</Link>
+          <div className="homepage-workspace-answer-actions" aria-hidden="true"><span>Дружелюбный⌄</span><b>Отправить&nbsp; →</b></div>
         </div>
       </div>
     </div>
