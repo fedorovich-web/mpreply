@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { getMarketplaceDetailContent } from "../../lib/marketplace-detail-content";
-import type { MarketplaceConfig, MarketplaceKey } from "../../lib/site-config";
+import { siteConfig, type MarketplaceConfig, type MarketplaceKey } from "../../lib/site-config";
 import { PublicBrandMark } from "./PublicBrandMark";
 import { PublicIcon } from "./PublicIcon";
 import { PublicShell } from "./PublicShell";
@@ -65,13 +65,40 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
   const detailContent = getMarketplaceDetailContent(marketplace.key);
   const sampleVisual = detailContent.sampleVisual;
   const sampleVisualIcon = sampleVisual === "product" ? null : sampleVisualIcons[sampleVisual];
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Интеграции",
+        item: `${siteConfig.origin}/marketplaces`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: marketplace.name,
+        item: `${siteConfig.origin}${marketplace.path}`,
+      },
+    ],
+  };
 
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
       <div className="mockup-page">
         <section className="marketplace-detail-mockup-hero">
           <div className="public-container marketplace-detail-mockup-grid">
             <div className="marketplace-detail-mockup-copy">
+              <nav className="marketplace-detail-breadcrumbs" aria-label="Хлебные крошки">
+                <Link href="/marketplaces">Все интеграции MPReply</Link>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">{marketplace.name}</span>
+              </nav>
               <p className="mockup-eyebrow">{platformLabel} + MPReply</p>
               <h1>{detailContent.heroTitle}</h1>
               <p>{detailContent.heroDescription}</p>
@@ -282,6 +309,10 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                   Подключить {marketplace.name} <span aria-hidden="true">→</span>
                 </Link>
+                <div className="marketplace-detail-next-links">
+                  <Link href="/marketplaces">Все интеграции MPReply</Link>
+                  <Link href="/pricing">Сравнить тарифы</Link>
+                </div>
                 <div className="mockup-trust-row" aria-label="Условия старта">
                   {detailContent.trustItems.map((item) => (
                     <span key={`final-${item}`}>{item}</span>
