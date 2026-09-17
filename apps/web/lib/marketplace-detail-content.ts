@@ -49,6 +49,7 @@ export type MarketplaceDetailContent = {
   sampleMessage: string;
   sampleContext: string;
   sampleReply: string;
+  sampleVisual: "product" | "review" | "order" | "listing";
   sidebarItems: readonly MarketplaceDetailSidebarItem[];
   toolsHeading: string;
   toolsDescription: string;
@@ -77,6 +78,7 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleContext: "Кроссовки женские\nРазмерная сетка в карточке товара",
     sampleReply:
       "Здравствуйте! Для стопы 25 см ориентируйтесь на размерную сетку в карточке товара. Если сомневаетесь между двумя размерами, проверьте замеры модели перед заказом.",
+    sampleVisual: "product",
     sidebarItems: [
       { icon: "inbox", label: "Все обращения", count: 17 },
       { icon: "message", label: "Отзывы", count: 7 },
@@ -128,6 +130,7 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleMessage: "Товар пришёл хорошо упакован, всё работает.",
     sampleContext: "Электрический чайник\nОтзыв о товаре",
     sampleReply: "Спасибо за отзыв! Рады, что товар приехал в порядке и всё работает. Благодарим, что поделились впечатлением.",
+    sampleVisual: "review",
     sidebarItems: [
       { icon: "inbox", label: "Все обращения", count: 24 },
       { icon: "message", label: "Отзывы", count: 9, active: true },
@@ -180,6 +183,7 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleContext: "Заказ покупателя\nКонтекст обращения по доставке",
     sampleReply:
       "Здравствуйте! Возможность изменить адрес зависит от текущего статуса заказа. Проверьте доступные действия в заказе; если изменение недоступно, подскажем следующий вариант.",
+    sampleVisual: "order",
     sidebarItems: [
       { icon: "inbox", label: "Все обращения", count: 19 },
       { icon: "message", label: "Отзывы", count: 5 },
@@ -231,6 +235,7 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleMessage: "Здравствуйте! Объявление ещё актуально?",
     sampleContext: "Кофемашина DeLonghi\nДиалог по объявлению",
     sampleReply: "Здравствуйте! Спасибо за сообщение. Уточним актуальность предложения и ответим вам в этом диалоге.",
+    sampleVisual: "listing",
     sidebarItems: [
       { icon: "inbox", label: "Все диалоги", count: 14 },
       { icon: "message", label: "Новые диалоги", count: 6, active: true },
