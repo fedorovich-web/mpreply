@@ -60,6 +60,10 @@ The only public contact email is `support@mpreply.ru`.
 
 MPReply currently has no public Telegram contact and no public social-network accounts. Do not render Telegram, VK, YouTube or other social links/icons in the public site unless the user explicitly adds and verifies those channels later.
 
+### Public content architecture
+
+MPReply has no public blog. Do not create a `/blog` route, show `Блог` in navigation or footers, or use `/help` as a disguised editorial/blog section. `/help` remains a task-oriented support, knowledge-base and FAQ surface.
+
 ## AI capability truth
 
 Normal product and marketing copy should describe the user-facing capability:
