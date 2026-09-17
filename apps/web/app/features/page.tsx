@@ -199,7 +199,7 @@ export default function FeaturesPage() {
               </div>
               <div className="mockup-trust-row" aria-label="Условия старта">
                 <span>14 дней бесплатно</span>
-                <span>Без карты</span>
+                <span>Контроль перед отправкой</span>
                 <span>Быстрое подключение</span>
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function FeaturesPage() {
               <div className="mockup-cta-strip-copy">
                 <p className="mockup-eyebrow">Готовы попробовать?</p>
                 <h2>Начните использовать все возможности MPReply</h2>
-                <p>14 дней бесплатного доступа. Без карты. Никаких рисков.</p>
+                <p>14 дней бесплатно. Ответы автоматически или после проверки.</p>
               </div>
               <div className="mockup-cta-strip-side">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
@@ -370,8 +370,8 @@ export default function FeaturesPage() {
                 </Link>
                 <div className="mockup-trust-row" aria-label="Условия старта">
                   <span>Быстрое подключение</span>
-                  <span>Полный доступ</span>
-                  <span>Без карты</span>
+                  <span>14 дней бесплатно</span>
+                  <span>Контроль перед отправкой</span>
                 </div>
               </div>
             </div>
