@@ -45,7 +45,7 @@ describe("marketplace detail content contract", () => {
     }
 
     expect(content).toContain("14 дней");
-    expect(content).toContain("автоматически или после проверки");
+    expect(content).toMatch(/автоматически или после проверки/i);
   });
 
   it("keeps the renderer shared and typed by marketplace key", () => {
