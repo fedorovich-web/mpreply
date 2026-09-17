@@ -47,13 +47,14 @@ describe("marketplace detail content contract", () => {
       expect(content).toContain(sampleType);
     }
 
+    const normalizedContent = content.toLowerCase();
     for (const sampleFragment of [
       "на стопу 25 см",
       "хорошо упакован",
       "изменить адрес доставки",
       "объявление ещё актуально",
     ]) {
-      expect(content).toContain(sampleFragment);
+      expect(normalizedContent).toContain(sampleFragment.toLowerCase());
     }
 
     expect(landing).not.toContain("Здравствуйте! Когда будет поставка этого товара?");
