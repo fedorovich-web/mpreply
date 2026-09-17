@@ -10,7 +10,7 @@ import { createPageMetadata } from "../../lib/seo";
 export const metadata: Metadata = createPageMetadata({
   title: "Интеграции MPReply — Wildberries, Ozon, Яндекс Маркет и Авито",
   description:
-    "Подключите Wildberries, Ozon, Яндекс Маркет и Авито к MPReply и работайте с отзывами, вопросами и сообщениями покупателей в одной системе.",
+    "Работайте с поддерживаемыми обращениями Wildberries, Ozon, Яндекс Маркета и Авито в единой очереди MPReply с ИИ-черновиками и контролем перед отправкой.",
   path: "/marketplaces",
 });
 
@@ -26,32 +26,32 @@ const integrations = [
     key: "wb",
     name: "Wildberries",
     path: "/marketplaces/wildberries",
-    text: "Подключите Wildberries к MPReply и работайте с доступными отзывами, вопросами и сообщениями в одном окне.",
-    points: ["Быстрое подключение", "Статусы и синхронизация", "Доступные типы обращений"],
+    text: "Работайте с отзывами и вопросами Wildberries в одной очереди MPReply с контекстом товара и контролем перед отправкой.",
+    points: ["Подключение аккаунта", "Статусы и синхронизация", "Отзывы и вопросы"],
     logo: marketplaceLogos.wb,
   },
   {
     key: "oz",
     name: "Ozon",
     path: "/marketplaces/ozon",
-    text: "Подключите Ozon к MPReply и работайте с доступными отзывами, вопросами и сообщениями в одном окне.",
-    points: ["Быстрое подключение", "Статусы и синхронизация", "Доступные типы обращений"],
+    text: "Работайте с поддерживаемыми обращениями Ozon в общей очереди MPReply и сохраняйте контекст рядом с ответом.",
+    points: ["Подключение аккаунта", "Статусы и синхронизация", "Поддерживаемые обращения"],
     logo: marketplaceLogos.oz,
   },
   {
     key: "ym",
     name: "Яндекс Маркет",
     path: "/marketplaces/yandex-market",
-    text: "Работайте с доступными обращениями Яндекс Маркета в MPReply и сохраняйте контекст в общей очереди.",
-    points: ["Быстрое подключение", "Статусы и синхронизация", "Доступные типы обращений"],
+    text: "Работайте с поддерживаемыми обращениями Яндекс Маркета в MPReply и сохраняйте их тип, статус и доступный контекст.",
+    points: ["Подключение аккаунта", "Статусы и синхронизация", "Поддерживаемые обращения"],
     logo: marketplaceLogos.ym,
   },
   {
     key: "av",
     name: "Авито",
     path: "/marketplaces/avito",
-    text: "Работайте с доступными сообщениями и отзывами Авито в общей очереди MPReply вместе с командой.",
-    points: ["Быстрое подключение", "Статусы и синхронизация", "Доступные типы обращений"],
+    text: "Работайте с поддерживаемыми сообщениями покупателей Авито в общей очереди MPReply с контекстом объявления.",
+    points: ["Подключение аккаунта", "Статусы диалогов", "Поддерживаемые сообщения"],
     logo: marketplaceLogos.av,
   },
 ] as const;
@@ -61,36 +61,36 @@ const benefits: readonly [PublicIconName, string, string, string][] = [
     "inbox",
     "blue",
     "Единая очередь обращений",
-    "Отзывы, вопросы и сообщения из подключённых маркетплейсов собраны в одном удобном интерфейсе.",
+    "Поддерживаемые обращения из подключённых маркетплейсов собраны в одном рабочем пространстве.",
   ],
   [
     "sync",
     "blue",
     "Статусы и синхронизация",
-    "MPReply синхронизирует доступные данные и показывает статусы обращений в одном рабочем пространстве.",
+    "MPReply синхронизирует доступные данные и показывает текущее состояние обращений в общей очереди.",
   ],
   [
     "sparkles",
     "purple",
-    "AI-подготовка ответов",
-    "Искусственный интеллект помогает составлять вежливые, точные и персонализированные ответы.",
+    "ИИ-черновики с контекстом",
+    "ИИ помогает подготовить ответ на основе текста обращения, доступного контекста товара и настроек рабочего пространства.",
   ],
   [
     "users",
     "purple",
-    "Командная работа",
-    "Распределяйте обращения между сотрудниками, настраивайте роли и контролируйте нагрузку.",
+    "Назначение и контроль",
+    "Назначайте обращения, фильтруйте очередь и оставляйте неоднозначные случаи на ручную проверку.",
   ],
 ];
 
 const connectSteps: readonly [string, PublicIconName, string, string][] = [
-  ["1", "link", "Выберите маркетплейсы", "Отметьте нужные площадки и нажмите «Подключить»."],
-  ["2", "gear", "Авторизуйтесь", "Пройдите авторизацию через доступный способ подключения площадки."],
+  ["1", "link", "Выберите площадку", "Откройте нужную интеграцию и перейдите к подключению аккаунта."],
+  ["2", "gear", "Добавьте подключение", "Укажите данные, которые требуются для доступного способа подключения этой площадки."],
   [
     "3",
     "chart",
-    "Начните работать",
-    "Обращения появятся в MPReply. Работайте с ними в единой очереди и сохраняйте контекст.",
+    "Работайте с очередью",
+    "Поддерживаемые обращения появляются в MPReply со статусом и доступным контекстом для дальнейшей обработки.",
   ],
 ];
 
@@ -128,22 +128,22 @@ export default function MarketplacesPage() {
             <div className="mockup-hero-copy">
               <p className="mockup-eyebrow">Интеграции MPReply</p>
               <h1>
-                Подключите все ключевые маркетплейсы <span className="mockup-highlight">в одной системе</span>
+                Подключайте маркетплейсы <span className="mockup-highlight">в одной системе</span>
               </h1>
               <p>
-                Собирайте отзывы, вопросы и сообщения покупателей со всех маркетплейсов в одном удобном
-                рабочем пространстве. Готовьте ответы с контекстом, проверяйте сложные случаи и работайте командой.
+                Работайте с поддерживаемыми обращениями Wildberries, Ozon, Яндекс Маркета и Авито в одном
+                пространстве. Готовьте ИИ-черновики с контекстом и оставляйте сложные случаи на проверку.
               </p>
               <div className="mockup-actions">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
                 <Link className="button button-secondary" href="/demo">
-                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть видео
+                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть демо
                 </Link>
               </div>
               <div className="mockup-trust-row" aria-label="Условия подключения">
-                <span>Быстрое подключение</span>
+                <span>4 площадки</span>
                 <span>14 дней бесплатно</span>
                 <span>Контроль перед отправкой</span>
               </div>
@@ -152,7 +152,7 @@ export default function MarketplacesPage() {
             <div
               className="marketplace-hub-scene"
               role="img"
-              aria-label="MPReply соединяет четыре готовые интеграции в одной системе"
+              aria-label="MPReply объединяет четыре площадки в одном рабочем процессе"
             >
               <span className="marketplace-hub-line l1" aria-hidden="true" />
               <span className="marketplace-hub-line l2" aria-hidden="true" />
@@ -181,7 +181,7 @@ export default function MarketplacesPage() {
                 </span>
                 <span className="marketplace-hub-card-label">
                   <PublicIcon name="message" />
-                  <span>Отзывы и вопросы</span>
+                  <span>Поддерживаемые обращения</span>
                 </span>
               </div>
               <div className="marketplace-hub-card ym">
@@ -190,7 +190,7 @@ export default function MarketplacesPage() {
                 </span>
                 <span className="marketplace-hub-card-label">
                   <PublicIcon name="inbox" />
-                  <span>Сообщения покупателей</span>
+                  <span>Поддерживаемые обращения</span>
                 </span>
               </div>
               <div className="marketplace-hub-card av">
@@ -199,7 +199,7 @@ export default function MarketplacesPage() {
                 </span>
                 <span className="marketplace-hub-card-label">
                   <PublicIcon name="message" />
-                  <span>Сообщения и отзывы</span>
+                  <span>Сообщения покупателей</span>
                 </span>
               </div>
 
@@ -222,8 +222,8 @@ export default function MarketplacesPage() {
         <section className="public-section">
           <div className="public-container">
             <div className="mockup-section-head">
-              <p className="mockup-eyebrow">Поддерживаем ведущие маркетплейсы</p>
-              <h2>Популярные маркетплейсы уже в MPReply</h2>
+              <p className="mockup-eyebrow">Маркетплейсы MPReply</p>
+              <h2>Wildberries, Ozon, Яндекс Маркет и Авито</h2>
             </div>
 
             <div className="marketplace-logo-grid">
@@ -254,8 +254,8 @@ export default function MarketplacesPage() {
           <div className="public-container">
             <div className="mockup-section-head">
               <p className="mockup-eyebrow">Преимущества интеграции</p>
-              <h2>Что даёт единая интеграция</h2>
-              <p>Подключите нужные маркетплейсы к MPReply и работайте с обращениями в одном рабочем процессе.</p>
+              <h2>Что даёт единый рабочий процесс</h2>
+              <p>Подключите нужные маркетплейсы к MPReply и работайте с поддерживаемыми обращениями в одной очереди.</p>
             </div>
             <div className="marketplace-benefits-grid">
               {benefits.map(([icon, tone, title, text]) => (
@@ -274,9 +274,9 @@ export default function MarketplacesPage() {
         <section className="public-section">
           <div className="public-container">
             <div className="mockup-section-head">
-              <p className="mockup-eyebrow">Как подключить маркетплейсы</p>
-              <h2>3 простых шага до подключения</h2>
-              <p>Подключите все нужные маркетплейсы и начните работать с обращениями уже сегодня.</p>
+              <p className="mockup-eyebrow">Как подключить маркетплейс</p>
+              <h2>3 шага до рабочей очереди</h2>
+              <p>Выберите нужную площадку, добавьте подключение и работайте с доступными через него обращениями.</p>
             </div>
             <div className="marketplace-connect-steps">
               {connectSteps.map(([number, icon, title, text], index) => (
@@ -300,7 +300,7 @@ export default function MarketplacesPage() {
                 <PublicIcon name="send" />
               </span>
               <div className="mockup-cta-strip-copy">
-                <h2>Начните подключать маркетплейсы уже сегодня</h2>
+                <h2>Начните с подключения нужной площадки</h2>
                 <p>14 дней бесплатно. Ответы автоматически или после проверки.</p>
               </div>
               <div className="mockup-cta-strip-side">
@@ -312,9 +312,9 @@ export default function MarketplacesPage() {
                 </Link>
               </div>
               <span className="marketplace-cta-note" aria-hidden="true">
-                Все площадки
+                4 площадки
                 <br />
-                в одном процессе
+                один процесс
               </span>
             </div>
           </div>
