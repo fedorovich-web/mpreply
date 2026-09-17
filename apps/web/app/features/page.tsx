@@ -113,8 +113,8 @@ const workflow = [
   {
     icon: "send" as PublicIconName,
     marketplaces: false,
-    title: "Довольный клиент",
-    text: "Вы отправляете ответ, а клиент получает быструю и профессиональную поддержку.",
+    title: "Ответ отправлен",
+    text: "После проверки или по правилам автоматизации ответ отправляется в маркетплейс.",
   },
 ] as const;
 
@@ -122,26 +122,26 @@ const benefits: readonly [PublicIconName, Tone, string, string][] = [
   [
     "clock",
     "purple",
-    "Меньше времени на ответы",
-    "Автоматизация и AI ускоряют обработку типовых обращений.",
+    "Меньше ручного набора",
+    "AI-черновики и шаблоны дают готовую основу для повторяющихся ответов.",
   ],
   [
     "star",
     "blue",
-    "Выше рейтинг товаров",
-    "Быстрые и качественные ответы помогают получать больше положительных отзывов.",
+    "Единый стандарт ответов",
+    "Контекст, шаблоны и правила помогают команде придерживаться согласованного стиля общения.",
   ],
   [
     "users",
     "purple",
-    "Команда работает эффективнее",
-    "Удобные инструменты для распределения задач и контроля качества.",
+    "Понятная работа команды",
+    "Статусы и роли помогают видеть, кто и с каким обращением работает.",
   ],
   [
     "chart",
     "blue",
-    "Больше продаж",
-    "Довольные клиенты чаще возвращаются и рекомендуют ваши товары.",
+    "Контроль исключений",
+    "Типовые случаи можно автоматизировать, а неоднозначные оставить на проверку сотруднику.",
   ],
 ];
 
@@ -183,11 +183,11 @@ export default function FeaturesPage() {
         <section className="features-mockup-hero mockup-hero">
           <div className="public-container mockup-hero-grid">
             <div className="mockup-hero-copy">
-              <p className="mockup-eyebrow">Больше возможностей — больше довольных клиентов</p>
+              <p className="mockup-eyebrow">Один процесс для обращений покупателей</p>
               <h1>Все возможности MPReply для работы с обращениями покупателей</h1>
               <p>
-                MPReply объединяет все инструменты для быстрой, удобной и профессиональной обработки отзывов,
-                вопросов и сообщений на маркетплейсах.
+                MPReply объединяет инструменты для обработки отзывов, вопросов и сообщений на маркетплейсах
+                в одном рабочем процессе.
               </p>
               <div className="mockup-actions">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
@@ -263,9 +263,9 @@ export default function FeaturesPage() {
                 <span>↙</span>
               </div>
               <div className="features-hero-note features-hero-note-ai" aria-hidden="true">
-                Быстрые и точные ответы
+                Ответы с контекстом
                 <br />
-                с помощью AI
+                обращения и товара
                 <span>↙</span>
               </div>
               <div className="mockup-mascot" aria-hidden="true" />
@@ -277,8 +277,8 @@ export default function FeaturesPage() {
           <div className="public-container">
             <div className="mockup-section-head">
               <p className="mockup-eyebrow">Возможности</p>
-              <h2>Все инструменты для эффективной работы</h2>
-              <p>MPReply помогает автоматизировать рутину, повысить качество ответов и сделать ваших клиентов счастливее.</p>
+              <h2>Инструменты для обработки обращений</h2>
+              <p>MPReply объединяет очередь, подготовку ответов, автоматизацию и контроль перед отправкой в одном рабочем процессе.</p>
             </div>
             <div className="features-tool-grid">
               {tools.map((tool) => (
@@ -298,8 +298,8 @@ export default function FeaturesPage() {
           <div className="public-container">
             <div className="mockup-section-head">
               <p className="mockup-eyebrow">Как это работает</p>
-              <h2>От обращения до довольного клиента</h2>
-              <p>MPReply автоматически собирает обращения, помогает с ответами и упрощает вашу работу.</p>
+              <h2>От обращения до отправленного ответа</h2>
+              <p>MPReply собирает обращение, готовит ответ и сохраняет контроль перед отправкой.</p>
             </div>
             <div className="features-workflow">
               {workflow.map((step, index) => (
@@ -333,8 +333,8 @@ export default function FeaturesPage() {
         <section className="public-section">
           <div className="public-container">
             <div className="mockup-section-head">
-              <p className="mockup-eyebrow">Почему команды выбирают MPReply</p>
-              <h2>Экономьте время и развивайте ваш бизнес</h2>
+              <p className="mockup-eyebrow">Ежедневная работа</p>
+              <h2>Что меняется в ежедневной работе</h2>
             </div>
             <div className="features-benefit-grid">
               {benefits.map(([icon, tone, title, text]) => (
