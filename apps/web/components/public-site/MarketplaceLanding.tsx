@@ -95,7 +95,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
           <div className="public-container marketplace-detail-mockup-grid">
             <div className="marketplace-detail-mockup-copy">
               <nav className="marketplace-detail-breadcrumbs" aria-label="Хлебные крошки">
-                <Link href="/marketplaces">Все интеграции MPReply</Link>
+                <Link href="/marketplaces">Интеграции</Link>
                 <span aria-hidden="true">/</span>
                 <span aria-current="page">{marketplace.name}</span>
               </nav>
