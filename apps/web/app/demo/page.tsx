@@ -173,7 +173,7 @@ export default function DemoPage() {
               </div>
               <div className="mockup-trust-row">
                 <span>14 дней бесплатно</span>
-                <span>Без карты</span>
+                <span>Контроль перед отправкой</span>
                 <span>Быстрое подключение</span>
               </div>
             </div>
@@ -383,7 +383,7 @@ export default function DemoPage() {
               </span>
               <div className="mockup-cta-strip-copy">
                 <h2>Попробуйте MPReply на своих обращениях</h2>
-                <p>14 дней бесплатного доступа ко всем возможностям. Без карты. Никаких рисков.</p>
+                <p>14 дней бесплатно. Ответы автоматически или после проверки.</p>
               </div>
               <div className="mockup-cta-strip-side">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
