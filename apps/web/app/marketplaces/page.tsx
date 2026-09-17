@@ -239,7 +239,7 @@ export default function MarketplacesPage() {
                   />
                   <p>{integration.text}</p>
                   <Link className="button button-secondary" href={integration.path}>
-                    Подробнее <span aria-hidden="true">→</span>
+                    Интеграция {integration.name} <span aria-hidden="true">→</span>
                   </Link>
                   <ul>
                     {integration.points.map((point) => <li key={point}>{point}</li>)}
@@ -306,6 +306,9 @@ export default function MarketplacesPage() {
               <div className="mockup-cta-strip-side">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                   Попробовать бесплатно <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="text-link" href="/pricing">
+                  Сравнить тарифы →
                 </Link>
               </div>
               <span className="marketplace-cta-note" aria-hidden="true">
