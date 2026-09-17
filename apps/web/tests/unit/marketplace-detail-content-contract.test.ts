@@ -32,6 +32,34 @@ describe("marketplace detail content contract", () => {
     expect(landing).not.toContain("Работайте с обращениями {marketplace.name} быстрее");
   });
 
+  it("renders a distinct marketplace-specific sample inside the hero product UI", () => {
+    for (const field of ["sampleType", "sampleMessage", "sampleContext", "sampleReply"]) {
+      expect(content).toContain(`${field}: string`);
+      expect(landing).toContain(`detailContent.${field}`);
+    }
+
+    for (const sampleType of [
+      "Вопрос о товаре",
+      "Отзыв покупателя",
+      "Чат по заказу",
+      "Сообщение по объявлению",
+    ]) {
+      expect(content).toContain(sampleType);
+    }
+
+    for (const sampleFragment of [
+      "на стопу 25 см",
+      "хорошо упакован",
+      "изменить адрес доставки",
+      "объявление ещё актуально",
+    ]) {
+      expect(content).toContain(sampleFragment);
+    }
+
+    expect(landing).not.toContain("Здравствуйте! Когда будет поставка этого товара?");
+    expect(landing).not.toContain("Арт. 12345678");
+  });
+
   it("keeps public claims within the approved product and trial boundary", () => {
     for (const unsupportedClaim of [
       "Без карты",
