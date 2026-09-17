@@ -1,0 +1,12 @@
+/* The supplied contact and 404 renders both use the compact public footer. */
+.public-root:has(.contacts-render-page) .public-footer-default,
+.public-root:has(.contacts-render-page) .public-footer-pricing,
+.public-root:has(.not-found-render-page) .public-footer-default,
+.public-root:has(.not-found-render-page) .public-footer-pricing {
+  display: none;
+}
+
+.public-root:has(.contacts-render-page) .public-footer-compact,
+.public-root:has(.not-found-render-page) .public-footer-compact {
+  display: block;
+}
