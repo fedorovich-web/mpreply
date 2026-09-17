@@ -1,34 +1,34 @@
 :root {
 	/* Shared MPReply brand palette: public site + authenticated workspace. */
-	--color-bg-page: #f7fbff;
+	--color-bg-page: #fbfaff;
 	--color-bg-surface: #ffffff;
 	--color-bg-elevated: #ffffff;
-	--color-bg-subtle: #f2f7fd;
-	--color-bg-brand-soft: #eff6ff;
-	--color-surface-cool: #f6faff;
+	--color-bg-subtle: #f6f5ff;
+	--color-bg-brand-soft: #f0efff;
+	--color-surface-cool: #f8f7ff;
 	--color-text-primary: #071846;
 	--color-text-secondary: #50648a;
 	--color-text-muted: #566b90;
-	--color-kicker-text: #1d4ed8;
-	--color-brand-text-on-soft: #1d4ed8;
-	--color-border-subtle: #dceafa;
-	--color-border-strong: #bfd6f3;
-	--color-border-card: #dceafa;
-	--color-brand-primary: #2563eb;
-	--color-brand-primary-strong: #1d4ed8;
-	--color-brand-deep: #1e40af;
-	--color-brand-primary-hover: #1d4ed8;
-	--color-brand-primary-active: #1e40af;
-	--color-brand-accent: #0ea5e9;
-	--color-brand-accent-hover: #0284c7;
-	--color-brand-accent-soft: #7dd3fc;
-	--color-brand-mint-soft: #e0f2fe;
-	--color-focus-ring: #2563eb;
+	--color-kicker-text: #5148e8;
+	--color-brand-text-on-soft: #443bcf;
+	--color-border-subtle: #e3e0f6;
+	--color-border-strong: #c9c3ee;
+	--color-border-card: #e3e0f6;
+	--color-brand-primary: #5148e8;
+	--color-brand-primary-strong: #443bcf;
+	--color-brand-deep: #3d35c0;
+	--color-brand-primary-hover: #443bcf;
+	--color-brand-primary-active: #3d35c0;
+	--color-brand-accent: #5148e8;
+	--color-brand-accent-hover: #443bcf;
+	--color-brand-accent-soft: #c8c3ff;
+	--color-brand-mint-soft: #f0efff;
+	--color-focus-ring: #5148e8;
 	--color-text-on-brand: #ffffff;
 	--color-text-on-dark: #f8fbff;
 	--color-surface-dark: #071846;
-	--color-brand-soft: #eff6ff;
-	--color-brand-soft-strong: rgb(37 99 235 / 16%);
+	--color-brand-soft: #f0efff;
+	--color-brand-soft-strong: rgb(81 72 232 / 16%);
 	--color-info: #2563eb;
 	--color-info-text: #1d4ed8;
 	--color-info-soft: #eff6ff;
@@ -39,30 +39,31 @@
 	--radius-panel: 1.65rem;
 	--space-section-public: clamp(7rem, 10vw, 10rem);
 
-	--gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
-	--gradient-public-cta: linear-gradient(115deg, #1e40af 0%, #2563eb 52%, #0ea5e9 100%);
+	--gradient-mpreply-action: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
+	--gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+	--gradient-public-cta: linear-gradient(115deg, #3d35c0 0%, #5148e8 52%, #635bff 100%);
 	--gradient-hero:
-		radial-gradient(circle at top left, rgb(37 99 235 / 10%), transparent 34%),
-		linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+		radial-gradient(circle at top left, rgb(81 72 232 / 10%), transparent 34%),
+		linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
 
-	--shadow-xs: 0 1px 2px rgb(20 62 125 / 5%);
-	--shadow-sm: 0 2px 8px rgb(20 62 125 / 8%);
-	--shadow-md: 0 10px 26px rgb(20 62 125 / 9%);
-	--shadow-lg: 0 24px 56px rgb(20 62 125 / 12%);
-	--shadow-card: 0 16px 40px rgb(34 90 168 / 6%);
-	--shadow-public-card: 0 18px 54px rgb(20 62 125 / 9%);
-	--shadow-public-card-hover: 0 14px 32px rgb(20 62 125 / 10%);
-	--shadow-marketplace-hover: 0 12px 28px rgb(20 62 125 / 8%);
-	--shadow-public-panel: 0 24px 60px rgb(20 62 125 / 10%);
-	--shadow-public-cta: 0 28px 70px rgb(30 64 175 / 18%);
-	--shadow-secondary-button: inset 0 1px 0 rgb(255 255 255 / 80%), 0 8px 20px rgb(20 62 125 / 6%);
+	--shadow-xs: 0 1px 2px rgb(49 43 112 / 5%);
+	--shadow-sm: 0 2px 8px rgb(49 43 112 / 8%);
+	--shadow-md: 0 10px 26px rgb(49 43 112 / 9%);
+	--shadow-lg: 0 24px 56px rgb(49 43 112 / 12%);
+	--shadow-card: 0 16px 40px rgb(81 72 232 / 6%);
+	--shadow-public-card: 0 18px 54px rgb(49 43 112 / 9%);
+	--shadow-public-card-hover: 0 14px 32px rgb(49 43 112 / 10%);
+	--shadow-marketplace-hover: 0 12px 28px rgb(49 43 112 / 8%);
+	--shadow-public-panel: 0 24px 60px rgb(49 43 112 / 10%);
+	--shadow-public-cta: 0 28px 70px rgb(81 72 232 / 18%);
+	--shadow-secondary-button: inset 0 1px 0 rgb(255 255 255 / 80%), 0 8px 20px rgb(49 43 112 / 6%);
 
 	/* Authenticated application surfaces intentionally use the same brand family. */
 	--app-sidebar-bg: #ffffff;
 	--app-topbar-bg: rgb(255 255 255 / 90%);
-	--app-nav-active-bg: #eff6ff;
-	--app-nav-hover-bg: #f7fbff;
-	--app-card-hover-shadow: 0 16px 36px rgb(20 62 125 / 10%);
+	--app-nav-active-bg: #f0efff;
+	--app-nav-hover-bg: #f8f7ff;
+	--app-card-hover-shadow: 0 16px 36px rgb(49 43 112 / 10%);
 }
 
 [data-theme='dark'] {
@@ -70,31 +71,31 @@
 	--color-bg-surface: #0b172a;
 	--color-bg-elevated: #0f1d33;
 	--color-bg-subtle: #0a1424;
-	--color-bg-brand-soft: #102a56;
+	--color-bg-brand-soft: #28225b;
 	--color-surface-cool: #0a1424;
 	--color-text-primary: #f8fbff;
 	--color-text-secondary: #c8d6e9;
 	--color-text-muted: #8ea4c4;
-	--color-kicker-text: #93c5fd;
-	--color-brand-text-on-soft: #bfdbfe;
-	--color-border-subtle: #1c3350;
-	--color-border-strong: #2b4a70;
-	--color-border-card: #1c3350;
-	--color-brand-primary: #60a5fa;
-	--color-brand-primary-strong: #93c5fd;
-	--color-brand-deep: #3b82f6;
-	--color-brand-primary-hover: #7dd3fc;
-	--color-brand-primary-active: #3b82f6;
-	--color-brand-accent: #38bdf8;
-	--color-brand-accent-hover: #7dd3fc;
-	--color-brand-accent-soft: #7dd3fc;
-	--color-brand-mint-soft: #0c2a3f;
-	--color-focus-ring: #60a5fa;
+	--color-kicker-text: #a69bff;
+	--color-brand-text-on-soft: #c8c3ff;
+	--color-border-subtle: #2e2a50;
+	--color-border-strong: #48416f;
+	--color-border-card: #2e2a50;
+	--color-brand-primary: #8e80ff;
+	--color-brand-primary-strong: #a69bff;
+	--color-brand-deep: #7d6cf2;
+	--color-brand-primary-hover: #a69bff;
+	--color-brand-primary-active: #8274f5;
+	--color-brand-accent: #8e80ff;
+	--color-brand-accent-hover: #a69bff;
+	--color-brand-accent-soft: #c8c3ff;
+	--color-brand-mint-soft: #28225b;
+	--color-focus-ring: #a69bff;
 	--color-text-on-brand: #061222;
 	--color-text-on-dark: #f8fbff;
 	--color-surface-dark: #050b14;
-	--color-brand-soft: #102a56;
-	--color-brand-soft-strong: rgb(96 165 250 / 18%);
+	--color-brand-soft: #28225b;
+	--color-brand-soft-strong: rgb(142 128 255 / 18%);
 	--color-success-text: #75e0a7;
 	--color-success-soft: #053321;
 	--color-warning-text: #fec84b;
@@ -111,14 +112,15 @@
 	--color-public-surface: var(--color-bg-surface);
 	--color-public-header: rgb(11 23 42 / 92%);
 	--color-public-footer: var(--color-bg-page);
+	--gradient-mpreply-action: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
 	--gradient-public-hero: linear-gradient(180deg, #0b172a 0%, #07111f 100%);
-	--gradient-public-cta: linear-gradient(115deg, #173b86 0%, #1d4ed8 55%, #0369a1 100%);
+	--gradient-public-cta: linear-gradient(115deg, #3d35c0 0%, #5148e8 55%, #635bff 100%);
 	--gradient-hero:
-		radial-gradient(circle at top left, rgb(96 165 250 / 13%), transparent 34%),
+		radial-gradient(circle at top left, rgb(142 128 255 / 13%), transparent 34%),
 		linear-gradient(180deg, #0b172a 0%, #07111f 100%);
 	--app-sidebar-bg: #0b172a;
 	--app-topbar-bg: rgb(11 23 42 / 88%);
-	--app-nav-active-bg: #102a56;
-	--app-nav-hover-bg: rgb(96 165 250 / 8%);
+	--app-nav-active-bg: #28225b;
+	--app-nav-hover-bg: rgb(142 128 255 / 8%);
 	--app-card-hover-shadow: 0 16px 36px rgb(0 0 0 / 24%);
 }
