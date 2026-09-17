@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { siteConfig } from "../../lib/site-config";
 import { PublicBrandMark } from "./PublicBrandMark";
 import { PublicHeader } from "./PublicHeader";
-import { PublicIcon } from "./PublicIcon";
 
 type PublicShellProps = {
   children: ReactNode;
@@ -16,16 +15,6 @@ function FooterLogo() {
       <PublicBrandMark />
       <strong>MPReply</strong>
     </Link>
-  );
-}
-
-function FooterSocials() {
-  return (
-    <div className="public-footer-socials" aria-hidden="true">
-      <span><PublicIcon name="send" /></span>
-      <span><PublicIcon name="vk" /></span>
-      <span><PublicIcon name="play" /></span>
-    </div>
   );
 }
 
@@ -94,8 +83,6 @@ export function PublicShell({ children }: PublicShellProps) {
           </nav>
 
           <div className="public-footer-compact-meta">
-            <FooterSocials />
-            <i aria-hidden="true" />
             <span>© {new Date().getFullYear()} MPReply<br />Все права защищены.</span>
           </div>
         </div>
@@ -106,7 +93,6 @@ export function PublicShell({ children }: PublicShellProps) {
           <div className="public-footer-pricing-brand">
             <FooterLogo />
             <p>Автоматическая обработка отзывов, вопросов и сообщений на маркетплейсах.</p>
-            <FooterSocials />
           </div>
 
           <div className="public-footer-pricing-column">
