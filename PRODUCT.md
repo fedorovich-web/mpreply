@@ -54,6 +54,12 @@ These values are part of the currently approved public-site source of truth. Do 
 
 Production payment-provider wiring is deferred until the site is running on its production domain. Until that deployment step, do not redesign the billing/payment flow, invent checkout actions, or reinterpret the existing tariff presentation as a product error. Billing/provider integration is a separate launch-stage task.
 
+### Public contact truth
+
+The only public contact email is `support@mpreply.ru`.
+
+MPReply currently has no public Telegram contact and no public social-network accounts. Do not render Telegram, VK, YouTube or other social links/icons in the public site unless the user explicitly adds and verifies those channels later.
+
 ## AI capability truth
 
 Normal product and marketing copy should describe the user-facing capability:
