@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
+const landing = readFileSync(join(root, "components/public-site/MarketplaceLanding.tsx"), "utf8");
 
 const routes = [
   {
@@ -62,5 +63,39 @@ describe("marketplace detail SEO metadata contract", () => {
       expect(source).toContain("createPageMetadata({");
       expect(source).toContain(`path: \"/marketplaces/${route.slug}\"`);
     }
+  });
+
+  it("keeps public marketplace routes discoverable while private product routes stay non-indexable", () => {
+    const sitemap = readFileSync(join(root, "app/sitemap.ts"), "utf8");
+    const robots = readFileSync(join(root, "app/robots.ts"), "utf8");
+    const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
+    const appLayout = readFileSync(join(root, "app/app/layout.tsx"), "utf8");
+    const authLayout = readFileSync(join(root, "app/auth/layout.tsx"), "utf8");
+
+    expect(sitemap).toContain("publicRoutes.map");
+    expect(robots).toContain('disallow: ["/app/", "/auth/"]');
+    expect(appLayout).toContain("index: false");
+    expect(authLayout).toContain("index: false");
+
+    for (const route of routes) {
+      expect(siteConfig).toContain(`\"/marketplaces/${route.slug}\"`);
+    }
+  });
+
+  it("renders a visible marketplace breadcrumb with matching BreadcrumbList JSON-LD", () => {
+    expect(landing).toContain('aria-label="Хлебные крошки"');
+    expect(landing).toContain('href="/marketplaces"');
+    expect(landing).toContain('"@type": "BreadcrumbList"');
+    expect(landing).toContain('type="application/ld+json"');
+    expect(landing).toContain("siteConfig.origin");
+    expect(landing).toContain("marketplace.path");
+    expect(landing).not.toContain('"@type": "FAQPage"');
+  });
+
+  it("links marketplace detail pages back to integrations and onward to pricing with descriptive anchors", () => {
+    expect(landing).toContain("Все интеграции MPReply");
+    expect(landing).toContain('href="/pricing"');
+    expect(landing).toContain("Сравнить тарифы");
+    expect(landing).not.toContain(">Подробнее<");
   });
 });
