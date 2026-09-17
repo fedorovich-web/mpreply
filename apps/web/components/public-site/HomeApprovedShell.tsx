@@ -54,9 +54,6 @@ export function HomeApprovedShell({ children }: HomeApprovedShellProps) {
           <div className="home-reference-footer-brand">
             <HomeLogo />
             <p>Автоответы на отзывы, вопросы<br />и сообщения покупателей<br />на маркетплейсах.</p>
-            <div className="home-reference-socials" aria-label="Социальные сети">
-              <span aria-hidden="true">➤</span><span aria-hidden="true">●</span><span aria-hidden="true">▶</span>
-            </div>
           </div>
 
           <div className="home-reference-footer-column">
@@ -85,8 +82,7 @@ export function HomeApprovedShell({ children }: HomeApprovedShellProps) {
 
           <div className="home-reference-footer-column home-reference-footer-support">
             <strong>Поддержка</strong>
-            <a href={`mailto:${siteConfig.contactEmail}`}>help@mpreply.ru</a>
-            <Link href="/contacts">Написать в Telegram</Link>
+            <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
             <span>Пн — Пт, 9:00 — 18:00 (МСК)</span>
           </div>
         </div>
