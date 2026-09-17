@@ -1,8 +1,9 @@
-import fs from "node:fs";
-import path from "node:path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
-const root = path.resolve(process.cwd());
-const read = (file: string) => fs.readFileSync(path.join(root, file), "utf8");
+const root = process.cwd();
+const read = (file: string) => readFileSync(join(root, file), "utf8");
 
 const hub = read("app/marketplaces/page.tsx");
 const detail = read("lib/marketplace-detail-content.ts");
@@ -23,46 +24,38 @@ const forbiddenAcrossPublicMarketplaceCopy = [
   "Шаблоны ответов",
   'label: "Шаблоны"',
   'label: "Команда"',
-];
+] as const;
 
-for (const phrase of forbiddenAcrossPublicMarketplaceCopy) {
-  if (`${hub}\n${detail}\n${siteConfig}`.includes(phrase)) {
-    throw new Error(`Marketplace public copy must not contain unsupported claim: ${phrase}`);
-  }
-}
+describe("public marketplace truth contract", () => {
+  it("does not claim runtime certification or unsupported generic capabilities", () => {
+    const publicCopy = `${hub}\n${detail}\n${siteConfig}`;
+    for (const phrase of forbiddenAcrossPublicMarketplaceCopy) {
+      expect(publicCopy).not.toContain(phrase);
+    }
+    expect(hub).not.toContain("Сообщения и отзывы");
+  });
 
-if (hub.includes("Сообщения и отзывы")) {
-  throw new Error("Avito hub card must not claim reviews; the public scenario is buyer messages/dialogs.");
-}
+  it("keeps Wildberries scoped to the adapter-verified reviews and questions workflow", () => {
+    expect(detail).toContain('heroTitle: "Отзывы и вопросы Wildberries — в одном рабочем процессе"');
+    expect(detail).not.toContain("отзывы, вопросы и сообщения Wildberries");
+    expect(wbPage).toContain("Отзывы и вопросы Wildberries");
+  });
 
-if (!detail.includes('heroTitle: "Отзывы и вопросы Wildberries — в одном рабочем процессе"')) {
-  throw new Error("Wildberries detail must retain the runtime-verified reviews + questions scope.");
-}
+  it("keeps Ozon and Yandex channel-neutral until runtime channel certification is available", () => {
+    expect(detail).toContain('heroTitle: "Обращения Ozon — без постоянных переключений"');
+    expect(detail).toContain('heroTitle: "Обращения Яндекс Маркета — в единой очереди"');
+    expect(ozonPage).not.toContain("отзывы, вопросы и чаты");
+    expect(yandexPage).not.toContain("Отзывы, вопросы и чаты");
+  });
 
-if (detail.includes("отзывы, вопросы и сообщения Wildberries")) {
-  throw new Error("Wildberries public detail must not add buyer messages beyond the verified adapter scope.");
-}
+  it("uses a neutral product-surface status instead of a readiness badge", () => {
+    expect(siteConfig).toContain('const marketplaceStatusLabel = "Интеграция MPReply"');
+    expect(siteConfig).not.toContain('const marketplaceStatusLabel = "Интеграция готова"');
+  });
 
-if (!detail.includes('heroTitle: "Обращения Ozon — без постоянных переключений"')) {
-  throw new Error("Ozon detail heading must stay channel-neutral until runtime channel certification is available.");
-}
-
-if (!detail.includes('heroTitle: "Обращения Яндекс Маркета — в единой очереди"')) {
-  throw new Error("Yandex Market detail heading must stay channel-neutral until runtime channel certification is available.");
-}
-
-if (!siteConfig.includes('const marketplaceStatusLabel = "Интеграция MPReply"')) {
-  throw new Error("Marketplace status label must describe the product surface, not claim runtime certification.");
-}
-
-if (!wbPage.includes("Отзывы и вопросы Wildberries")) {
-  throw new Error("Wildberries SEO metadata must preserve its verified channel scope.");
-}
-
-if (ozonPage.includes("отзывы, вопросы и чаты") || yandexPage.includes("Отзывы, вопросы и чаты")) {
-  throw new Error("Uncertified Ozon/Yandex channel lists must not appear as SEO promises.");
-}
-
-if (!avitoPage.includes("поддерживаемые диалоги")) {
-  throw new Error("Avito metadata must retain its explicit supported-dialog qualification.");
-}
+  it("keeps the Avito public scenario qualified as supported buyer dialogs", () => {
+    expect(avitoPage).toContain("поддерживаемые диалоги");
+    expect(hub).toContain("Сообщения покупателей");
+    expect(hub).not.toContain("Сообщения и отзывы");
+  });
+});
