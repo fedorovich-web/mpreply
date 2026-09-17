@@ -18,7 +18,8 @@ describe("pricing and demo styles", () => {
   });
 
   it("uses violet MPReply decoration instead of the retired blue and cyan public glow", () => {
-    const hero = selectorBlock(".public-root .public-subhero-pricing,\\n.public-root .public-subhero-demo");
+    const hero = selectorBlock(`.public-root .public-subhero-pricing,
+.public-root .public-subhero-demo`);
     expect(hero).toContain("rgb(81 72 232 / 10%)");
     expect(hero).toContain("rgb(99 91 255 / 7%)");
     expect(hero).not.toContain("rgb(37 99 235");
