@@ -33,6 +33,13 @@ export type MarketplaceDetailFaq = {
   answer: string;
 };
 
+export type MarketplaceDetailSidebarItem = {
+  icon: MarketplaceDetailIcon;
+  label: string;
+  count?: number;
+  active?: boolean;
+};
+
 export type MarketplaceDetailContent = {
   heroTitle: string;
   heroDescription: string;
@@ -42,6 +49,7 @@ export type MarketplaceDetailContent = {
   sampleMessage: string;
   sampleContext: string;
   sampleReply: string;
+  sidebarItems: readonly MarketplaceDetailSidebarItem[];
   toolsHeading: string;
   toolsDescription: string;
   tools: readonly MarketplaceDetailTool[];
@@ -69,6 +77,13 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleContext: "Кроссовки женские\nРазмерная сетка в карточке товара",
     sampleReply:
       "Здравствуйте! Для стопы 25 см ориентируйтесь на размерную сетку в карточке товара. Если сомневаетесь между двумя размерами, проверьте замеры модели перед заказом.",
+    sidebarItems: [
+      { icon: "inbox", label: "Все обращения", count: 17 },
+      { icon: "message", label: "Отзывы", count: 7 },
+      { icon: "message", label: "Вопросы", count: 10, active: true },
+      { icon: "document", label: "Шаблоны" },
+      { icon: "users", label: "Команда" },
+    ],
     toolsHeading: "Работа с обратной связью Wildberries без ручной рутины",
     toolsDescription:
       "MPReply помогает команде разбирать входящие обращения по рабочему статусу, готовить ответы и сохранять контроль над сложными случаями.",
@@ -113,6 +128,14 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleMessage: "Товар пришёл хорошо упакован, всё работает.",
     sampleContext: "Электрический чайник\nОтзыв о товаре",
     sampleReply: "Спасибо за отзыв! Рады, что товар приехал в порядке и всё работает. Благодарим, что поделились впечатлением.",
+    sidebarItems: [
+      { icon: "inbox", label: "Все обращения", count: 24 },
+      { icon: "message", label: "Отзывы", count: 9, active: true },
+      { icon: "message", label: "Вопросы", count: 6 },
+      { icon: "message", label: "Чаты", count: 9 },
+      { icon: "document", label: "Шаблоны" },
+      { icon: "users", label: "Команда" },
+    ],
     toolsHeading: "Один рабочий процесс для разных типов обращений Ozon",
     toolsDescription: "Вместо отдельных разделов для обратной связи команда работает с единой очередью и видит тип обращения до ответа.",
     tools: [
@@ -157,6 +180,14 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleContext: "Заказ покупателя\nКонтекст обращения по доставке",
     sampleReply:
       "Здравствуйте! Возможность изменить адрес зависит от текущего статуса заказа. Проверьте доступные действия в заказе; если изменение недоступно, подскажем следующий вариант.",
+    sidebarItems: [
+      { icon: "inbox", label: "Все обращения", count: 19 },
+      { icon: "message", label: "Отзывы", count: 5 },
+      { icon: "message", label: "Вопросы", count: 4 },
+      { icon: "message", label: "Чаты", count: 10, active: true },
+      { icon: "document", label: "Шаблоны" },
+      { icon: "users", label: "Команда" },
+    ],
     toolsHeading: "Разные сценарии Маркета — один рабочий интерфейс",
     toolsDescription: "Команда видит контекст обращения и тип коммуникации до ответа, не смешивая вопрос о товаре с чатом по заказу или возврату.",
     tools: [
@@ -200,6 +231,14 @@ const marketplaceDetailContent: Record<MarketplaceKey, MarketplaceDetailContent>
     sampleMessage: "Здравствуйте! Объявление ещё актуально?",
     sampleContext: "Кофемашина DeLonghi\nДиалог по объявлению",
     sampleReply: "Здравствуйте! Спасибо за сообщение. Уточним актуальность предложения и ответим вам в этом диалоге.",
+    sidebarItems: [
+      { icon: "inbox", label: "Все диалоги", count: 14 },
+      { icon: "message", label: "Новые диалоги", count: 6, active: true },
+      { icon: "clock", label: "В работе", count: 5 },
+      { icon: "shield-check", label: "Обработаны", count: 3 },
+      { icon: "document", label: "Шаблоны" },
+      { icon: "users", label: "Команда" },
+    ],
     toolsHeading: "Фокус на диалогах с покупателями Авито",
     toolsDescription: "Для Авито основным сценарием остаются сообщения покупателей: MPReply помогает превратить поток диалогов в управляемую очередь команды.",
     tools: [
