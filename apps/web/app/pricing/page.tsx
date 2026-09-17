@@ -87,6 +87,7 @@ const faq = [
 const marketplaces = [
   {
     name: "Wildberries",
+    path: "/marketplaces/wildberries",
     src: "/images/marketplaces/wildberries.webp",
     compactSrc: "/images/marketplaces/wildberries-compact.webp",
     width: 432,
@@ -94,6 +95,7 @@ const marketplaces = [
   },
   {
     name: "Ozon",
+    path: "/marketplaces/ozon",
     src: "/images/marketplaces/ozon.webp",
     compactSrc: "/images/marketplaces/ozon-compact.webp",
     width: 436,
@@ -101,6 +103,7 @@ const marketplaces = [
   },
   {
     name: "Яндекс Маркет",
+    path: "/marketplaces/yandex-market",
     src: "/images/marketplaces/yandex-market.webp",
     compactSrc: "/images/marketplaces/yandex-market-compact.webp",
     width: 554,
@@ -108,6 +111,7 @@ const marketplaces = [
   },
   {
     name: "Авито",
+    path: "/marketplaces/avito",
     src: "/images/marketplaces/avito.webp",
     compactSrc: "/images/marketplaces/avito-compact.webp",
     width: 504,
@@ -195,7 +199,12 @@ export default function PricingPage() {
             </div>
             <div className="pricing-market-row">
               {marketplaces.map((marketplace) => (
-                <div className="pricing-market-chip" key={marketplace.name}>
+                <Link
+                  className="pricing-market-chip"
+                  href={marketplace.path}
+                  key={marketplace.name}
+                  aria-label={`Интеграция ${marketplace.name}`}
+                >
                   <Image
                     className="pricing-market-compact"
                     src={marketplace.compactSrc}
@@ -206,7 +215,7 @@ export default function PricingPage() {
                     unoptimized
                   />
                   <strong className="pricing-market-name">{marketplace.name}</strong>
-                </div>
+                </Link>
               ))}
             </div>
             <p className="pricing-market-note">
