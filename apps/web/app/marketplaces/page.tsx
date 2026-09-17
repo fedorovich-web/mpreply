@@ -145,7 +145,7 @@ export default function MarketplacesPage() {
               <div className="mockup-trust-row" aria-label="Условия подключения">
                 <span>Быстрое подключение</span>
                 <span>14 дней бесплатно</span>
-                <span>Без карты</span>
+                <span>Контроль перед отправкой</span>
               </div>
             </div>
 
@@ -301,7 +301,7 @@ export default function MarketplacesPage() {
               </span>
               <div className="mockup-cta-strip-copy">
                 <h2>Начните подключать маркетплейсы уже сегодня</h2>
-                <p>14 дней бесплатного доступа ко всем возможностям. Без карты. Никаких рисков.</p>
+                <p>14 дней бесплатно. Ответы автоматически или после проверки.</p>
               </div>
               <div className="mockup-cta-strip-side">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
