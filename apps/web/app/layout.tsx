@@ -39,6 +39,7 @@ import "../styles/public-header-fidelity.css";
 import "../styles/public-approved-raster-icons.css";
 import "../styles/public-inner-blue-reference.css";
 import "../styles/public-contact-404-render.css";
+import "../styles/public-contact-404-footer.css";
 import "../styles/homepage-reference-restore.css";
 
 export const metadata: Metadata = {
