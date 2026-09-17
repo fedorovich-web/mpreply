@@ -14,23 +14,13 @@ function isActiveNavigationItem(href: string, pathname: string): boolean {
   return pathname === href;
 }
 
-function isMockupRoute(pathname: string): boolean {
-  return (
-    pathname === "/features" ||
-    pathname === "/marketplaces" ||
-    pathname.startsWith("/marketplaces/") ||
-    pathname === "/pricing" ||
-    pathname === "/demo"
-  );
-}
-
 export function PublicHeader() {
   const pathname = usePathname();
   const menuId = useId();
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const headerCtaLabel = isMockupRoute(pathname) ? "Попробовать бесплатно" : "Создать аккаунт";
+  const headerCtaLabel = "Попробовать бесплатно";
 
   useEffect(() => {
     if (!menuOpen) return;
