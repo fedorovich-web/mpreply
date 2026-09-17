@@ -67,15 +67,16 @@ describe("marketplace detail content contract", () => {
     expect(landing).toContain("detailContent.sidebarItems.map");
     expect(landing).toContain("item.active ? \"detail-sidebar-item is-active\" : \"detail-sidebar-item\"");
 
-    for (const platformSpecificLabel of [
-      "Вопросы WB",
-      "Отзывы Ozon",
-      "Чаты Маркета",
-      "Новые диалоги",
+    for (const sidebarLabel of [
+      'label: "Отзывы"',
+      'label: "Вопросы"',
+      'label: "Чаты"',
+      'label: "Новые диалоги"',
     ]) {
-      expect(content).toContain(platformSpecificLabel);
+      expect(content).toContain(sidebarLabel);
     }
 
+    expect(content.match(/active: true/g)?.length).toBe(4);
     expect(landing).not.toContain("Отзывы <b>6</b>");
     expect(landing).not.toContain("Вопросы <b>8</b>");
     expect(landing).not.toContain("Сообщения <b>10</b>");
