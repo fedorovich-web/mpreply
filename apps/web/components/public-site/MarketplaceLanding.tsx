@@ -119,17 +119,16 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 </div>
                 <div className="detail-app-body">
                   <aside className="detail-sidebar" aria-hidden="true">
-                    <strong className="detail-sidebar-item is-active">
-                      <PublicIcon name="inbox" />
-                      Все обращения
-                      <b>24</b>
-                    </strong>
-                    <span className="detail-sidebar-item"><PublicIcon name="message" />Отзывы <b>6</b></span>
-                    <span className="detail-sidebar-item"><PublicIcon name="message" />Вопросы <b>8</b></span>
-                    <span className="detail-sidebar-item"><PublicIcon name="message" />Сообщения <b>10</b></span>
-                    <span className="detail-sidebar-item"><PublicIcon name="chart" />Аналитика</span>
-                    <span className="detail-sidebar-item"><PublicIcon name="archive" />Шаблоны</span>
-                    <span className="detail-sidebar-item"><PublicIcon name="users" />Команда</span>
+                    {detailContent.sidebarItems.map((item) => (
+                      <span
+                        className={item.active ? "detail-sidebar-item is-active" : "detail-sidebar-item"}
+                        key={item.label}
+                      >
+                        <PublicIcon name={item.icon} />
+                        {item.label}
+                        {item.count !== undefined ? <b>{item.count}</b> : null}
+                      </span>
+                    ))}
                   </aside>
                   <div className="detail-question">
                     <div className="detail-question-top">
