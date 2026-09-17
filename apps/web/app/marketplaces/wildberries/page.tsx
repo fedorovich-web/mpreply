@@ -5,9 +5,9 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Автоответы на отзывы и вопросы Wildberries с ИИ",
+  title: "Отзывы и вопросы Wildberries — ИИ-ответы и автоматизация",
   description:
-    "MPReply для Wildberries: собирайте отзывы и вопросы в единой очереди, готовьте ответы с помощью ИИ и настраивайте автоматическую отправку или проверку менеджером.",
+    "MPReply собирает доступные отзывы и вопросы Wildberries в одну очередь, готовит ответы с контекстом товара и позволяет отправлять типовые ответы автоматически или после проверки.",
   path: "/marketplaces/wildberries",
 });
 
