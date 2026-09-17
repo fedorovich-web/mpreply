@@ -8,7 +8,6 @@ const homeNavigation = [
   { href: "/features", label: "Возможности" },
   { href: "/marketplaces", label: "Интеграции" },
   { href: "/pricing", label: "Тарифы" },
-  { href: "/help", label: "Блог" },
   { href: "/help", label: "Помощь" },
 ] as const;
 
@@ -66,7 +65,6 @@ export function HomeApprovedShell({ children }: HomeApprovedShellProps) {
 
           <div className="home-reference-footer-column">
             <strong>Ресурсы</strong>
-            <Link href="/help">Блог</Link>
             <Link href="/help#start">База знаний</Link>
             <Link href="/help#faq">FAQ</Link>
             <Link href="/help">Статус сервисов</Link>
