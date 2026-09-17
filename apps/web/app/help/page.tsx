@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PublicShell } from "../../components/public-site/PublicShell";
-import { JsonLd } from "../../components/seo/JsonLd";
 import { createPageMetadata } from "../../lib/seo";
 import { siteConfig } from "../../lib/site-config";
 
@@ -83,23 +82,8 @@ const faq = [
 ];
 
 export default function HelpPage() {
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faq.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  };
-
   return (
     <PublicShell>
-      <JsonLd data={faqSchema} />
-
       <section className="public-subhero help-approved-hero">
         <div className="public-container public-subhero-grid help-hero-grid">
           <div className="public-subhero-copy">
