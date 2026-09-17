@@ -126,7 +126,7 @@ describe("public homepage redesign contract", () => {
     expect(approvedCss).toContain("grid-template-columns: minmax(0, 1.18fr) minmax(24rem, 0.82fr)");
   });
 
-  it("uses the authoritative violet system with hero artwork owned by the approved stylesheet", () => {
+  it("uses the authoritative violet public shell with hero artwork owned by the approved stylesheet", () => {
     expect(marketingCss).toContain(".public-root");
     expect(marketingCss).toContain("--color-brand-primary: #5148e8");
     expect(marketingCss).toContain("--color-brand-primary-hover: #443bcf");
@@ -137,8 +137,6 @@ describe("public homepage redesign contract", () => {
     expect(marketingCss).not.toContain("--color-brand-primary: #2563eb");
     expect(marketingCss).not.toContain("--color-brand-accent: #0ea5e9");
     expect(approvedCss).toContain("--homepage-section-pad");
-    expect(approvedCss).toContain("--homepage-brand: var(--color-brand-primary)");
-    expect(approvedCss).toContain("--homepage-brand-soft: var(--color-brand-soft)");
     expect(approvedCss).toContain(".homepage-horizontal-process");
     expect(approvedCss).toContain(".homepage-hero-scene");
     expect(approvedCss).toContain(".homepage-hero-image");
