@@ -365,6 +365,9 @@ export default function FeaturesPage() {
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
+                <Link className="text-link" href="/marketplaces">
+                  Посмотреть интеграции →
+                </Link>
                 <div className="mockup-trust-row" aria-label="Условия старта">
                   <span>Быстрое подключение</span>
                   <span>Полный доступ</span>
