@@ -1,6 +1,6 @@
 export type MarketplaceKey = "wildberries" | "ozon" | "yandex-market" | "avito";
 
-const marketplaceStatusLabel = "Интеграция готова";
+const marketplaceStatusLabel = "Интеграция MPReply";
 
 export type MarketplaceConfig = {
   key: MarketplaceKey;
@@ -41,7 +41,7 @@ const marketplaceDefinitions = [
     mark: "WB",
     path: "/marketplaces/wildberries",
     summary:
-      "Получение обращений, подготовка ответов, контроль перед отправкой и автоматизация повторяющихся сценариев через единый рабочий процесс.",
+      "Отзывы и вопросы Wildberries в единой очереди: контекст товара, ИИ-черновик, контроль перед отправкой и автоматизация по правилам.",
   },
   {
     key: "ozon",
@@ -50,7 +50,7 @@ const marketplaceDefinitions = [
     mark: "OZ",
     path: "/marketplaces/ozon",
     summary:
-      "Работа с обращениями покупателей Ozon в общей очереди MPReply: контекст, ИИ-ответ, проверка правил и отправка через интеграцию.",
+      "Поддерживаемые обращения Ozon в общей очереди MPReply: доступный контекст, ИИ-черновик, статусы и контроль перед отправкой.",
   },
   {
     key: "yandex-market",
@@ -59,7 +59,7 @@ const marketplaceDefinitions = [
     mark: "М",
     path: "/marketplaces/yandex-market",
     summary:
-      "Обращения Яндекс Маркета приводятся к единому формату, чтобы команда работала с ними по тем же правилам, что и с другими площадками.",
+      "Поддерживаемые обращения Яндекс Маркета приводятся к единому рабочему процессу со статусами, контекстом и проверкой перед отправкой.",
   },
   {
     key: "avito",
@@ -68,7 +68,7 @@ const marketplaceDefinitions = [
     mark: "A",
     path: "/marketplaces/avito",
     summary:
-      "Интеграция Авито подключена к общей модели обработки: единая очередь, ИИ-подготовка ответа, правила, статусы и история действий.",
+      "Поддерживаемые диалоги Авито в общей очереди MPReply: контекст объявления, ИИ-черновик, статусы и понятное следующее действие.",
   },
 ] satisfies MarketplaceDefinition[];
 
