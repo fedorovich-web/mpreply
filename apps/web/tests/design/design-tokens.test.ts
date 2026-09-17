@@ -193,7 +193,7 @@ describe("MPReply base design tokens", () => {
     }
   });
 
-  it("keeps a complete fallback palette beneath the blue MPReply brand layer", () => {
+  it("keeps the legacy fallback palette beneath the authoritative MPReply runtime brand layer", () => {
     expect(token("--color-brand-primary").toLowerCase()).toBe("#6f33ab");
     expect(token("--color-brand-accent").toLowerCase()).toBe("#79d6b0");
     expect(token("--color-bg-page").toLowerCase()).toBe("#fbfafc");
@@ -201,11 +201,17 @@ describe("MPReply base design tokens", () => {
     expect(token("--color-public-section")).toBe("var(--color-bg-page)");
   });
 
-  it("checks the actual blue runtime brand layer rather than the fallback palette", () => {
-    expect(lightToken("--color-brand-primary").toLowerCase()).toBe("#2563eb");
-    expect(lightToken("--color-brand-accent").toLowerCase()).toBe("#0ea5e9");
-    expect(darkToken("--color-brand-primary").toLowerCase()).toBe("#60a5fa");
-    expect(darkToken("--color-brand-accent").toLowerCase()).toBe("#38bdf8");
+  it("checks the approved violet runtime brand layer rather than the fallback palette", () => {
+    expect(lightToken("--color-brand-primary").toLowerCase()).toBe("#5148e8");
+    expect(lightToken("--color-brand-accent").toLowerCase()).toBe("#5148e8");
+    expect(darkToken("--color-brand-primary").toLowerCase()).toBe("#8e80ff");
+    expect(darkToken("--color-brand-accent").toLowerCase()).toBe("#8e80ff");
+    expect(lightToken("--gradient-mpreply-action")).toBe(
+      "linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%)",
+    );
+    expect(darkToken("--gradient-mpreply-action")).toBe(
+      "linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%)",
+    );
   });
 
   it("keeps decorative accent distinct from semantic success", () => {
@@ -361,8 +367,8 @@ describe("MPReply base design tokens", () => {
       expectOpaqueHexColor(darkToken(name), `dark ${name}`);
     }
 
-    expect(lightToken("--app-nav-active-bg")).toBe("#eff6ff");
-    expect(darkToken("--app-nav-active-bg")).toBe("#102a56");
+    expect(lightToken("--app-nav-active-bg")).toBe("#f0efff");
+    expect(darkToken("--app-nav-active-bg")).toBe("#28225b");
   });
 
   it("uses the dedicated brand text token on all soft brand text surfaces", () => {
