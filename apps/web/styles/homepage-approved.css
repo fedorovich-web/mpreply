@@ -613,12 +613,8 @@
 	border-radius: 50%;
 }
 
-.homepage-workspace-answer-dot.is-blue {
+.homepage-workspace-answer-dot.is-violet {
 	border-color: var(--homepage-brand);
-}
-
-.homepage-workspace-answer-dot.is-cyan {
-	border-color: #24a9d8;
 }
 
 .homepage-workspace-answer p {
