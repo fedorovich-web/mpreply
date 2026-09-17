@@ -6,9 +6,9 @@
 	padding-top: clamp(4.75rem, 6vw, 6.25rem);
 	padding-bottom: clamp(4.5rem, 6vw, 6rem);
 	background:
-		radial-gradient(circle at 82% 22%, rgb(37 99 235 / 10%), transparent 25rem),
-		radial-gradient(circle at 68% 72%, rgb(14 165 233 / 7%), transparent 22rem),
-		linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+		radial-gradient(circle at 82% 22%, rgb(81 72 232 / 10%), transparent 25rem),
+		radial-gradient(circle at 68% 72%, rgb(99 91 255 / 7%), transparent 22rem),
+		linear-gradient(180deg, #fff 0%, #fcfbff 100%);
 }
 
 .public-root .public-subhero-marketplaces::after {
@@ -18,7 +18,7 @@
 	width: 39rem;
 	height: 31rem;
 	border-radius: 48%;
-	background: linear-gradient(145deg, rgb(71 155 255 / 9%), transparent 68%);
+	background: linear-gradient(145deg, rgb(99 91 255 / 9%), transparent 68%);
 	content: '';
 	pointer-events: none;
 	transform: rotate(-14deg);
@@ -62,7 +62,7 @@
 	border-radius: 44% 56% 52% 48%;
 	background:
 		radial-gradient(circle at 32% 30%, rgb(255 255 255 / 72%), transparent 24%),
-		linear-gradient(145deg, rgb(223 239 255 / 86%), rgb(232 246 255 / 54%) 52%, rgb(238 242 255 / 46%));
+		linear-gradient(145deg, rgb(237 234 255 / 86%), rgb(246 244 255 / 54%) 52%, rgb(241 239 255 / 46%));
 	filter: blur(1px);
 	content: '';
 	transform: rotate(-8deg);
@@ -76,7 +76,7 @@
 	width: 20rem;
 	height: 8rem;
 	border-radius: 50%;
-	background: rgb(61 136 229 / 11%);
+	background: rgb(81 72 232 / 10%);
 	filter: blur(24px);
 	content: '';
 }
@@ -100,13 +100,13 @@
 	border-radius: 0.8rem;
 	background: rgb(255 255 255 / 95%);
 	padding: 0.62rem 0.7rem;
-	box-shadow: 0 12px 28px rgb(35 87 153 / 9%);
+	box-shadow: 0 12px 28px rgb(81 72 232 / 8%);
 	color: var(--color-text-primary);
 	transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .marketplace-unified-source:hover {
-	box-shadow: 0 16px 34px rgb(35 87 153 / 13%);
+	box-shadow: 0 16px 34px rgb(81 72 232 / 12%);
 	transform: translateX(2px);
 }
 
@@ -167,10 +167,10 @@
 	overflow: hidden;
 	width: min(88%, 35.5rem);
 	min-height: 27rem;
-	border: 1px solid #dce8f7;
+	border: 1px solid #e3e0f6;
 	border-radius: 1.05rem;
 	background: #fff;
-	box-shadow: 0 30px 74px rgb(31 82 150 / 15%);
+	box-shadow: 0 30px 74px rgb(81 72 232 / 13%);
 	transform: perspective(90rem) rotateY(-2.2deg) rotateZ(0.65deg);
 	transform-origin: right center;
 }
@@ -181,7 +181,7 @@
 	justify-content: space-between;
 	gap: 1rem;
 	min-height: 3.2rem;
-	border-bottom: 1px solid #e8eef7;
+	border-bottom: 1px solid #ebe8f8;
 	padding: 0.75rem 1rem;
 }
 
@@ -199,7 +199,7 @@
 	height: 1.65rem;
 	place-items: center;
 	border-radius: 0.48rem;
-	background: linear-gradient(135deg, #1d70f2, #4d8cff);
+	background: var(--gradient-mpreply-action);
 	color: #fff;
 	font-size: 0.58rem;
 	font-weight: 800;
@@ -207,8 +207,8 @@
 
 .marketplace-unified-window-topbar > span {
 	border-radius: 999px;
-	background: #eef6ff;
-	color: #276ad4;
+	background: var(--color-brand-soft);
+	color: var(--color-brand-text-on-soft);
 	padding: 0.3rem 0.55rem;
 	font-size: 0.49rem;
 	font-weight: 700;
@@ -224,8 +224,8 @@
 	display: grid;
 	align-content: start;
 	gap: 0.34rem;
-	border-right: 1px solid #e8eef7;
-	background: #fbfdff;
+	border-right: 1px solid #ebe8f8;
+	background: #fcfbff;
 	padding: 0.9rem 0.65rem;
 }
 
@@ -243,8 +243,8 @@
 }
 
 .marketplace-unified-nav > span:first-of-type {
-	background: #eaf3ff;
-	color: #1769df;
+	background: var(--color-brand-soft);
+	color: var(--color-brand-text-on-soft);
 	font-weight: 700;
 }
 
@@ -278,14 +278,14 @@
 	align-items: center;
 	gap: 0.55rem;
 	min-height: 4.55rem;
-	border-top: 1px solid #edf2f8;
+	border-top: 1px solid #f0eef9;
 	padding: 0.45rem 0.25rem;
 }
 
 .marketplace-unified-feed-head + .marketplace-unified-row {
 	border-top: 0;
 	border-radius: 0.6rem;
-	background: #fbfdff;
+	background: #fcfbff;
 }
 
 .marketplace-unified-row-mark {
@@ -294,8 +294,8 @@
 	height: 1.9rem;
 	place-items: center;
 	border-radius: 0.55rem;
-	background: #edf4ff;
-	color: #2169df;
+	background: var(--color-brand-soft);
+	color: var(--color-brand-text-on-soft);
 	font-size: 0.5rem;
 	font-weight: 800;
 }
@@ -334,11 +334,11 @@
 	bottom: 0.4rem;
 	z-index: 6;
 	width: min(66%, 24rem);
-	border: 1px solid #dce8f7;
+	border: 1px solid #e3e0f6;
 	border-radius: 0.9rem;
 	background: rgb(255 255 255 / 98%);
 	padding: 1rem;
-	box-shadow: 0 18px 42px rgb(35 87 153 / 15%);
+	box-shadow: 0 18px 42px rgb(81 72 232 / 13%);
 	transform: rotate(-1deg);
 }
 
@@ -356,8 +356,8 @@
 	height: 1.35rem;
 	place-items: center;
 	border-radius: 50%;
-	background: #eaf3ff;
-	color: #1769df;
+	background: var(--color-brand-soft);
+	color: var(--color-brand-text-on-soft);
 	font-size: 0.65rem;
 }
 
@@ -382,7 +382,7 @@
 
 .marketplace-unified-answer-actions strong {
 	border-radius: 0.46rem;
-	background: #1268f4;
+	background: var(--color-brand-primary);
 	color: #fff;
 	padding: 0.48rem 0.7rem;
 	font-size: 0.47rem;
@@ -393,7 +393,7 @@
 	right: 0.4rem;
 	bottom: -1.35rem;
 	z-index: 5;
-	color: #1b6ee8;
+	color: var(--color-brand-primary);
 	font-size: 0.72rem;
 	font-style: italic;
 	font-weight: 650;
