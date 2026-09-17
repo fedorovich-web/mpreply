@@ -11,17 +11,19 @@ const homepage = readFileSync(join(root, "styles/homepage-approved.css"), "utf8"
 const marketingPages = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
 
 describe("shared MPReply brand theme", () => {
-  it("loads one blue brand system for dashboard and public pages", () => {
+  it("loads one approved violet brand system for dashboard and public pages", () => {
     expect(layout).toContain('import "../styles/brand-theme.css"');
     expect(globals).toContain("@import './theme.css'");
     expect(brandTheme).toContain(":root");
-    expect(brandTheme).toContain("--color-brand-primary: #2563eb");
-    expect(brandTheme).toContain("--color-brand-primary-strong: #1d4ed8");
-    expect(brandTheme).toContain("--color-brand-deep: #1e40af");
-    expect(brandTheme).toContain("--color-brand-accent: #0ea5e9");
-    expect(brandTheme).toContain("--color-brand-accent-soft: #7dd3fc");
-    expect(brandTheme).toContain("--color-bg-brand-soft: #eff6ff");
-    expect(brandTheme).toContain("--app-nav-active-bg: #eff6ff");
+    expect(brandTheme).toContain("--color-brand-primary: #5148e8");
+    expect(brandTheme).toContain("--color-brand-primary-strong: #443bcf");
+    expect(brandTheme).toContain("--color-brand-deep: #3d35c0");
+    expect(brandTheme).toContain("--color-brand-accent: #5148e8");
+    expect(brandTheme).toContain("--color-brand-accent-soft: #c8c3ff");
+    expect(brandTheme).toContain("--color-bg-brand-soft: #f0efff");
+    expect(brandTheme).toContain("--app-nav-active-bg: #f0efff");
+    expect(brandTheme).not.toContain("--color-brand-primary: #2563eb");
+    expect(brandTheme).not.toContain("--color-brand-accent: #0ea5e9");
   });
 
   it("keeps theme.css limited to native color-scheme without a second palette", () => {
@@ -54,15 +56,17 @@ describe("shared MPReply brand theme", () => {
     expect(marketingPages).not.toContain("#1d4ed8");
   });
 
-  it("keeps dark mode in the same blue family with accessible semantic status surfaces", () => {
+  it("keeps dark mode in the same violet family with accessible semantic status surfaces", () => {
     expect(brandTheme).toContain("[data-theme='dark']");
-    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-brand-primary:\s*#60a5fa/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-brand-primary:\s*#8e80ff/);
+    expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-brand-accent:\s*#8e80ff/);
+    expect(brandTheme).not.toMatch(/\[data-theme='dark'\][\s\S]*--color-brand-primary:\s*#60a5fa/);
+    expect(brandTheme).not.toMatch(/\[data-theme='dark'\][\s\S]*--color-brand-accent:\s*#38bdf8/);
     expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-success-text:\s*#75e0a7/);
     expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-success-soft:\s*#053321/);
     expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-warning-text:\s*#fec84b/);
     expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-warning-soft:\s*#3f2a0a/);
     expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-danger-text:\s*#fda29b/);
     expect(brandTheme).toMatch(/\[data-theme='dark'\][\s\S]*--color-danger-soft:\s*#55160c/);
-    expect(brandTheme).not.toMatch(/#ad72dc|#7ad9b2|#6f33ab|#79d6b0/i);
   });
 });
