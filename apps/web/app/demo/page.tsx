@@ -9,7 +9,7 @@ import { createPageMetadata } from "../../lib/seo";
 export const metadata: Metadata = createPageMetadata({
   title: "Демо MPReply — как работает обработка обращений",
   description:
-    "Посмотрите, как MPReply получает обращения покупателей, анализирует контекст, готовит AI-черновик и передаёт ответ на проверку или отправку.",
+    "Посмотрите демонстрационный сценарий: MPReply получает обращение, использует доступный контекст, готовит ИИ-черновик и передаёт ответ на проверку или отправку.",
   path: "/demo",
 });
 
@@ -75,22 +75,22 @@ const journey: readonly [PublicIconName, string, string][] = [
   [
     "message",
     "Получение обращения",
-    "Сообщение, отзыв или вопрос поступает из маркетплейса в MPReply в реальном времени.",
+    "Отзыв, вопрос или поддерживаемое сообщение синхронизируется из подключённого маркетплейса в очередь MPReply.",
   ],
   [
     "document",
     "Анализ контекста",
-    "ИИ и система анализируют содержание обращения, историю клиента и товар, чтобы учесть все детали.",
+    "MPReply использует текст обращения, доступный контекст товара и настройки рабочего пространства.",
   ],
   [
     "sparkles",
-    "AI-черновик",
-    "MPReply предлагает готовый ответ с учётом правил бренда и специфики маркетплейса.",
+    "ИИ-черновик",
+    "ИИ готовит черновик ответа на основе доступного контекста и настроек рабочего пространства.",
   ],
   [
     "send",
     "Проверка и отправка",
-    "Вы проверяете, при необходимости редактируете и отправляете ответ в маркетплейс — прямо из MPReply.",
+    "Ответ можно проверить и отредактировать перед отправкой либо обработать автоматически, если это разрешают правила.",
   ],
 ];
 
@@ -99,28 +99,28 @@ const scenarios = [
     marketplace: "wb" as MarketplaceLogoKey,
     type: "Отзыв",
     popular: true,
-    text: "Покупатель оставил отзыв на товар. Посмотрите, как MPReply помогает корректно и вежливо ответить.",
+    text: "Покупатель оставил отзыв на товар. Посмотрите, как MPReply ведёт его через очередь, черновик и проверку.",
   },
   {
     marketplace: "oz" as MarketplaceLogoKey,
     type: "Вопрос",
     popular: false,
-    text: "Покупатель задаёт вопрос о товаре, доставке или наличии. Посмотрите, как MPReply формирует точный ответ.",
+    text: "Покупатель задаёт вопрос о товаре, доставке или наличии. MPReply готовит черновик только на основе доступного контекста.",
   },
   {
     marketplace: "ym" as MarketplaceLogoKey,
     type: "Сообщение",
     popular: false,
-    text: "Личное сообщение от покупателя. Посмотрите, как MPReply учитывает контекст и историю клиента.",
+    text: "Сообщение покупателя попадает в общую очередь, где видны его текст, статус и доступный контекст товара.",
   },
 ] as const;
 
 const processEvents: readonly [PublicIconName, "green" | "blue" | "purple", string, string, string][] = [
-  ["download", "green", "Получено", "12 мар, 14:32", "Сообщение успешно получено из Ozon"],
-  ["search", "blue", "Анализ", "12 мар, 14:32", "AI анализирует контекст, товар и историю клиента"],
-  ["sparkles", "purple", "AI-черновик", "12 мар, 14:33", "Ответ готов. Ожидает проверки"],
-  ["users", "purple", "Ожидает", "12 мар, 14:34", "Вы проверили ответ"],
-  ["check-circle", "green", "Отправлено", "12 мар, 14:35", "Ответ успешно отправлен в Ozon"],
+  ["download", "green", "Получено", "12 мар, 14:32", "Демо: обращение получено из Ozon"],
+  ["search", "blue", "Контекст", "12 мар, 14:32", "Демо: учтён доступный контекст обращения и товара"],
+  ["sparkles", "purple", "ИИ-черновик", "12 мар, 14:33", "Черновик подготовлен и передан на проверку"],
+  ["users", "purple", "Проверено", "12 мар, 14:34", "Ответ проверен сотрудником"],
+  ["check-circle", "green", "Отправлено", "12 мар, 14:35", "Демо: показан итоговый статус после отправки"],
 ];
 
 const teamTools: readonly [PublicIconName, "blue" | "purple" | "orange", string, string][] = [
@@ -128,25 +128,25 @@ const teamTools: readonly [PublicIconName, "blue" | "purple" | "orange", string,
     "users",
     "purple",
     "Единая очередь обращений",
-    "Все отзывы, вопросы и сообщения из подключённых маркетплейсов в одном окне.",
+    "Отзывы, вопросы и поддерживаемые сообщения из подключённых маркетплейсов собраны в одном рабочем пространстве.",
   ],
   [
-    "document",
+    "users",
     "blue",
-    "Шаблоны ответов",
-    "Создавайте готовые формулировки для типовых ситуаций и используйте их всей командой.",
+    "Назначение обращений",
+    "Берите обращения в работу и отделяйте назначенные вам обращения от общей очереди.",
   ],
   [
     "lightning",
     "orange",
-    "Автоответы и сценарии",
-    "Автоматизируйте повторяющиеся обращения и оставляйте сложные случаи на проверку.",
+    "Автоматизация по правилам",
+    "Настраивайте условия автоматической обработки и оставляйте неоднозначные случаи на проверку.",
   ],
   [
     "chart",
     "blue",
     "Аналитика",
-    "Следите за скоростью ответов, объёмом обращений и результатами работы команды.",
+    "Смотрите объём обращений, отправленные ответы, время реакции и данные по подключённым площадкам.",
   ],
 ];
 
@@ -160,8 +160,8 @@ export default function DemoPage() {
               <p className="mockup-eyebrow">Демо MPReply</p>
               <h1>Посмотрите, как MPReply ведёт обращение от получения до ответа</h1>
               <p>
-                Реальный пример, как покупатель пишет в маркетплейсе, ИИ помогает подготовить ответ,
-                а вы проверяете и отправляете его — быстро и удобно.
+                Демонстрационный сценарий: покупатель пишет в маркетплейсе, MPReply собирает доступный
+                контекст, ИИ готовит черновик, а дальше ответ проходит проверку или правила автоматизации.
               </p>
               <div className="mockup-actions">
                 <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
@@ -181,7 +181,7 @@ export default function DemoPage() {
             <div
               className="demo-hero-story"
               role="img"
-              aria-label="Путь обращения от покупателя до готового ответа"
+              aria-label="Демонстрационный путь обращения от покупателя до черновика и проверки"
             >
               <article className="demo-story-card incoming">
                 <div className="demo-story-meta">
@@ -200,13 +200,13 @@ export default function DemoPage() {
                     <PublicIcon name="sparkles" />
                   </span>
                   <div>
-                    <strong>AI MPReply</strong>
-                    <small>Предлагает ответ</small>
+                    <strong>ИИ MPReply</strong>
+                    <small>Предлагает черновик</small>
                   </div>
                 </div>
                 <p>
-                  Здравствуйте! Ожидаем поставку на следующей неделе. Мы сообщим, как только товар снова
-                  будет в наличии! Спасибо за ваш интерес! 💙
+                  Здравствуйте! Точная дата следующей поставки в доступном контексте не указана. Когда
+                  товар снова появится, актуальный статус будет виден в карточке товара. Спасибо за интерес!
                 </p>
               </article>
               <span className="demo-story-arrow a2" aria-hidden="true">→</span>
@@ -217,20 +217,20 @@ export default function DemoPage() {
                   </span>
                   <div>
                     <strong>Вы</strong>
-                    <small>Проверяете и отправляете</small>
+                    <small>Проверяете перед отправкой</small>
                   </div>
                 </div>
                 <div className="demo-story-review-bubble">
-                  <strong>Отличный ответ!</strong>
-                  <span>Отправляем ✅</span>
+                  <strong>Черновик проверен</strong>
+                  <span>Можно отправить →</span>
                 </div>
               </article>
               <div className="demo-hero-note" aria-hidden="true">
-                Быстрее и проще
+                Контекст
                 <br />
-                с заботой
+                черновик
                 <br />
-                о каждом клиенте
+                проверка
                 <span>↙</span>
               </div>
               <div className="mockup-mascot demo-hero-mascot" aria-hidden="true" />
@@ -243,7 +243,7 @@ export default function DemoPage() {
             <div className="render-section-head">
               <p className="mockup-eyebrow">Как это работает</p>
               <h2>Путь обращения</h2>
-              <p>От сообщения покупателя до отправленного ответа — всего 4 шага.</p>
+              <p>От сообщения покупателя до отправки или ручной проверки — четыре понятных этапа.</p>
             </div>
 
             <div className="demo-journey">
@@ -257,7 +257,7 @@ export default function DemoPage() {
                   <p>{text}</p>
 
                   {index === 0 ? (
-                    <div className="demo-journey-marketplaces" aria-label="Готовые интеграции маркетплейсов">
+                    <div className="demo-journey-marketplaces" aria-label="Поддерживаемые интеграции маркетплейсов">
                       {(Object.keys(logos) as MarketplaceLogoKey[]).map((marketplace) => (
                         <span className="demo-journey-marketplace-chip" key={marketplace}>
                           <CompactMarketplaceLogo marketplace={marketplace} size={30} decorative />
@@ -274,9 +274,9 @@ export default function DemoPage() {
         <section className="public-section mockup-section-soft">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Примеры из реальной практики</p>
-              <h2>Попробуйте разные сценарии</h2>
-              <p>Выберите тип обращения, чтобы увидеть, как MPReply помогает на каждом этапе.</p>
+              <p className="mockup-eyebrow">Пример сценария</p>
+              <h2>Посмотрите разные типы обращений</h2>
+              <p>Это демонстрационные примеры интерфейса, а не статистика или клиентские кейсы.</p>
             </div>
 
             <div className="demo-scenarios">
@@ -288,7 +288,7 @@ export default function DemoPage() {
                   <div className="demo-scenario-head">
                     <CompactMarketplaceLogo marketplace={scenario.marketplace} size={42} />
                     <strong>{scenario.type}</strong>
-                    {scenario.popular ? <span className="demo-scenario-popular">Популярный</span> : null}
+                    {scenario.popular ? <span className="demo-scenario-popular">Пример</span> : null}
                   </div>
                   <p>{scenario.text}</p>
                   <a href="#demo-process">Посмотреть пример →</a>
@@ -301,9 +301,9 @@ export default function DemoPage() {
         <section className="public-section" id="demo-process">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Пример работы в MPReply</p>
+              <p className="mockup-eyebrow">Демонстрационный сценарий</p>
               <h2>Одно обращение — весь процесс наглядно</h2>
-              <p>Посмотрите, как меняется статус обращения на каждом этапе.</p>
+              <p>Статический пример показывает, как могут меняться состояния обращения в MPReply.</p>
             </div>
 
             <div className="demo-process">
@@ -311,15 +311,15 @@ export default function DemoPage() {
                 <div className="demo-scenario-head">
                   <CompactMarketplaceLogo marketplace="oz" size={38} />
                   <div>
-                    <strong>Обращение #45821</strong>
-                    <small>12 мар 2024, 14:32</small>
+                    <strong>Демо-обращение #45821</strong>
+                    <small>12 мар, 14:32</small>
                   </div>
                 </div>
                 <div className="demo-process-buyer-message">
                   <span className="demo-process-avatar" aria-hidden="true" />
                   <p>Добрый день! А этот товар будет в наличии на следующей неделе?</p>
                 </div>
-                <span className="demo-process-market-link">Открыть в маркетплейсе ↗</span>
+                <span className="demo-process-market-link">Контекст маркетплейса ↗</span>
               </div>
 
               <div className="demo-process-timeline">
@@ -339,13 +339,13 @@ export default function DemoPage() {
 
               <div className="demo-process-answer">
                 <strong>
-                  <PublicIcon name="message" className="public-inline-icon" /> Готовый ответ
+                  <PublicIcon name="message" className="public-inline-icon" /> Черновик ответа
                 </strong>
                 <p>
-                  Добрый день! Ожидаем поставку на следующей неделе. Мы сообщим, как только товар снова
-                  будет в наличии. Спасибо за ваш интерес! 💙
+                  Добрый день! Точная дата следующей поставки в доступном контексте не указана. Когда
+                  товар снова появится, актуальный статус будет виден в карточке товара. Спасибо за интерес!
                 </p>
-                <span className="button button-secondary">Посмотреть полностью</span>
+                <span className="button button-secondary">Показан полностью</span>
               </div>
             </div>
           </div>
@@ -354,9 +354,9 @@ export default function DemoPage() {
         <section className="public-section mockup-section-soft">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Больше, чем просто ответы</p>
-              <h2>Что увидит ваша команда</h2>
-              <p>Удобные инструменты для совместной работы и полного контроля.</p>
+              <p className="mockup-eyebrow">Рабочие инструменты</p>
+              <h2>Что доступно команде</h2>
+              <p>Очередь, назначения, правила автоматизации и аналитика собраны вокруг обработки обращений.</p>
             </div>
 
             <div className="demo-team-tools">
@@ -394,9 +394,9 @@ export default function DemoPage() {
                 </Link>
               </div>
               <span className="demo-cta-note" aria-hidden="true">
-                Убедитесь в эффективности
+                Посмотрите процесс
                 <br />
-                уже сегодня!
+                на своих обращениях
               </span>
             </div>
           </div>
