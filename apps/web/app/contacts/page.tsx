@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { ContactMailForm } from "../../components/public-site/ContactMailForm";
 import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
@@ -15,10 +14,10 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 const contactCards: readonly [PublicIconName, string, string][] = [
-  ["gear", "Техническая поддержка", "Поможем с подключением, настройкой и вопросами по работе MPReply."],
-  ["chart", "Запросить демо", "Покажем рабочий процесс MPReply на понятном сценарии обращения."],
-  ["link", "Партнёрство", "Обсудим интеграции, совместные проекты и рабочие сценарии для команд."],
-  ["message", "Общие вопросы", "Ответим на вопросы о возможностях, тарифах и использовании сервиса."],
+  ["gear", "Техническая поддержка", "Опишите проблему с подключением, настройкой или рабочим процессом MPReply."],
+  ["chart", "Запросить демо", "Напишите, какой сценарий хотите посмотреть, чтобы обсудить работу MPReply."],
+  ["link", "Подключение", "Укажите площадки, количество кабинетов и особенности вашего рабочего процесса."],
+  ["message", "Общие вопросы", "Задайте вопрос о возможностях, тарифах или использовании сервиса."],
 ];
 
 export default function ContactsPage() {
@@ -31,13 +30,13 @@ export default function ContactsPage() {
               <p className="contacts-render-eyebrow">КОНТАКТЫ</p>
               <h1>Свяжитесь с нами</h1>
               <p>
-                Задайте вопрос, запросите демо или обсудите подключение MPReply. Для всех публичных обращений
-                используем один адрес поддержки — <strong>support@mpreply.ru</strong>.
+                Задайте вопрос, запросите демо или обсудите подключение MPReply. Единственный публичный адрес
+                поддержки — <strong>{siteConfig.contactEmail}</strong>.
               </p>
-              <div className="contacts-render-trust" aria-label="Как мы работаем с обращениями">
+              <div className="contacts-render-trust" aria-label="Контакт MPReply">
                 <span><PublicIcon name="users" />Один канал поддержки</span>
-                <span><PublicIcon name="clock" />Ответ в рабочее время</span>
-                <span><PublicIcon name="shield-check" />По делу и с контекстом</span>
+                <span><PublicIcon name="inbox" />Единый адрес поддержки</span>
+                <span><PublicIcon name="shield-check" />Не передавайте секретные ключи</span>
               </div>
             </div>
 
@@ -48,8 +47,8 @@ export default function ContactsPage() {
                 <PublicIcon name="message" />
                 <span><i /> <i /> <i /></span>
               </div>
-              <div className="contacts-render-scene-status"><i />На связи по вопросам MPReply</div>
-              <div className="contacts-render-scene-note">support@mpreply.ru</div>
+              <div className="contacts-render-scene-status"><i />Единый адрес поддержки</div>
+              <div className="contacts-render-scene-note">{siteConfig.contactEmail}</div>
             </div>
           </div>
         </section>
@@ -79,11 +78,11 @@ export default function ContactsPage() {
 
             <aside className="contacts-render-info-column" aria-label="Контактная информация MPReply">
               <article className="contacts-render-office-card">
-                <div className="contacts-render-info-icon"><PublicIcon name="link" /></div>
+                <div className="contacts-render-info-icon"><PublicIcon name="inbox" /></div>
                 <div>
-                  <h2>Наш офис</h2>
-                  <p>г. Майкоп, ул. Чкалова, 65,<br />помещение 17А</p>
-                  <span className="contacts-render-office-label">г. Майкоп</span>
+                  <h2>Единый адрес поддержки</h2>
+                  <p>{siteConfig.contactEmail}</p>
+                  <span className="contacts-render-office-label">Все публичные обращения</span>
                 </div>
                 <div className="contacts-render-office-visual" aria-hidden="true">
                   <span />
@@ -94,13 +93,13 @@ export default function ContactsPage() {
               </article>
 
               <article className="contacts-render-info-card">
-                <span className="contacts-render-info-icon"><PublicIcon name="lightning" /></span>
-                <div><h2>Поддержка</h2><p>Пишете на <strong>support@mpreply.ru</strong> — другого публичного канала поддержки нет.</p></div>
+                <span className="contacts-render-info-icon"><PublicIcon name="message" /></span>
+                <div><h2>Что указать в письме</h2><p>Площадку, кабинет, задачу и состояние обращения — без секретных ключей доступа.</p></div>
               </article>
 
               <article className="contacts-render-info-card">
-                <span className="contacts-render-info-icon"><PublicIcon name="clock" /></span>
-                <div><h2>Режим работы</h2><p>Ежедневно: 09:00–18:00 (МСК)</p></div>
+                <span className="contacts-render-info-icon"><PublicIcon name="shield-check" /></span>
+                <div><h2>Безопасность</h2><p>Не отправляйте API-ключи, пароли и другие секретные данные по электронной почте.</p></div>
               </article>
             </aside>
           </div>
@@ -111,7 +110,7 @@ export default function ContactsPage() {
             <div>
               <p className="contacts-render-eyebrow">ОСТАЛИСЬ ВОПРОСЫ?</p>
               <h2>Готовы обсудить подключение?</h2>
-              <p>Опишите задачу, маркетплейсы и рабочий сценарий — ответим по существу.</p>
+              <p>Опишите задачу, площадки и рабочий сценарий — этого достаточно для начала разговора.</p>
             </div>
             <a className="button button-primary" href={`mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("MPReply: обсуждение подключения")}`}>
               Написать в поддержку <span aria-hidden="true">→</span>
