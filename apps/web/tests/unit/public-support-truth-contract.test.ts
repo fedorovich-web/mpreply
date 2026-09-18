@@ -6,12 +6,17 @@ const root = process.cwd();
 const help = readFileSync(join(root, "app/help/page.tsx"), "utf8");
 const contacts = readFileSync(join(root, "app/contacts/page.tsx"), "utf8");
 const shell = readFileSync(join(root, "components/public-site/PublicShell.tsx"), "utf8");
+const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 const product = readFileSync(join(root, "../../PRODUCT.md"), "utf8");
 
 describe("public support truth contract", () => {
-  it("uses the single verified support email", () => {
-    for (const source of [help, contacts, shell, product]) {
-      expect(source).toContain("support@mpreply.ru");
+  it("uses the single verified support email through siteConfig", () => {
+    expect(siteConfig).toContain('contactEmail: configuredContactEmail || "support@mpreply.ru"');
+    expect(product).toContain("support@mpreply.ru");
+
+    for (const source of [help, contacts, shell]) {
+      expect(source).toContain("siteConfig.contactEmail");
+      expect(source).not.toContain("help@mpreply.ru");
     }
   });
 
