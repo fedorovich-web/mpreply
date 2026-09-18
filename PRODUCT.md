@@ -56,9 +56,11 @@ Production payment-provider wiring is deferred until the site is running on its 
 
 ### Public contact truth
 
-The only public contact email is `support@mpreply.ru`.
+The only verified public contact channel is the email `support@mpreply.ru`.
 
 MPReply currently has no public Telegram contact and no public social-network accounts. Do not render Telegram, VK, YouTube or other social links/icons in the public site unless the user explicitly adds and verifies those channels later.
+
+No public office address or support schedule is currently verified. Do not publish a physical office/address, office card, opening hours, response-hours badge or support SLA unless the user explicitly supplies and verifies those details later.
 
 ### Public content architecture
 
