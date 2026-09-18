@@ -206,7 +206,9 @@ MPReply has no public blog. Keep `/help` strictly task-oriented; do not create `
 
 ## `/contacts`
 
-Ask only for information useful to a real onboarding/sales conversation, such as marketplace set, approximate workflow/volume, team context and automation needs. Do not create a long lead form for data we do not need.
+Ask only for information useful to a real onboarding/support conversation, such as marketplace set, approximate workflow/volume, team context and automation needs. Do not create a long lead form for data we do not need.
+
+The only verified public contact channel is `support@mpreply.ru`. Do not publish Telegram/social links, a physical office/address, opening hours, response-time promises or a support SLA unless the user explicitly supplies and verifies them later.
 
 ## Legal pages
 
