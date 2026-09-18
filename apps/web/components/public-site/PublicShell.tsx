@@ -112,9 +112,9 @@ export function PublicShell({ children }: PublicShellProps) {
 
           <div className="public-footer-pricing-column public-footer-pricing-contacts">
             <strong>Контакты</strong>
-            <span>г. Майкоп, ул. Чкалова, 65,<br />помещение 17А</span>
             <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-            <span>Ежедневно 09:00–18:00 МСК</span>
+            <span>Единственный публичный адрес поддержки</span>
+            <Link href="/contacts">Написать в поддержку</Link>
           </div>
         </div>
 
