@@ -302,3 +302,28 @@
 .public-root:not(.homepage-reference-root) .mockup-page [class*="marketplace-logo-"] {
   --marketplace-brand-override: initial;
 }
+
+
+/* Final completeness pass: late fidelity surfaces that still carried lavender/indigo chrome.
+   Geometry remains owned by the render-fidelity files; only brand color is normalized here. */
+.public-root:not(.homepage-reference-root) .mockup-page .public-section:has(.features-benefit-grid) {
+  border-color: #dceafa;
+  background:
+    radial-gradient(circle at 92% 18%, rgb(11 104 246 / 8%), transparent 30%),
+    linear-gradient(135deg, #f7fbff 0%, #eef6ff 100%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .demo-story-review-bubble,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-process-buyer-message p {
+  background: #eef6ff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .demo-process-avatar {
+  border-color: #dceafa;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-final-review,
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-final-answer {
+  border-color: #dceafa;
+  box-shadow: 0 14px 34px rgb(11 104 246 / 10%);
+}
