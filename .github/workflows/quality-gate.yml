@@ -10,12 +10,6 @@ permissions:
     contents: read
 
 jobs:
-    runner-probe:
-        runs-on: ubuntu-slim
-        steps:
-            - name: Runner allocation probe
-              run: echo "runner-ok"
-
     backend:
         runs-on: ubuntu-latest
         steps:
