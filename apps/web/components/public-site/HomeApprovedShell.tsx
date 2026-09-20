@@ -60,33 +60,33 @@ export function HomeApprovedShell({ children }: HomeApprovedShellProps) {
             <Link href="/features">Возможности</Link>
             <Link href="/marketplaces">Интеграции</Link>
             <Link href="/pricing">Тарифы</Link>
-            <Link href="/demo">Кейсы</Link>
+            <Link href="/demo">Демо</Link>
           </div>
 
           <div className="home-reference-footer-column">
             <strong>Ресурсы</strong>
             <Link href="/help#start">База знаний</Link>
             <Link href="/help#faq">FAQ</Link>
-            <Link href="/help">Статус сервисов</Link>
+            <Link href="/help">Помощь</Link>
           </div>
 
           <div className="home-reference-footer-column">
-            <strong>Компания</strong>
-            <Link href="/contacts">О нас</Link>
-            <Link href="/contacts">Партнёрам</Link>
+            <strong>Документы</strong>
+            <Link href="/privacy">Политика конфиденциальности</Link>
+            <Link href="/terms">Условия использования</Link>
+            <Link href="/privacy">Обработка данных</Link>
             <Link href="/contacts">Контакты</Link>
-            <Link href="/contacts">Вакансии</Link>
           </div>
 
           <div className="home-reference-footer-column home-reference-footer-support">
             <strong>Поддержка</strong>
             <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-            <span>Пн — Пт, 9:00 — 18:00 (МСК)</span>
+            <span>Единственный публичный адрес поддержки</span>
           </div>
         </div>
 
         <div className="public-container home-reference-footer-bottom">
-          <span>© 2024 MPReply. Все права защищены.</span>
+          <span>© {new Date().getFullYear()} MPReply. Все права защищены.</span>
           <nav aria-label="Документы">
             <Link href="/privacy">Политика конфиденциальности</Link>
             <Link href="/terms">Условия использования</Link>
