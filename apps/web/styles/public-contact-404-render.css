@@ -598,14 +598,6 @@
   gap: 9px;
 }
 
-.not-found-render-code {
-  color: #0b68f6;
-  font-size: clamp(6.8rem, 12vw, 10rem);
-  font-weight: 900;
-  line-height: .78;
-  letter-spacing: -.04em;
-}
-
 .not-found-render-copy h1 {
   margin: 12px 0 0;
   color: #071846;
@@ -842,10 +834,6 @@
 
   .contacts-render-office-card {
     grid-template-columns: 40px minmax(0, 1fr);
-  }
-
-  .not-found-render-code {
-    font-size: 6.2rem;
   }
 
   .not-found-render-copy h1 {
