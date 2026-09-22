@@ -29,7 +29,6 @@ export default function NotFound() {
             </div>
 
             <div className="not-found-render-copy">
-              <strong className="not-found-render-code">404</strong>
               <h1>Страница не найдена</h1>
               <p>Возможно, она была перемещена, удалена или адрес введён неверно.</p>
               <p className="not-found-render-muted">Выберите нужный раздел или вернитесь на главную.</p>
