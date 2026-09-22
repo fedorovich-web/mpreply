@@ -18,14 +18,14 @@ export default function NotFound() {
         <section className="not-found-render-hero">
           <div className="public-container not-found-render-hero-grid">
             <div className="not-found-render-scene" aria-hidden="true">
-              <div className="not-found-render-signs">
-                <span>Главная?</span>
-                <span>Возможности?</span>
-                <span>Тарифы?</span>
-              </div>
-              <Image className="not-found-render-mascot" src="/images/mpreply-mascot.webp" width={320} height={320} alt="" priority />
-              <span className="not-found-render-cloud cloud-a" />
-              <span className="not-found-render-cloud cloud-b" />
+              <Image
+                className="not-found-render-asset"
+                src="/images/mpreply-404-illustration.webp"
+                width={960}
+                height={640}
+                alt=""
+                priority
+              />
             </div>
 
             <div className="not-found-render-copy">
