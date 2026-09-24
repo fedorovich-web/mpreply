@@ -50,6 +50,35 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain('href="/app/review-queue"');
   });
 
+  it("maps workflow states to truthful next steps and review handoffs", () => {
+    expect(inbox).toContain('status === "approved"');
+    expect(inbox).toContain('status === "auto_reply_pending"');
+    expect(inbox).toContain('status === "sending"');
+    expect(inbox).toContain('status === "duplicate"');
+    expect(inbox).toContain('status === "skipped"');
+    expect(inbox).toContain("Ответ одобрен и ожидает отправки");
+    expect(inbox).toContain("Автоответ поставлен в очередь");
+    expect(inbox).toContain("Ответ отправляется на маркетплейс");
+    expect(inbox).toContain("Повторное обращение уже обработано");
+    expect(inbox).toContain("Обращение пропущено автоматизацией");
+    expect(inbox).toContain("function isReviewWorkflowStatus");
+    expect(inbox).toContain('["waiting_review", "needs_manual_check", "safety_blocked", "approved"]');
+    expect(inbox).toContain("inbox-review-handoff");
+    expect(styles).toContain(".inbox-next-step-danger");
+    expect(styles).toContain(".inbox-next-step-warning");
+    expect(styles).toContain(".inbox-next-step-success");
+  });
+
+  it("moves mobile triage from the selected row to its detail without changing desktop behavior", () => {
+    expect(inbox).toContain("const detailPanelRef = useRef");
+    expect(inbox).toContain("function selectMessage");
+    expect(inbox).toContain('window.matchMedia("(max-width: 820px)")');
+    expect(inbox).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+    expect(inbox).toContain("detailPanelRef.current?.scrollIntoView");
+    expect(inbox).toContain("ref={detailPanelRef}");
+    expect(styles).toContain("scroll-margin-top:");
+  });
+
   it("uses the approved Обращения / На проверке vocabulary throughout the workflow", () => {
     expect(inbox).toContain("Все обращения");
     expect(inbox).toContain("Продолжите работу в разделе «На проверке»");
