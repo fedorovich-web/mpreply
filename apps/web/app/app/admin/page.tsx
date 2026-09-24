@@ -18,11 +18,27 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="admin-page-hero-mark" aria-hidden="true">
-          <span className="admin-page-hero-mark-ring" />
-          <span className="admin-page-hero-mark-core">M</span>
-          <span className="admin-page-hero-mark-dot admin-page-hero-mark-dot-a" />
-          <span className="admin-page-hero-mark-dot admin-page-hero-mark-dot-b" />
+        <div className="admin-page-hero-preview" aria-hidden="true">
+          <div className="admin-page-preview-window">
+            <div className="admin-page-preview-topbar">
+              <span className="admin-page-preview-logo" />
+              <span className="admin-page-preview-title" />
+              <span className="admin-page-preview-status" />
+            </div>
+            <div className="admin-page-preview-body">
+              <span className="admin-page-preview-rail" />
+              <div className="admin-page-preview-content">
+                <span className="admin-page-preview-line admin-page-preview-line-wide" />
+                <div className="admin-page-preview-cards">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="admin-page-preview-chart" />
+                <span className="admin-page-preview-line admin-page-preview-line-short" />
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
