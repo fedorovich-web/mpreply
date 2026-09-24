@@ -64,6 +64,30 @@ describe("integrations dashboard", () => {
     expect(page).not.toContain("находятся в плане интеграций");
   });
 
+  it("uses seller-facing connection language instead of implementation terms", () => {
+    expect(detailWorkspace).toContain("Ключ доступа Wildberries");
+    expect(detailWorkspace).toContain("Идентификатор продавца");
+    expect(detailWorkspace).toContain("Обновить данные");
+    expect(detailWorkspace).toContain("Последнее успешное обновление");
+    expect(detailWorkspace).toContain("Последняя ошибка");
+    expect(detailWorkspace).not.toContain(">Seller ID <");
+    expect(detailWorkspace).not.toContain("Синхронизировать сейчас");
+    expect(detailWorkspace).not.toContain("Ошибки синхронизации");
+    expect(detailWorkspace).not.toContain("текущего рабочего пространства");
+    expect(detailWorkspace).toContain("function userErrorMessage");
+  });
+
+  it("keeps loaded connections visible through refresh failures and supports compact selection", () => {
+    expect(workspace).toContain("accountsQuery.error && accountsQuery.data");
+    expect(detailWorkspace).toContain("accountsQuery.error && accountsQuery.data");
+    expect(detailWorkspace).toContain("integration-refresh-error");
+    expect(detailWorkspace).toContain("const detailPanelRef = useRef");
+    expect(detailWorkspace).toContain("function selectAccount");
+    expect(detailWorkspace).toContain('window.matchMedia("(max-width: 1000px)")');
+    expect(detailWorkspace).toContain("detailPanelRef.current?.scrollIntoView");
+    expect(styles).toContain("scroll-margin-top:");
+  });
+
   it("uses the scoped responsive integrations layer without a second palette", () => {
     expect(layout).toContain('import "../styles/dashboard-integrations-approved.css"');
     expect(styles).toContain(".integrations-page");
