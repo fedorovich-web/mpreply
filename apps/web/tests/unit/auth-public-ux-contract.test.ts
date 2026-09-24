@@ -24,6 +24,7 @@ describe("auth public UX", () => {
     expect(form).toContain("function authErrorMessage");
     expect(form).toContain("Неверный email или пароль");
     expect(form).toContain("Аккаунт с таким email уже существует");
+    expect(form).toContain("error.status === 400 || error.status === 409");
     expect(form).not.toContain("mutation.error instanceof ApiError ? mutation.error.message");
   });
 

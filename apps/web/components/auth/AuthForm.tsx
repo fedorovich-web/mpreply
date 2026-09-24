@@ -283,7 +283,7 @@ function authErrorMessage(error: unknown, isLogin: boolean, locale: Locale): str
   if (locale === "en") {
     if (error instanceof ApiError) {
       if (error.status === 401) return isLogin ? "Incorrect email or password." : "We could not create an account with these details.";
-      if (error.status === 409) return "An account with this email already exists. Log in or use another address.";
+      if (!isLogin && (error.status === 400 || error.status === 409)) return "An account with this email already exists. Log in or use another address.";
       if (error.status === 422) return "Check the email, password, and other form fields.";
       if (error.status === 429) return "Too many attempts. Wait a moment and try again.";
       if (error.status >= 500) return "The service is temporarily unavailable. Try again later.";
@@ -295,7 +295,7 @@ function authErrorMessage(error: unknown, isLogin: boolean, locale: Locale): str
 
   if (error instanceof ApiError) {
     if (error.status === 401) return isLogin ? "Неверный email или пароль." : "Не удалось создать аккаунт с этими данными.";
-    if (error.status === 409) return "Аккаунт с таким email уже существует. Войдите или используйте другой адрес.";
+    if (!isLogin && (error.status === 400 || error.status === 409)) return "Аккаунт с таким email уже существует. Войдите или используйте другой адрес.";
     if (error.status === 422) return "Проверьте email, пароль и остальные поля формы.";
     if (error.status === 429) return "Слишком много попыток подряд. Подождите немного и попробуйте снова.";
     if (error.status >= 500) return "Сервис временно недоступен. Попробуйте ещё раз позже.";
