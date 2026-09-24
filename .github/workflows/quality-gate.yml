@@ -110,16 +110,16 @@ jobs:
               run: docker compose --env-file infra/docker/.env.ci -f infra/docker/docker-compose.production.yml config --quiet
             - name: Validate production Compose with explicit env
               env:
-                  API_BASE_URL: https://api.respio.example
-                  WEB_APP_URL: https://app.respio.example
-                  PUBLIC_SITE_URL: https://respio.example
-                  DATABASE_URL: postgresql+asyncpg://respio:secret@database:5432/respio
+                  API_BASE_URL: https://api.mpreply.example
+                  WEB_APP_URL: https://app.mpreply.example
+                  PUBLIC_SITE_URL: https://mpreply.example
+                  DATABASE_URL: postgresql+asyncpg://mpreply:secret@database:5432/mpreply
                   REDIS_URL: redis://redis:6379/0
                   AUTH_SECRET_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
                   CREDENTIALS_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
                   GROQ_API_KEY: gsk_ci_placeholder_not_used_123456789
-                  CORS_ALLOWED_ORIGINS: '["https://app.respio.example","https://respio.example"]'
-                  ALLOWED_HOSTS: '["api.respio.example"]'
+                  CORS_ALLOWED_ORIGINS: '["https://app.mpreply.example","https://mpreply.example"]'
+                  ALLOWED_HOSTS: '["api.mpreply.example"]'
                   FORWARDED_ALLOW_IPS: '127.0.0.1'
                   DEPLOYMENT_VERSION: ci
               run: docker compose -f infra/docker/docker-compose.production.yml config --quiet

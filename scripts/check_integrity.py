@@ -388,6 +388,43 @@ def check_deployment_contract() -> None:
             fail(f"Production Compose contains forbidden hardcoded placeholder/secret: {token}")
 
 
+def check_production_raster_assets() -> None:
+    """Production raster assets must ship as WebP.
+
+    Playwright visual-regression baselines intentionally remain PNG under e2e/
+    and are not served by the application.
+    """
+    public_dir = WEB / "public"
+    forbidden_suffixes = {".png", ".jpg", ".jpeg"}
+
+    for path in public_dir.rglob("*"):
+        if path.is_file() and path.suffix.lower() in forbidden_suffixes:
+            fail(
+                "Production raster asset must be WebP: "
+                f"{path.relative_to(ROOT)}"
+            )
+
+    source_roots = [
+        WEB / "app",
+        WEB / "components",
+        WEB / "lib",
+        WEB / "styles",
+    ]
+    source_suffixes = {".ts", ".tsx", ".js", ".mjs", ".css"}
+    raster_reference = re.compile(r"\.(?:png|jpe?g)(?:[\"')?#]|$)", flags=re.I)
+
+    for source_root in source_roots:
+        for path in source_root.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in source_suffixes:
+                continue
+            text = path.read_text(encoding="utf-8")
+            if raster_reference.search(text):
+                fail(
+                    "Production source references PNG/JPEG instead of WebP: "
+                    f"{path.relative_to(ROOT)}"
+                )
+
+
 def _git_tracked_paths() -> list[Path] | None:
     """Return tracked repository paths when Git metadata is available.
 
@@ -452,6 +489,7 @@ def main() -> int:
     check_versions_and_frontend_security_baseline()
     check_release_gate_contract()
     check_deployment_contract()
+    check_production_raster_assets()
     check_generated_artifacts_absent()
 
     if ERRORS:
@@ -460,7 +498,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    print("Integrity gate passed: routes, Python/TypeScript imports, migrations, versions, dependency baseline, release gates and deployment contracts are consistent.")
+    print("Integrity gate passed: routes, Python/TypeScript imports, migrations, versions, dependency baseline, release gates, deployment contracts and production raster assets are consistent.")
     return 0
 
 
