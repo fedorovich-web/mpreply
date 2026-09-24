@@ -47,10 +47,8 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const activeCount = accounts.filter(
-    (account) => account.status === "active" && !hasCurrentIntegrationProblem(account),
-  ).length;
-  const problemCount = accounts.filter(hasCurrentIntegrationProblem).length;
+  const activeCount = accounts.filter(isHealthyConnection).length;
+  const problemCount = accounts.filter(needsConnectionAttention).length;
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
 
   return (
@@ -115,8 +113,8 @@ export function IntegrationsWorkspace() {
         {marketplaceCatalog.map((marketplace) => {
           const marketplaceAccounts = accounts.filter((account) => account.marketplace === marketplace.key);
           const connectedCount = marketplaceAccounts.length;
-          const hasProblem = marketplaceAccounts.some(hasCurrentIntegrationProblem);
-          const hasActive = marketplaceAccounts.some((account) => account.status === "active");
+          const hasProblem = marketplaceAccounts.some(needsConnectionAttention);
+          const hasActive = marketplaceAccounts.some(isHealthyConnection);
           const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem });
           const actionLabel = canManage
             ? connectedCount > 0
@@ -175,6 +173,29 @@ function getConnectionState({
     return { label: "Настройка не завершена", tone: "warning" };
   }
   return { label: "Не подключено", tone: "neutral" };
+}
+
+function isHealthyConnection(account: {
+  status: string;
+  credentials_status: string;
+  last_success_sync_at: string | null;
+  last_error_sync_at: string | null;
+}): boolean {
+  return account.status === "active"
+    && account.credentials_status === "valid"
+    && !hasCurrentIntegrationProblem(account);
+}
+
+function needsConnectionAttention(account: {
+  status: string;
+  credentials_status: string;
+  last_success_sync_at: string | null;
+  last_error_sync_at: string | null;
+}): boolean {
+  return account.status === "error"
+    || account.credentials_status === "invalid"
+    || account.credentials_status === "revoked"
+    || hasCurrentIntegrationProblem(account);
 }
 
 function accountWord(value: number): string {

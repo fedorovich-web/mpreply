@@ -622,6 +622,6 @@ function credentialsStatusLabel(value: string): string {
 function formatDateTime(value: string | null): string {
   if (!value) return "Ещё не было";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  if (Number.isNaN(date.getTime())) return "Дата недоступна";
   return new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
