@@ -99,7 +99,7 @@ export default function ContactsPage() {
 
               <article className="contacts-render-info-card">
                 <span className="contacts-render-info-icon"><PublicIcon name="shield-check" /></span>
-                <div><h2>Безопасность</h2><p>Не отправляйте API-ключи, пароли и другие секретные данные по электронной почте.</p></div>
+                <div><h2>Безопасность</h2><p>Не отправляйте ключи доступа, пароли и другие секретные данные по электронной почте.</p></div>
               </article>
             </aside>
           </div>
