@@ -25,31 +25,34 @@ export function AdminOverviewWorkspace() {
 
   if (!user.is_superadmin) {
     return (
-      <div className="workspace-inline-state workspace-inline-state-error">
-        <strong>Доступ запрещён</strong>
-        <p>Системная панель доступна только внутреннему суперадминистратору MPReply.</p>
-      </div>
+      <AdminOverviewState
+        description="Системная панель доступна только внутреннему суперадминистратору MPReply."
+        title="Нет доступа к системной панели"
+        tone="denied"
+      />
     );
   }
 
   if (overviewQuery.isLoading) {
     return (
-      <div className="workspace-inline-state">
-        <strong>Загружаем системную панель</strong>
-        <p>Получаем актуальные показатели организаций, пользователей, подписок и фоновых процессов.</p>
-      </div>
+      <AdminOverviewState
+        description="Получаем актуальные показатели организаций, пользователей, подписок и фоновых процессов."
+        title="Загружаем системную сводку"
+        tone="loading"
+      />
     );
   }
 
   if (overviewQuery.error || !overviewQuery.data) {
     return (
-      <div className="workspace-inline-state workspace-inline-state-error" role="alert">
-        <strong>Не удалось загрузить системную панель</strong>
-        <p>{overviewQuery.error instanceof Error ? overviewQuery.error.message : "Нет данных"}</p>
-        <button className="button button-secondary button-compact" onClick={() => void overviewQuery.refetch()} type="button">
-          Повторить
-        </button>
-      </div>
+      <AdminOverviewState
+        actionDisabled={overviewQuery.isFetching}
+        actionLabel={overviewQuery.isFetching ? "Повторяем..." : "Повторить"}
+        description={overviewQuery.error instanceof Error ? overviewQuery.error.message : "Системные данные сейчас недоступны."}
+        onAction={() => void overviewQuery.refetch()}
+        title="Не удалось загрузить системную сводку"
+        tone="error"
+      />
     );
   }
 
@@ -178,6 +181,50 @@ export function AdminOverviewWorkspace() {
           metrics={usageMetrics}
           title="Нагрузка и оценка расходов"
         />
+      </div>
+    </section>
+  );
+}
+
+function AdminOverviewState({
+  actionDisabled = false,
+  actionLabel,
+  description,
+  onAction,
+  title,
+  tone,
+}: {
+  actionDisabled?: boolean;
+  actionLabel?: string;
+  description: string;
+  onAction?: () => void;
+  title: string;
+  tone: "denied" | "error" | "loading";
+}) {
+  const eyebrow = tone === "loading" ? "Системные данные" : tone === "error" ? "Ошибка загрузки" : "Права доступа";
+
+  return (
+    <section
+      aria-busy={tone === "loading"}
+      aria-live="polite"
+      className={"admin-overview-state admin-overview-state-" + tone}
+      role={tone === "error" ? "alert" : "status"}
+    >
+      <span className="admin-overview-state-mark" aria-hidden="true" />
+      <div className="admin-overview-state-copy">
+        <span>{eyebrow}</span>
+        <strong>{title}</strong>
+        <p>{description}</p>
+        {actionLabel && onAction ? (
+          <button
+            className="button button-secondary button-compact"
+            disabled={actionDisabled}
+            onClick={onAction}
+            type="button"
+          >
+            {actionLabel}
+          </button>
+        ) : null}
       </div>
     </section>
   );

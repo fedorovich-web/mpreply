@@ -220,6 +220,169 @@
 	width: 68%;
 }
 
+
+.admin-overview-state {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
+	gap: 1rem;
+	min-height: 10rem;
+	border: 1px solid color-mix(in srgb, var(--color-brand-primary) 14%, var(--color-border-subtle));
+	border-radius: var(--radius-panel);
+	background:
+		linear-gradient(135deg, color-mix(in srgb, var(--color-bg-brand-soft) 40%, var(--color-bg-surface)), var(--color-bg-surface) 64%);
+	padding: clamp(1.15rem, 2.5vw, 1.7rem);
+	box-shadow: var(--shadow-sm);
+}
+
+.admin-overview-state-mark {
+	position: relative;
+	display: block;
+	width: 3rem;
+	height: 3rem;
+	border: 1px solid color-mix(in srgb, var(--color-brand-primary) 18%, var(--color-border-subtle));
+	border-radius: 0.9rem;
+	background: color-mix(in srgb, var(--color-bg-brand-soft) 72%, var(--color-bg-surface));
+}
+
+.admin-overview-state-mark::before,
+.admin-overview-state-mark::after {
+	position: absolute;
+	content: "";
+}
+
+.admin-overview-state-mark::before {
+	inset: 0.72rem;
+	border: 0.18rem solid color-mix(in srgb, var(--color-brand-primary) 24%, transparent);
+	border-top-color: var(--color-brand-primary);
+	border-radius: 50%;
+}
+
+.admin-overview-state-mark::after {
+	top: 50%;
+	left: 50%;
+	width: 0.42rem;
+	height: 0.42rem;
+	border-radius: 50%;
+	background: var(--color-brand-primary);
+	transform: translate(-50%, -50%);
+}
+
+.admin-overview-state-loading .admin-overview-state-mark::before {
+	animation: admin-state-spin 1s linear infinite;
+}
+
+.admin-overview-state-copy {
+	display: grid;
+	justify-items: start;
+	gap: 0.38rem;
+	max-width: 46rem;
+}
+
+.admin-overview-state-copy > span {
+	color: var(--color-brand-primary-strong);
+	font-size: 0.65rem;
+	font-weight: 800;
+	letter-spacing: 0.065em;
+	text-transform: uppercase;
+}
+
+.admin-overview-state-copy > strong {
+	color: var(--color-text-primary);
+	font-size: clamp(1.08rem, 1.8vw, 1.35rem);
+	font-weight: 780;
+	letter-spacing: -0.02em;
+}
+
+.admin-overview-state-copy > p {
+	max-width: 62ch;
+	margin: 0;
+	color: var(--color-text-secondary);
+	font-size: 0.78rem;
+	line-height: 1.58;
+}
+
+.admin-overview-state-copy .button {
+	margin-top: 0.35rem;
+}
+
+.admin-overview-state-error {
+	border-color: color-mix(in srgb, var(--color-danger-text) 22%, var(--color-border-subtle));
+	background: color-mix(in srgb, var(--color-danger-soft) 34%, var(--color-bg-surface));
+}
+
+.admin-overview-state-error .admin-overview-state-mark {
+	border-color: color-mix(in srgb, var(--color-danger-text) 24%, var(--color-border-subtle));
+	background: color-mix(in srgb, var(--color-danger-soft) 56%, var(--color-bg-surface));
+}
+
+.admin-overview-state-error .admin-overview-state-mark::before {
+	inset: 0.82rem 1.32rem;
+	border: 0;
+	border-radius: 999px;
+	background: var(--color-danger-text);
+	transform: rotate(45deg);
+}
+
+.admin-overview-state-error .admin-overview-state-mark::after {
+	top: 0.82rem;
+	bottom: 0.82rem;
+	left: 1.32rem;
+	width: auto;
+	height: auto;
+	border-radius: 999px;
+	background: var(--color-danger-text);
+	transform: rotate(-45deg);
+}
+
+.admin-overview-state-error .admin-overview-state-copy > span {
+	color: var(--color-danger-text);
+}
+
+.admin-overview-state-denied {
+	border-color: color-mix(in srgb, var(--color-text-muted) 18%, var(--color-border-subtle));
+	background: color-mix(in srgb, var(--color-bg-subtle) 64%, var(--color-bg-surface));
+}
+
+.admin-overview-state-denied .admin-overview-state-mark {
+	border-color: var(--color-border-strong);
+	background: var(--color-bg-surface);
+}
+
+.admin-overview-state-denied .admin-overview-state-mark::before {
+	inset: 0.72rem 0.92rem 0.62rem;
+	border: 0.16rem solid var(--color-text-muted);
+	border-radius: 0.45rem;
+}
+
+.admin-overview-state-denied .admin-overview-state-mark::after {
+	top: 0.52rem;
+	left: 50%;
+	width: 0.86rem;
+	height: 0.72rem;
+	border: 0.16rem solid var(--color-text-muted);
+	border-bottom: 0;
+	border-radius: 0.7rem 0.7rem 0 0;
+	background: transparent;
+	transform: translateX(-50%);
+}
+
+.admin-overview-state-denied .admin-overview-state-copy > span {
+	color: var(--color-text-muted);
+}
+
+@keyframes admin-state-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.admin-overview-state-loading .admin-overview-state-mark::before {
+		animation: none;
+	}
+}
+
 .admin-command-center {
 	border: 1px solid var(--color-border-subtle);
 	border-radius: var(--radius-panel);
@@ -668,6 +831,16 @@
 }
 
 @media (max-width: 520px) {
+	.admin-overview-state {
+		grid-template-columns: 1fr;
+		min-height: 0;
+	}
+
+	.admin-overview-state-mark {
+		width: 2.7rem;
+		height: 2.7rem;
+	}
+
 	.admin-page-hero {
 		margin-inline: -0.2rem;
 		border-radius: var(--radius-card);
