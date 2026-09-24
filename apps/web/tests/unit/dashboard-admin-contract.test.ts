@@ -23,13 +23,17 @@ describe("superadmin dashboard", () => {
     expect(workspace).not.toContain("usage ledger");
   });
 
-  it("uses the approved blue SaaS composition instead of a plain metrics table", () => {
+  it("uses the approved blue SaaS composition without decorative fake charts", () => {
     expect(page).toContain("admin-page-hero");
+    expect(page).toContain("admin-page-preview-activity");
+    expect(page).not.toContain("admin-page-preview-chart");
     expect(workspace).toContain("admin-command-center");
     expect(workspace).toContain("admin-kpi-strip");
     expect(workspace).toContain("admin-health-panel");
     expect(workspace).toContain("admin-metric-card");
     expect(styles).toContain(".admin-page-hero");
+    expect(styles).toContain(".admin-page-preview-activity");
+    expect(styles).not.toContain(".admin-page-preview-chart");
     expect(styles).toContain(".admin-command-center");
     expect(styles).toContain(".admin-kpi-strip");
     expect(styles).toContain(".admin-health-panel");
@@ -55,6 +59,9 @@ describe("superadmin dashboard", () => {
     expect(workspace).not.toContain("/api/admin/organizations");
     expect(workspace).not.toContain("/api/admin/users");
     expect(workspace).not.toContain("/api/admin/subscriptions");
+    expect(workspace).not.toContain("Активные и пробные подписки");
+    expect(workspace).not.toContain("включая пробные");
+    expect(workspace).not.toContain("сохранённым ИИ-черновикам");
   });
 
   it("keeps the overview error recoverable without leaving the page", () => {
