@@ -43,6 +43,11 @@ describe("billing and limits dashboard", () => {
     expect(workspace).toContain("? 100");
   });
 
+  it("keeps billing dates timezone-stable and canceled renewal truthful", () => {
+    expect(workspace).toContain('subscription.status === "canceled"');
+    expect(workspace).toContain('timeZone: "UTC"');
+  });
+
   it("uses the approved dense authenticated-product hierarchy", () => {
     expect(page).toContain("<h1>Тариф и лимиты</h1>");
     expect(workspace).toContain("billing-overview-grid");

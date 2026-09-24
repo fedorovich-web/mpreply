@@ -150,7 +150,7 @@ export function BillingWorkspace() {
   return (
     <section className="billing-workspace">
       {billingQuery.error ? (
-        <div className="billing-data-notice" role="status">
+        <div aria-live="polite" className="billing-data-notice" role="status">
           <span>{t.refreshError}</span>
           <button onClick={() => void billingQuery.refetch()} type="button">{t.refresh}</button>
         </div>
@@ -334,9 +334,12 @@ function subscriptionStatusClass(status: string | null | undefined): string {
   return "billing-status";
 }
 
-function renewalLabel(subscription: { cancel_at_period_end: boolean } | null | undefined, locale: Locale): string {
+function renewalLabel(
+  subscription: { status: string; cancel_at_period_end: boolean } | null | undefined,
+  locale: Locale,
+): string {
   const t = billingCopy[locale];
-  if (!subscription) return t.notApplicable;
+  if (!subscription || subscription.status === "canceled") return t.notApplicable;
   return subscription.cancel_at_period_end ? t.endsAtPeriod : t.renewalEnabled;
 }
 
@@ -349,6 +352,7 @@ function formatDate(value: string, locale: Locale): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   }).format(new Date(value));
 }
 

@@ -37,6 +37,9 @@ describe("analytics operational dashboard", () => {
     expect(workspace).toContain("Требуют ответа");
     expect(workspace).toContain("Среднее время ответа");
     expect(workspace).toContain("Негативные отзывы");
+    expect(workspace).toContain('afterReview: "вручную"');
+    expect(workspace).toContain('sentAfterReview: "Отправлено вручную"');
+    expect(workspace).toContain('aiDraftsSent: "Доля черновиков с ИИ, дошедших до отправки"');
     expect(workspace).not.toContain("tokens_input");
     expect(workspace).not.toContain("average_latency_ms");
     expect(workspace).not.toContain("cost_estimate");

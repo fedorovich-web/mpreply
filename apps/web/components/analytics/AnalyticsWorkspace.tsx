@@ -34,7 +34,7 @@ const analyticsCopy = {
     alreadyHandled: "уже обработано",
     needsReply: "Требуют ответа",
     automatic: "автоматически",
-    afterReview: "после проверки",
+    afterReview: "вручную",
     repliesSent: "Ответов отправлено",
     responseTimeHelper: "От обращения до отправки ответа",
     averageResponse: "Среднее время ответа",
@@ -53,9 +53,9 @@ const analyticsCopy = {
     replyFlow: "Что происходит с ответами",
     answeredMessages: "Отвечено на обращения",
     sentAutomatically: "Отправлено автоматически",
-    sentAfterReview: "Отправлено после проверки",
+    sentAfterReview: "Отправлено вручную",
     aiDrafts: "Подготовлено черновиков с ИИ",
-    aiDraftsSent: "Черновики с ИИ, дошедшие до отправки",
+    aiDraftsSent: "Доля черновиков с ИИ, дошедших до отправки",
     negativeReviews: "Негативные отзывы",
     marketplaces: "Площадки",
     marketplaceVolume: "Где больше обращений",
@@ -106,7 +106,7 @@ const analyticsCopy = {
     alreadyHandled: "already handled",
     needsReply: "Need a reply",
     automatic: "automatically",
-    afterReview: "after review",
+    afterReview: "manually",
     repliesSent: "Replies sent",
     responseTimeHelper: "From customer message to sent reply",
     averageResponse: "Average response time",
@@ -125,9 +125,9 @@ const analyticsCopy = {
     replyFlow: "What happens to replies",
     answeredMessages: "Customer messages answered",
     sentAutomatically: "Sent automatically",
-    sentAfterReview: "Sent after review",
+    sentAfterReview: "Sent manually",
     aiDrafts: "AI drafts prepared",
-    aiDraftsSent: "AI drafts that reached sending",
+    aiDraftsSent: "AI draft send-through rate",
     negativeReviews: "Negative reviews",
     marketplaces: "Marketplaces",
     marketplaceVolume: "Where customer-message volume is highest",
@@ -219,7 +219,7 @@ export function AnalyticsWorkspace() {
         </div>
 
         <div className="analytics-toolbar-controls">
-          {isRefreshing ? <span className="analytics-refresh-state">{t.refreshing}</span> : null}
+          {isRefreshing ? <span aria-live="polite" className="analytics-refresh-state">{t.refreshing}</span> : null}
           <div className="analytics-period-control" aria-label={t.periodAria}>
             <span>{t.period}</span>
             <div className="analytics-period-options">
