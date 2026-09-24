@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Generic, Literal, Protocol, TypeVar, runtime_checkable
 
 from app.adapters.capabilities import MarketplaceStream
-from app.models.enums import Marketplace, MessageType
+from app.models.enums import Marketplace, MessageStatus, MessageType
 
 MarketplaceErrorCode = Literal[
     "invalid_credentials",
@@ -38,6 +40,14 @@ class AdapterResult(Generic[T_co]):
 class MarketplacePage(Generic[T_co]):
     items: tuple[T_co, ...]
     next_cursor: str | None
+    resolutions: tuple[ProviderMessageResolution, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderMessageResolution:
+    external_id: str
+    message_type: MessageType
+    status: MessageStatus
 
 
 @dataclass(frozen=True, slots=True)
