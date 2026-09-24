@@ -5,38 +5,126 @@ import Link from "next/link";
 
 import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { marketplaceAccountListSchema } from "../../lib/api/schemas";
+import { localizedPath, type Locale } from "../../lib/i18n";
 import { hasCurrentIntegrationProblem } from "../../lib/marketplace-account-health";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
-const marketplaceCatalog = [
-  {
-    key: "wildberries",
-    name: "Wildberries",
-    href: "/app/integrations/wildberries",
-    description: "Отзывы, вопросы и сообщения покупателей в общей очереди с контекстом, подготовкой ответа и контролем отправки.",
+const marketplaceCatalog = {
+  ru: [
+    {
+      key: "wildberries",
+      name: "Wildberries",
+      href: "/app/integrations/wildberries",
+      description: "Отзывы, вопросы и сообщения покупателей в общей очереди с контекстом, подготовкой ответа и контролем отправки.",
+    },
+    {
+      key: "ozon",
+      name: "Ozon",
+      href: "/app/integrations/ozon",
+      description: "Обращения покупателей Ozon, подключённые кабинеты и ответы в том же рабочем процессе, что и на других площадках.",
+    },
+    {
+      key: "yandex_market",
+      name: "Яндекс Маркет",
+      href: "/app/integrations/yandex-market",
+      description: "Отзывы, вопросы и сообщения Яндекс Маркета с едиными статусами, очередью и правилами обработки.",
+    },
+    {
+      key: "avito",
+      name: "Авито",
+      href: "/app/integrations/avito",
+      description: "Сообщения и обращения покупателей Авито в общей очереди MPReply с едиными правилами обработки и ответами.",
+    },
+  ],
+  en: [
+    {
+      key: "wildberries",
+      name: "Wildberries",
+      href: "/app/integrations/wildberries",
+      description: "Bring supported Wildberries reviews, questions, and customer messages into the shared MPReply workflow with context and reply controls.",
+    },
+    {
+      key: "ozon",
+      name: "Ozon",
+      href: "/app/integrations/ozon",
+      description: "Handle supported Ozon customer messages, connected seller accounts, and replies in the same workflow as your other marketplaces.",
+    },
+    {
+      key: "yandex_market",
+      name: "Yandex Market",
+      href: "/app/integrations/yandex-market",
+      description: "Bring supported Yandex Market customer messages into the shared queue with consistent status and handling rules.",
+    },
+    {
+      key: "avito",
+      name: "Avito",
+      href: "/app/integrations/avito",
+      description: "Handle supported Avito buyer messages in the shared MPReply queue with the same workflow and reply controls.",
+    },
+  ],
+} satisfies Record<Locale, ReadonlyArray<{ key: "wildberries" | "ozon" | "yandex_market" | "avito"; name: string; href: string; description: string }>>;
+
+const integrationsCopy = {
+  ru: {
+    workspaceAria: "Интеграции маркетплейсов",
+    summaryAria: "Сводка подключений",
+    connected: "Подключённых кабинетов",
+    healthy: "Работают нормально",
+    attention: "Требуют внимания",
+    refreshing: "Обновляем...",
+    refresh: "Обновить подключения",
+    loading: "Загружаем подключения",
+    loadingDescription: "Проверяем подключённые кабинеты маркетплейсов.",
+    loadError: "Не удалось загрузить подключения",
+    unavailable: "Подключения временно недоступны. Попробуйте ещё раз.",
+    retrying: "Повторяем...",
+    retry: "Повторить",
+    refreshError: "Не удалось обновить подключения",
+    stale: "Показываем ранее загруженные данные. Можно продолжать работу или попробовать ещё раз.",
+    manage: "Управлять",
+    connect: "Подключить",
+    open: "Открыть",
+    available: "Подключение доступно",
+    stateAttention: "Требует внимания",
+    incomplete: "Настройка не завершена",
+    disconnected: "Не подключено",
+    one: "подключение",
+    few: "подключения",
+    many: "подключений",
   },
-  {
-    key: "ozon",
-    name: "Ozon",
-    href: "/app/integrations/ozon",
-    description: "Обращения покупателей Ozon, подключённые кабинеты и ответы в том же рабочем процессе, что и на других площадках.",
+  en: {
+    workspaceAria: "Marketplace integrations",
+    summaryAria: "Connection summary",
+    connected: "Connected seller accounts",
+    healthy: "Working normally",
+    attention: "Need attention",
+    refreshing: "Refreshing...",
+    refresh: "Refresh connections",
+    loading: "Loading connections",
+    loadingDescription: "Checking connected marketplace seller accounts.",
+    loadError: "Could not load connections",
+    unavailable: "Marketplace connections are temporarily unavailable. Try again.",
+    retrying: "Retrying...",
+    retry: "Retry",
+    refreshError: "Could not refresh connections",
+    stale: "Showing previously loaded data. You can continue working or try refreshing again.",
+    manage: "Manage",
+    connect: "Connect",
+    open: "Open",
+    available: "Connection available",
+    stateAttention: "Needs attention",
+    incomplete: "Setup incomplete",
+    disconnected: "Not connected",
+    one: "connection",
+    few: "connections",
+    many: "connections",
   },
-  {
-    key: "yandex_market",
-    name: "Яндекс Маркет",
-    href: "/app/integrations/yandex-market",
-    description: "Отзывы, вопросы и сообщения Яндекс Маркета с едиными статусами, очередью и правилами обработки.",
-  },
-  {
-    key: "avito",
-    name: "Авито",
-    href: "/app/integrations/avito",
-    description: "Сообщения и обращения покупателей Авито в общей очереди MPReply с едиными правилами обработки и ответами.",
-  },
-] as const;
+} as const;
 
 export function IntegrationsWorkspace() {
-  const { activeOrganization } = useWorkspace();
+  const { activeOrganization, locale } = useWorkspace();
+  const t = integrationsCopy[locale];
+  const catalog = marketplaceCatalog[locale];
   const accountsQuery = useQuery({
     queryKey: ["marketplace-accounts", activeOrganization.id],
     queryFn: () =>
@@ -52,11 +140,11 @@ export function IntegrationsWorkspace() {
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
 
   return (
-    <section className="integrations-workspace" aria-label="Интеграции маркетплейсов">
-      <div className="integrations-summary-grid" aria-label="Сводка подключений">
-        <SummaryMetric label="Подключённых кабинетов" value={accountsQuery.data ? String(accounts.length) : "—"} />
-        <SummaryMetric label="Работают нормально" value={accountsQuery.data ? String(activeCount) : "—"} />
-        <SummaryMetric label="Требуют внимания" value={accountsQuery.data ? String(problemCount) : "—"} />
+    <section className="integrations-workspace" aria-label={t.workspaceAria}>
+      <div className="integrations-summary-grid" aria-label={t.summaryAria}>
+        <SummaryMetric label={t.connected} value={accountsQuery.data ? String(accounts.length) : "—"} />
+        <SummaryMetric label={t.healthy} value={accountsQuery.data ? String(activeCount) : "—"} />
+        <SummaryMetric label={t.attention} value={accountsQuery.data ? String(problemCount) : "—"} />
       </div>
 
       <div className="integration-overview-actions">
@@ -67,27 +155,27 @@ export function IntegrationsWorkspace() {
             onClick={() => void accountsQuery.refetch()}
             type="button"
           >
-            {accountsQuery.isFetching ? "Обновляем..." : "Обновить подключения"}
+            {accountsQuery.isFetching ? t.refreshing : t.refresh}
           </button>
         ) : null}
       </div>
 
       {accountsQuery.isPending && !accountsQuery.data ? (
         <div className="integration-overview-state" aria-busy="true" aria-live="polite" role="status">
-          <strong>Загружаем подключения</strong>
-          <p>Проверяем подключённые кабинеты маркетплейсов.</p>
+          <strong>{t.loading}</strong>
+          <p>{t.loadingDescription}</p>
         </div>
       ) : accountsQuery.error && !accountsQuery.data ? (
         <div className="integration-overview-state integration-overview-state-error" role="alert">
-          <strong>Не удалось загрузить подключения</strong>
-          <p>Подключения временно недоступны. Попробуйте ещё раз.</p>
+          <strong>{t.loadError}</strong>
+          <p>{t.unavailable}</p>
           <button
             className="button button-secondary button-compact"
             disabled={accountsQuery.isFetching}
             onClick={() => void accountsQuery.refetch()}
             type="button"
           >
-            {accountsQuery.isFetching ? "Повторяем..." : "Повторить"}
+            {accountsQuery.isFetching ? t.retrying : t.retry}
           </button>
         </div>
       ) : accountsQuery.data ? (
@@ -95,8 +183,8 @@ export function IntegrationsWorkspace() {
           {accountsQuery.error && accountsQuery.data ? (
             <div className="integration-refresh-error" role="alert">
               <div>
-                <strong>Не удалось обновить подключения</strong>
-                <p>Показываем ранее загруженные данные. Можно продолжать работу или попробовать ещё раз.</p>
+                <strong>{t.refreshError}</strong>
+                <p>{t.stale}</p>
               </div>
               <button
                 className="button button-secondary button-compact"
@@ -104,35 +192,35 @@ export function IntegrationsWorkspace() {
                 onClick={() => void accountsQuery.refetch()}
                 type="button"
               >
-                {accountsQuery.isFetching ? "Повторяем..." : "Повторить"}
+                {accountsQuery.isFetching ? t.retrying : t.retry}
               </button>
             </div>
           ) : null}
 
           <div className="integration-catalog-grid" role="list">
-        {marketplaceCatalog.map((marketplace) => {
+        {catalog.map((marketplace) => {
           const marketplaceAccounts = accounts.filter((account) => account.marketplace === marketplace.key);
           const connectedCount = marketplaceAccounts.length;
           const hasProblem = marketplaceAccounts.some(needsConnectionAttention);
           const hasActive = marketplaceAccounts.some(isHealthyConnection);
-          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem });
+          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem }, locale);
           const actionLabel = canManage
             ? connectedCount > 0
-              ? `Управлять ${marketplace.name}`
-              : `Подключить ${marketplace.name}`
-            : `Открыть ${marketplace.name}`;
+              ? `${t.manage} ${marketplace.name}`
+              : `${t.connect} ${marketplace.name}`
+            : `${t.open} ${marketplace.name}`;
 
           return (
             <article className="integration-market-card" key={marketplace.key} role="listitem">
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge ui-badge-info">Подключение доступно</span>
+                  <span className="ui-badge ui-badge-info">{t.available}</span>
                   <h2>{marketplace.name}</h2>
                 </div>
                 <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
               </div>
               <p>{marketplace.description}</p>
-              <Link className="button button-secondary" href={marketplace.href}>
+              <Link className="button button-secondary" href={localizedPath(locale, marketplace.href)}>
                 {actionLabel}
               </Link>
             </article>
@@ -162,17 +250,18 @@ function getConnectionState({
   connectedCount: number;
   hasActive: boolean;
   hasProblem: boolean;
-}): { label: string; tone: "neutral" | "success" | "warning" } {
+}, locale: Locale): { label: string; tone: "neutral" | "success" | "warning" } {
+  const t = integrationsCopy[locale];
   if (hasProblem) {
-    return { label: "Требует внимания", tone: "warning" };
+    return { label: t.stateAttention, tone: "warning" };
   }
   if (hasActive) {
-    return { label: `${connectedCount} ${accountWord(connectedCount)}`, tone: "success" };
+    return { label: `${connectedCount} ${accountWord(connectedCount, locale)}`, tone: "success" };
   }
   if (connectedCount > 0) {
-    return { label: "Настройка не завершена", tone: "warning" };
+    return { label: t.incomplete, tone: "warning" };
   }
-  return { label: "Не подключено", tone: "neutral" };
+  return { label: t.disconnected, tone: "neutral" };
 }
 
 function isHealthyConnection(account: {
@@ -198,10 +287,12 @@ function needsConnectionAttention(account: {
     || hasCurrentIntegrationProblem(account);
 }
 
-function accountWord(value: number): string {
+function accountWord(value: number, locale: Locale): string {
+  const t = integrationsCopy[locale];
+  if (locale === "en") return value === 1 ? t.one : t.many;
   const mod10 = value % 10;
   const mod100 = value % 100;
-  if (mod10 === 1 && mod100 !== 11) return "подключение";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "подключения";
-  return "подключений";
+  if (mod10 === 1 && mod100 !== 11) return t.one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return t.few;
+  return t.many;
 }
