@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
+import { localizedPath, type Locale } from "../../lib/i18n";
 import {
   customerMessageListSchema,
   customerMessageSchema,
@@ -38,13 +39,22 @@ type MessageUpdate = {
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
 const inboxPageSize = 100;
-const marketplaceFilters: Array<{ value: MarketplaceFilter; label: string }> = [
-  { value: "all", label: "Все" },
-  { value: "wildberries", label: "Wildberries" },
-  { value: "ozon", label: "Ozon" },
-  { value: "yandex_market", label: "Яндекс Маркет" },
-  { value: "avito", label: "Авито" },
-];
+const marketplaceFilters: Record<Locale, Array<{ value: MarketplaceFilter; label: string }>> = {
+  ru: [
+    { value: "all", label: "Все" },
+    { value: "wildberries", label: "Wildberries" },
+    { value: "ozon", label: "Ozon" },
+    { value: "yandex_market", label: "Яндекс Маркет" },
+    { value: "avito", label: "Авито" },
+  ],
+  en: [
+    { value: "all", label: "All" },
+    { value: "wildberries", label: "Wildberries" },
+    { value: "ozon", label: "Ozon" },
+    { value: "yandex_market", label: "Yandex Market" },
+    { value: "avito", label: "Avito" },
+  ],
+};
 
 const defaultFilters: FilterState = {
   marketplace: "all",
@@ -55,44 +65,312 @@ const defaultFilters: FilterState = {
   rating: "all",
 };
 
-const messageStatusLabels: Record<string, string> = {
-  new: "Новое",
-  imported: "Получено",
-  needs_reply: "Нужен ответ",
-  auto_rule_matched: "Правило найдено",
-  auto_reply_pending: "Готовится автоответ",
-  ai_draft_ready: "Черновик готов",
-  safety_blocked: "Нужна проверка",
-  waiting_review: "На проверке",
-  needs_manual_check: "Нужна проверка",
-  approved: "Одобрено",
-  sending: "Отправляется",
-  answered: "Отвечено",
-  auto_reply_sent: "Отвечено автоматически",
-  failed: "Ошибка",
-  escalated: "Передано менеджеру",
-  archived: "Архив",
-  blocked_by_marketplace: "Заблокировано маркетплейсом",
+const messageStatusLabels: Record<Locale, Record<string, string>> = {
+  ru: {
+    new: "Новое",
+    imported: "Получено",
+    needs_reply: "Нужен ответ",
+    auto_rule_matched: "Правило найдено",
+    auto_reply_pending: "Готовится автоответ",
+    ai_draft_ready: "Черновик готов",
+    safety_blocked: "Нужна проверка",
+    waiting_review: "На проверке",
+    needs_manual_check: "Нужна проверка",
+    approved: "Одобрено",
+    sending: "Отправляется",
+    answered: "Отвечено",
+    auto_reply_sent: "Отвечено автоматически",
+    failed: "Ошибка",
+    escalated: "Передано менеджеру",
+    archived: "Архив",
+    blocked_by_marketplace: "Заблокировано маркетплейсом",
+  },
+  en: {
+    new: "New",
+    imported: "Received",
+    needs_reply: "Needs reply",
+    auto_rule_matched: "Rule matched",
+    auto_reply_pending: "Automatic reply pending",
+    ai_draft_ready: "Draft ready",
+    safety_blocked: "Needs review",
+    waiting_review: "Needs review",
+    needs_manual_check: "Needs review",
+    approved: "Approved",
+    sending: "Sending",
+    answered: "Answered",
+    auto_reply_sent: "Sent automatically",
+    failed: "Error",
+    escalated: "Escalated",
+    archived: "Archived",
+    blocked_by_marketplace: "Blocked by marketplace",
+  },
 };
 
-const messageTypeLabels: Record<string, string> = {
-  review: "Отзыв",
-  question: "Вопрос",
-  chat: "Сообщение",
+const messageTypeLabels: Record<Locale, Record<string, string>> = {
+  ru: { review: "Отзыв", question: "Вопрос", chat: "Сообщение" },
+  en: { review: "Review", question: "Question", chat: "Message" },
 };
 
-const priorityLabels: Record<string, string> = {
-  low: "Низкий",
-  normal: "Обычный",
-  high: "Высокий",
-  urgent: "Срочный",
+const priorityLabels: Record<Locale, Record<string, string>> = {
+  ru: { low: "Низкий", normal: "Обычный", high: "Высокий", urgent: "Срочный" },
+  en: { low: "Low", normal: "Normal", high: "High", urgent: "Urgent" },
 };
+
+const inboxCopy = {
+  ru: {
+    draftSubmitFailed: "Черновик создан, но не удалось передать его на проверку",
+    loadingCount: "Загружаем обращения",
+    messagesCount: "Обращения",
+    noRatingOnPage: "без оценки на странице",
+    messagesSuffix: "обращений",
+    workspaceAria: "Рабочая область обращений",
+    filtersAria: "Фильтры обращений",
+    filters: "Фильтры",
+    queue: "Очередь обращений",
+    reset: "Сбросить",
+    search: "Поиск",
+    searchAria: "Поиск по обращениям",
+    searchPlaceholder: "Товар, артикул или текст",
+    marketplace: "Площадка",
+    messageType: "Тип обращения",
+    all: "Все",
+    reviews: "Отзывы",
+    questions: "Вопросы",
+    messages: "Сообщения",
+    status: "Статус",
+    needsReply: "Нужен ответ",
+    draftReady: "Черновик готов",
+    needsReview: "На проверке",
+    errors: "Ошибки",
+    withManager: "У менеджера",
+    assignee: "Ответственный",
+    assignedToMe: "Назначено мне",
+    rating: "Оценка",
+    negativeRating: "1–3 звезды",
+    positiveRating: "4–5 звёзд",
+    noRating: "Без оценки",
+    listAria: "Список обращений",
+    filterResults: "Результаты фильтра",
+    allMessages: "Все обращения",
+    refreshing: "Обновляем...",
+    refresh: "Обновить",
+    refreshError: "Не удалось обновить обращения",
+    staleData: "Показываем последнюю успешно загруженную очередь.",
+    retrying: "Повторяем...",
+    retry: "Повторить",
+    loadingDescription: "Получаем обращения из подключённых маркетплейсов.",
+    loadingTitle: "Загружаем обращения",
+    loadErrorTitle: "Не удалось загрузить обращения",
+    noRatingPages: "Проверьте соседние страницы очереди — сервер не поддерживает отдельный фильтр по отсутствию оценки.",
+    noRatingCurrent: "На текущей серверной выборке обращений без оценки нет.",
+    noRatingTitle: "На этой странице обращений без оценки нет",
+    filteredEmpty: "Сбросьте часть фильтров или измените поиск.",
+    queueEmpty: "Новые обращения появятся здесь после получения данных с подключённых площадок.",
+    filteredEmptyTitle: "По выбранным условиям ничего не найдено",
+    queueEmptyTitle: "В очереди пока нет обращений",
+    pagesAria: "Страницы обращений",
+    previousPage: "Предыдущая страница",
+    back: "Назад",
+    page: "Страница",
+    of: "из",
+    nextPage: "Следующая страница",
+    next: "Далее",
+    detailAria: "Карточка выбранного обращения",
+    selectMessage: "Выберите обращение из списка, чтобы увидеть контекст и действия.",
+    noSelection: "Обращение не выбрано",
+    noProduct: "Товар без карточки",
+    unrated: "без оценки",
+    genericMessage: "Обращение",
+    nextStep: "Следующий шаг",
+    marketplaceLabel: "Маркетплейс",
+    typeLabel: "Тип",
+    priorityLabel: "Приоритет",
+    assigneeLabel: "Ответственный",
+    customer: "Покупатель",
+    noCustomerName: "Имя не передано маркетплейсом",
+    ratingPrefix: "Оценка",
+    message: "Обращение",
+    productContext: "Контекст товара",
+    sku: "Артикул",
+    noProductContext: "Товар не привязан к обращению.",
+    openReviewQueue: "Открыть очередь проверки",
+    replyForReview: "Ответ для проверки",
+    draftPlaceholder: "Введите ответ или отредактируйте подготовленный текст",
+    draftHint: "После отправки ответ попадёт в раздел «На проверке», где его можно проверить и отправить.",
+    submitting: "Передаём...",
+    submitForReview: "Передать на проверку",
+    submittedEyebrow: "Ответ передан на проверку",
+    submittedTitle: "Черновик сохранён и находится в разделе «На проверке»",
+    draftSaved: "Черновик уже сохранён",
+    draftRecovery: "Не создавайте второй ответ: продолжите работу с существующим черновиком в очереди проверки.",
+    readOnly: "Ваша роль позволяет просматривать обращения, но не менять ответственного, статус или черновик ответа.",
+    take: "Взять себе",
+    escalate: "Передать менеджеру",
+    archive: "Архивировать",
+    yandex: "Яндекс Маркет",
+    avito: "Авито",
+    unassigned: "Не назначено",
+    you: "Вы",
+    otherEmployee: "Другой сотрудник",
+    stepReview: "Проверить ответ перед отправкой",
+    stepApproved: "Ответ одобрен и ожидает отправки",
+    stepAutoPending: "Автоответ поставлен в очередь",
+    stepSending: "Ответ отправляется на маркетплейс",
+    stepFailed: "Разобраться с ошибкой отправки",
+    stepConnection: "Проверить подключение маркетплейса",
+    stepSent: "Ответ уже отправлен",
+    stepArchived: "Обращение находится в архиве",
+    stepDuplicate: "Повторное обращение уже обработано",
+    stepSkipped: "Обращение пропущено автоматизацией",
+    stepEscalated: "Менеджеру нужно принять решение",
+    stepDraft: "Проверить подготовленный черновик",
+    stepRule: "Проверить обработку по найденному правилу",
+    stepPrepare: "Подготовить ответ или передать обращение",
+    approvedEyebrow: "Ответ одобрен",
+    approvedTitle: "Продолжите отправку в разделе «На проверке»",
+    manualEyebrow: "Нужна ручная проверка",
+    manualTitle: "Проверьте ответ и причины остановки в разделе «На проверке»",
+    reviewEyebrow: "Ответ уже на проверке",
+    reviewTitle: "Продолжите работу в разделе «На проверке»",
+    unauthorized: "Сессия истекла. Войдите снова.",
+    forbidden: "Недостаточно прав для этого действия.",
+    notFound: "Нужные данные не найдены. Обновите страницу и попробуйте снова.",
+    conflict: "Данные уже изменились. Обновите страницу и повторите действие.",
+    invalid: "Проверьте введённые данные и попробуйте снова.",
+    rateLimit: "Слишком много действий подряд. Подождите немного и попробуйте снова.",
+    genericError: "Не удалось выполнить действие. Проверьте соединение и попробуйте снова.",
+  },
+  en: {
+    draftSubmitFailed: "The draft was created but could not be submitted for review",
+    loadingCount: "Loading messages",
+    messagesCount: "Messages",
+    noRatingOnPage: "without a rating on this page",
+    messagesSuffix: "messages",
+    workspaceAria: "Customer-message workspace",
+    filtersAria: "Message filters",
+    filters: "Filters",
+    queue: "Customer-message queue",
+    reset: "Reset",
+    search: "Search",
+    searchAria: "Search customer messages",
+    searchPlaceholder: "Product, SKU, or message text",
+    marketplace: "Marketplace",
+    messageType: "Message type",
+    all: "All",
+    reviews: "Reviews",
+    questions: "Questions",
+    messages: "Messages",
+    status: "Status",
+    needsReply: "Needs reply",
+    draftReady: "Draft ready",
+    needsReview: "Needs review",
+    errors: "Errors",
+    withManager: "Escalated",
+    assignee: "Assignee",
+    assignedToMe: "Assigned to me",
+    rating: "Rating",
+    negativeRating: "1–3 stars",
+    positiveRating: "4–5 stars",
+    noRating: "No rating",
+    listAria: "Customer-message list",
+    filterResults: "Filtered results",
+    allMessages: "All messages",
+    refreshing: "Refreshing...",
+    refresh: "Refresh",
+    refreshError: "Could not refresh customer messages",
+    staleData: "Showing the latest successfully loaded queue.",
+    retrying: "Retrying...",
+    retry: "Retry",
+    loadingDescription: "Loading customer messages from connected marketplaces.",
+    loadingTitle: "Loading messages",
+    loadErrorTitle: "Could not load customer messages",
+    noRatingPages: "Check adjacent queue pages — the server does not provide a dedicated no-rating filter.",
+    noRatingCurrent: "There are no unrated customer messages in the current server result.",
+    noRatingTitle: "No unrated messages on this page",
+    filteredEmpty: "Reset some filters or change the search query.",
+    queueEmpty: "New customer messages will appear here after data is received from connected marketplaces.",
+    filteredEmptyTitle: "Nothing matches the selected filters",
+    queueEmptyTitle: "No customer messages yet",
+    pagesAria: "Customer-message pages",
+    previousPage: "Previous page",
+    back: "Back",
+    page: "Page",
+    of: "of",
+    nextPage: "Next page",
+    next: "Next",
+    detailAria: "Selected customer-message details",
+    selectMessage: "Choose a customer message from the list to see its context and available actions.",
+    noSelection: "No message selected",
+    noProduct: "No linked product",
+    unrated: "no rating",
+    genericMessage: "Customer message",
+    nextStep: "Next step",
+    marketplaceLabel: "Marketplace",
+    typeLabel: "Type",
+    priorityLabel: "Priority",
+    assigneeLabel: "Assignee",
+    customer: "Customer",
+    noCustomerName: "The marketplace did not provide a customer name",
+    ratingPrefix: "Rating",
+    message: "Customer message",
+    productContext: "Product context",
+    sku: "SKU",
+    noProductContext: "No product is linked to this customer message.",
+    openReviewQueue: "Open review queue",
+    replyForReview: "Reply for review",
+    draftPlaceholder: "Enter a reply or edit the prepared text",
+    draftHint: "Submitting this reply moves it to the review queue, where the team can check and send it.",
+    submitting: "Submitting...",
+    submitForReview: "Submit for review",
+    submittedEyebrow: "Reply submitted for review",
+    submittedTitle: "The draft is saved and is now in the review queue",
+    draftSaved: "Draft already saved",
+    draftRecovery: "Do not create a second reply. Continue with the existing draft in the review queue.",
+    readOnly: "Your role can view customer messages but cannot change the assignee, status, or reply draft.",
+    take: "Assign to me",
+    escalate: "Escalate to manager",
+    archive: "Archive",
+    yandex: "Yandex Market",
+    avito: "Avito",
+    unassigned: "Unassigned",
+    you: "You",
+    otherEmployee: "Another teammate",
+    stepReview: "Review the reply before sending",
+    stepApproved: "Reply approved and waiting to be sent",
+    stepAutoPending: "Automatic reply is queued",
+    stepSending: "Reply is being sent to the marketplace",
+    stepFailed: "Resolve the sending error",
+    stepConnection: "Check the marketplace connection",
+    stepSent: "Reply already sent",
+    stepArchived: "Customer message is archived",
+    stepDuplicate: "Duplicate customer message already handled",
+    stepSkipped: "Customer message skipped by automation",
+    stepEscalated: "A manager needs to make a decision",
+    stepDraft: "Review the prepared draft",
+    stepRule: "Review the matched automation rule",
+    stepPrepare: "Prepare a reply or escalate the customer message",
+    approvedEyebrow: "Reply approved",
+    approvedTitle: "Continue sending from the review queue",
+    manualEyebrow: "Manual review required",
+    manualTitle: "Review the reply and the reason it stopped in the review queue",
+    reviewEyebrow: "Reply already in review",
+    reviewTitle: "Continue working in the review queue",
+    unauthorized: "Your session expired. Log in again.",
+    forbidden: "You do not have permission for this action.",
+    notFound: "The required data could not be found. Refresh the page and try again.",
+    conflict: "The data has already changed. Refresh the page and try again.",
+    invalid: "Check the entered data and try again.",
+    rateLimit: "Too many actions in a short time. Wait a moment and try again.",
+    genericError: "The action could not be completed. Check your connection and try again.",
+  },
+} as const;
 
 class ManualReviewSubmissionError extends Error {
   readonly replyId: string;
 
-  constructor(replyId: string, cause: unknown) {
-    super(`Черновик создан, но не удалось передать его на проверку: ${errorMessage(cause)}`);
+  constructor(replyId: string, cause: unknown, locale: Locale) {
+    const t = inboxCopy[locale];
+    super(`${t.draftSubmitFailed}: ${errorMessage(cause, locale)}`);
     this.name = "ManualReviewSubmissionError";
     this.replyId = replyId;
   }
@@ -100,7 +378,9 @@ class ManualReviewSubmissionError extends Error {
 
 export function InboxWorkspace() {
   const queryClient = useQueryClient();
-  const { activeOrganization, user } = useWorkspace();
+  const { activeOrganization, user, locale } = useWorkspace();
+  const t = inboxCopy[locale];
+  const localizedMarketplaceFilters = marketplaceFilters[locale];
   const canManageMessages = writeRoles.has(activeOrganization.current_user_role);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [selectedId, setSelectedId] = useState("");
@@ -177,11 +457,11 @@ export function InboxWorkspace() {
     : 1;
   const displayedCountLabel = !messagesQuery.data
     ? messagesQuery.isPending
-      ? "Загружаем обращения"
-      : "Обращения"
+      ? t.loadingCount
+      : t.messagesCount
     : filters.rating === "no_rating"
-      ? `${visibleMessages.length} без оценки на странице`
-      : `${messagesQuery.data.total} обращений`;
+      ? `${visibleMessages.length} ${t.noRatingOnPage}`
+      : `${messagesQuery.data.total} ${t.messagesSuffix}`;
 
   const updateMutation = useMutation({
     mutationFn: ({ messageId, status, assignedTo }: MessageUpdate) =>
@@ -209,7 +489,7 @@ export function InboxWorkspace() {
           method: "POST",
         });
       } catch (error) {
-        throw new ManualReviewSubmissionError(draft.reply.id, error);
+        throw new ManualReviewSubmissionError(draft.reply.id, error, locale);
       }
     },
     onSettled: async () => {
@@ -246,33 +526,33 @@ export function InboxWorkspace() {
   }
 
   return (
-    <section className="inbox-workspace" aria-label="Рабочая область обращений">
-      <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
+    <section className="inbox-workspace" aria-label={t.workspaceAria}>
+      <aside className="inbox-filters-panel" aria-label={t.filtersAria}>
         <div className="panel-heading panel-heading-row inbox-filter-heading">
           <div>
-            <span className="panel-kicker">Фильтры</span>
-            <strong>Очередь обращений</strong>
+            <span className="panel-kicker">{t.filters}</span>
+            <strong>{t.queue}</strong>
           </div>
           {activeFilterCount > 0 ? (
             <button className="button button-secondary button-compact" onClick={resetFilters} type="button">
-              Сбросить · {activeFilterCount}
+              {t.reset} · {activeFilterCount}
             </button>
           ) : null}
         </div>
 
         <label className="field-group inbox-search-field">
-          <span>Поиск</span>
+          <span>{t.search}</span>
           <input
-            aria-label="Поиск по обращениям"
+            aria-label={t.searchAria}
             onChange={(event) => updateFilter("query", event.target.value)}
-            placeholder="Товар, артикул или текст"
+            placeholder={t.searchPlaceholder}
             type="search"
             value={filters.query}
           />
         </label>
 
-        <FilterGroup label="Площадка">
-          {marketplaceFilters.map((option) => (
+        <FilterGroup label={t.marketplace}>
+          {localizedMarketplaceFilters.map((option) => (
             <FilterButton
               active={filters.marketplace === option.value}
               key={option.value}
@@ -283,40 +563,40 @@ export function InboxWorkspace() {
           ))}
         </FilterGroup>
 
-        <FilterGroup label="Тип обращения">
-          <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>Все</FilterButton>
-          <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>Отзывы</FilterButton>
-          <FilterButton active={filters.type === "question"} onClick={() => updateFilter("type", "question")}>Вопросы</FilterButton>
-          <FilterButton active={filters.type === "chat"} onClick={() => updateFilter("type", "chat")}>Сообщения</FilterButton>
+        <FilterGroup label={t.messageType}>
+          <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>{t.all}</FilterButton>
+          <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>{t.reviews}</FilterButton>
+          <FilterButton active={filters.type === "question"} onClick={() => updateFilter("type", "question")}>{t.questions}</FilterButton>
+          <FilterButton active={filters.type === "chat"} onClick={() => updateFilter("type", "chat")}>{t.messages}</FilterButton>
         </FilterGroup>
 
-        <FilterGroup label="Статус">
-          <FilterButton active={filters.status === "all"} onClick={() => updateFilter("status", "all")}>Все</FilterButton>
-          <FilterButton active={filters.status === "needs_reply"} onClick={() => updateFilter("status", "needs_reply")}>Нужен ответ</FilterButton>
-          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>Черновик готов</FilterButton>
-          <FilterButton active={filters.status === "waiting_review"} onClick={() => updateFilter("status", "waiting_review")}>На проверке</FilterButton>
-          <FilterButton active={filters.status === "failed"} onClick={() => updateFilter("status", "failed")}>Ошибки</FilterButton>
-          <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>У менеджера</FilterButton>
+        <FilterGroup label={t.status}>
+          <FilterButton active={filters.status === "all"} onClick={() => updateFilter("status", "all")}>{t.all}</FilterButton>
+          <FilterButton active={filters.status === "needs_reply"} onClick={() => updateFilter("status", "needs_reply")}>{t.needsReply}</FilterButton>
+          <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>{t.draftReady}</FilterButton>
+          <FilterButton active={filters.status === "waiting_review"} onClick={() => updateFilter("status", "waiting_review")}>{t.needsReview}</FilterButton>
+          <FilterButton active={filters.status === "failed"} onClick={() => updateFilter("status", "failed")}>{t.errors}</FilterButton>
+          <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>{t.withManager}</FilterButton>
         </FilterGroup>
 
-        <FilterGroup label="Ответственный">
-          <FilterButton active={filters.assignment === "all"} onClick={() => updateFilter("assignment", "all")}>Все</FilterButton>
-          <FilterButton active={filters.assignment === "mine"} onClick={() => updateFilter("assignment", "mine")}>Назначено мне</FilterButton>
+        <FilterGroup label={t.assignee}>
+          <FilterButton active={filters.assignment === "all"} onClick={() => updateFilter("assignment", "all")}>{t.all}</FilterButton>
+          <FilterButton active={filters.assignment === "mine"} onClick={() => updateFilter("assignment", "mine")}>{t.assignedToMe}</FilterButton>
         </FilterGroup>
 
-        <FilterGroup label="Оценка">
-          <FilterButton active={filters.rating === "all"} onClick={() => updateFilter("rating", "all")}>Все</FilterButton>
-          <FilterButton active={filters.rating === "negative"} onClick={() => updateFilter("rating", "negative")}>1–3 звезды</FilterButton>
-          <FilterButton active={filters.rating === "positive"} onClick={() => updateFilter("rating", "positive")}>4–5 звёзд</FilterButton>
-          <FilterButton active={filters.rating === "no_rating"} onClick={() => updateFilter("rating", "no_rating")}>Без оценки</FilterButton>
+        <FilterGroup label={t.rating}>
+          <FilterButton active={filters.rating === "all"} onClick={() => updateFilter("rating", "all")}>{t.all}</FilterButton>
+          <FilterButton active={filters.rating === "negative"} onClick={() => updateFilter("rating", "negative")}>{t.negativeRating}</FilterButton>
+          <FilterButton active={filters.rating === "positive"} onClick={() => updateFilter("rating", "positive")}>{t.positiveRating}</FilterButton>
+          <FilterButton active={filters.rating === "no_rating"} onClick={() => updateFilter("rating", "no_rating")}>{t.noRating}</FilterButton>
         </FilterGroup>
       </aside>
 
-      <section className="inbox-list-panel" aria-label="Список обращений">
+      <section className="inbox-list-panel" aria-label={t.listAria}>
         <div className="panel-heading panel-heading-row inbox-list-heading">
           <div>
             <span className="panel-kicker">{displayedCountLabel}</span>
-            <strong>{activeFilterCount > 0 ? "Результаты фильтра" : "Все обращения"}</strong>
+            <strong>{activeFilterCount > 0 ? t.filterResults : t.allMessages}</strong>
           </div>
           <button
             className="button button-secondary button-compact"
@@ -324,15 +604,15 @@ export function InboxWorkspace() {
             onClick={() => void messagesQuery.refetch()}
             type="button"
           >
-            {messagesQuery.isFetching ? "Обновляем..." : "Обновить"}
+            {messagesQuery.isFetching ? t.refreshing : t.refresh}
           </button>
         </div>
 
         {messagesQuery.error && messagesQuery.data ? (
           <div className="inbox-refresh-error" role="alert">
             <div>
-              <strong>Не удалось обновить обращения</strong>
-              <p>Показываем последнюю успешно загруженную очередь.</p>
+              <strong>{t.refreshError}</strong>
+              <p>{t.staleData}</p>
             </div>
             <button
               className="button button-secondary button-compact"
@@ -340,24 +620,24 @@ export function InboxWorkspace() {
               onClick={() => void messagesQuery.refetch()}
               type="button"
             >
-              {messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
+              {messagesQuery.isFetching ? t.retrying : t.retry}
             </button>
           </div>
         ) : null}
 
         {messagesQuery.isPending && !messagesQuery.data ? (
           <InboxState
-            description="Получаем обращения из подключённых маркетплейсов."
-            title="Загружаем обращения"
+            description={t.loadingDescription}
+            title={t.loadingTitle}
             tone="loading"
           />
         ) : messagesQuery.error && !messagesQuery.data ? (
           <InboxState
             actionDisabled={messagesQuery.isFetching}
-            actionLabel={messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
-            description={errorMessage(messagesQuery.error)}
+            actionLabel={messagesQuery.isFetching ? t.retrying : t.retry}
+            description={errorMessage(messagesQuery.error, locale)}
             onAction={() => void messagesQuery.refetch()}
-            title="Не удалось загрузить обращения"
+            title={t.loadErrorTitle}
             tone="error"
           />
         ) : visibleMessages.length > 0 ? (
@@ -368,26 +648,27 @@ export function InboxWorkspace() {
                   isSelected={selectedMessage?.id === message.id}
                   message={message}
                   onSelect={() => selectMessage(message.id)}
+                  locale={locale}
                 />
               </div>
             ))}
           </div>
         ) : filters.rating === "no_rating" && (messagesQuery.data?.total ?? 0) > 0 ? (
           <EmptyState
-            description={totalPages > 1 ? "Проверьте соседние страницы очереди — сервер не поддерживает отдельный фильтр по отсутствию оценки." : "На текущей серверной выборке обращений без оценки нет."}
-            title="На этой странице обращений без оценки нет"
+            description={totalPages > 1 ? t.noRatingPages : t.noRatingCurrent}
+            title={t.noRatingTitle}
           />
         ) : (
           <EmptyState
-            description={activeFilterCount > 0 ? "Сбросьте часть фильтров или измените поиск." : "Новые обращения появятся здесь после получения данных с подключённых площадок."}
-            title={activeFilterCount > 0 ? "По выбранным условиям ничего не найдено" : "В очереди пока нет обращений"}
+            description={activeFilterCount > 0 ? t.filteredEmpty : t.queueEmpty}
+            title={activeFilterCount > 0 ? t.filteredEmptyTitle : t.queueEmptyTitle}
           />
         )}
 
         {messagesQuery.data && totalPages > 1 ? (
-          <nav className="inbox-pagination" aria-label="Страницы обращений">
+          <nav className="inbox-pagination" aria-label={t.pagesAria}>
             <button
-              aria-label="Предыдущая страница"
+              aria-label={t.previousPage}
               className="button button-secondary button-compact"
               disabled={page <= 1 || messagesQuery.isFetching}
               onClick={() => {
@@ -396,11 +677,11 @@ export function InboxWorkspace() {
               }}
               type="button"
             >
-              Назад
+              {t.back}
             </button>
-            <span aria-live="polite">Страница {page} из {totalPages}</span>
+            <span aria-live="polite">{t.page} {page} {t.of} {totalPages}</span>
             <button
-              aria-label="Следующая страница"
+              aria-label={t.nextPage}
               className="button button-secondary button-compact"
               disabled={page >= totalPages || messagesQuery.isFetching}
               onClick={() => {
@@ -409,13 +690,13 @@ export function InboxWorkspace() {
               }}
               type="button"
             >
-              Далее
+              {t.next}
             </button>
           </nav>
         ) : null}
       </section>
 
-      <aside ref={detailPanelRef} className="inbox-detail-panel" aria-label="Карточка выбранного обращения">
+      <aside ref={detailPanelRef} className="inbox-detail-panel" aria-label={t.detailAria}>
         {selectedMessage ? (
           <MessageDetail
             canManage={canManageMessages}
@@ -441,9 +722,10 @@ export function InboxWorkspace() {
             onCreateDraft={(replyText) => manualDraftMutation.mutate({ messageId: selectedMessage.id, replyText })}
             onEscalate={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "escalated" })}
             onTake={() => updateMutation.mutate({ messageId: selectedMessage.id, assignedTo: user.id })}
+            locale={locale}
           />
         ) : (
-          <EmptyState description="Выберите обращение из списка, чтобы увидеть контекст и действия." title="Обращение не выбрано" />
+          <EmptyState description={t.selectMessage} title={t.noSelection} />
         )}
       </aside>
     </section>
@@ -467,7 +749,10 @@ function FilterButton({ active, children, onClick }: { active: boolean; children
   );
 }
 
-function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; message: CustomerMessage; onSelect: () => void }) {
+function MessageCard({ isSelected, message, onSelect, locale }: { isSelected: boolean; message: CustomerMessage; onSelect: () => void; locale: Locale }) {
+  const t = inboxCopy[locale];
+  const localizedStatusLabels = messageStatusLabels[locale];
+  const localizedTypeLabels = messageTypeLabels[locale];
   return (
     <button
       aria-pressed={isSelected}
@@ -476,15 +761,15 @@ function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; m
       type="button"
     >
       <span className="message-card-topline">
-        <Badge tone="info">{marketplaceLabel(message.marketplace)}</Badge>
-        <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
+        <Badge tone="info">{marketplaceLabel(message.marketplace, locale)}</Badge>
+        <Badge tone={statusTone(message.status)}>{localizedStatusLabels[message.status] ?? message.status}</Badge>
       </span>
-      <span className="message-card-title">{message.product?.name ?? "Товар без карточки"}</span>
+      <span className="message-card-title">{message.product?.name ?? t.noProduct}</span>
       <span className="message-card-text">{message.customer_text}</span>
       <span className="message-card-meta">
-        <span>{messageTypeLabels[message.type] ?? message.type}</span>
-        <span>{message.rating ? `${message.rating}★` : "без оценки"}</span>
-        <span>{formatDate(message.marketplace_created_at)}</span>
+        <span>{localizedTypeLabels[message.type] ?? message.type}</span>
+        <span>{message.rating ? `${message.rating}★` : t.unrated}</span>
+        <span>{formatDate(message.marketplace_created_at, locale)}</span>
       </span>
     </button>
   );
@@ -504,6 +789,7 @@ function MessageDetail({
   onEscalate,
   onTake,
   onCreateDraft,
+  locale,
 }: {
   message: CustomerMessage;
   currentUserId: string;
@@ -518,7 +804,13 @@ function MessageDetail({
   onEscalate: () => void;
   onTake: () => void;
   onCreateDraft: (replyText: string) => void;
+  locale: Locale;
 }) {
+  const t = inboxCopy[locale];
+  const localizedStatusLabels = messageStatusLabels[locale];
+  const localizedTypeLabels = messageTypeLabels[locale];
+  const localizedPriorityLabels = priorityLabels[locale];
+  const reviewQueuePath = localizedPath(locale, "/app/review-queue");
   const [replyText, setReplyText] = useState("");
   const canCreateDraft = canManage && !draftSubmissionSucceeded && !draftRecoveryNeeded && ![
     "waiting_review",
@@ -535,7 +827,7 @@ function MessageDetail({
     "blocked_by_marketplace",
   ].includes(message.status);
   const isAssignedToCurrentUser = message.assigned_to === currentUserId;
-  const reviewHandoff = isReviewWorkflowStatus(message.status) ? reviewHandoffCopy(message.status) : null;
+  const reviewHandoff = isReviewWorkflowStatus(message.status) ? reviewHandoffCopy(message.status, locale) : null;
   const canUseMessageActions = canManage && ![
     "approved",
     "auto_reply_pending",
@@ -551,41 +843,41 @@ function MessageDetail({
     <div className="message-detail-card">
       <div className="panel-heading panel-heading-row inbox-detail-heading">
         <div>
-          <span className="panel-kicker">{messageTypeLabels[message.type] ?? "Обращение"}</span>
-          <strong>{message.product?.name ?? "Товар без карточки"}</strong>
+          <span className="panel-kicker">{localizedTypeLabels[message.type] ?? t.genericMessage}</span>
+          <strong>{message.product?.name ?? t.noProduct}</strong>
         </div>
-        <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
+        <Badge tone={statusTone(message.status)}>{localizedStatusLabels[message.status] ?? message.status}</Badge>
       </div>
 
       <div className={"inbox-next-step inbox-next-step-" + nextStepTone(message.status)} aria-live="polite">
-        <span>Следующий шаг</span>
-        <strong>{nextStepLabel(message.status)}</strong>
+        <span>{t.nextStep}</span>
+        <strong>{nextStepLabel(message.status, locale)}</strong>
       </div>
 
       <div className="detail-grid">
-        <DetailItem label="Маркетплейс" value={marketplaceLabel(message.marketplace)} />
-        <DetailItem label="Тип" value={messageTypeLabels[message.type] ?? message.type} />
-        <DetailItem label="Приоритет" value={priorityLabels[message.priority] ?? message.priority} />
-        <DetailItem label="Ответственный" value={assignmentLabel(message.assigned_to, currentUserId)} />
+        <DetailItem label={t.marketplaceLabel} value={marketplaceLabel(message.marketplace, locale)} />
+        <DetailItem label={t.typeLabel} value={localizedTypeLabels[message.type] ?? message.type} />
+        <DetailItem label={t.priorityLabel} value={localizedPriorityLabels[message.priority] ?? message.priority} />
+        <DetailItem label={t.assigneeLabel} value={assignmentLabel(message.assigned_to, currentUserId, locale)} />
       </div>
 
       <section className="detail-section inbox-customer-context">
-        <span>Покупатель</span>
-        <p>{message.customer_display_name || "Имя не передано маркетплейсом"}</p>
-        {message.rating ? <small>Оценка: {message.rating} из 5</small> : null}
+        <span>{t.customer}</span>
+        <p>{message.customer_display_name || t.noCustomerName}</p>
+        {message.rating ? <small>{t.ratingPrefix}: {message.rating} / 5</small> : null}
       </section>
 
       <section className="detail-section inbox-message-context">
-        <span>Обращение</span>
+        <span>{t.message}</span>
         <p>{message.customer_text}</p>
       </section>
 
       <section className="detail-section inbox-product-context">
-        <span>Контекст товара</span>
+        <span>{t.productContext}</span>
         <p>
           {message.product
-            ? [message.product.name, message.product.sku ? `Артикул: ${message.product.sku}` : null, message.product.brand].filter(Boolean).join(" · ")
-            : "Товар не привязан к обращению."}
+            ? [message.product.name, message.product.sku ? `${t.sku}: ${message.product.sku}` : null, message.product.brand].filter(Boolean).join(" · ")
+            : t.noProductContext}
         </p>
       </section>
 
@@ -595,28 +887,28 @@ function MessageDetail({
             <span className="panel-kicker">{reviewHandoff.eyebrow}</span>
             <strong>{reviewHandoff.title}</strong>
           </div>
-          <Link className="button button-primary" href="/app/review-queue">Открыть очередь проверки</Link>
+          <Link className="button button-primary" href={reviewQueuePath}>{t.openReviewQueue}</Link>
         </div>
       ) : null}
 
       {canCreateDraft ? (
         <label className="review-editor-field inbox-manual-draft-field">
-          <span>Ответ для проверки</span>
+          <span>{t.replyForReview}</span>
           <textarea
             disabled={isCreatingDraft}
             maxLength={12000}
             onChange={(event) => setReplyText(event.target.value)}
-            placeholder="Введите ответ или отредактируйте подготовленный текст"
+            placeholder={t.draftPlaceholder}
             value={replyText}
           />
-          <small>После отправки ответ попадёт в раздел «На проверке», где его можно проверить и отправить.</small>
+          <small>{t.draftHint}</small>
           <button
             className="button button-primary"
             disabled={isCreatingDraft || replyText.trim().length === 0}
             onClick={() => onCreateDraft(replyText)}
             type="button"
           >
-            {isCreatingDraft ? "Передаём..." : "Передать на проверку"}
+            {isCreatingDraft ? t.submitting : t.submitForReview}
           </button>
         </label>
       ) : null}
@@ -624,46 +916,46 @@ function MessageDetail({
       {draftSubmissionSucceeded ? (
         <div className="inbox-review-handoff" role="status">
           <div>
-            <span className="panel-kicker">Ответ передан на проверку</span>
-            <strong>Черновик сохранён и находится в разделе «На проверке»</strong>
+            <span className="panel-kicker">{t.submittedEyebrow}</span>
+            <strong>{t.submittedTitle}</strong>
           </div>
-          <Link className="button button-primary" href="/app/review-queue">Открыть очередь проверки</Link>
+          <Link className="button button-primary" href={reviewQueuePath}>{t.openReviewQueue}</Link>
         </div>
       ) : null}
 
       {draftRecoveryNeeded && createDraftError ? (
         <div className="inbox-review-handoff" role="alert">
           <div>
-            <span className="panel-kicker">Черновик уже сохранён</span>
-            <strong>{errorMessage(createDraftError)}</strong>
-            <p>Не создавайте второй ответ: продолжите работу с существующим черновиком в очереди проверки.</p>
+            <span className="panel-kicker">{t.draftSaved}</span>
+            <strong>{errorMessage(createDraftError, locale)}</strong>
+            <p>{t.draftRecovery}</p>
           </div>
-          <Link className="button button-secondary" href="/app/review-queue">Открыть очередь проверки</Link>
+          <Link className="button button-secondary" href={reviewQueuePath}>{t.openReviewQueue}</Link>
         </div>
       ) : createDraftError ? (
-        <p className="form-error" role="alert">{errorMessage(createDraftError)}</p>
+        <p className="form-error" role="alert">{errorMessage(createDraftError, locale)}</p>
       ) : null}
 
       {!canManage ? (
         <p className="inbox-readonly-note">
-          Ваша роль позволяет просматривать обращения, но не менять ответственного, статус или черновик ответа.
+          {t.readOnly}
         </p>
       ) : null}
 
-      {error ? <p className="form-error" role="alert">{errorMessage(error)}</p> : null}
+      {error ? <p className="form-error" role="alert">{errorMessage(error, locale)}</p> : null}
 
       {canUseMessageActions ? (
         <div className="detail-actions inbox-detail-actions">
           {!isAssignedToCurrentUser ? (
             <button className="button button-secondary" disabled={isUpdating} onClick={onTake} type="button">
-              Взять себе
+              {t.take}
             </button>
           ) : null}
           <button className="button button-secondary" disabled={isUpdating || message.status === "escalated"} onClick={onEscalate} type="button">
-            Передать менеджеру
+            {t.escalate}
           </button>
           <button className="button button-secondary" disabled={isUpdating || message.status === "archived"} onClick={onArchive} type="button">
-            Архивировать
+            {t.archive}
           </button>
         </div>
       ) : null}
@@ -761,36 +1053,39 @@ function isOneOf<TValue extends string>(value: unknown, allowed: readonly TValue
   return typeof value === "string" && allowed.includes(value as TValue);
 }
 
-function marketplaceLabel(value: string): string {
+function marketplaceLabel(value: string, locale: Locale): string {
+  const t = inboxCopy[locale];
   const labels: Record<string, string> = {
     wildberries: "Wildberries",
     ozon: "Ozon",
-    yandex_market: "Яндекс Маркет",
-    avito: "Авито",
+    yandex_market: t.yandex,
+    avito: t.avito,
   };
   return labels[value] ?? value;
 }
 
-function assignmentLabel(assignedTo: string | null, currentUserId: string): string {
-  if (!assignedTo) return "Не назначено";
-  return assignedTo === currentUserId ? "Вы" : "Другой сотрудник";
+function assignmentLabel(assignedTo: string | null, currentUserId: string, locale: Locale): string {
+  const t = inboxCopy[locale];
+  if (!assignedTo) return t.unassigned;
+  return assignedTo === currentUserId ? t.you : t.otherEmployee;
 }
 
-function nextStepLabel(status: string): string {
-  if (status === "waiting_review" || status === "needs_manual_check" || status === "safety_blocked") return "Проверить ответ перед отправкой";
-  if (status === "approved") return "Ответ одобрен и ожидает отправки";
-  if (status === "auto_reply_pending") return "Автоответ поставлен в очередь";
-  if (status === "sending") return "Ответ отправляется на маркетплейс";
-  if (status === "failed") return "Разобраться с ошибкой отправки";
-  if (status === "blocked_by_marketplace") return "Проверить подключение маркетплейса";
-  if (status === "answered" || status === "auto_reply_sent") return "Ответ уже отправлен";
-  if (status === "archived") return "Обращение находится в архиве";
-  if (status === "duplicate") return "Повторное обращение уже обработано";
-  if (status === "skipped") return "Обращение пропущено автоматизацией";
-  if (status === "escalated") return "Менеджеру нужно принять решение";
-  if (status === "ai_draft_ready") return "Проверить подготовленный черновик";
-  if (status === "auto_rule_matched") return "Проверить обработку по найденному правилу";
-  return "Подготовить ответ или передать обращение";
+function nextStepLabel(status: string, locale: Locale): string {
+  const t = inboxCopy[locale];
+  if (status === "waiting_review" || status === "needs_manual_check" || status === "safety_blocked") return t.stepReview;
+  if (status === "approved") return t.stepApproved;
+  if (status === "auto_reply_pending") return t.stepAutoPending;
+  if (status === "sending") return t.stepSending;
+  if (status === "failed") return t.stepFailed;
+  if (status === "blocked_by_marketplace") return t.stepConnection;
+  if (status === "answered" || status === "auto_reply_sent") return t.stepSent;
+  if (status === "archived") return t.stepArchived;
+  if (status === "duplicate") return t.stepDuplicate;
+  if (status === "skipped") return t.stepSkipped;
+  if (status === "escalated") return t.stepEscalated;
+  if (status === "ai_draft_ready") return t.stepDraft;
+  if (status === "auto_rule_matched") return t.stepRule;
+  return t.stepPrepare;
 }
 
 function nextStepTone(status: string): "danger" | "info" | "neutral" | "success" | "warning" {
@@ -805,24 +1100,25 @@ function isReviewWorkflowStatus(status: string): boolean {
   return ["waiting_review", "needs_manual_check", "safety_blocked", "approved"].includes(status);
 }
 
-function reviewHandoffCopy(status: string): { eyebrow: string; title: string } {
+function reviewHandoffCopy(status: string, locale: Locale): { eyebrow: string; title: string } {
+  const t = inboxCopy[locale];
   if (status === "approved") {
     return {
-      eyebrow: "Ответ одобрен",
-      title: "Продолжите отправку в разделе «На проверке»",
+      eyebrow: t.approvedEyebrow,
+      title: t.approvedTitle,
     };
   }
 
   if (status === "needs_manual_check" || status === "safety_blocked") {
     return {
-      eyebrow: "Нужна ручная проверка",
-      title: "Проверьте ответ и причины остановки в разделе «На проверке»",
+      eyebrow: t.manualEyebrow,
+      title: t.manualTitle,
     };
   }
 
   return {
-    eyebrow: "Ответ уже на проверке",
-    title: "Продолжите работу в разделе «На проверке»",
+    eyebrow: t.reviewEyebrow,
+    title: t.reviewTitle,
   };
 }
 
@@ -834,10 +1130,10 @@ function statusTone(status: string): BadgeTone {
   return "neutral";
 }
 
-function formatDate(value: string): string {
+function formatDate(value: string, locale: Locale): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("ru-RU", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ru-RU", {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -845,14 +1141,15 @@ function formatDate(value: string): string {
   }).format(date);
 }
 
-function errorMessage(error: unknown): string {
+function errorMessage(error: unknown, locale: Locale): string {
+  const t = inboxCopy[locale];
   if (error instanceof ApiError) {
-    if (error.status === 401) return "Сессия истекла. Войдите снова.";
-    if (error.status === 403) return "Недостаточно прав для этого действия.";
-    if (error.status === 404) return "Нужные данные не найдены. Обновите страницу и попробуйте снова.";
-    if (error.status === 409) return "Данные уже изменились. Обновите страницу и повторите действие.";
-    if (error.status === 422) return "Проверьте введённые данные и попробуйте снова.";
-    if (error.status === 429) return "Слишком много действий подряд. Подождите немного и попробуйте снова.";
+    if (error.status === 401) return t.unauthorized;
+    if (error.status === 403) return t.forbidden;
+    if (error.status === 404) return t.notFound;
+    if (error.status === 409) return t.conflict;
+    if (error.status === 422) return t.invalid;
+    if (error.status === 429) return t.rateLimit;
   }
-  return "Не удалось выполнить действие. Проверьте соединение и попробуйте снова.";
+  return t.genericError;
 }
