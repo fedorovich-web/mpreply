@@ -107,60 +107,6 @@
   margin-right: 5px;
 }
 
-/* Pricing uses the larger two-column CTA from the approved render. */
-.mockup-page .pricing-final-visual {
-  position: relative;
-  min-height: 190px;
-}
-
-.mockup-page .pricing-final-logo-cloud {
-  position: absolute;
-  top: 2px;
-  right: 20px;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mockup-page .pricing-final-logo-chip {
-  display: grid;
-  width: 58px;
-  height: 52px;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid #e5e2ff;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 10px 24px rgb(81 72 232 / 10%);
-}
-
-.mockup-page .pricing-final-logo-chip img {
-  display: block;
-  width: 60px;
-  height: 42px;
-  object-fit: contain;
-  transform-origin: center;
-}
-
-.mockup-page .pricing-final-sparkle {
-  position: absolute;
-  right: 6px;
-  bottom: 8px;
-  z-index: 3;
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border: 5px solid rgb(255 255 255 / 90%);
-  border-radius: 15px;
-  background: var(--gradient-mpreply-action);
-  color: #fff;
-  font-size: 23px;
-  box-shadow: 0 12px 28px rgb(81 72 232 / 19%);
-  transform: rotate(5deg);
-}
-
 @media (max-width: 860px) {
   .mockup-page .mockup-cta-strip {
     grid-template-columns: 52px minmax(0, 1fr);
@@ -205,13 +151,4 @@
     grid-column: auto;
   }
 
-  .mockup-page .pricing-final-visual {
-    min-height: 210px;
-  }
-
-  .mockup-page .pricing-final-logo-cloud {
-    top: 0;
-    right: auto;
-    left: 0;
-  }
 }

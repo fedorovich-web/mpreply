@@ -166,22 +166,6 @@
   transform: rotate(1.4deg);
 }
 
-.features-window-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid #e7effa;
-  color: #7184a5;
-  font-size: .72rem;
-}
-
-.features-window-body {
-  display: grid;
-  grid-template-columns: 1.05fr .95fr;
-  min-height: 370px;
-}
-
 .features-feed {
   padding: 18px 14px 20px 20px;
   border-right: 1px solid #e7effa;
@@ -216,44 +200,9 @@
   border-bottom: 1px solid #edf3fb;
 }
 
-.mockup-market-mark {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 11px;
-  color: #fff;
-  font-size: .7rem;
-  font-weight: 800;
-}
-
-.mockup-market-mark.wb { background: linear-gradient(135deg, #b11190, #e3238c); }
-.mockup-market-mark.oz { background: #0877ff; }
-.mockup-market-mark.ym { background: linear-gradient(135deg, #ffcc00, #ff6b00); color: #111827; }
-.mockup-market-mark.av { background: linear-gradient(135deg, #00aaff, #8b5cf6); }
-
 .features-message strong { display: block; font-size: .76rem; }
 .features-message p { margin: 3px 0 0; color: #7588a9; font-size: .66rem; }
 .features-message small { color: #94a3bd; font-size: .62rem; }
-
-.features-draft-pane {
-  display: grid;
-  align-content: center;
-  padding: 25px;
-  background: linear-gradient(145deg, #f9fbff, #f1f6ff);
-}
-
-.features-draft-card {
-  border: 1px solid #d9e8fb;
-  border-radius: 20px;
-  background: #fff;
-  padding: 22px;
-  box-shadow: 0 18px 44px rgb(37 99 235 / 10%);
-}
-
-.features-draft-card strong { color: var(--mockup-blue); }
-.features-draft-card p { margin: 12px 0 18px; color: #566b90; font-size: .76rem; line-height: 1.55; }
-.features-draft-card span { display: block; border-radius: 11px; background: linear-gradient(90deg, #2563eb, #4f46e5); color: #fff; padding: 10px 12px; text-align: center; font-size: .72rem; font-weight: 700; }
 
 .mockup-mascot {
   position: absolute;
@@ -491,17 +440,6 @@
   box-shadow: 0 12px 34px rgb(37 99 235 / 6%);
 }
 
-.marketplace-brand-wordmark {
-  min-height: 58px;
-  font-size: 1.22rem;
-  font-weight: 800;
-}
-.marketplace-brand-wordmark.wb { color: #c21b8c; }
-.marketplace-brand-wordmark.oz { color: #0877ff; font-size: 1.6rem; letter-spacing: .08em; text-transform: uppercase; }
-.marketplace-brand-wordmark.ym { color: #111827; }
-.marketplace-brand-wordmark.ym::first-letter { color: #ff3b30; }
-.marketplace-brand-wordmark.av { color: #111827; }
-
 .marketplace-logo-card p { margin: 8px 0 18px; color: #687c9d; font-size: .8rem; line-height: 1.6; }
 .marketplace-logo-card ul { display: grid; gap: 9px; margin: 0 0 24px; padding: 0; list-style: none; color: #52688d; font-size: .76rem; }
 .marketplace-logo-card li::before { margin-right: 7px; color: #22c55e; content: '✓'; font-weight: 800; }
@@ -527,8 +465,6 @@
   .mockup-actions { display: grid; }
   .mockup-actions .button { width: 100%; }
   .features-window { inset: 24px 0 20px; }
-  .features-window-body { grid-template-columns: 1fr; }
-  .features-draft-pane { display: none; }
   .features-mockup-scene { min-height: 420px; }
   .features-tool-grid,
   .features-benefit-grid,

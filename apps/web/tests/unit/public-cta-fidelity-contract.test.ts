@@ -33,6 +33,14 @@ describe("approved horizontal public CTA strips", () => {
     expect(css).toContain("grid-template-columns: minmax(0, 1fr) auto");
     expect(css).toContain(".mockup-cta-strip-side");
     expect(css).toContain("@media (max-width: 720px)");
+    for (const retired of [
+      ".pricing-final-visual",
+      ".pricing-final-logo-cloud",
+      ".pricing-final-logo-chip",
+      ".pricing-final-sparkle",
+    ]) {
+      expect(css).not.toContain(retired);
+    }
   });
 
   it("renders trust ticks as soft circular badges like the approved renders", () => {
