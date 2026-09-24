@@ -22,7 +22,7 @@ describe("review queue operational workspace", () => {
     expect(workspace).toContain("queueQuery.error && queueQuery.data");
     expect(workspace).toContain("review-queue-refresh-error");
     expect(workspace).toContain('actionDisabled={queueQuery.isFetching}');
-    expect(workspace).toContain('actionLabel={queueQuery.isFetching ? "Повторяем..." : "Повторить"}');
+    expect(workspace).toContain("actionLabel={queueQuery.isFetching ? t.retrying : t.retry}");
     expect(styles).toContain(".review-queue-state");
     expect(styles).toContain(".review-queue-refresh-error");
   });
@@ -58,13 +58,14 @@ describe("review queue operational workspace", () => {
   it("keeps paginated review work reachable beyond the first API page", () => {
     expect(workspace).toContain("const [page, setPage] = useState(1)");
     expect(workspace).toContain("page_size: reviewQueuePageSize");
-    expect(workspace).toContain('aria-label="Следующая страница"');
+    expect(workspace).toContain("aria-label={t.nextPage}");
     expect(styles).toContain(".review-queue-pagination");
   });
 
   it("prevents known read-only roles from discovering permissions through a failed click", () => {
     expect(workspace).toContain('new Set(["owner", "admin", "manager"])');
     expect(workspace).toContain("canManageReview");
+    expect(workspace).toContain("const { activeOrganization, locale } = useWorkspace()");
     expect(workspace).toContain("review-readonly-note");
     expect(workspace).toContain("Ваша роль позволяет просматривать очередь");
   });

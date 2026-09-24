@@ -14,12 +14,14 @@ describe("AI assistant operational workspace", () => {
     expect(workspace).toContain('apiRequest("/api/replies/manual"');
     expect(workspace).toContain("/submit-review");
     expect(workspace).toContain("ai_draft_id: draft.id");
+    expect(workspace).toContain("const { activeOrganization, locale } = useWorkspace()");
+    expect(workspace).toContain('localizedPath(locale, "/app/review-queue")');
   });
 
   it("keeps paginated source messages reachable beyond the first API page", () => {
     expect(workspace).toContain("const [messagePage, setMessagePage] = useState(1)");
     expect(workspace).toContain("page_size: aiMessagePageSize");
-    expect(workspace).toContain('aria-label="Следующая страница обращений"');
+    expect(workspace).toContain("aria-label={t.nextPage}");
     expect(styles).toContain(".ai-message-pagination");
   });
 

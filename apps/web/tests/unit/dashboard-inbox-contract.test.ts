@@ -13,17 +13,18 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain('buildApiQuery("/api/messages"');
     expect(inbox).toContain("marketplace:");
     expect(inbox).toContain("assigned_to:");
-    expect(inbox).toContain('label="Площадка"');
-    expect(inbox).toContain('label="Ответственный"');
+    expect(inbox).toContain('marketplace: "Площадка"');
+    expect(inbox).toContain('assignee: "Ответственный"');
     expect(inbox).toContain("Назначено мне");
     expect(inbox).toContain("mpreply.inbox.filters.");
+    expect(inbox).toContain("const { activeOrganization, user, locale } = useWorkspace()");
     expect(inbox).toContain("window.localStorage.setItem");
   });
 
   it("keeps server pagination reachable without losing the active filters", () => {
     expect(inbox).toContain("const [page, setPage] = useState(1)");
     expect(inbox).toContain("page_size: inboxPageSize");
-    expect(inbox).toContain('aria-label="Следующая страница"');
+    expect(inbox).toContain("aria-label={t.nextPage}");
     expect(inbox).toContain("без оценки на странице");
     expect(styles).toContain(".inbox-pagination");
   });
@@ -34,7 +35,7 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain("inbox-refresh-error");
     expect(inbox).toContain('tone="error"');
     expect(inbox).toContain("actionDisabled={messagesQuery.isFetching}");
-    expect(inbox).toContain('actionLabel={messagesQuery.isFetching ? "Повторяем..." : "Повторить"}');
+    expect(inbox).toContain("actionLabel={messagesQuery.isFetching ? t.retrying : t.retry}");
     expect(inbox).not.toContain("messagesQuery.data?.total ?? 0} обращений");
     expect(styles).toContain(".inbox-list-state");
     expect(styles).toContain(".inbox-refresh-error");
@@ -47,7 +48,7 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain("Контекст товара");
     expect(inbox).toContain("Ответ для проверки");
     expect(inbox).toContain("Передать на проверку");
-    expect(inbox).toContain('href="/app/review-queue"');
+    expect(inbox).toContain('localizedPath(locale, "/app/review-queue")');
   });
 
   it("maps workflow states to truthful next steps and review handoffs", () => {

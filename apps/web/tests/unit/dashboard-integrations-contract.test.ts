@@ -16,7 +16,8 @@ const styles = readFileSync(join(root, "styles/dashboard-integrations-approved.c
 describe("integrations dashboard", () => {
   it("keeps all four ready integrations on the existing marketplace accounts API", () => {
     expect(workspace).toContain('buildApiQuery("/api/marketplace-accounts"');
-    expect(workspace).toContain("Подключение доступно");
+    expect(workspace).toContain('available: "Подключение доступно"');
+    expect(workspace).toContain("localizedPath(locale, marketplace.href)");
     expect(workspace).toContain("Wildberries");
     expect(workspace).toContain("Ozon");
     expect(workspace).toContain("Яндекс Маркет");
@@ -38,7 +39,7 @@ describe("integrations dashboard", () => {
 
   it("keeps the account detail section named even when no account is selected", () => {
     expect(detailWorkspace).toContain("aria-labelledby={selectedAccount ? detailTitleId : undefined}");
-    expect(detailWorkspace).toContain('aria-label={selectedAccount ? undefined : `Состояние подключения ${marketplaceName}`}');
+    expect(detailWorkspace).toContain('aria-label={selectedAccount ? undefined : `${t.connectionStateAria} ${marketplaceName}`}');
   });
 
   it("uses the same detail page and header layout for every ready marketplace", () => {
