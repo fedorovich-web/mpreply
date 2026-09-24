@@ -140,11 +140,20 @@ class MarketplaceIngestService:
                 CustomerMessage.marketplace == marketplace.value,
                 CustomerMessage.external_id == resolution.external_id,
                 CustomerMessage.type == MessageType.REVIEW.value,
-                CustomerMessage.status == MessageStatus.NEEDS_REPLY.value,
             )
             .with_for_update()
         )
         if message is None:
+            return
+        if (
+            resolution.status is MessageStatus.ANSWERED
+            and message.status in {MessageStatus.ANSWERED.value, MessageStatus.AUTO_REPLY_SENT.value}
+            and (message.metadata_json or {}).get("provider_publication") == "unverified"
+        ):
+            metadata = dict(message.metadata_json)
+            metadata.pop("provider_publication")
+            message.metadata_json = metadata
+        if message.status != MessageStatus.NEEDS_REPLY.value:
             return
         reply_id = await self.session.scalar(select(Reply.id).where(Reply.organization_id == account.organization_id, Reply.message_id == message.id).limit(1))
         if reply_id is not None:
@@ -271,7 +280,14 @@ class MarketplaceIngestService:
         message.marketplace_created_at = normalized.marketplace_created_at
         message.last_synced_at = now
         message.priority = _priority_for(normalized)
-        message.metadata_json = sanitize_message_metadata(marketplace, normalized.metadata)
+        metadata = sanitize_message_metadata(marketplace, normalized.metadata)
+        if (
+            marketplace is Marketplace.AVITO
+            and normalized.message_type is MessageType.REVIEW
+            and (message.metadata_json or {}).get("provider_publication") == "unverified"
+        ):
+            metadata["provider_publication"] = "unverified"
+        message.metadata_json = metadata
 
 
 def sanitize_message_metadata(

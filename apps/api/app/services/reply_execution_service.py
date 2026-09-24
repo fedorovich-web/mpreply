@@ -44,7 +44,7 @@ _READ_ROLES = {"owner", "admin", "manager", "viewer"}
 _RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"})
 _BLOCKING_MARKETPLACE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
 _AMBIGUOUS_WRITE_ERRORS = frozenset({"malformed_payload", "marketplace_unavailable", "network_error", "network_timeout"})
-_NON_PUBLISHABLE_PROVIDER_STATES = frozenset({"unmoderated", "banned", "deleted", "unknown"})
+_NON_PUBLISHABLE_PROVIDER_STATES = frozenset({"unmoderated", "banned", "deleted", "unknown", "moderation", "rejected"})
 
 
 @dataclass(frozen=True)
@@ -535,6 +535,7 @@ class ReplyExecutionService:
                 message=message,
                 marketplace_reply_id=preflight.data.provider_reply_id,
                 externally_already_answered=True,
+                provider_state=preflight.data.provider_state,
             )
             return ExecuteReplyResult(reply.id, reply.status, False, externally_already_answered=True)
 
@@ -589,6 +590,7 @@ class ReplyExecutionService:
                 message=message,
                 marketplace_reply_id=result.data.provider_reply_id,
                 externally_already_answered=False,
+                provider_state=result.data.provider_state,
             )
             return ExecuteReplyResult(reply.id, reply.status, False)
 
@@ -754,12 +756,20 @@ class ReplyExecutionService:
         message: CustomerMessage,
         marketplace_reply_id: str | None,
         externally_already_answered: bool,
+        provider_state: str | None = None,
     ) -> None:
         self._transition_reply(reply, ReplyStatus.SENT.value)
         message_target = MessageStatus.AUTO_REPLY_SENT.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.ANSWERED.value
         self._transition_message(message, message_target)
         reply.sent_at = datetime.now(UTC)
         reply.marketplace_reply_id = marketplace_reply_id
+        if message.marketplace == Marketplace.AVITO.value and message.type == MessageType.REVIEW.value:
+            metadata = dict(message.metadata_json or {})
+            if provider_state == "accepted_unverified" and not externally_already_answered:
+                metadata["provider_publication"] = "unverified"
+            elif provider_state == "published" and externally_already_answered:
+                metadata.pop("provider_publication", None)
+            message.metadata_json = metadata
         reply.error_code = None
         reply.failed_reason = None
         reply.next_retry_at = None

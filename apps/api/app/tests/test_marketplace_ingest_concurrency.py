@@ -251,3 +251,32 @@ async def test_unrelated_integrity_error_is_not_suppressed() -> None:
             _chat_page(),
             NOW,
         )
+
+
+@pytest.mark.asyncio
+async def test_avito_submission_verification_marker_survives_duplicate_review_sync() -> None:
+    shared = _SharedRecords()
+    account = _account()
+    page = MarketplacePage(
+        items=(
+            NormalizedMessage(
+                external_id="92312343",
+                message_type=MessageType.REVIEW,
+                rating=5,
+                customer_display_name=None,
+                customer_text="",
+                customer_photos=(),
+                marketplace_created_at=NOW,
+                product=None,
+                metadata={"source": "avito.reviews"},
+            ),
+        ),
+        next_cursor=None,
+    )
+    await MarketplaceIngestService(cast(AsyncSession, _ConcurrentSession(shared))).ingest_page(account, page, NOW)
+    assert shared.message is not None
+    shared.message.metadata_json = {**shared.message.metadata_json, "provider_publication": "unverified"}
+
+    await MarketplaceIngestService(cast(AsyncSession, _ConcurrentSession(shared))).ingest_page(account, page, NOW)
+
+    assert shared.message.metadata_json["provider_publication"] == "unverified"
