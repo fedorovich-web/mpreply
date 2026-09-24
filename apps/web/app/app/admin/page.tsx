@@ -8,8 +8,8 @@ export default function AdminPage() {
           <p className="eyebrow">Администрирование MPReply</p>
           <h1>Системная панель MPReply</h1>
           <p>
-            Контролируйте состояние продукта, нагрузку, подписки и ошибки фоновых процессов
-            в одном внутреннем рабочем пространстве.
+            Сверяйте состояние продукта, нагрузку, подписки и ошибки фоновых процессов
+            по одной системной сводке.
           </p>
           <div className="admin-page-hero-badges" aria-label="Параметры доступа">
             <span>Только superadmin</span>
@@ -34,7 +34,11 @@ export default function AdminPage() {
                   <span />
                   <span />
                 </div>
-                <span className="admin-page-preview-chart" />
+                <div className="admin-page-preview-activity">
+                  <span />
+                  <span />
+                  <span />
+                </div>
                 <span className="admin-page-preview-line admin-page-preview-line-short" />
               </div>
             </div>

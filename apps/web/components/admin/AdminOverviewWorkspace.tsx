@@ -94,7 +94,7 @@ export function AdminOverviewWorkspace() {
     {
       label: "Активные подписки",
       value: data.subscriptions_active,
-      helper: "Активные и пробные подписки",
+      helper: "Подписки, учтённые системой как активные",
       ratio: subscriptionCoverage,
       ratioLabel: subscriptionCoverage + "% от активных организаций",
     },
@@ -104,12 +104,12 @@ export function AdminOverviewWorkspace() {
     {
       label: "События использования · 30 дней",
       value: data.usage_events_30d,
-      helper: "Учтённые события потребления лимитов",
+      helper: "События, учтённые системой за период",
     },
     {
       label: "Оценка расходов на ИИ · 30 дней",
       value: formatUsd(data.ai_cost_estimate_30d),
-      helper: "Расчёт по сохранённым ИИ-черновикам",
+      helper: "Оценка системных расходов за период",
     },
   ];
 
@@ -142,7 +142,7 @@ export function AdminOverviewWorkspace() {
       <div className="admin-kpi-strip" aria-label="Ключевые показатели">
         <AdminKpi label="Активные организации" value={formatNumber(data.organizations_active)} helper={"из " + formatNumber(data.organizations_total)} />
         <AdminKpi label="Пользователи" value={formatNumber(data.users_total)} helper="зарегистрировано" />
-        <AdminKpi label="Активные подписки" value={formatNumber(data.subscriptions_active)} helper="включая пробные" />
+        <AdminKpi label="Активные подписки" value={formatNumber(data.subscriptions_active)} helper="по данным системы" />
         <AdminKpi label="ИИ · 30 дней" value={formatUsd(data.ai_cost_estimate_30d)} helper="оценка расходов" />
       </div>
 
