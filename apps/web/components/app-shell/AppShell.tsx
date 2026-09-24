@@ -5,6 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import {
+  alternateLocale,
+  basePathFromLocalizedPath,
+  localizedPath,
+  type Locale,
+} from "../../lib/i18n";
 import { PublicBrandMark } from "../public-site/PublicBrandMark";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
@@ -34,40 +40,106 @@ type NavGroup = {
 
 const focusableSelector = 'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const navGroups: NavGroup[] = [
-  {
-    id: "work",
-    label: "Работа",
-    items: [
-      { href: "/app/dashboard", label: "Обзор", icon: "overview" },
-      { href: "/app/inbox", label: "Обращения", icon: "inbox" },
-      { href: "/app/review-queue", label: "На проверке", icon: "review" },
-    ],
-  },
-  {
-    id: "answers",
-    label: "Ответы и автоматизация",
-    items: [
-      { href: "/app/ai-assistant", label: "Ответы с ИИ", icon: "ai" },
-      { href: "/app/automation-rules", label: "Автоматизация", icon: "automation" },
-    ],
-  },
-  {
-    id: "management",
-    label: "Управление",
-    items: [
-      { href: "/app/integrations", label: "Интеграции", icon: "integrations" },
-      { href: "/app/analytics", label: "Аналитика", icon: "analytics" },
-      { href: "/app/billing", label: "Тариф и лимиты", icon: "billing" },
-    ],
-  },
-];
+const navDefinitions = {
+  ru: [
+    {
+      id: "work",
+      label: "Работа",
+      items: [
+        { href: "/app/dashboard", label: "Обзор", icon: "overview" },
+        { href: "/app/inbox", label: "Обращения", icon: "inbox" },
+        { href: "/app/review-queue", label: "На проверке", icon: "review" },
+      ],
+    },
+    {
+      id: "answers",
+      label: "Ответы и автоматизация",
+      items: [
+        { href: "/app/ai-assistant", label: "Ответы с ИИ", icon: "ai" },
+        { href: "/app/automation-rules", label: "Автоматизация", icon: "automation" },
+      ],
+    },
+    {
+      id: "management",
+      label: "Управление",
+      items: [
+        { href: "/app/integrations", label: "Интеграции", icon: "integrations" },
+        { href: "/app/analytics", label: "Аналитика", icon: "analytics" },
+        { href: "/app/billing", label: "Тариф и лимиты", icon: "billing" },
+      ],
+    },
+  ],
+  en: [
+    {
+      id: "work",
+      label: "Work",
+      items: [
+        { href: "/app/dashboard", label: "Overview", icon: "overview" },
+        { href: "/app/inbox", label: "Messages", icon: "inbox" },
+        { href: "/app/review-queue", label: "Needs review", icon: "review" },
+      ],
+    },
+    {
+      id: "answers",
+      label: "Replies and automation",
+      items: [
+        { href: "/app/ai-assistant", label: "AI replies", icon: "ai" },
+        { href: "/app/automation-rules", label: "Automation", icon: "automation" },
+      ],
+    },
+    {
+      id: "management",
+      label: "Management",
+      items: [
+        { href: "/app/integrations", label: "Integrations", icon: "integrations" },
+        { href: "/app/analytics", label: "Analytics", icon: "analytics" },
+        { href: "/app/billing", label: "Plan and limits", icon: "billing" },
+      ],
+    },
+  ],
+} satisfies Record<Locale, NavGroup[]>;
 
-const adminNavGroup: NavGroup = {
-  id: "system",
-  label: "Система",
-  items: [{ href: "/app/admin", label: "Администрирование", icon: "admin" }],
-};
+const adminDefinition = {
+  ru: { id: "system", label: "Система", items: [{ href: "/app/admin", label: "Администрирование", icon: "admin" }] },
+  en: { id: "system", label: "System", items: [{ href: "/app/admin", label: "Administration", icon: "admin" }] },
+} satisfies Record<Locale, NavGroup>;
+
+const shellCopy = {
+  ru: {
+    mainNav: "Основная навигация",
+    panel: "Панель MPReply",
+    customerWork: "Работа с покупателями",
+    chooseWorkspace: "Выбрать рабочее пространство",
+    workspace: "Рабочее пространство",
+    sections: "Разделы кабинета",
+    help: "Помощь",
+    helpDetail: "База знаний и поддержка",
+    closeSidebar: "Закрыть боковое меню",
+    closeMenu: "Закрыть меню кабинета",
+    openMenu: "Открыть меню кабинета",
+    workspaceFallback: "Кабинет",
+    loggingOut: "Выходим...",
+    logout: "Выйти",
+    language: "Switch to English",
+  },
+  en: {
+    mainNav: "Main navigation",
+    panel: "MPReply workspace",
+    customerWork: "Customer communication",
+    chooseWorkspace: "Choose workspace",
+    workspace: "Workspace",
+    sections: "Workspace sections",
+    help: "Help",
+    helpDetail: "Knowledge base and support",
+    closeSidebar: "Close sidebar",
+    closeMenu: "Close workspace menu",
+    openMenu: "Open workspace menu",
+    workspaceFallback: "Workspace",
+    loggingOut: "Logging out...",
+    logout: "Log out",
+    language: "Переключить на русский",
+  },
+} as const;
 
 function matchesRoute(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -105,6 +177,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const {
+    locale,
     user,
     organizations,
     activeOrganization,
@@ -113,10 +186,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     isLoggingOut,
     logoutError,
   } = useWorkspace();
-  const visibleNavGroups = user.is_superadmin ? [...navGroups, adminNavGroup] : navGroups;
+  const labels = shellCopy[locale];
+  const localizedGroups = navDefinitions[locale].map((group) => ({
+    ...group,
+    items: group.items.map((item) => ({ ...item, href: localizedPath(locale, item.href) })),
+  }));
+  const localizedAdmin = {
+    ...adminDefinition[locale],
+    items: adminDefinition[locale].items.map((item) => ({ ...item, href: localizedPath(locale, item.href) })),
+  };
+  const visibleNavGroups = user.is_superadmin ? [...localizedGroups, localizedAdmin] : localizedGroups;
   const activeNavItem = visibleNavGroups
     .flatMap((group) => group.items)
     .find((item) => matchesRoute(pathname, item.href));
+  const otherLocale = alternateLocale(locale);
+  const languageHref = localizedPath(otherLocale, basePathFromLocalizedPath(pathname));
 
   useEffect(() => {
     if (!isOpen) return;
@@ -170,13 +254,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
-      <aside ref={sidebarRef} className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label="Основная навигация">
+      <aside ref={sidebarRef} className={isOpen ? "app-sidebar app-sidebar-open" : "app-sidebar"} aria-label={labels.mainNav}>
         <div className="app-sidebar-brand">
-          <Link href="/app/dashboard" className="app-logo" aria-label="Панель MPReply" onClick={closeDrawer}>
+          <Link href={localizedPath(locale, "/app/dashboard")} className="app-logo" aria-label={labels.panel} onClick={closeDrawer}>
             <PublicBrandMark />
             <span>
               <strong>MPReply</strong>
-              <small>Работа с покупателями</small>
+              <small>{labels.customerWork}</small>
             </span>
           </Link>
         </div>
@@ -187,9 +271,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </span>
           {organizations.length > 1 ? (
             <label className="app-sidebar-workspace-select">
-              <span className="sr-only">Выбрать рабочее пространство</span>
+              <span className="sr-only">{labels.chooseWorkspace}</span>
               <select
-                aria-label="Выбрать рабочее пространство"
+                aria-label={labels.chooseWorkspace}
                 onChange={(event) => setActiveOrganizationId(event.target.value)}
                 value={activeOrganization.id}
               >
@@ -197,17 +281,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <option key={organization.id} value={organization.id}>{organization.name}</option>
                 ))}
               </select>
-              <small>Рабочее пространство</small>
+              <small>{labels.workspace}</small>
             </label>
           ) : (
             <span className="app-sidebar-workspace-copy">
               <strong>{activeOrganization.name}</strong>
-              <small>Рабочее пространство</small>
+              <small>{labels.workspace}</small>
             </span>
           )}
         </div>
 
-        <nav className="app-nav" aria-label="Разделы кабинета">
+        <nav className="app-nav" aria-label={labels.sections}>
           {visibleNavGroups.map((group) => (
             <div className="app-nav-group" role="group" aria-labelledby={`app-nav-${group.id}`} key={group.id}>
               <span className="app-nav-group-label" id={`app-nav-${group.id}`}>{group.label}</span>
@@ -233,16 +317,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="app-sidebar-footer">
-          <Link className="app-help-link" href="/help" onClick={closeDrawer}>
+          <Link className="app-help-link" href={localizedPath(locale, "/help")} onClick={closeDrawer}>
             <span className="app-nav-icon"><NavIcon name="help" /></span>
-            <span><strong>Помощь</strong><small>База знаний и поддержка</small></span>
+            <span><strong>{labels.help}</strong><small>{labels.helpDetail}</small></span>
           </Link>
         </div>
       </aside>
 
       {isOpen ? (
         <button
-          aria-label="Закрыть боковое меню"
+          aria-label={labels.closeSidebar}
           className="app-sidebar-backdrop"
           onClick={closeDrawerAndRestoreFocus}
           type="button"
@@ -254,7 +338,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             ref={menuTriggerRef}
             aria-expanded={isOpen}
-            aria-label={isOpen ? "Закрыть меню кабинета" : "Открыть меню кабинета"}
+            aria-label={isOpen ? labels.closeMenu : labels.openMenu}
             className="app-menu-button"
             onClick={() => setIsOpen((value) => !value)}
             type="button"
@@ -265,11 +349,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="app-topbar-title">
-            <span>{activeNavItem?.label ?? "Кабинет"}</span>
+            <span>{activeNavItem?.label ?? labels.workspaceFallback}</span>
             <strong>{activeOrganization.name}</strong>
           </div>
 
           <div className="app-topbar-controls">
+            <Link
+              className="button button-secondary button-compact app-language-switch"
+              href={languageHref}
+              hrefLang={otherLocale}
+              aria-label={labels.language}
+            >
+              {otherLocale.toUpperCase()}
+            </Link>
+
             <div className="app-topbar-user">
               <span className="app-status-dot" aria-hidden="true" />
               <span>
@@ -285,7 +378,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={logout}
                 type="button"
               >
-                {isLoggingOut ? "Выходим..." : "Выйти"}
+                {isLoggingOut ? labels.loggingOut : labels.logout}
               </button>
               {logoutError ? <span className="app-logout-error" role="alert">{logoutError}</span> : null}
             </div>
