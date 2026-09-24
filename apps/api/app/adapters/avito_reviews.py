@@ -12,10 +12,13 @@ from app.adapters.avito_http import AvitoApiClient
 from app.adapters.base import (
     AdapterResult,
     CredentialValidation,
+    ExistingReplyResult,
     MarketplacePage,
     NormalizedMessage,
     NormalizedProduct,
+    ProviderMessageContext,
     ProviderMessageResolution,
+    ProviderWriteReceipt,
 )
 from app.adapters.capabilities import MarketplaceStream
 from app.adapters.http import ReadRetryPolicy
@@ -85,7 +88,7 @@ class AvitoReviewAdapter:
     ) -> AdapterResult[MarketplacePage[NormalizedMessage]]:
         del seller_id
         if stream is not MarketplaceStream.REVIEWS:
-            return self._invalid("Avito supports reviews, not questions")
+            return self._unsupported()
         page = await self._fetch_reviews(credential, cursor)
         if not page.ok or page.data is None:
             return cast(AdapterResult[MarketplacePage[NormalizedMessage]], AvitoApiClient.copy_failure(page))
@@ -147,6 +150,95 @@ class AvitoReviewAdapter:
             ok=True,
             data=MarketplacePage(items=records, next_cursor=str(next_offset) if next_offset < total else None),
         )
+
+    async def find_existing_reply(
+        self,
+        credential: str,
+        seller_id: str | None,
+        context: ProviderMessageContext,
+    ) -> AdapterResult[ExistingReplyResult]:
+        del seller_id
+        if context.message_type is not MessageType.REVIEW:
+            return self._unsupported()
+        review_id = self._context_review_id(context)
+        if review_id is None:
+            return self._invalid("Avito review reply context is invalid")
+        found = await self._find_review(credential, review_id)
+        if not found.ok or found.data is None:
+            return cast(AdapterResult[ExistingReplyResult], AvitoApiClient.copy_failure(found))
+        if found.data.answer is not None:
+            return AdapterResult(
+                ok=True,
+                data=ExistingReplyResult(
+                    exists=True,
+                    provider_reply_id=str(found.data.answer.answer_id),
+                    provider_state=found.data.answer.status,
+                ),
+            )
+        if not found.data.can_answer:
+            return self._invalid("Avito review is no longer answerable")
+        return AdapterResult(ok=True, data=ExistingReplyResult(exists=False))
+
+    async def send_reply(
+        self,
+        credential: str,
+        seller_id: str | None,
+        context: ProviderMessageContext,
+        text: str,
+    ) -> AdapterResult[ProviderWriteReceipt]:
+        del seller_id
+        if context.message_type is not MessageType.REVIEW:
+            return self._unsupported()
+        review_id = self._context_review_id(context)
+        if review_id is None or not text or text != text.strip() or len(text) > 3_000 or "\x00" in text:
+            return self._invalid("Avito review reply input is invalid")
+        found = await self._find_review(credential, review_id)
+        if not found.ok or found.data is None:
+            return cast(AdapterResult[ProviderWriteReceipt], AvitoApiClient.copy_failure(found))
+        if found.data.answer is not None or not found.data.can_answer:
+            return self._invalid("Avito review is no longer answerable")
+        result = await self._api.write(
+            credential,
+            "/ratings/v1/answers",
+            body={"reviewId": review_id, "message": text},
+        )
+        if not result.ok:
+            return cast(AdapterResult[ProviderWriteReceipt], AvitoApiClient.copy_failure(result))
+        payload = self._object(result.data)
+        answer_id = self._positive_int(payload.get("id")) if payload is not None else None
+        created = self._unix_seconds(payload.get("createdAt")) if payload is not None else None
+        if answer_id is None or created is None:
+            return self._malformed()
+        return AdapterResult(
+            ok=True,
+            data=ProviderWriteReceipt(provider_reply_id=str(answer_id), provider_state="accepted_unverified"),
+        )
+
+    async def _find_review(self, credential: str, review_id: int) -> AdapterResult[AvitoReviewRecord]:
+        cursor: str | None = None
+        for _ in range(_MAX_OFFSET // _PAGE_SIZE + 1):
+            page = await self._fetch_reviews(credential, cursor)
+            if not page.ok or page.data is None:
+                return cast(AdapterResult[AvitoReviewRecord], AvitoApiClient.copy_failure(page))
+            for record in page.data.items:
+                if record.review_id == review_id:
+                    return AdapterResult(ok=True, data=record)
+            if page.data.next_cursor is None:
+                return AdapterResult(
+                    False,
+                    error_code="marketplace_not_found",
+                    error_message_safe="Avito review was not found during reply preflight",
+                )
+            cursor = page.data.next_cursor
+        return self._malformed()
+
+    @classmethod
+    def _context_review_id(cls, context: ProviderMessageContext) -> int | None:
+        identifier = context.external_id
+        if context.message_type is not MessageType.REVIEW or len(identifier) > 20 or not identifier.isascii() or not identifier.isdecimal():
+            return None
+        parsed = int(identifier)
+        return parsed if parsed > 0 and str(parsed) == identifier else None
 
     @classmethod
     def _parse_review(cls, raw: object) -> AvitoReviewRecord:
@@ -301,7 +393,7 @@ class AvitoReviewAdapter:
     def _offset(cursor: str | None) -> int | None:
         if cursor is None:
             return 0
-        if not cursor.isascii() or not cursor.isdecimal():
+        if len(cursor) > 4 or not cursor.isascii() or not cursor.isdecimal():
             return None
         offset = int(cursor)
         return offset if offset <= _MAX_OFFSET and offset % _PAGE_SIZE == 0 and str(offset) == cursor else None
@@ -313,3 +405,7 @@ class AvitoReviewAdapter:
     @staticmethod
     def _invalid(message: str) -> AdapterResult[Never]:
         return AdapterResult(False, error_code="marketplace_validation_error", error_message_safe=message)
+
+    @staticmethod
+    def _unsupported() -> AdapterResult[Never]:
+        return AdapterResult(False, error_code="unsupported_capability", error_message_safe="Avito questions are not supported")

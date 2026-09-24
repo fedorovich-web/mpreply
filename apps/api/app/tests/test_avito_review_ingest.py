@@ -160,3 +160,21 @@ async def test_non_avito_review_still_requires_nonempty_text_and_product() -> No
     account.marketplace = Marketplace.WILDBERRIES.value
     with pytest.raises(InvalidNormalizedRecord):
         await MarketplaceIngestService(cast(AsyncSession, _Session())).ingest_page(account, MarketplacePage(items=(_review(),), next_cursor=None), _NOW)
+
+
+@pytest.mark.asyncio
+async def test_provider_published_resolution_clears_only_unverified_marker_on_sent_review() -> None:
+    account = _account()
+    sent = _existing(account, "92312343", MessageStatus.ANSWERED)
+    sent.metadata_json = {"source": "avito.reviews", "provider_publication": "unverified"}
+    session = _Session([sent], {sent.id})
+    page = MarketplacePage(
+        items=(),
+        next_cursor=None,
+        resolutions=(ProviderMessageResolution("92312343", MessageType.REVIEW, MessageStatus.ANSWERED),),
+    )
+
+    await MarketplaceIngestService(cast(AsyncSession, session)).ingest_page(account, page, _NOW)
+
+    assert sent.status == MessageStatus.ANSWERED.value
+    assert sent.metadata_json == {"source": "avito.reviews"}
