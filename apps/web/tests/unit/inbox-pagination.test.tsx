@@ -81,6 +81,7 @@ function mockWorkspace() {
     logout: vi.fn(),
     isLoggingOut: false,
     logoutError: null,
+    locale: "ru",
   });
 }
 
@@ -111,12 +112,12 @@ function installPagedMessages() {
     const url = String(input);
     if (url.includes("page=2")) {
       return new Response(
-        JSON.stringify({ items: [pageTwoMessage], total: 101, page: 2, page_size: 100 }),
+        JSON.stringify({ items: [pageTwoMessage], total: 9, page: 2, page_size: 8 }),
         { status: 200 },
       );
     }
     return new Response(
-      JSON.stringify({ items: [baseMessage], total: 101, page: 1, page_size: 100 }),
+      JSON.stringify({ items: [baseMessage], total: 9, page: 1, page_size: 8 }),
       { status: 200 },
     );
   });
@@ -125,7 +126,7 @@ function installPagedMessages() {
 }
 
 describe("InboxWorkspace pagination", () => {
-  it("lets users reach messages after the first 100 results", async () => {
+  it("lets users reach messages after the first compact page", async () => {
     mockWorkspace();
     const fetchMock = installPagedMessages();
 
@@ -146,6 +147,7 @@ describe("InboxWorkspace pagination", () => {
     renderWorkspace();
 
     expect(await screen.findByRole("button", { name: /Товар 1/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Фильтры" }));
     const filters = screen.getByRole("complementary", { name: "Фильтры обращений" });
     fireEvent.click(within(filters).getByRole("button", { name: "Без оценки" }));
 

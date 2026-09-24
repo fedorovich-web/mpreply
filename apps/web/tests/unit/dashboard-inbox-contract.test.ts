@@ -19,11 +19,13 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain("mpreply.inbox.filters.");
     expect(inbox).toContain("const { activeOrganization, user, locale } = useWorkspace()");
     expect(inbox).toContain("window.localStorage.setItem");
+    expect(inbox).toContain('buildApiQuery("/api/analytics/overview"');
   });
 
   it("keeps server pagination reachable without losing the active filters", () => {
     expect(inbox).toContain("const [page, setPage] = useState(1)");
     expect(inbox).toContain("page_size: inboxPageSize");
+    expect(inbox).toContain("const inboxPageSize = 8");
     expect(inbox).toContain("aria-label={t.nextPage}");
     expect(inbox).toContain("без оценки на странице");
     expect(styles).toContain(".inbox-pagination");
@@ -41,7 +43,7 @@ describe("inbox operational workspace", () => {
     expect(styles).toContain(".inbox-refresh-error");
   });
 
-  it("keeps the list-detail flow keyboard-operable and the next action explicit", () => {
+  it("keeps the table-detail flow keyboard-operable and the next action explicit", () => {
     expect(inbox).toContain('aria-pressed={isSelected}');
     expect(inbox).toContain("inbox-next-step");
     expect(inbox).toContain("Следующий шаг");
@@ -105,8 +107,12 @@ describe("inbox operational workspace", () => {
   it("loads a scoped responsive inbox style layer without a second palette", () => {
     expect(layout).toContain('import "../styles/dashboard-inbox-approved.css"');
     expect(styles).toContain(".inbox-workspace");
-    expect(styles).toContain(".inbox-filters-panel");
-    expect(styles).toContain(".message-card-selected");
+    expect(styles).toContain(".inbox-kpi-grid");
+    expect(styles).toContain(".inbox-toolbar");
+    expect(styles).toContain(".inbox-filter-drawer");
+    expect(styles).toContain(".inbox-message-table");
+    expect(styles).toContain(".inbox-table-row-selected");
+    expect(styles).toContain(".inbox-side-default");
     expect(styles).toContain(".inbox-manual-draft-field");
     expect(styles).toContain("@media (max-width: 520px)");
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);

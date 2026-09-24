@@ -1,12 +1,14 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import { localizedPath, type Locale } from "../../lib/i18n";
 import {
+  analyticsOverviewSchema,
   customerMessageListSchema,
   customerMessageSchema,
   manualReplyWorkflowSchema,
@@ -38,7 +40,7 @@ type MessageUpdate = {
 };
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
-const inboxPageSize = 100;
+const inboxPageSize = 8;
 const marketplaceFilters: Record<Locale, Array<{ value: MarketplaceFilter; label: string }>> = {
   ru: [
     { value: "all", label: "Все" },
@@ -239,6 +241,35 @@ const inboxCopy = {
     invalid: "Проверьте введённые данные и попробуйте снова.",
     rateLimit: "Слишком много действий подряд. Подождите немного и попробуйте снова.",
     genericError: "Не удалось выполнить действие. Проверьте соединение и попробуйте снова.",
+    totalKpi: "Всего обращений",
+    totalKpiHelper: "за последние 30 дней",
+    unansweredKpi: "Требуют ответа",
+    unansweredKpiHelper: "ждут следующего шага",
+    sentKpi: "Ответов отправлено",
+    sentKpiHelper: "за последние 30 дней",
+    responseKpi: "Среднее время ответа",
+    responseKpiHelper: "от обращения до отправки",
+    filtersButton: "Фильтры",
+    closeFilters: "Скрыть фильтры",
+    tableCustomer: "Покупатель",
+    tableMessage: "Обращение",
+    tableProduct: "Товар",
+    tableTime: "Время",
+    tableStatus: "Статус",
+    openMessage: "Открыть обращение",
+    assistantEyebrow: "Ответы с ИИ",
+    assistantTitle: "Помощник для ответа",
+    assistantText: "Откройте обращение или перейдите в Ответы с ИИ, чтобы подготовить черновик с контекстом товара.",
+    assistantAction: "Открыть Ответы с ИИ",
+    quickActions: "Быстрые действия",
+    reviewQueueAction: "Очередь проверки",
+    automationAction: "Автоматизация",
+    integrationsAction: "Интеграции",
+    helpAction: "Центр помощи",
+    noSelectionSide: "Выберите обращение в таблице, чтобы открыть контекст и действия.",
+    seconds: "сек",
+    minutes: "мин",
+    hours: "ч",
   },
   en: {
     draftSubmitFailed: "The draft was created but could not be submitted for review",
@@ -362,6 +393,35 @@ const inboxCopy = {
     invalid: "Check the entered data and try again.",
     rateLimit: "Too many actions in a short time. Wait a moment and try again.",
     genericError: "The action could not be completed. Check your connection and try again.",
+    totalKpi: "Total messages",
+    totalKpiHelper: "during the last 30 days",
+    unansweredKpi: "Need a reply",
+    unansweredKpiHelper: "waiting for the next step",
+    sentKpi: "Replies sent",
+    sentKpiHelper: "during the last 30 days",
+    responseKpi: "Average response time",
+    responseKpiHelper: "from message to sent reply",
+    filtersButton: "Filters",
+    closeFilters: "Hide filters",
+    tableCustomer: "Customer",
+    tableMessage: "Message",
+    tableProduct: "Product",
+    tableTime: "Time",
+    tableStatus: "Status",
+    openMessage: "Open message",
+    assistantEyebrow: "AI replies",
+    assistantTitle: "Reply assistant",
+    assistantText: "Open a customer message or use AI replies to prepare a draft with product context.",
+    assistantAction: "Open AI replies",
+    quickActions: "Quick actions",
+    reviewQueueAction: "Review queue",
+    automationAction: "Automation",
+    integrationsAction: "Integrations",
+    helpAction: "Help center",
+    noSelectionSide: "Choose a customer message in the table to open its context and actions.",
+    seconds: "sec",
+    minutes: "min",
+    hours: "hr",
   },
 } as const;
 
@@ -385,6 +445,7 @@ export function InboxWorkspace() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [selectedId, setSelectedId] = useState("");
   const [page, setPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
   const detailPanelRef = useRef<HTMLElement>(null);
   const [restoredOrganizationId, setRestoredOrganizationId] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(filters.query.trim());
@@ -445,13 +506,22 @@ export function InboxWorkspace() {
     queryFn: () => apiRequest(queryPath, customerMessageListSchema),
   });
 
+  const analyticsQuery = useQuery({
+    queryKey: ["analytics", "overview", activeOrganization.id, 30],
+    queryFn: () =>
+      apiRequest(
+        buildApiQuery("/api/analytics/overview", { organization_id: activeOrganization.id, days: 30 }),
+        analyticsOverviewSchema,
+      ),
+  });
+
   const visibleMessages = useMemo(() => {
     const items = messagesQuery.data?.items ?? [];
     if (filters.rating !== "no_rating") return items;
     return items.filter((message) => message.rating === null);
   }, [filters.rating, messagesQuery.data?.items]);
 
-  const selectedMessage = visibleMessages.find((message) => message.id === selectedId) ?? visibleMessages[0] ?? null;
+  const selectedMessage = visibleMessages.find((message) => message.id === selectedId) ?? null;
   const totalPages = messagesQuery.data
     ? Math.max(1, Math.ceil(messagesQuery.data.total / messagesQuery.data.page_size))
     : 1;
@@ -527,92 +597,112 @@ export function InboxWorkspace() {
 
   return (
     <section className="inbox-workspace" aria-label={t.workspaceAria}>
-      <aside className="inbox-filters-panel" aria-label={t.filtersAria}>
-        <div className="panel-heading panel-heading-row inbox-filter-heading">
-          <div>
-            <span className="panel-kicker">{t.filters}</span>
-            <strong>{t.queue}</strong>
-          </div>
-          {activeFilterCount > 0 ? (
-            <button className="button button-secondary button-compact" onClick={resetFilters} type="button">
-              {t.reset} · {activeFilterCount}
-            </button>
-          ) : null}
-        </div>
+      <section className="inbox-kpi-grid" aria-label={t.messagesCount}>
+        <InboxKpi
+          icon="/images/mockups/features-icons/01-unified-inbox.webp"
+          label={t.totalKpi}
+          value={analyticsQuery.data ? formatNumber(analyticsQuery.data.total_messages, locale) : "—"}
+          helper={t.totalKpiHelper}
+        />
+        <InboxKpi
+          icon="/images/mockups/features-icons/04-auto-replies-lightning.webp"
+          label={t.unansweredKpi}
+          value={analyticsQuery.data ? formatNumber(analyticsQuery.data.unanswered_messages, locale) : "—"}
+          helper={t.unansweredKpiHelper}
+        />
+        <InboxKpi
+          icon="/images/mockups/features-icons/03-quality-shield.webp"
+          label={t.sentKpi}
+          value={analyticsQuery.data ? formatNumber(analyticsQuery.data.replies_sent, locale) : "—"}
+          helper={t.sentKpiHelper}
+        />
+        <InboxKpi
+          icon="/images/mockups/wildberries-icons/05-analytics.webp"
+          label={t.responseKpi}
+          value={analyticsQuery.data ? formatDuration(analyticsQuery.data.average_response_seconds, locale) : "—"}
+          helper={t.responseKpiHelper}
+        />
+      </section>
 
-        <label className="field-group inbox-search-field">
-          <span>{t.search}</span>
-          <input
-            aria-label={t.searchAria}
-            onChange={(event) => updateFilter("query", event.target.value)}
-            placeholder={t.searchPlaceholder}
-            type="search"
-            value={filters.query}
-          />
-        </label>
-
-        <FilterGroup label={t.marketplace}>
-          {localizedMarketplaceFilters.map((option) => (
-            <FilterButton
-              active={filters.marketplace === option.value}
-              key={option.value}
-              onClick={() => updateFilter("marketplace", option.value)}
-            >
-              {option.label}
-            </FilterButton>
-          ))}
-        </FilterGroup>
-
-        <FilterGroup label={t.messageType}>
-          <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>{t.all}</FilterButton>
-          <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>{t.reviews}</FilterButton>
-          <FilterButton active={filters.type === "question"} onClick={() => updateFilter("type", "question")}>{t.questions}</FilterButton>
-          <FilterButton active={filters.type === "chat"} onClick={() => updateFilter("type", "chat")}>{t.messages}</FilterButton>
-        </FilterGroup>
-
-        <FilterGroup label={t.status}>
+      <section className="inbox-toolbar" aria-label={t.filtersAria}>
+        <div className="inbox-status-tabs" role="group" aria-label={t.status}>
           <FilterButton active={filters.status === "all"} onClick={() => updateFilter("status", "all")}>{t.all}</FilterButton>
           <FilterButton active={filters.status === "needs_reply"} onClick={() => updateFilter("status", "needs_reply")}>{t.needsReply}</FilterButton>
           <FilterButton active={filters.status === "ai_draft_ready"} onClick={() => updateFilter("status", "ai_draft_ready")}>{t.draftReady}</FilterButton>
           <FilterButton active={filters.status === "waiting_review"} onClick={() => updateFilter("status", "waiting_review")}>{t.needsReview}</FilterButton>
           <FilterButton active={filters.status === "failed"} onClick={() => updateFilter("status", "failed")}>{t.errors}</FilterButton>
           <FilterButton active={filters.status === "escalated"} onClick={() => updateFilter("status", "escalated")}>{t.withManager}</FilterButton>
-        </FilterGroup>
-
-        <FilterGroup label={t.assignee}>
-          <FilterButton active={filters.assignment === "all"} onClick={() => updateFilter("assignment", "all")}>{t.all}</FilterButton>
-          <FilterButton active={filters.assignment === "mine"} onClick={() => updateFilter("assignment", "mine")}>{t.assignedToMe}</FilterButton>
-        </FilterGroup>
-
-        <FilterGroup label={t.rating}>
-          <FilterButton active={filters.rating === "all"} onClick={() => updateFilter("rating", "all")}>{t.all}</FilterButton>
-          <FilterButton active={filters.rating === "negative"} onClick={() => updateFilter("rating", "negative")}>{t.negativeRating}</FilterButton>
-          <FilterButton active={filters.rating === "positive"} onClick={() => updateFilter("rating", "positive")}>{t.positiveRating}</FilterButton>
-          <FilterButton active={filters.rating === "no_rating"} onClick={() => updateFilter("rating", "no_rating")}>{t.noRating}</FilterButton>
-        </FilterGroup>
-      </aside>
-
-      <section className="inbox-list-panel" aria-label={t.listAria}>
-        <div className="panel-heading panel-heading-row inbox-list-heading">
-          <div>
-            <span className="panel-kicker">{displayedCountLabel}</span>
-            <strong>{activeFilterCount > 0 ? t.filterResults : t.allMessages}</strong>
-          </div>
-          <button
-            className="button button-secondary button-compact"
-            disabled={messagesQuery.isFetching}
-            onClick={() => void messagesQuery.refetch()}
-            type="button"
-          >
-            {messagesQuery.isFetching ? t.refreshing : t.refresh}
-          </button>
         </div>
 
-        {messagesQuery.error && messagesQuery.data ? (
-          <div className="inbox-refresh-error" role="alert">
+        <div className="inbox-toolbar-actions">
+          <label className="inbox-toolbar-search">
+            <span className="sr-only">{t.search}</span>
+            <input
+              aria-label={t.searchAria}
+              onChange={(event) => updateFilter("query", event.target.value)}
+              placeholder={t.searchPlaceholder}
+              type="search"
+              value={filters.query}
+            />
+          </label>
+          <button
+            aria-expanded={showFilters}
+            className={showFilters || activeFilterCount > (filters.status === "all" ? 0 : 1) ? "button button-secondary button-compact inbox-filter-toggle inbox-filter-toggle-active" : "button button-secondary button-compact inbox-filter-toggle"}
+            onClick={() => setShowFilters((value) => !value)}
+            type="button"
+          >
+            {showFilters ? t.closeFilters : t.filtersButton}
+            {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}
+          </button>
+          {activeFilterCount > 0 ? (
+            <button className="button button-secondary button-compact" onClick={resetFilters} type="button">
+              {t.reset}
+            </button>
+          ) : null}
+        </div>
+      </section>
+
+      {showFilters ? (
+        <aside className="inbox-filter-drawer" aria-label={t.filtersAria}>
+          <FilterGroup label={t.marketplace}>
+            {localizedMarketplaceFilters.map((option) => (
+              <FilterButton
+                active={filters.marketplace === option.value}
+                key={option.value}
+                onClick={() => updateFilter("marketplace", option.value)}
+              >
+                {option.label}
+              </FilterButton>
+            ))}
+          </FilterGroup>
+
+          <FilterGroup label={t.messageType}>
+            <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>{t.all}</FilterButton>
+            <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>{t.reviews}</FilterButton>
+            <FilterButton active={filters.type === "question"} onClick={() => updateFilter("type", "question")}>{t.questions}</FilterButton>
+            <FilterButton active={filters.type === "chat"} onClick={() => updateFilter("type", "chat")}>{t.messages}</FilterButton>
+          </FilterGroup>
+
+          <FilterGroup label={t.assignee}>
+            <FilterButton active={filters.assignment === "all"} onClick={() => updateFilter("assignment", "all")}>{t.all}</FilterButton>
+            <FilterButton active={filters.assignment === "mine"} onClick={() => updateFilter("assignment", "mine")}>{t.assignedToMe}</FilterButton>
+          </FilterGroup>
+
+          <FilterGroup label={t.rating}>
+            <FilterButton active={filters.rating === "all"} onClick={() => updateFilter("rating", "all")}>{t.all}</FilterButton>
+            <FilterButton active={filters.rating === "negative"} onClick={() => updateFilter("rating", "negative")}>{t.negativeRating}</FilterButton>
+            <FilterButton active={filters.rating === "positive"} onClick={() => updateFilter("rating", "positive")}>{t.positiveRating}</FilterButton>
+            <FilterButton active={filters.rating === "no_rating"} onClick={() => updateFilter("rating", "no_rating")}>{t.noRating}</FilterButton>
+          </FilterGroup>
+        </aside>
+      ) : null}
+
+      <div className="inbox-content-grid">
+        <section className="inbox-list-panel" aria-label={t.listAria}>
+          <div className="panel-heading panel-heading-row inbox-list-heading">
             <div>
-              <strong>{t.refreshError}</strong>
-              <p>{t.staleData}</p>
+              <span className="panel-kicker">{displayedCountLabel}</span>
+              <strong>{activeFilterCount > 0 ? t.filterResults : t.allMessages}</strong>
             </div>
             <button
               className="button button-secondary button-compact"
@@ -620,114 +710,140 @@ export function InboxWorkspace() {
               onClick={() => void messagesQuery.refetch()}
               type="button"
             >
-              {messagesQuery.isFetching ? t.retrying : t.retry}
+              {messagesQuery.isFetching ? t.refreshing : t.refresh}
             </button>
           </div>
-        ) : null}
 
-        {messagesQuery.isPending && !messagesQuery.data ? (
-          <InboxState
-            description={t.loadingDescription}
-            title={t.loadingTitle}
-            tone="loading"
-          />
-        ) : messagesQuery.error && !messagesQuery.data ? (
-          <InboxState
-            actionDisabled={messagesQuery.isFetching}
-            actionLabel={messagesQuery.isFetching ? t.retrying : t.retry}
-            description={errorMessage(messagesQuery.error, locale)}
-            onAction={() => void messagesQuery.refetch()}
-            title={t.loadErrorTitle}
-            tone="error"
-          />
-        ) : visibleMessages.length > 0 ? (
-          <div className="message-stack" role="list">
-            {visibleMessages.map((message) => (
-              <div key={message.id} role="listitem">
-                <MessageCard
-                  isSelected={selectedMessage?.id === message.id}
-                  message={message}
-                  onSelect={() => selectMessage(message.id)}
-                  locale={locale}
-                />
+          {messagesQuery.error && messagesQuery.data ? (
+            <div className="inbox-refresh-error" role="alert">
+              <div>
+                <strong>{t.refreshError}</strong>
+                <p>{t.staleData}</p>
               </div>
-            ))}
-          </div>
-        ) : filters.rating === "no_rating" && (messagesQuery.data?.total ?? 0) > 0 ? (
-          <EmptyState
-            description={totalPages > 1 ? t.noRatingPages : t.noRatingCurrent}
-            title={t.noRatingTitle}
-          />
-        ) : (
-          <EmptyState
-            description={activeFilterCount > 0 ? t.filteredEmpty : t.queueEmpty}
-            title={activeFilterCount > 0 ? t.filteredEmptyTitle : t.queueEmptyTitle}
-          />
-        )}
+              <button
+                className="button button-secondary button-compact"
+                disabled={messagesQuery.isFetching}
+                onClick={() => void messagesQuery.refetch()}
+                type="button"
+              >
+                {messagesQuery.isFetching ? t.retrying : t.retry}
+              </button>
+            </div>
+          ) : null}
 
-        {messagesQuery.data && totalPages > 1 ? (
-          <nav className="inbox-pagination" aria-label={t.pagesAria}>
-            <button
-              aria-label={t.previousPage}
-              className="button button-secondary button-compact"
-              disabled={page <= 1 || messagesQuery.isFetching}
-              onClick={() => {
-                setSelectedId("");
-                setPage((current) => Math.max(1, current - 1));
-              }}
-              type="button"
-            >
-              {t.back}
-            </button>
-            <span aria-live="polite">{t.page} {page} {t.of} {totalPages}</span>
-            <button
-              aria-label={t.nextPage}
-              className="button button-secondary button-compact"
-              disabled={page >= totalPages || messagesQuery.isFetching}
-              onClick={() => {
-                setSelectedId("");
-                setPage((current) => Math.min(totalPages, current + 1));
-              }}
-              type="button"
-            >
-              {t.next}
-            </button>
-          </nav>
-        ) : null}
-      </section>
+          {messagesQuery.isPending && !messagesQuery.data ? (
+            <InboxState description={t.loadingDescription} title={t.loadingTitle} tone="loading" />
+          ) : messagesQuery.error && !messagesQuery.data ? (
+            <InboxState
+              actionDisabled={messagesQuery.isFetching}
+              actionLabel={messagesQuery.isFetching ? t.retrying : t.retry}
+              description={errorMessage(messagesQuery.error, locale)}
+              onAction={() => void messagesQuery.refetch()}
+              title={t.loadErrorTitle}
+              tone="error"
+            />
+          ) : visibleMessages.length > 0 ? (
+            <div className="inbox-table-wrap">
+              <table className="inbox-message-table">
+                <thead>
+                  <tr>
+                    <th>{t.tableCustomer}</th>
+                    <th>{t.tableMessage}</th>
+                    <th>{t.tableProduct}</th>
+                    <th>{t.tableTime}</th>
+                    <th>{t.tableStatus}</th>
+                    <th><span className="sr-only">{t.openMessage}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleMessages.map((message) => (
+                    <MessageTableRow
+                      isSelected={selectedMessage?.id === message.id}
+                      key={message.id}
+                      locale={locale}
+                      message={message}
+                      onSelect={() => selectMessage(message.id)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : filters.rating === "no_rating" && (messagesQuery.data?.total ?? 0) > 0 ? (
+            <EmptyState
+              description={totalPages > 1 ? t.noRatingPages : t.noRatingCurrent}
+              title={t.noRatingTitle}
+            />
+          ) : (
+            <EmptyState
+              description={activeFilterCount > 0 ? t.filteredEmpty : t.queueEmpty}
+              title={activeFilterCount > 0 ? t.filteredEmptyTitle : t.queueEmptyTitle}
+            />
+          )}
 
-      <aside ref={detailPanelRef} className="inbox-detail-panel" aria-label={t.detailAria}>
-        {selectedMessage ? (
-          <MessageDetail
-            canManage={canManageMessages}
-            createDraftError={
-              manualDraftMutation.variables?.messageId === selectedMessage.id ? manualDraftMutation.error : null
-            }
-            currentUserId={user.id}
-            draftRecoveryNeeded={
-              manualDraftMutation.variables?.messageId === selectedMessage.id &&
-              manualDraftMutation.error instanceof ManualReviewSubmissionError
-            }
-            draftSubmissionSucceeded={
-              manualDraftMutation.variables?.messageId === selectedMessage.id && manualDraftMutation.isSuccess
-            }
-            error={updateMutation.variables?.messageId === selectedMessage.id ? updateMutation.error : null}
-            isCreatingDraft={
-              manualDraftMutation.variables?.messageId === selectedMessage.id && manualDraftMutation.isPending
-            }
-            isUpdating={updateMutation.isPending}
-            key={selectedMessage.id}
-            message={selectedMessage}
-            onArchive={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "archived" })}
-            onCreateDraft={(replyText) => manualDraftMutation.mutate({ messageId: selectedMessage.id, replyText })}
-            onEscalate={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "escalated" })}
-            onTake={() => updateMutation.mutate({ messageId: selectedMessage.id, assignedTo: user.id })}
-            locale={locale}
-          />
-        ) : (
-          <EmptyState description={t.selectMessage} title={t.noSelection} />
-        )}
-      </aside>
+          {messagesQuery.data && totalPages > 1 ? (
+            <nav className="inbox-pagination" aria-label={t.pagesAria}>
+              <button
+                aria-label={t.previousPage}
+                className="button button-secondary button-compact"
+                disabled={page <= 1 || messagesQuery.isFetching}
+                onClick={() => {
+                  setSelectedId("");
+                  setPage((current) => Math.max(1, current - 1));
+                }}
+                type="button"
+              >
+                {t.back}
+              </button>
+              <span aria-live="polite">{t.page} {page} {t.of} {totalPages}</span>
+              <button
+                aria-label={t.nextPage}
+                className="button button-secondary button-compact"
+                disabled={page >= totalPages || messagesQuery.isFetching}
+                onClick={() => {
+                  setSelectedId("");
+                  setPage((current) => Math.min(totalPages, current + 1));
+                }}
+                type="button"
+              >
+                {t.next}
+              </button>
+            </nav>
+          ) : null}
+        </section>
+
+        <aside ref={detailPanelRef} className="inbox-side-panel inbox-detail-panel" aria-label={t.detailAria}>
+          {selectedMessage ? (
+            <MessageDetail
+              canManage={canManageMessages}
+              createDraftError={
+                manualDraftMutation.variables?.messageId === selectedMessage.id ? manualDraftMutation.error : null
+              }
+              currentUserId={user.id}
+              draftRecoveryNeeded={
+                manualDraftMutation.variables?.messageId === selectedMessage.id &&
+                manualDraftMutation.error instanceof ManualReviewSubmissionError
+              }
+              draftSubmissionSucceeded={
+                manualDraftMutation.variables?.messageId === selectedMessage.id && manualDraftMutation.isSuccess
+              }
+              error={updateMutation.variables?.messageId === selectedMessage.id ? updateMutation.error : null}
+              isCreatingDraft={
+                manualDraftMutation.variables?.messageId === selectedMessage.id && manualDraftMutation.isPending
+              }
+              isUpdating={updateMutation.isPending}
+              key={selectedMessage.id}
+              locale={locale}
+              message={selectedMessage}
+              onArchive={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "archived" })}
+              onCreateDraft={(replyText) => manualDraftMutation.mutate({ messageId: selectedMessage.id, replyText })}
+              onEscalate={() => updateMutation.mutate({ messageId: selectedMessage.id, status: "escalated" })}
+              onTake={() => updateMutation.mutate({ messageId: selectedMessage.id, assignedTo: user.id })}
+            />
+          ) : (
+            <InboxSideDefault locale={locale} />
+          )}
+        </aside>
+      </div>
     </section>
   );
 }
@@ -749,29 +865,97 @@ function FilterButton({ active, children, onClick }: { active: boolean; children
   );
 }
 
-function MessageCard({ isSelected, message, onSelect, locale }: { isSelected: boolean; message: CustomerMessage; onSelect: () => void; locale: Locale }) {
+function InboxKpi({ icon, label, value, helper }: { icon: string; label: string; value: string; helper: string }) {
+  return (
+    <article className="inbox-kpi-card">
+      <span className="inbox-kpi-icon" aria-hidden="true"><Image alt="" height={24} src={icon} width={24} /></span>
+      <div>
+        <span>{label}</span>
+        <strong>{value}</strong>
+        <small>{helper}</small>
+      </div>
+    </article>
+  );
+}
+
+function MessageTableRow({
+  isSelected,
+  message,
+  onSelect,
+  locale,
+}: {
+  isSelected: boolean;
+  message: CustomerMessage;
+  onSelect: () => void;
+  locale: Locale;
+}) {
   const t = inboxCopy[locale];
   const localizedStatusLabels = messageStatusLabels[locale];
-  const localizedTypeLabels = messageTypeLabels[locale];
   return (
-    <button
-      aria-pressed={isSelected}
-      className={isSelected ? "message-card message-card-selected" : "message-card"}
-      onClick={onSelect}
-      type="button"
-    >
-      <span className="message-card-topline">
-        <Badge tone="info">{marketplaceLabel(message.marketplace, locale)}</Badge>
-        <Badge tone={statusTone(message.status)}>{localizedStatusLabels[message.status] ?? message.status}</Badge>
-      </span>
-      <span className="message-card-title">{message.product?.name ?? t.noProduct}</span>
-      <span className="message-card-text">{message.customer_text}</span>
-      <span className="message-card-meta">
-        <span>{localizedTypeLabels[message.type] ?? message.type}</span>
-        <span>{message.rating ? `${message.rating}★` : t.unrated}</span>
-        <span>{formatDate(message.marketplace_created_at, locale)}</span>
-      </span>
-    </button>
+    <tr className={isSelected ? "inbox-table-row inbox-table-row-selected" : "inbox-table-row"}>
+      <td>
+        <span className="inbox-customer-cell">
+          <span className="inbox-customer-avatar" aria-hidden="true">{personInitials(message.customer_display_name || t.customer)}</span>
+          <strong>{message.customer_display_name || t.noCustomerName}</strong>
+        </span>
+      </td>
+      <td><span className="inbox-table-message">{message.customer_text}</span></td>
+      <td>
+        <span className="inbox-product-cell">
+          <span className="inbox-product-mark" aria-hidden="true">{productInitial(message.product?.name)}</span>
+          <span>
+            <strong>{message.product?.name ?? t.noProduct}</strong>
+            <small>{marketplaceLabel(message.marketplace, locale)}</small>
+          </span>
+        </span>
+      </td>
+      <td>{formatDate(message.marketplace_created_at, locale)}</td>
+      <td><Badge tone={statusTone(message.status)}>{localizedStatusLabels[message.status] ?? message.status}</Badge></td>
+      <td>
+        <button
+          aria-label={`${t.openMessage}: ${message.product?.name ?? message.customer_display_name ?? t.genericMessage}`}
+          aria-pressed={isSelected}
+          className="inbox-row-open"
+          onClick={onSelect}
+          type="button"
+        >
+          <span aria-hidden="true">•••</span>
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function InboxSideDefault({ locale }: { locale: Locale }) {
+  const t = inboxCopy[locale];
+  return (
+    <div className="inbox-side-default">
+      <section className="inbox-assistant-card">
+        <div className="inbox-assistant-heading">
+          <span className="inbox-assistant-icon" aria-hidden="true">
+            <Image alt="" height={24} src="/images/mockups/features-icons/02-ai-sparkles.webp" width={24} />
+          </span>
+          <div>
+            <span className="panel-kicker">{t.assistantEyebrow}</span>
+            <strong>{t.assistantTitle}</strong>
+          </div>
+        </div>
+        <p>{t.assistantText}</p>
+        <Link className="button button-primary" href={localizedPath(locale, "/app/ai-assistant")}>{t.assistantAction}</Link>
+      </section>
+
+      <section className="inbox-quick-card">
+        <span className="panel-kicker">{t.quickActions}</span>
+        <nav className="inbox-quick-links" aria-label={t.quickActions}>
+          <Link href={localizedPath(locale, "/app/review-queue")}>{t.reviewQueueAction}<span aria-hidden="true">→</span></Link>
+          <Link href={localizedPath(locale, "/app/automation-rules")}>{t.automationAction}<span aria-hidden="true">→</span></Link>
+          <Link href={localizedPath(locale, "/app/integrations")}>{t.integrationsAction}<span aria-hidden="true">→</span></Link>
+          <Link href={localizedPath(locale, "/help")}>{t.helpAction}<span aria-hidden="true">→</span></Link>
+        </nav>
+      </section>
+
+      <p className="inbox-side-hint">{t.noSelectionSide}</p>
+    </div>
   );
 }
 
@@ -1139,6 +1323,29 @@ function formatDate(value: string, locale: Locale): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+}
+
+function formatNumber(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "ru-RU").format(value);
+}
+
+function formatDuration(value: number | null, locale: Locale): string {
+  const t = inboxCopy[locale];
+  if (value === null) return "—";
+  if (value < 60) return `${Math.round(value)} ${t.seconds}`;
+  if (value < 3600) return `${Math.round(value / 60)} ${t.minutes}`;
+  return `${(value / 3600).toFixed(1)} ${t.hours}`;
+}
+
+function personInitials(value: string): string {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "—";
+  return parts.slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("");
+}
+
+function productInitial(value: string | null | undefined): string {
+  const source = value?.trim();
+  return source ? source.charAt(0).toUpperCase() : "•";
 }
 
 function errorMessage(error: unknown, locale: Locale): string {

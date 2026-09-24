@@ -114,6 +114,7 @@ function mockWorkspace() {
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
     logoutError: null,
+    locale: "ru",
   });
 }
 
@@ -139,6 +140,7 @@ describe("InboxWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByText("Тестовый товар")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Фильтры" }));
     const filters = screen.getByRole("complementary", { name: "Фильтры обращений" });
     fireEvent.click(within(filters).getByRole("button", { name: "Ozon" }));
 
@@ -167,6 +169,7 @@ describe("InboxWorkspace", () => {
     renderWorkspace();
 
     expect(await screen.findByText("Тестовый товар")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Фильтры" }));
     expect(screen.getByRole("complementary", { name: "Фильтры обращений" })).toBeVisible();
     expect(getItemSpy).toHaveBeenCalled();
     await waitFor(() => expect(setItemSpy).toHaveBeenCalled());
@@ -209,6 +212,8 @@ describe("InboxWorkspace", () => {
 
     renderWorkspace();
 
+    await screen.findByText("Тестовый товар");
+    fireEvent.click(screen.getByRole("button", { name: "Открыть обращение: Тестовый товар" }));
     expect(await screen.findByText("Ответ одобрен и ожидает отправки")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Открыть очередь проверки" })).toHaveAttribute("href", "/app/review-queue");
     expect(screen.queryByLabelText("Ответ для проверки")).not.toBeInTheDocument();
@@ -247,6 +252,8 @@ describe("InboxWorkspace", () => {
 
     renderWorkspace();
 
+    await screen.findByText("Тестовый товар");
+    fireEvent.click(screen.getByRole("button", { name: "Открыть обращение: Тестовый товар" }));
     const editor = await screen.findByLabelText("Ответ для проверки");
     fireEvent.change(editor, { target: { value: reply.reply_text } });
     fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
@@ -288,6 +295,8 @@ describe("InboxWorkspace", () => {
 
     renderWorkspace();
 
+    await screen.findByText("Тестовый товар");
+    fireEvent.click(screen.getByRole("button", { name: "Открыть обращение: Тестовый товар" }));
     const editor = await screen.findByLabelText("Ответ для проверки");
     fireEvent.change(editor, { target: { value: reply.reply_text } });
     fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
