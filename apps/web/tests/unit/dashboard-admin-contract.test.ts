@@ -76,9 +76,20 @@ describe("superadmin dashboard", () => {
     expect(workspace).not.toContain("Math.min(100, Math.round((part / total) * 100))");
   });
 
-  it("keeps the overview error recoverable without leaving the page", () => {
-    expect(workspace).toContain("overviewQuery.refetch()");
-    expect(workspace).toContain("Повторить");
+  it("uses dedicated accessible loading, access and recoverable error states", () => {
+    expect(workspace).toContain("function AdminOverviewState");
+    expect(workspace).toContain('tone="denied"');
+    expect(workspace).toContain('tone="loading"');
+    expect(workspace).toContain('tone="error"');
+    expect(workspace).toContain('aria-busy={tone === "loading"}');
+    expect(workspace).toContain('role={tone === "error" ? "alert" : "status"}');
+    expect(workspace).toContain("overviewQuery.isFetching");
+    expect(workspace).toContain('actionLabel={overviewQuery.isFetching ? "Повторяем..." : "Повторить"}');
+    expect(workspace).toContain("disabled={overviewQuery.isFetching}");
+    expect(styles).toContain(".admin-overview-state");
+    expect(styles).toContain(".admin-overview-state-loading");
+    expect(styles).toContain(".admin-overview-state-error");
+    expect(styles).toContain(".admin-overview-state-denied");
   });
 
   it("loads a scoped responsive admin layer without introducing a second palette", () => {
