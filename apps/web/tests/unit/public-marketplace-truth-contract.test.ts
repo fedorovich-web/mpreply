@@ -46,6 +46,9 @@ describe("public marketplace truth contract", () => {
     expect(detail).toContain('heroTitle: "Обращения Яндекс Маркета — в единой очереди"');
     expect(ozonPage).not.toContain("отзывы, вопросы и чаты");
     expect(yandexPage).not.toContain("Отзывы, вопросы и чаты");
+    expect(siteConfig).toContain("supported Ozon customer messages");
+    expect(siteConfig).toContain("supported Yandex Market customer messages");
+    expect(siteConfig).not.toContain("Yandex Market reviews, questions, and chats");
   });
 
   it("uses a neutral product-surface status instead of a readiness badge", () => {

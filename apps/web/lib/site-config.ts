@@ -128,7 +128,7 @@ const marketplaceDefinitionsEn = [
     mark: "YM",
     path: "/marketplaces/yandex-market",
     summary:
-      "Bring supported Yandex Market reviews, questions, and chats into one workflow with context, status tracking, and review controls.",
+      "Bring supported Yandex Market customer messages into one workflow with available context, status tracking, AI-assisted drafts, and review controls.",
   },
   {
     key: "avito",

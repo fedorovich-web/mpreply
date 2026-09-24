@@ -6,11 +6,25 @@ const root = process.cwd();
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 
 describe("marketplace public configuration", () => {
-  it("derives readiness from one shared product truth without forcing a retired status badge into approved renders", () => {
-    expect(siteConfig).toContain('const marketplaceStatusLabel = "Интеграция готова"');
-    expect(siteConfig).not.toContain("export const marketplaceStatusLabel");
-    expect(siteConfig.match(/Интеграция готова/g)).toHaveLength(1);
+  it("uses neutral MPReply integration labels instead of unsupported readiness certification", () => {
+    expect(siteConfig).toContain('const marketplaceStatusLabel = "Интеграция MPReply"');
+    expect(siteConfig).toContain('const marketplaceStatusLabelEn = "MPReply integration"');
+    expect(siteConfig).not.toContain("Интеграция готова");
+    expect(siteConfig).not.toContain("Integration ready");
     expect(siteConfig).not.toContain('status: "supported"');
-    expect(siteConfig).toContain("statusLabel: marketplaceStatusLabel");
+  });
+
+  it("localizes marketplace paths from one route definition", () => {
+    expect(siteConfig).toContain("path: localizedPath(locale, definition.path)");
+    expect(siteConfig).toContain('localizeMarketplace(marketplace, "ru", marketplaceStatusLabel)');
+    expect(siteConfig).toContain('localizeMarketplace(marketplace, "en", marketplaceStatusLabelEn)');
+  });
+
+  it("keeps Ozon and Yandex summaries inside the runtime-truth boundary in both locales", () => {
+    expect(siteConfig).toContain("Поддерживаемые обращения Ozon");
+    expect(siteConfig).toContain("Поддерживаемые обращения Яндекс Маркета");
+    expect(siteConfig).toContain("supported Ozon customer messages");
+    expect(siteConfig).toContain("supported Yandex Market customer messages");
+    expect(siteConfig).not.toContain("Yandex Market reviews, questions, and chats");
   });
 });
