@@ -8,16 +8,16 @@ export default function AvitoIntegrationPage() {
       <header className="app-header app-header-row marketplace-integration-header">
         <div>
           <p className="eyebrow">Авито</p>
-          <h1>Аккаунты Авито и синхронизация</h1>
+          <h1>Подключение аккаунтов Авито</h1>
           <p>
-            Подключайте аккаунты, управляйте доступом, запускайте синхронизацию и выбирайте режим обработки сообщений покупателей.
+            Добавляйте аккаунты, проверяйте подключение, обновляйте сообщения покупателей и выбирайте, как MPReply должен работать с ответами.
           </p>
         </div>
         <div className="app-header-actions">
           <Link className="button button-secondary button-compact" href="/app/integrations">
             Все интеграции
           </Link>
-          <span className="status-badge">Интеграция готова</span>
+          <span className="status-badge">Подключение доступно</span>
         </div>
       </header>
 

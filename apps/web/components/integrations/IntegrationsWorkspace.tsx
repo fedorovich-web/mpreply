@@ -31,7 +31,7 @@ const marketplaceCatalog = [
     key: "avito",
     name: "Авито",
     href: "/app/integrations/avito",
-    description: "Сообщения и обращения покупателей Авито с синхронизацией диалогов и управлением подключением из MPReply.",
+    description: "Сообщения и обращения покупателей Авито в общей очереди MPReply с едиными правилами обработки и ответами.",
   },
 ] as const;
 
@@ -61,17 +61,57 @@ export function IntegrationsWorkspace() {
         <SummaryMetric label="Требуют внимания" value={accountsQuery.isPending ? "—" : String(problemCount)} />
       </div>
 
-      {accountsQuery.error ? (
-        <div className="workspace-inline-state workspace-inline-state-error" role="alert">
+      <div className="integration-overview-actions">
+        {accountsQuery.data ? (
+          <button
+            className="button button-secondary button-compact"
+            disabled={accountsQuery.isFetching}
+            onClick={() => void accountsQuery.refetch()}
+            type="button"
+          >
+            {accountsQuery.isFetching ? "Обновляем..." : "Обновить подключения"}
+          </button>
+        ) : null}
+      </div>
+
+      {accountsQuery.isPending && !accountsQuery.data ? (
+        <div className="integration-overview-state" aria-busy="true" aria-live="polite" role="status">
+          <strong>Загружаем подключения</strong>
+          <p>Проверяем подключённые кабинеты маркетплейсов.</p>
+        </div>
+      ) : accountsQuery.error && !accountsQuery.data ? (
+        <div className="integration-overview-state integration-overview-state-error" role="alert">
           <strong>Не удалось загрузить подключения</strong>
-          <p>Повторите загрузку. Сохранённые подключения останутся без изменений.</p>
-          <button className="button button-secondary button-compact" onClick={() => void accountsQuery.refetch()} type="button">
-            Повторить
+          <p>Подключения временно недоступны. Попробуйте ещё раз.</p>
+          <button
+            className="button button-secondary button-compact"
+            disabled={accountsQuery.isFetching}
+            onClick={() => void accountsQuery.refetch()}
+            type="button"
+          >
+            {accountsQuery.isFetching ? "Повторяем..." : "Повторить"}
           </button>
         </div>
-      ) : null}
+      ) : accountsQuery.data ? (
+        <>
+          {accountsQuery.error ? (
+            <div className="integration-refresh-error" role="alert">
+              <div>
+                <strong>Не удалось обновить подключения</strong>
+                <p>Показываем ранее загруженные данные. Можно продолжать работу или попробовать ещё раз.</p>
+              </div>
+              <button
+                className="button button-secondary button-compact"
+                disabled={accountsQuery.isFetching}
+                onClick={() => void accountsQuery.refetch()}
+                type="button"
+              >
+                {accountsQuery.isFetching ? "Повторяем..." : "Повторить"}
+              </button>
+            </div>
+          ) : null}
 
-      <div className="integration-catalog-grid" role="list">
+          <div className="integration-catalog-grid" role="list">
         {marketplaceCatalog.map((marketplace) => {
           const marketplaceAccounts = accounts.filter((account) => account.marketplace === marketplace.key);
           const connectedCount = marketplaceAccounts.length;
@@ -88,7 +128,7 @@ export function IntegrationsWorkspace() {
             <article className="integration-market-card" key={marketplace.key} role="listitem">
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge ui-badge-info">Интеграция готова</span>
+                  <span className="ui-badge ui-badge-info">Подключение доступно</span>
                   <h2>{marketplace.name}</h2>
                 </div>
                 <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
@@ -100,7 +140,9 @@ export function IntegrationsWorkspace() {
             </article>
           );
         })}
-      </div>
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }

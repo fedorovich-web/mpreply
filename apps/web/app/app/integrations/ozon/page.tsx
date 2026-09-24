@@ -8,16 +8,16 @@ export default function OzonIntegrationPage() {
       <header className="app-header app-header-row marketplace-integration-header">
         <div>
           <p className="eyebrow">Ozon</p>
-          <h1>Кабинеты Ozon и синхронизация</h1>
+          <h1>Подключение кабинетов Ozon</h1>
           <p>
-            Подключайте кабинеты, управляйте доступом, запускайте синхронизацию и выбирайте режим обработки обращений покупателей.
+            Добавляйте кабинеты, проверяйте подключение, обновляйте обращения покупателей и выбирайте, как MPReply должен отправлять ответы.
           </p>
         </div>
         <div className="app-header-actions">
           <Link className="button button-secondary button-compact" href="/app/integrations">
             Все интеграции
           </Link>
-          <span className="status-badge">Интеграция готова</span>
+          <span className="status-badge">Подключение доступно</span>
         </div>
       </header>
 

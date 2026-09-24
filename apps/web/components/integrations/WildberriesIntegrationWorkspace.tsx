@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
@@ -33,7 +33,7 @@ type MarketplaceIntegrationWorkspaceProps = {
 export function WildberriesIntegrationWorkspace() {
   return (
     <MarketplaceIntegrationWorkspace
-      credentialLabel="API-ключ Wildberries"
+      credentialLabel="Ключ доступа Wildberries"
       marketplace="wildberries"
       marketplaceName="Wildberries"
       placeholder="Например, WB — основной магазин"
@@ -56,6 +56,7 @@ export function MarketplaceIntegrationWorkspace({
   const [credentials, setCredentials] = useState("");
   const [responseMode, setResponseMode] = useState<ResponseMode>("inherit");
   const [notice, setNotice] = useState<Notice | null>(null);
+  const detailPanelRef = useRef<HTMLElement>(null);
   const listTitleId = `integration-${marketplace}-account-list-title`;
   const detailTitleId = `integration-${marketplace}-account-detail-title`;
 
@@ -93,22 +94,35 @@ export function MarketplaceIntegrationWorkspace({
       setSellerId("");
       setCredentials("");
       setResponseMode("inherit");
-      setNotice({ tone: "success", message: "Кабинет добавлен. Проверьте подключение перед первой синхронизацией." });
+      setNotice({ tone: "success", message: "Кабинет добавлен. Проверьте подключение перед первым обновлением данных." });
       await queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", activeOrganization.id] });
     },
   });
 
+  function selectAccount(accountId: string) {
+    setSelectedAccountId(accountId);
+    if (!window.matchMedia("(max-width: 1000px)").matches) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      detailPanelRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  }
+
   return (
     <section className="wildberries-workspace" aria-label={`Управление подключениями ${marketplaceName}`}>
       <div className="integration-security-strip" role="note">
-        <strong>Данные доступа защищены</strong>
-        <span>После сохранения полный секрет больше не показывается. В кабинете остаётся только скрытая маска.</span>
+        <strong>Данные для подключения защищены</strong>
+        <span>После сохранения значение скрывается. Полные данные для доступа повторно не показываются.</span>
       </div>
 
       {!canManage ? (
         <div className="workspace-inline-state">
           <strong>Только просмотр</strong>
-          <p>Для вашей роли доступно состояние подключений. Изменение настроек, данных доступа и запуск синхронизации недоступны.</p>
+          <p>Для вашей роли доступен просмотр подключений. Изменять настройки, данные для доступа и обновлять обращения нельзя.</p>
         </div>
       ) : null}
 
@@ -125,22 +139,58 @@ export function MarketplaceIntegrationWorkspace({
               <span className="panel-kicker">Подключённые кабинеты</span>
               <strong id={listTitleId}>Кабинеты {marketplaceName}</strong>
             </div>
-            <span className="ui-badge">{accounts.length}</span>
+            <div className="integration-account-heading-actions">
+              <span className="ui-badge">{accounts.length}</span>
+              {accountsQuery.data ? (
+                <button
+                  className="button button-secondary button-compact"
+                  disabled={accountsQuery.isFetching}
+                  onClick={() => void accountsQuery.refetch()}
+                  type="button"
+                >
+                  {accountsQuery.isFetching ? "Обновляем..." : "Обновить список"}
+                </button>
+              ) : null}
+            </div>
           </div>
 
-          {accountsQuery.isPending ? (
-            <WorkspaceState title="Загружаем подключения" description="Получаем кабинеты текущего рабочего пространства." />
-          ) : accountsQuery.error ? (
+          {accountsQuery.error && accountsQuery.data ? (
+            <div className="integration-refresh-error integration-refresh-error-embedded" role="alert">
+              <div>
+                <strong>Не удалось обновить список кабинетов</strong>
+                <p>Показываем ранее загруженные данные.</p>
+              </div>
+              <button
+                className="button button-secondary button-compact"
+                disabled={accountsQuery.isFetching}
+                onClick={() => void accountsQuery.refetch()}
+                type="button"
+              >
+                {accountsQuery.isFetching ? "Повторяем..." : "Повторить"}
+              </button>
+            </div>
+          ) : null}
+
+          {accountsQuery.isPending && !accountsQuery.data ? (
             <WorkspaceState
-              title="Не удалось загрузить подключения"
-              description={errorMessage(accountsQuery.error)}
-              actionLabel="Повторить"
+              description="Получаем подключённые кабинеты."
+              title="Загружаем подключения"
+              tone="loading"
+            />
+          ) : accountsQuery.error && !accountsQuery.data ? (
+            <WorkspaceState
+              actionDisabled={accountsQuery.isFetching}
+              actionLabel={accountsQuery.isFetching ? "Повторяем..." : "Повторить"}
+              description={userErrorMessage(accountsQuery.error, "Подключения временно недоступны. Попробуйте ещё раз.")}
               onAction={() => void accountsQuery.refetch()}
+              title="Не удалось загрузить подключения"
+              tone="error"
             />
           ) : accounts.length === 0 ? (
             <WorkspaceState
               title="Подключений пока нет"
-              description={canManage ? `Добавьте первый кабинет ${marketplaceName} в форме ниже.` : `В этом рабочем пространстве ещё нет кабинетов ${marketplaceName}.`}
+              description={canManage ? `Добавьте первый кабинет ${marketplaceName} в форме ниже.` : `Для вашей компании ещё нет подключённых кабинетов ${marketplaceName}.`}
+              tone="empty"
             />
           ) : (
             <div className="integration-account-list" role="list">
@@ -149,12 +199,12 @@ export function MarketplaceIntegrationWorkspace({
                   <button
                     aria-pressed={selectedAccount?.id === account.id}
                     className={`integration-account-button${selectedAccount?.id === account.id ? " integration-account-button-active" : ""}`}
-                    onClick={() => setSelectedAccountId(account.id)}
+                    onClick={() => selectAccount(account.id)}
                     type="button"
                   >
                     <span>
                       <strong>{account.display_name}</strong>
-                      <small>{account.credentials_masked}</small>
+                      <small>Доступ: {account.credentials_masked}</small>
                     </span>
                     <StatusBadge account={account} />
                   </button>
@@ -188,7 +238,7 @@ export function MarketplaceIntegrationWorkspace({
                 />
               </label>
               <label>
-                Seller ID <span className="field-optional">необязательно</span>
+                Идентификатор продавца <span className="field-optional">необязательно</span>
                 <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} value={sellerId} />
               </label>
               <label>
@@ -210,7 +260,9 @@ export function MarketplaceIntegrationWorkspace({
                   <option value="semi_auto">С подтверждением сотрудника</option>
                 </select>
               </label>
-              {createMutation.error ? <FormError error={createMutation.error} /> : null}
+              {createMutation.error ? (
+                <FormError error={createMutation.error} fallback="Не удалось добавить кабинет. Проверьте данные и попробуйте ещё раз." />
+              ) : null}
               <button
                 className="button button-primary"
                 disabled={createMutation.isPending || displayName.trim().length < 2 || credentials.length < 8}
@@ -225,6 +277,7 @@ export function MarketplaceIntegrationWorkspace({
         <section
           aria-label={selectedAccount ? undefined : `Состояние подключения ${marketplaceName}`}
           aria-labelledby={selectedAccount ? detailTitleId : undefined}
+          ref={detailPanelRef}
           className="integration-account-detail"
         >
           {selectedAccount ? (
@@ -241,7 +294,8 @@ export function MarketplaceIntegrationWorkspace({
           ) : (
             <WorkspaceState
               title="Кабинет не выбран"
-              description={accounts.length === 0 ? "После подключения здесь появятся состояние доступа, синхронизация и настройки." : "Выберите кабинет слева."}
+              description={accounts.length === 0 ? "После подключения здесь появятся состояние доступа, обновление данных и настройки." : "Выберите кабинет из списка."}
+              tone="neutral"
             />
           )}
         </section>
@@ -297,7 +351,7 @@ function AccountDetail({
     onSuccess: async (result) => {
       onNotice({
         tone: result.error_code ? "warning" : "success",
-        message: result.error_message_safe ?? (result.error_code ? "Не удалось подтвердить доступ к кабинету." : "Подключение работает."),
+        message: result.error_code ? "Не удалось подтвердить доступ к кабинету. Проверьте данные для подключения." : "Подключение работает.",
       });
       await invalidate();
     },
@@ -312,8 +366,9 @@ function AccountDetail({
       onNotice({
         tone: result.status === "success" ? "success" : "warning",
         message:
-          result.error_message_safe ??
-          `Синхронизация завершена: новых обращений ${imported}, обновлено ${updated}, без изменений ${result.skipped}.`,
+          result.status === "success"
+            ? `Данные обновлены: новых обращений ${imported}, обновлено ${updated}, без изменений ${result.skipped}.`
+            : "Не удалось полностью обновить данные. Проверьте подключение и попробуйте ещё раз.",
       });
       await invalidate();
     },
@@ -327,7 +382,7 @@ function AccountDetail({
       }),
     onSuccess: async () => {
       setNewCredentials("");
-      onNotice({ tone: "success", message: "Данные доступа заменены. Проверьте подключение перед следующей синхронизацией." });
+      onNotice({ tone: "success", message: "Данные для подключения заменены. Проверьте подключение перед следующим обновлением." });
       await invalidate();
     },
   });
@@ -336,7 +391,7 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/revoke-credentials`, marketplaceAccountActionSchema, { method: "POST" }),
     onSuccess: async () => {
-      onNotice({ tone: "warning", message: "Данные доступа отозваны. Кабинет больше не синхронизируется." });
+      onNotice({ tone: "warning", message: "Подключение отключено. Новые обращения из этого кабинета больше не будут загружаться." });
       await invalidate();
     },
   });
@@ -356,9 +411,9 @@ function AccountDetail({
 
       <dl className="integration-health-grid">
         <HealthItem label="Состояние доступа" value={credentialsStatusLabel(account.credentials_status)} />
-        <HealthItem label="Сохранённые данные" value={account.credentials_masked} />
-        <HealthItem label="Последняя синхронизация" value={formatDateTime(account.last_success_sync_at)} />
-        <HealthItem label="Ошибки синхронизации" value={String(account.error_count)} />
+        <HealthItem label="Данные подключения" value={account.credentials_masked} />
+        <HealthItem label="Последнее успешное обновление" value={formatDateTime(account.last_success_sync_at)} />
+        <HealthItem label="Последняя ошибка" value={formatDateTime(account.last_error_sync_at)} />
       </dl>
 
       {canManage ? (
@@ -381,7 +436,7 @@ function AccountDetail({
               <input maxLength={255} minLength={2} onChange={(event) => setDisplayName(event.target.value)} required value={displayName} />
             </label>
             <label>
-              Seller ID <span className="field-optional">необязательно</span>
+              Идентификатор продавца <span className="field-optional">необязательно</span>
               <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} value={sellerId} />
             </label>
             <label>
@@ -402,13 +457,13 @@ function AccountDetail({
               {validateMutation.isPending ? "Проверяем..." : "Проверить подключение"}
             </button>
             <button className="button button-secondary" disabled={busy || account.credentials_status !== "valid"} onClick={() => syncMutation.mutate()} type="button">
-              {syncMutation.isPending ? "Синхронизируем..." : "Синхронизировать сейчас"}
+              {syncMutation.isPending ? "Обновляем..." : "Обновить данные"}
             </button>
           </div>
 
           <form
             className="settings-form integration-rotate-form"
-            aria-label={`Замена данных доступа ${marketplaceName}`}
+            aria-label={`Новые данные для подключения ${marketplaceName}`}
             onSubmit={(event) => {
               event.preventDefault();
               setLocalError(null);
@@ -417,36 +472,38 @@ function AccountDetail({
           >
             <div className="panel-heading">
               <span className="panel-kicker">Доступ</span>
-              <strong>Заменить данные доступа</strong>
+              <strong>Обновить данные для подключения</strong>
             </div>
             <label>
               {credentialLabel}
               <input autoComplete="off" minLength={8} onChange={(event) => setNewCredentials(event.target.value)} required type="password" value={newCredentials} />
             </label>
             <button className="button button-secondary" disabled={busy || newCredentials.length < 8} type="submit">
-              {rotateMutation.isPending ? "Заменяем..." : "Заменить данные"}
+              {rotateMutation.isPending ? "Сохраняем..." : "Сохранить новые данные"}
             </button>
           </form>
 
           <div className="integration-danger-zone">
             <div>
-              <strong>Отключить доступ</strong>
-              <p>Данные доступа будут отозваны, и кабинет перестанет синхронизироваться. Для повторного подключения понадобятся новые данные.</p>
+              <strong>Отключить кабинет</strong>
+              <p>MPReply перестанет получать новые обращения из этого кабинета. Для повторного подключения понадобятся новые данные доступа.</p>
             </div>
             <button
               className="button button-danger"
               disabled={busy || account.credentials_status === "revoked"}
               onClick={() => {
                 setLocalError(null);
-                if (window.confirm("Отозвать данные доступа и отключить это подключение?")) revokeMutation.mutate();
+                if (window.confirm("Отключить этот кабинет от MPReply?")) revokeMutation.mutate();
               }}
               type="button"
             >
-              {revokeMutation.isPending ? "Отключаем..." : "Отозвать доступ"}
+              {revokeMutation.isPending ? "Отключаем..." : "Отключить кабинет"}
             </button>
           </div>
 
-          {mutationError ? <FormError error={mutationError} /> : null}
+          {mutationError ? (
+            <FormError error={mutationError} fallback="Не удалось выполнить действие. Проверьте подключение и попробуйте ещё раз." />
+          ) : null}
         </>
       ) : (
         <div className="workspace-inline-state">
@@ -480,22 +537,36 @@ function HealthItem({ label, value }: { label: string; value: string }) {
 }
 
 function WorkspaceState({
-  title,
-  description,
+  actionDisabled = false,
   actionLabel,
+  description,
   onAction,
+  title,
+  tone,
 }: {
-  title: string;
-  description: string;
+  actionDisabled?: boolean;
   actionLabel?: string;
+  description: string;
   onAction?: () => void;
+  title: string;
+  tone: "empty" | "error" | "loading" | "neutral";
 }) {
   return (
-    <div className="workspace-inline-state" aria-live="polite">
+    <div
+      aria-busy={tone === "loading"}
+      aria-live="polite"
+      className={"integration-workspace-state integration-workspace-state-" + tone}
+      role={tone === "error" ? "alert" : "status"}
+    >
       <strong>{title}</strong>
       <p>{description}</p>
       {actionLabel && onAction ? (
-        <button className="button button-secondary button-compact" onClick={onAction} type="button">
+        <button
+          className="button button-secondary button-compact"
+          disabled={actionDisabled}
+          onClick={onAction}
+          type="button"
+        >
           {actionLabel}
         </button>
       ) : null}
@@ -503,13 +574,21 @@ function WorkspaceState({
   );
 }
 
-function FormError({ error }: { error: unknown }) {
-  return <p className="form-error" role="alert">{errorMessage(error)}</p>;
+function FormError({ error, fallback }: { error: unknown; fallback: string }) {
+  return <p className="form-error" role="alert">{userErrorMessage(error, fallback)}</p>;
 }
 
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
+function userErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Сессия истекла. Войдите снова.";
+    if (error.status === 403) return "Недостаточно прав для этого действия.";
+    if (error.status === 404) return "Подключение не найдено. Обновите список и попробуйте снова.";
+    if (error.status === 409) return "Данные подключения уже изменились. Обновите страницу и повторите действие.";
+    if (error.status === 422) return "Проверьте введённые данные и попробуйте снова.";
+    if (error.status === 429) return "Слишком много действий подряд. Подождите немного и попробуйте снова.";
+    return fallback;
+  }
+  return fallback;
 }
 
 function emptyToNull(value: string): string | null {
@@ -525,7 +604,7 @@ function accountStatusLabel(account: MarketplaceAccount): string {
   if (account.credentials_status === "revoked") return "Доступ отозван";
   if (account.status === "error") return "Ошибка";
   if (hasCurrentIntegrationProblem(account)) return "Требует внимания";
-  if (account.status === "active" && account.credentials_status === "valid") return "Активно";
+  if (account.status === "active" && account.credentials_status === "valid") return "Подключено";
   if (account.status === "disabled") return "Отключено";
   return "Нужна проверка";
 }

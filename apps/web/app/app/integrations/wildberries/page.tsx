@@ -8,16 +8,16 @@ export default function WildberriesIntegrationPage() {
       <header className="app-header app-header-row marketplace-integration-header">
         <div>
           <p className="eyebrow">Wildberries</p>
-          <h1>Кабинеты Wildberries и синхронизация</h1>
+          <h1>Подключение кабинетов Wildberries</h1>
           <p>
-            Подключайте кабинеты, проверяйте доступ, запускайте синхронизацию, обновляйте данные доступа и выбирайте режим обработки обращений покупателей.
+            Добавляйте кабинеты, проверяйте подключение, обновляйте обращения покупателей и выбирайте, как MPReply должен отправлять ответы.
           </p>
         </div>
         <div className="app-header-actions">
           <Link className="button button-secondary button-compact" href="/app/integrations">
             Все интеграции
           </Link>
-          <span className="status-badge">Интеграция готова</span>
+          <span className="status-badge">Подключение доступно</span>
         </div>
       </header>
 
