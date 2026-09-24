@@ -196,7 +196,7 @@ describe("AIAssistantWorkspace", () => {
     expect(await screen.findByRole("button", { name: /Термокружка/ })).toBeInTheDocument();
     const form = screen.getByRole("form", { name: "Настройки подготовки черновика ответа" });
     fireEvent.change(within(form).getByLabelText("Тон ответа"), { target: { value: "friendly" } });
-    fireEvent.change(within(form).getByLabelText("Правила бренда"), { target: { value: "Обращаться на Вы" } });
+    fireEvent.change(within(form).getByLabelText("Как должен звучать ответ"), { target: { value: "Обращаться на Вы" } });
     fireEvent.click(within(form).getByRole("button", { name: "Подготовить черновик" }));
 
     const editor = await screen.findByLabelText("Ответ для проверки");
@@ -262,7 +262,7 @@ describe("AIAssistantWorkspace", () => {
     const editor = await screen.findByLabelText("Ответ для проверки");
     expect(editor).toHaveValue(draft.draft_text);
     expect(editor).toBeDisabled();
-    expect(screen.getByText(/может просматривать историю, но не создавать новые черновики/)).toBeInTheDocument();
+    expect(screen.getByText(/С вашим уровнем доступа можно просматривать готовые варианты, но нельзя создавать новые/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Подготовить черновик" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Передать на проверку" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Подготовить другой вариант" })).not.toBeInTheDocument();
