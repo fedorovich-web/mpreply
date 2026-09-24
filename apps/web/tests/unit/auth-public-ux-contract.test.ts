@@ -9,7 +9,8 @@ const styles = readFileSync(join(root, "styles/auth.css"), "utf8");
 describe("auth public UX", () => {
   it("keeps login and registration on the real auth API with safe redirect handling", () => {
     expect(form).toContain('apiRequest(`/api/auth/${mode}`');
-    expect(form).toContain('requestedNext?.startsWith("/app/")');
+    expect(form).toContain('const appPrefix = locale === "en" ? "/en/app/" : "/app/"');
+    expect(form).toContain("requestedNext?.startsWith(appPrefix)");
     expect(form).toContain('intent === "connect-marketplace"');
   });
 
