@@ -47,8 +47,8 @@ YANDEX_MARKET_CAPABILITY = MarketplaceCapability(
 )
 AVITO_CAPABILITY = MarketplaceCapability(
     marketplace=Marketplace.AVITO,
-    streams=frozenset({MarketplaceStream.CHATS}),
-    reply_types=frozenset({MessageType.CHAT}),
+    streams=frozenset({MarketplaceStream.CHATS, MarketplaceStream.REVIEWS}),
+    reply_types=frozenset({MessageType.CHAT, MessageType.REVIEW}),
 )
 
 _CAPABILITIES = {

@@ -292,6 +292,7 @@ class MarketplaceAccountService:
             account.scopes_json = {
                 "scopes": list(validation.scopes),
                 "checked_at": now.isoformat(),
+                **({"write_verification": validation.write_verification} if validation.write_verification is not None else {}),
             }
             event_status = "success"
             error_code = None
@@ -300,6 +301,7 @@ class MarketplaceAccountService:
         else:
             account.credentials_status = result.error_code or "invalid"
             account.status = "error"
+            account.scopes_json = {}
             account.last_error_sync_at = now
             account.error_count = int(account.error_count or 0) + 1
             event_status = "failed"

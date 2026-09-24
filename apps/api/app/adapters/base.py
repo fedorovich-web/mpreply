@@ -54,6 +54,7 @@ class ProviderMessageResolution:
 class CredentialValidation:
     scopes: tuple[str, ...]
     account_reference: str | None
+    write_verification: Literal["not_probed"] | None = None
 
 
 @dataclass(frozen=True, slots=True)

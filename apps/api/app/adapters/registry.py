@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from typing import TypeVar
 
 from app.adapters.avito import AvitoAdapter
+from app.adapters.avito_account import AvitoCredentialAdapter
+from app.adapters.avito_auth import AvitoCredentialResolver
+from app.adapters.avito_reviews import AvitoReviewAdapter
 from app.adapters.base import CredentialAdapter, ReviewQuestionAdapter
 from app.adapters.capabilities import (
     AVITO_CAPABILITY,
@@ -99,12 +102,14 @@ class MarketplaceAdapterRegistry:
 
 
 def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceAdapterRegistry:
+    avito_resolver = AvitoCredentialResolver(clients.avito)
     return MarketplaceAdapterRegistry(
         {
             Marketplace.AVITO: ProviderRegistration(
                 capability=AVITO_CAPABILITY,
-                credential_factory=lambda: AvitoAdapter(client=clients.avito),
-                conversation_factory=lambda: AvitoAdapter(client=clients.avito),
+                credential_factory=lambda: AvitoCredentialAdapter(client=clients.avito, credential_resolver=avito_resolver),
+                review_factory=lambda: AvitoReviewAdapter(client=clients.avito, credential_resolver=avito_resolver),
+                conversation_factory=lambda: AvitoAdapter(client=clients.avito, credential_resolver=avito_resolver),
             ),
             Marketplace.WILDBERRIES: ProviderRegistration(
                 capability=WILDBERRIES_CAPABILITY,
