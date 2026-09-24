@@ -16,10 +16,10 @@ describe("billing rollout boundary", () => {
     expect(product).toContain("do not redesign the billing/payment flow");
   });
 
-  it("preserves the existing billing behavior and framing in this redesign branch", () => {
+  it("preserves the existing billing boundary without inventing checkout actions", () => {
     expect(billingWorkspace).toContain("data.pricing_finalized");
     expect(billingWorkspace).toContain(': "—"');
-    expect(billingWorkspace).not.toContain("Цена не задана");
-    expect(billingPage).toContain("Текущий тариф и использование");
+    expect(billingWorkspace).not.toMatch(/checkout|оплатить сейчас|перейти к оплате/i);
+    expect(billingPage).toContain("Тариф и лимиты");
   });
 });

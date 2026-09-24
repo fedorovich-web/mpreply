@@ -5,9 +5,10 @@ import { describe, expect, it } from "vitest";
 const source = readFileSync(join(process.cwd(), "components/billing/BillingWorkspace.tsx"), "utf8");
 
 describe("billing product copy", () => {
-  it("shows plan and usage without product-development meta commentary", () => {
+  it("shows plan and usage without product-development or provider commentary", () => {
     expect(source).toContain("Текущий тариф");
     expect(source).toContain("Использование лимитов");
+    expect(source).toContain("Без отдельного лимита");
 
     for (const forbidden of [
       "Стоимость уточняется",
@@ -15,6 +16,9 @@ describe("billing product copy", () => {
       "выдуманную цену",
       "после их публикации",
       "пока не задан",
+      "payment provider",
+      "провайдер оплаты",
+      "API",
     ]) {
       expect(source).not.toContain(forbidden);
     }
