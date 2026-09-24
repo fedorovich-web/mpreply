@@ -111,7 +111,7 @@ export default function HelpPage() {
                   <span className="help-scene-mark" aria-hidden="true">?</span>
                   <div><strong>Помощь MPReply</strong><small>Найдите решение по задаче</small></div>
                 </div>
-                <span>Все системы</span>
+                <span>Справочный центр</span>
               </div>
               <div className="help-hero-search" aria-hidden="true">Поиск по помощи…</div>
               <div className="help-hero-routes">

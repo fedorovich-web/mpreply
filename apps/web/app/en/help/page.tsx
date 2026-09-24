@@ -113,7 +113,7 @@ export default function EnglishHelpPage() {
                   <span className="help-scene-mark" aria-hidden="true">?</span>
                   <div><strong>MPReply help</strong><small>Find help by task</small></div>
                 </div>
-                <span>All systems</span>
+                <span>Help center</span>
               </div>
               <div className="help-hero-search" aria-hidden="true">Search help…</div>
               <div className="help-hero-routes">
