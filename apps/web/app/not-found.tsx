@@ -71,6 +71,7 @@ export default async function NotFound() {
             </div>
 
             <div className="not-found-render-copy">
+              <div className="not-found-render-code" aria-hidden="true">404</div>
               <h1>{t.title}</h1>
               <p>{t.description}</p>
               <p className="not-found-render-muted">{t.muted}</p>

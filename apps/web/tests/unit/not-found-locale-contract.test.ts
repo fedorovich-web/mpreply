@@ -21,6 +21,7 @@ describe("locale-aware not found page", () => {
 
   it("keeps the approved raster 404 illustration", () => {
     expect(source).toContain('src="/images/mpreply-404-illustration.webp"');
+    expect(source).toContain('className="not-found-render-code"');
     expect(source).not.toContain("<svg");
   });
 });

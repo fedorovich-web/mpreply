@@ -598,6 +598,21 @@
   gap: 9px;
 }
 
+.not-found-render-code {
+  width: fit-content;
+  margin: 0 0 2px;
+  background: linear-gradient(180deg, #6f86ff 0%, #0b68f6 52%, #0757d7 100%);
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(5.1rem, 9vw, 8.8rem);
+  font-weight: 850;
+  line-height: .8;
+  letter-spacing: -.07em;
+  text-shadow: 0 16px 34px rgb(11 104 246 / 12%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .not-found-render-copy h1 {
   margin: 12px 0 0;
   color: #071846;
@@ -834,6 +849,10 @@
 
   .contacts-render-office-card {
     grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .not-found-render-code {
+    font-size: clamp(4.3rem, 24vw, 6.2rem);
   }
 
   .not-found-render-copy h1 {
