@@ -1,19 +1,61 @@
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 
 import { PublicIcon, type PublicIconName } from "../components/public-site/PublicIcon";
 import { PublicShell } from "../components/public-site/PublicShell";
+import {
+  localeFromRequestHeader,
+  localeRequestHeader,
+  localizedPath,
+  type Locale,
+} from "../lib/i18n";
 
-const suggestions: readonly [PublicIconName, string, string, string][] = [
-  ["chart", "Возможности", "Посмотрите, как MPReply помогает работать с обращениями покупателей.", "/features"],
-  ["document", "Тарифы", "Сравните планы и выберите подходящий формат работы.", "/pricing"],
-  ["link", "Интеграции", "Проверьте доступные подключения маркетплейсов.", "/marketplaces"],
-  ["shield-check", "Поддержка", "Найдите ответы на частые вопросы и инструкции.", "/help"],
-];
+const copy = {
+  ru: {
+    suggestions: [
+      ["chart", "Возможности", "Посмотрите, как MPReply помогает работать с обращениями покупателей.", "/features"],
+      ["document", "Тарифы", "Сравните планы и выберите подходящий формат работы.", "/pricing"],
+      ["link", "Интеграции", "Проверьте доступные подключения маркетплейсов.", "/marketplaces"],
+      ["shield-check", "Поддержка", "Найдите ответы на частые вопросы и инструкции.", "/help"],
+    ] as readonly [PublicIconName, string, string, string][],
+    title: "Страница не найдена",
+    description: "Возможно, она была перемещена, удалена или адрес введён неверно.",
+    muted: "Выберите нужный раздел или вернитесь на главную.",
+    home: "На главную",
+    contact: "Связаться с нами",
+    suggestionsTitle: "Возможно, вы искали?",
+    finalTitle: "Не нашли, что искали?",
+    finalText: "Напишите в поддержку — поможем найти нужную информацию.",
+    write: "Написать нам",
+  },
+  en: {
+    suggestions: [
+      ["chart", "Features", "See how MPReply helps teams handle marketplace customer messages.", "/features"],
+      ["document", "Pricing", "Compare plans and choose a setup that fits your workflow.", "/pricing"],
+      ["link", "Integrations", "Review the marketplace connections available in MPReply.", "/marketplaces"],
+      ["shield-check", "Help", "Find answers to common questions and practical setup guidance.", "/help"],
+    ] as readonly [PublicIconName, string, string, string][],
+    title: "Page not found",
+    description: "The page may have moved, been removed, or the address may be incorrect.",
+    muted: "Choose a section below or return to the home page.",
+    home: "Back to home",
+    contact: "Contact us",
+    suggestionsTitle: "You may be looking for",
+    finalTitle: "Still looking for something?",
+    finalText: "Contact support and we’ll help you find the right information.",
+    write: "Contact support",
+  },
+} as const;
 
-export default function NotFound() {
+export default async function NotFound() {
+  const requestHeaders = await headers();
+  const locale = localeFromRequestHeader(requestHeaders.get(localeRequestHeader));
+  const t = copy[locale];
+  const path = (value: string) => localizedPath(locale, value);
+
   return (
-    <PublicShell>
+    <PublicShell locale={locale}>
       <div className="not-found-render-page">
         <section className="not-found-render-hero">
           <div className="public-container not-found-render-hero-grid">
@@ -29,12 +71,12 @@ export default function NotFound() {
             </div>
 
             <div className="not-found-render-copy">
-              <h1>Страница не найдена</h1>
-              <p>Возможно, она была перемещена, удалена или адрес введён неверно.</p>
-              <p className="not-found-render-muted">Выберите нужный раздел или вернитесь на главную.</p>
+              <h1>{t.title}</h1>
+              <p>{t.description}</p>
+              <p className="not-found-render-muted">{t.muted}</p>
               <div className="not-found-render-actions">
-                <Link className="button button-primary" href="/">На главную <span aria-hidden="true">→</span></Link>
-                <Link className="button button-secondary" href="/contacts">Связаться с нами</Link>
+                <Link className="button button-primary" href={path("/")}>{t.home} <span aria-hidden="true">→</span></Link>
+                <Link className="button button-secondary" href={path("/contacts")}>{t.contact}</Link>
               </div>
             </div>
           </div>
@@ -42,10 +84,10 @@ export default function NotFound() {
 
         <section className="not-found-render-suggestions">
           <div className="public-container">
-            <h2>Возможно, вы искали?</h2>
+            <h2>{t.suggestionsTitle}</h2>
             <div className="not-found-route-grid">
-              {suggestions.map(([icon, title, text, href]) => (
-                <Link className="not-found-route-card" href={href} key={href}>
+              {t.suggestions.map(([icon, title, text, href]) => (
+                <Link className="not-found-route-card" href={path(href)} key={href}>
                   <span className="not-found-route-icon" aria-hidden="true"><PublicIcon name={icon} /></span>
                   <strong>{title}</strong>
                   <p>{text}</p>
@@ -59,8 +101,8 @@ export default function NotFound() {
         <section className="not-found-render-final">
           <div className="public-container not-found-render-final-card">
             <span className="not-found-render-final-icon" aria-hidden="true"><PublicIcon name="message" /></span>
-            <div><h2>Не нашли, что искали?</h2><p>Напишите в поддержку — поможем найти нужную информацию.</p></div>
-            <Link className="button button-primary" href="/contacts">Написать нам <span aria-hidden="true">→</span></Link>
+            <div><h2>{t.finalTitle}</h2><p>{t.finalText}</p></div>
+            <Link className="button button-primary" href={path("/contacts")}>{t.write} <span aria-hidden="true">→</span></Link>
           </div>
         </section>
       </div>
