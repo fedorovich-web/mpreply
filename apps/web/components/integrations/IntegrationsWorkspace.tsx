@@ -56,9 +56,9 @@ export function IntegrationsWorkspace() {
   return (
     <section className="integrations-workspace" aria-label="Интеграции маркетплейсов">
       <div className="integrations-summary-grid" aria-label="Сводка подключений">
-        <SummaryMetric label="Подключено кабинетов" value={accountsQuery.isPending ? "—" : String(accounts.length)} />
-        <SummaryMetric label="Работают нормально" value={accountsQuery.isPending ? "—" : String(activeCount)} />
-        <SummaryMetric label="Требуют внимания" value={accountsQuery.isPending ? "—" : String(problemCount)} />
+        <SummaryMetric label="Подключённых кабинетов" value={accountsQuery.data ? String(accounts.length) : "—"} />
+        <SummaryMetric label="Работают нормально" value={accountsQuery.data ? String(activeCount) : "—"} />
+        <SummaryMetric label="Требуют внимания" value={accountsQuery.data ? String(problemCount) : "—"} />
       </div>
 
       <div className="integration-overview-actions">

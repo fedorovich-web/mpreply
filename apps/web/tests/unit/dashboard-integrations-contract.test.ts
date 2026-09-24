@@ -16,7 +16,7 @@ const styles = readFileSync(join(root, "styles/dashboard-integrations-approved.c
 describe("integrations dashboard", () => {
   it("keeps all four ready integrations on the existing marketplace accounts API", () => {
     expect(workspace).toContain('buildApiQuery("/api/marketplace-accounts"');
-    expect(workspace).toContain("Интеграция готова");
+    expect(workspace).toContain("Подключение доступно");
     expect(workspace).toContain("Wildberries");
     expect(workspace).toContain("Ozon");
     expect(workspace).toContain("Яндекс Маркет");
@@ -31,7 +31,7 @@ describe("integrations dashboard", () => {
     expect(yandexPage).toContain("MarketplaceIntegrationWorkspace");
     expect(avitoPage).toContain("MarketplaceIntegrationWorkspace");
     for (const marketplacePage of [wildberriesPage, ozonPage, yandexPage, avitoPage]) {
-      expect(marketplacePage).toContain("Интеграция готова");
+      expect(marketplacePage).toContain("Подключение доступно");
       expect(marketplacePage).not.toContain("Подключение пока недоступно");
     }
   });
@@ -59,7 +59,7 @@ describe("integrations dashboard", () => {
   });
 
   it("states that all supported marketplaces are available for connection", () => {
-    expect(page).toContain("Wildberries, Ozon, Яндекс Маркет и Авито доступны для подключения");
+    expect(page).toContain("Подключите Wildberries, Ozon, Яндекс Маркет и Авито");
     expect(page).toContain("4 маркетплейса");
     expect(page).not.toContain("находятся в плане интеграций");
   });

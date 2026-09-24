@@ -15,6 +15,7 @@ describe("user-facing copy", () => {
     const aiWorkspace = source("components/ai-assistant/AIAssistantWorkspace.tsx");
     const analytics = source("components/analytics/AnalyticsWorkspace.tsx");
     const inbox = source("components/inbox/InboxWorkspace.tsx");
+    const integrations = source("components/integrations/WildberriesIntegrationWorkspace.tsx");
 
     expect(shell).toContain("Ответы с ИИ");
     expect(shell).not.toContain("ИИ-ассистент");
@@ -27,6 +28,11 @@ describe("user-facing copy", () => {
     expect(analytics).not.toContain("Без SKU");
     expect(inbox).not.toContain("Товар, SKU");
     expect(inbox).not.toContain("`SKU ${message.product.sku}`");
+    expect(integrations).not.toContain("API-ключ Wildberries");
+    expect(integrations).not.toContain(">Seller ID <");
+    expect(integrations).not.toContain("Синхронизировать сейчас");
+    expect(integrations).not.toContain("Ошибки синхронизации");
+    expect(integrations).not.toContain("текущего рабочего пространства");
   });
 
   it("keeps public Russian copy free from implementation jargon", () => {

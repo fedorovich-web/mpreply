@@ -92,7 +92,7 @@ describe("IntegrationsWorkspace", () => {
     expect(screen.getByRole("heading", { name: "Ozon" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Яндекс Маркет" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Авито" })).toBeInTheDocument();
-    expect(screen.getAllByText("Интеграция готова")).toHaveLength(4);
+    expect(screen.getAllByText("Подключение доступно")).toHaveLength(4);
     expect(screen.getAllByText("Не подключено")).toHaveLength(3);
     expect(screen.queryByText(/Planned|Пока недоступно|MVP adapter|production readiness/i)).not.toBeInTheDocument();
 
