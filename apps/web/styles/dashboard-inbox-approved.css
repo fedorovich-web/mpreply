@@ -64,6 +64,7 @@
 
 .inbox-detail-panel {
 	padding: 0;
+	scroll-margin-top: calc(var(--header-height) + var(--space-3));
 }
 
 .inbox-filter-heading,
@@ -435,6 +436,38 @@
 	font-weight: 650;
 }
 
+.inbox-next-step-warning {
+	background: color-mix(in srgb, var(--color-warning-soft) 42%, var(--color-bg-surface));
+}
+
+.inbox-next-step-warning > span {
+	color: var(--color-warning-text);
+}
+
+.inbox-next-step-danger {
+	background: color-mix(in srgb, var(--color-danger-soft) 38%, var(--color-bg-surface));
+}
+
+.inbox-next-step-danger > span {
+	color: var(--color-danger-text);
+}
+
+.inbox-next-step-success {
+	background: color-mix(in srgb, var(--color-success-soft) 42%, var(--color-bg-surface));
+}
+
+.inbox-next-step-success > span {
+	color: var(--color-success-text);
+}
+
+.inbox-next-step-neutral {
+	background: color-mix(in srgb, var(--color-bg-subtle) 64%, var(--color-bg-surface));
+}
+
+.inbox-next-step-neutral > span {
+	color: var(--color-text-muted);
+}
+
 .inbox-detail-panel .detail-grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -501,10 +534,19 @@
 	justify-content: space-between;
 	gap: 1rem;
 	margin: 1.1rem 1.25rem 0;
-	border: 1px solid color-mix(in srgb, var(--color-warning) 30%, var(--color-border-subtle));
+	border: 1px solid color-mix(in srgb, var(--color-warning-text) 24%, var(--color-border-subtle));
 	border-radius: var(--radius-lg);
 	background: color-mix(in srgb, var(--color-warning-soft) 60%, var(--color-bg-surface));
 	padding: 1rem;
+}
+
+.inbox-review-handoff-success {
+	border-color: color-mix(in srgb, var(--color-success-text) 22%, var(--color-border-subtle));
+	background: color-mix(in srgb, var(--color-success-soft) 48%, var(--color-bg-surface));
+}
+
+.inbox-review-handoff-success .panel-kicker {
+	color: var(--color-success-text);
 }
 
 .inbox-review-handoff strong {

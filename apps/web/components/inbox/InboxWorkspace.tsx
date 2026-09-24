@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
@@ -105,6 +105,7 @@ export function InboxWorkspace() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [selectedId, setSelectedId] = useState("");
   const [page, setPage] = useState(1);
+  const detailPanelRef = useRef<HTMLElement>(null);
   const [restoredOrganizationId, setRestoredOrganizationId] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(filters.query.trim());
 
@@ -231,6 +232,19 @@ export function InboxWorkspace() {
     setFilters(defaultFilters);
   }
 
+  function selectMessage(messageId: string) {
+    setSelectedId(messageId);
+    if (!window.matchMedia("(max-width: 820px)").matches) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      detailPanelRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  }
+
   return (
     <section className="inbox-workspace" aria-label="Рабочая область обращений">
       <aside className="inbox-filters-panel" aria-label="Фильтры обращений">
@@ -353,7 +367,7 @@ export function InboxWorkspace() {
                 <MessageCard
                   isSelected={selectedMessage?.id === message.id}
                   message={message}
-                  onSelect={() => setSelectedId(message.id)}
+                  onSelect={() => selectMessage(message.id)}
                 />
               </div>
             ))}
@@ -401,7 +415,7 @@ export function InboxWorkspace() {
         ) : null}
       </section>
 
-      <aside className="inbox-detail-panel" aria-label="Карточка выбранного обращения">
+      <aside ref={detailPanelRef} className="inbox-detail-panel" aria-label="Карточка выбранного обращения">
         {selectedMessage ? (
           <MessageDetail
             canManage={canManageMessages}
@@ -521,6 +535,17 @@ function MessageDetail({
     "blocked_by_marketplace",
   ].includes(message.status);
   const isAssignedToCurrentUser = message.assigned_to === currentUserId;
+  const reviewHandoff = isReviewWorkflowStatus(message.status) ? reviewHandoffCopy(message.status) : null;
+  const canUseMessageActions = canManage && ![
+    "approved",
+    "auto_reply_pending",
+    "sending",
+    "answered",
+    "auto_reply_sent",
+    "archived",
+    "duplicate",
+    "skipped",
+  ].includes(message.status);
 
   return (
     <div className="message-detail-card">
@@ -532,7 +557,7 @@ function MessageDetail({
         <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
       </div>
 
-      <div className="inbox-next-step" aria-live="polite">
+      <div className={"inbox-next-step inbox-next-step-" + nextStepTone(message.status)} aria-live="polite">
         <span>Следующий шаг</span>
         <strong>{nextStepLabel(message.status)}</strong>
       </div>
@@ -564,11 +589,11 @@ function MessageDetail({
         </p>
       </section>
 
-      {message.status === "waiting_review" ? (
-        <div className="inbox-review-handoff">
+      {reviewHandoff ? (
+        <div className={message.status === "approved" ? "inbox-review-handoff inbox-review-handoff-success" : "inbox-review-handoff"}>
           <div>
-            <span className="panel-kicker">Ответ уже на проверке</span>
-            <strong>Продолжите работу в разделе «На проверке»</strong>
+            <span className="panel-kicker">{reviewHandoff.eyebrow}</span>
+            <strong>{reviewHandoff.title}</strong>
           </div>
           <Link className="button button-primary" href="/app/review-queue">Открыть очередь проверки</Link>
         </div>
@@ -627,7 +652,7 @@ function MessageDetail({
 
       {error ? <p className="form-error" role="alert">{errorMessage(error)}</p> : null}
 
-      {canManage ? (
+      {canUseMessageActions ? (
         <div className="detail-actions inbox-detail-actions">
           {!isAssignedToCurrentUser ? (
             <button className="button button-secondary" disabled={isUpdating} onClick={onTake} type="button">
@@ -753,12 +778,52 @@ function assignmentLabel(assignedTo: string | null, currentUserId: string): stri
 
 function nextStepLabel(status: string): string {
   if (status === "waiting_review" || status === "needs_manual_check" || status === "safety_blocked") return "Проверить ответ перед отправкой";
-  if (status === "failed" || status === "blocked_by_marketplace") return "Разобраться с ошибкой отправки";
+  if (status === "approved") return "Ответ одобрен и ожидает отправки";
+  if (status === "auto_reply_pending") return "Автоответ поставлен в очередь";
+  if (status === "sending") return "Ответ отправляется на маркетплейс";
+  if (status === "failed") return "Разобраться с ошибкой отправки";
+  if (status === "blocked_by_marketplace") return "Проверить подключение маркетплейса";
   if (status === "answered" || status === "auto_reply_sent") return "Ответ уже отправлен";
   if (status === "archived") return "Обращение находится в архиве";
+  if (status === "duplicate") return "Повторное обращение уже обработано";
+  if (status === "skipped") return "Обращение пропущено автоматизацией";
   if (status === "escalated") return "Менеджеру нужно принять решение";
   if (status === "ai_draft_ready") return "Проверить подготовленный черновик";
+  if (status === "auto_rule_matched") return "Проверить обработку по найденному правилу";
   return "Подготовить ответ или передать обращение";
+}
+
+function nextStepTone(status: string): "danger" | "info" | "neutral" | "success" | "warning" {
+  if (["failed", "blocked_by_marketplace"].includes(status)) return "danger";
+  if (["waiting_review", "needs_manual_check", "safety_blocked", "escalated"].includes(status)) return "warning";
+  if (["answered", "auto_reply_sent"].includes(status)) return "success";
+  if (["approved", "auto_reply_pending", "sending", "ai_draft_ready", "auto_rule_matched"].includes(status)) return "info";
+  return "neutral";
+}
+
+function isReviewWorkflowStatus(status: string): boolean {
+  return ["waiting_review", "needs_manual_check", "safety_blocked", "approved"].includes(status);
+}
+
+function reviewHandoffCopy(status: string): { eyebrow: string; title: string } {
+  if (status === "approved") {
+    return {
+      eyebrow: "Ответ одобрен",
+      title: "Продолжите отправку в разделе «На проверке»",
+    };
+  }
+
+  if (status === "needs_manual_check" || status === "safety_blocked") {
+    return {
+      eyebrow: "Нужна ручная проверка",
+      title: "Проверьте ответ и причины остановки в разделе «На проверке»",
+    };
+  }
+
+  return {
+    eyebrow: "Ответ уже на проверке",
+    title: "Продолжите работу в разделе «На проверке»",
+  };
 }
 
 function statusTone(status: string): BadgeTone {
