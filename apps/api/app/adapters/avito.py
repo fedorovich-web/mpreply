@@ -16,7 +16,7 @@ from app.adapters.base import (
     ProviderMessageContext,
     ProviderWriteReceipt,
 )
-from app.adapters.conversation import ConversationAdapter, ConversationMessage, ConversationThread
+from app.adapters.conversation import ConversationAdapter, ConversationMessage, ConversationParticipant, ConversationThread
 from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_with_retry
 from app.models.enums import Marketplace, MessageType
 
@@ -27,7 +27,7 @@ _MAX_CHAT_ID_LENGTH = 255
 _MAX_REPLY_LENGTH = 1_000
 _MAX_UNIX_SECONDS = 253_402_300_799
 _MESSAGE_KINDS = frozenset({"text", "image", "link", "item", "location", "call", "deleted", "voice", "system"})
-_CHAT_TYPES = "u2i,u2u,a2u"
+_CHAT_TYPES = "u2i,u2u"
 
 
 class AvitoAdapter(ConversationAdapter):
@@ -115,7 +115,7 @@ class AvitoAdapter(ConversationAdapter):
                 self._malformed("Avito returned an invalid chat page"),
             )
         try:
-            items = tuple(self._parse_chat(record, user_id) for record in records)
+            items = tuple(self._parse_chat(record) for record in records)
             next_cursor = self._next_offset(offset, len(records))
         except (TypeError, ValueError):
             return cast(
@@ -424,7 +424,7 @@ class AvitoAdapter(ConversationAdapter):
         )
 
     @classmethod
-    def _parse_chat(cls, raw: dict[str, object], user_id: str) -> ConversationThread:
+    def _parse_chat(cls, raw: dict[str, object]) -> ConversationThread:
         chat_id = cls._bounded_string(raw.get("id"), _MAX_CHAT_ID_LENGTH)
         created = cls._unix_seconds(raw.get("created"))
         updated = cls._unix_seconds(raw.get("updated"))
@@ -434,22 +434,28 @@ class AvitoAdapter(ConversationAdapter):
             raise ValueError("Avito chat is invalid")
         chat_type = cls._bounded_string(context.get("type"), 32)
         product = cls._chat_product(context)
-        customer_id: str | None = None
-        customer_name: str | None = None
+        participants: list[ConversationParticipant] = []
+        seen_ids: set[str] = set()
         for raw_user in cast(list[object], users):
             user = cls._object(raw_user)
             identifier = cls._positive_integer(user.get("id") if user is not None else None)
             if user is None or identifier is None:
                 raise ValueError("Avito chat user is invalid")
-            if str(identifier) != user_id and customer_id is None:
-                customer_id = str(identifier)
-                customer_name = cls._bounded_string(user.get("name"), 255)
+            external_id = str(identifier)
+            if external_id in seen_ids:
+                raise ValueError("Avito chat user is duplicated")
+            seen_ids.add(external_id)
+            participants.append(
+                ConversationParticipant(
+                    external_id=external_id,
+                    name=cls._bounded_string(user.get("name"), 255),
+                )
+            )
         return ConversationThread(
             external_id=chat_id,
             created_unix=created,
             updated_unix=updated,
-            customer_id=customer_id,
-            customer_name=customer_name,
+            participants=tuple(participants),
             product=product,
             metadata={"chat_type": chat_type},
         )
