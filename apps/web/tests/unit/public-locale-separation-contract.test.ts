@@ -64,6 +64,6 @@ describe("public RU/EN separation", () => {
     expect(sitemap).toContain('localizedPath("en", path)');
     expect(sitemap).toContain('"ru-RU"');
     expect(sitemap).toContain('"x-default"');
-    expect(sitemap).toContain("flatMap");
+    expect(sitemap).toContain("indexablePublicRoutes.flatMap");
   });
 });

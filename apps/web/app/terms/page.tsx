@@ -9,6 +9,7 @@ export const metadata: Metadata = createPageMetadata({
   description: "Проект условий использования MPReply: работа с обращениями покупателей, ответы с помощью ИИ, автоматизация, подключения к маркетплейсам, ограничения ответственности и допустимое использование.",
   path: "/terms",
   localized: true,
+  indexable: false,
 });
 
 const sections = [

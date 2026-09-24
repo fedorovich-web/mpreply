@@ -81,7 +81,7 @@ describe("marketplace detail SEO metadata contract", () => {
     const appLayout = readFileSync(join(root, "app/app/layout.tsx"), "utf8");
     const authLayout = readFileSync(join(root, "app/auth/layout.tsx"), "utf8");
 
-    expect(sitemap).toContain("publicRoutes.map");
+    expect(sitemap).toContain("indexablePublicRoutes.flatMap");
     expect(robots).toContain('disallow: ["/app/", "/auth/", "/en/app/", "/en/auth/"]');
     expect(appLayout).toContain("index: false");
     expect(authLayout).toContain("index: false");

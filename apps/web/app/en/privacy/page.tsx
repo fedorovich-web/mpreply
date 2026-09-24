@@ -11,6 +11,7 @@ export const metadata: Metadata = createPageMetadata({
   path: "/privacy",
   locale: "en",
   localized: true,
+  indexable: false,
 });
 
 const sections = [

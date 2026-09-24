@@ -14,6 +14,7 @@ type PageMetadataInput = {
   path: string;
   locale?: Locale;
   localized?: boolean;
+  indexable?: boolean;
 };
 
 export function createPageMetadata({
@@ -22,6 +23,7 @@ export function createPageMetadata({
   path,
   locale = "ru",
   localized = false,
+  indexable = true,
 }: PageMetadataInput): Metadata {
   const canonical = localizedPath(locale, path);
   const otherLocale = alternateLocale(locale);
@@ -55,6 +57,6 @@ export function createPageMetadata({
       title,
       description,
     },
-    robots: { index: true, follow: true },
+    robots: { index: indexable, follow: true },
   };
 }

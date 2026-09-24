@@ -5,8 +5,10 @@ import { describe, expect, it } from "vitest";
 const seoSource = readFileSync(join(process.cwd(), "lib/seo.ts"), "utf8");
 
 describe("public metadata helper", () => {
-  it("does not keep an unused no-index branch in the public-page helper", () => {
+  it("indexes public pages by default but supports explicit draft noindex", () => {
+    expect(seoSource).toContain("indexable?: boolean");
+    expect(seoSource).toContain("indexable = true");
+    expect(seoSource).toContain("robots: { index: indexable, follow: true }");
     expect(seoSource).not.toContain("noIndex");
-    expect(seoSource).toContain("robots: { index: true, follow: true }");
   });
 });

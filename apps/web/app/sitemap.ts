@@ -1,14 +1,14 @@
 import type { MetadataRoute } from "next";
 
 import { localizedPath } from "../lib/i18n";
-import { publicRoutes, siteConfig } from "../lib/site-config";
+import { indexablePublicRoutes, siteConfig } from "../lib/site-config";
 
 function absolute(path: string): string {
   return `${siteConfig.origin}${path === "/" ? "" : path}`;
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return publicRoutes.flatMap((path) => {
+  return indexablePublicRoutes.flatMap((path) => {
     const ruPath = localizedPath("ru", path);
     const enPath = localizedPath("en", path);
     const alternates = {

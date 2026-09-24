@@ -187,3 +187,7 @@ export const publicRoutes = [
   "/terms",
   "/contacts",
 ] as const;
+
+export const indexablePublicRoutes = publicRoutes.filter(
+  (path) => path !== "/privacy" && path !== "/terms",
+);
