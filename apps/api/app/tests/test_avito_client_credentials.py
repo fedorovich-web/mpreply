@@ -39,7 +39,7 @@ async def test_concurrent_avito_resolve_coalesces_token_refresh() -> None:
     assert first.data.access_token == second.data.access_token == "synthetic-token"
     assert len(transport.requests) == 1
     request = transport.requests[0]
-    assert request.url.path == "/token/"
+    assert request.url.path == "/token"
     assert request.headers["Content-Type"].startswith("application/x-www-form-urlencoded")
     assert "synthetic-secret" not in str(request.url)
 

@@ -31,6 +31,7 @@ class AvitoChatIngestService:
             raise InvalidAvitoChatTurn("Avito chat type is invalid")
         ordered = sorted(messages, key=lambda item: (item.created_unix, item.external_id))
         unread_inbound = [message for message in ordered if message.direction == "in" and not message.is_read]
+        names_by_author = {participant.external_id: participant.name for participant in chat.participants}
         normalized: list[NormalizedMessage] = []
         unsupported_unread = False
         for message in unread_inbound:
@@ -46,7 +47,7 @@ class AvitoChatIngestService:
                     external_id=message.external_id,
                     message_type=MessageType.CHAT,
                     rating=None,
-                    customer_display_name=chat.customer_name,
+                    customer_display_name=names_by_author.get(message.author_id),
                     customer_text=message.text,
                     customer_photos=(),
                     marketplace_created_at=created_at,

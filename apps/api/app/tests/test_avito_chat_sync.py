@@ -12,6 +12,7 @@ from app.adapters.base import AdapterResult, MarketplacePage
 from app.adapters.conversation import (
     ConversationAdapter,
     ConversationMessage,
+    ConversationParticipant,
     ConversationThread,
 )
 from app.models.marketplace_account import MarketplaceAccount
@@ -89,8 +90,7 @@ class _Adapter:
                         external_id="chat-123",
                         created_unix=1_723_456_789,
                         updated_unix=1_723_456_790,
-                        customer_id="42",
-                        customer_name="Synthetic buyer",
+                        participants=(ConversationParticipant(external_id="42", name="Synthetic buyer"),),
                         product=None,
                         metadata={"chat_type": "user"},
                     ),

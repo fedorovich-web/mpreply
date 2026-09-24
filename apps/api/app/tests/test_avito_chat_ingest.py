@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from app.adapters.base import NormalizedProduct
-from app.adapters.conversation import ConversationMessage, ConversationThread
+from app.adapters.conversation import ConversationMessage, ConversationParticipant, ConversationThread
 from app.models.enums import MessageType
 from app.services.avito_chat_ingest_service import AvitoChatIngestService
 
@@ -11,8 +13,7 @@ def _thread(product: NormalizedProduct | None = None) -> ConversationThread:
         external_id="chat-123",
         created_unix=1_723_456_789,
         updated_unix=1_723_456_790,
-        customer_id="42",
-        customer_name="Synthetic buyer",
+        participants=(ConversationParticipant(external_id="42", name="Synthetic buyer"),),
         product=product,
         metadata={"chat_type": "item" if product is not None else "user"},
     )
@@ -87,3 +88,25 @@ def test_avito_preserves_only_real_item_identity() -> None:
     )
 
     assert projection.page.items[0].product is product
+
+
+def test_avito_projects_inbound_text_without_identified_customer() -> None:
+    projection = AvitoChatIngestService().project(
+        replace(_thread(), participants=()),
+        (_message("message-123"),),
+    )
+
+    assert len(projection.page.items) == 1
+    assert projection.page.items[0].customer_display_name is None
+    assert projection.can_mark_read is True
+
+
+def test_avito_projects_inbound_text_from_author_not_listed_in_chat() -> None:
+    projection = AvitoChatIngestService().project(
+        _thread(),
+        (replace(_message("message-123"), author_id="999"),),
+    )
+
+    assert len(projection.page.items) == 1
+    assert projection.page.items[0].customer_display_name is None
+    assert projection.can_mark_read is True

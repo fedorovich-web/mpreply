@@ -151,7 +151,7 @@ class AvitoCredentialResolver:
     ) -> AdapterResult[AvitoResolvedCredential]:
         try:
             response = await self._client.post(
-                "/token/",
+                "/token",
                 data={
                     "grant_type": "client_credentials",
                     "client_id": credentials.client_id,

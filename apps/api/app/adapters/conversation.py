@@ -15,12 +15,17 @@ from app.adapters.base import (
 
 
 @dataclass(frozen=True, slots=True)
+class ConversationParticipant:
+    external_id: str
+    name: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class ConversationThread:
     external_id: str
     created_unix: int
     updated_unix: int
-    customer_id: str | None
-    customer_name: str | None
+    participants: tuple[ConversationParticipant, ...]
     product: NormalizedProduct | None
     metadata: dict[str, object]
 

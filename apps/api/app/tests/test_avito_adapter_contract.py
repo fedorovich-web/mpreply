@@ -9,6 +9,7 @@ from app.adapters.avito import AvitoAdapter
 from app.adapters.base import ProviderMessageContext
 from app.adapters.http import ReadRetryPolicy
 from app.models.enums import MessageType
+from app.services.avito_chat_ingest_service import AvitoChatIngestService
 from app.tests.marketplace_fixtures import SequenceTransport, response
 
 BASE_URL = "https://api.avito.ru"
@@ -91,9 +92,33 @@ async def test_avito_fetches_documented_chat_and_message_contracts() -> None:
         "limit": "100",
         "offset": "0",
         "unread_only": "true",
-        "chat_types": "u2i,u2u,a2u",
+        "chat_types": "u2i,u2u",
     }
     assert transport.requests[2].url.path.endswith("/chat-123/messages/")
+
+
+@pytest.mark.asyncio
+async def test_avito_projects_inbound_author_even_when_chat_user_ids_are_hashed() -> None:
+    chat = {
+        **_chat(),
+        "users": [
+            {"id": 900001, "name": "Synthetic seller"},
+            {"id": 42, "name": "Synthetic buyer"},
+        ],
+    }
+    transport = SequenceTransport([_token(), response(200, json={"chats": [chat]}), response(200, json=[_message()])])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        adapter = AvitoAdapter(client, read_retry_policy=NO_RETRY)
+        chats = await adapter.fetch_chats(CREDENTIAL, "123456", None)
+        messages = await adapter.fetch_chat_messages(CREDENTIAL, "123456", "chat-123", None)
+
+    assert chats.ok is True and chats.data is not None
+    assert messages.ok is True and messages.data is not None
+    projection = AvitoChatIngestService().project(chats.data.items[0], messages.data.items)
+    assert len(projection.page.items) == 1
+    assert projection.page.items[0].customer_text == "Synthetic text"
+    assert projection.page.items[0].customer_display_name == "Synthetic buyer"
+    assert projection.can_mark_read is True
 
 
 @pytest.mark.asyncio
