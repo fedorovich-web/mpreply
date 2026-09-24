@@ -39,7 +39,7 @@ describe("superadmin dashboard", () => {
     expect(styles).toContain(".admin-health-panel");
   });
 
-  it("keeps current incidents before product scale and 30-day usage", () => {
+  it("keeps current incidents first and makes their live state immediately scannable", () => {
     expect(workspace).toContain("admin-section-incidents");
     expect(workspace).toContain("admin-section-product");
     expect(workspace).toContain("admin-section-usage");
@@ -47,8 +47,13 @@ describe("superadmin dashboard", () => {
     expect(workspace.indexOf("admin-section-product")).toBeLessThan(workspace.indexOf("admin-section-usage"));
     expect(workspace).toContain("Ошибки интеграций за 24 часа");
     expect(workspace).toContain("Неотправленные ответы за 24 часа");
-    expect(workspace).toContain("Организации");
-    expect(workspace).toContain("Пользователи");
+    expect(workspace).toContain("Инцидентов за 24 часа не зафиксировано");
+    expect(workspace).toContain("admin-command-live-dot-warning");
+    expect(workspace).toContain("admin-section-alert");
+    expect(workspace).toContain('role="status"');
+    expect(workspace).toContain('aria-live="polite"');
+    expect(styles).toContain(".admin-command-live-dot-warning");
+    expect(styles).toContain(".admin-section-alert");
   });
 
   it("derives status only from the existing overview payload instead of fake admin data", () => {
@@ -62,6 +67,13 @@ describe("superadmin dashboard", () => {
     expect(workspace).not.toContain("Активные и пробные подписки");
     expect(workspace).not.toContain("включая пробные");
     expect(workspace).not.toContain("сохранённым ИИ-черновикам");
+  });
+
+  it("does not silently clamp derived ratios shown to the administrator", () => {
+    expect(workspace).toContain("function ratioPercent");
+    expect(workspace).toContain("Math.round((part / total) * 100)");
+    expect(workspace).toContain("Math.min(metric.ratio, 100)");
+    expect(workspace).not.toContain("Math.min(100, Math.round((part / total) * 100))");
   });
 
   it("keeps the overview error recoverable without leaving the page", () => {
