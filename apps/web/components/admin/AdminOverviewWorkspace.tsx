@@ -56,8 +56,8 @@ export function AdminOverviewWorkspace() {
   const data = overviewQuery.data;
   const incidentCount = data.integration_failures_24h + data.replies_failed_24h;
   const hasIncidents = incidentCount > 0;
-  const activeOrganizationRatio = percentage(data.organizations_active, data.organizations_total);
-  const subscriptionCoverage = percentage(data.subscriptions_active, data.organizations_active);
+  const activeOrganizationRatio = ratioPercent(data.organizations_active, data.organizations_total);
+  const subscriptionCoverage = ratioPercent(data.subscriptions_active, data.organizations_active);
 
   const incidentMetrics: AdminMetric[] = [
     {
@@ -83,8 +83,8 @@ export function AdminOverviewWorkspace() {
       label: "Организации",
       value: data.organizations_total,
       helper: formatNumber(data.organizations_active) + " активных",
-      ratio: activeOrganizationRatio,
-      ratioLabel: activeOrganizationRatio + "% активны",
+      ratio: activeOrganizationRatio ?? undefined,
+      ratioLabel: activeOrganizationRatio === null ? undefined : activeOrganizationRatio + "% активны",
     },
     {
       label: "Пользователи",
@@ -95,8 +95,8 @@ export function AdminOverviewWorkspace() {
       label: "Активные подписки",
       value: data.subscriptions_active,
       helper: "Подписки, учтённые системой как активные",
-      ratio: subscriptionCoverage,
-      ratioLabel: subscriptionCoverage + "% от активных организаций",
+      ratio: subscriptionCoverage ?? undefined,
+      ratioLabel: subscriptionCoverage === null ? undefined : subscriptionCoverage + "% от активных организаций",
     },
   ];
 
@@ -118,7 +118,10 @@ export function AdminOverviewWorkspace() {
       <div className="admin-command-head">
         <div className="admin-command-copy">
           <span className="admin-command-eyebrow">
-            <span className="admin-command-live-dot" aria-hidden="true" />
+            <span
+              className={hasIncidents ? "admin-command-live-dot admin-command-live-dot-warning" : "admin-command-live-dot"}
+              aria-hidden="true"
+            />
             Операционный центр
           </span>
           <h2>{hasIncidents ? "Есть процессы, которые требуют внимания" : "Система работает без зафиксированных сбоев"}</h2>
@@ -128,7 +131,11 @@ export function AdminOverviewWorkspace() {
           </p>
         </div>
 
-        <aside className={hasIncidents ? "admin-health-panel admin-health-panel-warning" : "admin-health-panel"}>
+        <aside
+          aria-live="polite"
+          className={hasIncidents ? "admin-health-panel admin-health-panel-warning" : "admin-health-panel"}
+          role="status"
+        >
           <span>Состояние системы</span>
           <strong>{hasIncidents ? "Требует внимания" : "Стабильно"}</strong>
           <p>
@@ -153,10 +160,11 @@ export function AdminOverviewWorkspace() {
 
       <div className="admin-overview-body">
         <AdminMetricSection
-          className="admin-section-incidents"
+          className={hasIncidents ? "admin-section-incidents admin-section-alert" : "admin-section-incidents"}
           eyebrow="Последние 24 часа"
           metrics={incidentMetrics}
-          title="Что требует внимания сейчас"
+          summary={formatNumber(incidentCount) + " событий"}
+          title={hasIncidents ? "Что требует внимания сейчас" : "Инцидентов за 24 часа не зафиксировано"}
         />
         <AdminMetricSection
           className="admin-section-product"
@@ -189,11 +197,13 @@ function AdminMetricSection({
   className,
   eyebrow,
   metrics,
+  summary,
   title,
 }: {
   className: string;
   eyebrow: string;
   metrics: AdminMetric[];
+  summary?: string;
   title: string;
 }) {
   return (
@@ -201,6 +211,7 @@ function AdminMetricSection({
       <header className="admin-section-heading">
         <span>{eyebrow}</span>
         <h3>{title}</h3>
+        {summary ? <strong className="admin-section-summary">{summary}</strong> : null}
       </header>
       <div className="admin-overview-grid">
         {metrics.map((metric) => (
@@ -224,7 +235,7 @@ function AdminMetricCard({ metric }: { metric: AdminMetric }) {
       {metric.ratio !== undefined && metric.ratioLabel ? (
         <div className="admin-metric-progress">
           <div className="admin-metric-progress-track" aria-hidden="true">
-            <span style={{ width: metric.ratio + "%" }} />
+            <span style={{ width: Math.min(metric.ratio, 100) + "%" }} />
           </div>
           <small>{metric.ratioLabel}</small>
         </div>
@@ -233,9 +244,9 @@ function AdminMetricCard({ metric }: { metric: AdminMetric }) {
   );
 }
 
-function percentage(part: number, total: number): number {
-  if (total <= 0) return 0;
-  return Math.min(100, Math.round((part / total) * 100));
+function ratioPercent(part: number, total: number): number | null {
+  if (total <= 0) return null;
+  return Math.round((part / total) * 100);
 }
 
 function formatNumber(value: number): string {

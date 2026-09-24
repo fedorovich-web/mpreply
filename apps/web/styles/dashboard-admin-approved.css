@@ -264,6 +264,11 @@
 	box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-brand-primary) 12%, transparent);
 }
 
+.admin-command-live-dot-warning {
+	background: var(--color-warning-text);
+	box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-warning-text) 14%, transparent);
+}
+
 .admin-command-copy h2 {
 	max-width: 26ch;
 	margin: 0;
@@ -409,15 +414,39 @@
 
 .admin-section-heading {
 	display: grid;
-	gap: 0.3rem;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.3rem 1rem;
+}
+
+.admin-section-heading > span {
+	grid-column: 1;
+	grid-row: 1;
 }
 
 .admin-section-heading h3 {
+	grid-column: 1;
+	grid-row: 2;
 	margin: 0;
 	color: var(--color-text-primary);
 	font-size: 1rem;
 	font-weight: 780;
 	letter-spacing: -0.02em;
+}
+
+.admin-section-summary {
+	grid-column: 2;
+	grid-row: 1 / span 2;
+	align-self: center;
+	border: 1px solid color-mix(in srgb, var(--color-brand-primary) 14%, var(--color-border-subtle));
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-bg-brand-soft) 62%, var(--color-bg-surface));
+	color: var(--color-brand-primary-strong);
+	padding: 0.42rem 0.66rem;
+	font-size: 0.64rem;
+	font-weight: 750;
+	line-height: 1;
+	white-space: nowrap;
 }
 
 .admin-overview-grid {
@@ -436,6 +465,20 @@
 
 .admin-section-incidents {
 	background: color-mix(in srgb, var(--color-bg-brand-soft) 11%, var(--color-bg-surface));
+}
+
+.admin-section-alert {
+	background: color-mix(in srgb, var(--color-warning-soft) 18%, var(--color-bg-surface));
+}
+
+.admin-section-alert .admin-section-heading > span {
+	color: var(--color-warning-text);
+}
+
+.admin-section-alert .admin-section-summary {
+	border-color: color-mix(in srgb, var(--color-warning-text) 22%, var(--color-border-subtle));
+	background: color-mix(in srgb, var(--color-warning-soft) 52%, var(--color-bg-surface));
+	color: var(--color-warning-text);
 }
 
 .admin-section-product {
@@ -605,6 +648,22 @@
 		align-items: flex-start;
 		flex-direction: column;
 		gap: 0.25rem;
+	}
+
+	.admin-section-heading {
+		grid-template-columns: 1fr;
+	}
+
+	.admin-section-heading > span,
+	.admin-section-heading h3,
+	.admin-section-summary {
+		grid-column: 1;
+		grid-row: auto;
+	}
+
+	.admin-section-summary {
+		justify-self: start;
+		margin-top: 0.15rem;
 	}
 }
 
