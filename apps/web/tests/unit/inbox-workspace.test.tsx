@@ -195,6 +195,27 @@ describe("InboxWorkspace", () => {
     expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
   });
 
+  it("routes approved replies back to review workflow and hides conflicting message actions", async () => {
+    mockWorkspace();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({ items: [{ ...message, status: "approved" }], total: 1, page: 1, page_size: 100 }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    renderWorkspace();
+
+    expect(await screen.findByText("Ответ одобрен и ожидает отправки")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Открыть очередь проверки" })).toHaveAttribute("href", "/app/review-queue");
+    expect(screen.queryByLabelText("Ответ для проверки")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Передать менеджеру" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Архивировать" })).not.toBeInTheDocument();
+  });
+
   it("creates a manual reply and actually submits it to review from the inbox", async () => {
     mockWorkspace();
     let messageRequests = 0;
