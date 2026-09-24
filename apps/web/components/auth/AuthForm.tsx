@@ -7,32 +7,117 @@ import { useState } from "react";
 
 import { ApiError, apiRequest } from "../../lib/api/client";
 import { authSessionSchema } from "../../lib/api/schemas";
+import { localizedPath, type Locale } from "../../lib/i18n";
 import { PublicBrandMark } from "../public-site/PublicBrandMark";
 
 type AuthMode = "login" | "register";
 
-const previewRows = [
-  ["WB", "Анна К.", "Отличное качество, быстрая доставка!", "Готов к отправке"],
-  ["OZ", "Дмитрий С.", "Подойдёт ли размер M на рост 174 см?", "На проверке"],
-  ["М", "Елена М.", "Когда появится этот цвет?", "Черновик готов"],
-] as const;
+const copy = {
+  ru: {
+    previewRows: [
+      ["WB", "Анна К.", "Отличное качество, быстрая доставка!", "Готов к отправке"],
+      ["OZ", "Дмитрий С.", "Подойдёт ли размер M на рост 174 см?", "На проверке"],
+      ["М", "Елена М.", "Когда появится этот цвет?", "Черновик готов"],
+    ],
+    workspace: "Рабочее пространство MPReply",
+    home: "MPReply — главная",
+    eyebrow: "Единое рабочее пространство",
+    panelTitle: "Обращения покупателей, ИИ-ответы и контроль команды — рядом",
+    panelText: "Wildberries, Ozon, Яндекс Маркет и Авито подключаются к одной очереди. Типовые сценарии можно автоматизировать, сложные — оставлять на проверку.",
+    allMessages: "Все обращения",
+    sharedQueue: "единая очередь",
+    queue: "Очередь",
+    reviews: "Отзывы",
+    questions: "Вопросы",
+    messages: "Сообщения",
+    aiReply: "Ответ с помощью ИИ",
+    draft: "черновик",
+    sampleReply: "Спасибо за ваш отзыв! Рады, что товар вам понравился. Будем рады видеть вас снова.",
+    draftAction: "Дружелюбный  ·  Готов к отправке",
+    marketplaces: "Поддерживаемые маркетплейсы",
+    readyIntegrations: "4 готовые интеграции",
+    loginEyebrow: "Рабочий кабинет",
+    registerEyebrow: "Новый аккаунт",
+    loginTitle: "Войти в MPReply",
+    registerTitle: "Создать аккаунт",
+    loginDescription: "Вернитесь к общей очереди, ответам на проверке, правилам автоматизации и подключённым площадкам.",
+    registerDescription: "Создайте рабочее пространство, затем подключите Wildberries, Ozon, Яндекс Маркет или Авито и настройте правила обработки обращений.",
+    name: "Имя",
+    namePlaceholder: "Ваше имя",
+    password: "Пароль",
+    loginPassword: "Ваш пароль",
+    registerPassword: "Минимум 10 символов",
+    pending: "Подождите...",
+    login: "Войти",
+    continue: "Продолжить",
+    noAccount: "Нет аккаунта?",
+    createAccount: "Создать аккаунт",
+    haveAccount: "Уже есть аккаунт?",
+  },
+  en: {
+    previewRows: [
+      ["WB", "Anna K.", "Great quality and fast delivery!", "Ready to send"],
+      ["OZ", "Dmitry S.", "Would size M fit someone 174 cm tall?", "Needs review"],
+      ["YM", "Elena M.", "When will this color be available?", "Draft ready"],
+    ],
+    workspace: "MPReply workspace",
+    home: "MPReply — home",
+    eyebrow: "One shared workspace",
+    panelTitle: "Customer messages, AI-assisted replies, and team review in one place",
+    panelText: "Connect Wildberries, Ozon, Yandex Market, and Avito to one queue. Automate routine scenarios and keep exceptions under team review.",
+    allMessages: "All messages",
+    sharedQueue: "shared queue",
+    queue: "Queue",
+    reviews: "Reviews",
+    questions: "Questions",
+    messages: "Messages",
+    aiReply: "AI-assisted reply",
+    draft: "draft",
+    sampleReply: "Thanks for your review! We’re glad you liked the product and hope to see you again.",
+    draftAction: "Friendly  ·  Ready to send",
+    marketplaces: "Supported marketplaces",
+    readyIntegrations: "4 marketplace integrations",
+    loginEyebrow: "Workspace access",
+    registerEyebrow: "New account",
+    loginTitle: "Log in to MPReply",
+    registerTitle: "Create your account",
+    loginDescription: "Return to the shared queue, replies waiting for review, automation rules, and connected marketplaces.",
+    registerDescription: "Create a workspace, connect Wildberries, Ozon, Yandex Market, or Avito, and set up how your team handles customer messages.",
+    name: "Name",
+    namePlaceholder: "Your name",
+    password: "Password",
+    loginPassword: "Your password",
+    registerPassword: "At least 10 characters",
+    pending: "Please wait...",
+    login: "Log in",
+    continue: "Continue",
+    noAccount: "New to MPReply?",
+    createAccount: "Create account",
+    haveAccount: "Already have an account?",
+  },
+} as const;
 
-export function AuthForm({ mode }: { mode: AuthMode }) {
+export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Locale }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const isLogin = mode === "login";
+  const labels = copy[locale];
   const requestedNext = searchParams.get("next");
   const intent = searchParams.get("intent");
+  const appPrefix = locale === "en" ? "/en/app/" : "/app/";
+  const appRoot = locale === "en" ? "/en/app" : "/app";
+
+  const safeRequestedNext = requestedNext?.startsWith(appPrefix) ? requestedNext : null;
 
   const alternateAuthHref = (() => {
     const query = new URLSearchParams();
-    if (requestedNext?.startsWith("/app/")) query.set("next", requestedNext);
+    if (safeRequestedNext) query.set("next", safeRequestedNext);
     if (intent === "connect-marketplace") query.set("intent", "connect-marketplace");
     const queryString = query.toString();
-    const path = isLogin ? "/auth/register" : "/auth/login";
+    const path = localizedPath(locale, isLogin ? "/auth/register" : "/auth/login");
     return queryString ? `${path}?${queryString}` : path;
   })();
 
@@ -46,11 +131,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             : { email: email.trim(), password },
       }),
     onSuccess: () => {
-      const target = requestedNext?.startsWith("/app/")
-        ? requestedNext
-        : intent === "connect-marketplace"
-          ? "/app/integrations"
-          : "/app/dashboard";
+      const target = safeRequestedNext
+        ?? (intent === "connect-marketplace"
+          ? `${appRoot}/integrations`
+          : `${appRoot}/dashboard`);
       router.replace(target);
       router.refresh();
     },
@@ -59,37 +143,37 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <main className="auth-page">
       <div className="auth-shell">
-        <aside className="auth-product-panel" aria-label="Рабочее пространство MPReply">
-          <Link className="auth-product-brand" href="/" aria-label="MPReply — главная">
+        <aside className="auth-product-panel" aria-label={labels.workspace}>
+          <Link className="auth-product-brand" href={localizedPath(locale, "/")} aria-label={labels.home}>
             <PublicBrandMark />
             <strong>MPReply</strong>
           </Link>
 
           <div className="auth-product-copy">
-            <p className="eyebrow">Единое рабочее пространство</p>
-            <h2>Обращения покупателей, ИИ-ответы и контроль команды — рядом</h2>
-            <p>Wildberries, Ozon, Яндекс Маркет и Авито подключаются к одной очереди. Типовые сценарии можно автоматизировать, сложные — оставлять на проверку.</p>
+            <p className="eyebrow">{labels.eyebrow}</p>
+            <h2>{labels.panelTitle}</h2>
+            <p>{labels.panelText}</p>
           </div>
 
           <div className="auth-preview" aria-hidden="true">
             <div className="auth-preview-window">
               <div className="auth-preview-head">
-                <div><span>MP</span><strong>Все обращения</strong></div>
-                <small>единая очередь</small>
+                <div><span>MP</span><strong>{labels.allMessages}</strong></div>
+                <small>{labels.sharedQueue}</small>
               </div>
               <div className="auth-preview-body">
                 <div className="auth-preview-sidebar">
-                  <strong>Очередь</strong>
-                  <span>Все обращения</span>
-                  <span>Отзывы</span>
-                  <span>Вопросы</span>
-                  <span>Сообщения</span>
+                  <strong>{labels.queue}</strong>
+                  <span>{labels.allMessages}</span>
+                  <span>{labels.reviews}</span>
+                  <span>{labels.questions}</span>
+                  <span>{labels.messages}</span>
                 </div>
                 <div className="auth-preview-queue">
-                  {previewRows.map(([source, name, text, status], index) => (
-                    <div className={`auth-preview-row${index === 0 ? " is-active" : ""}`} key={`${source}-${name}`}>
+                  {labels.previewRows.map(([source, person, text, status], index) => (
+                    <div className={`auth-preview-row${index === 0 ? " is-active" : ""}`} key={`${source}-${person}`}>
                       <span>{source}</span>
-                      <div><strong>{name}</strong><p>{text}</p></div>
+                      <div><strong>{person}</strong><p>{text}</p></div>
                       <small>{status}</small>
                     </div>
                   ))}
@@ -98,31 +182,29 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </div>
 
             <div className="auth-preview-draft">
-              <div><span>✦</span><strong>Ответ с помощью ИИ</strong><small>черновик</small></div>
-              <p>Спасибо за ваш отзыв! Рады, что товар вам понравился. Будем рады видеть вас снова.</p>
-              <span className="auth-preview-draft-action">Дружелюбный&nbsp;&nbsp; · &nbsp;&nbsp;Готов к отправке</span>
+              <div><span>✦</span><strong>{labels.aiReply}</strong><small>{labels.draft}</small></div>
+              <p>{labels.sampleReply}</p>
+              <span className="auth-preview-draft-action">{labels.draftAction}</span>
             </div>
           </div>
 
-          <div className="auth-marketplaces" aria-label="Поддерживаемые маркетплейсы">
-            <span>WB</span><span>OZ</span><span>ЯМ</span><span>A</span>
-            <small>4 готовые интеграции</small>
+          <div className="auth-marketplaces" aria-label={labels.marketplaces}>
+            <span>WB</span><span>OZ</span><span>YM</span><span>A</span>
+            <small>{labels.readyIntegrations}</small>
           </div>
         </aside>
 
         <section className="auth-form-panel" aria-labelledby={`${mode}-title`}>
           <div className="auth-card">
-            <Link className="auth-brand" href="/" aria-label="MPReply — главная">
+            <Link className="auth-brand" href={localizedPath(locale, "/")} aria-label={labels.home}>
               <PublicBrandMark />
               <strong>MPReply</strong>
             </Link>
 
-            <p className="eyebrow">{isLogin ? "Рабочий кабинет" : "Новый аккаунт"}</p>
-            <h1 id={`${mode}-title`}>{isLogin ? "Войти в MPReply" : "Создать аккаунт"}</h1>
+            <p className="eyebrow">{isLogin ? labels.loginEyebrow : labels.registerEyebrow}</p>
+            <h1 id={`${mode}-title`}>{isLogin ? labels.loginTitle : labels.registerTitle}</h1>
             <p className="auth-description">
-              {isLogin
-                ? "Вернитесь к общей очереди, ответам на проверке, правилам автоматизации и подключённым площадкам."
-                : "Создайте рабочее пространство, затем подключите Wildberries, Ozon, Яндекс Маркет или Авито и настройте правила обработки обращений."}
+              {isLogin ? labels.loginDescription : labels.registerDescription}
             </p>
 
             <form
@@ -134,13 +216,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             >
               {!isLogin ? (
                 <label>
-                  Имя
+                  {labels.name}
                   <input
                     autoComplete="name"
                     maxLength={255}
                     name="name"
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="Ваше имя"
+                    placeholder={labels.namePlaceholder}
                     type="text"
                     value={name}
                   />
@@ -159,13 +241,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 />
               </label>
               <label>
-                Пароль
+                {labels.password}
                 <input
                   autoComplete={isLogin ? "current-password" : "new-password"}
                   minLength={isLogin ? 1 : 10}
                   name="password"
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder={isLogin ? "Ваш пароль" : "Минимум 10 символов"}
+                  placeholder={isLogin ? labels.loginPassword : labels.registerPassword}
                   required
                   type="password"
                   value={password}
@@ -174,20 +256,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
               {mutation.error ? (
                 <p className="form-error" role="alert">
-                  {authErrorMessage(mutation.error, isLogin)}
+                  {authErrorMessage(mutation.error, isLogin, locale)}
                 </p>
               ) : null}
 
               <button className="button button-primary" disabled={mutation.isPending} type="submit">
-                {mutation.isPending ? "Подождите..." : isLogin ? "Войти" : "Продолжить"}
+                {mutation.isPending ? labels.pending : isLogin ? labels.login : labels.continue}
               </button>
             </form>
 
             <p className="auth-footer">
               {isLogin ? (
-                <>Нет аккаунта? <Link href={alternateAuthHref}>Создать аккаунт</Link></>
+                <>{labels.noAccount} <Link href={alternateAuthHref}>{labels.createAccount}</Link></>
               ) : (
-                <>Уже есть аккаунт? <Link href={alternateAuthHref}>Войти</Link></>
+                <>{labels.haveAccount} <Link href={alternateAuthHref}>{labels.login}</Link></>
               )}
             </p>
           </div>
@@ -197,8 +279,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   );
 }
 
+function authErrorMessage(error: unknown, isLogin: boolean, locale: Locale): string {
+  if (locale === "en") {
+    if (error instanceof ApiError) {
+      if (error.status === 401) return isLogin ? "Incorrect email or password." : "We could not create an account with these details.";
+      if (error.status === 409) return "An account with this email already exists. Log in or use another address.";
+      if (error.status === 422) return "Check the email, password, and other form fields.";
+      if (error.status === 429) return "Too many attempts. Wait a moment and try again.";
+      if (error.status >= 500) return "The service is temporarily unavailable. Try again later.";
+    }
+    return isLogin
+      ? "Could not log in. Check your connection and try again."
+      : "Could not create the account. Check your connection and try again.";
+  }
 
-function authErrorMessage(error: unknown, isLogin: boolean): string {
   if (error instanceof ApiError) {
     if (error.status === 401) return isLogin ? "Неверный email или пароль." : "Не удалось создать аккаунт с этими данными.";
     if (error.status === 409) return "Аккаунт с таким email уже существует. Войдите или используйте другой адрес.";
