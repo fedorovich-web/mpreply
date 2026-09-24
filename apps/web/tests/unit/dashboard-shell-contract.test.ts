@@ -23,7 +23,7 @@ const requiredLabels = [
   "Обзор",
   "Обращения",
   "На проверке",
-  "ИИ-ассистент",
+  "Ответы с ИИ",
   "Автоматизация",
   "Интеграции",
   "Аналитика",
@@ -50,11 +50,16 @@ describe("dashboard shell information architecture", () => {
     expect(shell).not.toContain("description:");
   });
 
-  it("reuses the canonical MPReply mark in the persistent product shell", () => {
+  it("reuses the canonical MPReply mark and approved raster icons in the persistent product shell", () => {
     expect(shell).toContain('import { PublicBrandMark } from "../public-site/PublicBrandMark"');
     expect(shell).toContain("<PublicBrandMark />");
     expect(shell).not.toContain("function BrandMark()");
+    expect(shell).toContain("navIconSources");
+    expect(shell).toContain("/images/mockups/features-icons/01-unified-inbox.webp");
+    expect(shell).toContain("/images/mockups/wildberries-icons/05-analytics.webp");
+    expect(shell).not.toContain("<svg");
     expect(styles).toContain(".app-logo .public-brand-mark");
+    expect(styles).toContain(".app-nav-icon-image");
     expect(styles).not.toContain(".app-logo-mark");
     expect(styles).not.toContain(".app-brand-glyph");
   });

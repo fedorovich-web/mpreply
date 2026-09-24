@@ -284,5 +284,12 @@ function WorkspaceBootState({
 }
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Сессия истекла. Войдите снова.";
+    if (error.status === 403) return "Недостаточно прав для создания рабочего пространства.";
+    if (error.status === 409) return "Такое рабочее пространство уже существует. Измените название и попробуйте снова.";
+    if (error.status === 422) return "Проверьте название рабочего пространства.";
+    if (error.status === 429) return "Слишком много попыток подряд. Подождите немного и попробуйте снова.";
+  }
+  return "Не удалось создать рабочее пространство. Проверьте соединение и попробуйте снова.";
 }

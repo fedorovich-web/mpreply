@@ -616,7 +616,7 @@ function credentialsStatusLabel(value: string): string {
     revoked: "Отозван",
     invalid: "Недействителен",
   };
-  return labels[value] ?? value;
+  return labels[value] ?? "Нужна проверка";
 }
 
 function formatDateTime(value: string | null): string {

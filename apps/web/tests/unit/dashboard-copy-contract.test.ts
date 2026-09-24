@@ -28,7 +28,7 @@ describe("dashboard product copy", () => {
     expect(files).toContain("MPReply");
     expect(files).toContain("Обращения");
     expect(files).toContain("На проверке");
-    expect(files).toContain("ИИ-ассистент");
+    expect(files).toContain("Ответы с ИИ");
     expect(files).toContain("Автоматизация");
     expect(files).toContain("Интеграции");
     expect(files).toContain("Аналитика");

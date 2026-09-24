@@ -672,5 +672,5 @@ function userErrorMessage(error: unknown, fallback: string): string {
     if (error.status >= 500) return fallback;
     return fallback;
   }
-  return error instanceof Error && error.message ? error.message : fallback;
+  return fallback;
 }

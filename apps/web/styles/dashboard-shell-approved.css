@@ -129,19 +129,20 @@
 	height: 2rem;
 	place-items: center;
 	border-radius: 0.64rem;
-	background: var(--color-surface-cool);
-	color: var(--color-text-secondary);
+	background: transparent;
 	transition: var(--transition-interactive);
 }
 
-.app-nav-link:hover .app-nav-icon {
-	background: var(--color-bg-brand-soft);
-	color: var(--color-brand-primary);
+.app-nav-icon-image {
+	display: block;
+	width: 1.12rem;
+	height: 1.12rem;
+	object-fit: contain;
 }
 
+.app-nav-link:hover .app-nav-icon,
 .app-nav-link-active .app-nav-icon {
-	background: var(--color-brand-primary);
-	color: var(--color-text-on-brand);
+	background: var(--color-bg-brand-soft);
 }
 
 .app-nav-label {

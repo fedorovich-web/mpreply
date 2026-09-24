@@ -48,7 +48,7 @@ export function AdminOverviewWorkspace() {
       <AdminOverviewState
         actionDisabled={overviewQuery.isFetching}
         actionLabel={overviewQuery.isFetching ? "Повторяем..." : "Повторить"}
-        description={overviewQuery.error instanceof Error ? overviewQuery.error.message : "Системные данные сейчас недоступны."}
+        description="Системные данные сейчас недоступны. Проверьте соединение и повторите попытку."
         onAction={() => void overviewQuery.refetch()}
         title="Не удалось загрузить системную сводку"
         tone="error"

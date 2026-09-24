@@ -531,7 +531,7 @@ function productContextLabel(item: ReviewQueueItem): string {
   const product = item.message.product;
   const details = [
     marketplaceLabel(item.message.marketplace),
-    product?.sku ? `SKU ${product.sku}` : null,
+    product?.sku ? `Артикул: ${product.sku}` : null,
     product?.brand ?? null,
   ].filter((value): value is string => Boolean(value));
   return details.join(" · ");
@@ -561,8 +561,7 @@ function messageTypeLabel(value: string): string {
 }
 
 function reviewActionErrorMessage(error: unknown): string {
-  const message = errorMessage(error);
-  const normalized = message.toLowerCase();
+  const normalized = internalErrorMessage(error).toLowerCase();
 
   if (normalized.includes("safetygate blocked this reply at send time")) {
     return "Ответ нельзя отправить в текущем виде. Верните его на доработку и проверьте текст.";
@@ -581,10 +580,22 @@ function reviewActionErrorMessage(error: unknown): string {
     return "Статус ответа уже изменился. Обновите очередь перед следующим действием.";
   }
 
-  return message;
+  return errorMessage(error);
+}
+
+function internalErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) return error.message;
+  return error instanceof Error ? error.message : "";
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Сессия истекла. Войдите снова.";
+    if (error.status === 403) return "Недостаточно прав для этого действия.";
+    if (error.status === 404) return "Нужные данные не найдены. Обновите очередь и попробуйте снова.";
+    if (error.status === 409) return "Данные уже изменились. Обновите очередь и повторите действие.";
+    if (error.status === 422) return "Проверьте данные ответа и попробуйте снова.";
+    if (error.status === 429) return "Слишком много действий подряд. Подождите немного и попробуйте снова.";
+  }
+  return "Не удалось выполнить действие. Проверьте соединение и попробуйте снова.";
 }

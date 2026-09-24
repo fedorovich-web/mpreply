@@ -45,7 +45,8 @@ describe("AI assistant operational workspace", () => {
   });
 
   it("frames the page around the seller workflow", () => {
-    expect(page).toContain("Подготовьте ответ и передайте его на проверку");
-    expect(page).toContain("обращение, контекст и готовый текст остаются в одном рабочем пространстве");
+    expect(page).toContain("Подготовьте ответ покупателю с помощью ИИ");
+    expect(page).toContain("MPReply подготовит черновик");
+    expect(page).toContain("передать на проверку");
   });
 });

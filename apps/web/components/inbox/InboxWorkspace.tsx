@@ -379,7 +379,7 @@ export function InboxWorkspace() {
           />
         ) : (
           <EmptyState
-            description={activeFilterCount > 0 ? "Сбросьте часть фильтров или измените поиск." : "Новые обращения появятся здесь после синхронизации подключённых площадок."}
+            description={activeFilterCount > 0 ? "Сбросьте часть фильтров или измените поиск." : "Новые обращения появятся здесь после получения данных с подключённых площадок."}
             title={activeFilterCount > 0 ? "По выбранным условиям ничего не найдено" : "В очереди пока нет обращений"}
           />
         )}
@@ -846,6 +846,13 @@ function formatDate(value: string): string {
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Сессия истекла. Войдите снова.";
+    if (error.status === 403) return "Недостаточно прав для этого действия.";
+    if (error.status === 404) return "Нужные данные не найдены. Обновите страницу и попробуйте снова.";
+    if (error.status === 409) return "Данные уже изменились. Обновите страницу и повторите действие.";
+    if (error.status === 422) return "Проверьте введённые данные и попробуйте снова.";
+    if (error.status === 429) return "Слишком много действий подряд. Подождите немного и попробуйте снова.";
+  }
+  return "Не удалось выполнить действие. Проверьте соединение и попробуйте снова.";
 }
