@@ -26,6 +26,26 @@ describe("dashboard operational overview", () => {
     expect(dashboard).not.toContain("account.error_count > 0");
   });
 
+  it("renders the primary overview progressively without treating pending secondary queries as empty data", () => {
+    expect(dashboard).toContain("if (analyticsQuery.isPending)");
+    expect(dashboard).not.toContain("analyticsQuery.isPending || reviewQueueQuery.isPending");
+    expect(dashboard).toContain('state: reviewQueueQuery.isPending ? "loading"');
+    expect(dashboard).toContain('state: accountsQuery.isPending ? "loading"');
+    expect(dashboard).toContain('state: rulesQuery.isPending ? "loading"');
+    expect(dashboard).toContain('return "Проверяем"');
+    expect(dashboard).not.toContain('reviewTotal && reviewTotal > 0');
+    expect(dashboard).not.toContain('problemAccounts && problemAccounts > 0');
+  });
+
+  it("keeps the critical analytics failure recoverable in place", () => {
+    expect(dashboard).toContain("function DashboardOverviewState");
+    expect(dashboard).toContain("analyticsQuery.refetch()");
+    expect(dashboard).toContain("analyticsQuery.isFetching");
+    expect(dashboard).toContain('role={tone === "error" ? "alert" : "status"}');
+    expect(styles).toContain(".dashboard-overview-state");
+    expect(styles).toContain(".dashboard-overview-state-error");
+  });
+
   it("puts unanswered work, review decisions and integration health before aggregate reporting", () => {
     expect(page).toContain("Очереди, проверки и состояние автоматизации");
     expect(dashboard).toContain("dashboard-attention-panel");
