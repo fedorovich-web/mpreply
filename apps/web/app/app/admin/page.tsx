@@ -12,9 +12,9 @@ export default function AdminPage() {
             по одной системной сводке.
           </p>
           <div className="admin-page-hero-badges" aria-label="Параметры доступа">
-            <span>Только superadmin</span>
-            <span>Живые системные данные</span>
-            <span>Внутренний контур</span>
+            <span>Доступ суперадминистратора</span>
+            <span>Актуальные данные</span>
+            <span>Внутренняя панель</span>
           </div>
         </div>
 

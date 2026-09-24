@@ -316,23 +316,23 @@
 	background: color-mix(in srgb, var(--color-danger-soft) 56%, var(--color-bg-surface));
 }
 
-.admin-overview-state-error .admin-overview-state-mark::before {
-	inset: 0.82rem 1.32rem;
+.admin-overview-state-error .admin-overview-state-mark::before,
+.admin-overview-state-error .admin-overview-state-mark::after {
+	top: 50%;
+	left: 50%;
+	width: 0.18rem;
+	height: 1.35rem;
 	border: 0;
 	border-radius: 999px;
 	background: var(--color-danger-text);
-	transform: rotate(45deg);
+}
+
+.admin-overview-state-error .admin-overview-state-mark::before {
+	transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .admin-overview-state-error .admin-overview-state-mark::after {
-	top: 0.82rem;
-	bottom: 0.82rem;
-	left: 1.32rem;
-	width: auto;
-	height: auto;
-	border-radius: 999px;
-	background: var(--color-danger-text);
-	transform: rotate(-45deg);
+	transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .admin-overview-state-error .admin-overview-state-copy > span {
