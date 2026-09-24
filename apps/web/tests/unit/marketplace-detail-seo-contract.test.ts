@@ -54,8 +54,9 @@ describe("marketplace detail SEO metadata contract", () => {
     const seo = readFileSync(join(root, "lib/seo.ts"), "utf8");
     const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 
-    expect(seo).toContain("canonical: path");
-    expect(seo).toContain("url: path");
+    expect(seo).toContain("const canonical = localizedPath(locale, path)");
+    expect(seo).toContain("canonical,");
+    expect(seo).toContain("url: canonical");
     expect(layout).toContain("metadataBase: new URL(siteConfig.origin)");
 
     for (const route of routes) {
@@ -73,7 +74,7 @@ describe("marketplace detail SEO metadata contract", () => {
     const authLayout = readFileSync(join(root, "app/auth/layout.tsx"), "utf8");
 
     expect(sitemap).toContain("publicRoutes.map");
-    expect(robots).toContain('disallow: ["/app/", "/auth/"]');
+    expect(robots).toContain('disallow: ["/app/", "/auth/", "/en/app/", "/en/auth/"]');
     expect(appLayout).toContain("index: false");
     expect(authLayout).toContain("index: false");
 

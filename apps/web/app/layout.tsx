@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 
+import { htmlLanguage, localeFromRequestHeader, localeRequestHeader } from "../lib/i18n";
 import { siteConfig } from "../lib/site-config";
 import "../styles/globals.css";
 import "../styles/brand-theme.css";
@@ -90,9 +92,12 @@ const themeScript = `
   }
 })();`;
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const requestHeaders = await headers();
+  const locale = localeFromRequestHeader(requestHeaders.get(localeRequestHeader));
+
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang={htmlLanguage(locale)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
