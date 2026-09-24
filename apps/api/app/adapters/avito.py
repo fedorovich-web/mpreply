@@ -6,7 +6,8 @@ from urllib.parse import quote, urlsplit
 
 import httpx
 
-from app.adapters.avito_auth import AvitoCredentialResolver, AvitoResolvedCredential
+from app.adapters.avito_auth import AvitoCredentialResolver
+from app.adapters.avito_http import AvitoApiClient
 from app.adapters.base import (
     AdapterResult,
     CredentialValidation,
@@ -17,7 +18,7 @@ from app.adapters.base import (
     ProviderWriteReceipt,
 )
 from app.adapters.conversation import ConversationAdapter, ConversationMessage, ConversationParticipant, ConversationThread
-from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_with_retry
+from app.adapters.http import ReadRetryPolicy
 from app.models.enums import Marketplace, MessageType
 
 _PAGE_SIZE = 100
@@ -40,9 +41,7 @@ class AvitoAdapter(ConversationAdapter):
         credential_resolver: AvitoCredentialResolver | None = None,
         read_retry_policy: ReadRetryPolicy = ReadRetryPolicy(),
     ) -> None:
-        self._client = client
-        self._resolver = credential_resolver or AvitoCredentialResolver(client)
-        self._read_retry_policy = read_retry_policy
+        self._api = AvitoApiClient(client, credential_resolver or AvitoCredentialResolver(client), read_retry_policy)
 
     async def validate_credentials(
         self,
@@ -55,7 +54,7 @@ class AvitoAdapter(ConversationAdapter):
                 AdapterResult[CredentialValidation],
                 self._invalid("Avito account ID must be a positive decimal integer"),
             )
-        response = await self._read(
+        response = await self._api.read(
             credential,
             f"/messenger/v2/accounts/{user_id}/chats",
             params={
@@ -93,7 +92,7 @@ class AvitoAdapter(ConversationAdapter):
                 AdapterResult[MarketplacePage[ConversationThread]],
                 self._invalid("Avito chat pagination or account ID is invalid"),
             )
-        response = await self._read(
+        response = await self._api.read(
             credential,
             f"/messenger/v2/accounts/{user_id}/chats",
             params={
@@ -139,7 +138,7 @@ class AvitoAdapter(ConversationAdapter):
                 AdapterResult[MarketplacePage[ConversationMessage]],
                 self._invalid("Avito message pagination or chat context is invalid"),
             )
-        response = await self._read(
+        response = await self._api.read(
             credential,
             f"/messenger/v3/accounts/{user_id}/chats/{segment}/messages/",
             params={"limit": _PAGE_SIZE, "offset": offset},
@@ -175,7 +174,7 @@ class AvitoAdapter(ConversationAdapter):
         segment = self._chat_segment(chat_id)
         if user_id is None or segment is None:
             return cast(AdapterResult[None], self._invalid("Avito chat context is invalid"))
-        response = await self._write(
+        response = await self._api.write(
             credential,
             f"/messenger/v1/accounts/{user_id}/chats/{segment}/read",
             body=None,
@@ -265,7 +264,7 @@ class AvitoAdapter(ConversationAdapter):
                 AdapterResult[ProviderWriteReceipt],
                 self._invalid("Avito chat reply input is invalid"),
             )
-        response = await self._write(
+        response = await self._api.write(
             credential,
             f"/messenger/v1/accounts/{user_id}/chats/{segment}/messages",
             body={"message": {"text": text}, "type": "text"},
@@ -288,140 +287,6 @@ class AvitoAdapter(ConversationAdapter):
                 self._malformed("Avito write success could not be proven"),
             )
         return AdapterResult(ok=True, data=ProviderWriteReceipt(provider_reply_id=reply_id))
-
-    async def _read(
-        self,
-        raw_credential: str,
-        path: str,
-        *,
-        params: dict[str, str | int],
-    ) -> AdapterResult[object]:
-        resolved = await self._resolver.resolve(raw_credential)
-        if not resolved.ok or resolved.data is None:
-            return self._copy_failure(resolved)
-        try:
-            response = await self._read_with_token(resolved.data, path, params)
-        except httpx.TimeoutException:
-            return AdapterResult(
-                False,
-                error_code="network_timeout",
-                error_message_safe="Avito read timed out",
-            )
-        except httpx.RequestError:
-            return AdapterResult(
-                False,
-                error_code="network_error",
-                error_message_safe="Avito network request failed",
-            )
-        if response.status_code == 401:
-            await self._resolver.invalidate(raw_credential)
-            refreshed = await self._resolver.resolve(raw_credential)
-            if not refreshed.ok or refreshed.data is None:
-                return self._copy_failure(refreshed)
-            try:
-                response = await self._read_with_token(refreshed.data, path, params)
-            except httpx.TimeoutException:
-                return AdapterResult(
-                    False,
-                    error_code="network_timeout",
-                    error_message_safe="Avito read timed out",
-                )
-            except httpx.RequestError:
-                return AdapterResult(
-                    False,
-                    error_code="network_error",
-                    error_message_safe="Avito network request failed",
-                )
-        return self._response_result(response)
-
-    async def _read_with_token(
-        self,
-        resolved: AvitoResolvedCredential,
-        path: str,
-        params: dict[str, str | int],
-    ) -> httpx.Response:
-        return await request_read_with_retry(
-            self._client,
-            "GET",
-            path,
-            headers=self._headers(resolved.access_token),
-            params=params,
-            policy=self._read_retry_policy,
-        )
-
-    async def _write(
-        self,
-        raw_credential: str,
-        path: str,
-        *,
-        body: dict[str, object] | None,
-    ) -> AdapterResult[object]:
-        resolved = await self._resolver.resolve(raw_credential)
-        if not resolved.ok or resolved.data is None:
-            return self._copy_failure(resolved)
-        try:
-            response = await self._client.post(
-                path,
-                headers=self._headers(resolved.data.access_token),
-                json=body,
-            )
-        except httpx.TimeoutException:
-            return AdapterResult(
-                False,
-                error_code="network_timeout",
-                error_message_safe="Avito write timed out",
-            )
-        except httpx.RequestError:
-            return AdapterResult(
-                False,
-                error_code="network_error",
-                error_message_safe="Avito network request failed",
-            )
-        return self._response_result(response)
-
-    def _response_result(self, response: httpx.Response) -> AdapterResult[object]:
-        if not response.is_success:
-            return self._map_error(response)
-        try:
-            payload: object = response.json()
-        except ValueError:
-            return self._malformed("Avito returned invalid JSON")
-        return AdapterResult(ok=True, data=payload)
-
-    def _map_error(self, response: httpx.Response) -> AdapterResult[object]:
-        retry_after = (
-            parse_retry_after(
-                response.headers.get("Retry-After"),
-                now=datetime.now(UTC),
-                maximum_seconds=self._read_retry_policy.max_retry_after_seconds,
-            )
-            if response.status_code == 429
-            else None
-        )
-        if response.status_code == 401:
-            code = "invalid_credentials"
-            message = "Avito credentials are invalid"
-        elif response.status_code in {402, 403}:
-            code = "insufficient_scope"
-            message = "Avito account lacks Messenger access"
-        elif response.status_code == 404:
-            code = "marketplace_not_found"
-            message = "Avito chat or account was not found"
-        elif response.status_code == 429:
-            code = "rate_limited"
-            message = "Avito Messenger rate limit was exceeded"
-        elif 500 <= response.status_code <= 599:
-            code = "marketplace_unavailable"
-            message = "Avito Messenger is temporarily unavailable"
-        else:
-            code = "marketplace_validation_error"
-            message = "Avito Messenger rejected the request"
-        return AdapterResult(
-            False,
-            error_code=code,
-            error_message_safe=message,
-            retry_after_seconds=retry_after,
-        )
 
     @classmethod
     def _parse_chat(cls, raw: dict[str, object]) -> ConversationThread:
@@ -607,10 +472,6 @@ class AvitoAdapter(ConversationAdapter):
         ):
             return None
         return text
-
-    @staticmethod
-    def _headers(access_token: str) -> dict[str, str]:
-        return {"Authorization": f"Bearer {access_token}"}
 
     @staticmethod
     def _object(value: object | None) -> dict[str, object] | None:
