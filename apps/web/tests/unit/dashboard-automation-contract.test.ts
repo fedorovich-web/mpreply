@@ -34,6 +34,36 @@ describe("automation operational workspace", () => {
     expect(styles).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
 
+  it("uses plain seller-facing wording for confidence, conditions and errors", () => {
+    expect(workspace).toContain("Насколько уверенным должен быть ответ");
+    expect(workspace).toContain("Если встречаются слова");
+    expect(workspace).toContain("Не применять при словах");
+    expect(workspace).toContain("Темы, которые всегда нужно проверять");
+    expect(workspace).toContain("Когда не отправлять автоматически");
+    expect(workspace).toContain("Если ИИ не уверен в ответе");
+    expect(workspace).not.toContain(">Порог уверенности<");
+    expect(workspace).not.toContain("Защитные проверки");
+    expect(workspace).not.toContain("рискованных сигналах");
+    expect(workspace).not.toContain("выбранной рабочей области");
+    expect(workspace).toContain("function userErrorMessage");
+  });
+
+  it("shows confidence as a percentage while keeping the API value unchanged", () => {
+    expect(workspace).toContain("confidenceThreshold: String(Math.round(rule.confidence_threshold * 100))");
+    expect(workspace).toContain("confidence_threshold: Number(state.confidenceThreshold) / 100");
+    expect(workspace).toContain('min={0} max={100} step={1}');
+  });
+
+  it("keeps loaded rules visible through a failed refresh and supports mobile selection", () => {
+    expect(workspace).toContain("rulesQuery.error && rulesQuery.data");
+    expect(workspace).toContain("automation-refresh-error");
+    expect(workspace).toContain("const detailPanelRef = useRef");
+    expect(workspace).toContain("function selectRule");
+    expect(workspace).toContain('window.matchMedia("(max-width: 1180px)")');
+    expect(workspace).toContain("detailPanelRef.current?.scrollIntoView");
+    expect(styles).toContain("scroll-margin-top:");
+  });
+
   it("frames automation as seller decisions instead of internal machinery", () => {
     expect(page).toContain("Определите, когда MPReply может отвечать автоматически");
     expect(page).toContain("условия, приоритет и уровень контроля");
