@@ -10,6 +10,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Ответы на вопросы о подключении площадок, единой очереди обращений, ИИ-черновиках, проверке сотрудником и автоматизации MPReply.",
   path: "/help",
+  localized: true,
 });
 
 const helpPaths = [

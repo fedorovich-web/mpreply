@@ -11,6 +11,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Посмотрите демонстрационный сценарий: MPReply получает обращение, использует доступный контекст, готовит ИИ-черновик и передаёт ответ на проверку или отправку.",
   path: "/demo",
+  localized: true,
 });
 
 const logos = {

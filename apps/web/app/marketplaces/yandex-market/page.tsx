@@ -9,6 +9,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Посмотрите, как MPReply организует поддерживаемые обращения Яндекс Маркета в одном рабочем процессе с доступным контекстом, ИИ-черновиками и контролем перед отправкой.",
   path: "/marketplaces/yandex-market",
+  localized: true,
 });
 
 const marketplace = getMarketplaceConfig("yandex-market");

@@ -13,6 +13,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "MPReply собирает обращения с Wildberries, Ozon и Яндекс Маркета в одном окне, готовит ответы с помощью ИИ и автоматизирует отправку.",
   path: "/",
+  localized: true,
 });
 
 const homeMarketplaceKeys = ["wildberries", "ozon", "yandex-market"] as const;

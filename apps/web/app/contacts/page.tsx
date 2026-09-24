@@ -11,6 +11,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Свяжитесь с MPReply по вопросам подключения маркетплейсов, настройки автоматизации, демо и работы с обращениями покупателей.",
   path: "/contacts",
+  localized: true,
 });
 
 const contactCards: readonly [PublicIconName, string, string][] = [

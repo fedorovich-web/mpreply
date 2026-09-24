@@ -8,6 +8,7 @@ export const metadata: Metadata = createPageMetadata({
   title: "Политика конфиденциальности",
   description: "Проект политики конфиденциальности MPReply: категории данных, цели обработки, безопасность, сроки хранения и права пользователей.",
   path: "/privacy",
+  localized: true,
 });
 
 const sections = [

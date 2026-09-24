@@ -11,6 +11,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Тарифы MPReply: Старт, Профессиональный и Бизнес. 14 дней бесплатного доступа и скидка 20% при ежегодной оплате.",
   path: "/pricing",
+  localized: true,
 });
 
 const plans = [

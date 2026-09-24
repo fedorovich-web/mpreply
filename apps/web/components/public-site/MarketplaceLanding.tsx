@@ -2,13 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { getMarketplaceDetailContent } from "../../lib/marketplace-detail-content";
-import { siteConfig, type MarketplaceConfig, type MarketplaceKey } from "../../lib/site-config";
+import { getMarketplaceDetailContentEn } from "../../lib/marketplace-detail-content-en";
+import type { Locale } from "../../lib/i18n";
+import { getSiteConfig, type MarketplaceConfig, type MarketplaceKey } from "../../lib/site-config";
 import { PublicBrandMark } from "./PublicBrandMark";
 import { PublicIcon } from "./PublicIcon";
 import { PublicShell } from "./PublicShell";
 
 type MarketplaceLandingProps = {
   marketplace: MarketplaceConfig;
+  locale?: Locale;
 };
 
 const marketplaceLogos: Record<MarketplaceKey, { src: string; compactSrc: string; width: number; height: number }> = {
@@ -59,10 +62,56 @@ function MultilineText({ value }: { value: string }) {
   );
 }
 
-export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
+export function MarketplaceLanding({ marketplace, locale = "ru" }: MarketplaceLandingProps) {
   const platformLabel = marketplace.name === "Wildberries" ? "WILDBERRIES" : marketplace.name.toUpperCase();
   const logo = marketplaceLogos[marketplace.key];
-  const detailContent = getMarketplaceDetailContent(marketplace.key);
+  const detailContent = locale === "en"
+    ? getMarketplaceDetailContentEn(marketplace.key)
+    : getMarketplaceDetailContent(marketplace.key);
+  const siteConfig = getSiteConfig(locale);
+  const copy = locale === "en"
+    ? {
+        integrations: "Integrations",
+        breadcrumbs: "Breadcrumbs",
+        connect: "Connect",
+        viewDemo: "View demo",
+        startTerms: "Getting started",
+        imageLabel: "customer-message workflow in MPReply",
+        ago: "12 min ago",
+        ai: "AI",
+        useReply: "Use reply",
+        integrationFeatures: "Integration features",
+        howItWorks: "How it works",
+        teamBenefits: "What the team gets",
+        beforeConnecting: "Before connecting",
+        faq: "Frequently asked questions",
+        allIntegrations: "All MPReply integrations",
+        comparePlans: "Compare plans",
+      }
+    : {
+        integrations: "Интеграции",
+        breadcrumbs: "Хлебные крошки",
+        connect: "Подключить",
+        viewDemo: "Посмотреть демо",
+        startTerms: "Условия старта",
+        imageLabel: "Обработка обращения в MPReply",
+        ago: "12 мин назад",
+        ai: "ИИ",
+        useReply: "Использовать ответ",
+        integrationFeatures: "Возможности интеграции",
+        howItWorks: "Как это работает",
+        teamBenefits: "Что получает команда",
+        beforeConnecting: "Перед подключением",
+        faq: "Частые вопросы",
+        allIntegrations: "Все интеграции MPReply",
+        comparePlans: "Сравнить тарифы",
+      };
+  const marketplacesPath = locale === "en" ? "/en/marketplaces" : "/marketplaces";
+  const demoPath = locale === "en" ? "/en/demo" : "/demo";
+  const registerPath = locale === "en"
+    ? "/en/auth/register?intent=connect-marketplace"
+    : "/auth/register?intent=connect-marketplace";
+  const pricingPath = locale === "en" ? "/en/pricing" : "/pricing";
   const sampleVisual = detailContent.sampleVisual;
   const sampleVisualIcon = sampleVisual === "product" ? null : sampleVisualIcons[sampleVisual];
   const breadcrumbJsonLd = {
@@ -72,8 +121,8 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Интеграции",
-        item: `${siteConfig.origin}/marketplaces`,
+        name: copy.integrations,
+        item: `${siteConfig.origin}${marketplacesPath}`,
       },
       {
         "@type": "ListItem",
@@ -85,7 +134,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
   };
 
   return (
-    <PublicShell>
+    <PublicShell locale={locale}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
@@ -94,8 +143,8 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
         <section className="marketplace-detail-mockup-hero">
           <div className="public-container marketplace-detail-mockup-grid">
             <div className="marketplace-detail-mockup-copy">
-              <nav className="marketplace-detail-breadcrumbs" aria-label="Хлебные крошки">
-                <Link href="/marketplaces">Интеграции</Link>
+              <nav className="marketplace-detail-breadcrumbs" aria-label={copy.breadcrumbs}>
+                <Link href={marketplacesPath}>{copy.integrations}</Link>
                 <span aria-hidden="true">/</span>
                 <span aria-current="page">{marketplace.name}</span>
               </nav>
@@ -103,14 +152,14 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
               <h1>{detailContent.heroTitle}</h1>
               <p>{detailContent.heroDescription}</p>
               <div className="mockup-actions">
-                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                  Подключить {marketplace.name} <span aria-hidden="true">→</span>
+                <Link className="button button-primary" href={registerPath}>
+                  {copy.connect} {marketplace.name} <span aria-hidden="true">→</span>
                 </Link>
-                <Link className="button button-secondary" href="/demo">
-                  <PublicIcon name="play" className="public-inline-icon" /> Посмотреть демо
+                <Link className="button button-secondary" href={demoPath}>
+                  <PublicIcon name="play" className="public-inline-icon" /> {copy.viewDemo}
                 </Link>
               </div>
-              <div className="mockup-trust-row" aria-label="Условия старта">
+              <div className="mockup-trust-row" aria-label={copy.startTerms}>
                 {detailContent.trustItems.map((item) => (
                   <span key={item}>{item}</span>
                 ))}
@@ -120,7 +169,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
             <div
               className="marketplace-detail-render"
               role="img"
-              aria-label={`Обработка обращения ${marketplace.name} в MPReply`}
+              aria-label={`${marketplace.name} ${copy.imageLabel}`}
             >
               <div className="detail-market-card">
                 <div className="detail-market-logo">
@@ -134,7 +183,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                   />
                 </div>
                 <div className="detail-market-message">
-                  <strong>{detailContent.sampleType} · 12 мин назад</strong>
+                  <strong>{detailContent.sampleType} · {copy.ago}</strong>
                   {detailContent.sampleMessage}
                 </div>
                 <div className="detail-product-row">
@@ -179,7 +228,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                         unoptimized
                       />
                       <strong>{detailContent.sampleType}</strong>
-                      <span>12 мин назад</span>
+                      <span>{copy.ago}</span>
                     </div>
                     <h3>{detailContent.sampleMessage}</h3>
                     <p>{detailContent.sampleContext.replace("\n", " · ")}</p>
@@ -189,10 +238,10 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
 
               <div className="detail-ai-card">
                 <strong>
-                  <PublicIcon name="sparkles" className="public-inline-icon" /> ИИ
+                  <PublicIcon name="sparkles" className="public-inline-icon" /> {copy.ai}
                 </strong>
                 <p>{detailContent.sampleReply}</p>
-                <span>Использовать ответ</span>
+                <span>{copy.useReply}</span>
               </div>
 
               <div className="detail-hero-note" aria-hidden="true">
@@ -207,7 +256,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
         <section className="public-section">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Возможности интеграции</p>
+              <p className="mockup-eyebrow">{copy.integrationFeatures}</p>
               <h2>{detailContent.toolsHeading}</h2>
               <p>{detailContent.toolsDescription}</p>
             </div>
@@ -228,7 +277,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
         <section className="public-section mockup-section-soft">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Как это работает</p>
+              <p className="mockup-eyebrow">{copy.howItWorks}</p>
               <h2>{detailContent.stepsHeading}</h2>
               <p>{detailContent.stepsDescription}</p>
             </div>
@@ -250,7 +299,7 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
         <section className="public-section">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Что получает команда</p>
+              <p className="mockup-eyebrow">{copy.teamBenefits}</p>
               <h2>{detailContent.benefitsHeading}</h2>
               <p>{detailContent.benefitsDescription}</p>
             </div>
@@ -274,8 +323,8 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
         <section className="public-section mockup-section-soft">
           <div className="public-container detail-faq-layout">
             <div>
-              <p className="mockup-eyebrow">Перед подключением</p>
-              <h2>Частые вопросы</h2>
+              <p className="mockup-eyebrow">{copy.beforeConnecting}</p>
+              <h2>{copy.faq}</h2>
               <p>{detailContent.faqIntro}</p>
             </div>
             <div className="marketplace-detail-faq">
@@ -306,14 +355,14 @@ export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
                 <p>{detailContent.finalDescription}</p>
               </div>
               <div className="mockup-cta-strip-side">
-                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                  Подключить {marketplace.name} <span aria-hidden="true">→</span>
+                <Link className="button button-primary" href={registerPath}>
+                  {copy.connect} {marketplace.name} <span aria-hidden="true">→</span>
                 </Link>
                 <div className="marketplace-detail-next-links">
-                  <Link href="/marketplaces">Все интеграции MPReply</Link>
-                  <Link href="/pricing">Сравнить тарифы</Link>
+                  <Link href={marketplacesPath}>{copy.allIntegrations}</Link>
+                  <Link href={pricingPath}>{copy.comparePlans}</Link>
                 </div>
-                <div className="mockup-trust-row" aria-label="Условия старта">
+                <div className="mockup-trust-row" aria-label={copy.startTerms}>
                   {detailContent.trustItems.map((item) => (
                     <span key={`final-${item}`}>{item}</span>
                   ))}

@@ -9,6 +9,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Собирайте поддерживаемые диалоги по объявлениям Авито в общей очереди MPReply, готовьте ответы с контекстом и оставляйте сложные сообщения на проверку менеджеру.",
   path: "/marketplaces/avito",
+  localized: true,
 });
 
 const marketplace = getMarketplaceConfig("avito");

@@ -12,6 +12,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Единая очередь обращений с Wildberries, Ozon, Яндекс Маркета и Авито, контекстные ИИ-черновики, автоматизация по правилам, ручная проверка, аналитика, назначение и фильтры.",
   path: "/features",
+  localized: true,
 });
 
 const marketplaceLogos = {

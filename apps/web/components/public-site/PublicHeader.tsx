@@ -4,23 +4,57 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { siteConfig } from "../../lib/site-config";
+import {
+  alternateLocale,
+  basePathFromLocalizedPath,
+  localizedPath,
+  type Locale,
+} from "../../lib/i18n";
+import { getSiteConfig } from "../../lib/site-config";
 import { PublicBrandMark } from "./PublicBrandMark";
 
 const focusableSelector = 'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+const copy = {
+  ru: {
+    mainNav: "Основная навигация",
+    mobileNav: "Мобильная навигация",
+    closeMenu: "Закрыть меню",
+    openMenu: "Открыть меню",
+    login: "Войти",
+    cta: "Попробовать бесплатно",
+    homeLabel: "MPReply — главная",
+    switchLanguage: "Switch to English",
+  },
+  en: {
+    mainNav: "Main navigation",
+    mobileNav: "Mobile navigation",
+    closeMenu: "Close menu",
+    openMenu: "Open menu",
+    login: "Log in",
+    cta: "Start free",
+    homeLabel: "MPReply — home",
+    switchLanguage: "Переключить на русский",
+  },
+} as const;
+
 function isActiveNavigationItem(href: string, pathname: string): boolean {
-  if (href === "/marketplaces") return pathname === href || pathname.startsWith(`${href}/`);
+  if (href.endsWith("/marketplaces")) return pathname === href || pathname.startsWith(`${href}/`);
   return pathname === href;
 }
 
-export function PublicHeader() {
+export function PublicHeader({ locale = "ru" }: { locale?: Locale }) {
   const pathname = usePathname();
   const menuId = useId();
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const headerCtaLabel = "Попробовать бесплатно";
+  const config = getSiteConfig(locale);
+  const labels = copy[locale];
+  const otherLocale = alternateLocale(locale);
+  const languageHref = localizedPath(otherLocale, basePathFromLocalizedPath(pathname));
+  const loginHref = localizedPath(locale, "/auth/login");
+  const registerHref = localizedPath(locale, "/auth/register?intent=connect-marketplace");
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -75,13 +109,18 @@ export function PublicHeader() {
   return (
     <header className="public-header">
       <div className="public-container public-header-inner">
-        <Link className="public-brand" href="/" aria-label="MPReply — главная" onClick={closeMenu}>
+        <Link
+          className="public-brand"
+          href={localizedPath(locale, "/")}
+          aria-label={labels.homeLabel}
+          onClick={closeMenu}
+        >
           <PublicBrandMark />
           <span className="public-brand-copy"><strong>MPReply</strong></span>
         </Link>
 
-        <nav className="public-nav" aria-label="Основная навигация">
-          {siteConfig.navigation.map((item) => {
+        <nav className="public-nav" aria-label={labels.mainNav}>
+          {config.navigation.map((item) => {
             const active = isActiveNavigationItem(item.href, pathname);
             return (
               <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined}>
@@ -92,9 +131,17 @@ export function PublicHeader() {
         </nav>
 
         <div className="public-header-actions">
-          <Link className="button button-secondary public-login-link" href="/auth/login">Войти</Link>
-          <Link className="button button-primary public-header-cta" href="/auth/register?intent=connect-marketplace">
-            {headerCtaLabel} <span aria-hidden="true">→</span>
+          <Link
+            className="button button-secondary public-language-link"
+            href={languageHref}
+            hrefLang={otherLocale}
+            aria-label={labels.switchLanguage}
+          >
+            {otherLocale.toUpperCase()}
+          </Link>
+          <Link className="button button-secondary public-login-link" href={loginHref}>{labels.login}</Link>
+          <Link className="button button-primary public-header-cta" href={registerHref}>
+            {labels.cta} <span aria-hidden="true">→</span>
           </Link>
         </div>
 
@@ -105,7 +152,7 @@ export function PublicHeader() {
             type="button"
             aria-expanded={menuOpen}
             aria-controls={menuId}
-            aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
+            aria-label={menuOpen ? labels.closeMenu : labels.openMenu}
             onClick={() => setMenuOpen((open) => !open)}
           >
             <span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" />
@@ -113,10 +160,15 @@ export function PublicHeader() {
 
           {menuOpen ? (
             <>
-              <button className="public-mobile-menu-backdrop" type="button" aria-label="Закрыть меню" onClick={closeMenuAndRestoreFocus} />
+              <button
+                className="public-mobile-menu-backdrop"
+                type="button"
+                aria-label={labels.closeMenu}
+                onClick={closeMenuAndRestoreFocus}
+              />
               <div className="public-mobile-menu-panel" id={menuId} ref={menuPanelRef}>
-                <nav aria-label="Мобильная навигация">
-                  {siteConfig.navigation.map((item) => {
+                <nav aria-label={labels.mobileNav}>
+                  {config.navigation.map((item) => {
                     const active = isActiveNavigationItem(item.href, pathname);
                     return (
                       <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={closeMenu}>
@@ -126,9 +178,12 @@ export function PublicHeader() {
                   })}
                 </nav>
                 <div className="public-mobile-menu-actions">
-                  <Link className="button button-secondary" href="/auth/login" onClick={closeMenu}>Войти</Link>
-                  <Link className="button button-primary" href="/auth/register?intent=connect-marketplace" onClick={closeMenu}>
-                    {headerCtaLabel} →
+                  <Link className="button button-secondary" href={languageHref} hrefLang={otherLocale} onClick={closeMenu}>
+                    {otherLocale.toUpperCase()}
+                  </Link>
+                  <Link className="button button-secondary" href={loginHref} onClick={closeMenu}>{labels.login}</Link>
+                  <Link className="button button-primary" href={registerHref} onClick={closeMenu}>
+                    {labels.cta} →
                   </Link>
                 </div>
               </div>

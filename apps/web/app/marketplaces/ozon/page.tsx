@@ -9,6 +9,7 @@ export const metadata: Metadata = createPageMetadata({
   description:
     "Посмотрите, как MPReply организует поддерживаемые обращения Ozon в одной очереди с доступным контекстом, ИИ-черновиками и контролем перед отправкой.",
   path: "/marketplaces/ozon",
+  localized: true,
 });
 
 const marketplace = getMarketplaceConfig("ozon");
