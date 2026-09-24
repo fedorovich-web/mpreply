@@ -128,111 +128,102 @@ function renderComparisonValue(value: string) {
   return value === "✓" ? <span className="pricing-comparison-check">✓</span> : value;
 }
 
+const planIcons = ["send", "users", "chart"] as const;
+
+const startBenefits = [
+  ["clock", "14 дней бесплатно", "Оцените рабочий процесс MPReply до перехода на платный тариф."],
+  ["link", "4 площадки в MPReply", "Wildberries, Ozon, Яндекс Маркет и Авито собраны вокруг одной модели работы с обращениями."],
+  ["shield-check", "Контроль перед отправкой", "Оставляйте неоднозначные ответы на проверку, когда автоматическая отправка не подходит."],
+] as const;
+
 export default function PricingPage() {
   return (
     <PublicShell>
       <div className="mockup-page">
         <section className="pricing-mockup-hero">
           <div className="public-container">
-            <p className="mockup-eyebrow">Тарифы</p>
-            <h1>Простые тарифы для разных объёмов работы</h1>
-            <p>
-              Выберите план по объёму обращений, числу пользователей и количеству подключаемых площадок.
-            </p>
-
-            <div className="pricing-toggle-wrap">
-              <div className="pricing-toggle" aria-label="Период оплаты">
-                <span>Ежемесячно</span>
-                <span>Ежегодно · -20%</span>
+            <div className="pricing-approved-hero-grid">
+              <div className="pricing-approved-hero-copy">
+                <p className="mockup-eyebrow">Тарифы MPReply</p>
+                <h1>Простые тарифы для разных объёмов работы</h1>
+                <p>
+                  Выберите план по объёму обращений, числу пользователей и количеству подключаемых площадок.
+                </p>
+                <div className="mockup-trust-row" aria-label="Условия старта">
+                  <span>14 дней бесплатно</span>
+                  <span>Ежегодно · -20%</span>
+                  <span>Контроль перед отправкой</span>
+                </div>
               </div>
-              <div className="pricing-hero-note" aria-hidden="true">
-                Меньше переключений
-                <br />
-                между кабинетами
-                <span>↙</span>
+
+              <div className="pricing-approved-hero-scene" aria-hidden="true">
+                <div className="pricing-approved-hero-blob" />
+                <Image
+                  className="pricing-approved-hero-mascot"
+                  src="/images/mpreply-mascot.webp"
+                  width={320}
+                  height={320}
+                  alt=""
+                  priority
+                />
+                <div className="pricing-approved-market-card">
+                  <strong>Один инструмент для всех площадок</strong>
+                  <div>
+                    {marketplaces.map((marketplace) => (
+                      <span className="pricing-approved-market-logo" key={marketplace.name}>
+                        <Image
+                          className="pricing-market-compact"
+                          src={marketplace.compactSrc}
+                          width={64}
+                          height={64}
+                          alt=""
+                          unoptimized
+                        />
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <span className="pricing-approved-note pricing-approved-note-top">Одна система для команды</span>
+                <span className="pricing-approved-note pricing-approved-note-side">Меньше переключений</span>
               </div>
             </div>
 
             <div className="pricing-card-grid">
-              {plans.map((plan) => (
+              {plans.map((plan, index) => (
                 <article className={`pricing-card${plan.popular ? " is-popular" : ""}`} key={plan.name}>
+                  {plan.popular ? <span className="pricing-card-popular">Популярный выбор</span> : null}
+                  <span className="pricing-plan-card-icon" aria-hidden="true">
+                    <PublicIcon name={planIcons[index]} />
+                  </span>
                   <h2>{plan.name}</h2>
                   <p>{plan.description}</p>
                   <div className="pricing-price">
                     <strong>{plan.price}</strong>
                     <span>/ мес</span>
                   </div>
-                  <Link
-                    className={`button ${plan.popular ? "button-primary" : "button-secondary"}`}
-                    href="/auth/register?intent=connect-marketplace"
-                  >
-                    Попробовать бесплатно
-                  </Link>
                   <ul className="pricing-feature-list">
                     {plan.features.map((feature) => (
                       <li key={feature}>{feature}</li>
                     ))}
                   </ul>
+                  <Link
+                    className={`button ${plan.popular ? "button-primary" : "button-secondary"}`}
+                    href="/auth/register?intent=connect-marketplace"
+                  >
+                    Попробовать бесплатно <span aria-hidden="true">→</span>
+                  </Link>
                 </article>
               ))}
             </div>
-
-            <div className="pricing-custom-strip">
-              <span className="pricing-custom-icon" aria-hidden="true">
-                <PublicIcon name="shield-check" />
-              </span>
-              <div>
-                <strong>Нужно обсудить подключение?</strong>
-                <span>
-                  Если у вас несколько кабинетов, большая команда или нестандартный рабочий процесс — опишите задачу, чтобы обсудить подключение MPReply.
-                </span>
-              </div>
-              <Link className="button button-secondary" href="/contacts">
-                Обсудить подключение
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="public-section mockup-section-soft">
-          <div className="public-container">
-            <div className="render-section-head">
-              <p className="mockup-eyebrow">Интеграции</p>
-              <h2>4 площадки в MPReply</h2>
-              <p>Wildberries, Ozon, Яндекс Маркет и Авито представлены в едином продукте и общей модели работы с обращениями.</p>
-            </div>
-            <div className="pricing-market-row">
-              {marketplaces.map((marketplace) => (
-                <Link
-                  className="pricing-market-chip"
-                  href={marketplace.path}
-                  key={marketplace.name}
-                  aria-label={`Интеграция ${marketplace.name}`}
-                >
-                  <Image
-                    className="pricing-market-compact"
-                    src={marketplace.compactSrc}
-                    width={64}
-                    height={64}
-                    alt=""
-                    aria-hidden="true"
-                    unoptimized
-                  />
-                  <strong className="pricing-market-name">{marketplace.name}</strong>
-                </Link>
-              ))}
-            </div>
-            <p className="pricing-market-note">
-              Доступность конкретного подключения зависит от текущей версии сервиса; подробности — на странице интеграций.
-            </p>
           </div>
         </section>
 
         <section className="public-section">
           <div className="public-container">
             <div className="render-section-head">
-              <p className="mockup-eyebrow">Сравнение</p>
+              <p className="mockup-eyebrow">Сравнение тарифов</p>
               <h2>Сравните тарифы и выберите свой</h2>
+              <p>Все планы используют один рабочий процесс MPReply и отличаются доступными лимитами.</p>
             </div>
             <div className="pricing-comparison">
               <table>
@@ -259,13 +250,28 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="public-section mockup-section-soft">
+        <section className="public-section mockup-section-soft pricing-approved-start-section">
           <div className="public-container">
-            <div className="pricing-faq-heading">
-              <div className="render-section-head pricing-faq-head">
-                <p className="mockup-eyebrow">Вопросы</p>
-                <h2>Частые вопросы</h2>
-              </div>
+            <div className="render-section-head">
+              <p className="mockup-eyebrow">Начните спокойно</p>
+              <h2>Всё необходимое для начала работы</h2>
+            </div>
+            <div className="pricing-approved-start-grid">
+              {startBenefits.map(([icon, title, text]) => (
+                <article className="pricing-approved-start-card" key={title}>
+                  <span className="mockup-icon-chip" aria-hidden="true"><PublicIcon name={icon} /></span>
+                  <div><strong>{title}</strong><p>{text}</p></div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="public-section pricing-approved-faq-section">
+          <div className="public-container pricing-approved-faq-layout">
+            <div className="pricing-approved-faq-copy">
+              <p className="mockup-eyebrow">Часто задаваемые вопросы</p>
+              <h2>Ответы на частые вопросы</h2>
               <Link className="pricing-all-questions" href="/help">
                 Все вопросы <span aria-hidden="true">→</span>
               </Link>
@@ -275,7 +281,7 @@ export default function PricingPage() {
                 <details key={question}>
                   <summary className="pricing-faq-summary">
                     <span>{question}</span>
-                    <span className="pricing-faq-chevron" aria-hidden="true">⌄</span>
+                    <span className="pricing-faq-chevron" aria-hidden="true">+</span>
                   </summary>
                   <p>{answer}</p>
                 </details>
@@ -286,50 +292,17 @@ export default function PricingPage() {
 
         <section className="public-section public-cta-section">
           <div className="public-container">
-            <div className="pricing-final-cta">
-              <div>
-                <p className="mockup-eyebrow">Начните сегодня</p>
-                <h2>Попробуйте MPReply бесплатно</h2>
-                <p>Подключите доступные площадки, настройте рабочий процесс и оцените обработку обращений в одном пространстве.</p>
-                <div className="mockup-actions">
-                  <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                    Попробовать бесплатно
-                  </Link>
-                  <Link className="button button-secondary" href="/demo">
-                    Посмотреть демо
-                  </Link>
-                </div>
-                <div className="mockup-trust-row" aria-label="Условия старта">
-                  <span>14 дней бесплатно</span>
-                  <span>4 площадки в MPReply</span>
-                  <span>Автоматически или после проверки</span>
-                </div>
+            <div className="pricing-final-cta pricing-approved-final-cta">
+              <span className="pricing-approved-final-icon" aria-hidden="true"><PublicIcon name="send" /></span>
+              <div className="pricing-approved-final-copy">
+                <h2>Начните использовать MPReply уже сегодня</h2>
+                <p>14 дней бесплатно. Ответы автоматически или после проверки — в одном рабочем процессе.</p>
               </div>
-              <div className="pricing-final-visual" aria-hidden="true">
-                <div className="pricing-final-logo-cloud">
-                  {marketplaces.slice(0, 3).map((marketplace) => (
-                    <span className="pricing-final-logo-chip" key={marketplace.name}>
-                      <Image
-                        className="pricing-market-compact"
-                        src={marketplace.compactSrc}
-                        width={64}
-                        height={64}
-                        alt=""
-                        unoptimized
-                      />
-                    </span>
-                  ))}
-                </div>
-                <div className="pricing-final-review">
-                  <strong>Отличный товар!</strong>
-                  <span>★★★★★</span>
-                </div>
-                <div className="pricing-final-answer">
-                  <p>Здравствуйте! Спасибо за отзыв! Будем рады видеть вас снова!</p>
-                </div>
-                <span className="pricing-final-sparkle">
-                  <PublicIcon name="sparkles" />
-                </span>
+              <div className="pricing-approved-final-actions">
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+                  Попробовать бесплатно <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="text-link" href="/demo">Посмотреть демо →</Link>
               </div>
             </div>
           </div>

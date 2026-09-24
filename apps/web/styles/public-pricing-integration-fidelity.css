@@ -1,13 +1,5 @@
-/* Pricing marketplace marks and small render-specific details. */
-
-.mockup-page .pricing-market-chip {
-  display: inline-flex;
-  min-width: 148px;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 9px;
-  padding: 9px 14px;
-}
+/* Pricing fidelity for the approved 2026-09 render.
+   Product facts come from the current pricing copy; this file owns composition only. */
 
 .mockup-page .pricing-market-compact {
   display: block;
@@ -17,68 +9,11 @@
   object-fit: contain;
 }
 
-.mockup-page .pricing-market-name {
-  color: #52688d;
-  font-size: .74rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.mockup-page .pricing-final-logo-chip {
-  display: grid;
-  place-items: center;
-}
-
-.mockup-page .pricing-final-logo-chip .pricing-market-compact {
-  width: 42px;
-  height: 42px;
-  flex-basis: 42px;
-  clip-path: none;
-  transform: none;
-}
-
-/* The approved individual-plan strip uses a simple padlock, not a shield. */
-.mockup-page .pricing-custom-icon {
-  position: relative;
-}
-
-.mockup-page .pricing-custom-icon > .public-icon-image {
-  display: none;
-}
-
-.mockup-page .pricing-custom-icon::before {
-  width: 14px;
-  height: 11px;
-  border: 2px solid currentColor;
-  border-radius: 3px;
-  content: "";
-  transform: translateY(3px);
-}
-
-.mockup-page .pricing-custom-icon::after {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  width: 10px;
-  height: 9px;
-  border: 2px solid currentColor;
-  border-bottom: 0;
-  border-radius: 7px 7px 0 0;
-  content: "";
-  transform: translateX(-50%);
-}
-
-/* Keep the Professional column highlighted by surface/header, not by recoloring every body value. */
-.mockup-page .pricing-comparison tbody td:nth-child(3) {
-  color: #52688d;
-}
-
 .mockup-page .pricing-comparison-check {
   color: var(--color-brand-primary);
   font-weight: 800;
 }
 
-/* FAQ rows: question on the left, chevron at the far right. */
 .mockup-page .pricing-faq-summary {
   display: flex;
   align-items: center;
@@ -100,65 +35,432 @@
 }
 
 .mockup-page .pricing-faq details[open] .pricing-faq-chevron {
-  transform: rotate(180deg);
+  transform: rotate(45deg);
 }
 
-/* CTA illustration: review and reply are two separate floating cards. */
-.mockup-page .pricing-final-review,
-.mockup-page .pricing-final-answer {
+.mockup-page .pricing-mockup-hero {
+  overflow: hidden;
+  text-align: left;
+  background:
+    radial-gradient(circle at 8% 12%, rgb(11 104 246 / 6%), transparent 22rem),
+    radial-gradient(circle at 82% 24%, rgb(11 104 246 / 11%), transparent 25rem),
+    linear-gradient(180deg, #fff 0%, #f4f9ff 100%);
+}
+
+.mockup-page .pricing-approved-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(390px, 1.05fr);
+  align-items: center;
+  gap: clamp(28px, 5vw, 66px);
+}
+
+.mockup-page .pricing-approved-hero-copy {
+  display: grid;
+  justify-items: start;
+  align-content: center;
+}
+
+.mockup-page .pricing-approved-hero-copy h1 {
+  max-width: 700px;
+}
+
+.mockup-page .pricing-approved-hero-copy > p:not(.mockup-eyebrow) {
+  max-width: 610px;
+  margin: 17px 0 0;
+  color: #62779a;
+  font-size: .92rem;
+  line-height: 1.58;
+}
+
+.mockup-page .pricing-approved-hero-copy .mockup-trust-row {
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+.mockup-page .pricing-approved-hero-scene {
+  position: relative;
+  min-height: 260px;
+}
+
+.mockup-page .pricing-approved-hero-blob {
   position: absolute;
+  inset: 14px 20px 4px 10px;
+  border-radius: 48% 52% 44% 56%;
+  background:
+    radial-gradient(circle at 66% 22%, rgb(255 255 255 / 76%), transparent 20%),
+    linear-gradient(145deg, #edf5ff 0%, #e0edff 56%, #f5f9ff 100%);
+  transform: rotate(-4deg);
+}
+
+.mockup-page .pricing-approved-hero-mascot {
+  position: absolute;
+  left: 17%;
+  bottom: 10px;
   z-index: 2;
-  border: 1px solid #e7e5ff;
+  width: 185px;
+  height: 185px;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 30px rgb(11 104 246 / 14%));
+}
+
+.mockup-page .pricing-approved-market-card {
+  position: absolute;
+  top: 52px;
+  right: 3%;
+  z-index: 3;
+  display: grid;
+  gap: 10px;
+  width: min(58%, 260px);
+  border: 1px solid #dceafa;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 18px 42px rgb(20 85 170 / 10%);
+  padding: 13px 15px;
+  transform: rotate(2deg);
+}
+
+.mockup-page .pricing-approved-market-card > strong {
+  color: #0b61e8;
+  font-size: .68rem;
+  line-height: 1.25;
+}
+
+.mockup-page .pricing-approved-market-card > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mockup-page .pricing-approved-market-logo {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid #e0ecfa;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.mockup-page .pricing-approved-market-logo .pricing-market-compact {
+  width: 30px;
+  height: 30px;
+}
+
+.mockup-page .pricing-approved-note {
+  position: absolute;
+  z-index: 4;
+  color: var(--color-brand-primary);
+  font-size: .64rem;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.mockup-page .pricing-approved-note-top {
+  top: 18px;
+  right: 11%;
+  transform: rotate(-5deg);
+}
+
+.mockup-page .pricing-approved-note-side {
+  right: 0;
+  bottom: 25px;
+  transform: rotate(-5deg);
+}
+
+.mockup-page .pricing-card-grid {
+  margin-top: 24px;
+}
+
+.mockup-page .pricing-card {
+  min-height: 410px;
+  padding: 20px;
+}
+
+.mockup-page .pricing-card.is-popular {
+  z-index: 1;
+}
+
+.mockup-page .pricing-plan-card-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--color-bg-brand-soft);
+  color: var(--color-brand-primary);
+}
+
+.mockup-page .pricing-plan-card-icon .public-icon-image {
+  width: 25px;
+  height: 25px;
+}
+
+.mockup-page .pricing-card h2 {
+  margin-top: 14px;
+}
+
+.mockup-page .pricing-card-popular {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  z-index: 3;
+  border: 1px solid #cfe3fb;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-brand-primary);
+  box-shadow: 0 7px 18px rgb(11 104 246 / 10%);
+  padding: 6px 13px;
+  font-size: .62rem;
+  font-weight: 760;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.mockup-page .pricing-card .pricing-feature-list {
+  margin-bottom: 18px;
+}
+
+.mockup-page .pricing-card .button {
+  margin-top: auto;
+}
+
+.mockup-page .pricing-approved-start-section {
+  background:
+    radial-gradient(circle at 50% 0%, rgb(11 104 246 / 5%), transparent 24rem),
+    linear-gradient(180deg, #fbfdff 0%, #f2f8ff 100%);
+}
+
+.mockup-page .pricing-approved-start-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mockup-page .pricing-approved-start-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 13px;
+  border: 1px solid #dceafa;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 7px 20px rgb(20 85 170 / 5%);
+  padding: 16px;
+}
+
+.mockup-page .pricing-approved-start-card .mockup-icon-chip {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+}
+
+.mockup-page .pricing-approved-start-card > div {
+  min-width: 0;
+}
+
+.mockup-page .pricing-approved-start-card strong {
+  display: block;
+  color: #0c2251;
+  font-size: .78rem;
+}
+
+.mockup-page .pricing-approved-start-card p {
+  margin: 5px 0 0;
+  color: #697d9e;
+  font-size: .67rem;
+  line-height: 1.45;
+}
+
+.mockup-page .pricing-approved-faq-section {
+  background: #fff;
+}
+
+.mockup-page .pricing-approved-faq-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, .36fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(28px, 5vw, 58px);
+}
+
+.mockup-page .pricing-approved-faq-copy {
+  display: grid;
+  justify-items: start;
+}
+
+.mockup-page .pricing-approved-faq-copy h2 {
+  max-width: 10ch;
+  margin: 11px 0 0;
+  color: #071846;
+  font-size: clamp(1.85rem, 3vw, 2.6rem);
+  line-height: 1.04;
+  letter-spacing: -.04em;
+}
+
+.mockup-page .pricing-approved-faq-copy .pricing-all-questions {
+  margin-top: 17px;
+}
+
+.mockup-page .pricing-approved-faq-layout .pricing-faq {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mockup-page .pricing-approved-faq-layout .pricing-faq details {
+  min-height: 48px;
+  align-self: start;
+}
+
+.mockup-page .pricing-approved-final-cta {
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 16px;
+  min-height: 94px;
+  border: 1px solid #cfe3fb;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 84% 18%, rgb(11 104 246 / 11%), transparent 16rem),
+    linear-gradient(120deg, #f7fbff 0%, #eaf4ff 100%);
+  padding: 16px 20px;
+}
+
+.mockup-page .pricing-approved-final-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid #d8e9fd;
   border-radius: 13px;
   background: #fff;
-  box-shadow: 0 14px 34px rgb(81 72 232 / 10%);
+  box-shadow: 0 8px 20px rgb(11 104 246 / 9%);
 }
 
-.mockup-page .pricing-final-review {
-  top: 64px;
-  left: 18px;
-  width: 174px;
-  padding: 10px 13px;
+.mockup-page .pricing-approved-final-icon .public-icon-image {
+  width: 29px;
+  height: 29px;
 }
 
-.mockup-page .pricing-final-review strong {
-  display: block;
-  color: #102554;
-  font-size: .7rem;
-}
-
-.mockup-page .pricing-final-review span {
-  display: block;
-  margin-top: 3px;
-  color: #f59e0b;
-  font-size: .66rem;
-  letter-spacing: .06em;
-}
-
-.mockup-page .pricing-final-answer {
-  top: 118px;
-  left: 48px;
-  width: min(230px, calc(100% - 62px));
-  padding: 11px 13px;
-}
-
-.mockup-page .pricing-final-answer p {
+.mockup-page .pricing-approved-final-copy h2 {
   margin: 0;
-  color: #64799b;
+  font-size: 1.05rem;
+  letter-spacing: -.02em;
+}
+
+.mockup-page .pricing-approved-final-copy p {
+  max-width: 620px;
+  margin: 4px 0 0;
+  color: #667b9e;
   font-size: .68rem;
   line-height: 1.45;
 }
 
-@media (max-width: 720px) {
-  .mockup-page .pricing-market-chip {
-    min-width: 132px;
+.mockup-page .pricing-approved-final-actions {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.mockup-page .pricing-approved-final-actions .button {
+  min-width: 210px;
+  justify-content: center;
+}
+
+.mockup-page .pricing-approved-final-actions .text-link {
+  font-size: .65rem;
+}
+
+@media (max-width: 980px) {
+  .mockup-page .pricing-approved-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(330px, .8fr);
+    gap: 24px;
   }
 
-  .mockup-page .pricing-final-review {
-    left: 0;
+  .mockup-page .pricing-approved-hero-mascot {
+    left: 10%;
   }
 
-  .mockup-page .pricing-final-answer {
-    left: 28px;
+  .mockup-page .pricing-approved-market-card {
+    right: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .mockup-page .pricing-approved-hero-grid,
+  .mockup-page .pricing-approved-faq-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mockup-page .pricing-approved-hero-scene {
+    min-height: 245px;
+  }
+
+  .mockup-page .pricing-approved-hero-mascot {
+    left: 14%;
+    width: 165px;
+    height: 165px;
+  }
+
+  .mockup-page .pricing-approved-start-grid,
+  .mockup-page .pricing-approved-faq-layout .pricing-faq {
+    grid-template-columns: 1fr;
+  }
+
+  .mockup-page .pricing-approved-faq-copy h2 {
+    max-width: 16ch;
+  }
+
+  .mockup-page .pricing-approved-final-cta {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .mockup-page .pricing-approved-final-actions {
+    grid-column: 1 / -1;
+    justify-items: stretch;
+  }
+
+  .mockup-page .pricing-approved-final-actions .button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .mockup-page .pricing-approved-hero-scene {
+    min-height: 225px;
+  }
+
+  .mockup-page .pricing-approved-hero-mascot {
+    left: 5%;
+    bottom: 5px;
+    width: 145px;
+    height: 145px;
+  }
+
+  .mockup-page .pricing-approved-market-card {
+    top: 54px;
+    width: 62%;
+    padding: 10px;
+  }
+
+  .mockup-page .pricing-approved-market-card > div {
+    gap: 4px;
+  }
+
+  .mockup-page .pricing-approved-market-logo {
+    width: 34px;
+    height: 34px;
+  }
+
+  .mockup-page .pricing-approved-market-logo .pricing-market-compact {
+    width: 27px;
+    height: 27px;
+  }
+
+  .mockup-page .pricing-approved-note-side {
+    display: none;
+  }
+
+  .mockup-page .pricing-approved-start-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .mockup-page .pricing-approved-final-cta {
+    grid-template-columns: 1fr;
   }
 }

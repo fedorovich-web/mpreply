@@ -1,32 +1,19 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const pricing = readFileSync(join(root, "app/pricing/page.tsx"), "utf8");
+const englishPricing = readFileSync(join(root, "app/en/pricing/page.tsx"), "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
-const ctaCss = readFileSync(join(root, "styles/public-mockup-cta-fidelity.css"), "utf8");
-const finalCss = readFileSync(join(root, "styles/public-mockup-final-details.css"), "utf8");
-const integrationsCssPath = join(root, "styles/public-pricing-integration-fidelity.css");
-const integrationsCss = existsSync(integrationsCssPath) ? readFileSync(integrationsCssPath, "utf8") : "";
+const css = readFileSync(join(root, "styles/public-pricing-integration-fidelity.css"), "utf8");
 
-describe("approved pricing final CTA visual", () => {
-  it("uses marketplace logos, review card and sparkle instead of the generic mascot", () => {
-    expect(pricing).toContain("pricing-final-logo-cloud");
-    expect(pricing).toContain("pricing-final-logo-chip");
-    expect(pricing).toContain("pricing-final-sparkle");
-    expect(pricing).toContain('name="sparkles"');
-    expect(pricing).not.toContain('<div className="mockup-mascot"');
-  });
-
-  it("positions the decorative composition inside the pricing CTA", () => {
-    expect(ctaCss).toContain(".pricing-final-logo-cloud");
-    expect(ctaCss).toContain(".pricing-final-sparkle");
-  });
-
-  it("uses compact official marketplace marks in integration chips and CTA decoration", () => {
-    expect(existsSync(integrationsCssPath)).toBe(true);
-    expect(layout).toContain('import "../styles/public-pricing-integration-fidelity.css"');
+describe("approved pricing visual", () => {
+  it("uses the approved split hero with the raster mascot and marketplace card", () => {
+    expect(pricing).toContain("pricing-approved-hero-grid");
+    expect(pricing).toContain("pricing-approved-hero-scene");
+    expect(pricing).toContain('src="/images/mpreply-mascot.webp"');
+    expect(pricing).toContain("pricing-approved-market-card");
     for (const asset of [
       "wildberries-compact.webp",
       "ozon-compact.webp",
@@ -35,46 +22,61 @@ describe("approved pricing final CTA visual", () => {
     ]) {
       expect(pricing).toContain(asset);
     }
-    expect(pricing).toContain("pricing-market-compact");
-    expect(pricing).toContain("pricing-market-name");
-    expect(integrationsCss).toContain(".pricing-market-compact");
-    expect(integrationsCss).toContain(".pricing-final-logo-chip");
-    expect(ctaCss).not.toContain('img[src$="wildberries.webp"]');
-    expect(ctaCss).not.toContain('img[src$="ozon.webp"]');
-    expect(ctaCss).not.toContain('img[src$="yandex-market.webp"]');
-    expect(finalCss).not.toContain("marketplace-detail-logo-small");
-    expect(finalCss).not.toContain("approved full wordmark assets without duplicate text labels");
+    expect(pricing).not.toContain("<svg");
   });
 
-  it("keeps Professional body values dark while retaining branded checkmarks", () => {
-    expect(integrationsCss).toContain(".pricing-comparison tbody td:nth-child(3)");
-    expect(integrationsCss).toContain("color: #52688d");
-    expect(pricing).toContain("pricing-comparison-check");
-    expect(integrationsCss).toContain(".pricing-comparison-check");
-    expect(integrationsCss).toContain("color: var(--color-brand-primary)");
+  it("keeps three plan cards with compact raster icon treatments and a highlighted middle plan", () => {
+    expect(pricing).toContain("pricing-card-grid");
+    expect(pricing).toContain("pricing-plan-card-icon");
+    expect(pricing).toContain("pricing-card-popular");
+    expect(pricing).toContain('const planIcons = ["send", "users", "chart"] as const');
+    expect(css).toContain(".pricing-plan-card-icon");
+    expect(css).toContain(".pricing-card-popular");
   });
 
-  it("draws the individual-plan padlock shown in the approved render", () => {
-    expect(pricing).toContain("pricing-custom-icon");
-    expect(integrationsCss).toContain(".pricing-custom-icon > .public-icon-image");
-    expect(integrationsCss).toContain("display: none");
-    expect(integrationsCss).toContain(".pricing-custom-icon::before");
-    expect(integrationsCss).toContain(".pricing-custom-icon::after");
+  it("follows the approved comparison, start-benefits, FAQ, and compact CTA sequence", () => {
+    expect(pricing).toContain("pricing-comparison");
+    expect(pricing).toContain("pricing-approved-start-grid");
+    expect(pricing).toContain("pricing-approved-faq-layout");
+    expect(pricing).toContain("pricing-approved-final-cta");
+    expect(pricing).not.toContain("pricing-final-logo-cloud");
+    expect(pricing).not.toContain("pricing-final-review");
+    expect(pricing).not.toContain("pricing-final-answer");
+    expect(pricing).not.toContain("pricing-custom-strip");
+
+    expect(css).toContain(".pricing-approved-start-grid");
+    expect(css).toContain(".pricing-approved-faq-layout");
+    expect(css).toContain(".pricing-approved-final-cta");
   });
 
-  it("renders FAQ chevrons at the right like the approved render", () => {
+  it("keeps FAQ controls compact and aligned to the right", () => {
     expect(pricing).toContain("pricing-faq-summary");
     expect(pricing).toContain("pricing-faq-chevron");
-    expect(integrationsCss).toContain(".pricing-faq-summary");
-    expect(integrationsCss).toContain(".pricing-faq-chevron");
+    expect(css).toContain(".pricing-faq-summary");
+    expect(css).toContain(".pricing-faq-chevron");
   });
 
-  it("splits the CTA review and reply into separate cards", () => {
-    expect(pricing).toContain("pricing-final-review");
-    expect(pricing).toContain("pricing-final-answer");
-    expect(pricing).not.toContain("pricing-final-bubble");
-    expect(ctaCss).not.toContain(".pricing-final-bubble");
-    expect(integrationsCss).toContain(".pricing-final-review");
-    expect(integrationsCss).toContain(".pricing-final-answer");
+  it("keeps RU and EN on the same composition and English marketplace links localized", () => {
+    for (const className of [
+      "pricing-approved-hero-grid",
+      "pricing-card-grid",
+      "pricing-comparison",
+      "pricing-approved-start-grid",
+      "pricing-approved-faq-layout",
+      "pricing-approved-final-cta",
+    ]) {
+      expect(pricing).toContain(className);
+      expect(englishPricing).toContain(className);
+    }
+
+    for (const slug of ["wildberries", "ozon", "yandex-market", "avito"]) {
+      expect(englishPricing).toContain(`path: "/en/marketplaces/${slug}"`);
+    }
+  });
+
+  it("loads the scoped pricing fidelity layer without the retired violet brand family", () => {
+    expect(layout).toContain('import "../styles/public-pricing-integration-fidelity.css"');
+    expect(css).not.toMatch(/#5148e8|#635bff|#5964ff|rgb\(81 72 232|rgb\(99 91 255/i);
+    expect(css).toContain("@media (max-width: 520px)");
   });
 });
