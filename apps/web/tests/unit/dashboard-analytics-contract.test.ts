@@ -14,28 +14,25 @@ describe("analytics operational dashboard", () => {
     expect(workspace).toContain('buildApiQuery("/api/analytics/messages"');
     expect(workspace).toContain('buildApiQuery("/api/analytics/marketplaces"');
     expect(workspace).toContain('buildApiQuery("/api/analytics/products"');
-    expect(workspace).toContain('buildApiQuery("/api/analytics/ai-usage"');
+    expect(workspace).toContain('buildApiQuery("/api/analytics/team"');
     expect(workspace).toContain("organization_id: activeOrganization.id");
   });
 
-  it("keeps analytics failures recoverable without leaving the page", () => {
+  it("keeps analytics failures recoverable without exposing raw backend errors", () => {
     expect(workspace).toContain("function retryAnalytics()");
     expect(workspace).toContain("overviewQuery.refetch()");
     expect(workspace).toContain("messagesQuery.refetch()");
     expect(workspace).toContain("marketplacesQuery.refetch()");
     expect(workspace).toContain("productsQuery.refetch()");
-    expect(workspace).toContain("aiUsageQuery.refetch()");
+    expect(workspace).toContain("teamQuery.refetch()");
     expect(workspace).toContain('actionLabel="Повторить"');
-    expect(workspace).toContain("onAction={retryAnalytics}");
-  });
-
-  it("does not report zero safety flags when AI usage analytics failed", () => {
-    expect(workspace).toContain('aiUsageQuery.error ? "—" : formatNumber(aiUsageQuery.data?.safety_flagged_drafts ?? 0)');
+    expect(workspace).toContain("Показаны последние доступные данные");
+    expect(workspace).not.toContain("error.message");
   });
 
   it("keeps operational metrics seller-facing instead of exposing AI diagnostics", () => {
-    expect(workspace).toContain("Обращения");
-    expect(workspace).toContain("Без ответа");
+    expect(workspace).toContain("Всего обращений");
+    expect(workspace).toContain("Требуют ответа");
     expect(workspace).toContain("Среднее время ответа");
     expect(workspace).toContain("Негативные отзывы");
     expect(workspace).not.toContain("tokens_input");
@@ -43,9 +40,12 @@ describe("analytics operational dashboard", () => {
     expect(workspace).not.toContain("cost_estimate");
   });
 
-  it("frames the page as real operational data, not a decorative BI dashboard", () => {
-    expect(page).toContain("Понимайте, где обращения требуют внимания");
-    expect(page).toContain("Все показатели рассчитываются по данным текущего рабочего пространства");
+  it("uses the approved dense authenticated-product hierarchy", () => {
+    expect(page).toContain("<h1>Аналитика</h1>");
+    expect(page).toContain("Следите за обращениями, скоростью ответов, площадками и товарами");
+    expect(workspace).toContain("analytics-metric-grid");
+    expect(workspace).toContain("analytics-panel-grid");
+    expect(workspace).toContain("analytics-period-options");
   });
 
   it("uses a scoped responsive analytics layer without a second palette", () => {
