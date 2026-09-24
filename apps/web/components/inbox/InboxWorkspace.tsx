@@ -15,7 +15,7 @@ import { Badge, type BadgeTone } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
 
 type FilterState = {
-  type: "all" | "review" | "question";
+  type: "all" | "review" | "question" | "chat";
   status: "all" | "needs_reply" | "ai_draft_ready" | "waiting_review" | "failed" | "escalated";
   query: string;
   rating: "all" | "negative" | "positive" | "no_rating";
@@ -38,6 +38,7 @@ const messageStatusLabels: Record<string, string> = {
   approved: "Одобрено",
   sending: "Отправляется",
   answered: "Отвечено",
+  auto_reply_sent: "Автоответ отправлен",
   failed: "Ошибка",
   escalated: "Эскалировано",
   archived: "Архив",
@@ -47,6 +48,7 @@ const messageStatusLabels: Record<string, string> = {
 const messageTypeLabels: Record<string, string> = {
   review: "Отзыв",
   question: "Вопрос",
+  chat: "Чат",
 };
 
 const priorityLabels: Record<string, string> = {
@@ -141,6 +143,7 @@ export function InboxWorkspace() {
           <FilterButton active={filters.type === "all"} onClick={() => updateFilter("type", "all")}>Все</FilterButton>
           <FilterButton active={filters.type === "review"} onClick={() => updateFilter("type", "review")}>Отзывы</FilterButton>
           <FilterButton active={filters.type === "question"} onClick={() => updateFilter("type", "question")}>Вопросы</FilterButton>
+          <FilterButton active={filters.type === "chat"} onClick={() => updateFilter("type", "chat")}>Чаты</FilterButton>
         </FilterGroup>
 
         <FilterGroup label="Статус">
@@ -244,8 +247,8 @@ function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; m
         <Badge tone="info">{marketplaceLabel(message.marketplace)}</Badge>
         <Badge tone={statusTone(message.status)}>{messageTypeLabels[message.type] ?? message.type}</Badge>
       </span>
-      <span className="message-card-title">{message.product?.name ?? "Товар без карточки"}</span>
-      <span className="message-card-text">{message.customer_text}</span>
+      <span className="message-card-title">{messageTitle(message)}</span>
+      <span className="message-card-text">{message.customer_text || (isAvitoReview(message) ? "Текст отзыва не передан Авито." : "")}</span>
       <span className="message-card-meta">
         <span>{formatDate(message.marketplace_created_at)}</span>
         <span>{message.rating ? `${message.rating}★` : "без оценки"}</span>
@@ -282,10 +285,16 @@ function MessageDetail({
       <div className="panel-heading panel-heading-row">
         <div>
           <span className="panel-kicker">Карточка обращения</span>
-          <strong>{message.product?.name ?? "Товар без карточки"}</strong>
+          <strong>{messageTitle(message)}</strong>
         </div>
         <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
       </div>
+
+      {isAvitoReview(message) && message.metadata_json.provider_publication === "unverified" ? (
+        <p className="integration-notice integration-notice-warning" role="note">
+          Ответ принят API Авито. Публикация не подтверждена.
+        </p>
+      ) : null}
 
       <div className="detail-grid">
         <DetailItem label="Маркетплейс" value={marketplaceLabel(message.marketplace)} />
@@ -301,7 +310,7 @@ function MessageDetail({
 
       <section className="detail-section">
         <span>Текст покупателя</span>
-        <p>{message.customer_text}</p>
+        <p>{message.customer_text || (isAvitoReview(message) ? "Текст отзыва не передан Авито." : "")}</p>
       </section>
 
       <section className="detail-section">
@@ -386,6 +395,17 @@ function marketplaceLabel(value: string): string {
     avito: "Авито",
   };
   return labels[value] ?? value;
+}
+
+function isAvitoReview(message: CustomerMessage): boolean {
+  return message.marketplace === "avito" && message.type === "review";
+}
+
+function messageTitle(message: CustomerMessage): string {
+  if (message.product?.name) return message.product.name;
+  if (isAvitoReview(message)) return "Отзыв без объявления";
+  if (message.type === "chat") return "Диалог";
+  return "Товар без карточки";
 }
 
 function statusTone(status: string): BadgeTone {

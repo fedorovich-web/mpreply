@@ -236,7 +236,7 @@ describe("MarketplaceIntegrationWorkspace", () => {
     renderWithQueryClient(<MarketplaceIntegrationWorkspace marketplace="avito" />);
     const form = await screen.findByRole("form", { name: "Новое подключение Авито" });
     fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Авито кабинет" } });
-    fireEvent.change(within(form).getByLabelText("ID аккаунта Авито"), { target: { value: "123456" } });
+    fireEvent.change(within(form).getByLabelText(/ID аккаунта Авито для чатов/), { target: { value: "123456" } });
     fireEvent.change(within(form).getByLabelText("Client ID Авито"), { target: { value: "client-123" } });
     fireEvent.change(within(form).getByLabelText("Client Secret Авито"), { target: { value: "secret-123" } });
     fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
@@ -246,5 +246,39 @@ describe("MarketplaceIntegrationWorkspace", () => {
     const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
     expect(payload).toMatchObject({ marketplace: "avito", seller_id: "123456" });
     expect(JSON.parse(String(payload.credentials))).toEqual({ version: 1, client_id: "client-123", client_secret: "secret-123" });
+  });
+
+  it("shows review-only Avito access and unverified sending without requiring a Messenger ID", async () => {
+    mockWorkspace("owner");
+    const reviewAccount = {
+      ...account,
+      marketplace: "avito",
+      display_name: "Авито отзывы",
+      seller_id: null,
+      scopes_json: { scopes: ["reviews:read", "reviews:write"], write_verification: "not_probed" },
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        return new Response(JSON.stringify({ ...reviewAccount, id: "55555555-5555-4555-8555-555555555555", status: "pending_validation" }), { status: 201 });
+      }
+      return new Response(JSON.stringify([reviewAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<MarketplaceIntegrationWorkspace marketplace="avito" />);
+
+    expect(await screen.findByRole("heading", { name: "Авито отзывы" })).toBeInTheDocument();
+    expect(screen.getByText("Отзывы").parentElement).toHaveTextContent("Чтение доступно");
+    expect(screen.getByText("Чаты").parentElement).toHaveTextContent("Доступ не подтверждён");
+    expect(screen.getByText("Отправка").parentElement).toHaveTextContent("Не проверена на реальном аккаунте");
+    const form = screen.getByRole("form", { name: "Новое подключение Авито" });
+    expect(within(form).getByLabelText(/ID аккаунта Авито/)).not.toBeRequired();
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Отзывы без чатов" } });
+    fireEvent.change(within(form).getByLabelText("Client ID Авито"), { target: { value: "client-123" } });
+    fireEvent.change(within(form).getByLabelText("Client Secret Авито"), { target: { value: "secret-123" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    expect(JSON.parse(String(postCall?.[1]?.body))).toMatchObject({ marketplace: "avito", seller_id: null });
   });
 });

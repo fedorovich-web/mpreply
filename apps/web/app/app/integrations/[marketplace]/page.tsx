@@ -7,7 +7,7 @@ const pages: Record<string, { marketplace: MarketplaceKey; name: string; descrip
   wildberries: { marketplace: "wildberries", name: "Wildberries", description: "Отзывы и вопросы" },
   ozon: { marketplace: "ozon", name: "Ozon", description: "Отзывы и вопросы" },
   "yandex-market": { marketplace: "yandex_market", name: "Яндекс Маркет", description: "Отзывы и вопросы" },
-  avito: { marketplace: "avito", name: "Авито", description: "Сообщения в чатах" },
+  avito: { marketplace: "avito", name: "Авито", description: "Чаты и доступные для ответа отзывы" },
 };
 
 export function generateStaticParams() {

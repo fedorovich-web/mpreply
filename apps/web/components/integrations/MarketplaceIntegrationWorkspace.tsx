@@ -21,7 +21,7 @@ const marketplaceDetails = {
   wildberries: { name: "Wildberries", accountLabel: "Seller ID", accountRequired: false, numericAccount: false },
   ozon: { name: "Ozon", accountLabel: "Client ID Ozon", accountRequired: true, numericAccount: false },
   yandex_market: { name: "Яндекс Маркет", accountLabel: "Business ID Яндекс Маркета", accountRequired: true, numericAccount: true },
-  avito: { name: "Авито", accountLabel: "ID аккаунта Авито", accountRequired: true, numericAccount: true },
+  avito: { name: "Авито", accountLabel: "ID аккаунта Авито для чатов", accountRequired: false, numericAccount: true },
 } as const;
 
 type Notice = {
@@ -177,7 +177,7 @@ export function MarketplaceIntegrationWorkspace({ marketplace }: { marketplace: 
               </label>
               <label>
                 {details.accountLabel} {!details.accountRequired ? <span className="field-optional">необязательно</span> : null}
-                <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} required={details.accountRequired} value={sellerId} />
+                <input maxLength={marketplace === "avito" ? 20 : 255} onChange={(event) => setSellerId(event.target.value)} required={details.accountRequired} value={sellerId} />
               </label>
               {marketplace === "avito" ? (
                 <>
@@ -285,7 +285,7 @@ function AccountDetail({
     onSuccess: async (result) => {
       onNotice({
         tone: result.error_code ? "warning" : "success",
-        message: result.error_message_safe ?? (result.error_code ? "Проверка завершилась с ошибкой." : "Доступ к API подтверждён."),
+        message: result.error_message_safe ?? (result.error_code ? "Проверка завершилась с ошибкой." : marketplace === "avito" ? "Чтение API проверено. Отправка не проверена." : "Доступ к API подтверждён."),
       });
       await invalidate();
     },
@@ -334,6 +334,9 @@ function AccountDetail({
   const busy = updateMutation.isPending || validateMutation.isPending || syncMutation.isPending || rotateMutation.isPending || revokeMutation.isPending;
   const accountIdReady = validAccountId(marketplace, sellerId);
   const mutationError = updateMutation.error ?? validateMutation.error ?? syncMutation.error ?? rotateMutation.error ?? revokeMutation.error;
+  const scopes = account.scopes_json.scopes;
+  const hasReadScope = (scope: string) =>
+    account.status === "active" && account.credentials_status === "valid" && Array.isArray(scopes) && scopes.includes(scope);
 
   return (
     <div className="integration-detail-stack">
@@ -347,6 +350,13 @@ function AccountDetail({
 
       <dl className="integration-health-grid">
         <HealthItem label="Доступ" value={credentialsStatusLabel(account.credentials_status)} />
+        {marketplace === "avito" ? (
+          <>
+            <HealthItem label="Отзывы" value={hasReadScope("reviews:read") ? "Чтение доступно" : "Доступ не подтверждён"} />
+            <HealthItem label="Чаты" value={hasReadScope("chats:read") ? "Чтение доступно" : "Доступ не подтверждён"} />
+            <HealthItem label="Отправка" value={account.scopes_json.write_verification === "not_probed" ? "Не проверена на реальном аккаунте" : "Нет подтверждения права отправки"} />
+          </>
+        ) : null}
         <HealthItem label="Маска" value={account.credentials_masked} />
         <HealthItem label="Последняя успешная синхронизация" value={formatDateTime(account.last_success_sync_at)} />
         <HealthItem label="Ошибок" value={String(account.error_count)} />
@@ -372,7 +382,7 @@ function AccountDetail({
             </label>
             <label>
               {marketplaceDetails[marketplace].accountLabel} {!marketplaceDetails[marketplace].accountRequired ? <span className="field-optional">необязательно</span> : null}
-              <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} required={marketplaceDetails[marketplace].accountRequired} value={sellerId} />
+              <input maxLength={marketplace === "avito" ? 20 : 255} onChange={(event) => setSellerId(event.target.value)} required={marketplaceDetails[marketplace].accountRequired} value={sellerId} />
             </label>
             <label>
               Режим ответов
@@ -510,8 +520,9 @@ function emptyToNull(value: string): string | null {
 
 function validAccountId(marketplace: MarketplaceKey, value: string): boolean {
   const details = marketplaceDetails[marketplace];
-  if (!details.accountRequired) return true;
-  return details.numericAccount ? /^[1-9]\d*$/.test(value) : value.trim().length > 0;
+  if (value.trim().length === 0) return !details.accountRequired;
+  if (details.numericAccount) return /^[1-9]\d*$/.test(value) && (marketplace !== "avito" || value.length <= 20);
+  return true;
 }
 
 function accountStatusLabel(account: MarketplaceAccount): string {
