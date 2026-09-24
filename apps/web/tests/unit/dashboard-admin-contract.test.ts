@@ -16,14 +16,26 @@ describe("superadmin dashboard", () => {
   });
 
   it("uses MPReply product language rather than legacy Respio copy", () => {
-    expect(page).toContain("Системная сводка MPReply");
+    expect(page).toContain("Системная панель MPReply");
     expect(page).not.toContain("Respio");
     expect(workspace).not.toContain("Respio");
     expect(workspace).not.toContain("active + trialing");
     expect(workspace).not.toContain("usage ledger");
   });
 
-  it("puts current incidents before product scale and 30-day usage", () => {
+  it("uses the approved blue SaaS composition instead of a plain metrics table", () => {
+    expect(page).toContain("admin-page-hero");
+    expect(workspace).toContain("admin-command-center");
+    expect(workspace).toContain("admin-kpi-strip");
+    expect(workspace).toContain("admin-health-panel");
+    expect(workspace).toContain("admin-metric-card");
+    expect(styles).toContain(".admin-page-hero");
+    expect(styles).toContain(".admin-command-center");
+    expect(styles).toContain(".admin-kpi-strip");
+    expect(styles).toContain(".admin-health-panel");
+  });
+
+  it("keeps current incidents before product scale and 30-day usage", () => {
     expect(workspace).toContain("admin-section-incidents");
     expect(workspace).toContain("admin-section-product");
     expect(workspace).toContain("admin-section-usage");
@@ -33,6 +45,16 @@ describe("superadmin dashboard", () => {
     expect(workspace).toContain("Неотправленные ответы за 24 часа");
     expect(workspace).toContain("Организации");
     expect(workspace).toContain("Пользователи");
+  });
+
+  it("derives status only from the existing overview payload instead of fake admin data", () => {
+    expect(workspace).toContain("integration_failures_24h");
+    expect(workspace).toContain("replies_failed_24h");
+    expect(workspace).toContain("organizations_active");
+    expect(workspace).toContain("subscriptions_active");
+    expect(workspace).not.toContain("/api/admin/organizations");
+    expect(workspace).not.toContain("/api/admin/users");
+    expect(workspace).not.toContain("/api/admin/subscriptions");
   });
 
   it("keeps the overview error recoverable without leaving the page", () => {
