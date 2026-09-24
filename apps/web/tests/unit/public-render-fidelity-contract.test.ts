@@ -18,11 +18,11 @@ describe("public render fidelity contract", () => {
       "Свяжитесь с нами",
       "Техническая поддержка",
       "Запросить демо",
-      "Партнёрство",
+      "Подключение",
       "Общие вопросы",
       "Напишите нам",
-      "Наш офис",
-      "Режим работы",
+      "Единый адрес поддержки",
+      "Безопасность",
       "Готовы обсудить подключение?",
       "<ContactMailForm",
     ]) {
@@ -31,7 +31,7 @@ describe("public render fidelity contract", () => {
   });
 
   it("keeps contact truth while matching the render", () => {
-    expect(contacts).toContain("support@mpreply.ru");
+    expect(contacts).toContain("siteConfig.contactEmail");
     expect(contacts).not.toContain("Telegram");
     expect(contacts).not.toContain("VK");
     expect(contacts).not.toContain("YouTube");
@@ -43,7 +43,7 @@ describe("public render fidelity contract", () => {
     for (const marker of [
       "404",
       "Страница не найдена",
-      "/images/mpreply-mascot.webp",
+      "/images/mpreply-404-illustration.webp",
       'href="/"',
       'href="/features"',
       'href="/pricing"',

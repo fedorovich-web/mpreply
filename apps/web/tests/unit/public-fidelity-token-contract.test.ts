@@ -28,20 +28,20 @@ const tokenizedLateLayers = [
 
 describe("public handoff fidelity token usage", () => {
   it("defines the approved brand primitives once in the scoped brand layer", () => {
-    expect(brandCss).toContain("--color-brand-primary: #5148e8");
-    expect(brandCss).toContain("--color-brand-soft: #f0efff");
-    expect(brandCss).toContain("--gradient-mpreply-action: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%)");
+    expect(brandCss).toContain("--color-brand-primary: #0b68f6");
+    expect(brandCss).toContain("--color-brand-soft: #eaf4ff");
+    expect(brandCss).toContain("--gradient-mpreply-action: linear-gradient(110deg, #0d6cf7 0%, #0674ff 58%, #0a5fe8 100%)");
   });
 
   it("uses the shared primary token instead of repeating the brand hex in late fidelity layers", () => {
     for (const source of tokenizedLateLayers) {
-      expect(source).not.toMatch(/#5148e8/i);
+      expect(source).not.toMatch(/#(?:5148e8|635bff|5964ff)/i);
       expect(source).toContain("var(--color-brand-primary)");
     }
   });
 
   it("keeps non-color late layers from reintroducing a raw primary override", () => {
-    for (const source of [mascotCss, rasterCss]) expect(source).not.toMatch(/#5148e8/i);
+    for (const source of [mascotCss, rasterCss]) expect(source).not.toMatch(/#(?:5148e8|635bff|5964ff)/i);
   });
 
   it("uses the shared brand-soft token for repeated approved lavender surfaces", () => {
@@ -51,15 +51,15 @@ describe("public handoff fidelity token usage", () => {
 
   it("uses the shared action gradient where the approved gradient is repeated", () => {
     for (const source of [ctaCss, decorativeCss, headerCss]) {
-      expect(source).not.toContain("linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%)");
+      expect(source).not.toMatch(/5148e8|635bff|5964ff/i);
       expect(source).toContain("var(--gradient-mpreply-action)");
     }
   });
 
-  it("keeps generic demo fidelity accents on the shared violet brand tokens", () => {
+  it("keeps generic demo fidelity accents on the shared blue brand tokens", () => {
     expect(finalDetailsCss).not.toMatch(/#(?:1672ee|eaf5ff|e9efff|eef2ff|6f42e8)/i);
     expect(finalDetailsCss).toMatch(/\.demo-story-review-avatar\s*\{[^}]*background:\s*var\(--color-brand-soft\);[^}]*color:\s*var\(--color-brand-primary\);/s);
     expect(finalDetailsCss).toMatch(/\.demo-process-avatar\s*\{[^}]*var\(--color-brand-soft\);[^}]*\}/s);
-    expect(finalDetailsCss).toMatch(/\.demo-process-answer > strong > svg\s*\{[^}]*background:\s*var\(--color-brand-soft\);[^}]*color:\s*var\(--color-brand-primary\);/s);
+    expect(finalDetailsCss).toMatch(/\.demo-process-answer > strong > \.public-icon-image\s*\{[^}]*background:\s*var\(--color-brand-soft\);[^}]*color:\s*var\(--color-brand-primary\);/s);
   });
 });

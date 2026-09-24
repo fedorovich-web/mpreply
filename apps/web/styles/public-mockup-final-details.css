@@ -70,7 +70,7 @@
   box-shadow: 0 9px 22px rgb(81 72 232 / 8%);
 }
 
-.mockup-page .marketplace-hub-card-label > svg {
+.mockup-page .marketplace-hub-card-label > .public-icon-image {
   flex: 0 0 auto;
   color: var(--color-brand-primary);
   font-size: 15px;
@@ -458,7 +458,7 @@
   gap: 7px;
 }
 
-.mockup-page .demo-process-answer > strong > svg {
+.mockup-page .demo-process-answer > strong > .public-icon-image {
   width: 28px;
   height: 28px;
   flex: 0 0 28px;

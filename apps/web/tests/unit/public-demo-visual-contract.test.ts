@@ -51,7 +51,7 @@ describe("approved demo journey visual", () => {
 
   it("renders the ready-answer message icon inside the soft blue tile from the approved process card", () => {
     expect(demo).toContain('name="message" className="public-inline-icon"');
-    expect(finalCss).toContain(".demo-process-answer > strong > svg");
+    expect(finalCss).toContain(".demo-process-answer > strong > .public-icon-image");
     expect(finalCss).toContain("background: #eef2ff");
     expect(finalCss).toContain("border-radius: 8px");
   });

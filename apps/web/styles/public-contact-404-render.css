@@ -108,7 +108,7 @@
   font-size: .74rem;
 }
 
-.contacts-render-trust svg {
+.contacts-render-trust .public-icon-image {
   width: 25px;
   height: 25px;
   border-radius: 999px;
@@ -149,7 +149,7 @@
   content: "";
 }
 
-.contacts-render-scene-bubble > svg {
+.contacts-render-scene-bubble > .public-icon-image {
   position: absolute;
   top: 18px;
   left: 18px;

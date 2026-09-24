@@ -126,7 +126,7 @@
 .public-root:not(.homepage-reference-root) .mockup-page .demo-journey-card:not(:last-child)::after,
 .public-root:not(.homepage-reference-root) .mockup-page .demo-story-arrow,
 .public-root:not(.homepage-reference-root) .mockup-page .detail-faq-chevron,
-.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-card-label > svg {
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-card-label > .public-icon-image {
   color: #0b68f6;
 }
 

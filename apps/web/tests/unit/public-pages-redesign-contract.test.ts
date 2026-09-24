@@ -19,7 +19,7 @@ const terms = readFileSync(join(root, "app/terms/page.tsx"), "utf8");
 const authForm = readFileSync(join(root, "components/auth/AuthForm.tsx"), "utf8");
 const authCss = readFileSync(join(root, "styles/auth.css"), "utf8");
 const mockupCss = readFileSync(join(root, "styles/public-mockup-fidelity.css"), "utf8");
-const contactsCss = readFileSync(join(root, "styles/contacts-approved.css"), "utf8");
+const contactsRenderCss = readFileSync(join(root, "styles/public-contact-404-render.css"), "utf8");
 const helpLegalCss = readFileSync(join(root, "styles/help-legal-approved.css"), "utf8");
 const siteConfig = readFileSync(join(root, "lib/site-config.ts"), "utf8");
 
@@ -91,14 +91,14 @@ describe("current public page composition", () => {
   });
 
   it("makes support email the primary contact action without inventing response-time promises", () => {
-    expect(layout).toContain('import "../styles/contacts-approved.css"');
-    expect(contacts).toContain("contact-support-scene");
-    expect(contacts).toContain("contact-support-email");
+    expect(layout).toContain('import "../styles/public-contact-404-render.css"');
+    expect(contacts).toContain("contacts-render-hero");
+    expect(contacts).toContain("contacts-render-channel-grid");
     expect(contacts).toContain("siteConfig.contactEmail");
     expect(contacts).toContain("mailto:");
     expect(contacts).not.toMatch(/ответим за|ответ в течение|24\s*час/i);
-    expect(contactsCss).toContain(".contact-support-scene");
-    expect(contactsCss).toContain(".contact-support-email");
+    expect(contactsRenderCss).toContain(".contacts-render-page");
+    expect(contactsRenderCss).toContain(".contacts-render-channel-grid");
   });
 
   it("keeps help task-oriented with concrete troubleshooting paths", () => {
@@ -137,6 +137,8 @@ describe("current public page composition", () => {
     expect(authForm).toContain("auth-preview-queue");
     expect(authForm).toContain("auth-preview-draft");
     expect(authForm).toContain('apiRequest(`/api/auth/${mode}`');
+    expect(authForm).toContain("authErrorMessage");
+    expect(authForm).not.toContain("mutation.error instanceof ApiError ? mutation.error.message");
     expect(authForm).toContain('requestedNext?.startsWith("/app/")');
     expect(authForm).not.toMatch(/14\s*дн|бесплатн(?:ый|ых)\s+период/i);
     expect(authCss).toContain(".auth-product-panel");

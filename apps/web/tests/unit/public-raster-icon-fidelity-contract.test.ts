@@ -25,7 +25,7 @@ describe("approved selective raster icon fidelity", () => {
   it("uses the five approved feature icon assets only on the first five tool cards", () => {
     expect(features).toContain("features-tool-grid");
     for (const asset of featureAssets) expect(css).toContain(`url("${asset}")`);
-    expect(css).toContain(".features-tool-card:nth-child(-n+5) .mockup-icon-chip > svg");
+    expect(css).toContain(".features-tool-card:nth-child(-n+5) .mockup-icon-chip > .public-icon-image");
     expect(css).toContain("display: none");
     expect(css).not.toContain(".features-tool-card:nth-child(6)");
     expect(css).not.toContain(".features-tool-card:nth-child(7)");

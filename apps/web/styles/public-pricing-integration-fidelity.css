@@ -42,7 +42,7 @@
   position: relative;
 }
 
-.mockup-page .pricing-custom-icon > svg {
+.mockup-page .pricing-custom-icon > .public-icon-image {
   display: none;
 }
 

@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { ApiError, apiRequest } from "../../lib/api/client";
 import { authSessionSchema } from "../../lib/api/schemas";
+import { PublicBrandMark } from "../public-site/PublicBrandMark";
 
 type AuthMode = "login" | "register";
 
@@ -60,7 +61,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       <div className="auth-shell">
         <aside className="auth-product-panel" aria-label="Рабочее пространство MPReply">
           <Link className="auth-product-brand" href="/" aria-label="MPReply — главная">
-            <span className="public-brand-mark" aria-hidden="true">M</span>
+            <PublicBrandMark />
             <strong>MPReply</strong>
           </Link>
 
@@ -112,7 +113,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         <section className="auth-form-panel" aria-labelledby={`${mode}-title`}>
           <div className="auth-card">
             <Link className="auth-brand" href="/" aria-label="MPReply — главная">
-              <span className="public-brand-mark" aria-hidden="true">M</span>
+              <PublicBrandMark />
               <strong>MPReply</strong>
             </Link>
 
@@ -173,7 +174,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
               {mutation.error ? (
                 <p className="form-error" role="alert">
-                  {mutation.error instanceof ApiError ? mutation.error.message : "Не удалось выполнить запрос. Попробуйте ещё раз."}
+                  {authErrorMessage(mutation.error, isLogin)}
                 </p>
               ) : null}
 
@@ -194,4 +195,19 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       </div>
     </main>
   );
+}
+
+
+function authErrorMessage(error: unknown, isLogin: boolean): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return isLogin ? "Неверный email или пароль." : "Не удалось создать аккаунт с этими данными.";
+    if (error.status === 409) return "Аккаунт с таким email уже существует. Войдите или используйте другой адрес.";
+    if (error.status === 422) return "Проверьте email, пароль и остальные поля формы.";
+    if (error.status === 429) return "Слишком много попыток подряд. Подождите немного и попробуйте снова.";
+    if (error.status >= 500) return "Сервис временно недоступен. Попробуйте ещё раз позже.";
+  }
+
+  return isLogin
+    ? "Не удалось войти. Проверьте соединение и попробуйте снова."
+    : "Не удалось создать аккаунт. Проверьте соединение и попробуйте снова.";
 }

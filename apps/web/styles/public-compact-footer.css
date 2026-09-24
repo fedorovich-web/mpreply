@@ -117,7 +117,7 @@
   font-weight: 800;
 }
 
-.public-root .public-footer-socials > span > svg {
+.public-root .public-footer-socials > span > .public-icon-image {
   font-size: 13px;
 }
 

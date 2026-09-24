@@ -13,7 +13,7 @@
   line-height: 1.2;
 }
 
-.mockup-page .features-app-nav-item > svg {
+.mockup-page .features-app-nav-item > .public-icon-image {
   width: 14px;
   height: 14px;
   flex: 0 0 14px;
@@ -26,7 +26,7 @@
   color: var(--color-brand-primary);
 }
 
-.mockup-page .features-app-nav-item.is-active > svg {
+.mockup-page .features-app-nav-item.is-active > .public-icon-image {
   color: var(--color-brand-primary);
 }
 

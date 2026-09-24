@@ -24,7 +24,7 @@ describe("final approved render details", () => {
     expect(pricing).toContain("pricing-market-name");
     expect(finalCss).toContain(".pricing-hero-note");
     expect(finalCss).toContain(".pricing-custom-icon");
-    expect(pricingCss).toContain(".pricing-custom-icon > svg");
+    expect(pricingCss).toContain(".pricing-custom-icon > .public-icon-image");
     expect(pricingCss).toContain(".pricing-custom-icon::before");
     expect(pricingCss).toContain(".pricing-custom-icon::after");
   });

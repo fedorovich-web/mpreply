@@ -18,7 +18,7 @@ describe("approved demo raster icon fidelity", () => {
   it("uses approved raster icons on all four journey cards", () => {
     expect(demo).toContain("demo-journey-card");
     for (const asset of journeyAssets) expect(css).toContain(`url("${asset}")`);
-    expect(css).toContain(".demo-journey .demo-journey-card .mockup-icon-chip > svg");
+    expect(css).toContain(".demo-journey .demo-journey-card .mockup-icon-chip > .public-icon-image");
     expect(css).toContain("display: none");
   });
 

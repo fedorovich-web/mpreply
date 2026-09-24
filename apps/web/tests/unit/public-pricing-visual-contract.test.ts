@@ -56,7 +56,7 @@ describe("approved pricing final CTA visual", () => {
 
   it("draws the individual-plan padlock shown in the approved render", () => {
     expect(pricing).toContain("pricing-custom-icon");
-    expect(integrationsCss).toContain(".pricing-custom-icon > svg");
+    expect(integrationsCss).toContain(".pricing-custom-icon > .public-icon-image");
     expect(integrationsCss).toContain("display: none");
     expect(integrationsCss).toContain(".pricing-custom-icon::before");
     expect(integrationsCss).toContain(".pricing-custom-icon::after");

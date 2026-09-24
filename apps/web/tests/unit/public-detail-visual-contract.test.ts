@@ -51,7 +51,7 @@ describe("approved marketplace detail visual", () => {
   });
 
   it("renders the status FAQ as the filled check-circle shown in the approved render", () => {
-    expect(heroCss).toContain("details:nth-of-type(3) .detail-faq-icon > svg");
+    expect(heroCss).toContain("details:nth-of-type(3) .detail-faq-icon > .public-icon-image");
     expect(heroCss).toContain("display: none");
     expect(heroCss).toContain("details:nth-of-type(3) .detail-faq-icon::before");
     expect(heroCss).toContain("content: '✓'");

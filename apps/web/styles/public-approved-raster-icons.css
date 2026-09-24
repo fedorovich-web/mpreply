@@ -1,3 +1,25 @@
+/* Raster-only public icon system from the approved 2026-09 render assets. */
+
+.public-icon-image {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: -0.12em;
+}
+
+.mockup-icon-chip > .public-icon-image,
+.contacts-render-channel-icon > .public-icon-image,
+.contacts-render-info-icon > .public-icon-image,
+.not-found-route-icon > .public-icon-image,
+.mockup-cta-strip-icon > .public-icon-image {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
 /* Selective approved raster icons from the 2026-09 inner-page renders. */
 
 .mockup-page .features-tool-card:nth-child(-n+5) .mockup-icon-chip {
@@ -8,7 +30,7 @@
   color: transparent;
 }
 
-.mockup-page .features-tool-card:nth-child(-n+5) .mockup-icon-chip > svg {
+.mockup-page .features-tool-card:nth-child(-n+5) .mockup-icon-chip > .public-icon-image {
   display: none;
 }
 
@@ -42,8 +64,8 @@
   color: transparent;
 }
 
-.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip > svg,
-.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card .mockup-icon-chip > svg {
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip > .public-icon-image,
+.mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card .mockup-icon-chip > .public-icon-image {
   display: none;
 }
 
@@ -77,8 +99,8 @@
   color: transparent;
 }
 
-.mockup-page .demo-journey .demo-journey-card .mockup-icon-chip > svg,
-.mockup-page .demo-team-tools .demo-team-tool:nth-child(1) .mockup-icon-chip > svg {
+.mockup-page .demo-journey .demo-journey-card .mockup-icon-chip > .public-icon-image,
+.mockup-page .demo-team-tools .demo-team-tool:nth-child(1) .mockup-icon-chip > .public-icon-image {
   display: none;
 }
 

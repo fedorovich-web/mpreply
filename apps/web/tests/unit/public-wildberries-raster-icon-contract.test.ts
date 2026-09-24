@@ -25,8 +25,8 @@ describe("approved Wildberries raster icon fidelity", () => {
   it("replaces only history plus the four daily-benefit icons", () => {
     expect(css).toContain(".marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip");
     expect(css).toContain(".marketplace-detail-benefits .detail-benefit-card .mockup-icon-chip");
-    expect(css).toContain(".marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip > svg");
-    expect(css).toContain(".marketplace-detail-benefits .detail-benefit-card .mockup-icon-chip > svg");
+    expect(css).toContain(".marketplace-detail-tools .detail-tool-card:nth-child(4) .mockup-icon-chip > .public-icon-image");
+    expect(css).toContain(".marketplace-detail-benefits .detail-benefit-card .mockup-icon-chip > .public-icon-image");
     expect(css).not.toContain(".marketplace-detail-tools .detail-tool-card:nth-child(1) .mockup-icon-chip");
     expect(css).not.toContain(".marketplace-detail-tools .detail-tool-card:nth-child(2) .mockup-icon-chip");
     expect(css).not.toContain(".marketplace-detail-tools .detail-tool-card:nth-child(3) .mockup-icon-chip");

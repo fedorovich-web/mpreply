@@ -13,19 +13,23 @@ describe("approved public footer variants", () => {
     expect(shell).toContain("public-footer-compact");
     expect(shell).toContain("public-footer-pricing");
     expect(shell).toContain("Ближе к вашим клиентам");
-    expect(shell).toContain("г. Майкоп, ул. Чкалова, 65,");
-    expect(shell).toContain("помещение 17А");
-    expect(shell).toContain("Ежедневно 09:00–18:00 МСК");
+    expect(shell).toContain("siteConfig.contactEmail");
   });
 
-  it("uses proper social glyphs instead of footer text placeholders", () => {
-    expect(shell).toContain('name="send"');
-    expect(shell).toContain('name="vk"');
-    expect(shell).toContain('name="play"');
-    expect(shell).not.toContain(">ТГ<");
-    expect(shell).not.toContain(">VK<");
-    expect(footerCss).toContain(".public-footer-socials > span > svg");
-    expect(footerCss).toContain("font-size: 13px");
+  it("does not publish unverified office, hours or social channels", () => {
+    for (const forbidden of [
+      "г. Майкоп",
+      "ул. Чкалова",
+      "помещение 17А",
+      "09:00–18:00",
+      'name="send"',
+      'name="vk"',
+      'name="play"',
+      ">ТГ<",
+      ">VK<",
+    ]) {
+      expect(shell).not.toContain(forbidden);
+    }
   });
 
   it("shows compact footer only on non-pricing mockup pages", () => {
