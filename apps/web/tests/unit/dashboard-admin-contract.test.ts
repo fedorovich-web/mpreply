@@ -15,10 +15,15 @@ describe("superadmin dashboard", () => {
     expect(workspace).toContain("if (!user.is_superadmin)");
   });
 
-  it("uses MPReply product language rather than legacy Respio copy", () => {
+  it("uses MPReply product language rather than legacy or developer-facing copy", () => {
     expect(page).toContain("Системная панель MPReply");
+    expect(page).toContain("Доступ суперадминистратора");
+    expect(page).toContain("Актуальные данные");
+    expect(page).toContain("Внутренняя панель");
     expect(page).not.toContain("Respio");
+    expect(page).not.toContain("Только superadmin");
     expect(workspace).not.toContain("Respio");
+    expect(workspace).not.toContain("Сводка строится только по фактическим данным системного API");
     expect(workspace).not.toContain("active + trialing");
     expect(workspace).not.toContain("usage ledger");
   });
