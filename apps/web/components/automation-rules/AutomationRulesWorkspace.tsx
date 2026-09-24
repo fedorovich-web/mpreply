@@ -225,7 +225,7 @@ function AutomationRulesWorkspaceContent({
           <strong>{rulesQuery.data?.total ?? "—"}</strong>
         </article>
         <article>
-          <span>Включено</span>
+          <span>Включено в списке</span>
           <strong>{rulesQuery.data?.items.filter((rule) => rule.is_enabled).length ?? "—"}</strong>
         </article>
         <article>
@@ -433,7 +433,7 @@ function RuleDetail({
         <div><dt>Тип обращений</dt><dd>{appliesToLabel(rule.applies_to)}</dd></div>
         <div><dt>Маркетплейс</dt><dd>{marketplaceLabel(rule.marketplace)}</dd></div>
         <div><dt>Рейтинг</dt><dd>{ratingLabel(rule.min_rating, rule.max_rating)}</dd></div>
-        <div><dt>Минимальная уверенность ИИ</dt><dd>{Math.round(rule.confidence_threshold * 100)}%</dd></div>
+        <div><dt>Насколько уверенным должен быть ответ</dt><dd>{Math.round(rule.confidence_threshold * 100)}%</dd></div>
         <div><dt>Лимиты</dt><dd>{limitLabel(rule.hourly_limit, rule.daily_limit)}</dd></div>
       </dl>
 
@@ -506,7 +506,7 @@ function RuleEditor({
       <header>
         <div>
           <p className="eyebrow">{mode === "create" ? "Новое правило" : "Редактирование"}</p>
-          <h2>{mode === "create" ? "Настройте условия и защиту" : state.name}</h2>
+          <h2>{mode === "create" ? "Настройте, когда и как отвечать" : state.name}</h2>
         </div>
       </header>
 
@@ -557,7 +557,7 @@ function RuleEditor({
         <label className="automation-field">
           Насколько уверенным должен быть ответ
           <span className="automation-field-with-suffix">
-            <input min={0} max={100} step={1} required type="number" value={state.confidenceThreshold} onChange={(e) => set("confidenceThreshold", e.target.value)} />
+            <input aria-label="Насколько уверенным должен быть ответ" min={0} max={100} step={1} required type="number" value={state.confidenceThreshold} onChange={(e) => set("confidenceThreshold", e.target.value)} />
             <span aria-hidden="true">%</span>
           </span>
         </label>
