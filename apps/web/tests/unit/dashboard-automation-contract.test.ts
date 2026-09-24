@@ -66,7 +66,7 @@ describe("automation operational workspace", () => {
 
   it("frames automation as seller decisions instead of internal machinery", () => {
     expect(page).toContain("Определите, когда MPReply может отвечать автоматически");
-    expect(page).toContain("условия, приоритет и уровень контроля");
+    expect(page).toContain("условия и порядок применения");
     expect(page).not.toContain("pipeline");
   });
 });
