@@ -28,6 +28,18 @@ describe("inbox operational workspace", () => {
     expect(styles).toContain(".inbox-pagination");
   });
 
+  it("keeps stale queue data visible when only a background refresh fails", () => {
+    expect(inbox).toContain("messagesQuery.error && !messagesQuery.data");
+    expect(inbox).toContain("messagesQuery.error && messagesQuery.data");
+    expect(inbox).toContain("inbox-refresh-error");
+    expect(inbox).toContain('tone="error"');
+    expect(inbox).toContain("actionDisabled={messagesQuery.isFetching}");
+    expect(inbox).toContain('actionLabel={messagesQuery.isFetching ? "Повторяем..." : "Повторить"}');
+    expect(inbox).not.toContain("messagesQuery.data?.total ?? 0} обращений");
+    expect(styles).toContain(".inbox-list-state");
+    expect(styles).toContain(".inbox-refresh-error");
+  });
+
   it("keeps the list-detail flow keyboard-operable and the next action explicit", () => {
     expect(inbox).toContain('aria-pressed={isSelected}');
     expect(inbox).toContain("inbox-next-step");
