@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import cast
 from uuid import UUID
 
 import jwt
@@ -51,7 +49,7 @@ def create_access_token(
 def decode_access_token_claims(token: str) -> AccessTokenClaims:
     settings = get_settings()
     try:
-        decoded: object = jwt.decode(
+        payload = jwt.decode(
             token,
             settings.auth_secret_key.get_secret_value(),
             algorithms=["HS256"],
@@ -59,9 +57,6 @@ def decode_access_token_claims(token: str) -> AccessTokenClaims:
         )
     except jwt.PyJWTError as exc:
         raise unauthorized("Invalid or expired session") from exc
-    if not isinstance(decoded, Mapping):
-        raise unauthorized("Invalid session payload")
-    payload = cast(Mapping[str, object], decoded)
 
     if payload.get("typ") != "access":
         raise unauthorized("Invalid session type")

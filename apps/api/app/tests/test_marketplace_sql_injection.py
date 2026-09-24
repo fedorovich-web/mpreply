@@ -82,6 +82,28 @@ async def test_message_filters_are_bound_as_data(value: str) -> None:
     assert params is not None
     assert value not in sql
     assert value in params.values()
-    assert f"%{value}%" in params.values()
+    assert "ESCAPE" in sql
     assert "DROP TABLE" not in sql
     assert "UNION SELECT" not in sql
+
+
+@pytest.mark.asyncio
+async def test_message_search_treats_like_metacharacters_as_literal_text() -> None:
+    organization_id = uuid4()
+    actor = User(id=uuid4(), email="member@example.test", password_hash="not-used", status="active")
+    membership = OrganizationUser(organization_id=organization_id, user_id=actor.id, role="viewer", status="active")
+    session = _Session(membership)
+
+    await MessageService(cast(AsyncSession, session)).list_messages(
+        actor=actor,
+        organization_id=organization_id,
+        marketplace=None,
+        message_type=None,
+        status=None,
+        search=r"50%_\done",
+    )
+    compiled = cast(ClauseElement, session.statements[2]).compile(dialect=postgresql.dialect())
+
+    assert "ESCAPE" in str(compiled)
+    assert compiled.params is not None
+    assert r"%50\%\_\\done%" in compiled.params.values()

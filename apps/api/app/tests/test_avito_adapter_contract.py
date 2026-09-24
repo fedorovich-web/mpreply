@@ -87,7 +87,7 @@ async def test_avito_fetches_documented_chat_and_message_contracts() -> None:
     assert chats.data.items[0].product.name == "Synthetic item"
     assert messages.ok is True and messages.data is not None
     assert messages.data.items[0].text == "Synthetic text"
-    assert transport.requests[1].url.params == {
+    assert dict(transport.requests[1].url.params) == {
         "limit": "100",
         "offset": "0",
         "unread_only": "true",
