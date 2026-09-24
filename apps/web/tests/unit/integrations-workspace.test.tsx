@@ -154,6 +154,22 @@ describe("IntegrationsWorkspace", () => {
     expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("0");
   });
 
+  it("does not call an account healthy when its access is no longer valid", async () => {
+    mockWorkspace("owner");
+    const accountWithInvalidAccess = {
+      ...account,
+      credentials_status: "invalid",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithInvalidAccess]), { status: 200 })));
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    const summary = await screen.findByLabelText("Сводка подключений");
+    expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("0");
+    expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
+    expect(screen.getByText("Требует внимания")).toBeInTheDocument();
+  });
+
   it("marks an active account as requiring attention when its latest sync failed", async () => {
     mockWorkspace("owner");
     const accountWithCurrentSyncError = {
