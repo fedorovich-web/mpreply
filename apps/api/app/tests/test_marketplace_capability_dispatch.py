@@ -24,8 +24,8 @@ from app.models.enums import Marketplace, MessageType
         ),
         (
             Marketplace.AVITO,
-            frozenset({MarketplaceStream.CHATS}),
-            frozenset({MessageType.CHAT}),
+            frozenset({MarketplaceStream.CHATS, MarketplaceStream.REVIEWS}),
+            frozenset({MessageType.CHAT, MessageType.REVIEW}),
         ),
     ],
 )

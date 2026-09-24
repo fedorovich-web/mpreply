@@ -64,6 +64,8 @@ async def test_registry_resolves_existing_review_and_question_streams() -> None:
             questions = registry.review_questions(marketplace, MarketplaceStream.QUESTIONS)
             assert reviews is questions
             assert reviews.marketplace is marketplace
+        assert registry.review_questions(Marketplace.AVITO, MarketplaceStream.REVIEWS).marketplace is Marketplace.AVITO
+        assert registry.conversations(Marketplace.AVITO).marketplace is Marketplace.AVITO
     finally:
         await clients.aclose()
 
