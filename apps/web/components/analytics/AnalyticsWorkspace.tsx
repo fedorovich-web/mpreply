@@ -174,7 +174,7 @@ export function AnalyticsWorkspace() {
                 <div className="analytics-product-list">
                   {productsQuery.data.items.slice(0, 8).map((item) => (
                     <div className="analytics-product-row" key={item.product_id}>
-                      <div><strong>{item.name}</strong><small>{item.sku ? `SKU ${item.sku}` : "Без SKU"}</small></div>
+                      <div><strong>{item.name}</strong><small>{item.sku ? `Артикул: ${item.sku}` : "Артикул не указан"}</small></div>
                       <div><span>{formatNumber(item.messages)}</span><small>{formatNumber(item.negative_reviews)} негативных</small></div>
                     </div>
                   ))}

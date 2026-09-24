@@ -265,7 +265,7 @@ export function InboxWorkspace() {
           <input
             aria-label="Поиск по обращениям"
             onChange={(event) => updateFilter("query", event.target.value)}
-            placeholder="Товар, SKU или текст"
+            placeholder="Товар, артикул или текст"
             type="search"
             value={filters.query}
           />
@@ -584,7 +584,7 @@ function MessageDetail({
         <span>Контекст товара</span>
         <p>
           {message.product
-            ? [message.product.name, message.product.sku ? `SKU ${message.product.sku}` : null, message.product.brand].filter(Boolean).join(" · ")
+            ? [message.product.name, message.product.sku ? `Артикул: ${message.product.sku}` : null, message.product.brand].filter(Boolean).join(" · ")
             : "Товар не привязан к обращению."}
         </p>
       </section>
