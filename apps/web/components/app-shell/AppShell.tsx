@@ -47,7 +47,7 @@ const navGroups: NavGroup[] = [
     id: "answers",
     label: "Ответы и автоматизация",
     items: [
-      { href: "/app/ai-assistant", label: "ИИ-ассистент", icon: "ai" },
+      { href: "/app/ai-assistant", label: "Ответы с ИИ", icon: "ai" },
       { href: "/app/automation-rules", label: "Автоматизация", icon: "automation" },
     ],
   },
@@ -219,7 +219,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="app-sidebar-footer">
           {organizations.length > 1 ? (
             <div className="app-mobile-workspace-switcher">
-              <span className="app-nav-group-label">Рабочее пространство</span>
+              <span className="app-nav-group-label">Компания</span>
               <label className="workspace-selector">
                 <span className="sr-only">Выбрать организацию</span>
                 <select
@@ -267,7 +267,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="app-topbar-title">
-            <span>{activeNavItem?.label ?? "Рабочее пространство"}</span>
+            <span>{activeNavItem?.label ?? "Кабинет"}</span>
             <strong>{activeOrganization.name}</strong>
           </div>
 

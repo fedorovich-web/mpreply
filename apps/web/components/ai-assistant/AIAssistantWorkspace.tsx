@@ -211,7 +211,7 @@ export function AIAssistantWorkspace() {
           )}
 
           {messagesQuery.data && messageTotalPages > 1 ? (
-            <nav className="ai-message-pagination" aria-label="Страницы обращений ИИ-ассистента">
+            <nav className="ai-message-pagination" aria-label="Страницы обращений для подготовки ответа">
               <button
                 aria-label="Предыдущая страница обращений"
                 className="button button-secondary button-compact"
@@ -265,7 +265,7 @@ export function AIAssistantWorkspace() {
                   </select>
                 </label>
                 <label>
-                  Правила бренда
+                  Как должен звучать ответ
                   <textarea
                     disabled={!canGenerate || generateMutation.isPending}
                     maxLength={2000}
@@ -287,9 +287,6 @@ export function AIAssistantWorkspace() {
                 {generateMutation.error ? (
                   <p className="form-error" role="alert">
                     {errorMessage(generateMutation.error)}
-                    {generateMutation.error instanceof ApiError && generateMutation.error.requestId
-                      ? ` · код запроса ${generateMutation.error.requestId}`
-                      : ""}
                   </p>
                 ) : null}
                 {canGenerate ? (
@@ -298,7 +295,7 @@ export function AIAssistantWorkspace() {
                   </button>
                 ) : (
                   <p className="ai-readonly-note">
-                    Роль {roleLabel(activeOrganization.current_user_role)} может просматривать историю, но не создавать новые черновики.
+                    С вашим уровнем доступа можно просматривать готовые варианты, но нельзя создавать новые.
                   </p>
                 )}
               </form>
@@ -430,7 +427,7 @@ function DraftResult({
           value={replyText}
         />
         {canManage && !isLocked ? (
-          <small>Отредактируйте текст при необходимости, затем передайте его в очередь ручной проверки.</small>
+          <small>Отредактируйте текст при необходимости, затем передайте его в раздел «На проверке».</small>
         ) : null}
       </label>
 
@@ -551,8 +548,7 @@ function draftTone(draft: AIDraft): BadgeTone {
 }
 
 function confidenceLabel(draft: AIDraft): string {
-  if (draft.confidence_score === null) return "Уверенность не рассчитана";
-  return `Уверенность ${Math.round(draft.confidence_score * 100)}%`;
+  return draftNeedsReview(draft) ? "Проверьте внимательнее" : "Черновик готов";
 }
 
 function errorMessage(error: unknown): string {
