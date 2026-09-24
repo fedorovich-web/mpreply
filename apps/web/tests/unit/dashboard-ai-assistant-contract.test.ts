@@ -21,6 +21,8 @@ describe("AI assistant operational workspace", () => {
   it("keeps paginated source messages reachable beyond the first API page", () => {
     expect(workspace).toContain("const [messagePage, setMessagePage] = useState(1)");
     expect(workspace).toContain("page_size: aiMessagePageSize");
+    expect(workspace).toContain("const aiMessagePageSize = 20");
+    expect(styles).toContain("max-height: 34.5rem");
     expect(workspace).toContain("aria-label={t.nextPage}");
     expect(styles).toContain(".ai-message-pagination");
   });

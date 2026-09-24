@@ -118,6 +118,7 @@ function mockWorkspace(role: "owner" | "viewer") {
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
     logoutError: null,
+    locale: "ru",
   });
 }
 
@@ -137,7 +138,7 @@ function queueResponse(status = reply.status) {
     items: [{ reply: { ...reply, status }, message, safety }],
     total: 1,
     page: 1,
-    page_size: 100,
+    page_size: 20,
   };
 }
 
@@ -159,13 +160,13 @@ describe("ReviewQueueWorkspace", () => {
     expect(screen.getByText("Контекст товара")).toBeInTheDocument();
   });
 
-  it("lets users reach review items after the first 100 results", async () => {
+  it("lets users reach review items after the first 20 results", async () => {
     mockWorkspace("owner");
     const pageTwoMessage = {
       ...message,
       id: "77777777-7777-4777-8777-777777777777",
-      external_id: "wb-message-101",
-      product: { ...message.product, id: "88888888-8888-4888-8888-888888888888", name: "Товар 101" },
+      external_id: "wb-message-21",
+      product: { ...message.product, id: "88888888-8888-4888-8888-888888888888", name: "Товар 21" },
     };
     const pageTwoReply = {
       ...reply,
@@ -178,15 +179,15 @@ describe("ReviewQueueWorkspace", () => {
         return new Response(
           JSON.stringify({
             items: [{ reply: pageTwoReply, message: pageTwoMessage, safety }],
-            total: 101,
+            total: 21,
             page: 2,
-            page_size: 100,
+            page_size: 20,
           }),
           { status: 200 },
         );
       }
       return new Response(
-        JSON.stringify({ items: [{ reply, message, safety }], total: 101, page: 1, page_size: 100 }),
+        JSON.stringify({ items: [{ reply, message, safety }], total: 21, page: 1, page_size: 20 }),
         { status: 200 },
       );
     });
@@ -198,7 +199,7 @@ describe("ReviewQueueWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Следующая страница" }));
 
     expect(await screen.findByText("Страница 2 из 2")).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: /Товар 101/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Товар 21/ })).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes("page=2"))).toBe(true);
   });
 

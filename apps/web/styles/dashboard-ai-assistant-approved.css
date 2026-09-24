@@ -7,7 +7,7 @@
 
 .ai-assistant-page-header {
 	align-items: end;
-	margin-bottom: clamp(1.5rem, 2.6vw, 2.25rem);
+	margin-bottom: 1.2rem;
 }
 
 .ai-assistant-page-header > div:first-child {
@@ -16,14 +16,14 @@
 
 .ai-assistant-page-header h1 {
 	max-width: 23ch;
-	font-size: clamp(2rem, 3vw, 3.15rem);
+	font-size: clamp(2rem, 3vw, 3rem);
 	letter-spacing: -0.04em;
 }
 
 .ai-assistant-page-header > div:first-child > p:last-child {
 	max-width: 54rem;
 	color: var(--color-text-secondary);
-	line-height: 1.65;
+	line-height: 1.55;
 }
 
 .ai-workspace {
@@ -58,7 +58,7 @@
 	grid-template-columns: minmax(17rem, 0.72fr) minmax(20rem, 0.92fr) minmax(25rem, 1.36fr);
 	gap: 0;
 	align-items: stretch;
-	min-height: 45rem;
+	min-height: 42rem;
 	border: 1px solid var(--color-border-subtle);
 	border-radius: var(--radius-xl);
 	background: var(--color-bg-surface);
@@ -231,7 +231,7 @@
 
 .ai-message-list {
 	gap: 0;
-	max-height: 45rem;
+	max-height: 34.5rem;
 	padding-right: 0;
 	overscroll-behavior: contain;
 }
@@ -477,7 +477,7 @@
 @media (min-width: 1181px) {
 	.ai-generate-panel,
 	.ai-result-panel {
-		max-height: 48rem;
+		max-height: 44rem;
 		overflow-y: auto;
 		overscroll-behavior: contain;
 	}

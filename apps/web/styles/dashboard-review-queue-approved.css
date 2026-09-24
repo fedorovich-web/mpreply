@@ -7,7 +7,7 @@
 
 .review-queue-page-header {
 	align-items: end;
-	margin-bottom: clamp(1.5rem, 2.6vw, 2.25rem);
+	margin-bottom: 1.2rem;
 }
 
 .review-queue-page-header > div:first-child {
@@ -16,14 +16,14 @@
 
 .review-queue-page-header h1 {
 	max-width: 24ch;
-	font-size: clamp(2rem, 3vw, 3.15rem);
+	font-size: clamp(2rem, 3vw, 3rem);
 	letter-spacing: -0.04em;
 }
 
 .review-queue-page-header > div:first-child > p:last-child {
 	max-width: 54rem;
 	color: var(--color-text-secondary);
-	line-height: 1.65;
+	line-height: 1.55;
 }
 
 .review-queue-state {
@@ -159,7 +159,7 @@
 .review-queue-workspace {
 	display: grid;
 	grid-template-columns: minmax(19rem, 0.74fr) minmax(34rem, 1.66fr);
-	min-height: 44rem;
+	min-height: 42rem;
 	align-items: stretch;
 	border: 1px solid var(--color-border-subtle);
 	border-radius: var(--radius-xl);
@@ -197,7 +197,7 @@
 .review-queue-stack {
 	display: grid;
 	gap: 0;
-	max-height: 46rem;
+	max-height: 37.5rem;
 	margin-top: 0;
 	overflow-y: auto;
 	overscroll-behavior: contain;
@@ -531,7 +531,7 @@
 
 @media (min-width: 981px) {
 	.review-editor-card {
-		max-height: 48rem;
+		max-height: 44rem;
 		overflow-y: auto;
 		overscroll-behavior: contain;
 	}

@@ -25,7 +25,8 @@ describe("private AI assistant locale separation", () => {
   });
 
   it("provides a dedicated English AI route", () => {
-    expect(enPage).toContain("<AIAssistantWorkspace />");
+    expect(enPage).toContain("<ScopedAIAssistantWorkspace />");
+    expect(enPage).toContain('components/ai-assistant/ScopedAIAssistantWorkspace');
     expect(enPage).toContain("<h1>AI replies</h1>");
     expect(enPage).not.toMatch(/[А-Яа-яЁё]/);
   });

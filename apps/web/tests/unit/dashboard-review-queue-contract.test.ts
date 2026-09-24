@@ -58,6 +58,8 @@ describe("review queue operational workspace", () => {
   it("keeps paginated review work reachable beyond the first API page", () => {
     expect(workspace).toContain("const [page, setPage] = useState(1)");
     expect(workspace).toContain("page_size: reviewQueuePageSize");
+    expect(workspace).toContain("const reviewQueuePageSize = 20");
+    expect(styles).toContain("max-height: 37.5rem");
     expect(workspace).toContain("aria-label={t.nextPage}");
     expect(styles).toContain(".review-queue-pagination");
   });

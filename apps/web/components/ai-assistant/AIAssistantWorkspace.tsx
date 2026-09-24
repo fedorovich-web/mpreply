@@ -18,7 +18,7 @@ import { Badge, type BadgeTone } from "../ui/Badge";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
-const aiMessagePageSize = 50;
+const aiMessagePageSize = 20;
 const toneOptions: Record<Locale, ReadonlyArray<{ value: Tone; label: string }>> = {
   ru: [
     { value: "neutral", label: "Нейтральный" },

@@ -62,18 +62,18 @@ const firstMessage = {
   updated_at: timestamp,
 };
 
-const message51 = {
+const message21 = {
   ...firstMessage,
   id: "66666666-6666-4666-8666-666666666666",
   product_id: "77777777-7777-4777-8777-777777777777",
-  external_id: "message-51",
-  customer_text: "Пятьдесят первое обращение",
+  external_id: "message-21",
+  customer_text: "Двадцать первое обращение",
   product: {
     ...firstMessage.product,
     id: "77777777-7777-4777-8777-777777777777",
-    external_id: "product-51",
-    sku: "SKU-51",
-    name: "Товар 51",
+    external_id: "product-21",
+    sku: "SKU-21",
+    name: "Товар 21",
   },
 };
 const secondOrganizationMessage = {
@@ -116,6 +116,7 @@ function mockActiveOrganization(activeOrganization = organization) {
     logout: vi.fn(),
     isLoggingOut: false,
     logoutError: null,
+    locale: "ru",
   });
 }
 
@@ -127,14 +128,14 @@ function renderWorkspace() {
     if (url.includes("/api/messages")) {
       if (url.includes(secondOrganization.id)) {
         if (url.includes("page=2")) {
-          return new Response(JSON.stringify({ items: [], total: 1, page: 2, page_size: 50 }), { status: 200 });
+          return new Response(JSON.stringify({ items: [], total: 1, page: 2, page_size: 20 }), { status: 200 });
         }
-        return new Response(JSON.stringify({ items: [secondOrganizationMessage], total: 1, page: 1, page_size: 50 }), { status: 200 });
+        return new Response(JSON.stringify({ items: [secondOrganizationMessage], total: 1, page: 1, page_size: 20 }), { status: 200 });
       }
       if (url.includes("page=2")) {
-        return new Response(JSON.stringify({ items: [message51], total: 51, page: 2, page_size: 50 }), { status: 200 });
+        return new Response(JSON.stringify({ items: [message21], total: 21, page: 2, page_size: 20 }), { status: 200 });
       }
-      return new Response(JSON.stringify({ items: [firstMessage], total: 51, page: 1, page_size: 50 }), { status: 200 });
+      return new Response(JSON.stringify({ items: [firstMessage], total: 21, page: 1, page_size: 20 }), { status: 200 });
     }
     if (url.includes("/api/ai/drafts")) {
       return new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 });
@@ -155,7 +156,7 @@ function renderWorkspace() {
 }
 
 describe("AIAssistantWorkspace message pagination", () => {
-  it("lets the user reach messages after the first 50 results", async () => {
+  it("lets the user reach messages after the first 20 results", async () => {
     const { fetchMock } = renderWorkspace();
 
     expect(await screen.findByText("Страница 1 из 2")).toBeInTheDocument();
@@ -164,7 +165,7 @@ describe("AIAssistantWorkspace message pagination", () => {
     fireEvent.click(screen.getByRole("button", { name: "Следующая страница обращений" }));
 
     expect(await screen.findByText("Страница 2 из 2")).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: /Товар 51/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Товар 21/ })).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes("page=2"))).toBe(true);
   });
 
@@ -183,6 +184,6 @@ describe("AIAssistantWorkspace message pagination", () => {
     );
 
     expect(await screen.findByRole("button", { name: /Товар второго магазина/ })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Товар 51/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Товар 21/ })).not.toBeInTheDocument();
   });
 });

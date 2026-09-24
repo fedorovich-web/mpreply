@@ -17,7 +17,7 @@ import { EmptyState } from "../ui/EmptyState";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
-const reviewQueuePageSize = 100;
+const reviewQueuePageSize = 20;
 
 const statusLabels: Record<Locale, Record<string, string>> = {
   ru: {
