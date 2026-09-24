@@ -201,7 +201,7 @@ export default function FeaturesPage() {
               <div className="mockup-trust-row" aria-label="Getting started">
                 <span>14-day trial</span>
                 <span>Review before sending</span>
-                <span>Quick setup</span>
+                <span>Shared customer-message queue</span>
               </div>
             </div>
 
@@ -370,7 +370,7 @@ export default function FeaturesPage() {
                   Explore integrations →
                 </Link>
                 <div className="mockup-trust-row" aria-label="Getting started">
-                  <span>Quick setup</span>
+                  <span>Shared customer-message queue</span>
                   <span>14-day trial</span>
                   <span>Review before sending</span>
                 </div>

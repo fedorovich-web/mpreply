@@ -78,7 +78,7 @@ describe("current public page composition", () => {
     expect(demo).toContain("demo-scenarios");
     expect(demo).toContain("demo-process");
     expect(demo).toContain("demo-team-tools");
-    for (const label of ["Получение обращения", "Анализ контекста", "AI-черновик", "Проверка и отправка"]) {
+    for (const label of ["Получение обращения", "Анализ контекста", "ИИ-черновик", "Проверка и отправка"]) {
       expect(demo).toContain(label);
     }
   });
@@ -116,7 +116,7 @@ describe("current public page composition", () => {
   it("keeps readable anchored legal layouts without changing the draft substance", () => {
     expect(privacy).toContain("legal-approved-layout");
     expect(privacy).toContain('id="privacy-data"');
-    expect(privacy).toContain("До production-запуска требуется юридическая финализация.");
+    expect(privacy).toContain("До коммерческого запуска требуется юридическая финализация.");
     expect(terms).toContain("legal-approved-layout");
     expect(terms).toContain('id="terms-acceptable-use"');
     expect(terms).toContain("Не является финальной офертой.");

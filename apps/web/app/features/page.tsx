@@ -201,7 +201,7 @@ export default function FeaturesPage() {
               <div className="mockup-trust-row" aria-label="Условия старта">
                 <span>14 дней бесплатно</span>
                 <span>Контроль перед отправкой</span>
-                <span>Быстрое подключение</span>
+                <span>Единая очередь обращений</span>
               </div>
             </div>
 
@@ -370,7 +370,7 @@ export default function FeaturesPage() {
                   Посмотреть интеграции →
                 </Link>
                 <div className="mockup-trust-row" aria-label="Условия старта">
-                  <span>Быстрое подключение</span>
+                  <span>Единая очередь обращений</span>
                   <span>14 дней бесплатно</span>
                   <span>Контроль перед отправкой</span>
                 </div>

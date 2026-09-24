@@ -64,7 +64,7 @@ describe("approved public mockup fidelity", () => {
     expect(marketplaceLanding).not.toContain("Поддержка 24/7");
     expect(pricing).not.toContain("до 5 маркетплейсов");
     expect(pricing).toContain("до 4 маркетплейсов");
-    expect(pricing).toContain("Поддерживаем ключевые маркетплейсы");
+    expect(pricing).toContain("4 площадки в MPReply");
   });
 
   it("uses one reusable polished SVG icon component instead of unicode glyph icons", () => {
@@ -91,13 +91,13 @@ describe("approved public mockup fidelity", () => {
     expect(features).toContain("Все возможности MPReply для работы с обращениями покупателей");
     for (const label of [
       "Единая очередь обращений",
-      "AI-подготовка ответов",
-      "Контроль качества",
-      "Автоответы и сценарии",
-      "Шаблоны ответов",
+      "ИИ-черновики с контекстом",
+      "Контроль перед отправкой",
+      "Автоматизация по правилам",
+      "Назначение обращений",
       "Аналитика",
-      "Командная работа",
-      "История действий",
+      "Статусы обработки",
+      "Поиск и фильтры",
     ]) expect(features).toContain(label);
   });
 
@@ -123,9 +123,10 @@ describe("approved public mockup fidelity", () => {
     expect(marketplaceLanding).toContain("marketplace-detail-steps");
     expect(marketplaceLanding).toContain("marketplace-detail-benefits");
     expect(marketplaceLanding).toContain("marketplace-detail-faq");
-    for (const label of ["Единая очередь обращений", "AI-черновик ответа", "Контроль качества", "История действий"]) {
-      expect(marketplaceLanding).toContain(label);
-    }
+    expect(marketplaceLanding).toContain("getMarketplaceDetailContent(marketplace.key)");
+    expect(marketplaceLanding).toContain("detailContent.tools");
+    expect(marketplaceLanding).toContain("detailContent.steps");
+    expect(marketplaceLanding).toContain("detailContent.benefits");
   });
 
   it("implements pricing as coded plan cards, not a raster pricing image", () => {
@@ -133,7 +134,7 @@ describe("approved public mockup fidelity", () => {
     expect(pricing).toContain("pricing-card-grid");
     expect(pricing).toContain("pricing-comparison");
     expect(pricing).toContain("pricing-faq");
-    expect(pricing).toContain("Простые и выгодные тарифы");
+    expect(pricing).toContain("Простые тарифы для разных объёмов работы");
     expect(pricing).toContain("Ежегодно · -20%");
     for (const price of ["490 ₽", "990 ₽", "1 990 ₽"]) expect(pricing).toContain(price);
     for (const plan of ["Старт", "Профессиональный", "Бизнес"]) expect(pricing).toContain(plan);
@@ -146,10 +147,10 @@ describe("approved public mockup fidelity", () => {
     expect(demo).toContain("demo-process");
     expect(demo).toContain("demo-team-tools");
     expect(demo).toContain("Посмотрите, как MPReply ведёт обращение от получения до ответа");
-    expect(demo).toContain("Попробуйте разные сценарии");
+    expect(demo).toContain("Посмотрите разные типы обращений");
     expect(demo).toContain("Одно обращение — весь процесс наглядно");
-    expect(demo).toContain("Что увидит ваша команда");
-    for (const label of ["Получение обращения", "Анализ контекста", "AI-черновик", "Проверка и отправка"]) {
+    expect(demo).toContain("Что доступно команде");
+    for (const label of ["Получение обращения", "Анализ контекста", "ИИ-черновик", "Проверка и отправка"]) {
       expect(demo).toContain(label);
     }
   });

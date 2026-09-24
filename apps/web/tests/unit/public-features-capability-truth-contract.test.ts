@@ -18,6 +18,7 @@ describe("public features capability truth contract", () => {
       "Проверка тональности, грамотности и соответствия правилам маркетплейсов",
       "точные и персонализированные ответы",
       "Следите за рейтингом, динамикой отзывов",
+      "Быстрое подключение",
     ]) {
       expect(features).not.toContain(unsupported);
     }
@@ -34,6 +35,7 @@ describe("public features capability truth contract", () => {
       "Поиск и фильтры",
       "Автоматизация",
       "На проверке",
+      "Единая очередь обращений",
     ]) {
       expect(features).toContain(supported);
     }

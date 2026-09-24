@@ -153,9 +153,7 @@
 
 /* Pricing: lavender pill kickers used throughout the approved render. */
 .mockup-page .pricing-mockup-hero .mockup-eyebrow,
-.mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow,
-.mockup-page .pricing-faq-heading .mockup-eyebrow,
-.mockup-page .pricing-final-cta .mockup-eyebrow {
+.mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow {
   display: inline-flex;
   width: fit-content;
   align-items: center;
@@ -177,91 +175,13 @@
 }
 
 .mockup-page .pricing-mockup-hero .mockup-eyebrow::before,
-.mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow::before,
-.mockup-page .pricing-faq-heading .mockup-eyebrow::before,
-.mockup-page .pricing-final-cta .mockup-eyebrow::before {
+.mockup-page:has(.pricing-mockup-hero) .render-section-head .mockup-eyebrow::before {
   width: 6px;
   height: 6px;
   flex: 0 0 6px;
   border: 1.5px solid currentColor;
   border-radius: 999px;
   content: "";
-}
-
-/* Pricing: helper annotation beside the period switch. */
-.mockup-page .pricing-toggle-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.mockup-page .pricing-hero-note {
-  position: absolute;
-  left: calc(100% + 72px);
-  top: -10px;
-  width: 190px;
-  color: var(--color-brand-primary);
-  font-family: "Comic Sans MS", "Segoe Print", cursive;
-  font-size: .72rem;
-  font-weight: 700;
-  line-height: 1.1;
-  text-align: left;
-  transform: rotate(-7deg);
-  pointer-events: none;
-}
-
-.mockup-page .pricing-hero-note span {
-  position: absolute;
-  left: -37px;
-  bottom: -16px;
-  font-family: var(--font-family-sans);
-  font-size: 26px;
-  font-weight: 500;
-  transform: rotate(18deg);
-}
-
-/* Pricing: compact individual-plan strip with the leading icon from the render. */
-.mockup-page .pricing-custom-strip {
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: center;
-}
-
-.mockup-page .pricing-custom-icon {
-  display: grid;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  border: 1px solid #e2e0ff;
-  border-radius: 13px;
-  background: #eeedff;
-  color: var(--color-brand-primary);
-  font-size: 22px;
-}
-
-.mockup-page .pricing-custom-strip > div {
-  min-width: 0;
-}
-
-.mockup-page .pricing-custom-strip > div > span {
-  display: block;
-  margin-top: 4px;
-  line-height: 1.45;
-}
-
-/* Pricing FAQ heading is left-aligned with the help link at the right. */
-.mockup-page .pricing-faq-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 22px;
-}
-
-.mockup-page .pricing-faq-heading .render-section-head {
-  max-width: none;
-  margin: 0;
-  text-align: left;
 }
 
 .mockup-page .pricing-all-questions {
@@ -474,29 +394,10 @@
   margin-top: 12px;
 }
 
-@media (max-width: 860px) {
-  .mockup-page .pricing-hero-note {
-    display: none;
-  }
-
-  .mockup-page .pricing-custom-strip {
-    grid-template-columns: 46px minmax(0, 1fr);
-  }
-
-  .mockup-page .pricing-custom-strip .button {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-}
-
 @media (max-width: 720px) {
   .mockup-page .public-section:has(.features-benefit-grid) {
     width: calc(100% - 24px);
     border-radius: 20px;
-  }
-
-  .mockup-page .pricing-faq-heading {
-    align-items: flex-start;
   }
 
   .mockup-page .detail-faq-summary {
