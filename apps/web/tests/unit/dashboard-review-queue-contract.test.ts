@@ -17,6 +17,34 @@ describe("review queue operational workspace", () => {
     expect(workspace).toContain("/send");
   });
 
+  it("keeps loaded review work visible through background refresh failures", () => {
+    expect(workspace).toContain("queueQuery.error && !queueQuery.data");
+    expect(workspace).toContain("queueQuery.error && queueQuery.data");
+    expect(workspace).toContain("review-queue-refresh-error");
+    expect(workspace).toContain('actionDisabled={queueQuery.isFetching}');
+    expect(workspace).toContain('actionLabel={queueQuery.isFetching ? "Повторяем..." : "Повторить"}');
+    expect(styles).toContain(".review-queue-state");
+    expect(styles).toContain(".review-queue-refresh-error");
+  });
+
+  it("keeps backend implementation wording out of seller-facing action errors", () => {
+    expect(workspace).toContain("function reviewActionErrorMessage");
+    expect(workspace).toContain("Ответ нельзя одобрить в текущем виде");
+    expect(workspace).toContain("Ответ нельзя отправить в текущем виде");
+    expect(workspace).toContain("Ответ уже изменился");
+    expect(workspace).not.toContain("{errorMessage(activeError)}");
+  });
+
+  it("moves mobile selection to the review editor while respecting reduced motion", () => {
+    expect(workspace).toContain("const editorPanelRef = useRef");
+    expect(workspace).toContain("function selectReviewItem");
+    expect(workspace).toContain('window.matchMedia("(max-width: 980px)")');
+    expect(workspace).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+    expect(workspace).toContain("editorPanelRef.current?.scrollIntoView");
+    expect(styles).toContain(".review-editor-slot");
+    expect(styles).toContain("scroll-margin-top:");
+  });
+
   it("keeps review context and reason next to the decision", () => {
     expect(workspace).toContain('aria-pressed={item.reply.id === selected?.reply.id}');
     expect(workspace).toContain("Почему требуется внимание");
