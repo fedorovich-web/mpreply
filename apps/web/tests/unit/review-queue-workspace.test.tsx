@@ -202,6 +202,55 @@ describe("ReviewQueueWorkspace", () => {
     expect(fetchMock.mock.calls.some(([input]) => String(input).includes("page=2"))).toBe(true);
   });
 
+  it("keeps loaded review work visible when a manual refresh fails", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async () => {
+      requests += 1;
+      if (requests === 1) {
+        return new Response(JSON.stringify(queueResponse()), { status: 200 });
+      }
+      return new Response(JSON.stringify({ detail: "temporary failure" }), { status: 503 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByText("Почему требуется внимание")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Обновить" }));
+
+    const refreshError = await screen.findByRole("alert");
+    expect(refreshError).toHaveTextContent("Не удалось обновить очередь проверки");
+    expect(screen.getByText("Почему требуется внимание")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
+  });
+
+  it("translates a safety approval conflict into seller-facing copy", async () => {
+    mockWorkspace("owner");
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/replies/review-queue")) {
+        return new Response(JSON.stringify(queueResponse()), { status: 200 });
+      }
+      if (url.includes(`/api/replies/${reply.id}/approve`) && init?.method === "POST") {
+        return new Response(
+          JSON.stringify({ detail: "SafetyGate blocked this reply. Reject it back to draft and edit the text" }),
+          { status: 409 },
+        );
+      }
+      throw new Error(`Unexpected request: ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Одобрить ответ" }));
+
+    const error = await screen.findByRole("alert");
+    expect(error).toHaveTextContent("Ответ нельзя одобрить в текущем виде");
+    expect(error).not.toHaveTextContent("SafetyGate");
+  });
+
   it("shows viewer role as read-only before any mutation is attempted", async () => {
     mockWorkspace("viewer");
     vi.stubGlobal(
