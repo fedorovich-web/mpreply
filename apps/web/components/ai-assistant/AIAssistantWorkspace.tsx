@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
@@ -28,7 +28,7 @@ const toneOptions = [
 type Tone = (typeof toneOptions)[number]["value"];
 type ReviewHandoffState =
   | { status: "submitted" }
-  | { status: "draft_created"; error: unknown };
+  | { status: "draft_created"; error: unknown; replyId: string };
 
 export function AIAssistantWorkspace() {
   const { activeOrganization } = useWorkspace();
@@ -41,6 +41,7 @@ export function AIAssistantWorkspace() {
   const [knowledgeBase, setKnowledgeBase] = useState("");
   const [latestDraft, setLatestDraft] = useState<AIDraft | null>(null);
   const [reviewHandoff, setReviewHandoff] = useState<ReviewHandoffState | null>(null);
+  const generatePanelRef = useRef<HTMLElement>(null);
 
   const messagesQuery = useQuery({
     queryKey: ["ai-assistant", "messages", activeOrganization.id, messagePage],
@@ -76,6 +77,14 @@ export function AIAssistantWorkspace() {
       ),
     enabled: Boolean(selectedMessage),
   });
+
+  const invalidateReplyWork = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["review-queue", activeOrganization.id] }),
+      queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] }),
+      queryClient.invalidateQueries({ queryKey: ["ai-assistant", "messages", activeOrganization.id] }),
+    ]);
+  };
 
   const generateMutation = useMutation({
     mutationFn: () => {
@@ -120,7 +129,7 @@ export function AIAssistantWorkspace() {
         });
         return { status: "submitted" } as ReviewHandoffState;
       } catch (error) {
-        return { status: "draft_created", error } as ReviewHandoffState;
+        return { status: "draft_created", error, replyId: created.reply.id } as ReviewHandoffState;
       }
     },
     onMutate: () => {
@@ -128,11 +137,23 @@ export function AIAssistantWorkspace() {
     },
     onSuccess: async (handoff) => {
       setReviewHandoff(handoff);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["review-queue", activeOrganization.id] }),
-        queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] }),
-        queryClient.invalidateQueries({ queryKey: ["ai-assistant", "messages", activeOrganization.id] }),
-      ]);
+      await invalidateReplyWork();
+    },
+  });
+
+  const retryReviewMutation = useMutation({
+    mutationFn: (replyId: string) =>
+      apiRequest(`/api/replies/${replyId}/submit-review`, manualReplyWorkflowSchema, { method: "POST" }),
+    onSuccess: async () => {
+      setReviewHandoff({ status: "submitted" });
+      await invalidateReplyWork();
+    },
+    onError: (error) => {
+      setReviewHandoff((current) =>
+        current?.status === "draft_created"
+          ? { ...current, error }
+          : current,
+      );
     },
   });
 
@@ -146,6 +167,16 @@ export function AIAssistantWorkspace() {
     setReviewHandoff(null);
     generateMutation.reset();
     reviewMutation.reset();
+    retryReviewMutation.reset();
+
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      generatePanelRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
   }
 
   function changeMessagePage(nextPage: number) {
@@ -154,6 +185,7 @@ export function AIAssistantWorkspace() {
     setReviewHandoff(null);
     generateMutation.reset();
     reviewMutation.reset();
+    retryReviewMutation.reset();
     setMessagePage(nextPage);
   }
 
@@ -179,22 +211,58 @@ export function AIAssistantWorkspace() {
               <span className="panel-kicker">Шаг 1</span>
               <strong id="ai-message-list-title">Выберите обращение</strong>
             </div>
-            {messagesQuery.data ? <Badge>{messagesQuery.data.total}</Badge> : null}
+            {messagesQuery.data ? (
+              <div className="ai-message-heading-actions">
+                <Badge>{messagesQuery.data.total}</Badge>
+                <button
+                  className="button button-secondary button-compact"
+                  disabled={messagesQuery.isFetching}
+                  onClick={() => void messagesQuery.refetch()}
+                  type="button"
+                >
+                  {messagesQuery.isFetching ? "Обновляем..." : "Обновить обращения"}
+                </button>
+              </div>
+            ) : null}
           </div>
 
-          {messagesQuery.isPending ? (
-            <AIState title="Загружаем обращения" description="Получаем отзывы, вопросы и сообщения покупателей." />
-          ) : messagesQuery.error ? (
+          {messagesQuery.error && messagesQuery.data ? (
+            <div className="ai-refresh-error" role="alert">
+              <div>
+                <strong>Не удалось обновить обращения</strong>
+                <p>Показываем ранее загруженные обращения. Можно продолжать работу или попробовать обновить ещё раз.</p>
+              </div>
+              <button
+                className="button button-secondary button-compact"
+                disabled={messagesQuery.isFetching}
+                onClick={() => void messagesQuery.refetch()}
+                type="button"
+              >
+                {messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
+              </button>
+            </div>
+          ) : null}
+
+          {messagesQuery.isPending && !messagesQuery.data ? (
             <AIState
-              title="Не удалось загрузить обращения"
-              description={errorMessage(messagesQuery.error)}
-              actionLabel="Повторить"
+              description="Получаем отзывы, вопросы и сообщения покупателей."
+              title="Загружаем обращения"
+              tone="loading"
+            />
+          ) : messagesQuery.error && !messagesQuery.data ? (
+            <AIState
+              actionDisabled={messagesQuery.isFetching}
+              actionLabel={messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
+              description={userErrorMessage(messagesQuery.error, "Не удалось загрузить обращения.")}
               onAction={() => void messagesQuery.refetch()}
+              title="Не удалось загрузить обращения"
+              tone="error"
             />
           ) : !messagesQuery.data || messagesQuery.data.items.length === 0 ? (
             <AIState
+              description="После подключения маркетплейса здесь появятся отзывы, вопросы и сообщения, для которых можно подготовить ответ."
               title="Обращений пока нет"
-              description="После синхронизации здесь появятся отзывы, вопросы и сообщения, для которых можно подготовить ответ."
+              tone="empty"
             />
           ) : (
             <div className="ai-message-list" role="list">
@@ -235,7 +303,7 @@ export function AIAssistantWorkspace() {
           ) : null}
         </section>
 
-        <section className="ai-panel ai-generate-panel" aria-labelledby="ai-generate-title">
+        <section ref={generatePanelRef} className="ai-panel ai-generate-panel" aria-labelledby="ai-generate-title">
           <div className="panel-heading">
             <span className="panel-kicker">Шаг 2</span>
             <strong id="ai-generate-title">Контекст и стиль</strong>
@@ -286,7 +354,7 @@ export function AIAssistantWorkspace() {
                 </label>
                 {generateMutation.error ? (
                   <p className="form-error" role="alert">
-                    {errorMessage(generateMutation.error)}
+                    {userErrorMessage(generateMutation.error, "Не удалось подготовить ответ. Попробуйте ещё раз.")}
                   </p>
                 ) : null}
                 {canGenerate ? (
@@ -301,7 +369,11 @@ export function AIAssistantWorkspace() {
               </form>
             </>
           ) : (
-            <AIState title="Выберите обращение" description="Сначала выберите отзыв, вопрос или сообщение в списке слева." />
+            <AIState
+              description="Сначала выберите отзыв, вопрос или сообщение в списке."
+              title="Выберите обращение"
+              tone="neutral"
+            />
           )}
         </section>
 
@@ -315,15 +387,25 @@ export function AIAssistantWorkspace() {
           </div>
 
           {!selectedMessage ? (
-            <AIState title="Нет выбранного обращения" description="Результат появится после выбора обращения." />
+            <AIState
+              description="Готовый вариант появится после выбора обращения."
+              title="Нет выбранного обращения"
+              tone="neutral"
+            />
           ) : draftsQuery.isPending && !displayedDraft ? (
-            <AIState title="Загружаем историю" description="Получаем предыдущие черновики для этого обращения." />
+            <AIState
+              description="Получаем ранее подготовленные варианты для этого обращения."
+              title="Загружаем готовые варианты"
+              tone="loading"
+            />
           ) : draftsQuery.error && !displayedDraft ? (
             <AIState
-              title="Не удалось загрузить черновики"
-              description={errorMessage(draftsQuery.error)}
-              actionLabel="Повторить"
+              actionDisabled={draftsQuery.isFetching}
+              actionLabel={draftsQuery.isFetching ? "Повторяем..." : "Повторить"}
+              description={userErrorMessage(draftsQuery.error, "Не удалось загрузить готовые варианты.")}
               onAction={() => void draftsQuery.refetch()}
+              title="Не удалось загрузить готовые варианты"
+              tone="error"
             />
           ) : displayedDraft ? (
             <DraftResult
@@ -331,14 +413,20 @@ export function AIAssistantWorkspace() {
               draft={displayedDraft}
               handoff={reviewHandoff}
               isGenerating={generateMutation.isPending}
+              isRetryingReview={retryReviewMutation.isPending}
               isSubmitting={reviewMutation.isPending}
               key={displayedDraft.id}
               onRegenerate={() => generateMutation.mutate()}
+              onRetryReview={(replyId) => retryReviewMutation.mutate(replyId)}
               onSubmit={(replyText) => reviewMutation.mutate({ draft: displayedDraft, replyText })}
               submitError={reviewMutation.error}
             />
           ) : (
-            <AIState title="Черновиков ещё нет" description="Подготовьте первый ответ для выбранного обращения." />
+            <AIState
+              description="Подготовьте первый вариант ответа для выбранного обращения."
+              title="Готовых вариантов ещё нет"
+              tone="empty"
+            />
           )}
         </section>
       </div>
@@ -397,19 +485,23 @@ function DraftResult({
   draft,
   canManage,
   isGenerating,
+  isRetryingReview,
   isSubmitting,
   handoff,
   submitError,
   onRegenerate,
+  onRetryReview,
   onSubmit,
 }: {
   draft: AIDraft;
   canManage: boolean;
   isGenerating: boolean;
+  isRetryingReview: boolean;
   isSubmitting: boolean;
   handoff: ReviewHandoffState | null;
   submitError: unknown;
   onRegenerate: () => void;
+  onRetryReview: (replyId: string) => void;
   onSubmit: (replyText: string) => void;
 }) {
   const [replyText, setReplyText] = useState(draft.draft_text);
@@ -450,14 +542,25 @@ function DraftResult({
       {handoff?.status === "draft_created" ? (
         <div className="form-error ai-review-handoff" role="alert">
           <div>
-            <strong>Черновик сохранён, но передача на проверку не завершилась</strong>
-            <span>{errorMessage(handoff.error)}</span>
+            <strong>Ответ сохранён, но пока не передан на проверку</strong>
+            <span>{userErrorMessage(handoff.error, "Не удалось передать ответ на проверку. Попробуйте ещё раз.")}</span>
           </div>
-          <Link className="button button-secondary" href="/app/review-queue">Открыть очередь проверки</Link>
+          <button
+            className="button button-secondary"
+            disabled={isRetryingReview}
+            onClick={() => onRetryReview(handoff.replyId)}
+            type="button"
+          >
+            {isRetryingReview ? "Передаём..." : "Попробовать ещё раз"}
+          </button>
         </div>
       ) : null}
 
-      {submitError ? <p className="form-error" role="alert">{errorMessage(submitError)}</p> : null}
+      {submitError ? (
+        <p className="form-error" role="alert">
+          {userErrorMessage(submitError, "Не удалось сохранить ответ. Попробуйте ещё раз.")}
+        </p>
+      ) : null}
 
       {canManage && !isLocked ? (
         <div className="ai-draft-actions">
@@ -484,25 +587,42 @@ function DraftResult({
 }
 
 function AIState({
-  title,
-  description,
+  actionDisabled = false,
   actionLabel,
+  description,
   onAction,
+  title,
+  tone,
 }: {
-  title: string;
-  description: string;
+  actionDisabled?: boolean;
   actionLabel?: string;
+  description: string;
   onAction?: () => void;
+  title: string;
+  tone: "empty" | "error" | "loading" | "neutral";
 }) {
   return (
-    <div className="workspace-inline-state" aria-live="polite">
-      <strong>{title}</strong>
-      <p>{description}</p>
-      {actionLabel && onAction ? (
-        <button className="button button-secondary button-compact" onClick={onAction} type="button">
-          {actionLabel}
-        </button>
-      ) : null}
+    <div
+      aria-busy={tone === "loading"}
+      aria-live="polite"
+      className={"ai-state ai-state-" + tone}
+      role={tone === "error" ? "alert" : "status"}
+    >
+      <span className="ai-state-mark" aria-hidden="true" />
+      <div>
+        <strong>{title}</strong>
+        <p>{description}</p>
+        {actionLabel && onAction ? (
+          <button
+            className="button button-secondary button-compact"
+            disabled={actionDisabled}
+            onClick={onAction}
+            type="button"
+          >
+            {actionLabel}
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -529,16 +649,6 @@ function messageTypeLabel(value: string): string {
   return value;
 }
 
-function roleLabel(value: string): string {
-  const labels: Record<string, string> = {
-    owner: "владельца",
-    admin: "администратора",
-    manager: "менеджера",
-    viewer: "наблюдателя",
-  };
-  return labels[value] ?? value;
-}
-
 function draftNeedsReview(draft: AIDraft): boolean {
   return draft.safety_flags_json.length > 0 || (draft.confidence_score !== null && draft.confidence_score < 0.75);
 }
@@ -551,7 +661,16 @@ function confidenceLabel(draft: AIDraft): string {
   return draftNeedsReview(draft) ? "Проверьте внимательнее" : "Черновик готов";
 }
 
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
+function userErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Сессия истекла. Войдите снова.";
+    if (error.status === 403) return "Недостаточно прав для этого действия.";
+    if (error.status === 404) return "Нужные данные не найдены. Обновите страницу и попробуйте снова.";
+    if (error.status === 409) return "Данные изменились. Обновите страницу и повторите действие.";
+    if (error.status === 422) return "Проверьте введённые данные и попробуйте снова.";
+    if (error.status === 429) return "Слишком много действий подряд. Подождите немного и попробуйте снова.";
+    if (error.status >= 500) return fallback;
+    return fallback;
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
 }
