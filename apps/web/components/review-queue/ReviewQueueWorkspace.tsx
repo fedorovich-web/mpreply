@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
@@ -48,6 +48,7 @@ export function ReviewQueueWorkspace() {
   const canManageReview = writeRoles.has(activeOrganization.current_user_role);
   const [selectedId, setSelectedId] = useState("");
   const [page, setPage] = useState(1);
+  const editorPanelRef = useRef<HTMLDivElement>(null);
 
   const queuePath = buildApiQuery("/api/replies/review-queue", {
     organization_id: activeOrganization.id,
@@ -73,22 +74,38 @@ export function ReviewQueueWorkspace() {
     ]);
   };
 
-  if (queueQuery.isPending) {
+  function selectReviewItem(replyId: string) {
+    setSelectedId(replyId);
+    if (!window.matchMedia("(max-width: 980px)").matches) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      editorPanelRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  if (queueQuery.isPending && !queueQuery.data) {
     return (
       <QueueState
-        title="Загружаем очередь проверки"
         description="Получаем ответы, которые требуют решения перед отправкой."
+        title="Загружаем очередь проверки"
+        tone="loading"
       />
     );
   }
 
-  if (queueQuery.error) {
+  if (queueQuery.error && !queueQuery.data) {
     return (
       <QueueState
-        title="Не удалось загрузить очередь проверки"
+        actionDisabled={queueQuery.isFetching}
+        actionLabel={queueQuery.isFetching ? "Повторяем..." : "Повторить"}
         description={errorMessage(queueQuery.error)}
-        actionLabel="Повторить"
         onAction={() => void queueQuery.refetch()}
+        title="Не удалось загрузить очередь проверки"
+        tone="error"
       />
     );
   }
@@ -96,10 +113,11 @@ export function ReviewQueueWorkspace() {
   if (items.length === 0 && page > 1) {
     return (
       <QueueState
-        title="На этой странице больше нет ответов"
-        description="Вернитесь на предыдущую страницу очереди."
         actionLabel="Предыдущая страница"
+        description="Вернитесь на предыдущую страницу очереди."
         onAction={() => setPage((current) => Math.max(1, current - 1))}
+        title="На этой странице больше нет ответов"
+        tone="neutral"
       />
     );
   }
@@ -131,13 +149,30 @@ export function ReviewQueueWorkspace() {
           </button>
         </div>
 
+        {queueQuery.error && queueQuery.data ? (
+          <div className="review-queue-refresh-error" role="alert">
+            <div>
+              <strong>Не удалось обновить очередь проверки</strong>
+              <p>Показываем последнюю успешно загруженную версию очереди.</p>
+            </div>
+            <button
+              className="button button-secondary button-compact"
+              disabled={queueQuery.isFetching}
+              onClick={() => void queueQuery.refetch()}
+              type="button"
+            >
+              {queueQuery.isFetching ? "Повторяем..." : "Повторить"}
+            </button>
+          </div>
+        ) : null}
+
         <div className="review-queue-stack" role="list">
           {items.map((item) => (
             <div key={item.reply.id} role="listitem">
               <button
                 aria-pressed={item.reply.id === selected?.reply.id}
                 className={item.reply.id === selected?.reply.id ? "review-queue-card review-queue-card-active" : "review-queue-card"}
-                onClick={() => setSelectedId(item.reply.id)}
+                onClick={() => selectReviewItem(item.reply.id)}
                 type="button"
               >
                 <span className="review-queue-card-topline">
@@ -186,12 +221,14 @@ export function ReviewQueueWorkspace() {
       </aside>
 
       {selected ? (
-        <ReviewEditor
-          canManage={canManageReview}
-          item={selected}
-          key={`${selected.reply.id}:${selected.reply.revision}:${selected.reply.status}`}
-          onChanged={invalidateQueue}
-        />
+        <div ref={editorPanelRef} className="review-editor-slot">
+          <ReviewEditor
+            canManage={canManageReview}
+            item={selected}
+            key={`${selected.reply.id}:${selected.reply.revision}:${selected.reply.status}`}
+            onChanged={invalidateQueue}
+          />
+        </div>
       ) : null}
     </section>
   );
@@ -293,8 +330,11 @@ function ReviewEditor({
         />
       </label>
 
-      <section className="review-attention-reason" aria-label="Причина внимания">
-        <span>Почему требуется внимание</span>
+      <section
+        className={"review-attention-reason review-attention-reason-" + reviewAttentionTone(item)}
+        aria-label="Причина внимания"
+      >
+        <span>{item.reply.status === "approved" ? "Статус решения" : "Почему требуется внимание"}</span>
         <p>{reviewAttentionSummary(item)}</p>
         {attentionReasons.length > 0 ? (
           <ul>
@@ -340,7 +380,7 @@ function ReviewEditor({
         </p>
       ) : null}
 
-      {activeError ? <p className="form-error" role="alert">{errorMessage(activeError)}</p> : null}
+      {activeError ? <p className="form-error" role="alert">{reviewActionErrorMessage(activeError)}</p> : null}
 
       {canManage ? (
         <div className="detail-actions review-editor-actions">
@@ -393,26 +433,43 @@ function ReviewEditor({
 }
 
 function QueueState({
-  title,
-  description,
+  actionDisabled = false,
   actionLabel,
+  description,
   onAction,
+  title,
+  tone,
 }: {
-  title: string;
-  description: string;
+  actionDisabled?: boolean;
   actionLabel?: string;
+  description: string;
   onAction?: () => void;
+  title: string;
+  tone: "error" | "loading" | "neutral";
 }) {
   return (
-    <div className="workspace-inline-state" aria-live="polite">
-      <strong>{title}</strong>
-      <p>{description}</p>
-      {actionLabel && onAction ? (
-        <button className="button button-secondary button-compact" onClick={onAction} type="button">
-          {actionLabel}
-        </button>
-      ) : null}
-    </div>
+    <section
+      aria-busy={tone === "loading"}
+      aria-live="polite"
+      className={"review-queue-state review-queue-state-" + tone}
+      role={tone === "error" ? "alert" : "status"}
+    >
+      <span className="review-queue-state-mark" aria-hidden="true" />
+      <div>
+        <strong>{title}</strong>
+        <p>{description}</p>
+        {actionLabel && onAction ? (
+          <button
+            className="button button-secondary button-compact"
+            disabled={actionDisabled}
+            onClick={onAction}
+            type="button"
+          >
+            {actionLabel}
+          </button>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
@@ -424,6 +481,15 @@ function workflowStep(status: string): "draft" | "waiting_review" | "approved" {
   if (status === "waiting_review") return "waiting_review";
   if (status === "approved") return "approved";
   return "draft";
+}
+
+function reviewAttentionTone(item: ReviewQueueItem): "danger" | "neutral" | "success" | "warning" {
+  if (item.safety.decision === "block") return "danger";
+  if (item.reply.status === "approved") return "success";
+  if (item.reply.status === "waiting_review" || item.reply.status === "manual_review_required" || item.safety.decision === "manual_review") {
+    return "warning";
+  }
+  return "neutral";
 }
 
 function reviewAttentionSummary(item: ReviewQueueItem): string {
@@ -492,6 +558,30 @@ function messageTypeLabel(value: string): string {
   if (value === "question") return "Вопрос";
   if (value === "chat") return "Сообщение";
   return value;
+}
+
+function reviewActionErrorMessage(error: unknown): string {
+  const message = errorMessage(error);
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("safetygate blocked this reply at send time")) {
+    return "Ответ нельзя отправить в текущем виде. Верните его на доработку и проверьте текст.";
+  }
+  if (normalized.includes("safetygate blocked this reply")) {
+    return "Ответ нельзя одобрить в текущем виде. Верните его на доработку и исправьте текст.";
+  }
+  if (normalized.includes("stale reply revision")) {
+    return "Ответ уже изменился. Обновите очередь и повторите действие.";
+  }
+  if (
+    normalized.includes("only replies waiting for review") ||
+    normalized.includes("reply must be a draft") ||
+    normalized.includes("reply must be approved")
+  ) {
+    return "Статус ответа уже изменился. Обновите очередь перед следующим действием.";
+  }
+
+  return message;
 }
 
 function errorMessage(error: unknown): string {
