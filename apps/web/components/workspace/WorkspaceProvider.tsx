@@ -96,14 +96,14 @@ const workspaceCopy = {
     createWorkspace: "Создайте рабочее пространство",
     onboardingText: (email: string) =>
       <>Аккаунт <strong>{email}</strong> готов. Назовите магазин, бренд или команду — после этого перейдём к подключению маркетплейсов.</>,
-    readyIntegrations: "Готовые интеграции",
+    readyIntegrations: "Площадки MPReply",
     yandex: "Яндекс Маркет",
     avito: "Авито",
-    integrationsCount: "4 готовые интеграции",
+    integrationsCount: "4 площадки в одном рабочем процессе",
     workspaceName: "Название рабочего пространства",
     workspacePlaceholder: "Например, Seller Group",
     creating: "Создаём...",
-    createAndConnect: "Создать и подключить маркетплейсы",
+    createAndConnect: "Создать и перейти к подключениям",
   },
   en: {
     opening: "Opening your workspace",
@@ -124,14 +124,14 @@ const workspaceCopy = {
     createWorkspace: "Create your workspace",
     onboardingText: (email: string) =>
       <>Your account <strong>{email}</strong> is ready. Name the store, brand, or team, then continue to marketplace connections.</>,
-    readyIntegrations: "Marketplace integrations",
+    readyIntegrations: "MPReply marketplaces",
     yandex: "Yandex Market",
     avito: "Avito",
-    integrationsCount: "4 marketplace integrations",
+    integrationsCount: "4 marketplaces in one workflow",
     workspaceName: "Workspace name",
     workspacePlaceholder: "For example, Seller Group",
     creating: "Creating...",
-    createAndConnect: "Create workspace and connect marketplaces",
+    createAndConnect: "Create workspace and continue to integrations",
   },
 } as const;
 

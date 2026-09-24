@@ -10,16 +10,20 @@ const styles = readFileSync(join(root, "styles/workspace-onboarding-approved.css
 describe("first workspace onboarding", () => {
   it("keeps organization creation on the existing live API and continues to integrations", () => {
     expect(provider).toContain('apiRequest("/api/organizations"');
-    expect(provider).toContain('router.replace("/app/integrations")');
+    expect(provider).toContain('router.replace(localizedPath(locale, "/app/integrations"))');
   });
 
   it("sets the correct product expectation before the first marketplace connection", () => {
     expect(provider).toContain("MPReply");
-    expect(provider).toContain("4 готовые интеграции");
+    expect(provider).toContain("4 площадки в одном рабочем процессе");
+    expect(provider).toContain("4 marketplaces in one workflow");
+    expect(provider).not.toContain("4 готовые интеграции");
     expect(provider).toContain("Wildberries");
     expect(provider).toContain("Ozon");
     expect(provider).toContain("Яндекс Маркет");
     expect(provider).toContain("Авито");
+    expect(provider).toContain("Создать и перейти к подключениям");
+    expect(provider).toContain("Create workspace and continue to integrations");
   });
 
   it("uses the canonical MPReply brand mark instead of a separate onboarding glyph", () => {
