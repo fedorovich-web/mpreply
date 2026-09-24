@@ -38,6 +38,10 @@ describe("marketplace integration API contracts", () => {
     expect(() => marketplaceAccountSchema.parse({ ...account, organization_id: "not-a-uuid" })).toThrow();
   });
 
+  it("rejects an unknown response mode instead of silently changing it", () => {
+    expect(() => marketplaceAccountSchema.parse({ ...account, default_response_mode: "unknown" })).toThrow();
+  });
+
   it("accepts validation, rotation and sync result contracts", () => {
     expect(
       marketplaceAccountValidateSchema.parse({

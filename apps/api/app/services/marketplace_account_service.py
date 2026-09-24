@@ -122,6 +122,7 @@ class MarketplaceAccountService:
         account_id: UUID,
         display_name: str | None = None,
         seller_id: str | None = None,
+        seller_id_supplied: bool = False,
         default_response_mode: ResponseMode | None = None,
         status: str | None = None,
     ) -> MarketplaceAccount:
@@ -133,14 +134,23 @@ class MarketplaceAccountService:
         )
         if display_name is not None:
             account.display_name = display_name.strip()
-        if seller_id is not None:
-            account.seller_id = seller_id.strip() or None
         if default_response_mode is not None:
             account.default_response_mode = default_response_mode.value
         if status is not None:
             if status not in {"active", "disabled", "pending_validation"}:
                 raise bad_request("Unsupported marketplace account status")
             account.status = status
+        if seller_id_supplied:
+            normalized_seller_id = seller_id.strip() if seller_id is not None else ""
+            new_seller_id = normalized_seller_id or None
+            if new_seller_id != account.seller_id:
+                account.seller_id = new_seller_id
+                account.scopes_json = {}
+                if account.credentials_status != "revoked":
+                    account.credentials_status = "pending_validation"
+                    account.status = "pending_validation"
+                else:
+                    account.status = "disabled"
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.updated",
@@ -153,11 +163,11 @@ class MarketplaceAccountService:
                     k
                     for k, v in {
                         "display_name": display_name,
-                        "seller_id": seller_id,
+                        "seller_id": seller_id if seller_id_supplied else None,
                         "default_response_mode": default_response_mode.value if default_response_mode else None,
                         "status": status,
                     }.items()
-                    if v is not None
+                    if v is not None or (k == "seller_id" and seller_id_supplied)
                 ]
             },
         )
@@ -176,6 +186,7 @@ class MarketplaceAccountService:
         account.credentials_last_rotated_at = datetime.now(UTC)
         account.credentials_status = "pending_validation"
         account.status = "pending_validation"
+        account.scopes_json = {}
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.rotated",
@@ -196,6 +207,7 @@ class MarketplaceAccountService:
         )
         account.credentials_status = "revoked"
         account.status = "disabled"
+        account.scopes_json = {}
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.revoked",
@@ -220,6 +232,8 @@ class MarketplaceAccountService:
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
+        if account.credentials_status == "revoked":
+            raise conflict("Rotate revoked credentials before validation")
         try:
             marketplace = Marketplace(account.marketplace)
             adapter = registry.credentials(marketplace)

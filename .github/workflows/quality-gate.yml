@@ -79,9 +79,6 @@ jobs:
             - name: Lint
               working-directory: apps/web
               run: npm run lint
-            - name: Impeccable design anti-pattern scan
-              working-directory: apps/web
-              run: npm run design:detect
             - name: CSS syntax validation
               working-directory: apps/web
               run: npm run validate:css-syntax

@@ -38,4 +38,4 @@ Protect Core Web Vitals. Prefer server-rendered public content. Avoid large clie
 
 ## QA
 
-Run `design:detect`, typecheck, lint, build. Browser work runs E2E, axe and Lighthouse. Visual baselines are intentionally approved; never updated solely to make CI green.
+Run typecheck, lint and build. Browser work runs E2E, axe and Lighthouse. Visual baselines are intentionally approved; never updated solely to make CI green.

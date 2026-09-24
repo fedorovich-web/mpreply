@@ -2565,7 +2565,7 @@ h1 {
 
 /* Live marketplace integrations workspace */
 .integrations-workspace,
-.wildberries-workspace {
+.marketplace-workspace {
 	display: grid;
 	gap: var(--space-5);
 }
@@ -2593,7 +2593,6 @@ h1 {
 }
 
 .integration-summary-card span,
-.integration-unavailable-note,
 .integration-account-button small,
 .field-optional,
 .integration-health-grid dt {
@@ -2677,7 +2676,7 @@ h1 {
 	color: var(--color-warning-text);
 }
 
-.wildberries-layout {
+.marketplace-layout {
 	display: grid;
 	grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.35fr);
 	gap: var(--space-4);
@@ -2808,7 +2807,7 @@ h1 {
 }
 
 @media (max-width: 1080px) {
-	.wildberries-layout {
+	.marketplace-layout {
 		grid-template-columns: 1fr;
 	}
 }

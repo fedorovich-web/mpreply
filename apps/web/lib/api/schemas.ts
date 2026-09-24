@@ -214,7 +214,7 @@ export const marketplaceAccountSchema = z.object({
   credentials_masked: z.string().min(1),
   credentials_status: z.string().min(1),
   scopes_json: z.record(z.string(), z.unknown()),
-  default_response_mode: z.string().min(1),
+  default_response_mode: z.enum(["inherit", "auto", "semi_auto"]),
   last_success_sync_at: timestampSchema.nullable(),
   last_error_sync_at: timestampSchema.nullable(),
   error_count: z.number().int().nonnegative(),
