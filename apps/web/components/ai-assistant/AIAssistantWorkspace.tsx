@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
+import { localizedPath, type Locale } from "../../lib/i18n";
 import {
   aiDraftListSchema,
   aiDraftSchema,
@@ -18,20 +19,205 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
 const aiMessagePageSize = 50;
-const toneOptions = [
-  { value: "neutral", label: "Нейтральный" },
-  { value: "friendly", label: "Доброжелательный" },
-  { value: "formal", label: "Официальный" },
-  { value: "apologetic", label: "Эмпатичный / с извинением" },
-] as const;
+const toneOptions: Record<Locale, ReadonlyArray<{ value: Tone; label: string }>> = {
+  ru: [
+    { value: "neutral", label: "Нейтральный" },
+    { value: "friendly", label: "Доброжелательный" },
+    { value: "formal", label: "Официальный" },
+    { value: "apologetic", label: "Эмпатичный / с извинением" },
+  ],
+  en: [
+    { value: "neutral", label: "Neutral" },
+    { value: "friendly", label: "Friendly" },
+    { value: "formal", label: "Formal" },
+    { value: "apologetic", label: "Empathetic / apologetic" },
+  ],
+};
 
-type Tone = (typeof toneOptions)[number]["value"];
+const aiCopy = {
+  ru: {
+    chooseFirst: "Сначала выберите обращение.",
+    changedMessage: "Выбранное обращение изменилось. Повторно откройте нужное обращение.",
+    workflow: "Рабочий процесс",
+    workflowTitle: "Обращение → черновик → проверка",
+    workflowDescription: "Контекст обращения, настройки ответа и готовый текст остаются рядом — без переключения между экранами.",
+    canGenerate: "Можно готовить ответы",
+    readOnly: "Только просмотр",
+    step1: "Шаг 1",
+    chooseMessage: "Выберите обращение",
+    refreshing: "Обновляем...",
+    refreshMessages: "Обновить обращения",
+    refreshError: "Не удалось обновить обращения",
+    staleMessages: "Показываем ранее загруженные обращения. Можно продолжать работу или попробовать обновить ещё раз.",
+    retrying: "Повторяем...",
+    retry: "Повторить",
+    loadingMessagesDescription: "Получаем отзывы, вопросы и сообщения покупателей.",
+    loadingMessages: "Загружаем обращения",
+    loadMessagesFallback: "Не удалось загрузить обращения.",
+    loadMessagesTitle: "Не удалось загрузить обращения",
+    emptyMessagesDescription: "После подключения маркетплейса здесь появятся отзывы, вопросы и сообщения, для которых можно подготовить ответ.",
+    emptyMessagesTitle: "Обращений пока нет",
+    pagesAria: "Страницы обращений для подготовки ответа",
+    previousPage: "Предыдущая страница обращений",
+    back: "Назад",
+    page: "Страница",
+    of: "из",
+    nextPage: "Следующая страница обращений",
+    next: "Далее",
+    step2: "Шаг 2",
+    contextStyle: "Контекст и стиль",
+    settingsAria: "Настройки подготовки черновика ответа",
+    tone: "Тон ответа",
+    brandRules: "Как должен звучать ответ",
+    brandPlaceholder: "Например: обращаться на Вы, не обещать скидки, не использовать эмодзи",
+    facts: "Факты для ответа",
+    factsPlaceholder: "Комплектация, гарантия, доставка или другие факты, которые важно учесть",
+    generateFallback: "Не удалось подготовить ответ. Попробуйте ещё раз.",
+    generating: "Готовим ответ...",
+    generate: "Подготовить черновик",
+    readonlyNote: "С вашим уровнем доступа можно просматривать готовые варианты, но нельзя создавать новые.",
+    chooseFirstDescription: "Сначала выберите отзыв, вопрос или сообщение в списке.",
+    step3: "Шаг 3",
+    reviewDraft: "Проверьте готовый ответ",
+    noSelectionDescription: "Готовый вариант появится после выбора обращения.",
+    noSelectionTitle: "Нет выбранного обращения",
+    loadingDraftsDescription: "Получаем ранее подготовленные варианты для этого обращения.",
+    loadingDraftsTitle: "Загружаем готовые варианты",
+    loadDraftsFallback: "Не удалось загрузить готовые варианты.",
+    loadDraftsTitle: "Не удалось загрузить готовые варианты",
+    noDraftDescription: "Подготовьте первый вариант ответа для выбранного обращения.",
+    noDraftTitle: "Готовых вариантов ещё нет",
+    noProduct: "Без карточки товара",
+    marketplace: "Маркетплейс",
+    type: "Тип",
+    product: "Товар",
+    noProductContext: "Контекст товара отсутствует",
+    replyForReview: "Ответ для проверки",
+    editHint: "Отредактируйте текст при необходимости, затем передайте его в раздел «На проверке».",
+    needsReview: "Нужна дополнительная проверка",
+    passed: "Проверка пройдена",
+    done: "Готово",
+    submitted: "Ответ передан на проверку",
+    openReviewQueue: "Открыть очередь проверки",
+    draftSavedNotSubmitted: "Ответ сохранён, но пока не передан на проверку",
+    handoffFallback: "Не удалось передать ответ на проверку. Попробуйте ещё раз.",
+    submitting: "Передаём...",
+    tryAgain: "Попробовать ещё раз",
+    submitFallback: "Не удалось сохранить ответ. Попробуйте ещё раз.",
+    generatingVariant: "Готовим вариант...",
+    regenerate: "Подготовить другой вариант",
+    submitReview: "Передать на проверку",
+    yandex: "Яндекс Маркет",
+    avito: "Авито",
+    review: "Отзыв",
+    question: "Вопрос",
+    chat: "Сообщение",
+    confidenceReview: "Проверьте внимательнее",
+    confidenceReady: "Черновик готов",
+    unauthorized: "Сессия истекла. Войдите снова.",
+    forbidden: "Недостаточно прав для этого действия.",
+    notFound: "Нужные данные не найдены. Обновите страницу и попробуйте снова.",
+    conflict: "Данные изменились. Обновите страницу и повторите действие.",
+    invalid: "Проверьте введённые данные и попробуйте снова.",
+    rateLimit: "Слишком много действий подряд. Подождите немного и попробуйте снова.",
+  },
+  en: {
+    chooseFirst: "Choose a customer message first.",
+    changedMessage: "The selected customer message changed. Open the message you want to work with again.",
+    workflow: "Workflow",
+    workflowTitle: "Customer message → draft → review",
+    workflowDescription: "Keep customer context, reply settings, and the prepared text together without switching between screens.",
+    canGenerate: "Drafting enabled",
+    readOnly: "View only",
+    step1: "Step 1",
+    chooseMessage: "Choose a customer message",
+    refreshing: "Refreshing...",
+    refreshMessages: "Refresh messages",
+    refreshError: "Could not refresh customer messages",
+    staleMessages: "Showing previously loaded messages. You can continue working or try refreshing again.",
+    retrying: "Retrying...",
+    retry: "Retry",
+    loadingMessagesDescription: "Loading reviews, questions, and customer messages.",
+    loadingMessages: "Loading messages",
+    loadMessagesFallback: "Could not load customer messages.",
+    loadMessagesTitle: "Could not load customer messages",
+    emptyMessagesDescription: "After a marketplace is connected, supported reviews, questions, and messages that can receive a drafted reply will appear here.",
+    emptyMessagesTitle: "No customer messages yet",
+    pagesAria: "Customer-message pages for reply drafting",
+    previousPage: "Previous customer-message page",
+    back: "Back",
+    page: "Page",
+    of: "of",
+    nextPage: "Next customer-message page",
+    next: "Next",
+    step2: "Step 2",
+    contextStyle: "Context and reply style",
+    settingsAria: "Reply-draft settings",
+    tone: "Reply tone",
+    brandRules: "How the reply should sound",
+    brandPlaceholder: "For example: use a professional tone, do not promise discounts, avoid emoji",
+    facts: "Facts to use in the reply",
+    factsPlaceholder: "Package contents, warranty, delivery, or other verified facts the reply should use",
+    generateFallback: "Could not prepare a reply. Try again.",
+    generating: "Preparing reply...",
+    generate: "Prepare draft",
+    readonlyNote: "Your access level can view prepared replies but cannot generate new ones.",
+    chooseFirstDescription: "Choose a review, question, or customer message from the list first.",
+    step3: "Step 3",
+    reviewDraft: "Review the prepared reply",
+    noSelectionDescription: "A prepared reply will appear after you choose a customer message.",
+    noSelectionTitle: "No customer message selected",
+    loadingDraftsDescription: "Loading previously prepared drafts for this customer message.",
+    loadingDraftsTitle: "Loading prepared drafts",
+    loadDraftsFallback: "Could not load prepared drafts.",
+    loadDraftsTitle: "Could not load prepared drafts",
+    noDraftDescription: "Prepare the first reply draft for the selected customer message.",
+    noDraftTitle: "No prepared drafts yet",
+    noProduct: "No linked product",
+    marketplace: "Marketplace",
+    type: "Type",
+    product: "Product",
+    noProductContext: "Product context unavailable",
+    replyForReview: "Reply for review",
+    editHint: "Edit the text if needed, then submit it to the review queue.",
+    needsReview: "Additional review required",
+    passed: "Checks passed",
+    done: "Done",
+    submitted: "Reply submitted for review",
+    openReviewQueue: "Open review queue",
+    draftSavedNotSubmitted: "Reply saved but not yet submitted for review",
+    handoffFallback: "Could not submit the reply for review. Try again.",
+    submitting: "Submitting...",
+    tryAgain: "Try again",
+    submitFallback: "Could not save the reply. Try again.",
+    generatingVariant: "Preparing another draft...",
+    regenerate: "Prepare another draft",
+    submitReview: "Submit for review",
+    yandex: "Yandex Market",
+    avito: "Avito",
+    review: "Review",
+    question: "Question",
+    chat: "Message",
+    confidenceReview: "Review carefully",
+    confidenceReady: "Draft ready",
+    unauthorized: "Your session expired. Log in again.",
+    forbidden: "You do not have permission for this action.",
+    notFound: "The required data could not be found. Refresh the page and try again.",
+    conflict: "The data changed. Refresh the page and try again.",
+    invalid: "Check the entered data and try again.",
+    rateLimit: "Too many actions in a short time. Wait a moment and try again.",
+  },
+} as const;
+
+type Tone = "neutral" | "friendly" | "formal" | "apologetic";
 type ReviewHandoffState =
   | { status: "submitted" }
   | { status: "draft_created"; error: unknown; replyId: string };
 
 export function AIAssistantWorkspace() {
-  const { activeOrganization } = useWorkspace();
+  const { activeOrganization, locale } = useWorkspace();
+  const t = aiCopy[locale];
+  const localizedToneOptions = toneOptions[locale];
   const queryClient = useQueryClient();
   const canGenerate = writeRoles.has(activeOrganization.current_user_role);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
@@ -88,7 +274,7 @@ export function AIAssistantWorkspace() {
 
   const generateMutation = useMutation({
     mutationFn: () => {
-      if (!selectedMessage) throw new Error("Сначала выберите обращение.");
+      if (!selectedMessage) throw new Error(t.chooseFirst);
       return apiRequest("/api/ai/drafts/generate", aiDraftSchema, {
         method: "POST",
         body: {
@@ -111,7 +297,7 @@ export function AIAssistantWorkspace() {
   const reviewMutation = useMutation({
     mutationFn: async ({ draft, replyText }: { draft: AIDraft; replyText: string }) => {
       if (!selectedMessage || selectedMessage.id !== draft.message_id) {
-        throw new Error("Выбранное обращение изменилось. Повторно откройте нужное обращение.");
+        throw new Error(t.changedMessage);
       }
 
       const created = await apiRequest("/api/replies/manual", manualReplyWorkflowSchema, {
@@ -193,14 +379,14 @@ export function AIAssistantWorkspace() {
     <section className="ai-workspace" aria-labelledby="ai-workspace-title">
       <header className="ai-workspace-toolbar">
         <div>
-          <p className="eyebrow">Рабочий процесс</p>
-          <h2 id="ai-workspace-title">Обращение → черновик → проверка</h2>
+          <p className="eyebrow">{t.workflow}</p>
+          <h2 id="ai-workspace-title">{t.workflowTitle}</h2>
           <p>
-            Контекст обращения, настройки ответа и готовый текст остаются рядом — без переключения между экранами.
+            {t.workflowDescription}
           </p>
         </div>
         <Badge tone={canGenerate ? "success" : "neutral"}>
-          {canGenerate ? "Можно готовить ответы" : "Только просмотр"}
+          {canGenerate ? t.canGenerate : t.readOnly}
         </Badge>
       </header>
 
@@ -208,8 +394,8 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-message-panel" aria-labelledby="ai-message-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Шаг 1</span>
-              <strong id="ai-message-list-title">Выберите обращение</strong>
+              <span className="panel-kicker">{t.step1}</span>
+              <strong id="ai-message-list-title">{t.chooseMessage}</strong>
             </div>
             {messagesQuery.data ? (
               <div className="ai-message-heading-actions">
@@ -220,7 +406,7 @@ export function AIAssistantWorkspace() {
                   onClick={() => void messagesQuery.refetch()}
                   type="button"
                 >
-                  {messagesQuery.isFetching ? "Обновляем..." : "Обновить обращения"}
+                  {messagesQuery.isFetching ? t.refreshing : t.refreshMessages}
                 </button>
               </div>
             ) : null}
@@ -229,8 +415,8 @@ export function AIAssistantWorkspace() {
           {messagesQuery.error && messagesQuery.data ? (
             <div className="ai-refresh-error" role="alert">
               <div>
-                <strong>Не удалось обновить обращения</strong>
-                <p>Показываем ранее загруженные обращения. Можно продолжать работу или попробовать обновить ещё раз.</p>
+                <strong>{t.refreshError}</strong>
+                <p>{t.staleMessages}</p>
               </div>
               <button
                 className="button button-secondary button-compact"
@@ -238,30 +424,30 @@ export function AIAssistantWorkspace() {
                 onClick={() => void messagesQuery.refetch()}
                 type="button"
               >
-                {messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
+                {messagesQuery.isFetching ? t.retrying : t.retry}
               </button>
             </div>
           ) : null}
 
           {messagesQuery.isPending && !messagesQuery.data ? (
             <AIState
-              description="Получаем отзывы, вопросы и сообщения покупателей."
-              title="Загружаем обращения"
+              description={t.loadingMessagesDescription}
+              title={t.loadingMessages}
               tone="loading"
             />
           ) : messagesQuery.error && !messagesQuery.data ? (
             <AIState
               actionDisabled={messagesQuery.isFetching}
-              actionLabel={messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
-              description={userErrorMessage(messagesQuery.error, "Не удалось загрузить обращения.")}
+              actionLabel={messagesQuery.isFetching ? t.retrying : t.retry}
+              description={userErrorMessage(messagesQuery.error, t.loadMessagesFallback, locale)}
               onAction={() => void messagesQuery.refetch()}
-              title="Не удалось загрузить обращения"
+              title={t.loadMessagesTitle}
               tone="error"
             />
           ) : !messagesQuery.data || messagesQuery.data.items.length === 0 ? (
             <AIState
-              description="После подключения маркетплейса здесь появятся отзывы, вопросы и сообщения, для которых можно подготовить ответ."
-              title="Обращений пока нет"
+              description={t.emptyMessagesDescription}
+              title={t.emptyMessagesTitle}
               tone="empty"
             />
           ) : (
@@ -272,6 +458,7 @@ export function AIAssistantWorkspace() {
                     active={selectedMessage?.id === message.id}
                     message={message}
                     onSelect={() => selectMessage(message.id)}
+                    locale={locale}
                   />
                 </div>
               ))}
@@ -279,25 +466,25 @@ export function AIAssistantWorkspace() {
           )}
 
           {messagesQuery.data && messageTotalPages > 1 ? (
-            <nav className="ai-message-pagination" aria-label="Страницы обращений для подготовки ответа">
+            <nav className="ai-message-pagination" aria-label={t.pagesAria}>
               <button
-                aria-label="Предыдущая страница обращений"
+                aria-label={t.previousPage}
                 className="button button-secondary button-compact"
                 disabled={messagePage <= 1 || messagesQuery.isFetching}
                 onClick={() => changeMessagePage(Math.max(1, messagePage - 1))}
                 type="button"
               >
-                Назад
+                {t.back}
               </button>
-              <span aria-live="polite">Страница {messagePage} из {messageTotalPages}</span>
+              <span aria-live="polite">{t.page} {messagePage} {t.of} {messageTotalPages}</span>
               <button
-                aria-label="Следующая страница обращений"
+                aria-label={t.nextPage}
                 className="button button-secondary button-compact"
                 disabled={messagePage >= messageTotalPages || messagesQuery.isFetching}
                 onClick={() => changeMessagePage(Math.min(messageTotalPages, messagePage + 1))}
                 type="button"
               >
-                Далее
+                {t.next}
               </button>
             </nav>
           ) : null}
@@ -305,73 +492,73 @@ export function AIAssistantWorkspace() {
 
         <section ref={generatePanelRef} className="ai-panel ai-generate-panel" aria-labelledby="ai-generate-title">
           <div className="panel-heading">
-            <span className="panel-kicker">Шаг 2</span>
-            <strong id="ai-generate-title">Контекст и стиль</strong>
+            <span className="panel-kicker">{t.step2}</span>
+            <strong id="ai-generate-title">{t.contextStyle}</strong>
           </div>
 
           {selectedMessage ? (
             <>
-              <MessageContext message={selectedMessage} />
+              <MessageContext message={selectedMessage} locale={locale} />
               <form
                 className="settings-form ai-form"
-                aria-label="Настройки подготовки черновика ответа"
+                aria-label={t.settingsAria}
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (canGenerate) generateMutation.mutate();
                 }}
               >
                 <label>
-                  Тон ответа
+                  {t.tone}
                   <select
                     disabled={!canGenerate || generateMutation.isPending}
                     onChange={(event) => setTone(event.target.value as Tone)}
                     value={tone}
                   >
-                    {toneOptions.map((option) => (
+                    {localizedToneOptions.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
                 </label>
                 <label>
-                  Как должен звучать ответ
+                  {t.brandRules}
                   <textarea
                     disabled={!canGenerate || generateMutation.isPending}
                     maxLength={2000}
                     onChange={(event) => setBrandRules(event.target.value)}
-                    placeholder="Например: обращаться на Вы, не обещать скидки, не использовать эмодзи"
+                    placeholder={t.brandPlaceholder}
                     value={brandRules}
                   />
                 </label>
                 <label>
-                  Факты для ответа
+                  {t.facts}
                   <textarea
                     disabled={!canGenerate || generateMutation.isPending}
                     maxLength={4000}
                     onChange={(event) => setKnowledgeBase(event.target.value)}
-                    placeholder="Комплектация, гарантия, доставка или другие факты, которые важно учесть"
+                    placeholder={t.factsPlaceholder}
                     value={knowledgeBase}
                   />
                 </label>
                 {generateMutation.error ? (
                   <p className="form-error" role="alert">
-                    {userErrorMessage(generateMutation.error, "Не удалось подготовить ответ. Попробуйте ещё раз.")}
+                    {userErrorMessage(generateMutation.error, t.generateFallback, locale)}
                   </p>
                 ) : null}
                 {canGenerate ? (
                   <button className="button button-primary" disabled={generateMutation.isPending} type="submit">
-                    {generateMutation.isPending ? "Готовим ответ..." : "Подготовить черновик"}
+                    {generateMutation.isPending ? t.generating : t.generate}
                   </button>
                 ) : (
                   <p className="ai-readonly-note">
-                    С вашим уровнем доступа можно просматривать готовые варианты, но нельзя создавать новые.
+                    {t.readonlyNote}
                   </p>
                 )}
               </form>
             </>
           ) : (
             <AIState
-              description="Сначала выберите отзыв, вопрос или сообщение в списке."
-              title="Выберите обращение"
+              description={t.chooseFirstDescription}
+              title={t.chooseMessage}
               tone="neutral"
             />
           )}
@@ -380,31 +567,31 @@ export function AIAssistantWorkspace() {
         <section className="ai-panel ai-result-panel" aria-labelledby="ai-result-title">
           <div className="panel-heading panel-heading-row">
             <div>
-              <span className="panel-kicker">Шаг 3</span>
-              <strong id="ai-result-title">Проверьте готовый ответ</strong>
+              <span className="panel-kicker">{t.step3}</span>
+              <strong id="ai-result-title">{t.reviewDraft}</strong>
             </div>
-            {displayedDraft ? <Badge tone={draftTone(displayedDraft)}>{confidenceLabel(displayedDraft)}</Badge> : null}
+            {displayedDraft ? <Badge tone={draftTone(displayedDraft)}>{confidenceLabel(displayedDraft, locale)}</Badge> : null}
           </div>
 
           {!selectedMessage ? (
             <AIState
-              description="Готовый вариант появится после выбора обращения."
-              title="Нет выбранного обращения"
+              description={t.noSelectionDescription}
+              title={t.noSelectionTitle}
               tone="neutral"
             />
           ) : draftsQuery.isPending && !displayedDraft ? (
             <AIState
-              description="Получаем ранее подготовленные варианты для этого обращения."
-              title="Загружаем готовые варианты"
+              description={t.loadingDraftsDescription}
+              title={t.loadingDraftsTitle}
               tone="loading"
             />
           ) : draftsQuery.error && !displayedDraft ? (
             <AIState
               actionDisabled={draftsQuery.isFetching}
-              actionLabel={draftsQuery.isFetching ? "Повторяем..." : "Повторить"}
-              description={userErrorMessage(draftsQuery.error, "Не удалось загрузить готовые варианты.")}
+              actionLabel={draftsQuery.isFetching ? t.retrying : t.retry}
+              description={userErrorMessage(draftsQuery.error, t.loadDraftsFallback, locale)}
               onAction={() => void draftsQuery.refetch()}
-              title="Не удалось загрузить готовые варианты"
+              title={t.loadDraftsTitle}
               tone="error"
             />
           ) : displayedDraft ? (
@@ -420,11 +607,12 @@ export function AIAssistantWorkspace() {
               onRetryReview={(replyId) => retryReviewMutation.mutate(replyId)}
               onSubmit={(replyText) => reviewMutation.mutate({ draft: displayedDraft, replyText })}
               submitError={reviewMutation.error}
+              locale={locale}
             />
           ) : (
             <AIState
-              description="Подготовьте первый вариант ответа для выбранного обращения."
-              title="Готовых вариантов ещё нет"
+              description={t.noDraftDescription}
+              title={t.noDraftTitle}
               tone="empty"
             />
           )}
@@ -438,11 +626,14 @@ function MessageButton({
   message,
   active,
   onSelect,
+  locale,
 }: {
   message: CustomerMessage;
   active: boolean;
   onSelect: () => void;
+  locale: Locale;
 }) {
+  const t = aiCopy[locale];
   return (
     <button
       aria-pressed={active}
@@ -451,30 +642,31 @@ function MessageButton({
       type="button"
     >
       <span className="ai-message-meta">
-        <Badge tone={message.type === "review" ? "info" : "neutral"}>{messageTypeLabel(message.type)}</Badge>
-        <span>{marketplaceLabel(message.marketplace)}</span>
+        <Badge tone={message.type === "review" ? "info" : "neutral"}>{messageTypeLabel(message.type, locale)}</Badge>
+        <span>{marketplaceLabel(message.marketplace, locale)}</span>
         {message.rating !== null ? <span>{message.rating} / 5</span> : null}
       </span>
-      <strong>{message.product?.name ?? "Без карточки товара"}</strong>
+      <strong>{message.product?.name ?? t.noProduct}</strong>
       <span className="ai-message-preview">{message.customer_text}</span>
     </button>
   );
 }
 
-function MessageContext({ message }: { message: CustomerMessage }) {
+function MessageContext({ message, locale }: { message: CustomerMessage; locale: Locale }) {
+  const t = aiCopy[locale];
   return (
     <div className="ai-message-context">
       <div>
-        <span>Маркетплейс</span>
-        <strong>{marketplaceLabel(message.marketplace)}</strong>
+        <span>{t.marketplace}</span>
+        <strong>{marketplaceLabel(message.marketplace, locale)}</strong>
       </div>
       <div>
-        <span>Тип</span>
-        <strong>{messageTypeLabel(message.type)}</strong>
+        <span>{t.type}</span>
+        <strong>{messageTypeLabel(message.type, locale)}</strong>
       </div>
       <div>
-        <span>Товар</span>
-        <strong>{message.product?.name ?? "Контекст товара отсутствует"}</strong>
+        <span>{t.product}</span>
+        <strong>{message.product?.name ?? t.noProductContext}</strong>
       </div>
       <blockquote>{message.customer_text}</blockquote>
     </div>
@@ -492,6 +684,7 @@ function DraftResult({
   onRegenerate,
   onRetryReview,
   onSubmit,
+  locale,
 }: {
   draft: AIDraft;
   canManage: boolean;
@@ -503,7 +696,10 @@ function DraftResult({
   onRegenerate: () => void;
   onRetryReview: (replyId: string) => void;
   onSubmit: (replyText: string) => void;
+  locale: Locale;
 }) {
+  const t = aiCopy[locale];
+  const reviewQueuePath = localizedPath(locale, "/app/review-queue");
   const [replyText, setReplyText] = useState(draft.draft_text);
   const needsReview = draftNeedsReview(draft);
   const isLocked = handoff !== null;
@@ -511,7 +707,7 @@ function DraftResult({
   return (
     <div className="ai-draft-result" aria-live="polite">
       <label className="ai-draft-editor-field">
-        <span>Ответ для проверки</span>
+        <span>{t.replyForReview}</span>
         <textarea
           disabled={!canManage || isSubmitting || isLocked}
           maxLength={12000}
@@ -519,31 +715,31 @@ function DraftResult({
           value={replyText}
         />
         {canManage && !isLocked ? (
-          <small>Отредактируйте текст при необходимости, затем передайте его в раздел «На проверке».</small>
+          <small>{t.editHint}</small>
         ) : null}
       </label>
 
       <div className="ai-draft-flags">
         <Badge tone={needsReview ? "warning" : "success"}>
-          {needsReview ? "Нужна дополнительная проверка" : "Проверка пройдена"}
+          {needsReview ? t.needsReview : t.passed}
         </Badge>
       </div>
 
       {handoff?.status === "submitted" ? (
         <div className="ai-review-handoff" role="status">
           <div>
-            <span className="panel-kicker">Готово</span>
-            <strong>Ответ передан на проверку</strong>
+            <span className="panel-kicker">{t.done}</span>
+            <strong>{t.submitted}</strong>
           </div>
-          <Link className="button button-primary" href="/app/review-queue">Открыть очередь проверки</Link>
+          <Link className="button button-primary" href={reviewQueuePath}>{t.openReviewQueue}</Link>
         </div>
       ) : null}
 
       {handoff?.status === "draft_created" ? (
         <div className="form-error ai-review-handoff" role="alert">
           <div>
-            <strong>Ответ сохранён, но пока не передан на проверку</strong>
-            <span>{userErrorMessage(handoff.error, "Не удалось передать ответ на проверку. Попробуйте ещё раз.")}</span>
+            <strong>{t.draftSavedNotSubmitted}</strong>
+            <span>{userErrorMessage(handoff.error, t.handoffFallback, locale)}</span>
           </div>
           <button
             className="button button-secondary"
@@ -551,14 +747,14 @@ function DraftResult({
             onClick={() => onRetryReview(handoff.replyId)}
             type="button"
           >
-            {isRetryingReview ? "Передаём..." : "Попробовать ещё раз"}
+            {isRetryingReview ? t.submitting : t.tryAgain}
           </button>
         </div>
       ) : null}
 
       {submitError ? (
         <p className="form-error" role="alert">
-          {userErrorMessage(submitError, "Не удалось сохранить ответ. Попробуйте ещё раз.")}
+          {userErrorMessage(submitError, t.submitFallback, locale)}
         </p>
       ) : null}
 
@@ -570,7 +766,7 @@ function DraftResult({
             onClick={onRegenerate}
             type="button"
           >
-            {isGenerating ? "Готовим вариант..." : "Подготовить другой вариант"}
+            {isGenerating ? t.generatingVariant : t.regenerate}
           </button>
           <button
             className="button button-primary"
@@ -578,7 +774,7 @@ function DraftResult({
             onClick={() => onSubmit(replyText)}
             type="button"
           >
-            {isSubmitting ? "Передаём..." : "Передать на проверку"}
+            {isSubmitting ? t.submitting : t.submitReview}
           </button>
         </div>
       ) : null}
@@ -632,20 +828,22 @@ function emptyToNull(value: string): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function marketplaceLabel(value: string): string {
+function marketplaceLabel(value: string, locale: Locale): string {
+  const t = aiCopy[locale];
   const labels: Record<string, string> = {
     wildberries: "Wildberries",
     ozon: "Ozon",
-    yandex_market: "Яндекс Маркет",
-    avito: "Авито",
+    yandex_market: t.yandex,
+    avito: t.avito,
   };
   return labels[value] ?? value;
 }
 
-function messageTypeLabel(value: string): string {
-  if (value === "review") return "Отзыв";
-  if (value === "question") return "Вопрос";
-  if (value === "chat") return "Сообщение";
+function messageTypeLabel(value: string, locale: Locale): string {
+  const t = aiCopy[locale];
+  if (value === "review") return t.review;
+  if (value === "question") return t.question;
+  if (value === "chat") return t.chat;
   return value;
 }
 
@@ -657,18 +855,20 @@ function draftTone(draft: AIDraft): BadgeTone {
   return draftNeedsReview(draft) ? "warning" : "success";
 }
 
-function confidenceLabel(draft: AIDraft): string {
-  return draftNeedsReview(draft) ? "Проверьте внимательнее" : "Черновик готов";
+function confidenceLabel(draft: AIDraft, locale: Locale): string {
+  const t = aiCopy[locale];
+  return draftNeedsReview(draft) ? t.confidenceReview : t.confidenceReady;
 }
 
-function userErrorMessage(error: unknown, fallback: string): string {
+function userErrorMessage(error: unknown, fallback: string, locale: Locale): string {
+  const t = aiCopy[locale];
   if (error instanceof ApiError) {
-    if (error.status === 401) return "Сессия истекла. Войдите снова.";
-    if (error.status === 403) return "Недостаточно прав для этого действия.";
-    if (error.status === 404) return "Нужные данные не найдены. Обновите страницу и попробуйте снова.";
-    if (error.status === 409) return "Данные изменились. Обновите страницу и повторите действие.";
-    if (error.status === 422) return "Проверьте введённые данные и попробуйте снова.";
-    if (error.status === 429) return "Слишком много действий подряд. Подождите немного и попробуйте снова.";
+    if (error.status === 401) return t.unauthorized;
+    if (error.status === 403) return t.forbidden;
+    if (error.status === 404) return t.notFound;
+    if (error.status === 409) return t.conflict;
+    if (error.status === 422) return t.invalid;
+    if (error.status === 429) return t.rateLimit;
     if (error.status >= 500) return fallback;
     return fallback;
   }
