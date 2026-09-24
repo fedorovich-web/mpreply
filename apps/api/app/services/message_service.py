@@ -237,5 +237,6 @@ class MessageService:
         if product_id is not None:
             conditions.append(CustomerMessage.product_id == product_id)
         if search:
-            conditions.append(CustomerMessage.customer_text.ilike(f"%{search}%"))
+            literal_search = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            conditions.append(CustomerMessage.customer_text.ilike(f"%{literal_search}%", escape="\\"))
         return conditions

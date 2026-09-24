@@ -138,7 +138,7 @@ def _account() -> MarketplaceAccount:
         display_name="Synthetic Avito",
         status="active",
         credentials_encrypted="encrypted",
-        credentials_masked="***",
+        credentials_fingerprint="f" * 64,
         credentials_status="valid",
         scopes_json={"scopes": ["chats:read", "chats:write"]},
     )
