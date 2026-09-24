@@ -29,6 +29,9 @@ describe("public inner blue completeness contract", () => {
       ".pricing-final-logo-chip",
       ".pricing-market-chip",
       ".pricing-faq-heading",
+      ".features-draft-card",
+      ".detail-cta-bar",
+      ".pricing-card.is-popular",
     ]) {
       expect(blue).not.toContain(selector);
     }

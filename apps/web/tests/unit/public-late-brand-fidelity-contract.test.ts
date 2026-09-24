@@ -8,19 +8,31 @@ const brandCss = readFileSync(join(root, "styles/public-mockup-brand-fidelity.cs
 const blueCss = readFileSync(join(root, "styles/public-inner-blue-reference.css"), "utf8");
 
 describe("late public brand normalization", () => {
-  it("loads the canonical blue guard after the historical mockup fidelity layer", () => {
+  it("loads both blue brand layers in the intended cascade order", () => {
     const brandImport = 'import "../styles/public-mockup-brand-fidelity.css";';
     const blueImport = 'import "../styles/public-inner-blue-reference.css";';
     expect(layout.indexOf(brandImport)).toBeGreaterThan(-1);
     expect(layout.indexOf(blueImport)).toBeGreaterThan(layout.indexOf(brandImport));
-    expect(brandCss).toContain("#5148e8");
-    expect(blueCss).toContain("#0b68f6");
+    for (const source of [brandCss, blueCss]) {
+      expect(source).toContain("#0b68f6");
+      expect(source.toLowerCase()).not.toContain("#5148e8");
+    }
   });
 
-  it("normalizes live demo accents in the final cascade without retired pricing selectors", () => {
-    expect(blueCss).toContain(".mockup-page .demo-scenario-popular");
-    expect(blueCss).toContain(".mockup-page .demo-story-review-bubble");
-    expect(blueCss).not.toContain(".pricing-final-review");
-    expect(blueCss).not.toContain(".pricing-final-answer");
+  it("normalizes live demo accents without retaining retired renderer selectors", () => {
+    expect(brandCss).toContain(".demo-scenario-popular");
+    expect(blueCss).toContain(".demo-story-review-bubble");
+    for (const retired of [
+      ".features-draft-card",
+      ".detail-cta-bar",
+      ".demo-cta-bar",
+      ".pricing-toggle",
+      ".pricing-popular",
+      ".pricing-market-chip",
+      ".pricing-card.is-popular",
+    ]) {
+      expect(brandCss).not.toContain(retired);
+      expect(blueCss).not.toContain(retired);
+    }
   });
 });

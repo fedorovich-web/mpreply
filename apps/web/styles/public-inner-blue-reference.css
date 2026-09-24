@@ -81,7 +81,6 @@
 
 .public-root:not(.homepage-reference-root) .mockup-page .mockup-eyebrow,
 .public-root:not(.homepage-reference-root) .mockup-page .mockup-highlight,
-.public-root:not(.homepage-reference-root) .mockup-page .features-draft-card strong,
 .public-root:not(.homepage-reference-root) .mockup-page .detail-ai-card strong,
 .public-root:not(.homepage-reference-root) .mockup-page .demo-process-answer strong,
 .public-root:not(.homepage-reference-root) .mockup-page .demo-story-card.ai strong,
@@ -170,7 +169,6 @@
 }
 
 .public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-core,
-.public-root:not(.homepage-reference-root) .mockup-page .features-draft-card > span,
 .public-root:not(.homepage-reference-root) .mockup-page .detail-ai-card > span {
   background: linear-gradient(110deg, #0d6cf7 0%, #0674ff 58%, #0a5fe8 100%);
 }
@@ -182,11 +180,6 @@
 .public-root:not(.homepage-reference-root) .mockup-page .detail-ai-card,
 .public-root:not(.homepage-reference-root) .mockup-page .demo-story-card {
   box-shadow: 0 24px 62px rgb(11 104 246 / 13%);
-}
-
-.public-root:not(.homepage-reference-root) .mockup-page .pricing-card.is-popular {
-  border-color: #0b68f6;
-  box-shadow: 0 20px 50px rgb(11 104 246 / 13%);
 }
 
 .public-root:not(.homepage-reference-root) .mockup-page .pricing-feature-list li::before,
@@ -202,7 +195,6 @@
 
 .public-root:not(.homepage-reference-root) .mockup-page .mockup-cta,
 .public-root:not(.homepage-reference-root) .mockup-page .pricing-final-cta,
-.public-root:not(.homepage-reference-root) .mockup-page .detail-cta-bar,
 .public-root:not(.homepage-reference-root) .mockup-page .mockup-cta-strip {
   border-color: #cfe3fb;
   background:

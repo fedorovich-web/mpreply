@@ -43,15 +43,18 @@ describe("approved public mockup fidelity", () => {
     expect(tuningCss).toContain("clamp(1.85rem, 2.6vw, 2.45rem)");
   });
 
-  it("keeps render-era violet geometry tokens behind the canonical final blue guard", () => {
+  it("keeps both public brand layers on the canonical blue family", () => {
     expect(existsSync(brandFidelityPath)).toBe(true);
     const brandImport = 'import "../styles/public-mockup-brand-fidelity.css";';
     const blueImport = 'import "../styles/public-inner-blue-reference.css";';
     expect(layout.indexOf(brandImport)).toBeGreaterThan(-1);
     expect(layout.indexOf(blueImport)).toBeGreaterThan(layout.indexOf(brandImport));
-    expect(brandFidelityCss).toContain("#5148e8");
-    expect(blueReference).toContain("--color-brand-primary: #0b68f6");
-    expect(blueReference.toLowerCase()).not.toContain("#5148e8");
+    for (const source of [brandFidelityCss, blueReference]) {
+      expect(source).toContain("#0b68f6");
+      expect(source.toLowerCase()).not.toContain("#5148e8");
+      expect(source.toLowerCase()).not.toContain("#635bff");
+      expect(source.toLowerCase()).not.toContain("#5964ff");
+    }
   });
 
   it("keeps the full approved header navigation", () => {
