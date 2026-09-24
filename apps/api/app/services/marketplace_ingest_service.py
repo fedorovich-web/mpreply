@@ -9,11 +9,13 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import MarketplacePage, NormalizedMessage, NormalizedProduct
+from app.adapters.base import MarketplacePage, NormalizedMessage, NormalizedProduct, ProviderMessageResolution
+from app.automation.state_machine import ensure_message_transition
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.product import Product
+from app.models.reply import Reply
 
 _MAX_METADATA_STRING_LENGTH = 512
 _MAX_MESSAGE_TEXT_LENGTH = 100_000
@@ -26,7 +28,7 @@ _MESSAGE_METADATA_KEYS: dict[Marketplace, frozenset[str]] = {
     Marketplace.WILDBERRIES: frozenset({"source", "status", "is_answered"}),
     Marketplace.OZON: frozenset({"source", "status", "is_answered", "sku"}),
     Marketplace.YANDEX_MARKET: frozenset({"source", "status", "is_answered"}),
-    Marketplace.AVITO: frozenset({"source", "status", "chat_id", "chat_type", "author_type", "direction"}),
+    Marketplace.AVITO: frozenset({"source", "status", "chat_id", "chat_type", "author_type", "direction", "stage", "used_in_score"}),
 }
 _PRODUCT_METADATA_KEYS: dict[Marketplace, frozenset[str]] = {
     Marketplace.WILDBERRIES: frozenset({"nm_id", "imt_id", "supplier_article"}),
@@ -74,7 +76,7 @@ class MarketplaceIngestService:
         updated_products = 0
 
         for normalized in page.items:
-            _validate_message(normalized)
+            _validate_message(normalized, marketplace)
             product: Product | None = None
             if normalized.product is not None:
                 product, product_created = await self._insert_or_get_product(
@@ -87,7 +89,7 @@ class MarketplaceIngestService:
                 else:
                     self._update_product(product, marketplace, normalized.product)
                     updated_products += 1
-            elif normalized.message_type is not MessageType.CHAT:
+            elif normalized.message_type is not MessageType.CHAT and not (marketplace is Marketplace.AVITO and normalized.message_type is MessageType.REVIEW):
                 raise InvalidNormalizedRecord("review and question records require a product identity")
 
             message, message_created = await self._insert_or_get_message(
@@ -103,12 +105,53 @@ class MarketplaceIngestService:
                 self._update_message(message, marketplace, normalized, product, now)
                 updated_messages += 1
 
+        for resolution in page.resolutions:
+            await self._reconcile_resolution(account, marketplace, resolution, now)
+
         return IngestStats(
             created_messages=created_messages,
             updated_messages=updated_messages,
             created_products=created_products,
             updated_products=updated_products,
         )
+
+    async def _reconcile_resolution(
+        self,
+        account: MarketplaceAccount,
+        marketplace: Marketplace,
+        resolution: ProviderMessageResolution,
+        now: datetime,
+    ) -> None:
+        if marketplace is not Marketplace.AVITO or resolution.message_type is not MessageType.REVIEW:
+            raise InvalidNormalizedRecord("provider resolution is unsupported for this stream")
+        _validate_required_text(resolution.external_id, field_name="message external ID", maximum=255)
+        if resolution.status not in {
+            MessageStatus.ANSWERED,
+            MessageStatus.WAITING_REVIEW,
+            MessageStatus.NEEDS_MANUAL_CHECK,
+            MessageStatus.BLOCKED_BY_MARKETPLACE,
+        }:
+            raise InvalidNormalizedRecord("provider resolution status is invalid")
+        message = await self.session.scalar(
+            select(CustomerMessage)
+            .where(
+                CustomerMessage.organization_id == account.organization_id,
+                CustomerMessage.marketplace_account_id == account.id,
+                CustomerMessage.marketplace == marketplace.value,
+                CustomerMessage.external_id == resolution.external_id,
+                CustomerMessage.type == MessageType.REVIEW.value,
+                CustomerMessage.status == MessageStatus.NEEDS_REPLY.value,
+            )
+            .with_for_update()
+        )
+        if message is None:
+            return
+        reply_id = await self.session.scalar(select(Reply.id).where(Reply.organization_id == account.organization_id, Reply.message_id == message.id).limit(1))
+        if reply_id is not None:
+            return
+        ensure_message_transition(message.status, resolution.status.value)
+        message.status = resolution.status.value
+        message.last_synced_at = now
 
     async def _insert_or_get_product(
         self,
@@ -272,9 +315,10 @@ def _marketplace(value: str) -> Marketplace:
         raise InvalidNormalizedRecord("marketplace is not supported for ingestion") from exc
 
 
-def _validate_message(message: NormalizedMessage) -> None:
+def _validate_message(message: NormalizedMessage, marketplace: Marketplace) -> None:
     _validate_required_text(message.external_id, field_name="message external ID", maximum=255)
-    _validate_required_text(message.customer_text, field_name="customer text", maximum=_MAX_MESSAGE_TEXT_LENGTH)
+    if message.customer_text or not (marketplace is Marketplace.AVITO and message.message_type is MessageType.REVIEW):
+        _validate_required_text(message.customer_text, field_name="customer text", maximum=_MAX_MESSAGE_TEXT_LENGTH)
     _validate_optional_text(message.customer_display_name, field_name="customer display name", maximum=255)
     _validate_aware_datetime(message.marketplace_created_at, field_name="marketplace creation time")
     if message.message_type is MessageType.REVIEW:
