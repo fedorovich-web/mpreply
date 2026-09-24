@@ -76,6 +76,23 @@ describe("superadmin dashboard", () => {
     expect(workspace).not.toContain("Math.min(100, Math.round((part / total) * 100))");
   });
 
+  it("keeps stale admin data visible when a background refresh fails", () => {
+    expect(workspace).toContain("overviewQuery.error && !overviewQuery.data");
+    expect(workspace).toContain("overviewQuery.error ? (");
+    expect(workspace).toContain("admin-refresh-notice");
+    expect(workspace).toContain('refreshError: "Не удалось обновить системные данные');
+    expect(workspace).toContain("overviewQuery.refetch()");
+    expect(styles).toContain(".admin-refresh-notice");
+  });
+
+  it("formats event counts and USD values for the active locale", () => {
+    expect(workspace).toContain("function formatEventCount");
+    expect(workspace).toContain("function formatIncidentReview");
+    expect(workspace).toContain('value === 1 ? "event" : "events"');
+    expect(workspace).toContain('locale === "en" ? "en-US" : "ru-RU"');
+    expect(workspace).toContain("formatUsd(data.ai_cost_estimate_30d, locale)");
+  });
+
   it("uses dedicated accessible loading, access and recoverable error states", () => {
     expect(workspace).toContain("function AdminOverviewState");
     expect(workspace).toContain('tone="denied"');
@@ -98,6 +115,8 @@ describe("superadmin dashboard", () => {
     expect(layout).toContain('import "../styles/dashboard-admin-approved.css"');
     expect(styles).toContain(".admin-page");
     expect(styles).toContain(".admin-section-incidents");
+    expect(styles).not.toContain(".admin-page-hero");
+    expect(styles).not.toContain(".admin-page-preview");
     expect(styles).toContain(".admin-section-product");
     expect(styles).toContain(".admin-section-usage");
     expect(styles).toContain("@media (max-width: 520px)");

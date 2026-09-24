@@ -36,5 +36,7 @@ describe("analytics, billing, and admin locale separation", () => {
     expect(admin).toContain("const { user, locale } = useWorkspace()");
     expect(admin).toContain('operationsCenter: "Operations center"');
     expect(admin).toContain('operationsCenter: "Операционный центр"');
+    expect(admin).toContain("formatUsd(data.ai_cost_estimate_30d, locale)");
+    expect(admin).toContain("function formatEventCount");
   });
 });

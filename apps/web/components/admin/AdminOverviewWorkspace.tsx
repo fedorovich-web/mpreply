@@ -21,8 +21,10 @@ const adminCopy = {
     deniedTitle: "Нет доступа к системной панели",
     loadingDescription: "Получаем актуальные показатели организаций, пользователей, подписок и фоновых процессов.",
     loadingTitle: "Загружаем системную сводку",
-    retrying: "Повторяем...",
+    retrying: "Обновляем...",
     retry: "Повторить",
+    refresh: "Обновить",
+    refreshError: "Не удалось обновить системные данные. Показана последняя доступная сводка.",
     errorDescription: "Системные данные сейчас недоступны. Проверьте соединение и повторите попытку.",
     errorTitle: "Не удалось загрузить системную сводку",
     integrationFailures: "Ошибки интеграций за 24 часа",
@@ -51,7 +53,6 @@ const adminCopy = {
     systemState: "Состояние системы",
     attention: "Требует внимания",
     stable: "Стабильно",
-    incidentsNeedReview: "событий требуют проверки",
     noIncidents: "Ошибок интеграций и отправки ответов за 24 часа нет",
     kpiAria: "Ключевые показатели",
     activeOrganizations: "Активные организации",
@@ -62,7 +63,6 @@ const adminCopy = {
     costEstimate: "оценка расходов",
     lastUpdated: "Последнее обновление",
     last24: "Последние 24 часа",
-    events: "событий",
     attentionNow: "Что требует внимания сейчас",
     noIncidentsTitle: "Инцидентов за 24 часа не зафиксировано",
     productAccess: "Продукт и доступ",
@@ -78,8 +78,10 @@ const adminCopy = {
     deniedTitle: "No access to the system console",
     loadingDescription: "Loading current organization, user, subscription, and background-process metrics.",
     loadingTitle: "Loading system overview",
-    retrying: "Retrying...",
+    retrying: "Refreshing...",
     retry: "Retry",
+    refresh: "Refresh",
+    refreshError: "Could not refresh system data. Showing the latest available overview.",
     errorDescription: "System data is currently unavailable. Check your connection and try again.",
     errorTitle: "Could not load the system overview",
     integrationFailures: "Integration failures · 24 hours",
@@ -108,7 +110,6 @@ const adminCopy = {
     systemState: "System state",
     attention: "Needs attention",
     stable: "Stable",
-    incidentsNeedReview: "events need review",
     noIncidents: "No integration or reply-delivery failures were recorded during the last 24 hours",
     kpiAria: "Key metrics",
     activeOrganizations: "Active organizations",
@@ -119,7 +120,6 @@ const adminCopy = {
     costEstimate: "estimated cost",
     lastUpdated: "Last updated",
     last24: "Last 24 hours",
-    events: "events",
     attentionNow: "What needs attention now",
     noIncidentsTitle: "No incidents recorded in the last 24 hours",
     productAccess: "Product and access",
@@ -152,7 +152,7 @@ export function AdminOverviewWorkspace() {
     );
   }
 
-  if (overviewQuery.isLoading) {
+  if (overviewQuery.isLoading && !overviewQuery.data) {
     return (
       <AdminOverviewState
         description={t.loadingDescription}
@@ -163,7 +163,7 @@ export function AdminOverviewWorkspace() {
     );
   }
 
-  if (overviewQuery.error || !overviewQuery.data) {
+  if (overviewQuery.error && !overviewQuery.data) {
     return (
       <AdminOverviewState
         actionDisabled={overviewQuery.isFetching}
@@ -232,7 +232,7 @@ export function AdminOverviewWorkspace() {
     },
     {
       label: t.aiCost,
-      value: formatUsd(data.ai_cost_estimate_30d),
+      value: formatUsd(data.ai_cost_estimate_30d, locale),
       helper: t.aiCostHelper,
     },
   ];
@@ -263,7 +263,7 @@ export function AdminOverviewWorkspace() {
           <strong>{hasIncidents ? t.attention : t.stable}</strong>
           <p>
             {hasIncidents
-              ? formatNumber(incidentCount, locale) + " " + t.incidentsNeedReview
+              ? formatIncidentReview(incidentCount, locale)
               : t.noIncidents}
           </p>
         </aside>
@@ -273,13 +273,37 @@ export function AdminOverviewWorkspace() {
         <AdminKpi label={t.activeOrganizations} value={formatNumber(data.organizations_active, locale)} helper={t.of + " " + formatNumber(data.organizations_total, locale)} />
         <AdminKpi label={t.users} value={formatNumber(data.users_total, locale)} helper={t.registered} />
         <AdminKpi label={t.activeSubscriptions} value={formatNumber(data.subscriptions_active, locale)} helper={t.systemData} />
-        <AdminKpi label={t.ai30} value={formatUsd(data.ai_cost_estimate_30d)} helper={t.costEstimate} />
+        <AdminKpi label={t.ai30} value={formatUsd(data.ai_cost_estimate_30d, locale)} helper={t.costEstimate} />
       </div>
 
       <div className="admin-overview-meta">
-        <span>{t.lastUpdated}</span>
-        <strong>{formatDateTime(data.generated_at, locale)}</strong>
+        <div className="admin-overview-meta-copy">
+          <span>{t.lastUpdated}</span>
+          <strong>{formatDateTime(data.generated_at, locale)}</strong>
+        </div>
+        <button
+          className="button button-secondary button-compact"
+          disabled={overviewQuery.isFetching}
+          onClick={() => void overviewQuery.refetch()}
+          type="button"
+        >
+          {overviewQuery.isFetching ? t.retrying : t.refresh}
+        </button>
       </div>
+
+      {overviewQuery.error ? (
+        <div aria-live="polite" className="admin-refresh-notice" role="status">
+          <span>{t.refreshError}</span>
+          <button
+            className="button button-secondary button-compact"
+            disabled={overviewQuery.isFetching}
+            onClick={() => void overviewQuery.refetch()}
+            type="button"
+          >
+            {overviewQuery.isFetching ? t.retrying : t.retry}
+          </button>
+        </div>
+      ) : null}
 
       <div className="admin-overview-body">
         <AdminMetricSection
@@ -287,7 +311,7 @@ export function AdminOverviewWorkspace() {
           eyebrow={t.last24}
           metrics={incidentMetrics}
           locale={locale}
-          summary={formatNumber(incidentCount, locale) + " " + t.events}
+          summary={formatEventCount(incidentCount, locale)}
           title={hasIncidents ? t.attentionNow : t.noIncidentsTitle}
         />
         <AdminMetricSection
@@ -428,8 +452,28 @@ function formatNumber(value: number, locale: Locale): string {
   return new Intl.NumberFormat(locale === "en" ? "en-US" : "ru-RU").format(value);
 }
 
-function formatUsd(value: number): string {
-  return new Intl.NumberFormat("en-US", {
+function formatEventCount(value: number, locale: Locale): string {
+  const formatted = formatNumber(value, locale);
+  if (locale === "en") return `${formatted} ${value === 1 ? "event" : "events"}`;
+
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+  const word = mod10 === 1 && mod100 !== 11
+    ? "событие"
+    : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)
+      ? "события"
+      : "событий";
+  return `${formatted} ${word}`;
+}
+
+function formatIncidentReview(value: number, locale: Locale): string {
+  const count = formatEventCount(value, locale);
+  if (locale === "en") return `${count} ${value === 1 ? "needs" : "need"} review`;
+  return `${count} ${value === 1 ? "требует" : "требуют"} проверки`;
+}
+
+function formatUsd(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "ru-RU", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 4,
