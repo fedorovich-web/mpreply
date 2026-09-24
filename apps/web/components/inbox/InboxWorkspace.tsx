@@ -174,9 +174,13 @@ export function InboxWorkspace() {
   const totalPages = messagesQuery.data
     ? Math.max(1, Math.ceil(messagesQuery.data.total / messagesQuery.data.page_size))
     : 1;
-  const displayedCountLabel = filters.rating === "no_rating"
-    ? `${visibleMessages.length} без оценки на странице`
-    : `${messagesQuery.data?.total ?? 0} обращений`;
+  const displayedCountLabel = !messagesQuery.data
+    ? messagesQuery.isPending
+      ? "Загружаем обращения"
+      : "Обращения"
+    : filters.rating === "no_rating"
+      ? `${visibleMessages.length} без оценки на странице`
+      : `${messagesQuery.data.total} обращений`;
 
   const updateMutation = useMutation({
     mutationFn: ({ messageId, status, assignedTo }: MessageUpdate) =>
@@ -310,14 +314,37 @@ export function InboxWorkspace() {
           </button>
         </div>
 
-        {messagesQuery.isPending ? (
-          <InboxState title="Загружаем обращения" description="Получаем обращения из подключённых маркетплейсов." />
-        ) : messagesQuery.error ? (
+        {messagesQuery.error && messagesQuery.data ? (
+          <div className="inbox-refresh-error" role="alert">
+            <div>
+              <strong>Не удалось обновить обращения</strong>
+              <p>Показываем последнюю успешно загруженную очередь.</p>
+            </div>
+            <button
+              className="button button-secondary button-compact"
+              disabled={messagesQuery.isFetching}
+              onClick={() => void messagesQuery.refetch()}
+              type="button"
+            >
+              {messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
+            </button>
+          </div>
+        ) : null}
+
+        {messagesQuery.isPending && !messagesQuery.data ? (
           <InboxState
-            title="Не удалось загрузить обращения"
+            description="Получаем обращения из подключённых маркетплейсов."
+            title="Загружаем обращения"
+            tone="loading"
+          />
+        ) : messagesQuery.error && !messagesQuery.data ? (
+          <InboxState
+            actionDisabled={messagesQuery.isFetching}
+            actionLabel={messagesQuery.isFetching ? "Повторяем..." : "Повторить"}
             description={errorMessage(messagesQuery.error)}
-            actionLabel="Повторить"
             onAction={() => void messagesQuery.refetch()}
+            title="Не удалось загрузить обращения"
+            tone="error"
           />
         ) : visibleMessages.length > 0 ? (
           <div className="message-stack" role="list">
@@ -343,7 +370,7 @@ export function InboxWorkspace() {
           />
         )}
 
-        {!messagesQuery.isPending && !messagesQuery.error && totalPages > 1 ? (
+        {messagesQuery.data && totalPages > 1 ? (
           <nav className="inbox-pagination" aria-label="Страницы обращений">
             <button
               aria-label="Предыдущая страница"
@@ -629,23 +656,42 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 }
 
 function InboxState({
-  title,
-  description,
+  actionDisabled = false,
   actionLabel,
+  description,
   onAction,
+  title,
+  tone,
 }: {
-  title: string;
-  description: string;
+  actionDisabled?: boolean;
   actionLabel?: string;
+  description: string;
   onAction?: () => void;
+  title: string;
+  tone: "error" | "loading";
 }) {
   return (
-    <div className="workspace-inline-state" aria-live="polite">
-      <strong>{title}</strong>
-      <p>{description}</p>
-      {actionLabel && onAction ? (
-        <button className="button button-secondary button-compact" onClick={onAction} type="button">{actionLabel}</button>
-      ) : null}
+    <div
+      aria-busy={tone === "loading"}
+      aria-live="polite"
+      className={"inbox-list-state inbox-list-state-" + tone}
+      role={tone === "error" ? "alert" : "status"}
+    >
+      <span className="inbox-list-state-mark" aria-hidden="true" />
+      <div>
+        <strong>{title}</strong>
+        <p>{description}</p>
+        {actionLabel && onAction ? (
+          <button
+            className="button button-secondary button-compact"
+            disabled={actionDisabled}
+            onClick={onAction}
+            type="button"
+          >
+            {actionLabel}
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

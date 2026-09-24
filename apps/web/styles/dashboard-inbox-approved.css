@@ -157,6 +157,140 @@
 	backdrop-filter: blur(10px);
 }
 
+
+.inbox-list-state {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
+	gap: 0.85rem;
+	min-height: 9rem;
+	border-bottom: 1px solid var(--color-border-subtle);
+	background: color-mix(in srgb, var(--color-bg-brand-soft) 18%, var(--color-bg-surface));
+	padding: 1.15rem 1.1rem;
+}
+
+.inbox-list-state-mark {
+	position: relative;
+	display: block;
+	width: 2.45rem;
+	height: 2.45rem;
+	border: 1px solid color-mix(in srgb, var(--color-brand-primary) 18%, var(--color-border-subtle));
+	border-radius: 0.78rem;
+	background: color-mix(in srgb, var(--color-bg-brand-soft) 72%, var(--color-bg-surface));
+}
+
+.inbox-list-state-mark::before {
+	position: absolute;
+	inset: 0.6rem;
+	border: 0.16rem solid color-mix(in srgb, var(--color-brand-primary) 24%, transparent);
+	border-top-color: var(--color-brand-primary);
+	border-radius: 50%;
+	content: "";
+}
+
+.inbox-list-state-loading .inbox-list-state-mark::before {
+	animation: inbox-state-spin 1s linear infinite;
+}
+
+.inbox-list-state > div {
+	display: grid;
+	justify-items: start;
+	gap: 0.35rem;
+}
+
+.inbox-list-state strong {
+	color: var(--color-text-primary);
+	font-size: 0.82rem;
+	font-weight: 750;
+}
+
+.inbox-list-state p {
+	margin: 0;
+	color: var(--color-text-secondary);
+	font-size: 0.72rem;
+	line-height: 1.5;
+}
+
+.inbox-list-state .button {
+	margin-top: 0.3rem;
+}
+
+.inbox-list-state-error {
+	background: color-mix(in srgb, var(--color-danger-soft) 24%, var(--color-bg-surface));
+}
+
+.inbox-list-state-error .inbox-list-state-mark {
+	border-color: color-mix(in srgb, var(--color-danger-text) 22%, var(--color-border-subtle));
+	background: color-mix(in srgb, var(--color-danger-soft) 50%, var(--color-bg-surface));
+}
+
+.inbox-list-state-error .inbox-list-state-mark::before,
+.inbox-list-state-error .inbox-list-state-mark::after {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 0.16rem;
+	height: 1.1rem;
+	border: 0;
+	border-radius: 999px;
+	background: var(--color-danger-text);
+	content: "";
+}
+
+.inbox-list-state-error .inbox-list-state-mark::before {
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.inbox-list-state-error .inbox-list-state-mark::after {
+	transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.inbox-refresh-error {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.8rem;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-danger-text) 18%, var(--color-border-subtle));
+	background: color-mix(in srgb, var(--color-danger-soft) 28%, var(--color-bg-surface));
+	padding: 0.7rem 0.9rem;
+}
+
+.inbox-refresh-error > div {
+	min-width: 0;
+}
+
+.inbox-refresh-error strong {
+	display: block;
+	color: var(--color-danger-text);
+	font-size: 0.7rem;
+	font-weight: 750;
+}
+
+.inbox-refresh-error p {
+	margin: 0.18rem 0 0;
+	color: var(--color-text-secondary);
+	font-size: 0.66rem;
+	line-height: 1.4;
+}
+
+.inbox-refresh-error .button {
+	flex: 0 0 auto;
+	min-height: 2rem;
+	font-size: 0.66rem;
+}
+
+@keyframes inbox-state-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.inbox-list-state-loading .inbox-list-state-mark::before {
+		animation: none;
+	}
+}
+
 .message-stack {
 	display: grid;
 	max-height: 44rem;
@@ -526,6 +660,20 @@
 }
 
 @media (max-width: 520px) {
+	.inbox-list-state {
+		grid-template-columns: 1fr;
+		min-height: 0;
+	}
+
+	.inbox-refresh-error {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.inbox-refresh-error .button {
+		width: 100%;
+	}
+
 	.inbox-filters-panel {
 		grid-template-columns: 1fr;
 		padding: 0.9rem;
