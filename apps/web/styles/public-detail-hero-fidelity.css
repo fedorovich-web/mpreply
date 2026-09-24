@@ -54,7 +54,7 @@
 }
 
 .mockup-page .detail-sidebar-item.is-active {
-  background: #f2f1ff;
+  background: #eaf4ff;
   color: var(--color-brand-primary);
   font-weight: 700;
 }
@@ -85,8 +85,8 @@
   bottom: -11px;
   width: 104px;
   height: 54px;
-  border-right: 2px dashed rgb(81 72 232 / 70%);
-  border-bottom: 2px dashed rgb(81 72 232 / 70%);
+  border-right: 2px dashed rgb(11 104 246 / 55%);
+  border-bottom: 2px dashed rgb(11 104 246 / 55%);
   border-radius: 0 0 42px 0;
   color: var(--color-brand-primary);
   content: "↗";
