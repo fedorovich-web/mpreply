@@ -50,6 +50,14 @@ describe("public RU/EN separation", () => {
     expect(homeShell).toContain("homeNavigation[locale]");
   });
 
+  it("keeps English pricing marketplace links inside the /en tree", () => {
+    const pricing = read("app/en/pricing/page.tsx");
+    for (const slug of ["wildberries", "ozon", "yandex-market", "avito"]) {
+      expect(pricing).toContain(`path: "/en/marketplaces/${slug}"`);
+      expect(pricing).not.toContain(`path: "/marketplaces/${slug}"`);
+    }
+  });
+
   it("emits both locale URLs and language alternates in the sitemap", () => {
     const sitemap = read("app/sitemap.ts");
     expect(sitemap).toContain('localizedPath("ru", path)');

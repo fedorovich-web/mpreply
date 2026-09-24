@@ -105,22 +105,22 @@ const faq = [
 const marketplaces = [
   {
     name: "Wildberries",
-    path: "/marketplaces/wildberries",
+    path: "/en/marketplaces/wildberries",
     compactSrc: "/images/marketplaces/wildberries-compact.webp",
   },
   {
     name: "Ozon",
-    path: "/marketplaces/ozon",
+    path: "/en/marketplaces/ozon",
     compactSrc: "/images/marketplaces/ozon-compact.webp",
   },
   {
     name: "Yandex Market",
-    path: "/marketplaces/yandex-market",
+    path: "/en/marketplaces/yandex-market",
     compactSrc: "/images/marketplaces/yandex-market-compact.webp",
   },
   {
     name: "Avito",
-    path: "/marketplaces/avito",
+    path: "/en/marketplaces/avito",
     compactSrc: "/images/marketplaces/avito-compact.webp",
   },
 ] as const;
