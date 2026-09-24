@@ -241,6 +241,86 @@ describe("AIAssistantWorkspace", () => {
     });
   });
 
+  it("keeps loaded appeals visible when a manual refresh fails", async () => {
+    mockWorkspace("manager");
+    let messageRequests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/messages")) {
+        messageRequests += 1;
+        if (messageRequests === 1) {
+          return new Response(JSON.stringify({ items: [message], total: 1, page: 1, page_size: 50 }), { status: 200 });
+        }
+        return new Response(JSON.stringify({ detail: "upstream_timeout" }), { status: 503 });
+      }
+      if (url.includes("/api/ai/drafts")) {
+        return new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 });
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByRole("button", { name: /Термокружка/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Обновить обращения" }));
+
+    const refreshError = await screen.findByRole("alert");
+    expect(refreshError).toHaveTextContent("Не удалось обновить обращения");
+    expect(refreshError).toHaveTextContent("Показываем ранее загруженные обращения");
+    expect(refreshError).not.toHaveTextContent("upstream_timeout");
+    expect(screen.getByRole("button", { name: /Термокружка/ })).toBeInTheDocument();
+  });
+
+  it("retries review handoff without creating a second reply", async () => {
+    mockWorkspace("manager");
+    let submitAttempts = 0;
+    let manualCreates = 0;
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/messages")) {
+        return new Response(JSON.stringify({ items: [message], total: 1, page: 1, page_size: 50 }), { status: 200 });
+      }
+      if (url.includes("/api/ai/drafts")) {
+        return new Response(JSON.stringify({ items: [draft], total: 1 }), { status: 200 });
+      }
+      if (url.endsWith("/api/replies/manual") && init?.method === "POST") {
+        manualCreates += 1;
+        return new Response(JSON.stringify({ reply, safety }), { status: 201 });
+      }
+      if (url.includes(`/api/replies/${reply.id}/submit-review`) && init?.method === "POST") {
+        submitAttempts += 1;
+        if (submitAttempts === 1) {
+          return new Response(JSON.stringify({ detail: "queue_worker_timeout" }), { status: 503 });
+        }
+        return new Response(
+          JSON.stringify({
+            reply: { ...reply, status: "waiting_review", submitted_for_review_at: timestamp },
+            safety,
+          }),
+          { status: 200 },
+        );
+      }
+      throw new Error(`Unexpected request: ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByLabelText("Ответ для проверки")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
+
+    const handoffError = await screen.findByRole("alert");
+    expect(handoffError).toHaveTextContent("Ответ сохранён, но пока не передан на проверку");
+    expect(handoffError).not.toHaveTextContent("queue_worker_timeout");
+
+    fireEvent.click(screen.getByRole("button", { name: "Попробовать ещё раз" }));
+
+    expect(await screen.findByText("Ответ передан на проверку")).toBeInTheDocument();
+    expect(manualCreates).toBe(1);
+    expect(submitAttempts).toBe(2);
+  });
+
   it("keeps viewer membership read-only while preserving draft history visibility", async () => {
     mockWorkspace("viewer");
     vi.stubGlobal(
