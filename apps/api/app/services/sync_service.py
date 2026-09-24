@@ -76,8 +76,8 @@ class MarketplaceSyncService:
         registry = self.registry
         try:
             capability = registry.capability(marketplace)
-            if capability.streams & {MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS}:
-                registry.review_questions(marketplace)
+            for stream in capability.streams & {MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS}:
+                registry.review_questions(marketplace, stream)
             if MarketplaceStream.CHATS in capability.streams:
                 registry.conversations(marketplace)
             if not capability.streams:

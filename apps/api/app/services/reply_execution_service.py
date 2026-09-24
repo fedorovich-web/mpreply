@@ -15,7 +15,7 @@ from app.adapters.base import (
     ProviderWriteReceipt,
     ReviewQuestionAdapter,
 )
-from app.adapters.capabilities import validated_scope_names, write_scope_for_message
+from app.adapters.capabilities import MarketplaceStream, validated_scope_names, write_scope_for_message
 from app.adapters.conversation import ConversationAdapter
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
@@ -385,7 +385,8 @@ class ReplyExecutionService:
             if message_type is MessageType.CHAT:
                 conversation_adapter = self._adapter_registry().conversations(marketplace)
             else:
-                review_adapter = self._adapter_registry().review_questions(marketplace)
+                stream = MarketplaceStream.REVIEWS if message_type is MessageType.REVIEW else MarketplaceStream.QUESTIONS
+                review_adapter = self._adapter_registry().review_questions(marketplace, stream)
         except UnsupportedCapabilityError:
             await self._mark_terminal_marketplace_failure(
                 reply=reply,

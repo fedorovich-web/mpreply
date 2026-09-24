@@ -28,7 +28,9 @@ AdapterT = TypeVar("AdapterT", bound=CredentialAdapter)
 @dataclass(frozen=True, slots=True)
 class ProviderRegistration:
     capability: MarketplaceCapability
-    factory: ProviderFactory
+    credential_factory: ProviderFactory
+    review_factory: ProviderFactory | None = None
+    conversation_factory: ProviderFactory | None = None
 
 
 class UnsupportedCapabilityError(RuntimeError):
@@ -46,30 +48,40 @@ class MarketplaceAdapterRegistry:
             if registration.capability.marketplace is not marketplace:
                 raise ValueError("registration key does not match capability marketplace")
         self._registrations = dict(registrations)
-        self._instances: dict[Marketplace, object] = {}
+        self._instances: dict[tuple[Marketplace, str], object] = {}
 
     def credentials(self, marketplace: Marketplace) -> CredentialAdapter:
-        return self._resolve(marketplace, CredentialAdapter)
+        return self._resolve_role(marketplace, "credentials", CredentialAdapter)
 
-    def review_questions(self, marketplace: Marketplace) -> ReviewQuestionAdapter:
-        required = frozenset({MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS})
+    def review_questions(self, marketplace: Marketplace, stream: MarketplaceStream) -> ReviewQuestionAdapter:
+        required = frozenset({stream})
+        if stream not in {MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS}:
+            raise UnsupportedCapabilityError(marketplace, required)
         self._require_streams(marketplace, required)
-        return self._resolve(marketplace, ReviewQuestionAdapter)
+        return self._resolve_role(marketplace, "reviews", ReviewQuestionAdapter)
 
     def conversations(self, marketplace: Marketplace) -> ConversationAdapter:
         required = frozenset({MarketplaceStream.CHATS})
         self._require_streams(marketplace, required)
-        return self._resolve(marketplace, ConversationAdapter)
+        return self._resolve_role(marketplace, "conversations", ConversationAdapter)
 
     def capability(self, marketplace: Marketplace) -> MarketplaceCapability:
         return self._registration(marketplace).capability
 
-    def _resolve(self, marketplace: Marketplace, expected: type[AdapterT]) -> AdapterT:
+    def _resolve_role(self, marketplace: Marketplace, role: str, expected: type[AdapterT]) -> AdapterT:
         registration = self._registration(marketplace)
-        instance = self._instances.get(marketplace)
+        key = (marketplace, role)
+        instance = self._instances.get(key)
         if instance is None:
-            instance = registration.factory()
-            self._instances[marketplace] = instance
+            factory = {
+                "credentials": registration.credential_factory,
+                "reviews": registration.review_factory,
+                "conversations": registration.conversation_factory,
+            }[role]
+            if factory is None:
+                raise UnsupportedCapabilityError(marketplace, registration.capability.streams)
+            instance = factory()
+            self._instances[key] = instance
         if not isinstance(instance, expected) or instance.marketplace is not marketplace:
             raise UnsupportedCapabilityError(marketplace, registration.capability.streams)
         return instance
@@ -91,19 +103,23 @@ def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceA
         {
             Marketplace.AVITO: ProviderRegistration(
                 capability=AVITO_CAPABILITY,
-                factory=lambda: AvitoAdapter(client=clients.avito),
+                credential_factory=lambda: AvitoAdapter(client=clients.avito),
+                conversation_factory=lambda: AvitoAdapter(client=clients.avito),
             ),
             Marketplace.WILDBERRIES: ProviderRegistration(
                 capability=WILDBERRIES_CAPABILITY,
-                factory=lambda: WildberriesAdapter(client=clients.wildberries),
+                credential_factory=lambda: WildberriesAdapter(client=clients.wildberries),
+                review_factory=lambda: WildberriesAdapter(client=clients.wildberries),
             ),
             Marketplace.OZON: ProviderRegistration(
                 capability=OZON_CAPABILITY,
-                factory=lambda: OzonAdapter(client=clients.ozon),
+                credential_factory=lambda: OzonAdapter(client=clients.ozon),
+                review_factory=lambda: OzonAdapter(client=clients.ozon),
             ),
             Marketplace.YANDEX_MARKET: ProviderRegistration(
                 capability=YANDEX_MARKET_CAPABILITY,
-                factory=lambda: YandexMarketAdapter(client=clients.yandex_market),
+                credential_factory=lambda: YandexMarketAdapter(client=clients.yandex_market),
+                review_factory=lambda: YandexMarketAdapter(client=clients.yandex_market),
             ),
         }
     )
