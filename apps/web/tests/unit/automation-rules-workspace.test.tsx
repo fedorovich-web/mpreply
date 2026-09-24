@@ -132,6 +132,61 @@ describe("AutomationRulesWorkspace", () => {
     });
   });
 
+  it("shows confidence as a percentage and sends the same value back to the service", async () => {
+    mockWorkspace("owner");
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "PATCH") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({ ...rule, ...payload }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ items: [rule], total: 1 }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByRole("heading", { name: "Balanced auto" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Редактировать" }));
+
+    const editor = screen.getByRole("form", { name: "Редактор правила автоматизации" });
+    const confidence = within(editor).getByLabelText("Насколько уверенным должен быть ответ");
+    expect(confidence).toHaveValue(80);
+
+    fireEvent.change(confidence, { target: { value: "85" } });
+    fireEvent.click(within(editor).getByRole("button", { name: "Сохранить изменения" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(true);
+    });
+
+    const patchCall = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH");
+    const body = JSON.parse(String(patchCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.confidence_threshold).toBe(0.85);
+  });
+
+  it("keeps loaded rules visible when a manual refresh fails", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async () => {
+      requests += 1;
+      if (requests === 1) {
+        return new Response(JSON.stringify({ items: [rule], total: 1 }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ detail: "database_timeout" }), { status: 503 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByRole("heading", { name: "Balanced auto" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Обновить правила" }));
+
+    const refreshError = await screen.findByRole("alert");
+    expect(refreshError).toHaveTextContent("Не удалось обновить правила");
+    expect(refreshError).not.toHaveTextContent("database_timeout");
+    expect(screen.getByRole("heading", { name: "Balanced auto" })).toBeInTheDocument();
+  });
+
   it("keeps a toggled rule visible and confirms the change when the active filter no longer matches", async () => {
     mockWorkspace("owner");
     let enabled = true;
