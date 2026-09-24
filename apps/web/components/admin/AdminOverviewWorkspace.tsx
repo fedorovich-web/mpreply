@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "../../lib/api/client";
 import { adminOverviewSchema } from "../../lib/api/schemas";
+import type { Locale } from "../../lib/i18n";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 type AdminMetric = {
@@ -14,9 +15,126 @@ type AdminMetric = {
   ratio?: number;
   ratioLabel?: string;
 };
+const adminCopy = {
+  ru: {
+    deniedDescription: "Системная панель доступна только внутреннему суперадминистратору MPReply.",
+    deniedTitle: "Нет доступа к системной панели",
+    loadingDescription: "Получаем актуальные показатели организаций, пользователей, подписок и фоновых процессов.",
+    loadingTitle: "Загружаем системную сводку",
+    retrying: "Повторяем...",
+    retry: "Повторить",
+    errorDescription: "Системные данные сейчас недоступны. Проверьте соединение и повторите попытку.",
+    errorTitle: "Не удалось загрузить системную сводку",
+    integrationFailures: "Ошибки интеграций за 24 часа",
+    integrationSome: "Есть неуспешные события обмена с маркетплейсами",
+    integrationNone: "Неуспешных событий обмена не зафиксировано",
+    failedReplies: "Неотправленные ответы за 24 часа",
+    repliesSome: "Есть ответы, завершившиеся ошибкой отправки",
+    repliesNone: "Ошибок отправки ответов не зафиксировано",
+    organizations: "Организации",
+    activeLower: "активных",
+    activePercent: "активны",
+    users: "Пользователи",
+    allAccounts: "Все зарегистрированные аккаунты",
+    activeSubscriptions: "Активные подписки",
+    subscriptionsHelper: "Подписки, учтённые системой как активные",
+    ofActiveOrganizations: "от активных организаций",
+    usageEvents: "События использования · 30 дней",
+    usageHelper: "События, учтённые системой за период",
+    aiCost: "Оценка расходов на ИИ · 30 дней",
+    aiCostHelper: "Оценка системных расходов за период",
+    systemMetricsAria: "Системные показатели MPReply",
+    operationsCenter: "Операционный центр",
+    incidentsTitle: "Есть процессы, которые требуют внимания",
+    healthyTitle: "Система работает без зафиксированных сбоев",
+    intro: "Здесь собраны ключевые показатели продукта: активность организаций, подписки, использование, расходы ИИ и ошибки за последние 24 часа.",
+    systemState: "Состояние системы",
+    attention: "Требует внимания",
+    stable: "Стабильно",
+    incidentsNeedReview: "событий требуют проверки",
+    noIncidents: "Ошибок интеграций и отправки ответов за 24 часа нет",
+    kpiAria: "Ключевые показатели",
+    activeOrganizations: "Активные организации",
+    of: "из",
+    registered: "зарегистрировано",
+    systemData: "по данным системы",
+    ai30: "ИИ · 30 дней",
+    costEstimate: "оценка расходов",
+    lastUpdated: "Последнее обновление",
+    last24: "Последние 24 часа",
+    events: "событий",
+    attentionNow: "Что требует внимания сейчас",
+    noIncidentsTitle: "Инцидентов за 24 часа не зафиксировано",
+    productAccess: "Продукт и доступ",
+    activeScope: "Масштаб активного контура",
+    last30: "Последние 30 дней",
+    loadAndCost: "Нагрузка и оценка расходов",
+    stateData: "Системные данные",
+    loadError: "Ошибка загрузки",
+    permissions: "Права доступа",
+  },
+  en: {
+    deniedDescription: "The system console is available only to the internal MPReply super administrator.",
+    deniedTitle: "No access to the system console",
+    loadingDescription: "Loading current organization, user, subscription, and background-process metrics.",
+    loadingTitle: "Loading system overview",
+    retrying: "Retrying...",
+    retry: "Retry",
+    errorDescription: "System data is currently unavailable. Check your connection and try again.",
+    errorTitle: "Could not load the system overview",
+    integrationFailures: "Integration failures · 24 hours",
+    integrationSome: "Some marketplace exchange events failed",
+    integrationNone: "No failed marketplace exchange events were recorded",
+    failedReplies: "Failed reply deliveries · 24 hours",
+    repliesSome: "Some replies ended with a delivery error",
+    repliesNone: "No reply-delivery errors were recorded",
+    organizations: "Organizations",
+    activeLower: "active",
+    activePercent: "active",
+    users: "Users",
+    allAccounts: "All registered accounts",
+    activeSubscriptions: "Active subscriptions",
+    subscriptionsHelper: "Subscriptions currently counted by the system as active",
+    ofActiveOrganizations: "of active organizations",
+    usageEvents: "Usage events · 30 days",
+    usageHelper: "Events recorded by the system during the period",
+    aiCost: "Estimated AI cost · 30 days",
+    aiCostHelper: "Estimated system cost for the period",
+    systemMetricsAria: "MPReply system metrics",
+    operationsCenter: "Operations center",
+    incidentsTitle: "Some processes need attention",
+    healthyTitle: "No recorded system incidents",
+    intro: "This view combines key product metrics: organization activity, subscriptions, usage, AI cost, and failures during the last 24 hours.",
+    systemState: "System state",
+    attention: "Needs attention",
+    stable: "Stable",
+    incidentsNeedReview: "events need review",
+    noIncidents: "No integration or reply-delivery failures were recorded during the last 24 hours",
+    kpiAria: "Key metrics",
+    activeOrganizations: "Active organizations",
+    of: "of",
+    registered: "registered",
+    systemData: "system data",
+    ai30: "AI · 30 days",
+    costEstimate: "estimated cost",
+    lastUpdated: "Last updated",
+    last24: "Last 24 hours",
+    events: "events",
+    attentionNow: "What needs attention now",
+    noIncidentsTitle: "No incidents recorded in the last 24 hours",
+    productAccess: "Product and access",
+    activeScope: "Active product footprint",
+    last30: "Last 30 days",
+    loadAndCost: "Usage and estimated cost",
+    stateData: "System data",
+    loadError: "Loading error",
+    permissions: "Access permissions",
+  },
+} as const;
 
 export function AdminOverviewWorkspace() {
-  const { user } = useWorkspace();
+  const { user, locale } = useWorkspace();
+  const t = adminCopy[locale];
   const overviewQuery = useQuery({
     queryKey: ["admin", "overview"],
     queryFn: () => apiRequest("/api/admin/overview", adminOverviewSchema),
@@ -26,9 +144,10 @@ export function AdminOverviewWorkspace() {
   if (!user.is_superadmin) {
     return (
       <AdminOverviewState
-        description="Системная панель доступна только внутреннему суперадминистратору MPReply."
-        title="Нет доступа к системной панели"
+        description={t.deniedDescription}
+        title={t.deniedTitle}
         tone="denied"
+        locale={locale}
       />
     );
   }
@@ -36,9 +155,10 @@ export function AdminOverviewWorkspace() {
   if (overviewQuery.isLoading) {
     return (
       <AdminOverviewState
-        description="Получаем актуальные показатели организаций, пользователей, подписок и фоновых процессов."
-        title="Загружаем системную сводку"
+        description={t.loadingDescription}
+        title={t.loadingTitle}
         tone="loading"
+        locale={locale}
       />
     );
   }
@@ -47,11 +167,12 @@ export function AdminOverviewWorkspace() {
     return (
       <AdminOverviewState
         actionDisabled={overviewQuery.isFetching}
-        actionLabel={overviewQuery.isFetching ? "Повторяем..." : "Повторить"}
-        description="Системные данные сейчас недоступны. Проверьте соединение и повторите попытку."
+        actionLabel={overviewQuery.isFetching ? t.retrying : t.retry}
+        description={t.errorDescription}
         onAction={() => void overviewQuery.refetch()}
-        title="Не удалось загрузить системную сводку"
+        title={t.errorTitle}
         tone="error"
+        locale={locale}
       />
     );
   }
@@ -64,60 +185,60 @@ export function AdminOverviewWorkspace() {
 
   const incidentMetrics: AdminMetric[] = [
     {
-      label: "Ошибки интеграций за 24 часа",
+      label: t.integrationFailures,
       value: data.integration_failures_24h,
       helper: data.integration_failures_24h > 0
-        ? "Есть неуспешные события обмена с маркетплейсами"
-        : "Неуспешных событий обмена не зафиксировано",
+        ? t.integrationSome
+        : t.integrationNone,
       tone: data.integration_failures_24h > 0 ? "warning" : undefined,
     },
     {
-      label: "Неотправленные ответы за 24 часа",
+      label: t.failedReplies,
       value: data.replies_failed_24h,
       helper: data.replies_failed_24h > 0
-        ? "Есть ответы, завершившиеся ошибкой отправки"
-        : "Ошибок отправки ответов не зафиксировано",
+        ? t.repliesSome
+        : t.repliesNone,
       tone: data.replies_failed_24h > 0 ? "warning" : undefined,
     },
   ];
 
   const productMetrics: AdminMetric[] = [
     {
-      label: "Организации",
+      label: t.organizations,
       value: data.organizations_total,
-      helper: formatNumber(data.organizations_active) + " активных",
+      helper: formatNumber(data.organizations_active, locale) + " " + t.activeLower,
       ratio: activeOrganizationRatio ?? undefined,
-      ratioLabel: activeOrganizationRatio === null ? undefined : activeOrganizationRatio + "% активны",
+      ratioLabel: activeOrganizationRatio === null ? undefined : activeOrganizationRatio + "% " + t.activePercent,
     },
     {
-      label: "Пользователи",
+      label: t.users,
       value: data.users_total,
-      helper: "Все зарегистрированные аккаунты",
+      helper: t.allAccounts,
     },
     {
-      label: "Активные подписки",
+      label: t.activeSubscriptions,
       value: data.subscriptions_active,
-      helper: "Подписки, учтённые системой как активные",
+      helper: t.subscriptionsHelper,
       ratio: subscriptionCoverage ?? undefined,
-      ratioLabel: subscriptionCoverage === null ? undefined : subscriptionCoverage + "% от активных организаций",
+      ratioLabel: subscriptionCoverage === null ? undefined : subscriptionCoverage + "% " + t.ofActiveOrganizations,
     },
   ];
 
   const usageMetrics: AdminMetric[] = [
     {
-      label: "События использования · 30 дней",
+      label: t.usageEvents,
       value: data.usage_events_30d,
-      helper: "События, учтённые системой за период",
+      helper: t.usageHelper,
     },
     {
-      label: "Оценка расходов на ИИ · 30 дней",
+      label: t.aiCost,
       value: formatUsd(data.ai_cost_estimate_30d),
-      helper: "Оценка системных расходов за период",
+      helper: t.aiCostHelper,
     },
   ];
 
   return (
-    <section className="admin-command-center" aria-label="Системные показатели MPReply">
+    <section className="admin-command-center" aria-label={t.systemMetricsAria}>
       <div className="admin-command-head">
         <div className="admin-command-copy">
           <span className="admin-command-eyebrow">
@@ -125,12 +246,11 @@ export function AdminOverviewWorkspace() {
               className={hasIncidents ? "admin-command-live-dot admin-command-live-dot-warning" : "admin-command-live-dot"}
               aria-hidden="true"
             />
-            Операционный центр
+            {t.operationsCenter}
           </span>
-          <h2>{hasIncidents ? "Есть процессы, которые требуют внимания" : "Система работает без зафиксированных сбоев"}</h2>
+          <h2>{hasIncidents ? t.incidentsTitle : t.healthyTitle}</h2>
           <p>
-            Здесь собраны ключевые показатели продукта: активность организаций, подписки,
-            использование, расходы ИИ и ошибки за последние 24 часа.
+            {t.intro}
           </p>
         </div>
 
@@ -139,47 +259,50 @@ export function AdminOverviewWorkspace() {
           className={hasIncidents ? "admin-health-panel admin-health-panel-warning" : "admin-health-panel"}
           role="status"
         >
-          <span>Состояние системы</span>
-          <strong>{hasIncidents ? "Требует внимания" : "Стабильно"}</strong>
+          <span>{t.systemState}</span>
+          <strong>{hasIncidents ? t.attention : t.stable}</strong>
           <p>
             {hasIncidents
-              ? formatNumber(incidentCount) + " событий требуют проверки"
-              : "Ошибок интеграций и отправки ответов за 24 часа нет"}
+              ? formatNumber(incidentCount, locale) + " " + t.incidentsNeedReview
+              : t.noIncidents}
           </p>
         </aside>
       </div>
 
-      <div className="admin-kpi-strip" aria-label="Ключевые показатели">
-        <AdminKpi label="Активные организации" value={formatNumber(data.organizations_active)} helper={"из " + formatNumber(data.organizations_total)} />
-        <AdminKpi label="Пользователи" value={formatNumber(data.users_total)} helper="зарегистрировано" />
-        <AdminKpi label="Активные подписки" value={formatNumber(data.subscriptions_active)} helper="по данным системы" />
-        <AdminKpi label="ИИ · 30 дней" value={formatUsd(data.ai_cost_estimate_30d)} helper="оценка расходов" />
+      <div className="admin-kpi-strip" aria-label={t.kpiAria}>
+        <AdminKpi label={t.activeOrganizations} value={formatNumber(data.organizations_active, locale)} helper={t.of + " " + formatNumber(data.organizations_total, locale)} />
+        <AdminKpi label={t.users} value={formatNumber(data.users_total, locale)} helper={t.registered} />
+        <AdminKpi label={t.activeSubscriptions} value={formatNumber(data.subscriptions_active, locale)} helper={t.systemData} />
+        <AdminKpi label={t.ai30} value={formatUsd(data.ai_cost_estimate_30d)} helper={t.costEstimate} />
       </div>
 
       <div className="admin-overview-meta">
-        <span>Последнее обновление</span>
-        <strong>{formatDateTime(data.generated_at)}</strong>
+        <span>{t.lastUpdated}</span>
+        <strong>{formatDateTime(data.generated_at, locale)}</strong>
       </div>
 
       <div className="admin-overview-body">
         <AdminMetricSection
           className={hasIncidents ? "admin-section-incidents admin-section-alert" : "admin-section-incidents"}
-          eyebrow="Последние 24 часа"
+          eyebrow={t.last24}
           metrics={incidentMetrics}
-          summary={formatNumber(incidentCount) + " событий"}
-          title={hasIncidents ? "Что требует внимания сейчас" : "Инцидентов за 24 часа не зафиксировано"}
+          locale={locale}
+          summary={formatNumber(incidentCount, locale) + " " + t.events}
+          title={hasIncidents ? t.attentionNow : t.noIncidentsTitle}
         />
         <AdminMetricSection
           className="admin-section-product"
-          eyebrow="Продукт и доступ"
+          eyebrow={t.productAccess}
           metrics={productMetrics}
-          title="Масштаб активного контура"
+          locale={locale}
+          title={t.activeScope}
         />
         <AdminMetricSection
           className="admin-section-usage"
-          eyebrow="Последние 30 дней"
+          eyebrow={t.last30}
           metrics={usageMetrics}
-          title="Нагрузка и оценка расходов"
+          locale={locale}
+          title={t.loadAndCost}
         />
       </div>
     </section>
@@ -193,6 +316,7 @@ function AdminOverviewState({
   onAction,
   title,
   tone,
+  locale,
 }: {
   actionDisabled?: boolean;
   actionLabel?: string;
@@ -200,8 +324,10 @@ function AdminOverviewState({
   onAction?: () => void;
   title: string;
   tone: "denied" | "error" | "loading";
+  locale: Locale;
 }) {
-  const eyebrow = tone === "loading" ? "Системные данные" : tone === "error" ? "Ошибка загрузки" : "Права доступа";
+  const t = adminCopy[locale];
+  const eyebrow = tone === "loading" ? t.stateData : tone === "error" ? t.loadError : t.permissions;
 
   return (
     <section
@@ -246,12 +372,14 @@ function AdminMetricSection({
   metrics,
   summary,
   title,
+  locale,
 }: {
   className: string;
   eyebrow: string;
   metrics: AdminMetric[];
   summary?: string;
   title: string;
+  locale: Locale;
 }) {
   return (
     <section className={"admin-section " + className}>
@@ -262,21 +390,21 @@ function AdminMetricSection({
       </header>
       <div className="admin-overview-grid">
         {metrics.map((metric) => (
-          <AdminMetricCard metric={metric} key={metric.label} />
+          <AdminMetricCard metric={metric} key={metric.label} locale={locale} />
         ))}
       </div>
     </section>
   );
 }
 
-function AdminMetricCard({ metric }: { metric: AdminMetric }) {
+function AdminMetricCard({ metric, locale }: { metric: AdminMetric; locale: Locale }) {
   return (
     <article
       className={metric.tone === "warning" ? "admin-metric-card admin-metric-card-warning" : "admin-metric-card"}
     >
       <div className="admin-metric-card-copy">
         <span>{metric.label}</span>
-        <strong>{typeof metric.value === "number" ? formatNumber(metric.value) : metric.value}</strong>
+        <strong>{typeof metric.value === "number" ? formatNumber(metric.value, locale) : metric.value}</strong>
         <p>{metric.helper}</p>
       </div>
       {metric.ratio !== undefined && metric.ratioLabel ? (
@@ -296,8 +424,8 @@ function ratioPercent(part: number, total: number): number | null {
   return Math.round((part / total) * 100);
 }
 
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("ru-RU").format(value);
+function formatNumber(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "ru-RU").format(value);
 }
 
 function formatUsd(value: number): string {
@@ -308,8 +436,8 @@ function formatUsd(value: number): string {
   }).format(value);
 }
 
-function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat("ru-RU", {
+function formatDateTime(value: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ru-RU", {
     day: "2-digit",
     month: "short",
     year: "numeric",

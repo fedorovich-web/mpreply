@@ -84,7 +84,9 @@ describe("superadmin dashboard", () => {
     expect(workspace).toContain('aria-busy={tone === "loading"}');
     expect(workspace).toContain('role={tone === "error" ? "alert" : "status"}');
     expect(workspace).toContain("overviewQuery.isFetching");
-    expect(workspace).toContain('actionLabel={overviewQuery.isFetching ? "Повторяем..." : "Повторить"}');
+    expect(workspace).toContain("actionLabel={overviewQuery.isFetching ? t.retrying : t.retry}");
+    expect(workspace).toContain('retrying: "Повторяем..."');
+    expect(workspace).toContain('retry: "Retry"');
     expect(workspace).toContain("disabled={overviewQuery.isFetching}");
     expect(styles).toContain(".admin-overview-state");
     expect(styles).toContain(".admin-overview-state-loading");

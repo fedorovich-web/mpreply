@@ -22,7 +22,9 @@ describe("billing and limits dashboard", () => {
   });
 
   it("keeps failures recoverable and never exposes raw backend errors", () => {
-    expect(workspace).toContain('actionLabel="Повторить"');
+    expect(workspace).toContain("actionLabel={t.retry}");
+    expect(workspace).toContain('retry: "Повторить"');
+    expect(workspace).toContain('retry: "Retry"');
     expect(workspace).toContain("billingQuery.refetch()");
     expect(workspace).toContain("Показана последняя доступная информация");
     expect(workspace).not.toContain("error.message");

@@ -4,17 +4,106 @@ import { useQuery } from "@tanstack/react-query";
 
 import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { billingOverviewSchema } from "../../lib/api/schemas";
+import type { Locale } from "../../lib/i18n";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
-const metricLabels: Record<string, string> = {
-  ai_drafts_monthly: "Черновики с ИИ",
-  replies_sent_monthly: "Отправленные ответы",
-  marketplace_accounts: "Подключённые кабинеты",
-  members: "Участники команды",
+const metricLabels: Record<Locale, Record<string, string>> = {
+  ru: {
+    ai_drafts_monthly: "Черновики с ИИ",
+    replies_sent_monthly: "Отправленные ответы",
+    marketplace_accounts: "Подключённые кабинеты",
+    members: "Участники команды",
+  },
+  en: {
+    ai_drafts_monthly: "AI drafts",
+    replies_sent_monthly: "Replies sent",
+    marketplace_accounts: "Connected seller accounts",
+    members: "Team members",
+  },
 };
 
+const billingCopy = {
+  ru: {
+    loadingDescription: "Получаем текущий тариф, расчётный период и использование лимитов.",
+    loadingTitle: "Загружаем тариф",
+    retry: "Повторить",
+    loadErrorDescription: "Не удалось получить данные о тарифе. Проверьте соединение и повторите попытку.",
+    loadErrorTitle: "Тариф временно недоступен",
+    noDataDescription: "Обновите страницу или обратитесь в поддержку, если данные не появятся.",
+    noDataTitle: "Нет данных о тарифе",
+    refreshError: "Не удалось обновить данные. Показана последняя доступная информация.",
+    refresh: "Обновить",
+    currentPlan: "Текущий тариф",
+    monthlyPrice: "Стоимость в месяц",
+    periodNote: "Лимиты ниже относятся к текущему расчётному периоду.",
+    billingPeriod: "Расчётный период",
+    planStatus: "Состояние тарифа",
+    renewal: "Продление",
+    usage: "Использование",
+    workspaceLimits: "Лимиты рабочего пространства",
+    usageDescription: "Здесь учитываются только показатели, которые действительно ограничиваются или отслеживаются текущим тарифом.",
+    metrics: "Показателей",
+    limitReached: "Лимит достигнут",
+    unlimited: "Без отдельного лимита",
+    currentPeriod: "Текущий период",
+    limitUsage: "Использование лимитов",
+    usedPercent: "лимита использовано",
+    used: "использовано",
+    remaining: "Осталось",
+    unlimitedDescription: "Текущий тариф не задаёт отдельное ограничение для этого показателя.",
+    genericMetric: "Лимит тарифа",
+    active: "Активен",
+    trialing: "Пробный период",
+    pastDue: "Требуется оплата",
+    canceled: "Отменён",
+    noSubscription: "Без подписки",
+    notApplicable: "Не применяется",
+    endsAtPeriod: "Отключится в конце периода",
+    renewalEnabled: "Включено",
+  },
+  en: {
+    loadingDescription: "Loading the current plan, billing period, and limit usage.",
+    loadingTitle: "Loading plan",
+    retry: "Retry",
+    loadErrorDescription: "Could not load plan data. Check your connection and try again.",
+    loadErrorTitle: "Plan data is temporarily unavailable",
+    noDataDescription: "Refresh the page or contact support if the plan data does not appear.",
+    noDataTitle: "No plan data available",
+    refreshError: "Could not refresh the data. Showing the latest available information.",
+    refresh: "Refresh",
+    currentPlan: "Current plan",
+    monthlyPrice: "Monthly price",
+    periodNote: "The limits below apply to the current billing period.",
+    billingPeriod: "Billing period",
+    planStatus: "Plan status",
+    renewal: "Renewal",
+    usage: "Usage",
+    workspaceLimits: "Workspace limits",
+    usageDescription: "Only metrics that are actually limited or tracked by the current plan are shown here.",
+    metrics: "Tracked metrics",
+    limitReached: "Limit reached",
+    unlimited: "No separate limit",
+    currentPeriod: "Current period",
+    limitUsage: "Limit usage",
+    usedPercent: "of limit used",
+    used: "used",
+    remaining: "Remaining",
+    unlimitedDescription: "The current plan does not set a separate limit for this metric.",
+    genericMetric: "Plan limit",
+    active: "Active",
+    trialing: "Trial",
+    pastDue: "Payment required",
+    canceled: "Canceled",
+    noSubscription: "No subscription",
+    notApplicable: "Not applicable",
+    endsAtPeriod: "Ends after the current period",
+    renewalEnabled: "Enabled",
+  },
+} as const;
+
 export function BillingWorkspace() {
-  const { activeOrganization } = useWorkspace();
+  const { activeOrganization, locale } = useWorkspace();
+  const t = billingCopy[locale];
   const billingQuery = useQuery({
     queryKey: ["billing", "overview", activeOrganization.id],
     queryFn: () => apiRequest(
@@ -26,8 +115,8 @@ export function BillingWorkspace() {
   if (billingQuery.isLoading && !billingQuery.data) {
     return (
       <BillingState
-        description="Получаем текущий тариф, расчётный период и использование лимитов."
-        title="Загружаем тариф"
+        description={t.loadingDescription}
+        title={t.loadingTitle}
       />
     );
   }
@@ -35,10 +124,10 @@ export function BillingWorkspace() {
   if (billingQuery.error && !billingQuery.data) {
     return (
       <BillingState
-        actionLabel="Повторить"
-        description="Не удалось получить данные о тарифе. Проверьте соединение и повторите попытку."
+        actionLabel={t.retry}
+        description={t.loadErrorDescription}
         onAction={() => void billingQuery.refetch()}
-        title="Тариф временно недоступен"
+        title={t.loadErrorTitle}
         tone="error"
       />
     );
@@ -47,23 +136,23 @@ export function BillingWorkspace() {
   if (!billingQuery.data) {
     return (
       <BillingState
-        description="Обновите страницу или обратитесь в поддержку, если данные не появятся."
-        title="Нет данных о тарифе"
+        description={t.noDataDescription}
+        title={t.noDataTitle}
       />
     );
   }
 
   const data = billingQuery.data;
   const price = data.pricing_finalized && data.plan.price_month_minor !== null
-    ? formatPrice(data.plan.price_month_minor, data.plan.currency)
+    ? formatPrice(data.plan.price_month_minor, data.plan.currency, locale)
     : "—";
 
   return (
     <section className="billing-workspace">
       {billingQuery.error ? (
         <div className="billing-data-notice" role="status">
-          <span>Не удалось обновить данные. Показана последняя доступная информация.</span>
-          <button onClick={() => void billingQuery.refetch()} type="button">Обновить</button>
+          <span>{t.refreshError}</span>
+          <button onClick={() => void billingQuery.refetch()} type="button">{t.refresh}</button>
         </div>
       ) : null}
 
@@ -71,52 +160,52 @@ export function BillingWorkspace() {
         <article className="billing-plan-card">
           <div className="billing-plan-heading">
             <div>
-              <span className="panel-kicker">Текущий тариф</span>
+              <span className="panel-kicker">{t.currentPlan}</span>
               <h2>{data.plan.name}</h2>
             </div>
             <span className={subscriptionStatusClass(data.subscription?.status)}>
-              {subscriptionStatusLabel(data.subscription?.status)}
+              {subscriptionStatusLabel(data.subscription?.status, locale)}
             </span>
           </div>
 
           <div className="billing-price-state">
-            <span>Стоимость в месяц</span>
+            <span>{t.monthlyPrice}</span>
             <strong>{price}</strong>
-            <p>Лимиты ниже относятся к текущему расчётному периоду.</p>
+            <p>{t.periodNote}</p>
           </div>
 
           <dl className="billing-meta-grid">
             <div>
-              <dt>Расчётный период</dt>
-              <dd>{formatDate(data.usage_period_start)} — {formatDate(data.usage_period_end)}</dd>
+              <dt>{t.billingPeriod}</dt>
+              <dd>{formatDate(data.usage_period_start, locale)} — {formatDate(data.usage_period_end, locale)}</dd>
             </div>
             <div>
-              <dt>Состояние тарифа</dt>
-              <dd>{subscriptionStatusLabel(data.subscription?.status)}</dd>
+              <dt>{t.planStatus}</dt>
+              <dd>{subscriptionStatusLabel(data.subscription?.status, locale)}</dd>
             </div>
             <div>
-              <dt>Продление</dt>
-              <dd>{renewalLabel(data.subscription)}</dd>
+              <dt>{t.renewal}</dt>
+              <dd>{renewalLabel(data.subscription, locale)}</dd>
             </div>
           </dl>
         </article>
 
         <aside className="billing-summary-card">
-          <span className="panel-kicker">Использование</span>
-          <h2>Лимиты рабочего пространства</h2>
+          <span className="panel-kicker">{t.usage}</span>
+          <h2>{t.workspaceLimits}</h2>
           <p>
-            Здесь учитываются только показатели, которые действительно ограничиваются или отслеживаются текущим тарифом.
+            {t.usageDescription}
           </p>
           <div className="billing-summary-list">
-            <SummaryItem label="Показателей" value={formatNumber(data.usage.length)} />
+            <SummaryItem label={t.metrics} value={formatNumber(data.usage.length, locale)} />
             <SummaryItem
-              label="Лимит достигнут"
+              label={t.limitReached}
               tone={data.usage.some((item) => !item.allowed) ? "warning" : "default"}
-              value={formatNumber(data.usage.filter((item) => !item.allowed).length)}
+              value={formatNumber(data.usage.filter((item) => !item.allowed).length, locale)}
             />
             <SummaryItem
-              label="Без отдельного лимита"
-              value={formatNumber(data.usage.filter((item) => item.limit === null).length)}
+              label={t.unlimited}
+              value={formatNumber(data.usage.filter((item) => item.limit === null).length, locale)}
             />
           </div>
         </aside>
@@ -125,11 +214,11 @@ export function BillingWorkspace() {
       <section className="billing-section" aria-labelledby="billing-usage-title">
         <div className="billing-section-heading">
           <div>
-            <span className="panel-kicker">Текущий период</span>
-            <h2 id="billing-usage-title">Использование лимитов</h2>
+            <span className="panel-kicker">{t.currentPeriod}</span>
+            <h2 id="billing-usage-title">{t.limitUsage}</h2>
           </div>
           <span className="billing-period-label">
-            {formatDate(data.usage_period_start)} — {formatDate(data.usage_period_end)}
+            {formatDate(data.usage_period_start, locale)} — {formatDate(data.usage_period_end, locale)}
           </span>
         </div>
 
@@ -148,30 +237,30 @@ export function BillingWorkspace() {
                 key={item.metric}
               >
                 <div className="billing-usage-heading">
-                  <span>{metricLabel(item.metric)}</span>
+                  <span>{metricLabel(item.metric, locale)}</span>
                   <strong>
-                    {formatNumber(item.used)}
-                    {item.limit !== null ? ` / ${formatNumber(item.limit)}` : ""}
+                    {formatNumber(item.used, locale)}
+                    {item.limit !== null ? ` / ${formatNumber(item.limit, locale)}` : ""}
                   </strong>
                 </div>
 
                 {percent !== null ? (
                   <>
                     <div
-                      aria-label={`${Math.round(percent)}% лимита использовано`}
+                      aria-label={`${Math.round(percent)}% ${t.usedPercent}`}
                       className="billing-progress"
                     >
                       <span style={{ width: `${percent}%` }} />
                     </div>
                     <div className="billing-usage-caption">
-                      <span>{Math.round(percent)}% использовано</span>
-                      <span>{item.allowed ? `Осталось: ${formatNumber(item.remaining ?? 0)}` : "Лимит достигнут"}</span>
+                      <span>{Math.round(percent)}% {t.used}</span>
+                      <span>{item.allowed ? `${t.remaining}: ${formatNumber(item.remaining ?? 0, locale)}` : t.limitReached}</span>
                     </div>
                   </>
                 ) : (
                   <div className="billing-unlimited">
-                    <strong>Без отдельного лимита</strong>
-                    <span>Текущий тариф не задаёт отдельное ограничение для этого показателя.</span>
+                    <strong>{t.unlimited}</strong>
+                    <span>{t.unlimitedDescription}</span>
                   </div>
                 )}
               </article>
@@ -226,16 +315,17 @@ function SummaryItem({
   );
 }
 
-function metricLabel(metric: string): string {
-  return metricLabels[metric] ?? "Лимит тарифа";
+function metricLabel(metric: string, locale: Locale): string {
+  return metricLabels[locale][metric] ?? billingCopy[locale].genericMetric;
 }
 
-function subscriptionStatusLabel(status: string | null | undefined): string {
-  if (status === "active") return "Активен";
-  if (status === "trialing") return "Пробный период";
-  if (status === "past_due") return "Требуется оплата";
-  if (status === "canceled") return "Отменён";
-  return "Без подписки";
+function subscriptionStatusLabel(status: string | null | undefined, locale: Locale): string {
+  const t = billingCopy[locale];
+  if (status === "active") return t.active;
+  if (status === "trialing") return t.trialing;
+  if (status === "past_due") return t.pastDue;
+  if (status === "canceled") return t.canceled;
+  return t.noSubscription;
 }
 
 function subscriptionStatusClass(status: string | null | undefined): string {
@@ -244,25 +334,26 @@ function subscriptionStatusClass(status: string | null | undefined): string {
   return "billing-status";
 }
 
-function renewalLabel(subscription: { cancel_at_period_end: boolean } | null | undefined): string {
-  if (!subscription) return "Не применяется";
-  return subscription.cancel_at_period_end ? "Отключится в конце периода" : "Включено";
+function renewalLabel(subscription: { cancel_at_period_end: boolean } | null | undefined, locale: Locale): string {
+  const t = billingCopy[locale];
+  if (!subscription) return t.notApplicable;
+  return subscription.cancel_at_period_end ? t.endsAtPeriod : t.renewalEnabled;
 }
 
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("ru-RU").format(value);
+function formatNumber(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "ru-RU").format(value);
 }
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("ru-RU", {
+function formatDate(value: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ru-RU", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   }).format(new Date(value));
 }
 
-function formatPrice(minor: number, currency: string): string {
-  return new Intl.NumberFormat("ru-RU", {
+function formatPrice(minor: number, currency: string, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "ru-RU", {
     style: "currency",
     currency,
   }).format(minor / 100);

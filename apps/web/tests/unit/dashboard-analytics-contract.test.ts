@@ -25,7 +25,9 @@ describe("analytics operational dashboard", () => {
     expect(workspace).toContain("marketplacesQuery.refetch()");
     expect(workspace).toContain("productsQuery.refetch()");
     expect(workspace).toContain("teamQuery.refetch()");
-    expect(workspace).toContain('actionLabel="Повторить"');
+    expect(workspace).toContain("actionLabel={t.retry}");
+    expect(workspace).toContain('retry: "Повторить"');
+    expect(workspace).toContain('retry: "Retry"');
     expect(workspace).toContain("Показаны последние доступные данные");
     expect(workspace).not.toContain("error.message");
   });
