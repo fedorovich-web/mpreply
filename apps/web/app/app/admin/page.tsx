@@ -14,7 +14,7 @@ export default function AdminPage() {
           <div className="admin-page-hero-badges" aria-label="Параметры доступа">
             <span>Только superadmin</span>
             <span>Живые системные данные</span>
-            <span>Без изменений backend</span>
+            <span>Внутренний контур</span>
           </div>
         </div>
 
