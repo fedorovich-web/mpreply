@@ -172,6 +172,29 @@ describe("InboxWorkspace", () => {
     await waitFor(() => expect(setItemSpy).toHaveBeenCalled());
   });
 
+  it("keeps the loaded queue visible when a manual refresh fails", async () => {
+    mockWorkspace();
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async () => {
+      requests += 1;
+      if (requests === 1) {
+        return new Response(JSON.stringify({ items: [message], total: 1, page: 1, page_size: 100 }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ detail: "temporary failure" }), { status: 503 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWorkspace();
+
+    expect(await screen.findByText("Тестовый товар")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Обновить" }));
+
+    const refreshError = await screen.findByRole("alert");
+    expect(refreshError).toHaveTextContent("Не удалось обновить обращения");
+    expect(screen.getByText("Тестовый товар")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
+  });
+
   it("creates a manual reply and actually submits it to review from the inbox", async () => {
     mockWorkspace();
     let messageRequests = 0;
