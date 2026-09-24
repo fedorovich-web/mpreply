@@ -92,7 +92,7 @@ export function IntegrationsWorkspace() {
         </div>
       ) : accountsQuery.data ? (
         <>
-          {accountsQuery.error ? (
+          {accountsQuery.error && accountsQuery.data ? (
             <div className="integration-refresh-error" role="alert">
               <div>
                 <strong>Не удалось обновить подключения</strong>
