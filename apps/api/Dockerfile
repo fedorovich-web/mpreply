@@ -18,8 +18,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/venv/bin:$PATH"
 
-RUN groupadd --gid 10001 respio \
-    && useradd --uid 10001 --gid respio --create-home --shell /usr/sbin/nologin respio
+RUN groupadd --gid 10001 mpreply \
+    && useradd --uid 10001 --gid mpreply --create-home --shell /usr/sbin/nologin mpreply
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
 
-USER respio
+USER mpreply
 
 EXPOSE 8000
 

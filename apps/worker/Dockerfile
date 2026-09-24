@@ -18,15 +18,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/venv/bin:$PATH"
 
-RUN groupadd --gid 10001 respio \
-    && useradd --uid 10001 --gid respio --create-home --shell /usr/sbin/nologin respio
+RUN groupadd --gid 10001 mpreply \
+    && useradd --uid 10001 --gid mpreply --create-home --shell /usr/sbin/nologin mpreply
 
 WORKDIR /app
 
 COPY --from=builder /venv /venv
 COPY apps/api/app ./app
 
-USER respio
+USER mpreply
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import os; from redis import Redis; client=Redis.from_url(os.environ['REDIS_URL']); assert client.ping(); client.close()"

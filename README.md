@@ -61,7 +61,7 @@ This builds and starts PostgreSQL, Redis, migrations, API, worker and web, waits
 ## Manual local Compose
 
 ```powershell
-cd C:\Work\respio
+cd C:\Work\mpreply
 docker compose -f infra\docker\docker-compose.local.yml up --build -d --wait
 ```
 

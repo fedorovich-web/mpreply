@@ -363,8 +363,8 @@ def check_deployment_contract() -> None:
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
 
     docker_contracts = [
-        (api_dockerfile, "USER respio", "API image must run as non-root user"),
-        (worker_dockerfile, "USER respio", "Worker image must run as non-root user"),
+        (api_dockerfile, "USER mpreply", "API image must run as non-root user"),
+        (worker_dockerfile, "USER mpreply", "Worker image must run as non-root user"),
         (web_dockerfile, "USER nextjs", "Web image must run as non-root user"),
         (web_dockerfile, "NEXT_PUBLIC_API_BASE_URL", "Web image must receive public API base URL at build time"),
         (next_config, 'output: "standalone"', "Next.js must use standalone output for production image"),
