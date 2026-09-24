@@ -23,6 +23,7 @@ describe("public demo truth contract", () => {
     for (const claim of unsupportedDemoClaims) {
       expect(demo).not.toContain(claim);
     }
+    expect(demo).not.toContain("Быстрое подключение");
   });
 
   it("labels the walkthrough as a demonstration", () => {
@@ -33,6 +34,12 @@ describe("public demo truth contract", () => {
   it("keeps the sample answer grounded when stock timing is unknown", () => {
     expect(demo).toContain("Точная дата следующей поставки в доступном контексте не указана");
     expect(demo).not.toContain("следующей неделе. Мы сообщим");
+  });
+
+  it("uses observable trial and workflow mechanics in the hero trust row", () => {
+    expect(demo).toContain("14 дней бесплатно");
+    expect(demo).toContain("Контроль перед отправкой");
+    expect(demo).toContain("ИИ-черновик с контекстом");
   });
 
   it("shows real product mechanics instead of template claims", () => {

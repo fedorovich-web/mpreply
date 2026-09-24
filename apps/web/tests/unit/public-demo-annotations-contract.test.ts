@@ -9,9 +9,9 @@ const decorativeCss = readFileSync(join(root, "styles/public-mockup-decorative-f
 describe("approved demo annotations", () => {
   it("keeps the hero and CTA handwritten notes from the render", () => {
     expect(demo).toContain("demo-hero-note");
-    expect(demo).toContain("Быстрее и проще");
+    expect(demo).toContain("Контекст");
     expect(demo).toContain("demo-cta-note");
-    expect(demo).toContain("Убедитесь в эффективности");
+    expect(demo).toContain("Посмотрите процесс");
     expect(decorativeCss).toContain(".demo-hero-note");
     expect(decorativeCss).toContain(".demo-cta-note");
   });

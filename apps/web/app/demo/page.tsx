@@ -175,7 +175,7 @@ export default function DemoPage() {
               <div className="mockup-trust-row">
                 <span>14 дней бесплатно</span>
                 <span>Контроль перед отправкой</span>
-                <span>Быстрое подключение</span>
+                <span>ИИ-черновик с контекстом</span>
               </div>
             </div>
 

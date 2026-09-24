@@ -22,7 +22,7 @@ describe("approved demo journey visual", () => {
     expect(publicIcon).toContain('"message"');
     expect(demo).toContain('["message", "Получение обращения"');
     expect(demo).toContain('["users", "purple", "Единая очередь обращений"');
-    expect(demo).toContain('["document", "blue", "Шаблоны ответов"');
+    expect(demo).toContain('["users", "blue", "Назначение обращений"');
   });
 
   it("uses the approved status icons in the large process timeline", () => {
@@ -31,20 +31,20 @@ describe("approved demo journey visual", () => {
     }
     expect(demo).toContain("demo-process-event-icon");
     expect(demo).toContain('["download", "green", "Получено"');
-    expect(demo).toContain('["search", "blue", "Анализ"');
-    expect(demo).toContain('["sparkles", "purple", "AI-черновик"');
-    expect(demo).toContain('["users", "purple", "Ожидает"');
+    expect(demo).toContain('["search", "blue", "Контекст"');
+    expect(demo).toContain('["sparkles", "purple", "ИИ-черновик"');
+    expect(demo).toContain('["users", "purple", "Проверено"');
     expect(demo).toContain('["check-circle", "green", "Отправлено"');
     expect(finalCss).toContain(".demo-process-event-icon.green");
     expect(finalCss).toContain(".demo-process-event-icon.purple");
   });
 
   it("matches the approved full-process message and ready-answer cards", () => {
-    expect(demo).toContain("12 мар 2024, 14:32");
+    expect(demo).toContain("12 мар, 14:32");
     expect(demo).toContain("demo-process-buyer-message");
-    expect(demo).toContain("Открыть в маркетплейсе");
-    expect(demo).toContain("Готовый ответ");
-    expect(demo).toContain("Посмотреть полностью");
+    expect(demo).toContain("Контекст маркетплейса");
+    expect(demo).toContain("Черновик ответа");
+    expect(demo).toContain("Показан полностью");
     expect(demo).not.toContain("detail-product-row");
     expect(finalCss).toContain(".demo-process-buyer-message");
   });
@@ -57,10 +57,10 @@ describe("approved demo journey visual", () => {
   });
 
   it("keeps scenario cards to logo, type, body copy and link like the render", () => {
-    expect(demo).toContain("Примеры из реальной практики");
-    expect(demo).toContain("Покупатель оставил отзыв на товар. Посмотрите, как MPReply помогает корректно и вежливо ответить.");
-    expect(demo).toContain("Покупатель задаёт вопрос о товаре, доставке или наличии. Посмотрите, как MPReply формирует точный ответ.");
-    expect(demo).toContain("Личное сообщение от покупателя. Посмотрите, как MPReply учитывает контекст и историю клиента.");
+    expect(demo).toContain("Пример сценария");
+    expect(demo).toContain("Покупатель оставил отзыв на товар. Посмотрите, как MPReply ведёт его через очередь, черновик и проверку.");
+    expect(demo).toContain("Покупатель задаёт вопрос о товаре, доставке или наличии. MPReply готовит черновик только на основе доступного контекста.");
+    expect(demo).toContain("Сообщение покупателя попадает в общую очередь, где видны его текст, статус и доступный контекст товара.");
     expect(demo).not.toContain("scenario.title");
   });
 
@@ -74,9 +74,9 @@ describe("approved demo journey visual", () => {
     expect(demo).toContain("demo-story-meta");
     expect(demo).toContain("Покупатель");
     expect(demo).toContain("5 мин назад");
-    expect(demo).toContain("Предлагает ответ");
-    expect(demo).toContain("Проверяете и отправляете");
-    expect(demo).toContain("Отличный ответ!");
+    expect(demo).toContain("Предлагает черновик");
+    expect(demo).toContain("Проверяете перед отправкой");
+    expect(demo).toContain("Черновик проверен");
     expect(finalCss).toContain(".demo-story-meta");
     expect(finalCss).toContain(".demo-story-review-avatar");
   });

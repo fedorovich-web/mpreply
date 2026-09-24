@@ -176,7 +176,7 @@ export default function DemoPage() {
               <div className="mockup-trust-row">
                 <span>14-day trial</span>
                 <span>Review before sending</span>
-                <span>Quick setup</span>
+                <span>AI-assisted draft with context</span>
               </div>
             </div>
 
