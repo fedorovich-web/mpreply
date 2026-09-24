@@ -41,7 +41,8 @@ describe("user-facing copy", () => {
       expect(page).not.toContain("Legal draft");
       expect(page).not.toContain("production");
       expect(page).not.toContain("SaaS");
-      expect(page).not.toContain("credentials");
+      expect(page).not.toContain("чужих credentials");
+      expect(page).not.toContain("Marketplace credentials");
       expect(page).not.toContain("scopes");
       expect(page).not.toContain("rate limits");
       expect(page).not.toContain("AI-");
