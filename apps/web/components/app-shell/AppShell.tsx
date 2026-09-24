@@ -181,6 +181,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
 
+        <div className="app-sidebar-workspace">
+          <span className="app-workspace-avatar" aria-hidden="true">
+            {activeOrganization.name.trim().charAt(0).toUpperCase() || "M"}
+          </span>
+          {organizations.length > 1 ? (
+            <label className="app-sidebar-workspace-select">
+              <span className="sr-only">Выбрать рабочее пространство</span>
+              <select
+                aria-label="Выбрать рабочее пространство"
+                onChange={(event) => setActiveOrganizationId(event.target.value)}
+                value={activeOrganization.id}
+              >
+                {organizations.map((organization) => (
+                  <option key={organization.id} value={organization.id}>{organization.name}</option>
+                ))}
+              </select>
+              <small>Рабочее пространство</small>
+            </label>
+          ) : (
+            <span className="app-sidebar-workspace-copy">
+              <strong>{activeOrganization.name}</strong>
+              <small>Рабочее пространство</small>
+            </span>
+          )}
+        </div>
+
         <nav className="app-nav" aria-label="Разделы кабинета">
           {visibleNavGroups.map((group) => (
             <div className="app-nav-group" role="group" aria-labelledby={`app-nav-${group.id}`} key={group.id}>
@@ -207,24 +233,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="app-sidebar-footer">
-          {organizations.length > 1 ? (
-            <div className="app-mobile-workspace-switcher">
-              <span className="app-nav-group-label">Компания</span>
-              <label className="workspace-selector">
-                <span className="sr-only">Выбрать организацию</span>
-                <select
-                  aria-label="Выбрать организацию"
-                  onChange={(event) => setActiveOrganizationId(event.target.value)}
-                  value={activeOrganization.id}
-                >
-                  {organizations.map((organization) => (
-                    <option key={organization.id} value={organization.id}>{organization.name}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          ) : null}
-
           <Link className="app-help-link" href="/help" onClick={closeDrawer}>
             <span className="app-nav-icon"><NavIcon name="help" /></span>
             <span><strong>Помощь</strong><small>База знаний и поддержка</small></span>
@@ -262,21 +270,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="app-topbar-controls">
-            {organizations.length > 1 ? (
-              <label className="workspace-selector">
-                <span className="sr-only">Выбрать организацию</span>
-                <select
-                  aria-label="Выбрать организацию"
-                  onChange={(event) => setActiveOrganizationId(event.target.value)}
-                  value={activeOrganization.id}
-                >
-                  {organizations.map((organization) => (
-                    <option key={organization.id} value={organization.id}>{organization.name}</option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-
             <div className="app-topbar-user">
               <span className="app-status-dot" aria-hidden="true" />
               <span>

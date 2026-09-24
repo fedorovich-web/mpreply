@@ -59,8 +59,9 @@ describe("integrations dashboard", () => {
   });
 
   it("states that all supported marketplaces are available for connection", () => {
-    expect(page).toContain("Подключите Wildberries, Ozon, Яндекс Маркет и Авито");
-    expect(page).toContain("4 маркетплейса");
+    expect(page).toContain("<h1>Интеграции</h1>");
+    expect(page).toContain("Wildberries, Ozon, Яндекс Маркет и Авито");
+    expect(page).not.toContain("status-badge");
     expect(page).not.toContain("находятся в плане интеграций");
   });
 

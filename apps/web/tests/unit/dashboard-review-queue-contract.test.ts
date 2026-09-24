@@ -80,9 +80,9 @@ describe("review queue operational workspace", () => {
   });
 
   it("frames the page around decisions with the approved product label", () => {
-    expect(page).toContain('<p className="eyebrow">На проверке</p>');
-    expect(page).toContain("Проверьте ответы, которым нужно решение");
-    expect(page).toContain("Причина внимания остаётся рядом с ответом");
+    expect(page).toContain("<h1>На проверке</h1>");
+    expect(page).toContain("обращение, товар и причина остановки остаются рядом");
+    expect(page).not.toContain("status-badge");
     expect(page).not.toContain("История изменений");
   });
 });

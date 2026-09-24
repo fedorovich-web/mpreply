@@ -112,9 +112,9 @@ describe("inbox operational workspace", () => {
   });
 
   it("frames the page around triage with the approved product label", () => {
-    expect(page).toContain('<p className="eyebrow">Обращения</p>');
-    expect(page).toContain("Разберите обращения без переключения между кабинетами");
-    expect(page).toContain("Фильтры сохраняются");
+    expect(page).toContain("<h1>Обращения</h1>");
+    expect(page).toContain("Фильтруйте очередь по площадке, типу, статусу, оценке и ответственному");
+    expect(page).not.toContain("status-badge");
     expect(page).not.toMatch(/экономи|процент|рост|эффективност/i);
   });
 });

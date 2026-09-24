@@ -47,7 +47,8 @@ describe("dashboard operational overview", () => {
   });
 
   it("puts unanswered work, review decisions and integration health before aggregate reporting", () => {
-    expect(page).toContain("Очереди, проверки и состояние автоматизации");
+    expect(page).toContain("<h1>Обзор</h1>");
+    expect(page).toContain("Следите за обращениями, очередью проверки, автоматизацией");
     expect(dashboard).toContain("dashboard-attention-panel");
     expect(dashboard).toContain("Без ответа");
     expect(dashboard).toContain("На проверке");

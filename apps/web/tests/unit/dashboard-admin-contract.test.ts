@@ -15,11 +15,9 @@ describe("superadmin dashboard", () => {
     expect(workspace).toContain("if (!user.is_superadmin)");
   });
 
-  it("uses MPReply product language rather than legacy or developer-facing copy", () => {
-    expect(page).toContain("Системная панель MPReply");
-    expect(page).toContain("Доступ суперадминистратора");
-    expect(page).toContain("Актуальные данные");
-    expect(page).toContain("Внутренняя панель");
+  it("uses concise MPReply product language rather than legacy or developer-facing copy", () => {
+    expect(page).toContain("<h1>Администрирование</h1>");
+    expect(page).toContain("состояние продукта, организаций, подписок и фоновых процессов");
     expect(page).not.toContain("Respio");
     expect(page).not.toContain("Только superadmin");
     expect(workspace).not.toContain("Respio");
@@ -28,17 +26,14 @@ describe("superadmin dashboard", () => {
     expect(workspace).not.toContain("usage ledger");
   });
 
-  it("uses the approved blue SaaS composition without decorative fake charts", () => {
-    expect(page).toContain("admin-page-hero");
-    expect(page).toContain("admin-page-preview-activity");
-    expect(page).not.toContain("admin-page-preview-chart");
+  it("uses the approved authenticated composition without a decorative fake preview", () => {
+    expect(page).toContain("admin-page-header");
+    expect(page).not.toContain("admin-page-hero-preview");
+    expect(page).not.toContain("admin-page-preview-activity");
     expect(workspace).toContain("admin-command-center");
     expect(workspace).toContain("admin-kpi-strip");
     expect(workspace).toContain("admin-health-panel");
     expect(workspace).toContain("admin-metric-card");
-    expect(styles).toContain(".admin-page-hero");
-    expect(styles).toContain(".admin-page-preview-activity");
-    expect(styles).not.toContain(".admin-page-preview-chart");
     expect(styles).toContain(".admin-command-center");
     expect(styles).toContain(".admin-kpi-strip");
     expect(styles).toContain(".admin-health-panel");
