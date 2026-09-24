@@ -38,8 +38,16 @@
 	padding: 0 0 0.8rem;
 }
 
-.automation-toolbar > div {
+.automation-toolbar > div:first-child {
 	max-width: 48rem;
+}
+
+.automation-toolbar-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem;
 }
 
 .automation-toolbar-title {
@@ -123,6 +131,41 @@
 	box-shadow: none;
 }
 
+.automation-refresh-error {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.8rem;
+	border: 1px solid color-mix(in srgb, var(--color-danger-text) 18%, var(--color-border-subtle));
+	border-radius: var(--radius-lg);
+	background: color-mix(in srgb, var(--color-danger-soft) 26%, var(--color-bg-surface));
+	padding: 0.7rem 0.9rem;
+}
+
+.automation-refresh-error > div {
+	min-width: 0;
+}
+
+.automation-refresh-error strong {
+	display: block;
+	color: var(--color-danger-text);
+	font-size: 0.72rem;
+	font-weight: 750;
+}
+
+.automation-refresh-error p {
+	margin: 0.18rem 0 0;
+	color: var(--color-text-secondary);
+	font-size: 0.67rem;
+	line-height: 1.4;
+}
+
+.automation-refresh-error .button {
+	flex: 0 0 auto;
+	min-height: 2rem;
+	font-size: 0.66rem;
+}
+
 .automation-rule-list {
 	display: grid;
 	align-content: start;
@@ -176,6 +219,7 @@
 	position: static;
 	min-width: 0;
 	padding: 1.15rem 1.25rem 1.25rem;
+	scroll-margin-top: calc(var(--header-height) + var(--space-3));
 }
 
 .automation-rule-detail,
@@ -285,6 +329,36 @@
 .automation-field select {
 	min-height: 2.45rem;
 	font-size: 0.72rem;
+}
+
+.automation-field > small {
+	color: var(--color-text-muted);
+	font-size: 0.64rem;
+	font-weight: 500;
+	line-height: 1.4;
+}
+
+.automation-field-with-suffix {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	border: 1px solid var(--color-border-subtle);
+	border-radius: var(--radius-md);
+	background: var(--color-bg-surface);
+	overflow: hidden;
+}
+
+.automation-field-with-suffix input {
+	min-width: 0;
+	border: 0;
+	border-radius: 0;
+}
+
+.automation-field-with-suffix > span {
+	padding: 0 0.75rem;
+	color: var(--color-text-muted);
+	font-size: 0.72rem;
+	font-weight: 700;
 }
 
 .automation-safety-fieldset {
@@ -470,7 +544,18 @@
 		font-size: clamp(1.8rem, 10vw, 2.35rem);
 	}
 
-	.automation-toolbar .button {
+	.automation-toolbar-actions,
+	.automation-toolbar-actions .button,
+	.automation-toolbar > .automation-readonly-note {
+		width: 100%;
+	}
+
+	.automation-refresh-error {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.automation-refresh-error .button {
 		width: 100%;
 	}
 

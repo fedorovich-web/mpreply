@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
@@ -36,11 +36,11 @@ type RuleEditorState = {
 };
 
 const precedence = [
-  "Режим рабочей области по умолчанию",
+  "Режим ответов по умолчанию",
   "Настройки выбранного кабинета маркетплейса",
-  "Совпавшее правило с наивысшим приоритетом",
-  "Проверка контекста товара и уверенности ответа",
-  "Финальная проверка перед автоотправкой",
+  "Подходящее правило с самым высоким приоритетом",
+  "Проверка данных о товаре и качества ответа",
+  "Проверка перед автоматической отправкой",
 ];
 
 const filterLabels: Record<RuleFilter, string> = {
@@ -77,6 +77,7 @@ function AutomationRulesWorkspaceContent({
   const [editorMode, setEditorMode] = useState<EditorMode | null>(null);
   const [editor, setEditor] = useState<RuleEditorState>(() => emptyEditor());
   const [mutationSuccess, setMutationSuccess] = useState<string | null>(null);
+  const detailPanelRef = useRef<HTMLDivElement>(null);
   const canWrite = role === "owner" || role === "admin";
 
   const rulesQuery = useQuery({
@@ -152,10 +153,22 @@ function AutomationRulesWorkspaceContent({
 
   const mutationError = saveMutation.error ?? toggleMutation.error;
 
+  function scrollToDetailOnCompactLayout() {
+    if (!window.matchMedia("(max-width: 1180px)").matches) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      detailPanelRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  }
+
   function startCreate() {
     setMutationSuccess(null);
     setEditor(emptyEditor());
     setEditorMode("create");
+    scrollToDetailOnCompactLayout();
   }
 
   function startEdit(rule: AutomationRule) {
@@ -163,12 +176,14 @@ function AutomationRulesWorkspaceContent({
     setSelectedRuleId(rule.id);
     setEditor(editorFromRule(rule));
     setEditorMode("edit");
+    scrollToDetailOnCompactLayout();
   }
 
   function selectRule(rule: AutomationRule) {
     setMutationSuccess(null);
     setSelectedRuleId(rule.id);
     setEditorMode(null);
+    scrollToDetailOnCompactLayout();
   }
 
   return (
@@ -177,23 +192,36 @@ function AutomationRulesWorkspaceContent({
         <div>
           <p className="automation-toolbar-title">{organizationName}</p>
           <p className="automation-toolbar-copy">
-            Правила применяются по приоритету. Перед автоотправкой ответ проходит обязательную проверку.
+            Правила применяются по приоритету. Перед автоматической отправкой MPReply проверяет, можно ли безопасно отправить ответ.
           </p>
         </div>
-        {canWrite ? (
-          <button className="button button-primary" onClick={startCreate} type="button">
-            Создать правило
-          </button>
-        ) : (
+        <div className="automation-toolbar-actions">
+          {rulesQuery.data ? (
+            <button
+              className="button button-secondary button-compact"
+              disabled={rulesQuery.isFetching}
+              onClick={() => void rulesQuery.refetch()}
+              type="button"
+            >
+              {rulesQuery.isFetching ? "Обновляем..." : "Обновить правила"}
+            </button>
+          ) : null}
+          {canWrite ? (
+            <button className="button button-primary" onClick={startCreate} type="button">
+              Создать правило
+            </button>
+          ) : null}
+        </div>
+        {!canWrite ? (
           <p className="automation-readonly-note" role="status">
             Только просмотр: изменять правила могут владелец и администраторы.
           </p>
-        )}
+        ) : null}
       </section>
 
       <section className="automation-summary" aria-label="Сводка правил">
         <article>
-          <span>Правил в выборке</span>
+          <span>Правил по фильтру</span>
           <strong>{rulesQuery.data?.total ?? "—"}</strong>
         </article>
         <article>
@@ -225,21 +253,43 @@ function AutomationRulesWorkspaceContent({
         ))}
       </div>
 
-      {rulesQuery.isPending ? (
-        <section className="automation-state" aria-live="polite">
+      {rulesQuery.isPending && !rulesQuery.data ? (
+        <section className="automation-state" aria-busy="true" aria-live="polite" role="status">
           <h2>Загружаем правила</h2>
-          <p>Получаем актуальные правила для выбранной рабочей области.</p>
+          <p>Получаем актуальные правила автоматизации для вашей компании.</p>
         </section>
-      ) : rulesQuery.error ? (
+      ) : rulesQuery.error && !rulesQuery.data ? (
         <section className="automation-state automation-state-error" role="alert">
           <h2>Не удалось загрузить правила</h2>
-          <p>{errorMessage(rulesQuery.error)}</p>
-          <button className="button button-secondary" onClick={() => void rulesQuery.refetch()} type="button">
-            Повторить
+          <p>{userErrorMessage(rulesQuery.error, "Правила временно недоступны. Попробуйте ещё раз.")}</p>
+          <button
+            className="button button-secondary"
+            disabled={rulesQuery.isFetching}
+            onClick={() => void rulesQuery.refetch()}
+            type="button"
+          >
+            {rulesQuery.isFetching ? "Повторяем..." : "Повторить"}
           </button>
         </section>
-      ) : (
-        <section className="automation-live-layout">
+      ) : rulesQuery.data ? (
+        <>
+          {rulesQuery.error ? (
+            <div className="automation-refresh-error" role="alert">
+              <div>
+                <strong>Не удалось обновить правила</strong>
+                <p>Показываем ранее загруженные правила. Можно продолжать работу или попробовать ещё раз.</p>
+              </div>
+              <button
+                className="button button-secondary button-compact"
+                disabled={rulesQuery.isFetching}
+                onClick={() => void rulesQuery.refetch()}
+                type="button"
+              >
+                {rulesQuery.isFetching ? "Повторяем..." : "Повторить"}
+              </button>
+            </div>
+          ) : null}
+          <section className="automation-live-layout">
           <div className="automation-rule-list" aria-label="Правила автоматизации">
             {rulesQuery.data.items.length === 0 ? (
               <div className="automation-empty-state">
@@ -278,10 +328,10 @@ function AutomationRulesWorkspaceContent({
             )}
           </div>
 
-          <div className="automation-detail-panel">
+          <div ref={detailPanelRef} className="automation-detail-panel">
             {editorMode ? (
               <RuleEditor
-                error={mutationError ? errorMessage(mutationError) : null}
+                error={mutationError ? userErrorMessage(mutationError, "Не удалось сохранить правило. Проверьте данные и попробуйте ещё раз.") : null}
                 isPending={saveMutation.isPending}
                 mode={editorMode}
                 onCancel={() => setEditorMode(null)}
@@ -303,15 +353,18 @@ function AutomationRulesWorkspaceContent({
             ) : (
               <div className="automation-empty-state">
                 <h2>Выберите правило</h2>
-                <p>Здесь появятся условия, режим, лимиты и защитные проверки.</p>
+                <p>Здесь появятся условия, способ отправки и ограничения выбранного правила.</p>
               </div>
             )}
           </div>
         </section>
-      )}
+        </>
+      ) : null}
 
       {mutationError && !editorMode ? (
-        <p className="automation-action-error" role="alert">{errorMessage(mutationError)}</p>
+        <p className="automation-action-error" role="alert">
+          {userErrorMessage(mutationError, "Не удалось изменить правило. Попробуйте ещё раз.")}
+        </p>
       ) : null}
       {mutationSuccess && !mutationError && !editorMode ? (
         <p className="automation-action-success" role="status">{mutationSuccess}</p>
@@ -335,9 +388,9 @@ function AutomationRulesWorkspaceContent({
           <p className="eyebrow">Проверка перед отправкой</p>
           <h2>Автоответ не отправляется вслепую</h2>
           <p>
-            После подготовки черновик проходит автоматическую проверку. Низкая уверенность,
-            отсутствие контекста товара, рискованные обещания и чувствительные утверждения
-            отправляют обращение на ручную проверку или останавливают автоотправку.
+            Перед отправкой MPReply проверяет готовый ответ. Если не хватает данных о товаре,
+            ИИ не уверен в ответе или затронута тема, которая требует внимания, обращение
+            передаётся человеку или автоматическая отправка останавливается.
           </p>
           <div className="automation-decision-row" aria-label="Возможные решения проверки">
             <span className="automation-decision automation-decision-allow">Можно отправить</span>
@@ -380,27 +433,27 @@ function RuleDetail({
         <div><dt>Тип обращений</dt><dd>{appliesToLabel(rule.applies_to)}</dd></div>
         <div><dt>Маркетплейс</dt><dd>{marketplaceLabel(rule.marketplace)}</dd></div>
         <div><dt>Рейтинг</dt><dd>{ratingLabel(rule.min_rating, rule.max_rating)}</dd></div>
-        <div><dt>Порог уверенности</dt><dd>{Math.round(rule.confidence_threshold * 100)}%</dd></div>
+        <div><dt>Минимальная уверенность ИИ</dt><dd>{Math.round(rule.confidence_threshold * 100)}%</dd></div>
         <div><dt>Лимиты</dt><dd>{limitLabel(rule.hourly_limit, rule.daily_limit)}</dd></div>
       </dl>
 
-      <div className="automation-safety-checklist" aria-label="Защитные условия правила">
+      <div className="automation-safety-checklist" aria-label="Когда правило требует дополнительной проверки">
         <p className="automation-safety-item" data-active={rule.require_manual_review_on_flags}>
-          Ручная проверка при рискованных сигналах
+          Передавать человеку, если ответ требует дополнительного внимания
         </p>
         <p className="automation-safety-item" data-active={rule.stop_on_missing_product_context}>
-          Не отправлять без контекста товара
+          Не отправлять автоматически, если не хватает данных о товаре
         </p>
         <p className="automation-safety-item" data-active={rule.stop_on_low_confidence}>
-          Не отправлять при низкой уверенности
+          Не отправлять автоматически, если ИИ не уверен в ответе
         </p>
       </div>
 
       {rule.include_keywords.length || rule.exclude_keywords.length || rule.sensitive_topics.length ? (
         <div className="automation-keyword-groups">
-          <KeywordList label="Включающие ключевые слова" values={rule.include_keywords} />
-          <KeywordList label="Исключающие ключевые слова" values={rule.exclude_keywords} />
-          <KeywordList label="Чувствительные темы" values={rule.sensitive_topics} />
+          <KeywordList label="Если встречаются слова" values={rule.include_keywords} />
+          <KeywordList label="Не применять при словах" values={rule.exclude_keywords} />
+          <KeywordList label="Темы, которые всегда нужно проверять" values={rule.sensitive_topics} />
         </div>
       ) : null}
 
@@ -465,6 +518,7 @@ function RuleEditor({
         <label className="automation-field">
           Приоритет
           <input min={0} max={10000} required type="number" value={state.priority} onChange={(e) => set("priority", e.target.value)} />
+          <small>Чем выше число, тем раньше проверяется правило.</small>
         </label>
         <label className="automation-field">
           Режим
@@ -501,8 +555,11 @@ function RuleEditor({
           <input min={1} max={5} type="number" value={state.maxRating} onChange={(e) => set("maxRating", e.target.value)} />
         </label>
         <label className="automation-field">
-          Порог уверенности
-          <input min={0} max={1} step={0.01} required type="number" value={state.confidenceThreshold} onChange={(e) => set("confidenceThreshold", e.target.value)} />
+          Насколько уверенным должен быть ответ
+          <span className="automation-field-with-suffix">
+            <input min={0} max={100} step={1} required type="number" value={state.confidenceThreshold} onChange={(e) => set("confidenceThreshold", e.target.value)} />
+            <span aria-hidden="true">%</span>
+          </span>
         </label>
         <label className="automation-field">
           Лимит в час
@@ -513,24 +570,26 @@ function RuleEditor({
           <input min={1} max={100000} type="number" value={state.dailyLimit} onChange={(e) => set("dailyLimit", e.target.value)} />
         </label>
         <label className="automation-field automation-field-wide">
-          Включающие ключевые слова
+          Если встречаются слова
           <input placeholder="доставка, упаковка" value={state.includeKeywords} onChange={(e) => set("includeKeywords", e.target.value)} />
+          <small>Правило применяется только к обращениям с этими словами.</small>
         </label>
         <label className="automation-field automation-field-wide">
-          Исключающие ключевые слова
+          Не применять при словах
           <input placeholder="возврат, компенсация" value={state.excludeKeywords} onChange={(e) => set("excludeKeywords", e.target.value)} />
+          <small>Если встречается одно из этих слов, правило не применяется.</small>
         </label>
         <label className="automation-field automation-field-wide">
-          Чувствительные темы
+          Темы, которые всегда нужно проверять
           <input placeholder="медицина, юридические обещания" value={state.sensitiveTopics} onChange={(e) => set("sensitiveTopics", e.target.value)} />
         </label>
       </div>
 
       <fieldset className="automation-safety-fieldset">
-        <legend>Защитные проверки</legend>
-        <label><input checked={state.requireManualReviewOnFlags} onChange={(e) => set("requireManualReviewOnFlags", e.target.checked)} type="checkbox" /> Передавать на ручную проверку при рискованных сигналах</label>
-        <label><input checked={state.stopOnMissingProductContext} onChange={(e) => set("stopOnMissingProductContext", e.target.checked)} type="checkbox" /> Не отправлять автоответ без контекста товара</label>
-        <label><input checked={state.stopOnLowConfidence} onChange={(e) => set("stopOnLowConfidence", e.target.checked)} type="checkbox" /> Не отправлять автоответ при низкой уверенности</label>
+        <legend>Когда не отправлять автоматически</legend>
+        <label><input checked={state.requireManualReviewOnFlags} onChange={(e) => set("requireManualReviewOnFlags", e.target.checked)} type="checkbox" /> Передавать человеку, если ответ требует дополнительного внимания</label>
+        <label><input checked={state.stopOnMissingProductContext} onChange={(e) => set("stopOnMissingProductContext", e.target.checked)} type="checkbox" /> Если не хватает данных о товаре</label>
+        <label><input checked={state.stopOnLowConfidence} onChange={(e) => set("stopOnLowConfidence", e.target.checked)} type="checkbox" /> Если ИИ не уверен в ответе</label>
         <label><input checked={state.isEnabled} onChange={(e) => set("isEnabled", e.target.checked)} type="checkbox" /> Правило включено</label>
       </fieldset>
 
@@ -570,7 +629,7 @@ function emptyEditor(): RuleEditorState {
     sensitiveTopics: "",
     dailyLimit: "",
     hourlyLimit: "",
-    confidenceThreshold: "0.8",
+    confidenceThreshold: "80",
     requireManualReviewOnFlags: true,
     stopOnMissingProductContext: true,
     stopOnLowConfidence: true,
@@ -592,7 +651,7 @@ function editorFromRule(rule: AutomationRule): RuleEditorState {
     sensitiveTopics: rule.sensitive_topics.join(", "),
     dailyLimit: numberToInput(rule.daily_limit),
     hourlyLimit: numberToInput(rule.hourly_limit),
-    confidenceThreshold: String(rule.confidence_threshold),
+    confidenceThreshold: String(Math.round(rule.confidence_threshold * 100)),
     requireManualReviewOnFlags: rule.require_manual_review_on_flags,
     stopOnMissingProductContext: rule.stop_on_missing_product_context,
     stopOnLowConfidence: rule.stop_on_low_confidence,
@@ -619,7 +678,7 @@ function editorPayload(state: RuleEditorState, organizationId: string) {
     require_manual_review_on_flags: state.requireManualReviewOnFlags,
     stop_on_missing_product_context: state.stopOnMissingProductContext,
     stop_on_low_confidence: state.stopOnLowConfidence,
-    confidence_threshold: Number(state.confidenceThreshold),
+    confidence_threshold: Number(state.confidenceThreshold) / 100,
   };
 }
 
@@ -681,7 +740,15 @@ function filterMatchesRuleState(filter: RuleFilter, isEnabled: boolean): boolean
   return filter === "all" || (filter === "enabled" && isEnabled) || (filter === "disabled" && !isEnabled);
 }
 
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
+function userErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Сессия истекла. Войдите снова.";
+    if (error.status === 403) return "Недостаточно прав для этого действия.";
+    if (error.status === 404) return "Правило не найдено. Обновите список и попробуйте снова.";
+    if (error.status === 409) return "Правило уже изменилось. Обновите список и повторите действие.";
+    if (error.status === 422) return "Проверьте заполненные поля и попробуйте снова.";
+    if (error.status === 429) return "Слишком много действий подряд. Подождите немного и попробуйте снова.";
+    return fallback;
+  }
+  return fallback;
 }
