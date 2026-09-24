@@ -16,6 +16,7 @@ from app.adapters.base import (
     ProviderMessageContext,
     ProviderWriteReceipt,
 )
+from app.adapters.capabilities import MarketplaceStream
 from app.adapters.registry import MarketplaceAdapterRegistry
 from app.core.security import CredentialEncryptionError, CredentialService
 from app.models.customer_message import CustomerMessage
@@ -176,8 +177,9 @@ class _Registry:
     def __init__(self, adapter: _Adapter) -> None:
         self.adapter = adapter
 
-    def review_questions(self, marketplace: Marketplace) -> _Adapter:
+    def review_questions(self, marketplace: Marketplace, stream: MarketplaceStream) -> _Adapter:
         assert marketplace is Marketplace.WILDBERRIES
+        assert stream is MarketplaceStream.REVIEWS
         return self.adapter
 
 

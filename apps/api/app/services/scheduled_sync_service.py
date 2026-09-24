@@ -138,7 +138,7 @@ class ScheduledSyncService:
                 if stream is MarketplaceStream.CHATS:
                     adapter: ReviewQuestionAdapter | ConversationAdapter = self.registry.conversations(marketplace)
                 else:
-                    adapter = self.registry.review_questions(marketplace)
+                    adapter = self.registry.review_questions(marketplace, stream)
             except (ValueError, UnsupportedCapabilityError):
                 await self.states.fail(
                     state.id,

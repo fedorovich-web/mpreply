@@ -114,8 +114,9 @@ class _Registry:
         self.adapter = adapter
         self.calls = 0
 
-    def review_questions(self, marketplace: Marketplace) -> object:
+    def review_questions(self, marketplace: Marketplace, stream: MarketplaceStream) -> object:
         assert marketplace is Marketplace.WILDBERRIES
+        assert stream is MarketplaceStream.REVIEWS
         self.calls += 1
         return self.adapter
 
@@ -358,8 +359,9 @@ class _ManualRegistry:
         assert marketplace is Marketplace.WILDBERRIES
         return WILDBERRIES_CAPABILITY
 
-    def review_questions(self, marketplace: Marketplace) -> object:
+    def review_questions(self, marketplace: Marketplace, stream: MarketplaceStream) -> object:
         assert marketplace is Marketplace.WILDBERRIES
+        assert stream in {MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS}
         return object()
 
 
