@@ -11,6 +11,8 @@ type AdminMetric = {
   value: string | number;
   helper: string;
   tone?: "warning";
+  ratio?: number;
+  ratioLabel?: string;
 };
 
 export function AdminOverviewWorkspace() {
@@ -25,7 +27,7 @@ export function AdminOverviewWorkspace() {
     return (
       <div className="workspace-inline-state workspace-inline-state-error">
         <strong>Доступ запрещён</strong>
-        <p>Системная сводка доступна только внутреннему суперадминистратору MPReply.</p>
+        <p>Системная панель доступна только внутреннему суперадминистратору MPReply.</p>
       </div>
     );
   }
@@ -33,8 +35,8 @@ export function AdminOverviewWorkspace() {
   if (overviewQuery.isLoading) {
     return (
       <div className="workspace-inline-state">
-        <strong>Загружаем системную сводку</strong>
-        <p>Получаем актуальные показатели организаций, пользователей и фоновых процессов.</p>
+        <strong>Загружаем системную панель</strong>
+        <p>Получаем актуальные показатели организаций, пользователей, подписок и фоновых процессов.</p>
       </div>
     );
   }
@@ -42,7 +44,7 @@ export function AdminOverviewWorkspace() {
   if (overviewQuery.error || !overviewQuery.data) {
     return (
       <div className="workspace-inline-state workspace-inline-state-error" role="alert">
-        <strong>Не удалось загрузить системную сводку</strong>
+        <strong>Не удалось загрузить системную панель</strong>
         <p>{overviewQuery.error instanceof Error ? overviewQuery.error.message : "Нет данных"}</p>
         <button className="button button-secondary button-compact" onClick={() => void overviewQuery.refetch()} type="button">
           Повторить
@@ -52,6 +54,11 @@ export function AdminOverviewWorkspace() {
   }
 
   const data = overviewQuery.data;
+  const incidentCount = data.integration_failures_24h + data.replies_failed_24h;
+  const hasIncidents = incidentCount > 0;
+  const activeOrganizationRatio = percentage(data.organizations_active, data.organizations_total);
+  const subscriptionCoverage = percentage(data.subscriptions_active, data.organizations_active);
+
   const incidentMetrics: AdminMetric[] = [
     {
       label: "Ошибки интеграций за 24 часа",
@@ -70,11 +77,14 @@ export function AdminOverviewWorkspace() {
       tone: data.replies_failed_24h > 0 ? "warning" : undefined,
     },
   ];
+
   const productMetrics: AdminMetric[] = [
     {
       label: "Организации",
       value: data.organizations_total,
-      helper: `${formatNumber(data.organizations_active)} активных`,
+      helper: formatNumber(data.organizations_active) + " активных",
+      ratio: activeOrganizationRatio,
+      ratioLabel: activeOrganizationRatio + "% активны",
     },
     {
       label: "Пользователи",
@@ -85,8 +95,11 @@ export function AdminOverviewWorkspace() {
       label: "Активные подписки",
       value: data.subscriptions_active,
       helper: "Активные и пробные подписки",
+      ratio: subscriptionCoverage,
+      ratioLabel: subscriptionCoverage + "% от активных организаций",
     },
   ];
+
   const usageMetrics: AdminMetric[] = [
     {
       label: "События использования · 30 дней",
@@ -101,10 +114,41 @@ export function AdminOverviewWorkspace() {
   ];
 
   return (
-    <section className="admin-overview" aria-label="Системные показатели MPReply">
+    <section className="admin-command-center" aria-label="Системные показатели MPReply">
+      <div className="admin-command-head">
+        <div className="admin-command-copy">
+          <span className="admin-command-eyebrow">
+            <span className="admin-command-live-dot" aria-hidden="true" />
+            Операционный центр
+          </span>
+          <h2>{hasIncidents ? "Есть процессы, которые требуют внимания" : "Система работает без зафиксированных сбоев"}</h2>
+          <p>
+            Сводка строится только по фактическим данным системного API: активность организаций,
+            подписки, использование, расходы ИИ и ошибки за последние 24 часа.
+          </p>
+        </div>
+
+        <aside className={hasIncidents ? "admin-health-panel admin-health-panel-warning" : "admin-health-panel"}>
+          <span>Состояние системы</span>
+          <strong>{hasIncidents ? "Требует внимания" : "Стабильно"}</strong>
+          <p>
+            {hasIncidents
+              ? formatNumber(incidentCount) + " событий требуют проверки"
+              : "Ошибок интеграций и отправки ответов за 24 часа нет"}
+          </p>
+        </aside>
+      </div>
+
+      <div className="admin-kpi-strip" aria-label="Ключевые показатели">
+        <AdminKpi label="Активные организации" value={formatNumber(data.organizations_active)} helper={"из " + formatNumber(data.organizations_total)} />
+        <AdminKpi label="Пользователи" value={formatNumber(data.users_total)} helper="зарегистрировано" />
+        <AdminKpi label="Активные подписки" value={formatNumber(data.subscriptions_active)} helper="включая пробные" />
+        <AdminKpi label="ИИ · 30 дней" value={formatUsd(data.ai_cost_estimate_30d)} helper="оценка расходов" />
+      </div>
+
       <div className="admin-overview-meta">
-        <span>Состояние системы</span>
-        <strong>Данные на {formatDateTime(data.generated_at)}</strong>
+        <span>Последнее обновление</span>
+        <strong>{formatDateTime(data.generated_at)}</strong>
       </div>
 
       <div className="admin-overview-body">
@@ -131,6 +175,16 @@ export function AdminOverviewWorkspace() {
   );
 }
 
+function AdminKpi({ helper, label, value }: { helper: string; label: string; value: string }) {
+  return (
+    <article className="admin-kpi-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <p>{helper}</p>
+    </article>
+  );
+}
+
 function AdminMetricSection({
   className,
   eyebrow,
@@ -143,25 +197,45 @@ function AdminMetricSection({
   title: string;
 }) {
   return (
-    <section className={`admin-section ${className}`}>
+    <section className={"admin-section " + className}>
       <header className="admin-section-heading">
         <span>{eyebrow}</span>
-        <h2>{title}</h2>
+        <h3>{title}</h3>
       </header>
       <div className="admin-overview-grid">
         {metrics.map((metric) => (
-          <article
-            className={metric.tone === "warning" ? "admin-overview-card admin-overview-card-warning" : "admin-overview-card"}
-            key={metric.label}
-          >
-            <span>{metric.label}</span>
-            <strong>{typeof metric.value === "number" ? formatNumber(metric.value) : metric.value}</strong>
-            <p>{metric.helper}</p>
-          </article>
+          <AdminMetricCard metric={metric} key={metric.label} />
         ))}
       </div>
     </section>
   );
+}
+
+function AdminMetricCard({ metric }: { metric: AdminMetric }) {
+  return (
+    <article
+      className={metric.tone === "warning" ? "admin-metric-card admin-metric-card-warning" : "admin-metric-card"}
+    >
+      <div className="admin-metric-card-copy">
+        <span>{metric.label}</span>
+        <strong>{typeof metric.value === "number" ? formatNumber(metric.value) : metric.value}</strong>
+        <p>{metric.helper}</p>
+      </div>
+      {metric.ratio !== undefined && metric.ratioLabel ? (
+        <div className="admin-metric-progress">
+          <div className="admin-metric-progress-track" aria-hidden="true">
+            <span style={{ width: metric.ratio + "%" }} />
+          </div>
+          <small>{metric.ratioLabel}</small>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function percentage(part: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(100, Math.round((part / total) * 100));
 }
 
 function formatNumber(value: number): string {
