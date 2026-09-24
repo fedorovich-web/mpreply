@@ -63,6 +63,8 @@ describe("inbox operational workspace", () => {
     expect(inbox).toContain("Обращение пропущено автоматизацией");
     expect(inbox).toContain("function isReviewWorkflowStatus");
     expect(inbox).toContain('["waiting_review", "needs_manual_check", "safety_blocked", "approved"]');
+    expect(inbox).toContain("const canUseMessageActions");
+    expect(inbox).toContain('["approved", "auto_reply_pending", "sending", "answered", "auto_reply_sent", "archived", "duplicate", "skipped"]');
     expect(inbox).toContain("inbox-review-handoff");
     expect(styles).toContain(".inbox-next-step-danger");
     expect(styles).toContain(".inbox-next-step-warning");
