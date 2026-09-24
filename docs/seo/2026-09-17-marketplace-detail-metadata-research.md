@@ -11,6 +11,13 @@ Focused metadata pass for:
 
 The goal was to validate current Russian search/category language before changing titles and descriptions, while keeping product/release truth above keyword opportunity.
 
+
+## Runtime-truth supersession
+
+Later on 2026-09-17, the implementation boundary was tightened after the search-language research. Commits `8085a92` (`fix: neutralize Ozon channel claims`) and `e9b444b` (`fix: align marketplace detail copy with runtime truth`) intentionally replaced explicit Ozon/Yandex channel claims with `поддерживаемые обращения` / available message-context wording.
+
+Therefore the broader search-language observations below remain useful research, but they are **not** the current implementation contract for Ozon or Яндекс Маркет. Current page metadata and visible copy must stay inside verified runtime coverage even when a broader phrase has stronger search intent. The unit contracts follow this later runtime-truth decision.
+
 ## Search patterns reviewed
 
 ### Wildberries

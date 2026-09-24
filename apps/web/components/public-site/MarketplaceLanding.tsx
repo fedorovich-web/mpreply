@@ -42,6 +42,7 @@ const marketplaceLogos: Record<MarketplaceKey, { src: string; compactSrc: string
 };
 
 const sampleVisualIcons = {
+  product: "archive",
   review: "star",
   order: "archive",
   listing: "message",
@@ -113,7 +114,8 @@ export function MarketplaceLanding({ marketplace, locale = "ru" }: MarketplaceLa
     : "/auth/register?intent=connect-marketplace";
   const pricingPath = locale === "en" ? "/en/pricing" : "/pricing";
   const sampleVisual = detailContent.sampleVisual;
-  const sampleVisualIcon = sampleVisual === "product" ? null : sampleVisualIcons[sampleVisual];
+  const useApprovedProductCrop = marketplace.key === "wildberries" && sampleVisual === "product";
+  const sampleVisualIcon = useApprovedProductCrop ? null : sampleVisualIcons[sampleVisual];
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -139,7 +141,7 @@ export function MarketplaceLanding({ marketplace, locale = "ru" }: MarketplaceLa
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
-      <div className="mockup-page">
+      <div className={`mockup-page marketplace-detail-page is-${marketplace.key}`}>
         <section className="marketplace-detail-mockup-hero">
           <div className="public-container marketplace-detail-mockup-grid">
             <div className="marketplace-detail-mockup-copy">
@@ -187,7 +189,10 @@ export function MarketplaceLanding({ marketplace, locale = "ru" }: MarketplaceLa
                   {detailContent.sampleMessage}
                 </div>
                 <div className="detail-product-row">
-                  <span className={`detail-product-thumb is-${sampleVisual}`} aria-hidden="true">
+                  <span
+                    className={`detail-product-thumb is-${sampleVisual} is-${marketplace.key}`}
+                    aria-hidden="true"
+                  >
                     {sampleVisualIcon ? <PublicIcon name={sampleVisualIcon} /> : null}
                   </span>
                   <span>

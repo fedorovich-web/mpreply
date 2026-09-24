@@ -14,15 +14,15 @@ const routes = [
   },
   {
     slug: "ozon",
-    title: "Обращения покупателей Ozon — отзывы, вопросы и чаты",
+    title: "Обращения покупателей Ozon — единая очередь MPReply",
     description:
-      "Собирайте поддерживаемые отзывы, вопросы и чаты Ozon в одной очереди MPReply, готовьте ответы с помощью ИИ и оставляйте сложные случаи на проверку менеджеру.",
+      "Посмотрите, как MPReply организует поддерживаемые обращения Ozon в одной очереди с доступным контекстом, ИИ-черновиками и контролем перед отправкой.",
   },
   {
     slug: "yandex-market",
-    title: "Отзывы, вопросы и чаты Яндекс Маркета — единая очередь",
+    title: "Обращения Яндекс Маркета — единая очередь MPReply",
     description:
-      "MPReply объединяет доступные отзывы, вопросы и чаты Яндекс Маркета в одном рабочем процессе с ИИ-черновиками и контролем перед отправкой.",
+      "Посмотрите, как MPReply организует поддерживаемые обращения Яндекс Маркета в одном рабочем процессе с доступным контекстом, ИИ-черновиками и контролем перед отправкой.",
   },
   {
     slug: "avito",
@@ -32,8 +32,9 @@ const routes = [
   },
 ] as const;
 
-function routeSource(slug: string) {
-  return readFileSync(join(root, `app/marketplaces/${slug}/page.tsx`), "utf8");
+function routeSource(slug: string, locale: "ru" | "en" = "ru") {
+  const prefix = locale === "en" ? "app/en/marketplaces" : "app/marketplaces";
+  return readFileSync(join(root, `${prefix}/${slug}/page.tsx`), "utf8");
 }
 
 describe("marketplace detail SEO metadata contract", () => {
@@ -43,6 +44,13 @@ describe("marketplace detail SEO metadata contract", () => {
       expect(source).toContain(`title: \"${route.title}\"`);
       expect(source).toContain(route.description);
     }
+  });
+
+  it("keeps Ozon and Yandex metadata inside the later runtime-truth boundary", () => {
+    expect(routeSource("ozon")).not.toContain("отзывы, вопросы и чаты Ozon");
+    expect(routeSource("yandex-market")).not.toContain("Отзывы, вопросы и чаты Яндекс Маркета");
+    expect(routeSource("ozon", "en")).toContain("Ozon customer messages — one MPReply queue");
+    expect(routeSource("yandex-market", "en")).toContain("Yandex Market customer messages — one MPReply workflow");
   });
 
   it("does not use the old marketplace-name substitution title formula", () => {

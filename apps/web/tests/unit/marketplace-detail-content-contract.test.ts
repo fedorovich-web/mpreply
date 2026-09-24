@@ -15,8 +15,8 @@ describe("marketplace detail content contract", () => {
 
     for (const heading of [
       "Отзывы и вопросы Wildberries — в одном рабочем процессе",
-      "Отзывы, вопросы и чаты Ozon — без постоянных переключений",
-      "Отзывы, вопросы и чаты Яндекс Маркета — в единой очереди",
+      "Обращения Ozon — без постоянных переключений",
+      "Обращения Яндекс Маркета — в единой очереди",
       "Сообщения покупателей Авито — в общем рабочем пространстве",
     ]) {
       expect(content).toContain(heading);
@@ -26,7 +26,8 @@ describe("marketplace detail content contract", () => {
   it("uses marketplace-specific communication scenarios instead of a name-substitution template", () => {
     expect(content).toContain("Ждут ответа");
     expect(content).toContain("Отзывы и вопросы");
-    expect(content).toContain("чаты по заказам и возвратам");
+    expect(content).toContain("Поддерживаемые обращения");
+    expect(content).toContain("доступный контекст");
     expect(content).toContain("диалоги по объявлениям");
 
     expect(landing).toContain("getMarketplaceDetailContent(marketplace.key)");
@@ -41,8 +42,7 @@ describe("marketplace detail content contract", () => {
 
     for (const sampleType of [
       "Вопрос о товаре",
-      "Отзыв покупателя",
-      "Чат по заказу",
+      "Пример обращения",
       "Сообщение по объявлению",
     ]) {
       expect(content).toContain(sampleType);
@@ -51,8 +51,8 @@ describe("marketplace detail content contract", () => {
     const normalizedContent = content.toLowerCase();
     for (const sampleFragment of [
       "на стопу 25 см",
-      "хорошо упакован",
-      "изменить адрес доставки",
+      "характеристики этого товара",
+      "условия для этого товара",
       "объявление ещё актуально",
     ]) {
       expect(normalizedContent).toContain(sampleFragment.toLowerCase());
@@ -64,15 +64,18 @@ describe("marketplace detail content contract", () => {
 
   it("renders a context-specific visual instead of showing the shoe for every marketplace", () => {
     expect(content).toContain('sampleVisual: "product" | "review" | "order" | "listing"');
-    for (const visual of ["product", "review", "order", "listing"]) {
-      expect(content).toContain(`sampleVisual: "${visual}"`);
-    }
+    expect(content.match(/sampleVisual: "product",/g)?.length).toBe(3);
+    expect(content.match(/sampleVisual: "listing",/g)?.length).toBe(1);
+    expect(content).not.toContain('sampleVisual: "review",');
+    expect(content).not.toContain('sampleVisual: "order",');
 
     expect(landing).toContain("detailContent.sampleVisual");
-    expect(landing).toContain("sampleVisualIcons");
-    expect(detailHeroStyles).toContain(".detail-product-thumb.is-product");
+    expect(landing).toContain("useApprovedProductCrop");
+    expect(landing).toContain('marketplace.key === "wildberries"');
+    expect(landing).toContain("is-${marketplace.key}");
+    expect(detailHeroStyles).toContain(".detail-product-thumb.is-product.is-wildberries");
     expect(detailHeroStyles).toContain('url("/images/mockups/product-shoe.webp")');
-    expect(detailHeroStyles).toContain(".detail-product-thumb:not(.is-product)");
+    expect(detailHeroStyles).toContain(".detail-product-thumb.is-product:not(.is-wildberries)");
     expect(landing).not.toContain('<span className="detail-product-thumb" aria-hidden="true" />');
   });
 
@@ -85,7 +88,9 @@ describe("marketplace detail content contract", () => {
     for (const sidebarLabel of [
       'label: "Отзывы"',
       'label: "Вопросы"',
-      'label: "Чаты"',
+      'label: "Нужен ответ"',
+      'label: "В работе"',
+      'label: "На проверке"',
       'label: "Новые диалоги"',
     ]) {
       expect(content).toContain(sidebarLabel);
