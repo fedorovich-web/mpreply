@@ -56,4 +56,4 @@ No desktop-card feed simply stacked. No horizontal overflow at 320px. Critical c
 
 ## Acceptance criteria
 
-Product claims match implementation; every route has clear intent/conversion role; desktop/tablet/mobile intentionally designed; tokens used; Impeccable/typecheck/lint/build pass; Playwright/axe/Lighthouse pass where browser available; snapshots are intentionally approved; logo/palette/type/icon system reviewed coherently.
+Product claims match implementation; every route has clear intent/conversion role; desktop/tablet/mobile intentionally designed; tokens used; typecheck/lint/build pass; Playwright/axe/Lighthouse pass where browser available; snapshots are intentionally approved; logo/palette/type/icon system reviewed coherently.

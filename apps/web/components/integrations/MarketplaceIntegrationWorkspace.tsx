@@ -15,13 +15,22 @@ import {
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 type ResponseMode = "inherit" | "auto" | "semi_auto";
+export type MarketplaceKey = "wildberries" | "ozon" | "yandex_market" | "avito";
+
+const marketplaceDetails = {
+  wildberries: { name: "Wildberries", accountLabel: "Seller ID", accountRequired: false, numericAccount: false },
+  ozon: { name: "Ozon", accountLabel: "Client ID Ozon", accountRequired: true, numericAccount: false },
+  yandex_market: { name: "Яндекс Маркет", accountLabel: "Business ID Яндекс Маркета", accountRequired: true, numericAccount: true },
+  avito: { name: "Авито", accountLabel: "ID аккаунта Авито", accountRequired: true, numericAccount: true },
+} as const;
 
 type Notice = {
   tone: "success" | "warning";
   message: string;
 };
 
-export function WildberriesIntegrationWorkspace() {
+export function MarketplaceIntegrationWorkspace({ marketplace }: { marketplace: MarketplaceKey }) {
+  const details = marketplaceDetails[marketplace];
   const { activeOrganization } = useWorkspace();
   const canManage = activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin";
   const queryClient = useQueryClient();
@@ -29,6 +38,8 @@ export function WildberriesIntegrationWorkspace() {
   const [displayName, setDisplayName] = useState("");
   const [sellerId, setSellerId] = useState("");
   const [credentials, setCredentials] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
   const [responseMode, setResponseMode] = useState<ResponseMode>("inherit");
   const [notice, setNotice] = useState<Notice | null>(null);
 
@@ -42,10 +53,12 @@ export function WildberriesIntegrationWorkspace() {
   });
 
   const accounts = useMemo(
-    () => (accountsQuery.data ?? []).filter((account) => account.marketplace === "wildberries"),
-    [accountsQuery.data],
+    () => (accountsQuery.data ?? []).filter((account) => account.marketplace === marketplace),
+    [accountsQuery.data, marketplace],
   );
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? accounts[0] ?? null;
+  const accountIdReady = validAccountId(marketplace, sellerId);
+  const credentialReady = marketplace === "avito" ? clientId.trim().length > 0 && clientSecret.trim().length > 0 : credentials.length >= 8;
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -53,9 +66,9 @@ export function WildberriesIntegrationWorkspace() {
         method: "POST",
         body: {
           organization_id: activeOrganization.id,
-          marketplace: "wildberries",
+          marketplace,
           display_name: displayName.trim(),
-          credentials,
+          credentials: marketplace === "avito" ? JSON.stringify({ version: 1, client_id: clientId.trim(), client_secret: clientSecret.trim() }) : credentials,
           seller_id: emptyToNull(sellerId),
           default_response_mode: responseMode,
         },
@@ -65,17 +78,19 @@ export function WildberriesIntegrationWorkspace() {
       setDisplayName("");
       setSellerId("");
       setCredentials("");
+      setClientId("");
+      setClientSecret("");
       setResponseMode("inherit");
-      setNotice({ tone: "success", message: "Подключение создано. Перед синхронизацией проверьте API-ключ." });
+      setNotice({ tone: "success", message: "Подключение создано. Перед синхронизацией проверьте доступ к API." });
       await queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", activeOrganization.id] });
     },
   });
 
   return (
-    <section className="wildberries-workspace" aria-label="Управление подключениями Wildberries">
+    <section className="marketplace-workspace" aria-label={`Управление подключениями ${details.name}`}>
       <div className="integration-security-strip" role="note">
-        <strong>Ключи остаются на сервере</strong>
-        <span>После сохранения браузер получает только маску безопасного отпечатка, без исходного API-ключа.</span>
+        <strong>Данные доступа остаются на сервере</strong>
+        <span>После сохранения браузер получает только маску отпечатка, без исходных данных доступа.</span>
       </div>
 
       {!canManage ? (
@@ -91,12 +106,12 @@ export function WildberriesIntegrationWorkspace() {
         </p>
       ) : null}
 
-      <div className="wildberries-layout">
-        <section className="integration-account-panel" aria-labelledby="wb-account-list-title">
+      <div className="marketplace-layout">
+        <section className="integration-account-panel" aria-labelledby="marketplace-account-list-title">
           <div className="panel-heading panel-heading-row">
             <div>
               <span className="panel-kicker">Кабинеты</span>
-              <strong id="wb-account-list-title">Кабинеты Wildberries</strong>
+              <strong id="marketplace-account-list-title">Кабинеты {details.name}</strong>
             </div>
             <span className="ui-badge">{accounts.length}</span>
           </div>
@@ -113,7 +128,7 @@ export function WildberriesIntegrationWorkspace() {
           ) : accounts.length === 0 ? (
             <WorkspaceState
               title="Подключений пока нет"
-              description={canManage ? "Создайте первый кабинет Wildberries в форме ниже." : "В этой организации ещё нет кабинетов Wildberries."}
+              description={canManage ? `Создайте первый кабинет ${details.name} в форме ниже.` : `В этой организации ещё нет кабинетов ${details.name}.`}
             />
           ) : (
             <div className="integration-account-list" role="list">
@@ -139,10 +154,10 @@ export function WildberriesIntegrationWorkspace() {
           {canManage ? (
             <form
               className="settings-form integration-create-form"
-              aria-label="Новое подключение Wildberries"
+              aria-label={`Новое подключение ${details.name}`}
               onSubmit={(event) => {
                 event.preventDefault();
-                if (displayName.trim().length >= 2 && credentials.length >= 8) createMutation.mutate();
+                if (displayName.trim().length >= 2 && accountIdReady && credentialReady) createMutation.mutate();
               }}
             >
               <div className="panel-heading">
@@ -155,26 +170,26 @@ export function WildberriesIntegrationWorkspace() {
                   maxLength={255}
                   minLength={2}
                   onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="Например, WB основной кабинет"
+                  placeholder={`${details.name} — основной кабинет`}
                   required
                   value={displayName}
                 />
               </label>
               <label>
-                Seller ID <span className="field-optional">необязательно</span>
-                <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} value={sellerId} />
+                {details.accountLabel} {!details.accountRequired ? <span className="field-optional">необязательно</span> : null}
+                <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} required={details.accountRequired} value={sellerId} />
               </label>
-              <label>
-                API-ключ Wildberries
-                <input
-                  autoComplete="off"
-                  minLength={8}
-                  onChange={(event) => setCredentials(event.target.value)}
-                  required
-                  type="password"
-                  value={credentials}
-                />
-              </label>
+              {marketplace === "avito" ? (
+                <>
+                  <label>Client ID Авито<input autoComplete="off" maxLength={4096} onChange={(event) => setClientId(event.target.value)} required value={clientId} /></label>
+                  <label>Client Secret Авито<input autoComplete="off" maxLength={4096} onChange={(event) => setClientSecret(event.target.value)} required type="password" value={clientSecret} /></label>
+                </>
+              ) : (
+                <label>
+                  API-ключ {details.name}
+                  <input autoComplete="off" minLength={8} onChange={(event) => setCredentials(event.target.value)} required type="password" value={credentials} />
+                </label>
+              )}
               <label>
                 Режим ответов
                 <select onChange={(event) => setResponseMode(event.target.value as ResponseMode)} value={responseMode}>
@@ -186,7 +201,7 @@ export function WildberriesIntegrationWorkspace() {
               {createMutation.error ? <FormError error={createMutation.error} /> : null}
               <button
                 className="button button-primary"
-                disabled={createMutation.isPending || displayName.trim().length < 2 || credentials.length < 8}
+                disabled={createMutation.isPending || displayName.trim().length < 2 || !accountIdReady || !credentialReady}
                 type="submit"
               >
                 {createMutation.isPending ? "Сохраняем..." : "Добавить кабинет"}
@@ -195,11 +210,13 @@ export function WildberriesIntegrationWorkspace() {
           ) : null}
         </section>
 
-        <section className="integration-account-detail" aria-labelledby="wb-account-detail-title">
+        <section className="integration-account-detail" aria-labelledby="marketplace-account-detail-title">
           {selectedAccount ? (
             <AccountDetail
               key={selectedAccount.id}
               account={selectedAccount}
+              marketplace={marketplace}
+              marketplaceName={details.name}
               canManage={canManage}
               organizationId={activeOrganization.id}
               onNotice={setNotice}
@@ -218,11 +235,15 @@ export function WildberriesIntegrationWorkspace() {
 
 function AccountDetail({
   account,
+  marketplace,
+  marketplaceName,
   canManage,
   organizationId,
   onNotice,
 }: {
   account: MarketplaceAccount;
+  marketplace: MarketplaceKey;
+  marketplaceName: string;
   canManage: boolean;
   organizationId: string;
   onNotice: (notice: Notice | null) => void;
@@ -230,9 +251,10 @@ function AccountDetail({
   const queryClient = useQueryClient();
   const [displayName, setDisplayName] = useState(account.display_name);
   const [sellerId, setSellerId] = useState(account.seller_id ?? "");
-  const [responseMode, setResponseMode] = useState<ResponseMode>(normalizeResponseMode(account.default_response_mode));
+  const [responseMode, setResponseMode] = useState<ResponseMode>(account.default_response_mode);
   const [newCredentials, setNewCredentials] = useState("");
-  const [localError, setLocalError] = useState<unknown>(null);
+  const [newClientId, setNewClientId] = useState("");
+  const [newClientSecret, setNewClientSecret] = useState("");
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", organizationId] });
 
   const updateMutation = useMutation({
@@ -245,8 +267,14 @@ function AccountDetail({
           default_response_mode: responseMode,
         },
       }),
-    onSuccess: async () => {
-      onNotice({ tone: "success", message: "Настройки кабинета обновлены." });
+    onSuccess: async (updatedAccount) => {
+      const referenceChanged = updatedAccount.seller_id !== account.seller_id;
+      onNotice({
+        tone: referenceChanged ? "warning" : "success",
+        message: referenceChanged
+          ? "ID кабинета изменён. Проверьте доступ заново перед синхронизацией и отправкой."
+          : "Настройки кабинета обновлены.",
+      });
       await invalidate();
     },
   });
@@ -257,7 +285,7 @@ function AccountDetail({
     onSuccess: async (result) => {
       onNotice({
         tone: result.error_code ? "warning" : "success",
-        message: result.error_message_safe ?? (result.error_code ? "Проверка завершилась с ошибкой." : "API-ключ успешно проверен."),
+        message: result.error_message_safe ?? (result.error_code ? "Проверка завершилась с ошибкой." : "Доступ к API подтверждён."),
       });
       await invalidate();
     },
@@ -267,8 +295,8 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/sync`, marketplaceSyncSchema, { method: "POST" }),
     onSuccess: async (result) => {
-      const imported = result.imported_reviews + result.imported_questions;
-      const updated = result.updated_reviews + result.updated_questions;
+      const imported = result.imported_reviews + result.imported_questions + result.imported_chats;
+      const updated = result.updated_reviews + result.updated_questions + result.updated_chats;
       onNotice({
         tone: result.status === "success" ? "success" : "warning",
         message:
@@ -283,11 +311,13 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/rotate-credentials`, marketplaceAccountActionSchema, {
         method: "POST",
-        body: { credentials: newCredentials },
+        body: { credentials: marketplace === "avito" ? JSON.stringify({ version: 1, client_id: newClientId.trim(), client_secret: newClientSecret.trim() }) : newCredentials },
       }),
     onSuccess: async () => {
       setNewCredentials("");
-      onNotice({ tone: "success", message: "Ключ заменён. Перед следующей синхронизацией выполните проверку." });
+      setNewClientId("");
+      setNewClientSecret("");
+      onNotice({ tone: "success", message: "Данные доступа заменены. Перед следующей синхронизацией выполните проверку." });
       await invalidate();
     },
   });
@@ -296,26 +326,27 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/revoke-credentials`, marketplaceAccountActionSchema, { method: "POST" }),
     onSuccess: async () => {
-      onNotice({ tone: "warning", message: "Ключ отозван, подключение отключено." });
+      onNotice({ tone: "warning", message: "Доступ отозван, подключение отключено." });
       await invalidate();
     },
   });
 
   const busy = updateMutation.isPending || validateMutation.isPending || syncMutation.isPending || rotateMutation.isPending || revokeMutation.isPending;
-  const mutationError = localError ?? updateMutation.error ?? validateMutation.error ?? syncMutation.error ?? rotateMutation.error ?? revokeMutation.error;
+  const accountIdReady = validAccountId(marketplace, sellerId);
+  const mutationError = updateMutation.error ?? validateMutation.error ?? syncMutation.error ?? rotateMutation.error ?? revokeMutation.error;
 
   return (
     <div className="integration-detail-stack">
       <div className="integration-detail-heading">
         <div>
           <span className="panel-kicker">Выбранный кабинет</span>
-          <h2 id="wb-account-detail-title">{account.display_name}</h2>
+          <h2 id="marketplace-account-detail-title">{account.display_name}</h2>
         </div>
         <StatusBadge account={account} />
       </div>
 
       <dl className="integration-health-grid">
-        <HealthItem label="Ключ" value={credentialsStatusLabel(account.credentials_status)} />
+        <HealthItem label="Доступ" value={credentialsStatusLabel(account.credentials_status)} />
         <HealthItem label="Маска" value={account.credentials_masked} />
         <HealthItem label="Последняя успешная синхронизация" value={formatDateTime(account.last_success_sync_at)} />
         <HealthItem label="Ошибок" value={String(account.error_count)} />
@@ -325,11 +356,10 @@ function AccountDetail({
         <>
           <form
             className="settings-form integration-detail-form"
-            aria-label="Настройки кабинета Wildberries"
+            aria-label={`Настройки кабинета ${marketplaceName}`}
             onSubmit={(event) => {
               event.preventDefault();
-              setLocalError(null);
-              if (displayName.trim().length >= 2) updateMutation.mutate();
+              if (displayName.trim().length >= 2 && accountIdReady) updateMutation.mutate();
             }}
           >
             <div className="panel-heading">
@@ -341,8 +371,8 @@ function AccountDetail({
               <input maxLength={255} minLength={2} onChange={(event) => setDisplayName(event.target.value)} required value={displayName} />
             </label>
             <label>
-              Seller ID <span className="field-optional">необязательно</span>
-              <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} value={sellerId} />
+              {marketplaceDetails[marketplace].accountLabel} {!marketplaceDetails[marketplace].accountRequired ? <span className="field-optional">необязательно</span> : null}
+              <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} required={marketplaceDetails[marketplace].accountRequired} value={sellerId} />
             </label>
             <label>
               Режим ответов
@@ -352,14 +382,14 @@ function AccountDetail({
                 <option value="semi_auto">С подтверждением</option>
               </select>
             </label>
-            <button className="button button-secondary" disabled={busy || displayName.trim().length < 2} type="submit">
+            <button className="button button-secondary" disabled={busy || displayName.trim().length < 2 || !accountIdReady} type="submit">
               {updateMutation.isPending ? "Сохраняем..." : "Сохранить настройки"}
             </button>
           </form>
 
           <div className="integration-action-grid" aria-label="Действия с подключением">
             <button className="button button-primary" disabled={busy || account.credentials_status === "revoked"} onClick={() => validateMutation.mutate()} type="button">
-              {validateMutation.isPending ? "Проверяем..." : "Проверить ключ"}
+              {validateMutation.isPending ? "Проверяем..." : "Проверить доступ"}
             </button>
             <button className="button button-secondary" disabled={busy || account.credentials_status !== "valid"} onClick={() => syncMutation.mutate()} type="button">
               {syncMutation.isPending ? "Синхронизируем..." : "Синхронизировать сейчас"}
@@ -368,41 +398,43 @@ function AccountDetail({
 
           <form
             className="settings-form integration-rotate-form"
-            aria-label="Замена API-ключа Wildberries"
+            aria-label={`Замена доступа к API ${marketplaceName}`}
             onSubmit={(event) => {
               event.preventDefault();
-              setLocalError(null);
-              if (newCredentials.length >= 8) rotateMutation.mutate();
+              if (marketplace === "avito" ? newClientId.trim().length > 0 && newClientSecret.trim().length > 0 : newCredentials.length >= 8) rotateMutation.mutate();
             }}
           >
             <div className="panel-heading">
               <span className="panel-kicker">Доступ к API</span>
-              <strong>Заменить API-ключ</strong>
+              <strong>Заменить данные доступа</strong>
             </div>
-            <label>
-              Новый API-ключ
-              <input autoComplete="off" minLength={8} onChange={(event) => setNewCredentials(event.target.value)} required type="password" value={newCredentials} />
-            </label>
-            <button className="button button-secondary" disabled={busy || newCredentials.length < 8} type="submit">
-              {rotateMutation.isPending ? "Заменяем..." : "Заменить ключ"}
+            {marketplace === "avito" ? (
+              <>
+                <label>Новый Client ID Авито<input autoComplete="off" maxLength={4096} onChange={(event) => setNewClientId(event.target.value)} required value={newClientId} /></label>
+                <label>Новый Client Secret Авито<input autoComplete="off" maxLength={4096} onChange={(event) => setNewClientSecret(event.target.value)} required type="password" value={newClientSecret} /></label>
+              </>
+            ) : (
+              <label>Новый API-ключ<input autoComplete="off" minLength={8} onChange={(event) => setNewCredentials(event.target.value)} required type="password" value={newCredentials} /></label>
+            )}
+            <button className="button button-secondary" disabled={busy || (marketplace === "avito" ? !newClientId.trim() || !newClientSecret.trim() : newCredentials.length < 8)} type="submit">
+              {rotateMutation.isPending ? "Заменяем..." : "Заменить доступ"}
             </button>
           </form>
 
           <div className="integration-danger-zone">
             <div>
-              <strong>Отозвать ключ</strong>
-              <p>Подключение будет отключено. Исходный ключ не возвращается и не показывается.</p>
+              <strong>Отозвать доступ</strong>
+              <p>Подключение будет отключено. Исходные данные доступа не возвращаются и не показываются.</p>
             </div>
             <button
               className="button button-danger"
               disabled={busy || account.credentials_status === "revoked"}
               onClick={() => {
-                setLocalError(null);
-                if (window.confirm("Отозвать API-ключ и отключить это подключение?")) revokeMutation.mutate();
+                if (window.confirm("Отозвать доступ к API и отключить это подключение?")) revokeMutation.mutate();
               }}
               type="button"
             >
-              {revokeMutation.isPending ? "Отзываем..." : "Отозвать ключ"}
+              {revokeMutation.isPending ? "Отзываем..." : "Отозвать доступ"}
             </button>
           </div>
 
@@ -411,7 +443,7 @@ function AccountDetail({
       ) : (
         <div className="workspace-inline-state">
           <strong>Управление недоступно для этой роли</strong>
-          <p>Backend RBAC остаётся security boundary; интерфейс не показывает write actions для текущего membership.</p>
+          <p>Изменять данные доступа и запускать синхронизацию могут только владелец и администратор организации.</p>
         </div>
       )}
     </div>
@@ -476,8 +508,10 @@ function emptyToNull(value: string): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function normalizeResponseMode(value: string): ResponseMode {
-  return value === "auto" || value === "semi_auto" ? value : "inherit";
+function validAccountId(marketplace: MarketplaceKey, value: string): boolean {
+  const details = marketplaceDetails[marketplace];
+  if (!details.accountRequired) return true;
+  return details.numericAccount ? /^[1-9]\d*$/.test(value) : value.trim().length > 0;
 }
 
 function accountStatusLabel(account: MarketplaceAccount): string {

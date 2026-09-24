@@ -19,6 +19,7 @@ Respio is a multi-tenant SaaS for marketplace sellers, operators and agencies. I
 
 - Wildberries: current MVP adapter and real execution path.
 - Ozon, Yandex Market and Avito: do not imply production-ready sending until official contracts are verified, adapters implemented and runtime-tested.
+- The authenticated integrations workspace exposes account setup, credential validation, rotation, revocation and manual sync for all four registered adapters. These controls do not certify live provider access or sending without seller credentials.
 - Groq: backend-only provider; MVP model is `qwen/qwen3.8-27b` with strict structured output and reasoning disabled for reply generation.
 - Existing layers: auth, organizations, RBAC, integrations, Inbox, AI drafts, SafetyGate, automation rules, worker queue, auto replies, manual review, analytics, billing foundation, admin and Docker deployment foundation.
 
@@ -95,7 +96,6 @@ Scan speed, state clarity, operational confidence, low cognitive load, accessibi
 
 ## Tooling policy
 
-- Impeccable: deterministic design anti-pattern scan and optional provider skill integration.
 - Playwright: E2E, responsive and visual testing.
 - `@axe-core/playwright`: automated accessibility checks.
 - Lighthouse CI: performance/SEO/accessibility regression monitoring.
@@ -103,7 +103,7 @@ Scan speed, state clarity, operational confidence, low cognitive load, accessibi
 
 ## Definition of done for public redesign
 
-Approved IA/copy hierarchy, semantic HTML, correct metadata/canonical, responsive behavior, keyboard accessibility, no serious/critical configured axe violations, no undocumented Impeccable findings, critical Playwright coverage, no fabricated claims, Lighthouse budgets, desktop/mobile visual QA and approved brand system.
+Approved IA/copy hierarchy, semantic HTML, correct metadata/canonical, responsive behavior, keyboard accessibility, no serious/critical configured axe violations, critical Playwright coverage, no fabricated claims, Lighthouse budgets, desktop/mobile visual QA and approved brand system.
 
 ## Product dashboard progress · Live AI Assistant · 0.1.20
 

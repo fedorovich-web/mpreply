@@ -10,31 +10,27 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 const marketplaceCatalog = [
   {
     key: "wildberries",
+    slug: "wildberries",
     name: "Wildberries",
-    badge: "Доступно в MVP",
-    description: "Подключение кабинетов, проверка ключа, ручная синхронизация отзывов и вопросов.",
-    available: true,
+    description: "Отзывы и вопросы: подключение, проверка доступа и синхронизация.",
   },
   {
     key: "ozon",
+    slug: "ozon",
     name: "Ozon",
-    badge: "Планируется",
-    description: "Подключение станет доступно после проверки официального API и рабочего цикла ответов.",
-    available: false,
+    description: "Отзывы и вопросы: потребуется Client ID и API-ключ с нужными правами.",
   },
   {
     key: "yandex_market",
+    slug: "yandex-market",
     name: "Яндекс Маркет",
-    badge: "Планируется",
-    description: "Подключение станет доступно после проверки официального API и сценариев публикации ответов.",
-    available: false,
+    description: "Отзывы и вопросы: потребуется Business ID и ключ с доступом к общению с покупателями.",
   },
   {
     key: "avito",
+    slug: "avito",
     name: "Авито",
-    badge: "Планируется",
-    description: "Подключение станет доступно после проверки официального API и обмена сообщениями в рабочей среде.",
-    available: false,
+    description: "Чаты: потребуется ID аккаунта, Client ID, Client Secret и доступ к API мессенджера.",
   },
 ] as const;
 
@@ -50,16 +46,16 @@ export function IntegrationsWorkspace() {
   });
 
   const accounts = accountsQuery.data ?? [];
-  const wildberriesAccounts = accounts.filter((account) => account.marketplace === "wildberries");
-  const activeCount = accounts.filter((account) => account.status === "active").length;
+  const hasAccountData = accountsQuery.isSuccess;
+  const activeCount = accounts.filter((account) => account.status === "active" && account.credentials_status === "valid").length;
   const problemCount = accounts.filter((account) => account.status === "error" || account.error_count > 0).length;
 
   return (
     <section className="integrations-workspace" aria-label="Интеграции маркетплейсов">
       <div className="integrations-summary-grid" aria-label="Сводка подключений">
-        <SummaryMetric label="Подключений" value={accountsQuery.isPending ? "—" : String(accounts.length)} />
-        <SummaryMetric label="Активных" value={accountsQuery.isPending ? "—" : String(activeCount)} />
-        <SummaryMetric label="Требуют внимания" value={accountsQuery.isPending ? "—" : String(problemCount)} />
+        <SummaryMetric label="Подключений" value={hasAccountData ? String(accounts.length) : "—"} />
+        <SummaryMetric label="Активных" value={hasAccountData ? String(activeCount) : "—"} />
+        <SummaryMetric label="Требуют внимания" value={hasAccountData ? String(problemCount) : "—"} />
       </div>
 
       {accountsQuery.error ? (
@@ -74,36 +70,28 @@ export function IntegrationsWorkspace() {
 
       <div className="integration-catalog-grid" role="list">
         {marketplaceCatalog.map((marketplace) => {
-          const connectedCount = marketplace.key === "wildberries" ? wildberriesAccounts.length : 0;
-          const statusLabel = marketplace.available
-            ? connectedCount > 0
-              ? `${connectedCount} ${accountWord(connectedCount)}`
-              : "Можно подключить"
-            : "Пока недоступно";
+          const connectedCount = accounts.filter((account) => account.marketplace === marketplace.key).length;
+          const statusLabel = !hasAccountData ? "Состояние неизвестно" : connectedCount > 0 ? `${connectedCount} ${accountWord(connectedCount)}` : "Нет подключений";
 
           return (
             <article className="integration-market-card" key={marketplace.key} role="listitem">
               <div className="integration-market-card-topline">
                 <div>
-                  <span className="ui-badge">{marketplace.badge}</span>
+                  <span className="ui-badge">Доступно к подключению</span>
                   <h2>{marketplace.name}</h2>
                 </div>
-                <span className={`ui-badge ${marketplace.available ? "ui-badge-success" : "ui-badge-warning"}`}>
+                <span className="ui-badge">
                   {statusLabel}
                 </span>
               </div>
               <p>{marketplace.description}</p>
-              {marketplace.available ? (
-                <Link className="button button-secondary" href="/app/integrations/wildberries">
-                  {activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin"
-                    ? connectedCount > 0
-                      ? "Управлять подключениями"
-                      : "Подключить Wildberries"
-                    : "Просмотреть подключения"}
-                </Link>
-              ) : (
-                <span className="integration-unavailable-note">Пока подключение недоступно.</span>
-              )}
+              <Link className="button button-secondary" href={`/app/integrations/${marketplace.slug}`}>
+                {!hasAccountData ? "Открыть подключения" : activeOrganization.current_user_role === "owner" || activeOrganization.current_user_role === "admin"
+                  ? connectedCount > 0
+                    ? "Управлять подключениями"
+                    : `Подключить ${marketplace.name}`
+                  : "Просмотреть подключения"}
+              </Link>
             </article>
           );
         })}

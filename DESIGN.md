@@ -141,10 +141,6 @@ This is a framework, not permission to force every section onto the page.
 
 WCAG AA-oriented implementation, keyboard navigation, visible focus, semantics, labels, contrast, reduced motion, no hover-only essential info. Automated axe is necessary but insufficient. Protect LCP, CLS and INP; avoid large client bundles and unnecessary third-party scripts.
 
-## Impeccable contract
-
-Before substantial UI work: read `PRODUCT.md`, `DESIGN.md`, relevant docs, inspect existing tokens/components, run `npm run design:detect`, and never suppress findings silently.
-
 ## Absolute anti-pattern bans
 
 Reject gradient text, generic glassmorphism, fake hero metrics, identical card grids, side-stripe accent cards, excessive 32px+ card rounding, decorative CSS grid backgrounds, fake logos/testimonials, uncontrolled glow, and AI-template copy.
@@ -157,7 +153,9 @@ Permission state is explicit without being treated as a security boundary. Owner
 
 ## Product dashboard · Live Integrations · 0.1.21
 
-The integrations experience is an operational workspace rather than a marketplace roadmap gallery. Real account health, credential state, masked fingerprint, sync history and error count are visible together, while unsupported marketplace adapters remain visually and textually marked as unavailable.
+The integrations experience is an operational workspace rather than a marketplace roadmap gallery. Real account health, credential state, masked fingerprint, sync history and error count are visible together. Account setup for a registered adapter must not be presented as proof of live provider sending.
+
+The current admin workspace uses the same account-management layout for Wildberries, Ozon, Yandex Market and Avito. Provider-specific credential fields are explicit; connection counts do not imply healthy access, and setup copy must not claim live sending was verified.
 
 The Wildberries management flow uses the existing dashboard design language and centralized CSS custom properties for colors, typography, spacing, radii, shadows, focus and transitions. Interactive account rows use stable transform-based hover/active motion, destructive credential revocation is explicit and confirmable, and write controls are absent for read-only memberships without treating frontend hiding as authorization.
 

@@ -24,7 +24,6 @@ Use CSS variables/tokens. Do not mix icon systems. No emoji as production icons.
 
 From `apps/web`:
 ```bash
-npm run design:detect
 npm run typecheck
 npm run lint
 npm run build
@@ -39,10 +38,6 @@ npm run lighthouse
 ```
 
 Visual snapshots are not a substitute for review. Never regenerate them only to silence a failure.
-
-## Impeccable
-
-The repo pins the CLI, vendors its direct npm tarball and stores authoritative project context in `PRODUCT.md` and `DESIGN.md`. Use `npm run design:detect`; `npm run impeccable:install` installs project-local provider skills where internet access is available. Impeccable does not replace research, strategy, manual design review or accessibility testing.
 
 ## Change discipline
 

@@ -81,6 +81,7 @@ async def update_marketplace_account(
         account_id=account_id,
         display_name=payload.display_name,
         seller_id=payload.seller_id,
+        seller_id_supplied="seller_id" in payload.model_fields_set,
         default_response_mode=payload.default_response_mode,
         status=payload.status,
     )

@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   compress: true,
+  agentRules: false,
   deploymentId: process.env.DEPLOYMENT_VERSION || undefined,
 };
 
