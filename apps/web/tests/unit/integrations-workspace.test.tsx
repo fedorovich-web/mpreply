@@ -114,6 +114,29 @@ describe("IntegrationsWorkspace", () => {
     );
   });
 
+  it("keeps marketplace cards visible when a manual refresh fails", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async () => {
+      requests += 1;
+      if (requests === 1) {
+        return new Response(JSON.stringify([account]), { status: 200 });
+      }
+      return new Response(JSON.stringify({ detail: "connection_pool_timeout" }), { status: 503 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Wildberries" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Обновить подключения" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Не удалось обновить подключения");
+    expect(alert).not.toHaveTextContent("connection_pool_timeout");
+    expect(screen.getByRole("heading", { name: "Wildberries" })).toBeInTheDocument();
+  });
+
   it("keeps a recovered account healthy even when its cumulative error count is nonzero", async () => {
     mockWorkspace("owner");
     const recoveredAccount = {
@@ -211,7 +234,7 @@ describe("WildberriesIntegrationWorkspace", () => {
 
     const form = screen.getByRole("form", { name: "Новое подключение Wildberries" });
     fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый WB" } });
-    fireEvent.change(within(form).getByLabelText("API-ключ Wildberries"), { target: { value: "secret-token" } });
+    fireEvent.change(within(form).getByLabelText("Ключ доступа Wildberries"), { target: { value: "secret-token" } });
     fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
 
     await waitFor(() => {
@@ -224,6 +247,25 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(body.organization_id).toBe(organization.id);
     expect(body.display_name).toBe("Новый WB");
     expect(body.credentials).toBe("secret-token");
+  });
+
+  it("shows human connection labels instead of technical synchronization counters", async () => {
+    mockWorkspace("owner");
+    const accountWithHistory = {
+      ...account,
+      error_count: 7,
+      last_error_sync_at: "2026-07-11T22:00:00Z",
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithHistory]), { status: 200 })));
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    expect(screen.getByText("Последнее успешное обновление")).toBeInTheDocument();
+    expect(screen.getByText("Последняя ошибка")).toBeInTheDocument();
+    expect(screen.queryByText("Ошибки синхронизации")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Обновить данные" })).toBeInTheDocument();
   });
 
   it("shows a current sync failure instead of calling an active account healthy", async () => {
