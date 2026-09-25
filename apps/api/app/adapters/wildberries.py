@@ -192,12 +192,18 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 AdapterResult[ExistingReplyResult],
                 self._malformed_payload("Wildberries returned an invalid answer state"),
             )
+        native_state = self._optional_string(data.get("state"))
+        provider_state = native_state
+        if exists and context.message_type is MessageType.QUESTION and native_state == "none":
+            provider_state = "not_public"
+        elif exists and native_state in {None, "wbRu"}:
+            provider_state = "accepted_unverified"
         return AdapterResult(
             ok=True,
             data=ExistingReplyResult(
                 exists=exists,
                 provider_reply_id=context.external_id if exists else None,
-                provider_state=self._optional_string(data.get("state")),
+                provider_state=provider_state,
             ),
         )
 
@@ -273,7 +279,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             )
         return AdapterResult(
             ok=True,
-            data=ProviderWriteReceipt(provider_reply_id=context.external_id),
+            data=ProviderWriteReceipt(provider_reply_id=context.external_id, provider_state="accepted_unverified"),
         )
 
     def normalize_review(self, raw: dict[str, object]) -> NormalizedMessage:
@@ -581,11 +587,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             raise ValueError("Wildberries selected deficiencies are malformed")
         items = cast(list[object], value)
         if len(items) > 20 or any(
-            not isinstance(item, str)
-            or not item
-            or item != item.strip()
-            or len(item) > 100
-            or any(ord(char) < 32 or ord(char) == 127 for char in item)
+            not isinstance(item, str) or not item or item != item.strip() or len(item) > 100 or any(ord(char) < 32 or ord(char) == 127 for char in item)
             for item in items
         ):
             raise ValueError("Wildberries selected deficiencies are malformed")
