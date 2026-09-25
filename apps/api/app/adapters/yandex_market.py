@@ -465,8 +465,6 @@ class YandexMarketAdapter(ReviewQuestionAdapter):
             cls._prefixed("Disadvantages", description.get("disadvantages")),
         ]
         text = "\n".join(part for part in text_parts if part)
-        if not text:
-            raise ValueError("Yandex Market review text is missing")
         need_reaction = record.get("needReaction")
         if type(need_reaction) is not bool or need_reaction is not True:
             raise ValueError("Yandex Market review reaction state is invalid")
@@ -702,11 +700,7 @@ class YandexMarketAdapter(ReviewQuestionAdapter):
             raise ValueError("Yandex Market review media is invalid")
         photos: list[str] = []
         for raw in cast(list[object], photos_value):
-            photo = YandexMarketAdapter._object(raw)
-            url = YandexMarketAdapter._bounded_string(
-                photo.get("url") if photo is not None else None,
-                2_048,
-            )
+            url = YandexMarketAdapter._bounded_string(raw, 2_048)
             if url is None or not url.startswith("https://"):
                 raise ValueError("Yandex Market review photo is invalid")
             photos.append(url)

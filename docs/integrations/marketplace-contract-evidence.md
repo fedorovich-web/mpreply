@@ -19,10 +19,11 @@ This log records documentation checks for provider-facing contracts. It does not
 
 ## Yandex Market Partner API
 
-- Inspected: 2026-09-14.
-- Sources: [token information](https://yandex.ru/dev/market/partner-api/doc/en/reference/auth/getAuthTokenInfo), [API-key access groups](https://yandex.ru/dev/market/partner-api/doc/en/concepts/access), [product reviews](https://yandex.ru/dev/market/partner-api/doc/en/step-by-step/goods-feedback), and [product questions](https://yandex.ru/dev/market/partner-api/doc/en/step-by-step/goods-questions).
+- Inspected: 2026-09-25.
+- Sources: [token information](https://yandex.ru/dev/market/partner-api/doc/en/reference/auth/getAuthTokenInfo), [API-key access groups](https://yandex.ru/dev/market/partner-api/doc/en/concepts/access), [product review method](https://yandex.ru/dev/market/partner-api/doc/en/reference/goods-feedback/getGoodsFeedbacks), [question method](https://yandex.ru/dev/market/partner-api/doc/en/reference/goods-questions/getGoodsQuestions), and [review comment method](https://yandex.ru/dev/market/partner-api/doc/en/reference/goods-feedback/updateGoodsFeedbackComment).
 - Scope: `Api-Key` authorization, `communication` and `all-methods` write scopes, `/v2/auth/token`, business-scoped goods-feedback and goods-questions reads, comment/answer reconciliation, `pageToken`, limits, and write receipt shapes.
 - Contract corrections from the historical implementation: review creation returns the comment object under `result` with its `id` and moderation `status`; question creation returns `result.entity` and must identify an `ANSWER`. Invalid timestamps are rejected instead of being replaced with the local clock, and missing products are rejected instead of receiving synthetic names or IDs.
+- The current review schema describes `media.photos` as URL strings, not objects. Rating-only reviews can have no text in `description`; ingestion preserves an empty customer text instead of inventing one. AI draft generation remains unavailable for such messages.
 - Evidence boundary: official-documentation review with synthetic transports only; no seller-account request was made. Yandex Market remains runtime-unverified until a separately authorized live probe succeeds.
 
 ## Avito API

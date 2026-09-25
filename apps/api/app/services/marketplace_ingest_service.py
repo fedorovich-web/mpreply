@@ -337,7 +337,7 @@ def _marketplace(value: str) -> Marketplace:
 
 def _validate_message(message: NormalizedMessage, marketplace: Marketplace) -> None:
     _validate_required_text(message.external_id, field_name="message external ID", maximum=255)
-    if marketplace is Marketplace.AVITO and message.message_type is MessageType.REVIEW:
+    if message.message_type is MessageType.REVIEW:
         if len(message.customer_text) > _MAX_MESSAGE_TEXT_LENGTH or "\x00" in message.customer_text:
             raise InvalidNormalizedRecord("customer text is invalid")
     else:
