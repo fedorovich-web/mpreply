@@ -13,6 +13,7 @@ import {
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { Badge, type BadgeTone } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
+import { ReviewEvidence, reviewPreview } from "./ReviewEvidence";
 
 type FilterState = {
   type: "all" | "review" | "question" | "chat";
@@ -248,7 +249,7 @@ function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; m
         <Badge tone={statusTone(message.status)}>{messageTypeLabels[message.type] ?? message.type}</Badge>
       </span>
       <span className="message-card-title">{messageTitle(message)}</span>
-      <span className="message-card-text">{message.customer_text || (isAvitoReview(message) ? "Текст отзыва не передан Авито." : "")}</span>
+      <span className="message-card-text">{reviewPreview(message)}</span>
       <span className="message-card-meta">
         <span>{formatDate(message.marketplace_created_at)}</span>
         <span>{message.rating ? `${message.rating}★` : "без оценки"}</span>
@@ -310,7 +311,7 @@ function MessageDetail({
 
       <section className="detail-section">
         <span>Текст покупателя</span>
-        <p>{message.customer_text || (isAvitoReview(message) ? "Текст отзыва не передан Авито." : "")}</p>
+        <ReviewEvidence message={message} />
       </section>
 
       <section className="detail-section">

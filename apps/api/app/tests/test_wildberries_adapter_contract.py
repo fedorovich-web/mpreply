@@ -101,6 +101,51 @@ async def test_wildberries_photo_only_feedback_does_not_fail_the_page() -> None:
     assert result.data.items[0].customer_photos == ("https://feedback.example.test/photo.webp",)
 
 
+@pytest.mark.parametrize(
+    ("content", "expected_metadata"),
+    [
+        ({"video": {"link": "https://videofeedback01.wbbasket.ru/review/index.m3u8"}}, {"review_video_url": "https://videofeedback01.wbbasket.ru/review/index.m3u8"}),
+        ({"bables": ["цена", "размер"]}, {"review_deficiencies": ["цена", "размер"]}),
+    ],
+)
+@pytest.mark.asyncio
+async def test_wildberries_content_only_feedback_keeps_original_review_context(
+    content: dict[str, object], expected_metadata: dict[str, object]
+) -> None:
+    record = {**_record(), "text": "", **content}
+    transport = SequenceTransport([response(200, json={"data": {"feedbacks": [record]}})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
+            "synthetic-token", None, MarketplaceStream.REVIEWS, None
+        )
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.items[0].customer_text == ""
+    assert result.data.items[0].metadata.items() >= expected_metadata.items()
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        {"video": {"link": "javascript:alert(1)"}},
+        {"bables": ["цена", 123]},
+        {"bables": [" "]},
+    ],
+)
+@pytest.mark.asyncio
+async def test_wildberries_malformed_content_only_feedback_fails_closed(content: dict[str, object]) -> None:
+    record = {**_record(), "text": "", **content}
+    transport = SequenceTransport([response(200, json={"data": {"feedbacks": [record]}})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
+            "synthetic-token", None, MarketplaceStream.REVIEWS, None
+        )
+
+    assert result.ok is False
+    assert result.error_code == "malformed_payload"
+
+
 @pytest.mark.asyncio
 async def test_wildberries_question_page_ends_when_provider_returns_less_than_page_size() -> None:
     question = _record()

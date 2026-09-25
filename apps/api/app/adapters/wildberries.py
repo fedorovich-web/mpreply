@@ -6,6 +6,7 @@ import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import cast
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -277,11 +278,13 @@ class WildberriesAdapter(ReviewQuestionAdapter):
 
     def normalize_review(self, raw: dict[str, object]) -> NormalizedMessage:
         photos = self._photos(raw)
+        video_url = self._video_url(raw.get("video"))
+        deficiencies = self._deficiencies(raw.get("bables"))
         raw_text = raw.get("text")
         if raw_text is not None and not isinstance(raw_text, str):
             raise ValueError("Wildberries feedback text is malformed")
         text = raw_text.strip() if isinstance(raw_text, str) else ""
-        if len(text) > 12_000 or "\x00" in text or (not text and not photos):
+        if len(text) > 12_000 or "\x00" in text or (not text and not photos and not video_url and not deficiencies):
             raise ValueError("Wildberries feedback content is missing")
         return NormalizedMessage(
             external_id=self._required_string(
@@ -299,6 +302,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 "source": "wildberries.feedbacks",
                 "status": raw.get("state"),
                 "is_answered": raw.get("isAnswered"),
+                **({"review_video_url": video_url} if video_url is not None else {}),
+                **({"review_deficiencies": list(deficiencies)} if deficiencies else {}),
             },
         )
 
@@ -553,6 +558,40 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 raise ValueError("Wildberries photo list is malformed")
             full_size_urls.append(full_size)
         return tuple(full_size_urls)
+
+    @staticmethod
+    def _video_url(value: object) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, dict):
+            raise ValueError("Wildberries video is malformed")
+        link = cast(dict[str, object], value).get("link")
+        if not isinstance(link, str) or not link or len(link) > 512 or any(ord(char) < 32 or ord(char) == 127 for char in link):
+            raise ValueError("Wildberries video link is malformed")
+        parsed = urlsplit(link)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.port not in (None, 443):
+            raise ValueError("Wildberries video link is malformed")
+        return link
+
+    @staticmethod
+    def _deficiencies(value: object) -> tuple[str, ...]:
+        if value is None:
+            return ()
+        if not isinstance(value, list):
+            raise ValueError("Wildberries selected deficiencies are malformed")
+        items = cast(list[object], value)
+        if len(items) > 20 or any(
+            not isinstance(item, str)
+            or not item
+            or item != item.strip()
+            or len(item) > 100
+            or any(ord(char) < 32 or ord(char) == 127 for char in item)
+            for item in items
+        ):
+            raise ValueError("Wildberries selected deficiencies are malformed")
+        if sum(len(cast(str, item)) for item in items) > 512:
+            raise ValueError("Wildberries selected deficiencies are malformed")
+        return tuple(cast(str, item) for item in items)
 
     @staticmethod
     def _datetime(value: object) -> datetime:
