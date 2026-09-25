@@ -406,6 +406,21 @@ def check_deployment_contract() -> None:
             if token in content:
                 fail(f"{label} still contains legacy Respio production identity: {token}")
 
+    current_brand_docs = [
+        ROOT / "PRODUCT.md",
+        ROOT / "DESIGN.md",
+        ROOT / "AGENTS.md",
+        ROOT / "docs" / "brand" / "brand-foundation.md",
+        ROOT / "docs" / "design" / "ui-ux-quality-standard.md",
+        ROOT / "docs" / "operations" / "backup-restore.md",
+        ROOT / "docs" / "operations" / "incident-runbook.md",
+        ROOT / "infra" / "dokploy" / "deployment-checklist.md",
+    ]
+    for path in current_brand_docs:
+        content = path.read_text(encoding="utf-8")
+        if "Respio" in content:
+            fail(f"Current product/source-of-truth document still uses the legacy Respio brand: {path.relative_to(ROOT)}")
+
 
 def check_production_raster_assets() -> None:
     """Production raster assets must ship as WebP.

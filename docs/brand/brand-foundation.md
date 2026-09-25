@@ -1,4 +1,4 @@
-# Respio brand foundation and identity brief
+# MPReply brand foundation and identity brief
 
 ## Brand idea
 

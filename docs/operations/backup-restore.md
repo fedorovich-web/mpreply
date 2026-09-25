@@ -2,7 +2,7 @@
 
 ## Scope
 
-This runbook covers the Respio PostgreSQL database. Redis is treated as transient queue/cache infrastructure and must not be considered the system of record for marketplace credentials, messages, replies, billing state or audit records.
+This runbook covers the MPReply PostgreSQL database. Redis is treated as transient queue/cache infrastructure and must not be considered the system of record for marketplace credentials, messages, replies, billing state or audit records.
 
 ## Minimum production policy
 
@@ -28,7 +28,7 @@ pg_dump \
   --format=custom \
   --no-owner \
   --no-privileges \
-  --file="respio-$(date +%Y%m%d-%H%M%S).dump" \
+  --file="mpreply-$(date +%Y%m%d-%H%M%S).dump" \
   "$DATABASE_URL"
 ```
 
@@ -44,7 +44,7 @@ pg_restore \
   --no-owner \
   --no-privileges \
   --dbname="$RESTORE_DATABASE_URL" \
-  respio-backup.dump
+  mpreply-backup.dump
 ```
 
 Then run:
