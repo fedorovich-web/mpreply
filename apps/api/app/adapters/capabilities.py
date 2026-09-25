@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Literal
+
+from app.adapters.base import MarketplaceOperation
+from app.models.enums import Marketplace, MarketplaceSyncStream, MessageType
+
+IntegrationStatus = Literal["enabled", "planned"]
+PaginationStrategy = Literal["offset", "page_token", "none", "unknown"]
+
+
+@dataclass(frozen=True)
+class MarketplaceCapability:
+    marketplace: Marketplace
+    integration_status: IntegrationStatus
+    operations: tuple[MarketplaceOperation, ...]
+    message_types: tuple[MessageType, ...]
+    polling_enabled: bool
+    pagination_strategy: PaginationStrategy
+    notes: str
+
+    @property
+    def connection_enabled(self) -> bool:
+        return self.integration_status == "enabled" and "validate" in self.operations
+
+    def supports(self, operation: MarketplaceOperation) -> bool:
+        return operation in self.operations
+
+    @property
+    def sync_streams(self) -> tuple[MarketplaceSyncStream, ...]:
+        streams: list[MarketplaceSyncStream] = []
+        if self.supports("fetch_reviews"):
+            streams.append(MarketplaceSyncStream.REVIEWS)
+        if self.supports("fetch_questions"):
+            streams.append(MarketplaceSyncStream.QUESTIONS)
+        if self.supports("fetch_chats"):
+            streams.append(MarketplaceSyncStream.CHATS)
+        return tuple(streams)
+
+    @property
+    def scheduler_enabled(self) -> bool:
+        return self.connection_enabled and self.polling_enabled and bool(self.sync_streams)
+
+
+_CAPABILITIES: dict[Marketplace, MarketplaceCapability] = {
+    Marketplace.WILDBERRIES: MarketplaceCapability(
+        marketplace=Marketplace.WILDBERRIES,
+        integration_status="enabled",
+        operations=(
+            "validate",
+            "fetch_reviews",
+            "fetch_questions",
+            "send_review_reply",
+            "send_question_reply",
+        ),
+        message_types=(MessageType.REVIEW, MessageType.QUESTION),
+        polling_enabled=True,
+        pagination_strategy="offset",
+        notes="Implemented and covered by the MPReply Wildberries adapter contract.",
+    ),
+    Marketplace.OZON: MarketplaceCapability(
+        marketplace=Marketplace.OZON,
+        integration_status="enabled",
+        operations=(
+            "validate",
+            "fetch_reviews",
+            "fetch_questions",
+            "send_review_reply",
+            "send_question_reply",
+        ),
+        message_types=(MessageType.REVIEW, MessageType.QUESTION),
+        polling_enabled=True,
+        pagination_strategy="page_token",
+        notes="Implemented against the Ozon Seller API review and question contracts.",
+    ),
+    Marketplace.YANDEX_MARKET: MarketplaceCapability(
+        marketplace=Marketplace.YANDEX_MARKET,
+        integration_status="enabled",
+        operations=(
+            "validate",
+            "fetch_reviews",
+            "fetch_questions",
+            "send_review_reply",
+            "send_question_reply",
+        ),
+        message_types=(MessageType.REVIEW, MessageType.QUESTION),
+        polling_enabled=True,
+        pagination_strategy="page_token",
+        notes="Implemented against the official Yandex Market Partner API OpenAPI contract.",
+    ),
+    Marketplace.AVITO: MarketplaceCapability(
+        marketplace=Marketplace.AVITO,
+        integration_status="enabled",
+        operations=("validate", "fetch_chats", "send_chat_message"),
+        message_types=(MessageType.CHAT,),
+        polling_enabled=True,
+        pagination_strategy="offset",
+        notes="Implemented against the Avito Messenger conversation contract.",
+    ),
+}
+
+
+def get_marketplace_capability(marketplace: Marketplace | str) -> MarketplaceCapability:
+    value = marketplace if isinstance(marketplace, Marketplace) else Marketplace(marketplace)
+    return _CAPABILITIES[value]
+
+
+def list_marketplace_capabilities() -> tuple[MarketplaceCapability, ...]:
+    return tuple(_CAPABILITIES[marketplace] for marketplace in Marketplace)
+
+
+def scheduler_marketplaces() -> tuple[str, ...]:
+    return tuple(capability.marketplace.value for capability in _CAPABILITIES.values() if capability.scheduler_enabled)
