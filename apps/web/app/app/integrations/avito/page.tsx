@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { MarketplaceIntegrationWorkspace } from "../../../../components/integrations/WildberriesIntegrationWorkspace";
+import { AvitoIntegrationWorkspace } from "../../../../components/integrations/AvitoIntegrationWorkspace";
 
 export default function AvitoIntegrationPage() {
   return (
@@ -10,7 +10,7 @@ export default function AvitoIntegrationPage() {
           <p className="eyebrow">Авито</p>
           <h1>Подключение аккаунтов Авито</h1>
           <p>
-            Добавляйте аккаунты, проверяйте подключение, обновляйте сообщения покупателей и выбирайте, как MPReply должен работать с ответами.
+            Подключайте Avito User ID, Client ID и Client Secret, синхронизируйте чаты и отвечайте покупателям из MPReply.
           </p>
         </div>
         <div className="app-header-actions">
@@ -21,12 +21,7 @@ export default function AvitoIntegrationPage() {
         </div>
       </header>
 
-      <MarketplaceIntegrationWorkspace
-        credentialLabel="Данные доступа Авито"
-        marketplace="avito"
-        marketplaceName="Авито"
-        placeholder="Например, Авито — основной аккаунт"
-      />
+      <AvitoIntegrationWorkspace />
     </section>
   );
 }

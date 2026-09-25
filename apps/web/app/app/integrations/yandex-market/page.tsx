@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { MarketplaceIntegrationWorkspace } from "../../../../components/integrations/WildberriesIntegrationWorkspace";
+import { YandexMarketIntegrationWorkspace } from "../../../../components/integrations/YandexMarketIntegrationWorkspace";
 
 export default function YandexMarketIntegrationPage() {
   return (
@@ -10,7 +10,7 @@ export default function YandexMarketIntegrationPage() {
           <p className="eyebrow">Яндекс Маркет</p>
           <h1>Подключение кабинетов Яндекс Маркета</h1>
           <p>
-            Добавляйте кабинеты, проверяйте подключение, обновляйте обращения покупателей и выбирайте, как MPReply должен отправлять ответы.
+            Подключайте Business ID и API-ключ, синхронизируйте отзывы и вопросы и безопасно отправляйте ответы через MPReply.
           </p>
         </div>
         <div className="app-header-actions">
@@ -21,12 +21,7 @@ export default function YandexMarketIntegrationPage() {
         </div>
       </header>
 
-      <MarketplaceIntegrationWorkspace
-        credentialLabel="Данные доступа Яндекс Маркета"
-        marketplace="yandex_market"
-        marketplaceName="Яндекс Маркет"
-        placeholder="Например, Яндекс Маркет — основной магазин"
-      />
+      <YandexMarketIntegrationWorkspace />
     </section>
   );
 }

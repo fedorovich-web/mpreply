@@ -2,11 +2,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { AvitoIntegrationWorkspace } from "../../components/integrations/AvitoIntegrationWorkspace";
 import { IntegrationsWorkspace } from "../../components/integrations/IntegrationsWorkspace";
+import { OzonIntegrationWorkspace } from "../../components/integrations/OzonIntegrationWorkspace";
 import {
   MarketplaceIntegrationWorkspace,
   WildberriesIntegrationWorkspace,
 } from "../../components/integrations/WildberriesIntegrationWorkspace";
+import { YandexMarketIntegrationWorkspace } from "../../components/integrations/YandexMarketIntegrationWorkspace";
 import { useWorkspace } from "../../components/workspace/WorkspaceProvider";
 
 vi.mock("../../components/workspace/WorkspaceProvider", () => ({
@@ -66,6 +69,7 @@ function mockWorkspace(role: "owner" | "admin" | "manager" | "viewer") {
     },
     organizations: [activeOrganization],
     activeOrganization,
+    locale: "ru",
     setActiveOrganizationId: vi.fn(),
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
@@ -228,6 +232,99 @@ describe("MarketplaceIntegrationWorkspace", () => {
     const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
     expect(body.marketplace).toBe("ozon");
     expect(body.organization_id).toBe(organization.id);
+  });
+});
+
+describe("Specialized marketplace connection forms", () => {
+  function mockEmptyAccounts() {
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            ...account,
+            id: "66666666-6666-4666-8666-666666666666",
+            marketplace: payload.marketplace,
+            display_name: payload.display_name,
+            seller_id: null,
+            default_response_mode: payload.default_response_mode,
+            status: "pending_validation",
+            credentials_status: "pending_validation",
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify([]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  it("requires Ozon Client ID and sends it with the API key", async () => {
+    mockWorkspace("owner");
+    const fetchMock = mockEmptyAccounts();
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Ozon" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Ozon основной" } });
+    fireEvent.change(within(form).getByLabelText("API-ключ Ozon"), { target: { value: "ozon-api-key" } });
+    expect(within(form).getByRole("button", { name: "Добавить кабинет" })).toBeDisabled();
+
+    fireEvent.change(within(form).getByLabelText("Client ID"), { target: { value: "client-123" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("ozon");
+    expect(body.seller_id).toBe("client-123");
+    expect(body.credentials).toBe("ozon-api-key");
+  });
+
+  it("requires a positive Yandex Market Business ID", async () => {
+    mockWorkspace("owner");
+    const fetchMock = mockEmptyAccounts();
+    renderWithQueryClient(<YandexMarketIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Яндекс Маркет" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Маркет" } });
+    fireEvent.change(within(form).getByLabelText("API-ключ Яндекс Маркета"), { target: { value: "yandex-api-key" } });
+    fireEvent.change(within(form).getByLabelText("Business ID"), { target: { value: "0" } });
+    expect(within(form).getByRole("button", { name: "Добавить кабинет" })).toBeDisabled();
+
+    fireEvent.change(within(form).getByLabelText("Business ID"), { target: { value: "42" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("yandex_market");
+    expect(body.seller_id).toBe("42");
+  });
+
+  it("encodes Avito Client ID and Client Secret without exposing them as separate API fields", async () => {
+    mockWorkspace("owner");
+    const fetchMock = mockEmptyAccounts();
+    renderWithQueryClient(<AvitoIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Авито" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Авито основной" } });
+    fireEvent.change(within(form).getByLabelText("Avito User ID"), { target: { value: "123456" } });
+    fireEvent.change(within(form).getByLabelText("Client ID"), { target: { value: "avito-client" } });
+    fireEvent.change(within(form).getByLabelText("Client Secret"), { target: { value: "avito-secret" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("avito");
+    expect(body.seller_id).toBe("123456");
+    expect(JSON.parse(String(body.credentials))).toEqual({
+      client_id: "avito-client",
+      client_secret: "avito-secret",
+    });
+    expect(body).not.toHaveProperty("client_id");
+    expect(body).not.toHaveProperty("client_secret");
   });
 });
 

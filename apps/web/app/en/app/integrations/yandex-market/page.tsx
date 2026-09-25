@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { MarketplaceIntegrationWorkspace } from "../../../../../components/integrations/WildberriesIntegrationWorkspace";
+import { YandexMarketIntegrationWorkspace } from "../../../../../components/integrations/YandexMarketIntegrationWorkspace";
 
 export default function EnglishYandexMarketIntegrationPage() {
   return (
@@ -10,7 +10,7 @@ export default function EnglishYandexMarketIntegrationPage() {
           <p className="eyebrow">Yandex Market</p>
           <h1>Connect Yandex Market seller accounts</h1>
           <p>
-            Add seller accounts, validate access, sync customer messages, and choose how MPReply should send replies.
+            Connect a Business ID and API key, sync reviews and questions, and send replies safely through MPReply.
           </p>
         </div>
         <div className="app-header-actions">
@@ -21,12 +21,7 @@ export default function EnglishYandexMarketIntegrationPage() {
         </div>
       </header>
 
-      <MarketplaceIntegrationWorkspace
-        credentialLabel="Yandex Market access credentials"
-        marketplace="yandex_market"
-        marketplaceName="Yandex Market"
-        placeholder="For example, Yandex Market — main store"
-      />
+      <YandexMarketIntegrationWorkspace />
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { MarketplaceIntegrationWorkspace } from "../../../../components/integrations/WildberriesIntegrationWorkspace";
+import { OzonIntegrationWorkspace } from "../../../../components/integrations/OzonIntegrationWorkspace";
 
 export default function OzonIntegrationPage() {
   return (
@@ -10,7 +10,7 @@ export default function OzonIntegrationPage() {
           <p className="eyebrow">Ozon</p>
           <h1>Подключение кабинетов Ozon</h1>
           <p>
-            Добавляйте кабинеты, проверяйте подключение, обновляйте обращения покупателей и выбирайте, как MPReply должен отправлять ответы.
+            Подключайте Client ID и API-ключ, синхронизируйте отзывы и вопросы и отправляйте ответы через MPReply.
           </p>
         </div>
         <div className="app-header-actions">
@@ -21,12 +21,7 @@ export default function OzonIntegrationPage() {
         </div>
       </header>
 
-      <MarketplaceIntegrationWorkspace
-        credentialLabel="Данные доступа Ozon"
-        marketplace="ozon"
-        marketplaceName="Ozon"
-        placeholder="Например, Ozon — основной магазин"
-      />
+      <OzonIntegrationWorkspace />
     </section>
   );
 }

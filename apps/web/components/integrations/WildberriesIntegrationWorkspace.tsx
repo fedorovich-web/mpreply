@@ -24,11 +24,20 @@ type Notice = {
   message: string;
 };
 
+type SellerIdMode = "optional" | "required" | "positive-integer";
+type CredentialMode = "single" | "avito-client-credentials";
+
 type MarketplaceIntegrationWorkspaceProps = {
   marketplace: MarketplaceIntegrationKey;
   marketplaceName: string;
   credentialLabel: string;
+  secondaryCredentialLabel?: string;
+  credentialMode?: CredentialMode;
   placeholder: string;
+  sellerIdLabel?: string;
+  sellerIdMode?: SellerIdMode;
+  sellerIdPlaceholder?: string;
+  sellerIdHiddenAfterSave?: boolean;
 };
 const integrationCopy = {
   ru: {
@@ -62,6 +71,10 @@ const integrationCopy = {
     displayName: "Название подключения",
     sellerId: "Идентификатор продавца",
     optional: "необязательно",
+    storedIdentifier: "Сохранённое значение скрыто. Оставьте поле пустым, если менять его не нужно.",
+    permissions: "Подтверждённые права",
+    notValidated: "Ещё не проверены",
+    noPermissions: "Права не подтверждены",
     responseMode: "Режим ответов",
     inherit: "Использовать общие настройки",
     auto: "Автоматическая отправка",
@@ -159,6 +172,10 @@ const integrationCopy = {
     displayName: "Connection name",
     sellerId: "Seller identifier",
     optional: "optional",
+    storedIdentifier: "The saved value is hidden. Leave this field empty unless you want to replace it.",
+    permissions: "Validated permissions",
+    notValidated: "Not validated yet",
+    noPermissions: "No permissions confirmed",
     responseMode: "Reply mode",
     inherit: "Use workspace defaults",
     auto: "Automatic sending",
@@ -244,7 +261,13 @@ export function MarketplaceIntegrationWorkspace({
   marketplace,
   marketplaceName,
   credentialLabel,
+  secondaryCredentialLabel,
+  credentialMode = "single",
   placeholder,
+  sellerIdLabel,
+  sellerIdMode = "optional",
+  sellerIdPlaceholder,
+  sellerIdHiddenAfterSave = false,
 }: MarketplaceIntegrationWorkspaceProps) {
   const { activeOrganization, locale } = useWorkspace();
   const t = integrationCopy[locale];
@@ -254,6 +277,7 @@ export function MarketplaceIntegrationWorkspace({
   const [displayName, setDisplayName] = useState("");
   const [sellerId, setSellerId] = useState("");
   const [credentials, setCredentials] = useState("");
+  const [secondaryCredentials, setSecondaryCredentials] = useState("");
   const [responseMode, setResponseMode] = useState<ResponseMode>("inherit");
   const [notice, setNotice] = useState<Notice | null>(null);
   const detailPanelRef = useRef<HTMLElement>(null);
@@ -274,6 +298,8 @@ export function MarketplaceIntegrationWorkspace({
     [accountsQuery.data, marketplace],
   );
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? accounts[0] ?? null;
+  const createSellerIdValid = sellerIdIsValid(sellerId, sellerIdMode);
+  const createCredentialsValid = credentialsAreValid(credentials, secondaryCredentials, credentialMode);
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -283,7 +309,7 @@ export function MarketplaceIntegrationWorkspace({
           organization_id: activeOrganization.id,
           marketplace,
           display_name: displayName.trim(),
-          credentials,
+          credentials: encodeCredentials(credentials, secondaryCredentials, credentialMode),
           seller_id: emptyToNull(sellerId),
           default_response_mode: responseMode,
         },
@@ -293,6 +319,7 @@ export function MarketplaceIntegrationWorkspace({
       setDisplayName("");
       setSellerId("");
       setCredentials("");
+      setSecondaryCredentials("");
       setResponseMode("inherit");
       setNotice({ tone: "success", message: t.added });
       await queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", activeOrganization.id] });
@@ -419,7 +446,7 @@ export function MarketplaceIntegrationWorkspace({
               aria-label={`${t.newConnectionAria} ${marketplaceName}`}
               onSubmit={(event) => {
                 event.preventDefault();
-                if (displayName.trim().length >= 2 && credentials.length >= 8) createMutation.mutate();
+                if (displayName.trim().length >= 2 && createSellerIdValid && createCredentialsValid) createMutation.mutate();
               }}
             >
               <div className="panel-heading">
@@ -438,20 +465,41 @@ export function MarketplaceIntegrationWorkspace({
                 />
               </label>
               <label>
-                {t.sellerId} <span className="field-optional">{t.optional}</span>
-                <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} value={sellerId} />
+                {sellerIdLabel ?? t.sellerId}{" "}
+                {sellerIdMode === "optional" ? <span className="field-optional">{t.optional}</span> : null}
+                <input
+                  inputMode={sellerIdMode === "positive-integer" ? "numeric" : "text"}
+                  maxLength={255}
+                  onChange={(event) => setSellerId(event.target.value)}
+                  pattern={sellerIdMode === "positive-integer" ? "[1-9][0-9]*" : undefined}
+                  placeholder={sellerIdPlaceholder}
+                  required={sellerIdMode !== "optional"}
+                  value={sellerId}
+                />
               </label>
               <label>
                 {credentialLabel}
                 <input
                   autoComplete="off"
-                  minLength={8}
+                  minLength={credentialMode === "single" ? 8 : undefined}
                   onChange={(event) => setCredentials(event.target.value)}
                   required
                   type="password"
                   value={credentials}
                 />
               </label>
+              {credentialMode === "avito-client-credentials" && secondaryCredentialLabel ? (
+                <label>
+                  {secondaryCredentialLabel}
+                  <input
+                    autoComplete="new-password"
+                    onChange={(event) => setSecondaryCredentials(event.target.value)}
+                    required
+                    type="password"
+                    value={secondaryCredentials}
+                  />
+                </label>
+              ) : null}
               <label>
                 {t.responseMode}
                 <select onChange={(event) => setResponseMode(event.target.value as ResponseMode)} value={responseMode}>
@@ -465,7 +513,7 @@ export function MarketplaceIntegrationWorkspace({
               ) : null}
               <button
                 className="button button-primary"
-                disabled={createMutation.isPending || displayName.trim().length < 2 || credentials.length < 8}
+                disabled={createMutation.isPending || displayName.trim().length < 2 || !createSellerIdValid || !createCredentialsValid}
                 type="submit"
               >
                 {createMutation.isPending ? t.saving : t.add}
@@ -486,11 +534,17 @@ export function MarketplaceIntegrationWorkspace({
               account={selectedAccount}
               canManage={canManage}
               credentialLabel={credentialLabel}
+              credentialMode={credentialMode}
               detailTitleId={detailTitleId}
               marketplaceName={marketplaceName}
               organizationId={activeOrganization.id}
               onNotice={setNotice}
               locale={locale}
+              secondaryCredentialLabel={secondaryCredentialLabel}
+              sellerIdHiddenAfterSave={sellerIdHiddenAfterSave}
+              sellerIdLabel={sellerIdLabel ?? t.sellerId}
+              sellerIdMode={sellerIdMode}
+              sellerIdPlaceholder={sellerIdPlaceholder}
             />
           ) : (
             <WorkspaceState
@@ -509,27 +563,40 @@ function AccountDetail({
   account,
   canManage,
   credentialLabel,
+  credentialMode,
   detailTitleId,
   marketplaceName,
   organizationId,
   onNotice,
   locale,
+  secondaryCredentialLabel,
+  sellerIdHiddenAfterSave,
+  sellerIdLabel,
+  sellerIdMode,
+  sellerIdPlaceholder,
 }: {
   account: MarketplaceAccount;
   canManage: boolean;
   credentialLabel: string;
+  credentialMode: CredentialMode;
   detailTitleId: string;
   marketplaceName: string;
   organizationId: string;
   onNotice: (notice: Notice | null) => void;
   locale: Locale;
+  secondaryCredentialLabel?: string;
+  sellerIdHiddenAfterSave: boolean;
+  sellerIdLabel: string;
+  sellerIdMode: SellerIdMode;
+  sellerIdPlaceholder?: string;
 }) {
   const t = integrationCopy[locale];
   const queryClient = useQueryClient();
   const [displayName, setDisplayName] = useState(account.display_name);
-  const [sellerId, setSellerId] = useState(account.seller_id ?? "");
+  const [sellerId, setSellerId] = useState(sellerIdHiddenAfterSave ? "" : account.seller_id ?? "");
   const [responseMode, setResponseMode] = useState<ResponseMode>(normalizeResponseMode(account.default_response_mode));
   const [newCredentials, setNewCredentials] = useState("");
+  const [newSecondaryCredentials, setNewSecondaryCredentials] = useState("");
   const [localError, setLocalError] = useState<unknown>(null);
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["marketplace-accounts", organizationId] });
 
@@ -582,10 +649,11 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/rotate-credentials`, marketplaceAccountActionSchema, {
         method: "POST",
-        body: { credentials: newCredentials },
+        body: { credentials: encodeCredentials(newCredentials, newSecondaryCredentials, credentialMode) },
       }),
     onSuccess: async () => {
       setNewCredentials("");
+      setNewSecondaryCredentials("");
       onNotice({ tone: "success", message: t.credentialsRotated });
       await invalidate();
     },
@@ -602,6 +670,13 @@ function AccountDetail({
 
   const busy = updateMutation.isPending || validateMutation.isPending || syncMutation.isPending || rotateMutation.isPending || revokeMutation.isPending;
   const mutationError = localError ?? updateMutation.error ?? validateMutation.error ?? syncMutation.error ?? rotateMutation.error ?? revokeMutation.error;
+  const detailSellerIdValid =
+    sellerIdHiddenAfterSave && sellerId.trim().length === 0 ? true : sellerIdIsValid(sellerId, sellerIdMode);
+  const rotationCredentialsValid = credentialsAreValid(
+    newCredentials,
+    newSecondaryCredentials,
+    credentialMode,
+  );
 
   return (
     <div className="integration-detail-stack">
@@ -618,6 +693,7 @@ function AccountDetail({
         <HealthItem label={t.connectionData} value={account.credentials_masked} />
         <HealthItem label={t.lastSuccess} value={formatDateTime(account.last_success_sync_at, locale)} />
         <HealthItem label={t.lastError} value={formatDateTime(account.last_error_sync_at, locale)} />
+        <HealthItem label={t.permissions} value={formatValidatedScopes(account.scopes_json, locale)} />
       </dl>
 
       {canManage ? (
@@ -628,7 +704,7 @@ function AccountDetail({
             onSubmit={(event) => {
               event.preventDefault();
               setLocalError(null);
-              if (displayName.trim().length >= 2) updateMutation.mutate();
+              if (displayName.trim().length >= 2 && detailSellerIdValid) updateMutation.mutate();
             }}
           >
             <div className="panel-heading">
@@ -640,8 +716,20 @@ function AccountDetail({
               <input maxLength={255} minLength={2} onChange={(event) => setDisplayName(event.target.value)} required value={displayName} />
             </label>
             <label>
-              {t.sellerId} <span className="field-optional">{t.optional}</span>
-              <input maxLength={255} onChange={(event) => setSellerId(event.target.value)} value={sellerId} />
+              {sellerIdLabel}{" "}
+              {sellerIdMode === "optional" || sellerIdHiddenAfterSave ? (
+                <span className="field-optional">{t.optional}</span>
+              ) : null}
+              <input
+                inputMode={sellerIdMode === "positive-integer" ? "numeric" : "text"}
+                maxLength={255}
+                onChange={(event) => setSellerId(event.target.value)}
+                pattern={sellerIdMode === "positive-integer" ? "[1-9][0-9]*" : undefined}
+                placeholder={sellerIdPlaceholder}
+                required={!sellerIdHiddenAfterSave && sellerIdMode !== "optional"}
+                value={sellerId}
+              />
+              {sellerIdHiddenAfterSave ? <small>{t.storedIdentifier}</small> : null}
             </label>
             <label>
               {t.responseMode}
@@ -651,7 +739,7 @@ function AccountDetail({
                 <option value="semi_auto">{t.semiAuto}</option>
               </select>
             </label>
-            <button className="button button-secondary" disabled={busy || displayName.trim().length < 2} type="submit">
+            <button className="button button-secondary" disabled={busy || displayName.trim().length < 2 || !detailSellerIdValid} type="submit">
               {updateMutation.isPending ? t.saving : t.saveSettings}
             </button>
           </form>
@@ -671,7 +759,7 @@ function AccountDetail({
             onSubmit={(event) => {
               event.preventDefault();
               setLocalError(null);
-              if (newCredentials.length >= 8) rotateMutation.mutate();
+              if (rotationCredentialsValid) rotateMutation.mutate();
             }}
           >
             <div className="panel-heading">
@@ -680,9 +768,28 @@ function AccountDetail({
             </div>
             <label>
               {credentialLabel}
-              <input autoComplete="off" minLength={8} onChange={(event) => setNewCredentials(event.target.value)} required type="password" value={newCredentials} />
+              <input
+                autoComplete="off"
+                minLength={credentialMode === "single" ? 8 : undefined}
+                onChange={(event) => setNewCredentials(event.target.value)}
+                required
+                type="password"
+                value={newCredentials}
+              />
             </label>
-            <button className="button button-secondary" disabled={busy || newCredentials.length < 8} type="submit">
+            {credentialMode === "avito-client-credentials" && secondaryCredentialLabel ? (
+              <label>
+                {secondaryCredentialLabel}
+                <input
+                  autoComplete="new-password"
+                  onChange={(event) => setNewSecondaryCredentials(event.target.value)}
+                  required
+                  type="password"
+                  value={newSecondaryCredentials}
+                />
+              </label>
+            ) : null}
+            <button className="button button-secondary" disabled={busy || !rotationCredentialsValid} type="submit">
               {rotateMutation.isPending ? t.saving : t.saveNewCredentials}
             </button>
           </form>
@@ -799,6 +906,37 @@ function userErrorMessage(error: unknown, fallback: string, locale: Locale): str
 function emptyToNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function sellerIdIsValid(value: string, mode: SellerIdMode): boolean {
+  const trimmed = value.trim();
+  if (mode === "optional") return trimmed.length === 0 || trimmed.length <= 255;
+  if (mode === "required") return trimmed.length > 0 && trimmed.length <= 255;
+  return /^[1-9][0-9]*$/.test(trimmed) && trimmed.length <= 255;
+}
+
+function credentialsAreValid(primary: string, secondary: string, mode: CredentialMode): boolean {
+  if (mode === "avito-client-credentials") {
+    return primary.trim().length > 0 && secondary.trim().length > 0;
+  }
+  return primary.length >= 8;
+}
+
+function encodeCredentials(primary: string, secondary: string, mode: CredentialMode): string {
+  if (mode === "avito-client-credentials") {
+    return JSON.stringify({ client_id: primary.trim(), client_secret: secondary.trim() });
+  }
+  return primary;
+}
+
+function formatValidatedScopes(scopesJson: Record<string, unknown>, locale: Locale): string {
+  const t = integrationCopy[locale];
+  const scopes = scopesJson.scopes;
+  if (Array.isArray(scopes)) {
+    const values = [...new Set(scopes.filter((scope): scope is string => typeof scope === "string" && scope.length > 0))];
+    if (values.length > 0) return values.join(", ");
+  }
+  return scopesJson.validated === true ? t.noPermissions : t.notValidated;
 }
 
 function normalizeResponseMode(value: string): ResponseMode {
