@@ -25,10 +25,11 @@ from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_w
 from app.models.enums import Marketplace, MessageType
 
 _PAGE_SIZE = 50
-_MAX_OFFSET = 1_000_000
+_MAX_REVIEW_OFFSET = 199_990
+_MAX_QUESTION_OFFSET = 9_950
 _MAX_REPLY_TEXT_LENGTH = 5_000
-_FEEDBACKS_AND_QUESTIONS_SCOPE = 1 << 6
-_READ_ONLY_SCOPE = 1 << 29
+_FEEDBACKS_AND_QUESTIONS_SCOPE = 1 << 7
+_READ_ONLY_SCOPE = 1 << 30
 _Normalizer = Callable[[dict[str, object]], NormalizedMessage]
 
 
@@ -104,7 +105,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 error_message_safe="Wildberries stream is not supported",
             )
         path, collection_key, normalizer = contract
-        offset = self._parse_cursor(cursor)
+        max_offset = _MAX_REVIEW_OFFSET if stream is MarketplaceStream.REVIEWS else _MAX_QUESTION_OFFSET
+        offset = self._parse_cursor(cursor, max_offset=max_offset)
         if offset is None:
             return AdapterResult(
                 False,
@@ -142,7 +144,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 self._malformed_payload("Wildberries returned an invalid record"),
             )
         next_offset = offset + _PAGE_SIZE
-        if len(items) == _PAGE_SIZE and next_offset > _MAX_OFFSET:
+        if len(items) == _PAGE_SIZE and next_offset > max_offset:
             return cast(
                 AdapterResult[MarketplacePage[NormalizedMessage]],
                 self._malformed_payload("Wildberries pagination exceeded the safe limit"),
@@ -211,6 +213,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             or len(context.external_id) > 255
             or "\x00" in context.external_id
             or not text.strip()
+            or (context.message_type is MessageType.REVIEW and len(text.strip()) < 2)
             or len(text) > _MAX_REPLY_TEXT_LENGTH
             or "\x00" in text
         ):
@@ -222,11 +225,11 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         if context.message_type is MessageType.REVIEW:
             method = "POST"
             path = "/api/v1/feedbacks/answer"
-            payload: dict[str, object] = {"id": context.external_id, "text": text}
+            write_payload: dict[str, object] = {"id": context.external_id, "text": text}
         elif context.message_type is MessageType.QUESTION:
             method = "PATCH"
             path = "/api/v1/questions"
-            payload = {"id": context.external_id, "text": text, "state": "wbRu"}
+            write_payload = {"id": context.external_id, "text": text, "state": "wbRu"}
         else:
             return AdapterResult(
                 False,
@@ -238,7 +241,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 method,
                 path,
                 headers=self._headers(credential),
-                json=payload,
+                json=write_payload,
             )
         except httpx.TimeoutException:
             return AdapterResult(
@@ -254,7 +257,15 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             )
         if not response.is_success:
             return cast(AdapterResult[ProviderWriteReceipt], self._map_error_response(response))
-        if response.status_code != 204:
+        if context.message_type is MessageType.REVIEW:
+            confirmed = response.status_code == 204 and not response.content
+        else:
+            try:
+                payload: object = response.json()
+            except ValueError:
+                payload = None
+            confirmed = response.status_code == 200 and self._successful_question_write(payload)
+        if not confirmed:
             return cast(
                 AdapterResult[ProviderWriteReceipt],
                 self._malformed_payload("Wildberries write success could not be proven"),
@@ -265,6 +276,13 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         )
 
     def normalize_review(self, raw: dict[str, object]) -> NormalizedMessage:
+        photos = self._photos(raw)
+        raw_text = raw.get("text")
+        if raw_text is not None and not isinstance(raw_text, str):
+            raise ValueError("Wildberries feedback text is malformed")
+        text = raw_text.strip() if isinstance(raw_text, str) else ""
+        if len(text) > 12_000 or "\x00" in text or (not text and not photos):
+            raise ValueError("Wildberries feedback content is missing")
         return NormalizedMessage(
             external_id=self._required_string(
                 raw.get("id"),
@@ -273,11 +291,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             message_type=MessageType.REVIEW,
             rating=self._rating(raw.get("productValuation")),
             customer_display_name=self._optional_string(raw.get("userName")),
-            customer_text=self._required_string(
-                raw.get("text"),
-                field_name="feedback text",
-            ),
-            customer_photos=self._photos(raw),
+            customer_text=text,
+            customer_photos=photos,
             marketplace_created_at=self._datetime(raw.get("createdDate")),
             product=self._product_context(raw),
             metadata={
@@ -405,13 +420,13 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         return {"Authorization": credential}
 
     @staticmethod
-    def _parse_cursor(cursor: str | None) -> int | None:
+    def _parse_cursor(cursor: str | None, *, max_offset: int) -> int | None:
         if cursor is None:
             return 0
-        if not cursor or len(cursor) > len(str(_MAX_OFFSET)) or not cursor.isascii() or not cursor.isdecimal():
+        if not cursor or len(cursor) > len(str(max_offset)) or not cursor.isascii() or not cursor.isdecimal():
             return None
         offset = int(cursor)
-        return offset if offset <= _MAX_OFFSET and str(offset) == cursor else None
+        return offset if offset <= max_offset and str(offset) == cursor else None
 
     @staticmethod
     def _token_scope(credential: str) -> int | None:
@@ -476,6 +491,20 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             return None
         data = cast(dict[str, object], payload).get("data")
         return cast(dict[str, object], data) if isinstance(data, dict) else None
+
+    @staticmethod
+    def _successful_question_write(payload: object) -> bool:
+        if not isinstance(payload, dict):
+            return False
+        result = cast(dict[str, object], payload)
+        return (
+            "data" in result
+            and result["data"] is None
+            and result.get("error") is False
+            and result.get("errorText") == ""
+            and "additionalErrors" in result
+            and result["additionalErrors"] is None
+        )
 
     def _product_context(self, raw: dict[str, object]) -> NormalizedProduct:
         product_details_value = raw.get("productDetails")

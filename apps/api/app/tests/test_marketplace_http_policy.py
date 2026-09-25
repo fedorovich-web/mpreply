@@ -183,14 +183,14 @@ async def test_registry_wildberries_validation_uses_injected_client() -> None:
     registry = create_marketplace_registry(clients)
 
     result = await registry.credentials(Marketplace.WILDBERRIES).validate_credentials(
-        _wildberries_token(scope=1 << 6),
+        _wildberries_token(scope=1 << 7),
         None,
     )
 
     assert result.ok is True
     assert len(transport.requests) == 1
     assert transport.requests[0].url.host == "feedbacks-api.wildberries.ru"
-    assert transport.requests[0].headers["Authorization"] == _wildberries_token(scope=1 << 6)
+    assert transport.requests[0].headers["Authorization"] == _wildberries_token(scope=1 << 7)
     transport.assert_exhausted()
     await clients.aclose()
 

@@ -4,10 +4,12 @@ This log records documentation checks for provider-facing contracts. It does not
 
 ## Wildberries
 
-- Inspected: 2026-09-13.
-- Sources: [API information](https://dev.wildberries.ru/en/openapi/api-information), [API release notice](https://dev.wildberries.ru/news/278), and [official knowledge-base article](https://dev.wildberries.ru/knowledge-base/articles/019d49a4-0b26-7620-8d0b-e3050b7cd01d).
-- Scope: token categories, feedback/question operations, request boundaries, and provider error behavior.
-- Evidence boundary: documentation-only review with synthetic transports; no seller-account request was made.
+- Inspected: 2026-09-25.
+- Sources: [Russian API information and token rules](https://dev.wildberries.ru/docs/openapi/api-information), [Russian buyer-communication guide](https://dev.wildberries.ru/news/278), [Russian release notes](https://dev.wildberries.ru/release-notes), [token bitmask guidance](https://dev.wildberries.ru/knowledge-base/articles/019d49a1-1540-76f6-befe-726633dc11be/dekodirovanie-i-proverka-tokenov-wb-api), and the [official China-region OpenAPI mirror](https://dev.wildberries.cn/docs/openapi/customer-communication) for exact response schemas and pagination bounds. The Russian OpenAPI page was not retrievable through the documentation reader, so regional parity of those detailed schemas remains an evidence limitation.
+- Scope: feedback/question list and detail, reply writes, JWT category bit 7 and read-only bit 30, review `take`/`skip` and question `take+skip` bounds, photo-only reviews, reply length, and provider response envelopes. The question-answer PATCH documents HTTP 200 with `{data:null,error:false,errorText:"",additionalErrors:null}`; feedback-answer POST documents empty HTTP 204. The adapter now distinguishes these instead of treating both alike.
+- Recent changes checked: feedback `photoLinks` examples now use WebP, and `orderStatus` is present in feedback payloads. Neither changes the request method or path; photo URLs are read from `fullSize` without assuming a JPEG suffix. The API guide also says seller question responses undergo moderation, so API acceptance is not proof of public visibility.
+- SaaS token constraint: WB documentation says personal tokens are for seller-controlled/on-premises software and must not be passed to cloud services. A cloud integration requires a service token for a catalogued service or the provider's authorized connection flow. The current credential entry does not establish such service registration; do not present a seller's personal token as a compliant production-cloud setup.
+- Evidence boundary: documentation-only review and synthetic HTTP transports; no seller-account request, moderation result, or production publication was verified. Reviews containing only video or selected deficiencies are documented as actionable but are not yet represented faithfully in the current message/UI model; this is a remaining integration gap, not a verified-working case.
 
 ## Ozon Seller API
 
