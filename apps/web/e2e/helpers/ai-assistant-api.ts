@@ -46,7 +46,7 @@ const message = {
     external_id: "wb-product-1",
     sku: "SKU-1",
     name: "Термокружка",
-    brand: "Respio Test",
+    brand: "Test Brand",
     category: "Посуда",
     image_url: null,
     product_url: null,

@@ -7,7 +7,7 @@ def test_build_marketplace_reply_prompt_hash_is_stable() -> None:
         message_type="review",
         customer_text="Товар пришёл быстро, всё хорошо",
         rating=5,
-        product={"name": "Кружка", "brand": "Respio Test"},
+        product={"name": "Кружка", "brand": "Test Brand"},
         tone="friendly",
     )
     second = build_marketplace_reply_prompt(
@@ -15,7 +15,7 @@ def test_build_marketplace_reply_prompt_hash_is_stable() -> None:
         message_type="review",
         customer_text="Товар пришёл быстро, всё хорошо",
         rating=5,
-        product={"name": "Кружка", "brand": "Respio Test"},
+        product={"name": "Кружка", "brand": "Test Brand"},
         tone="friendly",
     )
 

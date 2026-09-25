@@ -1,3 +1,3 @@
 FROM python:3.13-slim-bookworm
 WORKDIR /app
-CMD ["python", "-c", "print('Respio scheduler placeholder')"]
+CMD ["python", "-c", "print('MPReply scheduler placeholder')"]

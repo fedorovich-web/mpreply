@@ -420,9 +420,16 @@ def check_deployment_contract() -> None:
         ROOT / "AGENTS.md",
         ROOT / "docs" / "brand" / "brand-foundation.md",
         ROOT / "docs" / "design" / "ui-ux-quality-standard.md",
+        ROOT / "docs" / "design" / "asset-policy.md",
+        ROOT / "docs" / "product" / "product-baseline.md",
+        ROOT / "docs" / "automation-rules-engine-v1.md",
+        ROOT / "docs" / "security" / "marketplace-credentials-lifecycle.md",
         ROOT / "docs" / "operations" / "backup-restore.md",
         ROOT / "docs" / "operations" / "incident-runbook.md",
+        ROOT / "infra" / "docker" / "README.md",
         ROOT / "infra" / "dokploy" / "deployment-checklist.md",
+        ROOT / "infra" / "dokploy" / "service-map.md",
+        ROOT / "packages" / "design-tokens" / "README.md",
     ]
     for path in current_brand_docs:
         content = path.read_text(encoding="utf-8")
