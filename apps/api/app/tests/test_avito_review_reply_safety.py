@@ -10,11 +10,12 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.avito_reviews import AvitoReviewAdapter
-from app.adapters.base import ProviderMessageContext
+from app.adapters.base import AdapterResult, ProviderMessageContext
 from app.adapters.capabilities import MarketplaceStream
 from app.core.security import CredentialService
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
+from app.models.integration_event import IntegrationEvent
 from app.models.reply import Reply
 from app.services.reply_execution_service import ReplyExecutionService
 from app.tests.marketplace_fixtures import SequenceTransport, response
@@ -171,18 +172,78 @@ async def test_timed_out_post_is_not_retried() -> None:
     assert len([request for request in transport.requests if request.url.path == "/ratings/v1/answers"]) == 1
 
 
+@pytest.mark.asyncio
+async def test_secret_bearing_provider_error_is_not_persisted_in_reply_or_event() -> None:
+    leaked = "synthetic-secret synthetic-access-token Synthetic customer text provider-body-secret"
+    transport = SequenceTransport(
+        [
+            _token(),
+            response(200, json={"reviews": [_review()], "total": 1}),
+            response(403, json={"error": {"message": leaked}}),
+        ]
+    )
+    async with httpx.AsyncClient(base_url="https://api.avito.ru", transport=transport.mock()) as client:
+        result = await AvitoReviewAdapter(client).send_reply(_CREDENTIAL, "123", _CONTEXT, "Synthetic reply")
+
+    session = _Session()
+    service = _ReplyService(cast(AsyncSession, session), credentials=cast(CredentialService, object()))
+    message = CustomerMessage(
+        id=uuid4(),
+        organization_id=uuid4(),
+        marketplace_account_id=uuid4(),
+        marketplace=Marketplace.AVITO.value,
+        external_id="92312343",
+        type=MessageType.REVIEW.value,
+        status=MessageStatus.SENDING.value,
+        customer_text="Synthetic customer text",
+        marketplace_created_at=_CONTEXT.marketplace_created_at,
+        metadata_json={},
+    )
+    reply = Reply(
+        id=uuid4(),
+        organization_id=message.organization_id,
+        message_id=message.id,
+        reply_text="Synthetic reply",
+        status=ReplyStatus.SENDING.value,
+        mode=ResponseMode.SEMI_AUTO.value,
+        attempt_count=1,
+        metadata_json={},
+    )
+    with patch.object(service.audit, "write", new_callable=AsyncMock) as audit_write:
+        await service.mark_terminal_failure(reply=reply, message=message, result=result)
+
+    assert result.error_code == "insufficient_scope"
+    assert reply.status == ReplyStatus.BLOCKED.value
+    assert message.status == MessageStatus.BLOCKED_BY_MARKETPLACE.value
+    assert reply.failed_reason == "Avito account lacks API access"
+    assert len([request for request in transport.requests if request.url.path == "/ratings/v1/answers"]) == 1
+    events = [item for item in session.added if isinstance(item, IntegrationEvent)]
+    assert len(events) == 1
+    assert events[0].error_message_safe == "Avito account lacks API access"
+    for secret in ("synthetic-secret", "synthetic-access-token", "Synthetic customer text", "provider-body-secret"):
+        assert secret not in repr(result)
+        assert secret not in repr(reply.failed_reason)
+        assert secret not in repr(events[0].metadata_json)
+        assert secret not in repr(audit_write.call_args)
+
+
 class _Session:
     def __init__(self) -> None:
         self.commit_count = 0
+        self.added: list[object] = []
 
     def add(self, value: object) -> None:
         assert value is not None
+        self.added.append(value)
 
     async def commit(self) -> None:
         self.commit_count += 1
 
 
 class _ReplyService(ReplyExecutionService):
+    async def mark_terminal_failure(self, *, reply: Reply, message: CustomerMessage, result: AdapterResult) -> None:
+        await self._mark_terminal_marketplace_failure(reply=reply, message=message, result=result)
+
     async def mark_sent(
         self,
         *,
