@@ -41,7 +41,7 @@ describe("current public page composition", () => {
       expect(marketplaces).not.toContain(unsupportedClaim);
     }
     expect(marketplaces).toContain("Статусы и синхронизация");
-    expect(marketplaces).toContain("Доступные типы обращений");
+    expect(marketplaces).toContain("Поддерживаемые обращения");
   });
 
   it("uses the approved marketplaces hub with four live marketplace sources", () => {
@@ -164,7 +164,7 @@ describe("current public page composition", () => {
     expect(features).toContain("features-tool-grid");
     expect(features).toContain("features-workflow");
     expect(features).toContain("features-benefit-grid");
-    expect(features).toContain("Отзывы, вопросы и сообщения");
+    expect(features).toContain("Отзывы, вопросы и поддерживаемые сообщения");
     expect(features).not.toMatch(/worker-backed|идемпотентности|application layer/i);
   });
 
