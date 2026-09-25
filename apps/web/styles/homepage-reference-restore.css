@@ -401,14 +401,6 @@
   line-height: 1.55;
 }
 
-.home-reference-socials {
-  display: flex;
-  gap: 0.7rem;
-  margin-top: 1.2rem;
-  color: #0b68f6;
-  font-size: 0.8rem;
-}
-
 .home-reference-footer-column {
   display: grid;
   align-content: start;

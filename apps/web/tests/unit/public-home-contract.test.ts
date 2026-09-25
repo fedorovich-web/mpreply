@@ -70,6 +70,7 @@ describe("approved RU/EN homepage contract", () => {
     expect(restoreCss).toContain(".home-reference-hero-art img");
     expect(restoreCss).toContain(".home-reference-cta-art");
     expect(restoreCss).toContain(".home-reference-cta-art img");
+    expect(restoreCss).not.toContain(".home-reference-socials");
     expect(approvedCss).not.toContain(".homepage-hero-scene");
     expect(approvedCss).not.toContain(".homepage-cta-scene");
     expect(approvedCss).toContain("@media (max-width: 720px)");
