@@ -27,7 +27,7 @@ def _review() -> dict[str, object]:
             "disadvantages": "None",
             "comment": "Useful product",
         },
-        "media": {"photos": [{"url": "https://example.test/photo.jpg"}]},
+        "media": {"photos": ["https://example.test/photo.jpg"]},
         "statistics": {"rating": 5},
     }
 
@@ -69,7 +69,7 @@ async def test_yandex_review_normalization_preserves_data_without_fake_product_c
         {**_review(), "createdAt": "not-a-date"},
         {**_review(), "needReaction": False},
         {**_review(), "identifiers": {}},
-        {**_review(), "description": {"comment": ""}},
+        {**_review(), "media": {"photos": [{"url": "https://example.test/photo.jpg"}]}},
         {**_review(), "statistics": {"rating": 6}},
     ],
 )

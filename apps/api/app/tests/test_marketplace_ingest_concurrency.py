@@ -158,6 +158,40 @@ async def test_concurrent_duplicate_message_has_a_single_insert_winner() -> None
 
 
 @pytest.mark.asyncio
+async def test_yandex_rating_only_review_is_ingested_without_fabricated_text() -> None:
+    shared = _SharedRecords()
+    account = _account()
+    account.marketplace = Marketplace.YANDEX_MARKET.value
+    product = NormalizedProduct(
+        external_id="synthetic-sku",
+        sku="synthetic-sku",
+        name=None,
+        brand=None,
+        category=None,
+        image_url=None,
+        product_url=None,
+    )
+    review = NormalizedMessage(
+        external_id="124",
+        message_type=MessageType.REVIEW,
+        rating=5,
+        customer_display_name="Synthetic customer",
+        customer_text="",
+        customer_photos=(),
+        marketplace_created_at=NOW,
+        product=product,
+    )
+
+    result = await MarketplaceIngestService(cast(AsyncSession, _ConcurrentSession(shared))).ingest_page(
+        account, MarketplacePage(items=(review,), next_cursor=None), NOW
+    )
+
+    assert result.created_messages == 1
+    assert shared.message is not None and shared.message.customer_text == ""
+    assert shared.product is not None
+
+
+@pytest.mark.asyncio
 async def test_concurrent_duplicate_product_and_review_each_have_one_insert_winner() -> None:
     shared = _SharedRecords()
     account = _account()

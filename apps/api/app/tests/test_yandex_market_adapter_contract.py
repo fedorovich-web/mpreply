@@ -94,6 +94,79 @@ async def test_yandex_question_page_uses_business_scoped_cursor_contract() -> No
 
 
 @pytest.mark.asyncio
+async def test_yandex_review_page_accepts_documented_photo_urls() -> None:
+    photo_url = "https://market.example.test/photo.jpg"
+    transport = SequenceTransport(
+        [
+            response(
+                200,
+                json={
+                    "status": "OK",
+                    "result": {
+                        "feedbacks": [
+                            {
+                                "feedbackId": 123,
+                                "createdAt": "2026-09-14T08:00:00Z",
+                                "needReaction": True,
+                                "identifiers": {"offerId": "synthetic-sku"},
+                                "author": "Synthetic customer",
+                                "description": {"comment": "Synthetic review"},
+                                "media": {"photos": [photo_url]},
+                                "statistics": {"rating": 5},
+                            }
+                        ],
+                        "paging": {},
+                    },
+                },
+            )
+        ]
+    )
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await YandexMarketAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-key", "42", MarketplaceStream.REVIEWS, None)
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.items[0].customer_photos == (photo_url,)
+    assert transport.requests[0].read() == b'{"reactionStatus":"NEED_REACTION"}'
+
+
+@pytest.mark.asyncio
+async def test_yandex_rating_only_review_has_no_fabricated_customer_text() -> None:
+    transport = SequenceTransport(
+        [
+            response(
+                200,
+                json={
+                    "status": "OK",
+                    "result": {
+                        "feedbacks": [
+                            {
+                                "feedbackId": 124,
+                                "createdAt": "2026-09-14T08:00:00Z",
+                                "needReaction": True,
+                                "identifiers": {"offerId": "synthetic-sku"},
+                                "author": "Synthetic customer",
+                                "description": {},
+                                "media": {},
+                                "statistics": {"rating": 5},
+                            }
+                        ],
+                        "paging": {},
+                    },
+                },
+            )
+        ]
+    )
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await YandexMarketAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-key", "42", MarketplaceStream.REVIEWS, None)
+
+    assert result.ok is True
+    assert result.data is not None
+    review = result.data.items[0]
+    assert review.customer_text == ""
+
+
+@pytest.mark.asyncio
 async def test_yandex_question_send_requires_documented_answer_receipt() -> None:
     transport = SequenceTransport([response(200, json={"status": "OK", "result": {"entity": {"id": 81, "type": "ANSWER"}}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
