@@ -2,11 +2,11 @@
 
 ## Deployment model
 
-Respio is deployed as one Dokploy Docker Compose application per environment from this repository.
+MPReply is deployed as one Dokploy Docker Compose application per environment from this repository.
 
 Production source:
 
-- repository: `fedorovich-web/respio`;
+- repository: `fedorovich-web/mpreply`;
 - branch: `main`;
 - Compose path: `./infra/docker/docker-compose.production.yml`;
 - production deploys follow verified merges to `main`.
@@ -34,12 +34,10 @@ Use separate state, credentials and backups for staging and production.
 
 Configure these mappings in the Dokploy **Domains** tab for the Docker Compose application:
 
-- `respio.ru` -> service `web`, port `3000`;
-- `www.respio.ru` -> redirect/canonical handling to `respio.ru`;
-- `app.respio.ru` -> service `web`, port `3000`;
-- `api.respio.ru` -> service `api`, port `8000`.
-
-Reserved only until implemented: `admin.respio.ru`, `status.respio.ru`, `docs.respio.ru`.
+- `mpreply.ru` -> service `web`, port `3000`;
+- `www.mpreply.ru` -> redirect/canonical handling to `mpreply.ru`;
+- `app.mpreply.ru` -> service `web`, port `3000`;
+- `api.mpreply.ru` -> service `api`, port `8000`.
 
 ## Environment and secrets
 

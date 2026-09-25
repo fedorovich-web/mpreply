@@ -1,3 +1,3 @@
 # Design tokens
 
-Canonical CSS variables for Respio UI.
+Canonical CSS variables for MPReply UI.
