@@ -136,6 +136,18 @@ async def test_avito_chat_without_item_keeps_product_nullable() -> None:
     assert result.data.items[0].product is None
 
 
+@pytest.mark.parametrize("seller_id,cursor", [("9" * 5000, None), ("123456", "9" * 5000)], ids=["account", "cursor"])
+@pytest.mark.asyncio
+async def test_avito_rejects_oversized_account_and_cursor_before_token_request(seller_id: str, cursor: str | None) -> None:
+    transport = SequenceTransport([])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await AvitoAdapter(client, read_retry_policy=NO_RETRY).fetch_chats(CREDENTIAL, seller_id, cursor)
+
+    assert result.ok is False
+    assert result.error_code == "marketplace_validation_error"
+    assert transport.requests == []
+
+
 @pytest.mark.asyncio
 async def test_avito_chat_id_is_encoded_as_one_path_segment() -> None:
     transport = SequenceTransport([_token(), response(200, json=[])])
