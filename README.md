@@ -19,7 +19,7 @@ Implemented through Sprint 11:
 - optional semi-automatic manual review workflow: draft editing, optimistic revision checks, SafetyGate re-checks, submit for review, approve/reject, idempotent queueing and marketplace execution;
 - live SaaS frontend data plane for authentication, first-workspace onboarding, organization selection, Inbox and Review Queue.
 
-Marketplace coverage is described per verified runtime capability. Wildberries has the adapter-verified reviews and questions workflow; Ozon, Yandex Market and Avito remain qualified where channel-level runtime support has not been certified.
+Marketplace runtime is implemented for all four supported platforms: Wildberries, Ozon and Yandex Market use review/question streams, while Avito uses its Messenger chat stream. Actual account capabilities still depend on the credentials, seller/account identifier and scopes granted by each marketplace.
 
 ## Repository structure
 
@@ -27,7 +27,7 @@ Marketplace coverage is described per verified runtime capability. Wildberries h
 apps/api        FastAPI backend, models, services, migrations and tests
 apps/web        Next.js App Router public site and SaaS frontend
 apps/worker     Dramatiq worker image
-apps/scheduler  Placeholder only; intentionally excluded from deployment
+apps/scheduler  Marketplace polling scheduler and dispatch recovery
 infra/docker    Local and production Compose manifests
 infra/dokploy   Dokploy deployment mapping and checklist
 docs            ADRs, security, QA, legal and operations runbooks
@@ -52,7 +52,7 @@ With Docker Desktop running:
 .\scripts\container-gate.ps1
 ```
 
-This builds and starts PostgreSQL, Redis, migrations, API, worker and web, waits for health checks and verifies API/web readiness. The stack is stopped after the gate unless `-KeepRunning` is supplied.
+This builds and starts PostgreSQL, Redis, migrations, API, worker, scheduler and web, waits for health checks and verifies API/web readiness. The stack is stopped after the gate unless `-KeepRunning` is supplied.
 
 ```powershell
 .\scripts\container-gate.ps1 -KeepRunning

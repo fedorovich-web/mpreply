@@ -35,6 +35,10 @@ REDIS_URL
 AUTH_SECRET_KEY
 CREDENTIALS_ENCRYPTION_KEY
 GROQ_API_KEY
+MARKETPLACE_SYNC_INTERVAL_SECONDS
+SCHEDULER_POLL_INTERVAL_SECONDS
+SCHEDULER_CLAIM_LIMIT
+SCHEDULER_LEASE_SECONDS
 CORS_ALLOWED_ORIGINS
 ALLOWED_HOSTS
 FORWARDED_ALLOW_IPS
@@ -83,10 +87,11 @@ Required order is enforced by Compose where applicable:
 1. PostgreSQL and Redis are reachable.
 2. `migrate` runs `alembic upgrade head` and exits successfully.
 3. `api` starts and reaches `/health/ready`.
-4. `worker` starts.
-5. `web` starts and reaches `/api/health`.
-6. Run production smoke checks.
-7. Only then enable/resume automatic reply execution.
+4. `worker` starts with both auto-reply and marketplace-sync actors.
+5. `scheduler` starts and can claim/dispatch due marketplace sync states.
+6. `web` starts and reaches `/api/health`.
+7. Run production smoke checks.
+8. Only then enable/resume automatic reply execution.
 
 ## 6. Security and operational checks
 

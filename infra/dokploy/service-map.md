@@ -19,10 +19,9 @@ The production Compose application contains:
 
 - `migrate` — one-shot Alembic migration gate;
 - `api` — FastAPI backend, internal port `8000`;
-- `worker` — Dramatiq auto-reply execution;
+- `worker` — Dramatiq auto-reply and marketplace-sync execution;
+- `scheduler` — marketplace polling leases, scheduled sync dispatch and missing-reply dispatch recovery;
 - `web` — Next.js public site and SaaS frontend, internal port `3000`.
-
-The scheduler placeholder remains excluded until a real scheduler responsibility and implementation exist.
 
 ## Stateful resources
 
@@ -50,6 +49,6 @@ Keep real values only in Dokploy environment/service variables or a configured e
 - No floating `latest` tags for application/runtime images.
 - No public PostgreSQL or Redis ports.
 - API routing depends on `/health/ready`, not liveness alone.
-- `migrate` must complete successfully before API and worker startup.
+- `migrate` must complete successfully before API, worker and scheduler startup.
 - Production rollback does not automatically downgrade the database schema.
 - Review Dokploy **Preview Compose** before the first production deploy and after domain/network changes.
