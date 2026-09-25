@@ -363,6 +363,10 @@ def check_deployment_contract() -> None:
     web_dockerfile = (WEB / "Dockerfile").read_text(encoding="utf-8")
     next_config = (WEB / "next.config.ts").read_text(encoding="utf-8")
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
+    ci_env = (ROOT / "infra" / "docker" / ".env.ci").read_text(encoding="utf-8")
+    dokploy_checklist = (ROOT / "infra" / "dokploy" / "deployment-checklist.md").read_text(encoding="utf-8")
+    web_health = (WEB / "app" / "api" / "health" / "route.ts").read_text(encoding="utf-8")
+    observability = (API / "app" / "core" / "observability.py").read_text(encoding="utf-8")
 
     docker_contracts = [
         (api_dockerfile, "USER mpreply", "API image must run as non-root user"),
@@ -383,6 +387,10 @@ def check_deployment_contract() -> None:
 
     if "--forwarded-allow-ips=*" in api_dockerfile:
         fail("API Dockerfile must not hardcode wildcard proxy-header trust")
+    if 'app: "mpreply-web"' not in web_health:
+        fail("Web health route must expose the MPReply runtime name")
+    if 'release=f"mpreply-api@{settings.app_version}"' not in observability:
+        fail("Sentry release identity must use mpreply-api")
 
     forbidden_production_tokens = ["respio_password", "replace-with-local-dev-secret", "replace-only-in-real-env"]
     for token in forbidden_production_tokens:
