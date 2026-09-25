@@ -20,7 +20,8 @@ describe("approved marketplaces hero visual", () => {
     expect(marketplaces).toContain("Все обращения");
     expect(marketplaces).toContain("в одном окне");
     expect(marketplaces).toContain("marketplace-hero-note-sales");
-    expect(marketplaces).toContain("Больше продаж");
+    expect(marketplaces).toContain("Одна очередь");
+    expect(marketplaces).toContain("для команды");
     expect(marketplaces).toContain("marketplace-cta-note");
     expect(decorativeCss).toContain(".marketplace-hero-note-primary");
     expect(decorativeCss).toContain(".marketplace-hero-note-sales");
