@@ -95,6 +95,7 @@ describe("approved marketplace detail visual", () => {
     }
     expect(detail).toContain("marketplace-detail-compact-logo");
     expect(detail).not.toContain("marketplace-detail-logo-small");
+    expect(detail).not.toContain("detail-cta-bar");
   });
 
   it("uses the approved bubble and archive sidebar navigation glyphs", () => {

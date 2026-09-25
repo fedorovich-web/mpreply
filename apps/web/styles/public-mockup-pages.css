@@ -204,10 +204,6 @@
 .detail-faq-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 56px; align-items: start; }
 .detail-faq-layout h2 { margin: 0; font-size: clamp(2rem, 3.6vw, 3.2rem); letter-spacing: -.04em; }
 .detail-faq-layout > div:first-child > p:last-child { color: #667b9d; }
-.detail-cta-bar { display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 24px; border: 1px solid #dbe8fa; border-radius: 22px; background: linear-gradient(105deg, #f5f9ff, #e8f1ff); padding: 25px 32px; }
-.detail-cta-bar h2 { margin: 0; font-size: clamp(1.45rem, 2.6vw, 2.3rem); letter-spacing: -.035em; }
-.detail-cta-bar p { margin: 7px 0 0; color: #687c9d; }
-.detail-cta-bar .mockup-actions { justify-content: flex-end; margin: 0; }
 
 /* Pricing */
 .pricing-mockup-hero { padding: clamp(72px, 8vw, 105px) 0 34px; text-align: center; background: radial-gradient(circle at 50% 25%, rgb(91 96 246 / 8%), transparent 33%), #fff; }
@@ -312,9 +308,7 @@
   .detail-app-window { top: 120px; width: calc(100% - 35px); }
   .detail-ai-card { right: 0; width: 220px; }
   .detail-faq-layout,
-  .detail-cta-bar,
   .pricing-final-cta { grid-template-columns: 1fr; }
-  .detail-cta-bar .mockup-actions { justify-content: start; }
   .marketplace-detail-tools,
   .marketplace-detail-benefits,
   .marketplace-detail-steps,
