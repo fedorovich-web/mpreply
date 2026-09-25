@@ -137,6 +137,8 @@ def check_versions_and_frontend_security_baseline() -> None:
     env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
     local_compose = (ROOT / "infra" / "docker" / "docker-compose.local.yml").read_text(encoding="utf-8")
     production_compose = (ROOT / "infra" / "docker" / "docker-compose.production.yml").read_text(encoding="utf-8")
+    ci_env = (ROOT / "infra" / "docker" / ".env.ci").read_text(encoding="utf-8")
+    dokploy_checklist = (ROOT / "infra" / "dokploy" / "deployment-checklist.md").read_text(encoding="utf-8")
     dokploy_env = (ROOT / "infra" / "dokploy" / ".env.production.example").read_text(encoding="utf-8")
     web_health = (WEB / "app" / "api" / "health" / "route.ts").read_text(encoding="utf-8")
 
@@ -386,6 +388,23 @@ def check_deployment_contract() -> None:
     for token in forbidden_production_tokens:
         if token in production_compose:
             fail(f"Production Compose contains forbidden hardcoded placeholder/secret: {token}")
+
+    production_identity_sources = {
+        "production Compose": production_compose,
+        "CI environment": ci_env,
+        "Dokploy checklist": dokploy_checklist,
+    }
+    forbidden_legacy_identity = [
+        "respio.ru",
+        "respio.example",
+        "fedorovich-web/respio",
+        "name: respio-production",
+        "APP_NAME=Respio",
+    ]
+    for label, content in production_identity_sources.items():
+        for token in forbidden_legacy_identity:
+            if token in content:
+                fail(f"{label} still contains legacy Respio production identity: {token}")
 
 
 def check_production_raster_assets() -> None:

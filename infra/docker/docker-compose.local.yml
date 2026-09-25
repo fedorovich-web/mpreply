@@ -1,3 +1,4 @@
+# Legacy local Compose/DB identifiers are retained temporarily so existing developer volumes keep working.
 name: respio-local
 
 x-backend-env: &backend-env
@@ -7,6 +8,7 @@ x-backend-env: &backend-env
   API_BASE_URL: http://localhost:8000
   WEB_APP_URL: http://localhost:3000
   PUBLIC_SITE_URL: http://localhost:3000
+  # Do not rename these local DB identifiers without an explicit volume/data migration.
   DATABASE_URL: postgresql+asyncpg://respio:respio_password@postgres:5432/respio
   REDIS_URL: redis://redis:6379/0
   AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:-local-dev-secret-change-before-production-000000000000}

@@ -1,4 +1,4 @@
-name: respio-production
+name: mpreply-production
 
 x-backend-env: &backend-env
   APP_ENV: production

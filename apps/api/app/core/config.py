@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     web_app_url: str = "http://localhost:3000"
     public_site_url: str = "http://localhost:3000"
 
+    # Legacy local DB identifiers are retained for compatibility with existing developer volumes.
     database_url: SecretStr = Field(default=SecretStr("postgresql+asyncpg://respio:respio_password@localhost:5432/respio"))
     redis_url: SecretStr = Field(default=SecretStr("redis://localhost:6379/0"))
 
