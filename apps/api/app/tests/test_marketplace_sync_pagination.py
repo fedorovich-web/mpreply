@@ -7,11 +7,12 @@ from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
+from sqlalchemy.dialects.postgresql.dml import Insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
 from app.adapters.base import AdapterResult, MarketplacePage
-from app.adapters.capabilities import WILDBERRIES_CAPABILITY, MarketplaceStream
+from app.adapters.capabilities import AVITO_CAPABILITY, WILDBERRIES_CAPABILITY, MarketplaceStream
 from app.adapters.registry import MarketplaceAdapterRegistry
 from app.core.security import CredentialEncryptionError, CredentialService
 from app.models.enums import Marketplace
@@ -417,3 +418,61 @@ async def test_manual_sync_routes_every_supported_stream_through_the_common_runn
     assert {call[0] for call in runner.calls} == {state.id for state in states}
     assert len({call[1] for call in runner.calls}) == 1
     assert session.commit_count >= 1
+
+
+class _AvitoReviewOnlySession(_ManualSession):
+    def __init__(self, account: MarketplaceAccount) -> None:
+        super().__init__(account, [])
+        self.inserted_streams: list[str] = []
+
+    async def execute(self, statement: object) -> _QueryResult:
+        if isinstance(statement, Insert):
+            params = statement.compile().params
+            stream = params["stream"]
+            assert isinstance(stream, str)
+            self.inserted_streams.append(stream)
+            state = _state(self.account)
+            state.stream = stream
+            self.states.append(state)
+            return _QueryResult()
+        return await super().execute(statement)
+
+
+class _AvitoRegistry:
+    def capability(self, marketplace: Marketplace) -> object:
+        assert marketplace is Marketplace.AVITO
+        return AVITO_CAPABILITY
+
+    def review_questions(self, marketplace: Marketplace, stream: MarketplaceStream) -> object:
+        assert marketplace is Marketplace.AVITO
+        assert stream is MarketplaceStream.REVIEWS
+        return object()
+
+    def conversations(self, marketplace: Marketplace) -> object:
+        assert marketplace is Marketplace.AVITO
+        return object()
+
+
+@pytest.mark.asyncio
+async def test_avito_reviews_only_manual_sync_creates_no_chat_state() -> None:
+    account = _account()
+    account.marketplace = Marketplace.AVITO.value
+    account.seller_id = None
+    account.scopes_json = {"scopes": ["reviews:read", "reviews:write"], "write_verification": "not_probed"}
+    session = _AvitoReviewOnlySession(account)
+    runner = _Runner()
+    service = MarketplaceSyncService(
+        cast(AsyncSession, session),
+        registry=cast(MarketplaceAdapterRegistry, _AvitoRegistry()),
+        runner=cast(ScheduledSyncService, runner),
+    )
+    actor = User(id=uuid4(), email="synthetic@example.com", password_hash="hash", status="active")
+
+    _, stats, error_code, _ = await service.request_sync(actor=actor, account_id=account.id)
+
+    assert error_code is None
+    assert stats.imported_reviews == 1
+    assert stats.imported_chats == 0
+    assert session.inserted_streams == ["reviews"]
+    assert [state.stream for state in session.states] == ["reviews"]
+    assert len(runner.calls) == 1
