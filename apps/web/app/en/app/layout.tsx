@@ -6,6 +6,10 @@ import { WorkspaceProvider } from "../../../components/workspace/WorkspaceProvid
 
 export const metadata: Metadata = {
   title: "Workspace | MPReply",
+  description: null,
+  alternates: null,
+  openGraph: null,
+  twitter: null,
   robots: {
     index: false,
     follow: false,

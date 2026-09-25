@@ -5,6 +5,10 @@ import "../../../styles/auth.css";
 
 export const metadata: Metadata = {
   title: "Login and registration | MPReply",
+  description: null,
+  alternates: null,
+  openGraph: null,
+  twitter: null,
   robots: {
     index: false,
     follow: false,
