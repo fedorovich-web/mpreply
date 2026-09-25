@@ -8,7 +8,7 @@ Implemented through Sprint 11:
 
 - FastAPI backend with organizations, RBAC and tenant isolation;
 - encrypted marketplace credentials;
-- Wildberries, Ozon, Yandex Market and Avito integrations with synchronization and reply execution;
+- marketplace integrations for Wildberries, Ozon, Yandex Market and Avito, with public coverage claims limited to verified runtime capabilities;
 - unified Inbox API and dashboard UI;
 - Groq/Qwen 3.8 AI draft generation;
 - deterministic SafetyGate;
@@ -19,7 +19,7 @@ Implemented through Sprint 11:
 - optional semi-automatic manual review workflow: draft editing, optimistic revision checks, SafetyGate re-checks, submit for review, approve/reject, idempotent queueing and marketplace execution;
 - live SaaS frontend data plane for authentication, first-workspace onboarding, organization selection, Inbox and Review Queue.
 
-Wildberries, Ozon, Yandex Market and Avito are ready marketplace integrations in the current product scope.
+Marketplace coverage is described per verified runtime capability. Wildberries has the adapter-verified reviews and questions workflow; Ozon, Yandex Market and Avito remain qualified where channel-level runtime support has not been certified.
 
 ## Repository structure
 
