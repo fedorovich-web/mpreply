@@ -32,6 +32,10 @@ describe("approved public footer variants", () => {
     }
   });
 
+  it("does not keep retired social footer styling", () => {
+    expect(footerCss).not.toContain(".public-footer-socials");
+  });
+
   it("shows compact footer only on non-pricing mockup pages", () => {
     expect(footerCss).toContain(":has(.mockup-page)");
     expect(footerCss).toContain(":not(:has(.pricing-mockup-hero))");

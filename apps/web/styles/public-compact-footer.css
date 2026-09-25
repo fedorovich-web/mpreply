@@ -98,29 +98,6 @@
   white-space: nowrap;
 }
 
-.public-root .public-footer-socials {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.public-root .public-footer-socials > span {
-  display: grid;
-  width: 25px;
-  height: 25px;
-  place-items: center;
-  border-radius: 999px;
-  background: #50658b;
-  color: #fff;
-  font-size: .5rem;
-  font-style: normal;
-  font-weight: 800;
-}
-
-.public-root .public-footer-socials > span > .public-icon-image {
-  font-size: 13px;
-}
-
 .public-root .public-footer-compact-meta > i {
   width: 1px;
   height: 30px;

@@ -2,8 +2,7 @@
 
 .mockup-market-logo,
 .marketplace-brand-logo,
-.marketplace-detail-logo,
-.marketplace-detail-logo-small {
+.marketplace-detail-logo {
   display: block;
   width: auto;
   object-fit: contain;
@@ -94,33 +93,6 @@
 }
 
 .marketplace-detail-logo[src$="avito.webp"] {
-  clip-path: inset(28% 13% 8% 13%);
-  transform: scale(1.13);
-}
-
-.marketplace-detail-logo-small {
-  width: 72px;
-  height: 34px;
-  flex: 0 0 auto;
-  transform-origin: center;
-}
-
-.marketplace-detail-logo-small[src$="wildberries.webp"] {
-  clip-path: inset(22% 4% 1% 4%);
-  transform: scale(1.08);
-}
-
-.marketplace-detail-logo-small[src$="ozon.webp"] {
-  clip-path: inset(29% 5% 5% 5%);
-  transform: scale(1.12);
-}
-
-.marketplace-detail-logo-small[src$="yandex-market.webp"] {
-  clip-path: inset(28% 12% 8% 12%);
-  transform: scale(1.13);
-}
-
-.marketplace-detail-logo-small[src$="avito.webp"] {
   clip-path: inset(28% 13% 8% 13%);
   transform: scale(1.13);
 }
