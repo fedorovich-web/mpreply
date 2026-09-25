@@ -1,18 +1,29 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from cryptography.fernet import Fernet
 from pydantic import SecretStr, ValidationError
+from pydantic_settings import SettingsConfigDict
 
 from app.core.config import Settings
+
+
+class DokployExampleSettings(Settings):
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parents[4] / "infra" / "dokploy" / ".env.production.example",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
 def _production_settings(**overrides: object) -> Settings:
     values: dict[str, object] = {
         "app_env": "production",
-        "api_base_url": "https://api.respio.ru",
-        "web_app_url": "https://app.respio.ru",
-        "public_site_url": "https://respio.ru",
+        "api_base_url": "https://api.mpreply.ru",
+        "web_app_url": "https://app.mpreply.ru",
+        "public_site_url": "https://mpreply.ru",
         "auth_secret_key": SecretStr("a" * 64),
         "credentials_encryption_key": SecretStr(Fernet.generate_key().decode("utf-8")),
         "groq_api_key": SecretStr("gsk_production_test_key_123456789"),
@@ -20,8 +31,8 @@ def _production_settings(**overrides: object) -> Settings:
         "auth_cookie_secure": True,
         "auth_cookie_samesite": "lax",
         "rate_limit_enabled": True,
-        "cors_allowed_origins": ["https://app.respio.ru", "https://respio.ru"],
-        "allowed_hosts": ["api.respio.ru"],
+        "cors_allowed_origins": ["https://app.mpreply.ru", "https://mpreply.ru"],
+        "allowed_hosts": ["api.mpreply.ru"],
     }
     values.update(overrides)
     return Settings.model_validate(values)
@@ -33,6 +44,25 @@ def test_valid_production_settings_pass() -> None:
     assert settings.app_env == "production"
     assert settings.auth_cookie_secure is True
     assert settings.rate_limit_enabled is True
+
+
+def test_dokploy_example_targets_mpreply_hosts(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in ("APP_NAME", "API_BASE_URL", "WEB_APP_URL", "PUBLIC_SITE_URL", "CORS_ALLOWED_ORIGINS", "ALLOWED_HOSTS"):
+        monkeypatch.delenv(name, raising=False)
+
+    settings = DokployExampleSettings(
+        auth_secret_key=SecretStr("a" * 64),
+        credentials_encryption_key=SecretStr(Fernet.generate_key().decode("ascii")),
+        groq_api_key=SecretStr("gsk_production_test_key_123456789"),
+        resend_api_key=SecretStr("re_production_test_key_123456789"),
+    )
+
+    assert settings.app_name == "MPReply"
+    assert settings.api_base_url == "https://api.mpreply.ru"
+    assert settings.web_app_url == "https://app.mpreply.ru"
+    assert settings.public_site_url == "https://mpreply.ru"
+    assert settings.cors_origins == ["https://app.mpreply.ru", "https://mpreply.ru"]
+    assert settings.trusted_hosts == ["api.mpreply.ru"]
 
 
 def test_production_rejects_placeholder_secret() -> None:
@@ -62,7 +92,7 @@ def test_production_rejects_insecure_cookie() -> None:
 
 def test_production_rejects_http_origin() -> None:
     with pytest.raises(ValidationError, match="HTTPS"):
-        _production_settings(public_site_url="http://respio.ru")
+        _production_settings(public_site_url="http://mpreply.ru")
 
 
 def test_production_rejects_invalid_fernet_key() -> None:
