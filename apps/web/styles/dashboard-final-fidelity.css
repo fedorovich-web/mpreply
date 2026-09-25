@@ -189,6 +189,26 @@
 	line-height: 1.5;
 }
 
+@media (max-width: 1180px) {
+	.review-queue-workspace,
+	.wildberries-layout {
+		grid-template-columns: 1fr;
+		min-height: 0;
+		overflow: visible;
+	}
+
+	.review-queue-list,
+	.integration-account-panel {
+		border-right: 0;
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.review-editor-slot,
+	.integration-account-detail {
+		border-left: 0;
+	}
+}
+
 @media (max-width: 1120px) {
 	.inbox-workspace,
 	.review-queue-workspace,

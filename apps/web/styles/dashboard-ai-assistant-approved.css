@@ -474,7 +474,7 @@
 	}
 }
 
-@media (min-width: 1181px) {
+@media (min-width: 1281px) {
 	.ai-generate-panel,
 	.ai-result-panel {
 		max-height: 44rem;
@@ -492,7 +492,7 @@
 	}
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
 	.ai-workspace-grid {
 		grid-template-columns: minmax(18rem, 0.78fr) minmax(26rem, 1.22fr);
 	}
