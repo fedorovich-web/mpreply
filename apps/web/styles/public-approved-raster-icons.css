@@ -51,7 +51,7 @@
 }
 
 .mockup-page .features-tool-card:nth-child(5) .mockup-icon-chip {
-  background-image: url("/images/mockups/features-icons/05-templates-document.webp");
+  background-image: url("/images/mockups/features-icons/05-assignment-workflow.webp");
 }
 
 /* Wildberries-only approved raster icons. The shared landing stays SVG-driven for other marketplaces. */
@@ -82,7 +82,7 @@
 }
 
 .mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card:nth-child(3) .mockup-icon-chip {
-  background-image: url("/images/mockups/wildberries-icons/04-templates.webp");
+  background-image: url("/images/mockups/wildberries-icons/04-draft-review.webp");
 }
 
 .mockup-page:has(.marketplace-detail-logo[src$="/wildberries.webp"]) .marketplace-detail-benefits .detail-benefit-card:nth-child(4) .mockup-icon-chip {
