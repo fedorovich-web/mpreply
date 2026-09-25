@@ -57,3 +57,30 @@ def test_product_metadata_is_provider_specific_and_bounded() -> None:
         "imt_id": 456,
         "supplier_article": "SKU-1",
     }
+
+
+def test_wildberries_review_evidence_survives_metadata_sanitization_without_raw_payload() -> None:
+    metadata = sanitize_message_metadata(
+        Marketplace.WILDBERRIES,
+        {
+            "source": "wildberries.feedbacks",
+            "review_video_url": "https://videofeedback01.wbbasket.ru/review/index.m3u8",
+            "review_deficiencies": ["цена", "размер"],
+            "raw": {"Authorization": "synthetic-secret"},
+        },
+    )
+
+    assert metadata == {
+        "source": "wildberries.feedbacks",
+        "review_video_url": "https://videofeedback01.wbbasket.ru/review/index.m3u8",
+        "review_deficiencies": ["цена", "размер"],
+    }
+
+
+def test_wildberries_review_evidence_rejects_unsafe_metadata_values() -> None:
+    metadata = sanitize_message_metadata(
+        Marketplace.WILDBERRIES,
+        {"review_video_url": "javascript:alert(1)", "review_deficiencies": ["цена", "\x00secret"]},
+    )
+
+    assert metadata == {}

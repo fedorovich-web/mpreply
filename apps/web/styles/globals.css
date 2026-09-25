@@ -893,6 +893,16 @@ h1 {
 	line-height: var(--line-height-relaxed);
 }
 
+.review-evidence {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.review-evidence a {
+	color: var(--color-brand-primary);
+	text-decoration: underline;
+}
+
 .safety-list,
 .history-list {
 	padding-left: var(--space-5);

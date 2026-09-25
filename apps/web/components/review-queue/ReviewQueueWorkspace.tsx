@@ -12,6 +12,7 @@ import {
   type ReviewQueueItem,
 } from "../../lib/api/schemas";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { ReviewEvidence, reviewPreview } from "../inbox/ReviewEvidence";
 import { Badge, type BadgeTone } from "../ui/Badge";
 import { EmptyState } from "../ui/EmptyState";
 
@@ -99,7 +100,7 @@ export function ReviewQueueWorkspace() {
                 <Badge tone={replyStatusTone(item.reply.status)}>{statusLabels[item.reply.status] ?? item.reply.status}</Badge>
               </span>
               <strong>{item.message.product?.name ?? "Товар без карточки"}</strong>
-              <span>{item.message.customer_text}</span>
+              <span>{reviewPreview(item.message)}</span>
               <small>
                 {messageTypeLabel(item.message.type)} · {item.message.rating ? `${item.message.rating}★` : "без оценки"} · rev {item.reply.revision}
               </small>
@@ -185,7 +186,7 @@ function ReviewEditor({ item, onChanged }: { item: ReviewQueueItem; onChanged: (
 
       <section className="review-context-card">
         <span>Покупатель</span>
-        <p>{item.message.customer_text}</p>
+        <ReviewEvidence message={item.message} />
       </section>
 
       <label className="review-editor-field">

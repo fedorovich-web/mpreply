@@ -25,7 +25,7 @@ _MESSAGE_CONSTRAINT = "uq_customer_messages_external"
 _PRODUCT_CONSTRAINT = "uq_products_external"
 
 _MESSAGE_METADATA_KEYS: dict[Marketplace, frozenset[str]] = {
-    Marketplace.WILDBERRIES: frozenset({"source", "status", "is_answered"}),
+    Marketplace.WILDBERRIES: frozenset({"source", "status", "is_answered", "review_video_url"}),
     Marketplace.OZON: frozenset({"source", "status", "is_answered", "sku"}),
     Marketplace.YANDEX_MARKET: frozenset({"source", "status", "is_answered"}),
     Marketplace.AVITO: frozenset({"source", "status", "chat_id", "chat_type", "author_type", "direction", "stage", "used_in_score"}),
@@ -298,7 +298,30 @@ def sanitize_message_metadata(
     marketplace: Marketplace,
     metadata: dict[str, object],
 ) -> dict[str, object]:
-    return _sanitize_metadata(metadata, _MESSAGE_METADATA_KEYS[marketplace])
+    sanitized = _sanitize_metadata(metadata, _MESSAGE_METADATA_KEYS[marketplace])
+    if marketplace is Marketplace.WILDBERRIES:
+        video_url = sanitized.get("review_video_url")
+        if isinstance(video_url, str):
+            try:
+                _validate_https_url(video_url, field_name="review video URL")
+            except InvalidNormalizedRecord:
+                sanitized.pop("review_video_url")
+        deficiencies = metadata.get("review_deficiencies")
+        if isinstance(deficiencies, list):
+            items = cast(list[object], deficiencies)
+            if (
+                len(items) <= 20
+                and all(
+                    isinstance(item, str)
+                    and 0 < len(item) <= 100
+                    and item == item.strip()
+                    and all(ord(char) >= 32 and ord(char) != 127 for char in item)
+                    for item in items
+                )
+                and sum(len(cast(str, item)) for item in items) <= 512
+            ):
+                sanitized["review_deficiencies"] = list(items)
+    return sanitized
 
 
 def sanitize_product_metadata(
