@@ -5,9 +5,10 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 const englishPage = readFileSync(join(root, "app/en/page.tsx"), "utf8");
-const heroScene = readFileSync(join(root, "components/public-site/HomeHeroScene.tsx"), "utf8");
 const approvedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
-const heroAssetPath = join(root, "public/images/mpreply-hero.webp");
+const restoreCss = readFileSync(join(root, "styles/homepage-reference-restore.css"), "utf8");
+const heroAssetPath = join(root, "public/images/mpreply-hero-ui.webp");
+const ctaAssetPath = join(root, "public/images/mpreply-cta-ui.webp");
 
 describe("approved RU/EN homepage contract", () => {
   it("keeps the approved homepage composition in both locale routes", () => {
@@ -21,11 +22,15 @@ describe("approved RU/EN homepage contract", () => {
     }
   });
 
-  it("keeps the approved optimized hero artwork", () => {
+  it("keeps the live optimized hero and CTA artwork", () => {
     expect(existsSync(heroAssetPath)).toBe(true);
-    expect(heroScene).toContain('src="/images/mpreply-hero.webp"');
-    expect(heroScene).toContain("quality={85}");
-    expect(heroScene).not.toContain("unoptimized");
+    expect(existsSync(ctaAssetPath)).toBe(true);
+    for (const source of [page, englishPage]) {
+      expect(source).toContain('src="/images/mpreply-hero-ui.webp"');
+      expect(source).toContain('src="/images/mpreply-cta-ui.webp"');
+      expect(source).toContain("quality={85}");
+      expect(source).not.toContain("unoptimized");
+    }
   });
 
   it("keeps Russian and English marketing copy on separate routes", () => {
@@ -61,9 +66,12 @@ describe("approved RU/EN homepage contract", () => {
   it("keeps final homepage geometry in the approved stylesheet", () => {
     expect(approvedCss).toContain("--container-max-width: 1240px");
     expect(approvedCss).toContain(".homepage-horizontal-process");
-    expect(approvedCss).toContain(".homepage-hero-scene");
-    expect(approvedCss).toContain(".homepage-hero-image");
-    expect(approvedCss).toContain(".homepage-cta-scene");
+    expect(restoreCss).toContain(".home-reference-hero-art");
+    expect(restoreCss).toContain(".home-reference-hero-art img");
+    expect(restoreCss).toContain(".home-reference-cta-art");
+    expect(restoreCss).toContain(".home-reference-cta-art img");
+    expect(approvedCss).not.toContain(".homepage-hero-scene");
+    expect(approvedCss).not.toContain(".homepage-cta-scene");
     expect(approvedCss).toContain("@media (max-width: 720px)");
   });
 });
