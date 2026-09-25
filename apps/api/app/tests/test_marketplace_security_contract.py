@@ -211,13 +211,13 @@ async def test_revoked_credentials_cannot_be_validated_without_rotation() -> Non
     with (
         patch.object(service, "get_account", new=AsyncMock(return_value=account)),
         patch.object(service.organization_service, "require_membership_role", new=AsyncMock()),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            await service.validate_credentials(
-                actor=_actor(),
-                account_id=account.id,
-                registry=cast(MarketplaceAdapterRegistry, _FailRegistry()),
-            )
+        await service.validate_credentials(
+            actor=_actor(),
+            account_id=account.id,
+            registry=cast(MarketplaceAdapterRegistry, _FailRegistry()),
+        )
 
     assert exc_info.value.status_code == 409
     assert credentials.decrypt_calls == 0

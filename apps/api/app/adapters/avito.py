@@ -415,7 +415,7 @@ class AvitoAdapter(ConversationAdapter):
     def _offset(cursor: str | None) -> int | None:
         if cursor is None:
             return 0
-        if not cursor.isascii() or not cursor.isdecimal():
+        if len(cursor) > 4 or not cursor.isascii() or not cursor.isdecimal():
             return None
         value = int(cursor)
         return value if 0 <= value <= _MAX_OFFSET and str(value) == cursor and value % _PAGE_SIZE == 0 else None
@@ -431,10 +431,10 @@ class AvitoAdapter(ConversationAdapter):
 
     @staticmethod
     def _user_id(value: str | None) -> str | None:
-        if value is None or value != value.strip() or not value.isascii() or not value.isdecimal():
+        if value is None or len(value) > 20 or value != value.strip() or not value.isascii() or not value.isdecimal():
             return None
         parsed = int(value)
-        return str(parsed) if parsed > 0 and len(value) <= 20 else None
+        return str(parsed) if parsed > 0 else None
 
     @staticmethod
     def _positive_integer(value: object) -> int | None:
