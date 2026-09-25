@@ -98,17 +98,17 @@ describe("approved marketplace detail visual", () => {
     expect(detail).not.toContain("detail-cta-bar");
   });
 
-  it("uses the approved bubble and archive sidebar navigation glyphs", () => {
+  it("renders marketplace-specific sidebar items from grounded detail content", () => {
     expect(existsSync(heroCssPath)).toBe(true);
     expect(layout).toContain('import "../styles/public-detail-hero-fidelity.css"');
     expect(detail).toContain("detail-sidebar-item");
+    expect(detail).toContain("detailContent.sidebarItems.map");
+    expect(detail).toContain("<PublicIcon name={item.icon} />");
+    expect(detail).not.toContain(">Шаблоны</span>");
+    expect(heroCss).toContain(".detail-sidebar-item");
     for (const icon of ["inbox", "message", "chart", "archive", "users"]) {
       expect(publicIcon).toContain(`"${icon}"`);
     }
-    expect(detail).toContain('<span className="detail-sidebar-item"><PublicIcon name="message" />Отзывы <b>6</b></span>');
-    expect(detail).not.toContain('<span className="detail-sidebar-item"><PublicIcon name="star" />Отзывы <b>6</b></span>');
-    expect(detail).toContain('<span className="detail-sidebar-item"><PublicIcon name="archive" />Шаблоны</span>');
-    expect(heroCss).toContain(".detail-sidebar-item");
   });
 
   it("uses the approved product thumbnail asset instead of the fake gradient placeholder", () => {
