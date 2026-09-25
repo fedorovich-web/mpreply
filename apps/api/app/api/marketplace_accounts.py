@@ -95,11 +95,13 @@ async def validate_marketplace_account(
     service = MarketplaceAccountService(session)
     account, result = await service.validate_credentials(actor=current_user, account_id=account_id)
     await session.commit()
+    scopes_value = (account.scopes_json or {}).get("scopes")
+    scopes = [scope for scope in scopes_value if isinstance(scope, str)] if isinstance(scopes_value, list) else []
     return MarketplaceAccountValidateResponse(
         id=account.id,
         status=account.status,
         credentials_status=account.credentials_status,
-        scopes=list((account.scopes_json or {}).keys()),
+        scopes=scopes,
         checked_at=datetime.now(UTC),
         error_code=result.error_code,
         error_message_safe=result.error_message_safe,
@@ -169,6 +171,8 @@ async def request_marketplace_sync(
         imported_questions=stats.imported_questions,
         updated_reviews=stats.updated_reviews,
         updated_questions=stats.updated_questions,
+        imported_chats=stats.imported_chats,
+        updated_chats=stats.updated_chats,
         skipped=stats.skipped,
         error_code=error_code,
         error_message_safe=error_message_safe,

@@ -250,6 +250,8 @@ export const marketplaceSyncSchema = z.object({
   imported_questions: z.number().int().nonnegative(),
   updated_reviews: z.number().int().nonnegative(),
   updated_questions: z.number().int().nonnegative(),
+  imported_chats: z.number().int().nonnegative().default(0),
+  updated_chats: z.number().int().nonnegative().default(0),
   skipped: z.number().int().nonnegative(),
   error_code: z.string().nullable(),
   error_message_safe: z.string().nullable(),

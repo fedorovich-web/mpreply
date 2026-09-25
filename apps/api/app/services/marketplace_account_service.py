@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult
-from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.capabilities import get_marketplace_capability
+from app.adapters.registry import get_marketplace_adapter
 from app.core.config import get_settings
 from app.core.errors import bad_request, forbidden, not_found, payment_required
 from app.core.security import CredentialService
@@ -16,6 +18,7 @@ from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.marketplace_scheduler_service import MarketplaceSchedulerService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
 
@@ -23,11 +26,30 @@ _ALLOWED_MANAGE_ROLES = {"owner", "admin"}
 _ALLOWED_READ_ROLES = {"owner", "admin", "manager", "viewer"}
 
 
+def normalize_marketplace_seller_id(marketplace: str, seller_id: str | None) -> str | None:
+    normalized = seller_id.strip() if seller_id else None
+    if marketplace == Marketplace.YANDEX_MARKET.value and (
+        normalized is None or not normalized.isdecimal() or int(normalized) <= 0
+    ):
+        raise bad_request("Yandex Market business ID must be a positive integer")
+    if marketplace == Marketplace.OZON.value and not normalized:
+        raise bad_request("Ozon Client ID is required")
+    if marketplace == Marketplace.AVITO.value and (
+        normalized is None
+        or not normalized.isascii()
+        or not normalized.isdecimal()
+        or int(normalized) <= 0
+    ):
+        raise bad_request("Avito user ID must be a positive decimal integer")
+    return normalized
+
+
 class MarketplaceAccountService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.audit = AuditService(session)
         self.organization_service = OrganizationService(session)
+        self.scheduler = MarketplaceSchedulerService(session)
         self.plan_limits = PlanLimitService(session)
         settings = get_settings()
         self.credentials = CredentialService(settings.credentials_encryption_key.get_secret_value())
@@ -48,6 +70,10 @@ class MarketplaceAccountService:
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
+        capability = get_marketplace_capability(marketplace)
+        if not capability.connection_enabled:
+            raise forbidden("Marketplace integration is not enabled yet")
+        normalized_seller_id = normalize_marketplace_seller_id(marketplace.value, seller_id)
         limit_decision = await self.plan_limits.evaluate_metric(
             organization_id=organization_id,
             metric="marketplace_accounts",
@@ -60,7 +86,7 @@ class MarketplaceAccountService:
             organization_id=organization_id,
             marketplace=marketplace.value,
             display_name=display_name.strip(),
-            seller_id=seller_id.strip() if seller_id else None,
+            seller_id=normalized_seller_id,
             status="pending_validation",
             credentials_encrypted=encrypted,
             credentials_fingerprint=fingerprint,
@@ -70,6 +96,7 @@ class MarketplaceAccountService:
         )
         self.session.add(account)
         await self.session.flush()
+        await self.scheduler.ensure_account_states(account=account, activate=False)
         await self.audit.write(
             action="marketplace_account.credentials.created",
             entity_type="marketplace_account",
@@ -127,13 +154,30 @@ class MarketplaceAccountService:
         if display_name is not None:
             account.display_name = display_name.strip()
         if seller_id is not None:
-            account.seller_id = seller_id.strip() or None
+            normalized_seller_id = normalize_marketplace_seller_id(account.marketplace, seller_id)
+            if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value} and normalized_seller_id != account.seller_id:
+                account.scopes_json = {}
+                account.credentials_status = "pending_validation"
+                account.status = "pending_validation"
+                await self.scheduler.pause_account_states(account_id=account.id)
+            account.seller_id = normalized_seller_id
         if default_response_mode is not None:
             account.default_response_mode = default_response_mode.value
         if status is not None:
             if status not in {"active", "disabled", "pending_validation"}:
                 raise bad_request("Unsupported marketplace account status")
-            account.status = status
+            if (
+                account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}
+                and status == "active"
+                and account.credentials_status != "valid"
+            ):
+                account.status = "pending_validation"
+            else:
+                account.status = status
+            if status == "active" and account.credentials_status == "valid":
+                await self.scheduler.ensure_account_states(account=account, activate=True)
+            elif status == "disabled":
+                await self.scheduler.pause_account_states(account_id=account.id)
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.updated",
@@ -165,6 +209,10 @@ class MarketplaceAccountService:
         account.credentials_last_rotated_at = datetime.now(UTC)
         account.credentials_status = "pending_validation"
         account.status = "pending_validation"
+        if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}:
+            account.scopes_json = {}
+        if account.marketplace == Marketplace.AVITO.value:
+            await self.scheduler.pause_account_states(account_id=account.id)
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.rotated",
@@ -185,6 +233,9 @@ class MarketplaceAccountService:
         )
         account.credentials_status = "revoked"
         account.status = "disabled"
+        if account.marketplace == Marketplace.AVITO.value:
+            account.scopes_json = {}
+        await self.scheduler.pause_account_states(account_id=account.id)
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.revoked",
@@ -213,13 +264,48 @@ class MarketplaceAccountService:
             metadata={"marketplace": account.marketplace},
         )
         adapter = self._adapter_for(account.marketplace)
-        result = await adapter.validate_credentials(credential)
+        result = await adapter.validate_credentials(credential, seller_id=account.seller_id)
         now = datetime.now(UTC)
 
         if result.ok:
             account.status = "active"
             account.credentials_status = "valid"
-            account.scopes_json = {"validated": True, "checked_at": now.isoformat()}
+            payload = result.data
+            result_data = cast(dict[str, object], payload) if isinstance(payload, dict) else {}
+            scopes_value = result_data.get("scopes")
+            scopes = (
+                [scope for scope in cast(list[object], scopes_value) if isinstance(scope, str)]
+                if isinstance(scopes_value, list)
+                else []
+            )
+            if account.marketplace == Marketplace.AVITO.value:
+                authentication_value = result_data.get("authentication")
+                authentication = (
+                    authentication_value
+                    if authentication_value in {"client_credentials", "access_token"}
+                    else None
+                )
+                account.scopes_json = {
+                    "validated": True,
+                    "checked_at": now.isoformat(),
+                    "scopes": ["fetch_chats"],
+                    **({"authentication": authentication} if authentication is not None else {}),
+                }
+            elif account.marketplace == Marketplace.OZON.value:
+                expires_at = result_data.get("expires_at")
+                account.scopes_json = {
+                    "validated": True,
+                    "checked_at": now.isoformat(),
+                    "scopes": scopes,
+                    **({"expires_at": expires_at} if isinstance(expires_at, str) else {}),
+                }
+            else:
+                account.scopes_json = {
+                    "validated": True,
+                    "checked_at": now.isoformat(),
+                    "scopes": scopes,
+                }
+            await self.scheduler.ensure_account_states(account=account, activate=True, now=now)
             event_status = "success"
             error_code = None
             error_message_safe = None
@@ -229,6 +315,9 @@ class MarketplaceAccountService:
             account.status = "error"
             account.last_error_sync_at = now
             account.error_count = int(account.error_count or 0) + 1
+            if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value}:
+                account.scopes_json = {}
+                await self.scheduler.pause_account_states(account_id=account.id)
             event_status = "failed"
             error_code = result.error_code
             error_message_safe = result.error_message_safe
@@ -264,7 +353,7 @@ class MarketplaceAccountService:
             organization_id=account.organization_id,
             marketplace=account.marketplace,
             display_name=account.display_name,
-            seller_id=account.seller_id,
+            seller_id=None if account.marketplace in {Marketplace.OZON.value, Marketplace.AVITO.value} else account.seller_id,
             status=account.status,
             credentials_masked=self.credentials.mask_fingerprint(account.credentials_fingerprint),
             credentials_status=account.credentials_status,
@@ -278,9 +367,7 @@ class MarketplaceAccountService:
         )
 
     def _adapter_for(self, marketplace: str):
-        if marketplace == Marketplace.WILDBERRIES.value:
-            return WildberriesAdapter()
-        raise forbidden("Marketplace adapter is not enabled yet")
+        return get_marketplace_adapter(marketplace)
 
     async def _write_integration_event(
         self,

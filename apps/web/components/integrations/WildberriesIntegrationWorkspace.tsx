@@ -565,8 +565,8 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}/sync`, marketplaceSyncSchema, { method: "POST" }),
     onSuccess: async (result) => {
-      const imported = result.imported_reviews + result.imported_questions;
-      const updated = result.updated_reviews + result.updated_questions;
+      const imported = result.imported_reviews + result.imported_questions + result.imported_chats;
+      const updated = result.updated_reviews + result.updated_questions + result.updated_chats;
       onNotice({
         tone: result.status === "success" ? "success" : "warning",
         message:
