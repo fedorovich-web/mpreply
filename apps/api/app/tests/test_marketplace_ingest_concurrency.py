@@ -314,3 +314,41 @@ async def test_avito_submission_verification_marker_survives_duplicate_review_sy
     await MarketplaceIngestService(cast(AsyncSession, _ConcurrentSession(shared))).ingest_page(account, page, NOW)
 
     assert shared.message.metadata_json["provider_publication"] == "unverified"
+
+
+@pytest.mark.asyncio
+async def test_wildberries_submission_verification_marker_survives_duplicate_question_sync() -> None:
+    shared = _SharedRecords()
+    account = _account()
+    account.marketplace = Marketplace.WILDBERRIES.value
+    page = MarketplacePage(
+        items=(
+            NormalizedMessage(
+                external_id="question-1",
+                message_type=MessageType.QUESTION,
+                rating=None,
+                customer_display_name=None,
+                customer_text="Question about the product",
+                customer_photos=(),
+                marketplace_created_at=NOW,
+                product=NormalizedProduct(
+                    external_id="12345",
+                    sku=None,
+                    name="Synthetic product",
+                    brand=None,
+                    category=None,
+                    image_url=None,
+                    product_url=None,
+                ),
+                metadata={"source": "wildberries.questions", "status": "wbRu"},
+            ),
+        ),
+        next_cursor=None,
+    )
+    await MarketplaceIngestService(cast(AsyncSession, _ConcurrentSession(shared))).ingest_page(account, page, NOW)
+    assert shared.message is not None
+    shared.message.metadata_json = {**shared.message.metadata_json, "provider_publication": "unverified"}
+
+    await MarketplaceIngestService(cast(AsyncSession, _ConcurrentSession(shared))).ingest_page(account, page, NOW)
+
+    assert shared.message.metadata_json["provider_publication"] == "unverified"

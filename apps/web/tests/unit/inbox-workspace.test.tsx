@@ -23,7 +23,7 @@ const organization = {
 
 afterEach(() => vi.unstubAllGlobals());
 
-it("labels an accepted Avito review answer as not yet published", async () => {
+it("distinguishes accepted Avito and Wildberries answers from confirmed publication", async () => {
   vi.mocked(useWorkspace).mockReturnValue({
     user: {
       id: organization.owner_user_id,
@@ -72,15 +72,28 @@ it("labels an accepted Avito review answer as not yet published", async () => {
     customer_text: "Здравствуйте",
     metadata_json: {},
   };
-  const fetchMock = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ items: [message, chat], total: 2, page: 1, page_size: 100 }), { status: 200 }));
+  const question = {
+    ...message,
+    id: "66666666-6666-4666-8666-666666666666",
+    marketplace: "wildberries",
+    external_id: "question-1",
+    type: "question",
+    customer_text: "Когда поступит товар?",
+  };
+  const fetchMock = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ items: [message, chat, question], total: 3, page: 1, page_size: 100 }), { status: 200 }));
   vi.stubGlobal("fetch", fetchMock);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
   render(<QueryClientProvider client={queryClient}><InboxWorkspace /></QueryClientProvider>);
 
   expect(await screen.findByText(/Публикация не подтверждена/)).toBeInTheDocument();
+  expect(screen.getAllByText("Принято API")).toHaveLength(3);
+  expect(screen.queryByText("Отвечено")).not.toBeInTheDocument();
   expect(screen.getAllByText(/Текст отзыва не передан Авито/)).toHaveLength(2);
   expect(screen.getByText("Чат")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Wildberries/ }));
+  expect(screen.getByText("Ответ принят API Wildberries. Публикация не подтверждена.")).toBeInTheDocument();
+  expect(screen.getAllByText("Принято API")).toHaveLength(3);
   fireEvent.click(screen.getByRole("button", { name: "Чаты" }));
   await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => String(input).includes("type=chat"))).toBe(true));
 });

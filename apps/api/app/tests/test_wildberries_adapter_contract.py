@@ -54,9 +54,7 @@ async def test_wildberries_validation_requires_writable_feedback_scope() -> None
 async def test_wildberries_validation_rejects_other_category_bit() -> None:
     transport = SequenceTransport([])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
-        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).validate_credentials(
-            _token(scope=1 << 6), None
-        )
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).validate_credentials(_token(scope=1 << 6), None)
 
     assert result.ok is False
     assert result.error_code == "insufficient_scope"
@@ -90,9 +88,7 @@ async def test_wildberries_photo_only_feedback_does_not_fail_the_page() -> None:
     photo_only = {**_record(), "text": "", "photoLinks": [{"fullSize": "https://feedback.example.test/photo.webp"}]}
     transport = SequenceTransport([response(200, json={"data": {"feedbacks": [photo_only]}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
-        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
-            "synthetic-token", None, MarketplaceStream.REVIEWS, None
-        )
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-token", None, MarketplaceStream.REVIEWS, None)
 
     assert result.ok is True
     assert result.data is not None
@@ -104,20 +100,19 @@ async def test_wildberries_photo_only_feedback_does_not_fail_the_page() -> None:
 @pytest.mark.parametrize(
     ("content", "expected_metadata"),
     [
-        ({"video": {"link": "https://videofeedback01.wbbasket.ru/review/index.m3u8"}}, {"review_video_url": "https://videofeedback01.wbbasket.ru/review/index.m3u8"}),
+        (
+            {"video": {"link": "https://videofeedback01.wbbasket.ru/review/index.m3u8"}},
+            {"review_video_url": "https://videofeedback01.wbbasket.ru/review/index.m3u8"},
+        ),
         ({"bables": ["цена", "размер"]}, {"review_deficiencies": ["цена", "размер"]}),
     ],
 )
 @pytest.mark.asyncio
-async def test_wildberries_content_only_feedback_keeps_original_review_context(
-    content: dict[str, object], expected_metadata: dict[str, object]
-) -> None:
+async def test_wildberries_content_only_feedback_keeps_original_review_context(content: dict[str, object], expected_metadata: dict[str, object]) -> None:
     record = {**_record(), "text": "", **content}
     transport = SequenceTransport([response(200, json={"data": {"feedbacks": [record]}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
-        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
-            "synthetic-token", None, MarketplaceStream.REVIEWS, None
-        )
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-token", None, MarketplaceStream.REVIEWS, None)
 
     assert result.ok is True
     assert result.data is not None
@@ -138,9 +133,7 @@ async def test_wildberries_malformed_content_only_feedback_fails_closed(content:
     record = {**_record(), "text": "", **content}
     transport = SequenceTransport([response(200, json={"data": {"feedbacks": [record]}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
-        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
-            "synthetic-token", None, MarketplaceStream.REVIEWS, None
-        )
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-token", None, MarketplaceStream.REVIEWS, None)
 
     assert result.ok is False
     assert result.error_code == "malformed_payload"
@@ -188,9 +181,7 @@ async def test_wildberries_rejects_invalid_cursor_before_transport(cursor: str) 
     [(MarketplaceStream.QUESTIONS, "10000"), (MarketplaceStream.REVIEWS, "200000")],
 )
 @pytest.mark.asyncio
-async def test_wildberries_rejects_cursor_beyond_documented_stream_limit(
-    stream: MarketplaceStream, cursor: str
-) -> None:
+async def test_wildberries_rejects_cursor_beyond_documented_stream_limit(stream: MarketplaceStream, cursor: str) -> None:
     transport = SequenceTransport([response(200, json={"data": {"questions": [], "feedbacks": []}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
         result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-token", None, stream, cursor)
@@ -205,9 +196,7 @@ async def test_wildberries_full_last_question_page_does_not_return_invalid_curso
     questions = [{**_record(index), "id": f"question-{index}"} for index in range(50)]
     transport = SequenceTransport([response(200, json={"data": {"questions": questions}})])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
-        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page(
-            "synthetic-token", None, MarketplaceStream.QUESTIONS, "9950"
-        )
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-token", None, MarketplaceStream.QUESTIONS, "9950")
 
     assert result.ok is False
     assert result.error_code == "malformed_payload"
@@ -295,7 +284,7 @@ async def test_wildberries_maps_provider_errors_without_body_leakage(
 
 @pytest.mark.asyncio
 async def test_wildberries_existing_reply_preflight_uses_message_context() -> None:
-    transport = SequenceTransport([response(200, json={"data": {"id": "feedback-1", "answer": {"text": "Already answered"}}})])
+    transport = SequenceTransport([response(200, json={"data": {"id": "feedback-1", "state": "wbRu", "answer": {"text": "Already answered"}}})])
     context = ProviderMessageContext(
         message_type=MessageType.REVIEW,
         external_id="feedback-1",
@@ -311,8 +300,26 @@ async def test_wildberries_existing_reply_preflight_uses_message_context() -> No
     assert result.ok is True
     assert result.data is not None
     assert result.data.exists is True
+    assert result.data.provider_state == "accepted_unverified"
     assert transport.requests[0].url.path == "/api/v1/feedback"
     assert dict(transport.requests[0].url.params) == {"id": "feedback-1"}
+
+
+@pytest.mark.asyncio
+async def test_wildberries_hidden_question_answer_is_not_public() -> None:
+    transport = SequenceTransport([response(200, json={"data": {"id": "question-1", "state": "none", "answer": {"text": "Private answer"}}})])
+    context = ProviderMessageContext(
+        message_type=MessageType.QUESTION,
+        external_id="question-1",
+        marketplace_created_at=datetime(2026, 9, 12, 12, 0, tzinfo=UTC),
+    )
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).find_existing_reply("synthetic-token", None, context)
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.exists is True
+    assert result.data.provider_state == "not_public"
 
 
 @pytest.mark.asyncio
@@ -334,10 +341,28 @@ async def test_wildberries_question_reply_uses_documented_body_and_strict_succes
     assert result.ok is True
     assert result.data is not None
     assert result.data.provider_reply_id == "question-1"
+    assert result.data.provider_state == "accepted_unverified"
     request = transport.requests[0]
     assert request.method == "PATCH"
     assert request.url.path == "/api/v1/questions"
     assert request.read().decode("utf-8") == ('{"id":"question-1","text":"Synthetic answer","state":"wbRu"}')
+
+
+@pytest.mark.asyncio
+async def test_wildberries_review_receipt_does_not_claim_publication() -> None:
+    transport = SequenceTransport([response(204)])
+    context = ProviderMessageContext(
+        message_type=MessageType.REVIEW,
+        external_id="feedback-1",
+        marketplace_created_at=datetime(2026, 9, 12, 12, 0, tzinfo=UTC),
+    )
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).send_reply("synthetic-token", None, context, "Synthetic answer")
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.provider_state == "accepted_unverified"
+    assert transport.requests[0].url.path == "/api/v1/feedbacks/answer"
 
 
 @pytest.mark.parametrize(
@@ -358,9 +383,7 @@ async def test_wildberries_question_reply_rejects_unproven_200(payload: dict[str
         marketplace_created_at=datetime(2026, 9, 12, 12, 0, tzinfo=UTC),
     )
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
-        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).send_reply(
-            "synthetic-token", None, context, "Synthetic answer"
-        )
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).send_reply("synthetic-token", None, context, "Synthetic answer")
 
     assert result.ok is False
     assert result.error_code == "malformed_payload"
@@ -375,9 +398,7 @@ async def test_wildberries_review_rejects_one_character_reply_before_transport()
         marketplace_created_at=datetime(2026, 9, 12, 12, 0, tzinfo=UTC),
     )
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
-        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).send_reply(
-            "synthetic-token", None, context, "x"
-        )
+        result = await WildberriesAdapter(client, read_retry_policy=NO_RETRY).send_reply("synthetic-token", None, context, "x")
 
     assert result.ok is False
     assert result.error_code == "marketplace_validation_error"

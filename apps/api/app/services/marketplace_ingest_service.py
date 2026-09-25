@@ -286,10 +286,9 @@ class MarketplaceIngestService:
         message.priority = _priority_for(normalized)
         metadata = sanitize_message_metadata(marketplace, normalized.metadata)
         if (
-            marketplace is Marketplace.AVITO
-            and normalized.message_type is MessageType.REVIEW
-            and (message.metadata_json or {}).get("provider_publication") == "unverified"
-        ):
+            (marketplace is Marketplace.AVITO and normalized.message_type is MessageType.REVIEW)
+            or (marketplace is Marketplace.WILDBERRIES and normalized.message_type in {MessageType.REVIEW, MessageType.QUESTION})
+        ) and (message.metadata_json or {}).get("provider_publication") == "unverified":
             metadata["provider_publication"] = "unverified"
         message.metadata_json = metadata
 
@@ -312,10 +311,7 @@ def sanitize_message_metadata(
             if (
                 len(items) <= 20
                 and all(
-                    isinstance(item, str)
-                    and 0 < len(item) <= 100
-                    and item == item.strip()
-                    and all(ord(char) >= 32 and ord(char) != 127 for char in item)
+                    isinstance(item, str) and 0 < len(item) <= 100 and item == item.strip() and all(ord(char) >= 32 and ord(char) != 127 for char in item)
                     for item in items
                 )
                 and sum(len(cast(str, item)) for item in items) <= 512

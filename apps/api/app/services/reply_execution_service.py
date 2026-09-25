@@ -44,7 +44,7 @@ _READ_ROLES = {"owner", "admin", "manager", "viewer"}
 _RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"})
 _BLOCKING_MARKETPLACE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
 _AMBIGUOUS_WRITE_ERRORS = frozenset({"malformed_payload", "marketplace_unavailable", "network_error", "network_timeout"})
-_NON_PUBLISHABLE_PROVIDER_STATES = frozenset({"unmoderated", "banned", "deleted", "unknown", "moderation", "rejected"})
+_NON_PUBLISHABLE_PROVIDER_STATES = frozenset({"unmoderated", "banned", "deleted", "unknown", "moderation", "rejected", "not_public"})
 
 
 @dataclass(frozen=True)
@@ -763,7 +763,14 @@ class ReplyExecutionService:
         self._transition_message(message, message_target)
         reply.sent_at = datetime.now(UTC)
         reply.marketplace_reply_id = marketplace_reply_id
-        if message.marketplace == Marketplace.AVITO.value and message.type == MessageType.REVIEW.value:
+        if message.marketplace == Marketplace.WILDBERRIES.value and message.type in {
+            MessageType.REVIEW.value,
+            MessageType.QUESTION.value,
+        }:
+            metadata = dict(message.metadata_json or {})
+            metadata["provider_publication"] = "unverified"
+            message.metadata_json = metadata
+        elif message.marketplace == Marketplace.AVITO.value and message.type == MessageType.REVIEW.value:
             metadata = dict(message.metadata_json or {})
             if provider_state == "accepted_unverified" and not externally_already_answered:
                 metadata["provider_publication"] = "unverified"

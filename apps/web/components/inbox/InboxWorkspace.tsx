@@ -246,14 +246,14 @@ function MessageCard({ isSelected, message, onSelect }: { isSelected: boolean; m
     <button className={isSelected ? "message-card message-card-selected" : "message-card"} onClick={onSelect} type="button">
       <span className="message-card-topline">
         <Badge tone="info">{marketplaceLabel(message.marketplace)}</Badge>
-        <Badge tone={statusTone(message.status)}>{messageTypeLabels[message.type] ?? message.type}</Badge>
+        <Badge tone={statusTone(message)}>{messageTypeLabels[message.type] ?? message.type}</Badge>
       </span>
       <span className="message-card-title">{messageTitle(message)}</span>
       <span className="message-card-text">{reviewPreview(message)}</span>
       <span className="message-card-meta">
         <span>{formatDate(message.marketplace_created_at)}</span>
         <span>{message.rating ? `${message.rating}★` : "без оценки"}</span>
-        <span>{messageStatusLabels[message.status] ?? message.status}</span>
+        <span>{messageStatusLabel(message)}</span>
       </span>
     </button>
   );
@@ -288,12 +288,12 @@ function MessageDetail({
           <span className="panel-kicker">Карточка обращения</span>
           <strong>{messageTitle(message)}</strong>
         </div>
-        <Badge tone={statusTone(message.status)}>{messageStatusLabels[message.status] ?? message.status}</Badge>
+        <Badge tone={statusTone(message)}>{messageStatusLabel(message)}</Badge>
       </div>
 
-      {isAvitoReview(message) && message.metadata_json.provider_publication === "unverified" ? (
+      {hasUnverifiedPublication(message) ? (
         <p className="integration-notice integration-notice-warning" role="note">
-          Ответ принят API Авито. Публикация не подтверждена.
+          Ответ принят API {marketplaceLabel(message.marketplace)}. Публикация не подтверждена.
         </p>
       ) : null}
 
@@ -402,6 +402,12 @@ function isAvitoReview(message: CustomerMessage): boolean {
   return message.marketplace === "avito" && message.type === "review";
 }
 
+function hasUnverifiedPublication(message: CustomerMessage): boolean {
+  return message.metadata_json.provider_publication === "unverified" && (
+    isAvitoReview(message) || (message.marketplace === "wildberries" && (message.type === "review" || message.type === "question"))
+  );
+}
+
 function messageTitle(message: CustomerMessage): string {
   if (message.product?.name) return message.product.name;
   if (isAvitoReview(message)) return "Отзыв без объявления";
@@ -409,7 +415,13 @@ function messageTitle(message: CustomerMessage): string {
   return "Товар без карточки";
 }
 
-function statusTone(status: string): BadgeTone {
+function messageStatusLabel(message: CustomerMessage): string {
+  return hasUnverifiedPublication(message) ? "Принято API" : (messageStatusLabels[message.status] ?? message.status);
+}
+
+function statusTone(message: CustomerMessage): BadgeTone {
+  if (hasUnverifiedPublication(message)) return "warning";
+  const status = message.status;
   if (["failed", "blocked_by_marketplace", "safety_blocked"].includes(status)) return "danger";
   if (["waiting_review", "needs_manual_check", "escalated"].includes(status)) return "warning";
   if (["answered", "approved", "auto_reply_sent"].includes(status)) return "success";

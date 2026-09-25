@@ -179,7 +179,8 @@ class _Registry:
 
     def review_questions(self, marketplace: Marketplace, stream: MarketplaceStream) -> _Adapter:
         assert marketplace is Marketplace.WILDBERRIES
-        assert stream is MarketplaceStream.REVIEWS
+        expected_stream = MarketplaceStream.QUESTIONS if self.adapter.session.rows.message.type == MessageType.QUESTION.value else MarketplaceStream.REVIEWS
+        assert stream is expected_stream
         return self.adapter
 
 
@@ -345,7 +346,7 @@ async def test_existing_wildberries_answer_converges_without_sending() -> None:
         rows,
         preflight=AdapterResult(
             ok=True,
-            data=ExistingReplyResult(exists=True, provider_reply_id="provider-answer-1"),
+            data=ExistingReplyResult(exists=True, provider_reply_id="provider-answer-1", provider_state="accepted_unverified"),
         ),
         send=AdapterResult(ok=True, data=ProviderWriteReceipt("unused")),
     )
@@ -355,6 +356,27 @@ async def test_existing_wildberries_answer_converges_without_sending() -> None:
     assert result.externally_already_answered is True
     assert rows.reply.status == ReplyStatus.SENT.value
     assert rows.reply.marketplace_reply_id == "provider-answer-1"
+    assert rows.message.metadata_json["provider_publication"] == "unverified"
+    assert adapter.send_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_hidden_wildberries_question_answer_requires_manual_review() -> None:
+    rows = _rows(MessageType.QUESTION)
+    service, adapter, _ = _service(
+        rows,
+        preflight=AdapterResult(
+            ok=True,
+            data=ExistingReplyResult(exists=True, provider_reply_id="question-1", provider_state="not_public"),
+        ),
+        send=AdapterResult(ok=True, data=ProviderWriteReceipt("unused")),
+    )
+
+    result = await service.execute_reply(reply_id=rows.reply.id)
+
+    assert result.retryable is False
+    assert rows.reply.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert rows.message.status == MessageStatus.NEEDS_MANUAL_CHECK.value
     assert adapter.send_calls == 0
 
 
@@ -379,13 +401,14 @@ async def test_preflight_read_retry_exhaustion_does_not_send() -> None:
     assert rows.reply.error_code == "network_timeout"
 
 
+@pytest.mark.parametrize("message_type", [MessageType.REVIEW, MessageType.QUESTION])
 @pytest.mark.asyncio
-async def test_strict_wildberries_success_receipt_marks_reply_sent() -> None:
-    rows = _rows()
+async def test_strict_wildberries_success_receipt_marks_reply_sent(message_type: MessageType) -> None:
+    rows = _rows(message_type)
     service, adapter, _ = _service(
         rows,
         preflight=_absent(),
-        send=AdapterResult(ok=True, data=ProviderWriteReceipt("provider-answer-1")),
+        send=AdapterResult(ok=True, data=ProviderWriteReceipt("provider-answer-1", provider_state="accepted_unverified")),
     )
 
     result = await service.execute_reply(reply_id=rows.reply.id)
@@ -393,6 +416,7 @@ async def test_strict_wildberries_success_receipt_marks_reply_sent() -> None:
     assert result.retryable is False
     assert rows.reply.status == ReplyStatus.SENT.value
     assert rows.reply.marketplace_reply_id == "provider-answer-1"
+    assert rows.message.metadata_json["provider_publication"] == "unverified"
     assert adapter.send_calls == 1
 
 
