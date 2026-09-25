@@ -1,1 +1,1 @@
-"""Dramatiq worker actors and broker configuration for Respio."""
+"""Dramatiq worker actors and broker configuration for MPReply."""

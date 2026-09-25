@@ -7,23 +7,37 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import decode_access_token
-from app.core.cookies import ACCESS_COOKIE_NAME
+from app.core.cookies import ACCESS_COOKIE_NAME, LEGACY_ACCESS_COOKIE_NAME
 from app.core.errors import unauthorized
 from app.db.session import get_db_session
 from app.models.user import User
 
 
-async def get_current_user(
-    session: AsyncSession = Depends(get_db_session),
-    access_cookie: str | None = Cookie(default=None, alias=ACCESS_COOKIE_NAME),
-    authorization: str | None = Header(default=None),
-) -> User:
-    token = access_cookie
+def _resolve_access_token(
+    *,
+    access_cookie: str | None,
+    legacy_access_cookie: str | None,
+    authorization: str | None,
+) -> str | None:
+    token = access_cookie or legacy_access_cookie
     if token is None and authorization:
         prefix = "Bearer "
         if authorization.startswith(prefix):
             token = authorization[len(prefix) :].strip()
+    return token or None
 
+
+async def get_current_user(
+    session: AsyncSession = Depends(get_db_session),
+    access_cookie: str | None = Cookie(default=None, alias=ACCESS_COOKIE_NAME),
+    legacy_access_cookie: str | None = Cookie(default=None, alias=LEGACY_ACCESS_COOKIE_NAME),
+    authorization: str | None = Header(default=None),
+) -> User:
+    token = _resolve_access_token(
+        access_cookie=access_cookie,
+        legacy_access_cookie=legacy_access_cookie,
+        authorization=authorization,
+    )
     if not token:
         raise unauthorized("Authentication required")
 
