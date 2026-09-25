@@ -170,6 +170,7 @@ async def test_marketplace_http_clients_close_every_owned_client() -> None:
     assert clients.yandex_market.base_url == httpx.URL("https://api.partner.market.yandex.ru")
     assert clients.avito.base_url == httpx.URL("https://api.avito.ru")
     assert all(not client.follow_redirects for client in clients.all())
+    assert all(client.headers["User-Agent"] == "MPReply marketplace integration" for client in clients.all())
 
     await clients.aclose()
 
