@@ -6,15 +6,19 @@ from types import TracebackType
 from typing import cast
 from uuid import UUID, uuid4
 
+import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ClauseElement
 
+from app.adapters.avito_reviews import AvitoReviewAdapter
 from app.adapters.base import MarketplacePage, NormalizedMessage, ProviderMessageResolution
+from app.adapters.capabilities import MarketplaceStream
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType
 from app.models.marketplace_account import MarketplaceAccount
 from app.services.marketplace_ingest_service import InvalidNormalizedRecord, MarketplaceIngestService
+from app.tests.marketplace_fixtures import SequenceTransport, response
 
 _NOW = datetime(2026, 9, 24, tzinfo=UTC)
 
@@ -126,6 +130,46 @@ async def test_avito_review_with_empty_text_and_no_item_is_inserted_without_fabr
 
 
 @pytest.mark.asyncio
+async def test_avito_preserves_provider_review_whitespace_through_ingestion() -> None:
+    payload: dict[str, object] = {
+        "reviews": [
+            {
+                "id": 92312343,
+                "score": 5,
+                "stage": "done",
+                "text": " Good item ",
+                "usedInScore": True,
+                "canAnswer": True,
+                "createdAt": 1_757_855_200,
+                "item": None,
+                "sender": None,
+                "images": [],
+            }
+        ],
+        "total": 1,
+    }
+    transport = SequenceTransport(
+        [
+            response(200, json={"access_token": "synthetic-token", "token_type": "Bearer", "expires_in": 3600}),
+            response(200, json=payload),
+        ]
+    )
+    async with httpx.AsyncClient(base_url="https://api.avito.ru", transport=transport.mock()) as client:
+        result = await AvitoReviewAdapter(client).fetch_page(
+            '{"version":1,"client_id":"synthetic-client","client_secret":"synthetic-secret"}',
+            None,
+            MarketplaceStream.REVIEWS,
+            None,
+        )
+    assert result.ok and result.data is not None
+    session = _Session()
+
+    await MarketplaceIngestService(cast(AsyncSession, session)).ingest_page(_account(), result.data, _NOW)
+
+    assert session.messages[0].customer_text == " Good item "
+
+
+@pytest.mark.asyncio
 async def test_provider_resolutions_update_only_untouched_same_account_reviews() -> None:
     account = _account()
     other = _account()
@@ -178,3 +222,42 @@ async def test_provider_published_resolution_clears_only_unverified_marker_on_se
 
     assert sent.status == MessageStatus.ANSWERED.value
     assert sent.metadata_json == {"source": "avito.reviews"}
+
+
+@pytest.mark.parametrize("terminal_status", [MessageStatus.ANSWERED, MessageStatus.NEEDS_MANUAL_CHECK])
+@pytest.mark.asyncio
+async def test_provider_moderation_resolution_follows_later_provider_state(terminal_status: MessageStatus) -> None:
+    account = _account()
+    review = _existing(account, "92312343")
+    session = _Session([review])
+    service = MarketplaceIngestService(cast(AsyncSession, session))
+    await service.ingest_page(
+        account,
+        MarketplacePage(items=(), next_cursor=None, resolutions=(ProviderMessageResolution("92312343", MessageType.REVIEW, MessageStatus.WAITING_REVIEW),)),
+        _NOW,
+    )
+    assert review.status == MessageStatus.WAITING_REVIEW.value
+
+    await service.ingest_page(
+        account,
+        MarketplacePage(items=(), next_cursor=None, resolutions=(ProviderMessageResolution("92312343", MessageType.REVIEW, terminal_status),)),
+        _NOW,
+    )
+
+    assert review.status == terminal_status.value
+
+
+@pytest.mark.asyncio
+async def test_provider_resolution_does_not_replace_later_manual_status() -> None:
+    account = _account()
+    review = _existing(account, "92312343", MessageStatus.ESCALATED)
+    review.metadata_json = {"provider_resolution_status": MessageStatus.WAITING_REVIEW.value}
+    session = _Session([review])
+
+    await MarketplaceIngestService(cast(AsyncSession, session)).ingest_page(
+        account,
+        MarketplacePage(items=(), next_cursor=None, resolutions=(ProviderMessageResolution("92312343", MessageType.REVIEW, MessageStatus.ANSWERED),)),
+        _NOW,
+    )
+
+    assert review.status == MessageStatus.ESCALATED.value

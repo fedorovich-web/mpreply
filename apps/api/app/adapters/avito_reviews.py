@@ -27,6 +27,7 @@ from app.models.enums import Marketplace, MessageStatus, MessageType
 _PAGE_SIZE = 50
 _MAX_OFFSET = 5_000
 _MAX_UNIX_SECONDS = 253_402_300_799
+_MAX_INBOUND_ANSWER_LENGTH = 100_000
 _STAGES = frozenset({"done", "fell_through", "not_agree", "not_communicate"})
 _ANSWER_STATES = {
     "published": MessageStatus.ANSWERED,
@@ -297,7 +298,14 @@ class AvitoReviewAdapter:
         created = cls._unix_seconds(answer.get("createdAt"))
         text = answer.get("text")
         status = answer.get("status")
-        if answer_id is None or created is None or not isinstance(text, str) or len(text) > 3_000 or "\x00" in text or status not in _ANSWER_STATES:
+        if (
+            answer_id is None
+            or created is None
+            or not isinstance(text, str)
+            or len(text) > _MAX_INBOUND_ANSWER_LENGTH
+            or "\x00" in text
+            or status not in _ANSWER_STATES
+        ):
             raise ValueError("invalid answer fields")
         return AvitoAnswerRecord(answer_id=answer_id, text=text, status=cast(str, status), created_unix=created)
 

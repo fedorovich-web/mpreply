@@ -153,13 +153,17 @@ class MarketplaceIngestService:
             metadata = dict(message.metadata_json)
             metadata.pop("provider_publication")
             message.metadata_json = metadata
-        if message.status != MessageStatus.NEEDS_REPLY.value:
+        metadata = message.metadata_json or {}
+        provider_owned = metadata.get("provider_resolution_status") == message.status
+        if message.status != MessageStatus.NEEDS_REPLY.value and not provider_owned:
             return
         reply_id = await self.session.scalar(select(Reply.id).where(Reply.organization_id == account.organization_id, Reply.message_id == message.id).limit(1))
         if reply_id is not None:
             return
-        ensure_message_transition(message.status, resolution.status.value)
+        if message.status == MessageStatus.NEEDS_REPLY.value:
+            ensure_message_transition(message.status, resolution.status.value)
         message.status = resolution.status.value
+        message.metadata_json = {**metadata, "provider_resolution_status": resolution.status.value}
         message.last_synced_at = now
 
     async def _insert_or_get_product(
@@ -333,7 +337,10 @@ def _marketplace(value: str) -> Marketplace:
 
 def _validate_message(message: NormalizedMessage, marketplace: Marketplace) -> None:
     _validate_required_text(message.external_id, field_name="message external ID", maximum=255)
-    if message.customer_text or not (marketplace is Marketplace.AVITO and message.message_type is MessageType.REVIEW):
+    if marketplace is Marketplace.AVITO and message.message_type is MessageType.REVIEW:
+        if len(message.customer_text) > _MAX_MESSAGE_TEXT_LENGTH or "\x00" in message.customer_text:
+            raise InvalidNormalizedRecord("customer text is invalid")
+    else:
         _validate_required_text(message.customer_text, field_name="customer text", maximum=_MAX_MESSAGE_TEXT_LENGTH)
     _validate_optional_text(message.customer_display_name, field_name="customer display name", maximum=255)
     _validate_aware_datetime(message.marketplace_created_at, field_name="marketplace creation time")
