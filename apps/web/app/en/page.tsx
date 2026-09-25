@@ -17,21 +17,21 @@ export const metadata: Metadata = createPageMetadata({
   localized: true,
 });
 
-const homeMarketplaceKeys = ["wildberries", "ozon", "yandex-market"] as const;
+const homeMarketplaceKeys = ["wildberries", "ozon", "yandex-market", "avito"] as const;
 const homeMarketplaces = homeMarketplaceKeys.map((key) => marketplacesEn.find((marketplace) => marketplace.key === key)!).filter(Boolean);
 
 const aiModels = [
-  { name: "GPT-5.6", provider: "OpenAI", mark: "◎", description: "Strong reasoning for nuanced customer replies" },
-  { name: "Claude Sonnet 5", provider: "Anthropic", mark: "✺", description: "Context-aware drafting for careful responses" },
-  { name: "Gemini 3.8", provider: "Google", mark: "✦", description: "Useful for grounded, concise answers" },
-  { name: "DeepSeek V4.1 Flash", provider: "DeepSeek", mark: "◒", description: "Fast drafting for routine reply workflows" },
+  { name: "Message context", provider: "Text and status", mark: "◎", description: "AI uses the customer message and available workflow context." },
+  { name: "Product context", provider: "Available product data", mark: "✺", description: "Drafts use available product context instead of inventing missing facts." },
+  { name: "Workspace settings", provider: "Team workflow", mark: "✦", description: "Reply preparation follows the workspace settings and handling scenario." },
+  { name: "Exception control", provider: "Rules and review", mark: "◒", description: "Ambiguous cases can stay in human review before anything is sent." },
 ] as const;
 
 const resultFacts = [
-  { icon: "◷", value: "Less", label: "manual reply work" },
-  { icon: "▤", value: "3", label: "customer message types in one workspace" },
-  { icon: "ϟ", value: "4", label: "AI models for reply drafting" },
-  { icon: "◎", value: "1", label: "workspace instead of multiple seller panels" },
+  { icon: "◷", value: "4", label: "marketplace surfaces in MPReply" },
+  { icon: "▤", value: "1", label: "shared customer-message queue" },
+  { icon: "ϟ", value: "14", label: "days in the approved trial" },
+  { icon: "◎", value: "2", label: "paths: automation or review" },
 ] as const;
 
 export default function EnglishHomePage() {
@@ -52,20 +52,20 @@ export default function EnglishHomePage() {
           <div className="homepage-hero-copy">
             <p className="homepage-kicker homepage-pill-kicker">AI for marketplace seller teams</p>
             <h1>AI-assisted replies<br />for reviews, questions,<br />and customer<br /><span>messages</span></h1>
-            <p className="homepage-hero-lead">Bring messages from Wildberries, Ozon, and Yandex Market into one workspace. AI drafts replies using product context and your preferred tone, with automation or review before sending.</p>
+            <p className="homepage-hero-lead">Bring supported customer messages from Wildberries, Ozon, Yandex Market, and Avito into one queue. AI drafts replies from available context, with rules for automation and review before sending.</p>
             <div className="homepage-hero-actions">
               <Link className="button button-primary" href="/en/auth/register?intent=connect-marketplace">Start free <span aria-hidden="true">→</span></Link>
               <Link className="button button-secondary homepage-demo-button" href="/en/demo"><span aria-hidden="true">▶</span>View demo</Link>
             </div>
-            <div className="homepage-hero-benefits" role="group" aria-label="Getting started"><span>✓ Quick setup</span><span>✓ 14-day trial</span><span>✓ No card required</span></div>
+            <div className="homepage-hero-benefits" role="group" aria-label="Getting started"><span>✓ Shared queue</span><span>✓ 14-day trial</span><span>✓ Review before sending</span></div>
           </div>
           <div className="homepage-hero-art home-reference-hero-art">
-            <Image alt="MPReply workspace with a unified customer-message queue and AI-assisted reply" height={450} priority sizes="(max-width: 1100px) 100vw, 50vw" src="/images/mpreply-hero-ui.webp" width={600} />
+            <Image alt="MPReply workspace with a unified customer-message queue and AI-assisted reply" height={450} priority sizes="(max-width: 1100px) 100vw, 50vw" src="/images/mpreply-hero-ui.webp" width={600} quality={85} />
           </div>
         </div>
 
         <div className="public-container homepage-approved-marketplaces home-reference-marketplaces" role="group" aria-labelledby="homepage-marketplaces-title">
-          <div className="homepage-marketplaces-copy"><span>BUILT FOR LEADING MARKETPLACES</span><h2 id="homepage-marketplaces-title">Marketplaces</h2></div>
+          <div className="homepage-marketplaces-copy"><span>SUPPORTED MARKETPLACE SURFACES</span><h2 id="homepage-marketplaces-title">Marketplaces</h2></div>
           <div className="homepage-marketplace-list">
             {homeMarketplaces.map((marketplace) => (
               <Link key={marketplace.key} className="homepage-marketplace-link" href={marketplace.path}>
@@ -73,7 +73,7 @@ export default function EnglishHomePage() {
               </Link>
             ))}
           </div>
-          <div className="homepage-marketplace-facts" role="group" aria-label="Product overview"><span><strong>3</strong><small>marketplaces</small></span><span><strong>1</strong><small>shared workspace</small></span><span><strong>AI</strong><small>assisted reply drafting</small></span></div>
+          <div className="homepage-marketplace-facts" role="group" aria-label="Product overview"><span><strong>4</strong><small>marketplace surfaces</small></span><span><strong>1</strong><small>shared queue</small></span><span><strong>14</strong><small>days in the trial</small></span></div>
         </div>
       </section>
 
@@ -92,11 +92,11 @@ export default function EnglishHomePage() {
       <section className="public-section homepage-models-section home-reference-models">
         <div className="public-container homepage-models-layout">
           <div className="homepage-section-heading-left">
-            <p className="homepage-kicker">AI-ASSISTED REPLY WORKFLOWS</p>
-            <h2>Choose the right AI model for clear, context-aware replies</h2>
-            <p>Use supported AI models to draft replies around the available product context, your response style, and the customer message in front of your team.</p>
+            <p className="homepage-kicker">AI WITH CONTEXT</p>
+            <h2>Build each draft from the context that is actually available</h2>
+            <p>MPReply uses available message, product, and workspace context while keeping ambiguous cases available for human review.</p>
           </div>
-          <div className="homepage-model-grid" role="group" aria-label="Supported AI models">
+          <div className="homepage-model-grid" role="group" aria-label="AI-assisted reply mechanics">
             {aiModels.map((model, index) => (
               <article className={`homepage-model-card home-reference-model-card model-${index + 1}`} key={model.name}><span className="homepage-model-mark" aria-hidden="true">{model.mark}</span><strong>{model.name}</strong><small>{model.provider}</small><p>{model.description}</p></article>
             ))}
@@ -110,7 +110,7 @@ export default function EnglishHomePage() {
           <ol className="homepage-horizontal-process">
             <li className="homepage-horizontal-step">
               <div className="homepage-horizontal-step-topline"><span className="homepage-process-number-circle">1</span><span className="homepage-process-connector" aria-hidden="true" /></div>
-              <div className="homepage-process-card homepage-process-card-connect"><span className="homepage-process-card-icon" aria-hidden="true">↗</span><h3>Connect your<br />marketplaces</h3><p>Add your Wildberries, Ozon, and Yandex Market accounts to the workspace.</p><div className="homepage-process-marketplaces" aria-hidden="true"><b>WB</b><b>OZ</b><b>YM</b></div></div>
+              <div className="homepage-process-card homepage-process-card-connect"><span className="homepage-process-card-icon" aria-hidden="true">↗</span><h3>Connect your<br />marketplaces</h3><p>Add a supported marketplace connection to the MPReply workspace.</p><div className="homepage-process-marketplaces" aria-hidden="true"><b>WB</b><b>OZ</b><b>YM</b><b>AV</b></div></div>
             </li>
             <li className="homepage-horizontal-step">
               <div className="homepage-horizontal-step-topline"><span className="homepage-process-number-circle">2</span><span className="homepage-process-connector" aria-hidden="true" /></div>
@@ -130,15 +130,15 @@ export default function EnglishHomePage() {
 
       <section className="public-section homepage-results-section home-reference-results">
         <div className="public-container homepage-results-layout">
-          <div className="homepage-section-heading-left homepage-results-copy"><p className="homepage-kicker">LESS REPETITIVE WORK</p><h2>Spend less time<br />switching tools and<br />rewriting routine replies.</h2><p>Keep the team focused on customer conversations that need judgment while routine work follows a consistent process.</p></div>
+          <div className="homepage-section-heading-left homepage-results-copy"><p className="homepage-kicker">VERIFIABLE PRODUCT MECHANICS</p><h2>One queue.<br />Context nearby.<br />Control before sending.</h2><p>MPReply combines supported customer messages, AI-assisted drafts, automation rules, and human review in one workflow.</p></div>
           <div className="homepage-result-grid">{resultFacts.map((fact) => (<article className="homepage-result-card" key={fact.label}><span aria-hidden="true">{fact.icon}</span><strong>{fact.value}</strong><p>{fact.label}</p></article>))}</div>
         </div>
       </section>
 
       <section className="public-section homepage-approved-final-cta home-reference-final">
         <div className="public-container homepage-final-cta-card">
-          <div className="homepage-final-cta-copy"><p className="homepage-kicker">GET STARTED</p><h2>Bring marketplace<br />customer communication<br />into one workflow</h2><p>Connect a marketplace account and try the MPReply workflow for 14 days.</p><div className="homepage-final-cta-actions"><Link className="button button-primary" href="/en/auth/register?intent=connect-marketplace">Start free&nbsp; →</Link><Link className="button button-secondary homepage-demo-button" href="/en/demo"><span aria-hidden="true">▶</span> View demo</Link></div><div className="homepage-final-benefits" role="group" aria-label="Getting started"><span>✓ No card required</span><span>✓ 14-day trial</span><span>✓ Quick setup</span></div></div>
-          <div className="homepage-cta-art home-reference-cta-art" aria-hidden="true"><Image alt="" height={450} sizes="(max-width: 760px) 100vw, 38vw" src="/images/mpreply-cta-ui.webp" width={600} /></div>
+          <div className="homepage-final-cta-copy"><p className="homepage-kicker">GET STARTED</p><h2>Bring marketplace<br />customer communication<br />into one workflow</h2><p>Try the MPReply workflow for 14 days with an available marketplace connection.</p><div className="homepage-final-cta-actions"><Link className="button button-primary" href="/en/auth/register?intent=connect-marketplace">Start free&nbsp; →</Link><Link className="button button-secondary homepage-demo-button" href="/en/demo"><span aria-hidden="true">▶</span> View demo</Link></div><div className="homepage-final-benefits" role="group" aria-label="Getting started"><span>✓ 14-day trial</span><span>✓ Shared queue</span><span>✓ Review before sending</span></div></div>
+          <div className="homepage-cta-art home-reference-cta-art" aria-hidden="true"><Image alt="" height={450} sizes="(max-width: 760px) 100vw, 38vw" src="/images/mpreply-cta-ui.webp" width={600} quality={85} /></div>
         </div>
       </section>
     </HomeApprovedShell>

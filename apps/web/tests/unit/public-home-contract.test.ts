@@ -36,6 +36,28 @@ describe("approved RU/EN homepage contract", () => {
     expect(englishPage).not.toMatch(/[А-Яа-яЁё]/);
   });
 
+  it("keeps homepage marketing grounded in verified product mechanics", () => {
+    for (const source of [page, englishPage]) {
+      for (const unsupported of [
+        "GPT-5.6",
+        "Claude Sonnet 5",
+        "Gemini 3.8",
+        "DeepSeek V4.1 Flash",
+        "до 70%",
+        "No card required",
+        "Quick setup",
+      ]) {
+        expect(source).not.toContain(unsupported);
+      }
+      expect(source).toContain('"wildberries", "ozon", "yandex-market", "avito"');
+      expect(source).toContain("quality={85}");
+    }
+    expect(page).toContain("Контекст обращения");
+    expect(page).toContain("14 дней бесплатно");
+    expect(englishPage).toContain("Message context");
+    expect(englishPage).toContain("14-day trial");
+  });
+
   it("keeps final homepage geometry in the approved stylesheet", () => {
     expect(approvedCss).toContain("--container-max-width: 1240px");
     expect(approvedCss).toContain(".homepage-horizontal-process");

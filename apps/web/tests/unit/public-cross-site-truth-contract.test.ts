@@ -6,6 +6,7 @@ const root = process.cwd();
 
 const publicFiles = [
   "app/page.tsx",
+  "app/en/page.tsx",
   "app/features/page.tsx",
   "app/marketplaces/page.tsx",
   "app/marketplaces/wildberries/page.tsx",
@@ -25,6 +26,7 @@ const publicFiles = [
   "components/public-site/MarketplaceLanding.tsx",
   "lib/site-config.ts",
   "lib/marketplace-detail-content.ts",
+  "lib/marketplace-detail-content-en.ts",
 ] as const;
 
 const sources = new Map(
@@ -49,12 +51,13 @@ const globalForbidden = [
   ">Вакансии<",
 ] as const;
 
-const forbiddenOutsideApprovedHomepage = [
+const forbiddenMarketingProof = [
   "GPT-5.6",
   "Claude Sonnet 5",
   "Gemini 3.8",
   "DeepSeek V4.1 Flash",
   "-70% времени",
+  "до 70%",
 ] as const;
 
 describe("cross-site public truth contract", () => {
@@ -66,12 +69,10 @@ describe("cross-site public truth contract", () => {
     }
   });
 
-  it("does not spread homepage-only approved screenshot claims to internal pages", () => {
+  it("does not use fabricated model names or savings claims as marketing proof", () => {
     for (const [file, source] of sources) {
-      if (file === "app/page.tsx") continue;
-
-      for (const value of forbiddenOutsideApprovedHomepage) {
-        expect(source, `${file} contains homepage-only claim: ${value}`).not.toContain(value);
+      for (const value of forbiddenMarketingProof) {
+        expect(source, `${file} contains unsupported marketing proof: ${value}`).not.toContain(value);
       }
     }
   });

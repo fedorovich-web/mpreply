@@ -10,6 +10,7 @@ function source(path: string) {
 
 const publicConversionSources = [
   source("app/page.tsx"),
+  source("app/en/page.tsx"),
   source("app/features/page.tsx"),
   source("app/marketplaces/page.tsx"),
   source("app/demo/page.tsx"),
@@ -30,6 +31,8 @@ describe("public trial copy contract", () => {
       "Никаких рисков",
       "Полный доступ",
       "ко всем возможностям",
+      "No card required",
+      "Quick setup",
     ]) {
       expect(combined).not.toContain(unsupportedClaim);
     }
