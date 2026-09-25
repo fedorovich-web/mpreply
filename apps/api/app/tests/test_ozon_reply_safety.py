@@ -59,6 +59,82 @@ async def test_ozon_question_preflight_and_send_use_exact_contracts() -> None:
 
 
 @pytest.mark.asyncio
+async def test_ozon_rejected_seller_comment_blocks_automatic_duplicate_reply() -> None:
+    transport = SequenceTransport(
+        [
+            response(
+                200,
+                json={
+                    "comments": [
+                        {
+                            "id": "rejected-comment",
+                            "is_owner": True,
+                            "is_published": False,
+                            "is_rejected": True,
+                            "text": "Synthetic rejected comment",
+                        }
+                    ],
+                    "offset": 1,
+                },
+            )
+        ]
+    )
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await OzonAdapter(client, read_retry_policy=NO_RETRY).find_existing_reply("synthetic-api-key", "100200", _context(MessageType.REVIEW))
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.exists is True
+    assert result.data.provider_reply_id == "rejected-comment"
+    assert result.data.provider_state == "rejected"
+    assert len(transport.requests) == 1
+
+
+@pytest.mark.parametrize(
+    ("publication_status", "expected_state"),
+    [
+        ("PUBLISHED", "published"),
+        ("AWAITING_MODERATION", "moderation"),
+        ("MODERATION_FAILED", "rejected"),
+        ("DUPLICATE", "unknown"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_ozon_question_preflight_preserves_publication_state(publication_status: str, expected_state: str) -> None:
+    answer = {
+        "id": "answer-123",
+        "question_id": "message-123",
+        "sku": 646399170,
+        "status_publication": publication_status,
+        "author_name": "Synthetic seller",
+        "published_at": "2026-09-14T08:00:00Z",
+        "text": "Synthetic answer",
+    }
+    transport = SequenceTransport([response(200, json={"answers": [answer], "last_id": ""})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await OzonAdapter(client, read_retry_policy=NO_RETRY).find_existing_reply("synthetic-api-key", "100200", _context(MessageType.QUESTION))
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.exists is True
+    assert result.data.provider_reply_id == "answer-123"
+    assert result.data.provider_state == expected_state
+
+
+@pytest.mark.asyncio
+async def test_ozon_question_preflight_handles_unknown_publication_state_without_crashing() -> None:
+    invalid_status: list[str] = []
+    transport = SequenceTransport([response(200, json={"answers": [{"id": "answer-123", "status_publication": invalid_status}], "last_id": ""})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await OzonAdapter(client, read_retry_policy=NO_RETRY).find_existing_reply("synthetic-api-key", "100200", _context(MessageType.QUESTION))
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.exists is True
+    assert result.data.provider_state == "unknown"
+
+
+@pytest.mark.asyncio
 async def test_ozon_write_timeout_is_single_attempt_and_has_no_synthetic_receipt() -> None:
     request = httpx.Request("POST", f"{BASE_URL}/v1/review/comment/create")
     transport = SequenceTransport([httpx.WriteTimeout("synthetic timeout", request=request)])

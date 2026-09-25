@@ -11,11 +11,13 @@ This log records documentation checks for provider-facing contracts. It does not
 
 ## Ozon Seller API
 
-- Inspected: 2026-09-14.
-- Source: [official Seller API documentation](https://docs.ozon.ru/api/seller/).
-- Scope: `/v1/roles`, `/v2/review/list`, `/v1/review/comment/list`, `/v1/review/comment/create`, `/v1/question/list`, `/v1/question/answer/list`, and `/v1/question/answer/create`; role `methods` and `expires_at`; documented string review SKU and numeric question SKU.
-- Retrieval note: the official documentation entry point returned its anti-bot challenge to automated and direct browser retrieval. No bypass was attempted. The implementation therefore preserves the endpoint-level contract last verified against the official reference on 2026-08-12 and fails closed on unrecognized response shapes.
-- Evidence boundary: documentation and repository contract-history review with synthetic transports; no seller-account request was made. Ozon remains contract-complete only after its static and test gates, and runtime-unverified until a separately authorized live probe succeeds.
+- Inspected: 2026-09-25.
+- Sources: [official Seller API documentation](https://docs.ozon.ru/api/seller/) and user-supplied `swagger (4).json` (OpenAPI 3.0, title `Документация Ozon Seller API`, SHA-256 `1CFA52A00005F5619421E3295F3F396B1AFD918077BA7E2ED51BEBE133ADC3AB`). The export's provenance and freshness were not independently verified; the official documentation entry point still resists automated retrieval. No bypass was attempted.
+- Scope: `/v1/roles`, `/v2/review/list`, `/v1/review/comment/list`, `/v1/review/comment/create`, `/v1/question/list`, `/v1/question/answer/list`, and `/v1/question/answer/create`; role methods and expiry, review/question pagination, publication states, request and receipt fields.
+- The export defines review statuses `NEW`, `VIEWED`, `PROCESSED`, and question statuses `NEW`, `VIEWED`, `UNPROCESSED`, `PROCESSED`. Actionable review and unanswered-question ingestion now follows those states. Reviews with text or media remain eligible; contentless reviews are excluded because Ozon has announced that review comments cannot be created for reviews without text, photo, or video.
+- Existing question answers are reconciled using `status_publication`: `PUBLISHED` is published; `AWAITING_MODERATION` and `MODERATION_FAILED` block automatic duplicate sending without falsely recording publication. Unknown statuses also block. Seller review comments that are rejected or pending are not treated as published. The documented review-comment list may omit unmoderated comments, so an external pending comment cannot be ruled out by that endpoint alone.
+- TLS notice: Ozon announced a GlobalSign-to-HARICA root transition. The repository uses HTTPX certificate verification without a pinned Ozon certificate or custom CA bundle. HTTPX may honor environment overrides, and the trust bundle in the actual deployed image still needs a non-credential TLS handshake check after build and after the transition. Never disable certificate verification to work around a trust failure.
+- Evidence boundary: supplied export and synthetic transports only; no seller-account request was made. Ozon remains runtime-unverified until a separately authorized live probe succeeds.
 
 ## Yandex Market Partner API
 

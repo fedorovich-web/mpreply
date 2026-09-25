@@ -308,13 +308,14 @@ class OzonAdapter(ReviewQuestionAdapter):
                         AdapterResult[ExistingReplyResult],
                         self._malformed("Ozon returned an invalid review comment"),
                     )
-                if is_owner is True and is_published is True and is_rejected is False:
+                if is_owner is True:
+                    provider_state = "rejected" if is_rejected else "published" if is_published else "moderation"
                     return AdapterResult(
                         ok=True,
                         data=ExistingReplyResult(
                             exists=True,
                             provider_reply_id=self._optional_string(comment.get("id")),
-                            provider_state="published",
+                            provider_state=provider_state,
                         ),
                     )
             if len(comments) < _PAGE_SIZE:
@@ -362,12 +363,23 @@ class OzonAdapter(ReviewQuestionAdapter):
                         AdapterResult[ExistingReplyResult],
                         self._malformed("Ozon returned an invalid question answer"),
                     )
+                raw_publication_status = answers[0].get("status_publication")
+                publication_state = (
+                    {
+                        "PUBLISHED": "published",
+                        "AWAITING_MODERATION": "moderation",
+                        "MODERATION_FAILED": "rejected",
+                        "DUPLICATE": "unknown",
+                    }.get(raw_publication_status, "unknown")
+                    if isinstance(raw_publication_status, str)
+                    else "unknown"
+                )
                 return AdapterResult(
                     ok=True,
                     data=ExistingReplyResult(
                         exists=True,
                         provider_reply_id=answer_id,
-                        provider_state="answered",
+                        provider_state=publication_state,
                     ),
                 )
             next_cursor = next_cursor_value.strip()
@@ -432,15 +444,27 @@ class OzonAdapter(ReviewQuestionAdapter):
         stream: MarketplaceStream,
     ) -> NormalizedMessage | None:
         identifier = self._required_string(record.get("id"))
-        text = self._required_string(record.get("text"))
+        raw_text = record.get("text")
+        if raw_text is not None and not isinstance(raw_text, str):
+            raise ValueError("Ozon message text is invalid")
+        text = self._optional_string(raw_text)
+        if text is not None and len(text) > 4_096:
+            raise ValueError("Ozon message text is too long")
         published_at = self._datetime(record.get("published_at"))
         sku = self._record_sku(record.get("sku"), stream)
         status = self._required_string(record.get("status"))
-        if identifier is None or text is None or sku is None or status is None:
+        if identifier is None or sku is None or status is None:
             raise ValueError("required Ozon message field is missing")
         rating = self._optional_rating(record.get("rating"))
         if stream is MarketplaceStream.REVIEWS:
-            if status != "UNPROCESSED":
+            if status not in {"NEW", "VIEWED", "PROCESSED"}:
+                raise ValueError("Ozon review status is invalid")
+            if status == "PROCESSED":
+                return None
+            media_counts = (record.get("photos_amount"), record.get("videos_amount"))
+            if any(count is not None and (type(count) is not int or count < 0) for count in media_counts):
+                raise ValueError("Ozon review media count is invalid")
+            if text is None and not any(type(count) is int and count > 0 for count in media_counts):
                 return None
             message_type = MessageType.REVIEW
             customer_name = None
@@ -448,8 +472,12 @@ class OzonAdapter(ReviewQuestionAdapter):
             answers_count = record.get("answers_count")
             if isinstance(answers_count, bool) or not isinstance(answers_count, int):
                 raise ValueError("Ozon question answer count is invalid")
-            if status != "UNPROCESSED" or answers_count != 0:
+            if status not in {"NEW", "VIEWED", "UNPROCESSED", "PROCESSED"}:
+                raise ValueError("Ozon question status is invalid")
+            if status == "PROCESSED" or answers_count != 0:
                 return None
+            if text is None:
+                raise ValueError("Ozon question text is missing")
             if rating is not None:
                 raise ValueError("Ozon question rating is invalid")
             message_type = MessageType.QUESTION
@@ -463,7 +491,7 @@ class OzonAdapter(ReviewQuestionAdapter):
             message_type=message_type,
             rating=rating,
             customer_display_name=customer_name,
-            customer_text=text,
+            customer_text=text or "",
             customer_photos=(),
             marketplace_created_at=published_at,
             product=NormalizedProduct(
@@ -621,7 +649,7 @@ class OzonAdapter(ReviewQuestionAdapter):
     def _client_id(value: str | None) -> str | None:
         if value is None or value != value.strip() or not value.isascii() or not value.isdecimal():
             return None
-        return value if len(value) <= 64 else None
+        return value if int(value) > 0 and len(value) <= 64 else None
 
     @staticmethod
     def _valid_api_key(value: str) -> bool:

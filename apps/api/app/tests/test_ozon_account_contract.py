@@ -51,9 +51,11 @@ async def test_ozon_validation_rejects_partial_or_invalid_account_contracts() ->
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
         adapter = OzonAdapter(client, read_retry_policy=NO_RETRY)
         invalid_client = await adapter.validate_credentials("synthetic-api-key", "client-id")
+        zero_client = await adapter.validate_credentials("synthetic-api-key", "0")
         partial_scope = await adapter.validate_credentials("synthetic-api-key", "100200")
 
     assert invalid_client.error_code == "marketplace_validation_error"
+    assert zero_client.error_code == "marketplace_validation_error"
     assert partial_scope.error_code == "insufficient_scope"
     assert len(transport.requests) == 1
 

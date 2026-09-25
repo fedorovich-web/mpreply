@@ -18,11 +18,16 @@ NO_RETRY = ReadRetryPolicy(max_attempts=1)
 def _review() -> dict[str, object]:
     return {
         "id": "review-123",
-        "status": "UNPROCESSED",
+        "status": "NEW",
         "text": "Synthetic review",
         "rating": 2,
         "published_at": "2026-09-14T06:00:00Z",
         "sku": "148591503",
+        "comments_amount": 0,
+        "photos_amount": 0,
+        "videos_amount": 0,
+        "order_status": "DELIVERED",
+        "is_rating_participant": True,
     }
 
 
@@ -87,6 +92,56 @@ async def test_ozon_question_page_uses_exact_body_and_nullable_product_fields() 
     assert result.data.next_cursor is None
     assert result.data.items[0].customer_display_name == "Synthetic buyer"
     assert transport.requests[0].read() == (b'{"filter":{"status":"ALL"},"limit":100,"last_id":"current-question","sort_dir":"ASC"}')
+
+
+@pytest.mark.asyncio
+async def test_ozon_review_page_imports_new_and_viewed_but_not_processed() -> None:
+    reviews = [
+        {**_review(), "id": "new-review", "status": "NEW"},
+        {**_review(), "id": "viewed-review", "status": "VIEWED"},
+        {**_review(), "id": "processed-review", "status": "PROCESSED"},
+    ]
+    transport = SequenceTransport([response(200, json={"reviews": reviews, "has_next": False, "last_id": ""})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await OzonAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-api-key", "100200", MarketplaceStream.REVIEWS, None)
+
+    assert result.ok is True
+    assert result.data is not None
+    assert [item.external_id for item in result.data.items] == ["new-review", "viewed-review"]
+
+
+@pytest.mark.asyncio
+async def test_ozon_question_page_imports_unanswered_new_and_viewed_questions() -> None:
+    questions = [
+        {**_question(), "id": "new-question", "status": "NEW"},
+        {**_question(), "id": "viewed-question", "status": "VIEWED"},
+        {**_question(), "id": "unprocessed-question", "status": "UNPROCESSED"},
+        {**_question(), "id": "answered-question", "status": "VIEWED", "answers_count": 1},
+        {**_question(), "id": "processed-question", "status": "PROCESSED"},
+    ]
+    transport = SequenceTransport([response(200, json={"questions": questions, "has_next": False, "last_id": ""})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await OzonAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-api-key", "100200", MarketplaceStream.QUESTIONS, None)
+
+    assert result.ok is True
+    assert result.data is not None
+    assert [item.external_id for item in result.data.items] == ["new-question", "viewed-question", "unprocessed-question"]
+
+
+@pytest.mark.asyncio
+async def test_ozon_review_page_keeps_media_only_review_and_skips_rating_only_review() -> None:
+    reviews = [
+        {**_review(), "id": "photo-review", "status": "NEW", "text": "", "photos_amount": 1, "videos_amount": 0},
+        {**_review(), "id": "rating-only", "status": "NEW", "text": "", "photos_amount": 0, "videos_amount": 0},
+    ]
+    transport = SequenceTransport([response(200, json={"reviews": reviews, "has_next": False, "last_id": ""})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await OzonAdapter(client, read_retry_policy=NO_RETRY).fetch_page("synthetic-api-key", "100200", MarketplaceStream.REVIEWS, None)
+
+    assert result.ok is True
+    assert result.data is not None
+    assert [item.external_id for item in result.data.items] == ["photo-review"]
+    assert result.data.items[0].customer_text == ""
 
 
 @pytest.mark.parametrize(
