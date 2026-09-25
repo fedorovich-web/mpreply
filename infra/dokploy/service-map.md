@@ -2,7 +2,7 @@
 
 ## Deployment model
 
-Respio is deployed as one Dokploy Docker Compose application per environment from this repository.
+The intended MPReply topology is one Dokploy Docker Compose application per environment from this repository.
 
 Production source:
 
@@ -33,12 +33,12 @@ Use separate state, credentials and backups for staging and production.
 
 Configure these mappings in the Dokploy **Domains** tab for the Docker Compose application:
 
-- `respio.ru` -> service `web`, port `3000`;
-- `www.respio.ru` -> redirect/canonical handling to `respio.ru`;
-- `app.respio.ru` -> service `web`, port `3000`;
-- `api.respio.ru` -> service `api`, port `8000`.
+- `mpreply.ru` -> service `web`, port `3000`;
+- `www.mpreply.ru` -> redirect/canonical handling to `mpreply.ru`;
+- `app.mpreply.ru` -> service `web`, port `3000`;
+- `api.mpreply.ru` -> service `api`, port `8000`.
 
-Reserved only until implemented: `admin.respio.ru`, `status.respio.ru`, `docs.respio.ru`.
+Reserved only until implemented: `admin.mpreply.ru`, `status.mpreply.ru`, `docs.mpreply.ru`.
 
 ## Environment and secrets
 
@@ -54,3 +54,4 @@ Keep real values only in Dokploy environment/service variables or a configured e
 - `migrate` must complete successfully before API, worker and scheduler startup.
 - Production rollback does not automatically downgrade the database schema.
 - Review Dokploy **Preview Compose** before the first production deploy and after domain/network changes.
+- The production Compose project is named `mpreply-production`. If an existing stack uses the former project name, migrate it explicitly before deployment; changing the name alone would create a separate stack.
