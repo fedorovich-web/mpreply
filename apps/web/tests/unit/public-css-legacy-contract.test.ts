@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const marketingPagesCss = readFileSync(join(root, "styles/marketing-pages.css"), "utf8");
+const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 const publicSiteCss = readFileSync(join(root, "styles/public-site.css"), "utf8");
 const homepageApprovedCss = readFileSync(join(root, "styles/homepage-approved.css"), "utf8");
 
@@ -128,11 +129,29 @@ describe("public CSS legacy contract", () => {
   it("keeps only currently used shared public compositions available", () => {
     for (const selector of [
       ".public-root .public-subhero",
-      ".public-root .contact-path-primary",
+      ".public-root .public-lead",
+      ".public-root .public-copy-muted",
+      ".public-root .eyebrow",
+      ".public-root .panel-kicker",
       ".public-root .public-cta-card",
     ]) {
       expect(marketingPagesCss).toContain(selector);
     }
+
+    for (const retired of [
+      ".features-hero-",
+      ".marketplace-flow-layout",
+      ".marketplace-detail-story",
+      ".integration-flow-row",
+      ".demo-flow-row",
+      ".demo-decision-",
+      ".pricing-model-item",
+      ".contact-path-primary",
+    ]) {
+      expect(marketingPagesCss).not.toContain(retired);
+    }
+
+    expect(layout).not.toContain('import "../styles/marketplaces-approved.css"');
 
     for (const selector of [
       ".public-subhero",
