@@ -107,6 +107,31 @@ async def test_unanswerable_and_pending_answers_become_reconciliation_only() -> 
 
 
 @pytest.mark.asyncio
+async def test_existing_long_provider_answer_does_not_block_other_reviews() -> None:
+    transport = SequenceTransport(
+        [
+            _token(),
+            response(
+                200,
+                json={
+                    "reviews": [
+                        _review(1, answer={"id": 10, "text": "x" * 3001, "status": "published", "createdAt": 1_757_855_210}),
+                        _review(2),
+                    ],
+                    "total": 2,
+                },
+            ),
+        ]
+    )
+    async with httpx.AsyncClient(base_url="https://api.avito.ru", transport=transport.mock()) as client:
+        result = await AvitoReviewAdapter(client).fetch_page(_CREDENTIAL, None, MarketplaceStream.REVIEWS, None)
+
+    assert result.ok and result.data is not None
+    assert [item.external_id for item in result.data.items] == ["2"]
+    assert result.data.resolutions[0].external_id == "1"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "payload",
     [
