@@ -89,7 +89,7 @@ def _create_client(
         limits=limits,
         follow_redirects=False,
         transport=transport,
-        headers={"Accept": "application/json", "User-Agent": "Respio marketplace integration"},
+        headers={"Accept": "application/json", "User-Agent": "MPReply marketplace integration"},
     )
 
 

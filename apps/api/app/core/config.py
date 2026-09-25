@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_env: Literal["local", "staging", "production"] = "local"
-    app_name: str = "Respio"
+    app_name: str = "MPReply"
     app_version: str = "0.1.27"
 
     api_base_url: str = "http://localhost:8000"
