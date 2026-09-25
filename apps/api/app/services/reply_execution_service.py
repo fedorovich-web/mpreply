@@ -9,8 +9,10 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import AdapterResult
-from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.base import AdapterResult, MarketplaceAdapter, ProviderMessageContext
+from app.adapters.conversation import ConversationAdapter
+from app.adapters.registry import get_marketplace_adapter
+from app.adapters.yandex_market import YandexMarketAdapter, YandexQuestionReplyState
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
 from app.core.config import get_settings
 from app.core.errors import bad_request, conflict, not_found
@@ -18,7 +20,7 @@ from app.core.security import CredentialService
 from app.models.ai_draft import AIDraft
 from app.models.automation_rule import AutomationRule
 from app.models.customer_message import CustomerMessage
-from app.models.enums import MessageStatus, MessageType, ReplyStatus, ResponseMode
+from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.reply import Reply
@@ -35,6 +37,24 @@ _WRITE_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
 _RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"})
 _BLOCKING_MARKETPLACE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
+_YANDEX_QUESTION_STATES = frozenset(
+    {"ABSENT", "PUBLISHED", "UNMODERATED", "BANNED", "DELETED", "UNKNOWN"}
+)
+_YANDEX_AMBIGUOUS_SEND_ERRORS = frozenset({"network_timeout", "network_error"})
+_OUTBOUND_SEND_AMBIGUOUS_ERRORS = frozenset({"network_timeout", "network_error"})
+_YANDEX_QUESTION_BLOCK_MESSAGES = {
+    "yandex_question_reply_unmoderated": "Yandex Market question answer is pending moderation",
+    "yandex_question_reply_banned": "Yandex Market question answer is banned",
+    "yandex_question_reply_deleted": "Yandex Market question answer is deleted and requires manual review",
+    "yandex_question_reconciliation_unknown": "Yandex Market question reply state could not be confirmed",
+    "yandex_question_send_ambiguous": "Yandex Market question send outcome is ambiguous; automatic resend is blocked",
+}
+
+
+def _object_mapping(value: object | None) -> dict[str, object] | None:
+    if not isinstance(value, dict):
+        return None
+    return cast(dict[str, object], value)
 
 
 @dataclass(frozen=True)
@@ -54,6 +74,22 @@ class ExecuteReplyResult:
     retryable: bool
     error_code: str | None = None
     externally_already_answered: bool = False
+    retry_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class PreflightAnswerStatus:
+    answered: bool | None
+    failure: AdapterResult | None = None
+
+
+@dataclass(frozen=True)
+class YandexQuestionWriteAuthorization:
+    state: YandexQuestionReplyState
+    allowed: bool
+    externally_already_answered: bool = False
+    error_code: str | None = None
+    answer_id: str | None = None
 
 
 class ReplyExecutionService:
@@ -260,16 +296,29 @@ class ReplyExecutionService:
         reply = await self._get_reply_for_update(reply_id)
         if reply.status == ReplyStatus.SENT.value:
             return ExecuteReplyResult(reply.id, reply.status, False)
+
+        now = datetime.now(UTC)
+        if (
+            reply.status == ReplyStatus.RETRY_PENDING.value
+            and reply.next_retry_at is not None
+            and reply.next_retry_at > now
+        ):
+            return ExecuteReplyResult(
+                reply.id,
+                reply.status,
+                True,
+                "retry_not_due",
+                retry_at=reply.next_retry_at,
+            )
+
         settings = get_settings()
         if (
             reply.status == ReplyStatus.SENDING.value
             and reply.last_attempt_at is not None
-            and reply.last_attempt_at >= datetime.now(UTC) - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
+            and reply.last_attempt_at >= now - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
         ):
             return ExecuteReplyResult(reply.id, reply.status, False, "execution_in_progress")
-        if reply.attempt_count >= reply.max_attempts:
-            await self._mark_final_failure(reply, "retry_limit_exhausted", "Retry limit exhausted")
-            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+
         if reply.status not in {
             ReplyStatus.QUEUED.value,
             ReplyStatus.RETRY_PENDING.value,
@@ -280,6 +329,23 @@ class ReplyExecutionService:
 
         message = await self._get_message(reply.message_id)
         account = await self._get_account(message.marketplace_account_id)
+
+        avito_guard = await self._guard_avito_execution(
+            reply=reply,
+            message=message,
+            account=account,
+        )
+        if avito_guard is not None:
+            return avito_guard
+
+        if reply.attempt_count >= reply.max_attempts:
+            await self._mark_final_failure(reply, "retry_limit_exhausted", "Retry limit exhausted")
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+
+        if not self._ozon_message_scope_is_allowed(account=account, message=message):
+            await self._mark_ozon_scope_blocked(reply=reply, message=message)
+            return ExecuteReplyResult(reply.id, reply.status, False, "insufficient_scope")
+
         if reply.mode == ResponseMode.AUTO.value:
             rule = await self._get_rule(reply.automation_rule_id)
             quota = await self._check_quota(message=message, rule=rule)
@@ -298,25 +364,100 @@ class ReplyExecutionService:
 
         credential = self.credentials.decrypt(account.credentials_encrypted)
         adapter = self._adapter_for(account)
-        preflight = await self._preflight_answer_status(
-            adapter=adapter,
-            credential=credential,
-            message=message,
+        is_yandex_question = (
+            account.marketplace == Marketplace.YANDEX_MARKET.value
+            and message.type == MessageType.QUESTION.value
         )
-        if preflight is True:
-            reply = await self._get_reply_for_update(reply_id)
-            message = await self._get_message(reply.message_id)
-            await self._mark_sent(
-                reply=reply,
+
+        if is_yandex_question:
+            authorization = await self._authorize_yandex_question_write(
+                adapter=cast(YandexMarketAdapter, adapter),
+                credential=credential,
+                seller_id=account.seller_id,
                 message=message,
-                marketplace_reply_id=None,
-                externally_already_answered=True,
+                reply=reply,
             )
-            return ExecuteReplyResult(reply.id, reply.status, False, externally_already_answered=True)
+            if authorization.externally_already_answered:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                await self._mark_sent(
+                    reply=reply,
+                    message=message,
+                    marketplace_reply_id=authorization.answer_id,
+                    externally_already_answered=True,
+                )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    False,
+                    externally_already_answered=True,
+                )
+            if not authorization.allowed:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                await self._mark_yandex_question_write_blocked(
+                    reply=reply,
+                    message=message,
+                    authorization=authorization,
+                )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    False,
+                    authorization.error_code,
+                )
+        else:
+            preflight = await self._preflight_answer_state(
+                adapter=adapter,
+                credential=credential,
+                seller_id=account.seller_id,
+                message=message,
+            )
+            if preflight.answered is True:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                await self._mark_sent(
+                    reply=reply,
+                    message=message,
+                    marketplace_reply_id=None,
+                    externally_already_answered=True,
+                )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    False,
+                    externally_already_answered=True,
+                )
+            if preflight.failure is not None:
+                reply = await self._get_reply_for_update(reply_id)
+                message = await self._get_message(reply.message_id)
+                preflight_error = preflight.failure
+                error_code = preflight_error.error_code or "marketplace_error"
+                retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
+                if retryable:
+                    await self._mark_retry_pending(
+                        reply=reply,
+                        message=message,
+                        result=preflight_error,
+                    )
+                else:
+                    await self._mark_terminal_marketplace_failure(
+                        reply=reply,
+                        message=message,
+                        result=preflight_error,
+                    )
+                return ExecuteReplyResult(
+                    reply.id,
+                    reply.status,
+                    retryable,
+                    error_code,
+                    retry_at=reply.next_retry_at if retryable else None,
+                )
 
         result = await self._send_through_adapter(
             adapter=adapter,
             credential=credential,
+            seller_id=account.seller_id,
             message=message,
             reply=reply,
         )
@@ -332,12 +473,70 @@ class ReplyExecutionService:
             return ExecuteReplyResult(reply.id, reply.status, False)
 
         error_code = result.error_code or "marketplace_error"
+        if is_yandex_question and self._is_yandex_question_send_ambiguous_error(error_code):
+            self._record_yandex_question_send_ambiguity(
+                reply=reply,
+                error_code=error_code,
+                now=datetime.now(UTC),
+            )
+            authorization = YandexQuestionWriteAuthorization(
+                state="UNKNOWN",
+                allowed=False,
+                error_code="yandex_question_send_ambiguous",
+            )
+            await self._mark_yandex_question_write_blocked(
+                reply=reply,
+                message=message,
+                authorization=authorization,
+            )
+            return ExecuteReplyResult(
+                reply.id,
+                reply.status,
+                False,
+                authorization.error_code,
+            )
+
+        if not is_yandex_question and (
+            self._is_outbound_send_ambiguous_error(error_code)
+            or (
+                account.marketplace == Marketplace.OZON.value
+                and error_code == "malformed_payload"
+            )
+            or (
+                account.marketplace == Marketplace.AVITO.value
+                and error_code in {
+                    "malformed_payload",
+                    "rate_limited",
+                    "marketplace_unavailable",
+                }
+            )
+        ):
+            self._record_outbound_send_ambiguity(
+                reply=reply,
+                marketplace=message.marketplace,
+                error_code=error_code,
+                now=datetime.now(UTC),
+            )
+            await self._mark_outbound_send_ambiguous(reply=reply, message=message)
+            return ExecuteReplyResult(
+                reply.id,
+                reply.status,
+                False,
+                "outbound_send_ambiguous",
+            )
+
         retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
         if retryable:
             await self._mark_retry_pending(reply=reply, message=message, result=result)
         else:
             await self._mark_terminal_marketplace_failure(reply=reply, message=message, result=result)
-        return ExecuteReplyResult(reply.id, reply.status, retryable, error_code)
+        return ExecuteReplyResult(
+            reply.id,
+            reply.status,
+            retryable,
+            error_code,
+            retry_at=reply.next_retry_at if retryable else None,
+        )
 
     async def _get_draft(self, *, message: CustomerMessage, ai_draft_id: UUID | None) -> AIDraft:
         stmt = select(AIDraft).where(
@@ -418,45 +617,468 @@ class ReplyExecutionService:
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _adapter_for(account: MarketplaceAccount) -> WildberriesAdapter:
-        if account.marketplace == "wildberries":
-            return WildberriesAdapter()
-        raise bad_request("Marketplace reply adapter is not enabled yet")
+    def _adapter_for(account: MarketplaceAccount) -> MarketplaceAdapter:
+        return get_marketplace_adapter(account.marketplace)
 
     async def _preflight_answer_status(
         self,
         *,
-        adapter: WildberriesAdapter,
+        adapter: MarketplaceAdapter,
         credential: str,
+        seller_id: str | None,
         message: CustomerMessage,
     ) -> bool | None:
-        if message.type == MessageType.REVIEW.value:
-            result = await adapter.get_review(credential, message.external_id)
-        elif message.type == MessageType.QUESTION.value:
-            result = await adapter.get_question(credential, message.external_id)
+        return (
+            await self._preflight_answer_state(
+                adapter=adapter,
+                credential=credential,
+                seller_id=seller_id,
+                message=message,
+            )
+        ).answered
+
+    async def _preflight_answer_state(
+        self,
+        *,
+        adapter: MarketplaceAdapter,
+        credential: str,
+        seller_id: str | None,
+        message: CustomerMessage,
+    ) -> PreflightAnswerStatus:
+        if message.type == MessageType.CHAT.value:
+            chat_context = self._avito_chat_reply_context(message)
+            if chat_context is None:
+                return PreflightAnswerStatus(
+                    answered=None,
+                    failure=AdapterResult(
+                        False,
+                        error_code="invalid_chat_context",
+                        error_message_safe="Avito chat reply context is invalid",
+                    ),
+                )
+            if not isinstance(adapter, ConversationAdapter):
+                return PreflightAnswerStatus(
+                    answered=None,
+                    failure=AdapterResult(
+                        False,
+                        error_code="unsupported_message_type",
+                        error_message_safe="Marketplace adapter does not support chat replies",
+                    ),
+                )
+            chat_id, inbound_created_unix = chat_context
+            result = await adapter.has_existing_chat_reply(
+                credential,
+                seller_id or "",
+                chat_id=chat_id,
+                inbound_created_unix=inbound_created_unix,
+            )
         else:
-            return None
+            result = await adapter.has_existing_reply(
+                credential=credential,
+                message_type=message.type,
+                external_id=message.external_id,
+                seller_id=seller_id,
+                context=self._provider_message_context(message),
+            )
+
         if not result.ok:
+            return PreflightAnswerStatus(answered=None, failure=result)
+        payload = result.data
+        if not isinstance(payload, dict):
+            return PreflightAnswerStatus(
+                answered=None,
+                failure=AdapterResult(
+                    False,
+                    error_code="marketplace_malformed_response",
+                    error_message_safe="Marketplace preflight response is malformed",
+                ),
+            )
+        result_data = cast(dict[str, object], payload)
+        answered = result_data.get("answered")
+        if isinstance(answered, bool):
+            return PreflightAnswerStatus(answered=answered)
+        return PreflightAnswerStatus(
+            answered=None,
+            failure=AdapterResult(
+                False,
+                error_code="marketplace_malformed_response",
+                error_message_safe="Marketplace preflight response is malformed",
+            ),
+        )
+
+    async def _authorize_yandex_question_write(
+        self,
+        *,
+        adapter: YandexMarketAdapter,
+        credential: str,
+        seller_id: str | None,
+        message: CustomerMessage,
+        reply: Reply,
+    ) -> YandexQuestionWriteAuthorization:
+        result = await adapter.reconcile_question_reply(
+            credential,
+            message.external_id,
+            seller_id=seller_id,
+        )
+        data = _object_mapping(result.data)
+        if not result.ok or data is None:
+            return YandexQuestionWriteAuthorization(
+                state="UNKNOWN",
+                allowed=False,
+                error_code="yandex_question_reconciliation_unknown",
+            )
+
+        raw_state = str(data.get("state") or "UNKNOWN").upper()
+        state = cast(
+            YandexQuestionReplyState,
+            raw_state if raw_state in _YANDEX_QUESTION_STATES else "UNKNOWN",
+        )
+        answer_id_value = data.get("answer_id")
+        answer_id = str(answer_id_value) if answer_id_value is not None else None
+        if state == "PUBLISHED":
+            return YandexQuestionWriteAuthorization(
+                state=state,
+                allowed=False,
+                externally_already_answered=True,
+                answer_id=answer_id,
+            )
+        if state == "ABSENT":
+            if self._has_yandex_question_send_ambiguity(reply):
+                return YandexQuestionWriteAuthorization(
+                    state=state,
+                    allowed=False,
+                    error_code="yandex_question_send_ambiguous",
+                )
+            return YandexQuestionWriteAuthorization(state=state, allowed=True)
+
+        error_codes = {
+            "UNMODERATED": "yandex_question_reply_unmoderated",
+            "BANNED": "yandex_question_reply_banned",
+            "DELETED": "yandex_question_reply_deleted",
+            "UNKNOWN": "yandex_question_reconciliation_unknown",
+        }
+        return YandexQuestionWriteAuthorization(
+            state=state,
+            allowed=False,
+            error_code=error_codes[state],
+            answer_id=answer_id,
+        )
+
+    @staticmethod
+    def _has_yandex_question_send_ambiguity(reply: Reply) -> bool:
+        marker = _object_mapping(reply.metadata_json.get("yandex_question_send_ambiguity"))
+        return marker is not None and marker.get("active") is True
+
+    @staticmethod
+    def _is_yandex_question_send_ambiguous_error(error_code: str | None) -> bool:
+        return error_code in _YANDEX_AMBIGUOUS_SEND_ERRORS
+
+    @staticmethod
+    def _is_outbound_send_ambiguous_error(error_code: str | None) -> bool:
+        return error_code in _OUTBOUND_SEND_AMBIGUOUS_ERRORS
+
+    @staticmethod
+    def _record_yandex_question_send_ambiguity(
+        *,
+        reply: Reply,
+        error_code: str,
+        now: datetime,
+    ) -> None:
+        metadata = dict(reply.metadata_json or {})
+        metadata["yandex_question_send_ambiguity"] = {
+            "active": True,
+            "reason": error_code,
+            "recorded_at": now.isoformat(),
+        }
+        reply.metadata_json = metadata
+
+    @staticmethod
+    def _record_outbound_send_ambiguity(
+        *,
+        reply: Reply,
+        marketplace: str,
+        error_code: str,
+        now: datetime,
+    ) -> None:
+        metadata = dict(reply.metadata_json or {})
+        metadata["outbound_send_ambiguity"] = {
+            "active": True,
+            "marketplace": marketplace,
+            "reason": error_code,
+            "recorded_at": now.isoformat(),
+        }
+        reply.metadata_json = metadata
+
+    @staticmethod
+    def _has_outbound_send_ambiguity(reply: Reply, *, marketplace: str) -> bool:
+        marker = _object_mapping(reply.metadata_json.get("outbound_send_ambiguity"))
+        return (
+            marker is not None
+            and marker.get("active") is True
+            and marker.get("marketplace") == marketplace
+        )
+
+    @staticmethod
+    def _provider_message_context(message: CustomerMessage) -> ProviderMessageContext:
+        return dict(message.metadata_json or {})
+
+    @classmethod
+    def _avito_chat_reply_context(cls, message: CustomerMessage) -> tuple[str, int] | None:
+        context = cls._provider_message_context(message)
+        chat_id = context.get("avito_chat_id")
+        inbound_created_unix = context.get("avito_inbound_created_unix")
+        if (
+            not isinstance(chat_id, str)
+            or not chat_id.strip()
+            or type(inbound_created_unix) is not int
+        ):
             return None
-        return adapter.is_already_answered(result.data)
+        return chat_id, inbound_created_unix
+
+    @staticmethod
+    def _ozon_message_scope_is_allowed(
+        *,
+        account: MarketplaceAccount,
+        message: CustomerMessage,
+    ) -> bool:
+        if account.marketplace != Marketplace.OZON.value:
+            return True
+        if account.status != "active" or account.credentials_status != "valid":
+            return False
+        scopes_json = _object_mapping(cast(object, getattr(account, "scopes_json", {})))
+        if scopes_json is None or scopes_json.get("validated") is not True:
+            return False
+        raw_scopes = scopes_json.get("scopes")
+        if not isinstance(raw_scopes, list):
+            return False
+        scopes = {scope for scope in cast(list[object], raw_scopes) if isinstance(scope, str)}
+        if message.type == MessageType.REVIEW.value:
+            return {"fetch_reviews", "send_review_reply"}.issubset(scopes)
+        if message.type == MessageType.QUESTION.value:
+            return {"fetch_questions", "send_question_reply"}.issubset(scopes)
+        return False
+
+    async def _mark_ozon_scope_blocked(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+    ) -> None:
+        if reply.status == ReplyStatus.FAILED.value:
+            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        else:
+            self._transition_reply(reply, ReplyStatus.BLOCKED.value)
+            self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
+        reply.error_code = "insufficient_scope"
+        reply.failed_reason = "Ozon account scope does not permit this message stream"
+        reply.next_retry_at = None
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="failed",
+            error_code="insufficient_scope",
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.failed",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by,
+            entity_id=str(reply.id),
+            metadata={"attempt_count": reply.attempt_count, "error_code": "insufficient_scope"},
+        )
+        await self.session.commit()
 
     async def _send_through_adapter(
         self,
         *,
-        adapter: WildberriesAdapter,
+        adapter: MarketplaceAdapter,
         credential: str,
+        seller_id: str | None,
         message: CustomerMessage,
         reply: Reply,
     ) -> AdapterResult:
         if message.type == MessageType.REVIEW.value:
-            return await adapter.send_review_reply(credential, message.external_id, reply.reply_text)
+            return await adapter.send_review_reply(
+                credential,
+                message.external_id,
+                reply.reply_text,
+                seller_id=seller_id,
+                context=self._provider_message_context(message),
+            )
         if message.type == MessageType.QUESTION.value:
-            return await adapter.send_question_reply(credential, message.external_id, reply.reply_text)
+            return await adapter.send_question_reply(
+                credential,
+                message.external_id,
+                reply.reply_text,
+                seller_id=seller_id,
+                context=self._provider_message_context(message),
+            )
+        if message.type == MessageType.CHAT.value:
+            chat_context = self._avito_chat_reply_context(message)
+            if chat_context is None:
+                return AdapterResult(
+                    False,
+                    error_code="invalid_chat_context",
+                    error_message_safe="Avito chat reply context is invalid",
+                )
+            if not isinstance(adapter, ConversationAdapter):
+                return AdapterResult(
+                    False,
+                    error_code="unsupported_message_type",
+                    error_message_safe="Marketplace adapter does not support chat replies",
+                )
+            chat_id, _ = chat_context
+            return await adapter.send_chat_message(
+                credential,
+                seller_id or "",
+                chat_id=chat_id,
+                text=reply.reply_text,
+            )
         return AdapterResult(
             False,
             error_code="unsupported_message_type",
             error_message_safe="Message type cannot be replied to through the marketplace adapter",
         )
+
+    async def _mark_avito_account_blocked(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+    ) -> None:
+        if reply.status == ReplyStatus.FAILED.value:
+            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        else:
+            self._transition_reply(reply, ReplyStatus.BLOCKED.value)
+            self._transition_message(message, MessageStatus.BLOCKED_BY_MARKETPLACE.value)
+        reply.error_code = "invalid_credentials"
+        reply.failed_reason = "Avito account is inactive or credentials are not valid"
+        reply.next_retry_at = None
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="failed",
+            error_code=reply.error_code,
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.failed",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by,
+            entity_id=str(reply.id),
+            metadata={"attempt_count": reply.attempt_count, "error_code": reply.error_code},
+        )
+        await self.session.commit()
+
+    async def _guard_avito_execution(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        account: MarketplaceAccount,
+    ) -> ExecuteReplyResult | None:
+        if account.marketplace != Marketplace.AVITO.value:
+            return None
+        if self._has_outbound_send_ambiguity(reply, marketplace=Marketplace.AVITO.value):
+            self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+            reply.error_code = "outbound_send_ambiguous"
+            reply.failed_reason = "Marketplace reply send outcome is ambiguous; automatic resend is blocked"
+            reply.next_retry_at = None
+            await self.session.commit()
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        if account.status != "active" or account.credentials_status != "valid":
+            await self._mark_avito_account_blocked(reply=reply, message=message)
+            return ExecuteReplyResult(reply.id, reply.status, False, "invalid_credentials")
+        return None
+
+    async def _mark_yandex_question_write_blocked(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+        authorization: YandexQuestionWriteAuthorization,
+    ) -> None:
+        error_code = authorization.error_code or "yandex_question_reconciliation_unknown"
+        self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+        self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        reply.error_code = error_code
+        reply.failed_reason = _YANDEX_QUESTION_BLOCK_MESSAGES.get(
+            error_code,
+            "Yandex Market question send requires manual review",
+        )
+        reply.next_retry_at = None
+        reply.metadata_json = {
+            **(reply.metadata_json or {}),
+            "yandex_question_reconciliation": {
+                "state": authorization.state,
+                "answer_id": authorization.answer_id,
+                "blocked": True,
+                "checked_at": datetime.now(UTC).isoformat(),
+            },
+        }
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="blocked",
+            error_code=error_code,
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.yandex_question_write_blocked",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by,
+            entity_id=str(reply.id),
+            metadata={
+                "message_id": str(message.id),
+                "state": authorization.state,
+                "error_code": error_code,
+                "ambiguity_active": self._has_yandex_question_send_ambiguity(reply),
+            },
+        )
+        await self.session.commit()
+
+    async def _mark_outbound_send_ambiguous(
+        self,
+        *,
+        reply: Reply,
+        message: CustomerMessage,
+    ) -> None:
+        error_code = "outbound_send_ambiguous"
+        self._transition_reply(reply, ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+        self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
+        reply.error_code = error_code
+        reply.failed_reason = "Marketplace reply send outcome is ambiguous; automatic resend is blocked"
+        reply.next_retry_at = None
+        await self._write_integration_event(
+            reply=reply,
+            message=message,
+            status="blocked",
+            error_code=error_code,
+            error_message_safe=reply.failed_reason,
+        )
+        action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
+        await self.audit.write(
+            action=f"{action_prefix}.outbound_send_ambiguous",
+            entity_type="reply",
+            organization_id=reply.organization_id,
+            actor_user_id=reply.created_by,
+            entity_id=str(reply.id),
+            metadata={
+                "message_id": str(message.id),
+                "marketplace": message.marketplace,
+                "error_code": error_code,
+            },
+        )
+        await self.session.commit()
 
     async def _mark_sent(
         self,
@@ -537,7 +1159,12 @@ class ReplyExecutionService:
         self._transition_message(message, message_target)
         reply.error_code = result.error_code
         reply.failed_reason = result.error_message_safe
-        delay_seconds = min(60, 2 ** max(reply.attempt_count - 1, 0))
+        provider_delay = result.retry_after_seconds
+        delay_seconds = (
+            min(max(provider_delay, 1), 3600)
+            if provider_delay is not None
+            else min(60, 2 ** max(reply.attempt_count - 1, 0))
+        )
         reply.next_retry_at = datetime.now(UTC) + timedelta(seconds=delay_seconds)
         await self._write_integration_event(
             reply=reply,
