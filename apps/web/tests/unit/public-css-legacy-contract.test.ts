@@ -152,6 +152,7 @@ describe("public CSS legacy contract", () => {
     }
 
     expect(layout).not.toContain('import "../styles/marketplaces-approved.css"');
+    expect(layout).not.toContain('import "../styles/contacts-approved.css"');
 
     for (const selector of [
       ".public-subhero",
