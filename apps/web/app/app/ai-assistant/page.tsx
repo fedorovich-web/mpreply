@@ -1,24 +1,16 @@
-import { AIAssistantWorkspace } from "../../../components/ai-assistant/AIAssistantWorkspace";
+import { ScopedAIAssistantWorkspace } from "../../../components/ai-assistant/ScopedAIAssistantWorkspace";
 
 export default function AIAssistantPage() {
   return (
-    <section className="app-page app-page-wide">
-      <header className="app-header app-header-row">
-        <div>
-          <p className="eyebrow">ИИ-помощник</p>
-          <h1>Черновики ответов с контекстом обращения</h1>
-          <p>
-            Respio берёт отзыв или вопрос из очереди, добавляет сведения о товаре и правила бренда,
-            готовит ответ на сервере и сохраняет уровень уверенности, расход токенов и результаты проверки.
-          </p>
-        </div>
-        <div className="app-header-actions">
-          <span className="status-badge">Ключ ИИ только на сервере</span>
-          <span className="status-badge">SafetyGate</span>
-        </div>
+    <section className="app-page app-page-wide ai-assistant-page">
+      <header className="app-header ai-assistant-page-header">
+        <h1>Ответы с ИИ</h1>
+        <p>
+          Выберите обращение, задайте тон и добавьте важные факты о товаре. MPReply подготовит черновик, который можно отредактировать перед проверкой.
+        </p>
       </header>
 
-      <AIAssistantWorkspace />
+      <ScopedAIAssistantWorkspace />
     </section>
   );
 }

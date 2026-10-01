@@ -1,170 +1,296 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
+import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Возможности Respio — автоматические ответы с контролем риска",
+  title: "Возможности MPReply — обращения, ИИ-ответы и автоматизация",
   description:
-    "Respio объединяет входящие отзывы и вопросы, AI-подготовку ответа, SafetyGate, правила автоматизации, очередь отправки, повторы и журнал действий.",
+    "Единая очередь обращений с Wildberries, Ozon, Яндекс Маркета и Авито, контекстные ИИ-черновики, автоматизация по правилам, ручная проверка, аналитика, назначение и фильтры.",
   path: "/features",
+  localized: true,
 });
 
-const capabilityGroups = [
+const marketplaceLogos = {
+  wb: {
+    src: "/images/icons/final/01-wildberries.avif",
+    compactSrc: "/images/icons/final/01-wildberries.avif",
+    name: "Wildberries",
+  },
+  oz: {
+    src: "/images/icons/final/02-ozon.avif",
+    compactSrc: "/images/icons/final/02-ozon.avif",
+    name: "Ozon",
+  },
+  ym: {
+    src: "/images/icons/final/03-yandex-market.avif",
+    compactSrc: "/images/icons/final/03-yandex-market.avif",
+    name: "Яндекс Маркет",
+  },
+  av: {
+    src: "/images/icons/final/04-avito.avif",
+    compactSrc: "/images/brands/avito-sign-logo.svg",
+    name: "Авито",
+  },
+} as const;
+
+type MarketplaceLogoKey = keyof typeof marketplaceLogos;
+type Tone = "blue" | "purple" | "green" | "orange";
+
+const tools: readonly { icon: PublicIconName; tone: Tone; title: string; text: string }[] = [
   {
-    number: "01",
-    title: "Собрать обращения в один рабочий поток",
-    text: "Отзывы и вопросы приводятся к единому формату, получают понятный статус и остаются доступны для поиска, фильтрации и дальнейшей обработки.",
-    points: ["Единые состояния сообщений", "Контекст маркетплейса и товара", "Поиск и фильтры без переключения между кабинетами"],
+    icon: "inbox",
+    tone: "blue",
+    title: "Единая очередь обращений",
+    text: "Все отзывы, вопросы и сообщения из разных маркетплейсов в одном удобном интерфейсе.",
   },
   {
-    number: "02",
-    title: "Подготовить ответ с учётом контекста",
-    text: "ИИ получает только необходимый контекст: данные товара, правила компании и доступные знания. Модель, версия инструкции, расход токенов и задержка фиксируются в системе.",
-    points: ["Товарный контекст", "Правила компании", "Учёт модели, токенов и стоимости"],
+    icon: "sparkles",
+    tone: "purple",
+    title: "ИИ-автоответы",
+    text: "Искусственный интеллект помогает составлять вежливые, точные и персонализированные ответы.",
   },
   {
-    number: "03",
-    title: "Остановить риск до внешней отправки",
-    text: "SafetyGate проверяет недостаток контекста, низкую уверенность и рискованные темы. Результат всегда один из трёх: разрешить, отправить человеку или заблокировать.",
-    points: ["Разрешить", "Передать на проверку", "Заблокировать"],
+    icon: "shield-check",
+    tone: "green",
+    title: "Контроль качества",
+    text: "Проверка тональности, грамотности и соответствия правилам маркетплейсов.",
   },
   {
-    number: "04",
-    title: "Отправить надёжно и сохранить историю",
-    text: "После правил и квот ответ получает ключ идемпотентности, попадает в очередь, отправляется worker-процессом и фиксирует итог, попытки и ошибки.",
-    points: ["Защита от дублей", "Повтор при временных ошибках", "Журнал значимых действий"],
+    icon: "lightning",
+    tone: "orange",
+    title: "Автоответы и сценарии",
+    text: "Автоматически отвечайте на типовые вопросы и настройте сценарии для разных ситуаций.",
+  },
+  {
+    icon: "document",
+    tone: "blue",
+    title: "Шаблоны ответов",
+    text: "Создавайте и сохраняйте шаблоны для быстрых и единообразных ответов.",
+  },
+  {
+    icon: "chart",
+    tone: "blue",
+    title: "Аналитика",
+    text: "Следите за рейтингом, динамикой отзывов и скоростью ответов. Принимайте решения на основе данных.",
+  },
+  {
+    icon: "users",
+    tone: "purple",
+    title: "Командная работа",
+    text: "Распределяйте обращения между сотрудниками, устанавливайте роли и контролируйте нагрузку.",
+  },
+  {
+    icon: "clock",
+    tone: "purple",
+    title: "История действий",
+    text: "Полная история обращений и действий сотрудников для прозрачности и контроля.",
   },
 ];
 
-const consoleRows = [
-  ["Отзыв · 5 звёзд", "Можно отправить", "Правило: автоответ", "Отправлено"],
-  ["Вопрос о гарантии", "Нужна проверка", "Риск: обещание", "На проверке"],
-  ["Негатив · 1 звезда", "Контекст достаточен", "Правило: менеджер", "В очереди"],
+const workflow = [
+  {
+    icon: null,
+    marketplaces: true,
+    title: "Обращение на маркетплейсе",
+    text: "Покупатель оставляет отзыв, задаёт вопрос или пишет сообщение.",
+  },
+  {
+    icon: "inbox" as PublicIconName,
+    marketplaces: false,
+    title: "Все обращения в MPReply",
+    text: "Сообщения из всех подключённых площадок попадают в единую очередь.",
+  },
+  {
+    icon: "sparkles" as PublicIconName,
+    marketplaces: false,
+    title: "ИИ помогает с ответом",
+    text: "MPReply предлагает подходящий вариант ответа или использует ваши шаблоны.",
+  },
+  {
+    icon: "send" as PublicIconName,
+    marketplaces: false,
+    title: "Довольный клиент",
+    text: "Вы отправляете ответ, а клиент получает быструю и профессиональную поддержку.",
+  },
+] as const;
+
+const benefits: readonly [PublicIconName, Tone, string, string][] = [
+  [
+    "clock",
+    "purple",
+    "Правила для типовых случаев",
+    "Повторяющиеся обращения можно обрабатывать автоматически по настроенным правилам.",
+  ],
+  [
+    "star",
+    "blue",
+    "Контекст перед ответом",
+    "Текст обращения и доступные сведения о товаре видны рядом с черновиком.",
+  ],
+  [
+    "users",
+    "purple",
+    "Статус виден команде",
+    "Очередь и ответы на проверке помогают распределять задачи между сотрудниками.",
+  ],
+  [
+    "chart",
+    "blue",
+    "Проверка сложных случаев",
+    "Неоднозначные обращения можно оставить сотруднику перед отправкой ответа.",
+  ],
 ];
+
+function CompactMarketplaceLogo({
+  marketplace,
+  className,
+  decorative = false,
+}: {
+  marketplace: MarketplaceLogoKey;
+  className: string;
+  decorative?: boolean;
+}) {
+  const logo = marketplaceLogos[marketplace];
+
+  return (
+    <Image
+      className={className}
+      src={logo.compactSrc}
+      width={64}
+      height={64}
+      alt={decorative ? "" : logo.name}
+      aria-hidden={decorative || undefined}
+      unoptimized
+    />
+  );
+}
 
 export default function FeaturesPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-featured">
-        <div className="public-container public-subhero-grid">
-          <div className="public-subhero-copy">
-            <p className="eyebrow">Возможности Respio</p>
-            <h1>Автоматизация, которая не заканчивается на генерации текста</h1>
-            <p className="public-lead">
-              Respio проводит обращение через контекст, AI, SafetyGate, правила и надёжную очередь отправки. Менеджер подключается только там, где действительно нужен человек.
-            </p>
-            <div className="hero-actions">
-              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
-                Подключить маркетплейс
-              </Link>
-              <Link className="button button-secondary" href="/demo">
-                Посмотреть workflow
-              </Link>
-            </div>
-          </div>
+      <div className="mockup-page">
+        <section className="features-mockup-hero mockup-hero">
+          <div className="public-container mockup-hero-grid">
+            <div className="mockup-hero-copy">
 
-          <div className="decision-preview" role="group" aria-label="Пример решения SafetyGate">
-            <div className="decision-preview-head">
-              <span className="decision-preview-label">Новое обращение</span>
-              <span className="decision-preview-time">сейчас</span>
-            </div>
-            <div className="decision-preview-message">
-              <strong>«Можно ли вернуть товар после использования?»</strong>
-              <p>Вопрос содержит потенциально рискованное обещание о возврате.</p>
-            </div>
-            <div className="decision-preview-path" role="group" aria-label="Этапы обработки">
-              <span>Контекст найден</span>
-              <span>Ответ ИИ готов</span>
-              <strong>SafetyGate → на проверку</strong>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <h2>Четыре слоя между входящим обращением и опубликованным ответом</h2>
-            <p>Каждый слой отвечает за свою задачу. Marketplace-specific логика не смешивается с AI, правилами и отправкой.</p>
-          </div>
-
-          <div className="capability-stack">
-            {capabilityGroups.map((group) => (
-              <article className="capability-row" key={group.number}>
-                <span className="capability-index">{group.number}</span>
-                <div className="capability-copy">
-                  <h3>{group.title}</h3>
-                  <p>{group.text}</p>
-                </div>
-                <ul className="capability-points">
-                  {group.points.map((point) => <li key={point}>{point}</li>)}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section public-section-muted">
-        <div className="public-container public-two-column public-two-column-feature">
-          <div>
-            <h2>Видно не только сообщение, но и почему система выбрала именно это действие</h2>
-            <p className="public-copy-muted">
-              Для каждого обращения важны контекст, решение SafetyGate, сработавшее правило, статус отправки и история попыток. Это превращает автоматизацию из «чёрного ящика» в управляемый процесс.
-            </p>
-          </div>
-
-          <div className="product-console" role="group" aria-label="Пример операционного списка Respio">
-            <div className="product-console-head">
-              <div>
-                <span className="operations-live-dot" aria-hidden="true" />
-                <strong>Входящие</strong>
+              <h1>Все возможности MPReply для работы с обращениями покупателей</h1>
+              <p>
+                MPReply объединяет все инструменты для быстрой, удобной и профессиональной обработки отзывов, вопросов и сообщений на маркетплейсах.
+              </p>
+              <div className="mockup-actions">
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+                  Попробовать бесплатно <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="button button-secondary" href="/demo">
+                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть демо
+                </Link>
               </div>
-              <span>3 требуют внимания</span>
+              <div className="mockup-trust-row" role="group" aria-label="Условия старта">
+                <span>14 дней бесплатно</span>
+                <span>Без карты</span>
+                <span>Быстрое подключение</span>
+              </div>
             </div>
-            <div className="product-console-columns" aria-hidden="true">
-              <span>Обращение</span><span>Решение</span><span>Действие</span><span>Статус</span>
+
+            <div className="features-mockup-scene supplied-hero-scene">
+              <Image
+                alt="Единая очередь MPReply с обращениями из четырёх маркетплейсов"
+                className="supplied-hero-image"
+                src="/images/approved/02-features-hero.avif"
+                width={1671}
+                height={941}
+                sizes="(max-width: 1100px) 100vw, 50vw"
+                priority
+                unoptimized
+              />
             </div>
-            <div className="product-console-rows">
-              {consoleRows.map(([message, decision, action, status]) => (
-                <div className="product-console-row" key={message}>
-                  <strong><span className="product-console-field-label">Обращение</span>{message}</strong>
-                  <span><span className="product-console-field-label">Решение</span>{decision}</span>
-                  <span><span className="product-console-field-label">Действие</span>{action}</span>
-                  <span><span className="product-console-field-label">Статус</span>{status}</span>
-                </div>
+          </div>
+        </section>
+
+        <section className="public-section">
+          <div className="public-container">
+            <div className="mockup-section-head">
+
+              <h2>Все инструменты для эффективной работы</h2>
+              <p>MPReply помогает автоматизировать рутину, повысить качество ответов и сделать ваших клиентов счастливее.</p>
+            </div>
+            <div className="features-tool-grid">
+              {tools.map((tool) => (
+                <article className="features-tool-card" key={tool.title}>
+                  <span className={`mockup-icon-chip ${tool.tone === "blue" ? "" : tool.tone}`} aria-hidden="true">
+                    <PublicIcon name={tool.icon} />
+                  </span>
+                  <h3>{tool.title}</h3>
+                  <p>{tool.text}</p>
+                </article>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="public-section">
-        <div className="public-container public-two-column public-two-column-balanced">
-          <div>
-            <h2>Безопасная рутина проходит автоматически. Исключения остаются человеку.</h2>
-          </div>
-          <div className="public-check-list public-check-list-large">
-            <p>Ответ можно отправить автоматически только после SafetyGate, правил и проверки квот.</p>
-            <p>Временные сетевые ошибки не теряют сообщение: задача может перейти в повторную попытку.</p>
-            <p>Повторная постановка одной и той же операции подавляется ключом идемпотентности.</p>
-            <p>Значимые действия пользователя, ИИ и интеграционных процессов сохраняются в журнале.</p>
-          </div>
-        </div>
-      </section>
+        <section className="public-section mockup-section-soft">
+          <div className="public-container">
+            <div className="mockup-section-head">
 
-      <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
-          <div>
-            <h2>Посмотрите полный путь ответа — от входящего отзыва до решения и отправки</h2>
+              <h2>От обращения до довольного клиента</h2>
+              <p>MPReply автоматически собирает обращения, помогает с ответами и упрощает вашу работу.</p>
+            </div>
+            <div className="features-workflow">
+              {workflow.map((step, index) => (
+                <article className="features-workflow-card" key={step.title}>
+                  {step.marketplaces ? (
+                    <span className="features-workflow-logos" role="group" aria-label="Wildberries, Ozon, Яндекс Маркет и Авито">
+                      {(Object.keys(marketplaceLogos) as MarketplaceLogoKey[]).map((marketplace) => (
+                        <span className="features-workflow-logo-chip" key={marketplace}>
+                          <CompactMarketplaceLogo
+                            marketplace={marketplace}
+                            className="features-workflow-logo"
+                            decorative
+                          />
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className={`mockup-icon-chip ${index === 2 ? "purple" : ""}`} aria-hidden="true">
+                      <PublicIcon name={step.icon} />
+                    </span>
+                  )}
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </article>
+              ))}
+            </div>
           </div>
-          <Link className="button button-primary button-on-dark" href="/demo">
-            Открыть демо
-          </Link>
-        </div>
-      </section>
+        </section>
+
+        <section className="public-section">
+          <div className="public-container">
+            <div className="mockup-section-head">
+
+              <h2>Экономьте время и развивайте ваш бизнес</h2>
+            </div>
+            <div className="features-benefit-grid">
+              {benefits.map(([icon, tone, title, text]) => (
+                <div className="features-benefit-card" key={title}>
+                  <span
+                    className={`mockup-icon-chip features-benefit-icon ${tone === "blue" ? "" : tone}`}
+                    aria-hidden="true"
+                  >
+                    <PublicIcon name={icon} />
+                  </span>
+                  <strong>{title}</strong>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </section>
+      </div>
     </PublicShell>
   );
 }

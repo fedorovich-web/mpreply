@@ -1,22 +1,29 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import math
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from decimal import Decimal
+from hashlib import sha256
 from typing import cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from sqlalchemy import func, select
+from fastapi import HTTPException
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.prompt_strategy import ResponseTone, build_marketplace_reply_prompt
 from app.core.config import get_settings
-from app.core.errors import bad_gateway, bad_request, not_found
+from app.core.errors import bad_gateway, bad_request, conflict, not_found
 from app.models.ai_draft import AIDraft
+from app.models.automatic_draft_job import AutomaticDraftJob
 from app.models.customer_message import CustomerMessage
-from app.models.organization import OrganizationUser
+from app.models.marketplace_account import MarketplaceAccount
+from app.models.organization import Organization, OrganizationUser
 from app.models.product import Product
+from app.models.reply import Reply
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.providers.groq import GroqProvider, GroqProviderError
@@ -24,10 +31,14 @@ from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
 from app.services.audit_service import AuditService
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
-from app.services.plan_limit_service import PlanLimitService
+from app.services.reply_credit_service import ReplyCreditService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
+_GENERATION_BLOCKED_STATUSES = frozenset({
+    "auto_reply_pending", "approved", "sending", "answered", "auto_reply_sent",
+    "blocked_by_marketplace", "duplicate", "skipped", "archived",
+})
 
 
 @dataclass(frozen=True)
@@ -63,10 +74,83 @@ class AIService:
         self.audit = AuditService(session)
         self.message_service = MessageService(session)
         self.organization_service = OrganizationService(session)
-        self.plan_limits = PlanLimitService(session)
+        self.credits = ReplyCreditService(session)
         self.safety_gate = SafetyGate()
 
     async def generate_draft(
+        self,
+        *,
+        actor: User,
+        message_id: UUID,
+        operation_key: UUID,
+        tone: ResponseTone = "neutral",
+        temperature: float = 0.3,
+        max_tokens: int = 600,
+        brand_rules: str | None = None,
+        knowledge_base: str | None = None,
+        automatic_job: tuple[UUID, UUID] | None = None,
+    ) -> AIDraft:
+        """Owns short transactions; no transaction or tenant lock spans provider I/O."""
+        message, _ = await self.message_service.get_message(actor=actor, message_id=message_id)
+        org_id, actor_id = message.organization_id, actor.id
+        await self.organization_service.require_membership_role(
+            organization_id=org_id, user_id=actor_id, allowed_roles=_ALLOWED_ROLES,
+        )
+        if not message.customer_text.strip():
+            raise bad_request("Message has no customer text")
+        request_hash = sha256(json.dumps({
+            "actor_id": str(actor_id), "message_id": str(message_id), "tone": tone,
+            "temperature": temperature, "max_tokens": max_tokens,
+            "brand_rules": brand_rules, "knowledge_base": knowledge_base,
+        }, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        attempt_id = uuid4()
+        operation = await self.credits.reserve(
+            organization_id=org_id, operation_key=operation_key, request_hash=request_hash, operation_id=attempt_id,
+        )
+        operation_id, state, existing_draft_id = operation.id, operation.state, operation.draft_id
+        await self.session.commit()
+        if state == "completed" and existing_draft_id is not None:
+            return await self.get_draft(actor=actor, draft_id=existing_draft_id)
+        if state == "released":
+            raise HTTPException(status_code=410, detail="This generation attempt has ended; start a new generation")
+        if operation_id != attempt_id:
+            raise conflict("Reply generation is already in progress")
+
+        try:
+            # HTTP attempt retries cannot outlive the durable 300-second reservation.
+            async with asyncio.timeout(240):
+                draft = await self._generate_reserved_draft(
+                    actor=actor, message_id=message_id, tone=tone, temperature=temperature,
+                    max_tokens=max_tokens, brand_rules=brand_rules, knowledge_base=knowledge_base,
+                    automatic_job=automatic_job,
+                )
+                await self.credits.consume(organization_id=org_id, operation_id=operation_id, draft_id=draft.id)
+                await self.session.commit()
+                return draft
+        except (Exception, asyncio.CancelledError) as exc:
+            error_code = "generation_failed"
+            if isinstance(exc, asyncio.CancelledError):
+                error_code = "generation_cancelled"
+            elif isinstance(exc, TimeoutError):
+                error_code = "generation_timeout"
+            elif isinstance(exc.__cause__, GroqProviderError):
+                error_code = exc.__cause__.error_code
+            elif isinstance(exc.__cause__, ModelOutputError):
+                error_code = "groq_malformed_response"
+            elif isinstance(exc, HTTPException) and exc.status_code == 409:
+                error_code = "generation_conflict"
+            await self.session.rollback()
+            await self.credits.release(organization_id=org_id, operation_id=operation_id, reason=error_code)
+            await self.audit.write(
+                action="ai_draft.failed", entity_type="customer_message", organization_id=org_id,
+                actor_user_id=actor_id, entity_id=str(message_id), metadata={"provider": "groq", "error_code": error_code},
+            )
+            await self.session.commit()
+            if isinstance(exc, TimeoutError):
+                raise bad_gateway("AI generation timed out") from exc
+            raise
+
+    async def _generate_reserved_draft(
         self,
         *,
         actor: User,
@@ -76,6 +160,7 @@ class AIService:
         max_tokens: int = 600,
         brand_rules: str | None = None,
         knowledge_base: str | None = None,
+        automatic_job: tuple[UUID, UUID] | None = None,
     ) -> AIDraft:
         message, product = await self.message_service.get_message(actor=actor, message_id=message_id)
         await self.organization_service.require_membership_role(
@@ -85,8 +170,11 @@ class AIService:
         )
         if not message.customer_text.strip():
             raise bad_request("Message has no customer text")
-
-        await self.plan_limits.enforce_ai_draft_limit(organization_id=message.organization_id)
+        self._require_generation_available(message)
+        if automatic_job is not None:
+            await self._require_automatic_generation(automatic_job, message, actor)
+        original_status = message.status
+        organization_id = message.organization_id
 
         settings = get_settings()
         prompt = build_marketplace_reply_prompt(
@@ -94,7 +182,7 @@ class AIService:
             message_type=message.type,
             customer_text=message.customer_text,
             rating=message.rating,
-            product=self._product_context(product),
+            product=self.product_context(product),
             tone=tone,
             brand_rules=brand_rules,
             knowledge_base=knowledge_base,
@@ -104,6 +192,7 @@ class AIService:
             base_url=settings.groq_base_url,
             timeout_seconds=settings.groq_timeout_seconds,
         )
+        await self.session.commit()
         try:
             completion = await provider.complete(
                 model=settings.groq_default_model,
@@ -112,17 +201,11 @@ class AIService:
                 max_tokens=max_tokens,
             )
         except GroqProviderError as exc:
-            await self._write_failure_audit(actor=actor, message=message, error_code=exc.error_code)
             raise bad_gateway("AI provider request failed") from exc
 
         try:
             parsed = self._parse_model_output(completion.text)
         except ModelOutputError as exc:
-            await self._write_failure_audit(
-                actor=actor,
-                message=message,
-                error_code="groq_malformed_response",
-            )
             raise bad_gateway("AI provider returned an invalid response") from exc
         safety = self.safety_gate.evaluate(
             SafetyInput(
@@ -134,6 +217,39 @@ class AIService:
                 model_flags=parsed.safety_flags,
             )
         )
+        # A reply or marketplace refresh can finish while the model is running.
+        # Lock only during completion, never across the external request.
+        if automatic_job is not None:
+            await self._require_automatic_generation(automatic_job, message, actor)
+        current_message = await self.session.scalar(
+            select(CustomerMessage)
+            .where(CustomerMessage.id == message_id, CustomerMessage.organization_id == organization_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if current_message is None:
+            raise conflict("Message changed during AI generation; start a new generation")
+        message = current_message
+        if automatic_job is not None:
+            await self._require_automatic_generation(automatic_job, message, actor)
+        await self.organization_service.require_membership_role(
+            organization_id=message.organization_id, user_id=actor.id, allowed_roles=_ALLOWED_ROLES,
+        )
+        self._require_generation_available(message)
+        product = None if message.product_id is None else await self.session.scalar(
+            select(Product).where(
+                Product.id == message.product_id,
+                Product.organization_id == organization_id,
+                Product.marketplace_account_id == message.marketplace_account_id,
+            ).execution_options(populate_existing=True)
+        )
+        current_prompt = build_marketplace_reply_prompt(
+            marketplace=message.marketplace, message_type=message.type, customer_text=message.customer_text,
+            rating=message.rating, product=self.product_context(product), tone=tone,
+            brand_rules=brand_rules, knowledge_base=knowledge_base,
+        )
+        if message.status != original_status or current_prompt.input_hash != prompt.input_hash:
+            raise conflict("Message changed during AI generation; start a new generation")
         flags = safety.flags
         draft = AIDraft(
             organization_id=message.organization_id,
@@ -152,6 +268,7 @@ class AIService:
             created_by=actor.id,
         )
         self.session.add(draft)
+        await self.session.flush()
         status_by_decision = {
             SafetyDecision.ALLOW: "ai_draft_ready",
             SafetyDecision.MANUAL_REVIEW: "needs_manual_check",
@@ -246,18 +363,33 @@ class AIService:
         self.session.add(usage_event)
         await self.session.flush()
 
-    async def _write_failure_audit(self, *, actor: User, message: CustomerMessage, error_code: str) -> None:
-        await self.audit.write(
-            action="ai_draft.failed",
-            entity_type="customer_message",
-            organization_id=message.organization_id,
-            actor_user_id=actor.id,
-            entity_id=str(message.id),
-            metadata={"provider": "groq", "error_code": error_code},
-        )
+    @staticmethod
+    def _require_generation_available(message: CustomerMessage) -> None:
+        if message.status in _GENERATION_BLOCKED_STATUSES:
+            raise conflict("Message is already handled or is being sent")
+
+    async def _require_automatic_generation(self, job_identity: tuple[UUID, UUID], message: CustomerMessage, actor: User) -> None:
+        job_id, token = job_identity
+        job = await self.session.scalar(select(AutomaticDraftJob)
+            .join(Organization, Organization.id == AutomaticDraftJob.organization_id)
+            .join(MarketplaceAccount, MarketplaceAccount.id == message.marketplace_account_id)
+            .join(User, User.id == Organization.owner_user_id)
+            .join(OrganizationUser, (OrganizationUser.organization_id == Organization.id) & (OrganizationUser.user_id == User.id))
+            .where(
+                AutomaticDraftJob.id == job_id, AutomaticDraftJob.lease_token == token,
+                AutomaticDraftJob.state == "processing", AutomaticDraftJob.lease_expires_at > datetime.now(UTC),
+                AutomaticDraftJob.message_id == message.id, AutomaticDraftJob.organization_id == message.organization_id,
+                Organization.status == "active", User.id == actor.id, User.status == "active",
+                OrganizationUser.status == "active", OrganizationUser.role.in_(("owner", "admin")),
+                MarketplaceAccount.organization_id == message.organization_id,
+                MarketplaceAccount.status == "active", MarketplaceAccount.credentials_status == "valid",
+                ~exists().where(Reply.message_id == message.id, Reply.organization_id == message.organization_id),
+            ).with_for_update(of=AutomaticDraftJob).execution_options(populate_existing=True))
+        if job is None or message.status not in {"new", "imported", "needs_reply"}:
+            raise conflict("Automatic generation lease or eligibility changed")
 
     @staticmethod
-    def _product_context(product: Product | None) -> dict[str, object] | None:
+    def product_context(product: Product | None) -> dict[str, object] | None:
         if product is None:
             return None
         return {

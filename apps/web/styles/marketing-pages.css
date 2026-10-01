@@ -1,0 +1,41 @@
+.public-root {
+	--color-text-muted: var(--color-text-secondary);
+}
+
+.public-root .public-subhero {
+	background:
+		radial-gradient(circle at 84% 12%, rgb(81 72 232 / 9%), transparent 25rem),
+		radial-gradient(circle at 12% 8%, rgb(99 91 255 / 6%), transparent 22rem),
+		linear-gradient(180deg, #ffffff 0%, #fcfbff 100%);
+}
+
+.public-root .public-subhero-copy h1 {
+	color: var(--color-text-primary);
+	text-wrap: balance;
+}
+
+.public-root .public-lead,
+.public-root .public-copy-muted {
+	color: var(--color-text-secondary);
+}
+
+.public-root .eyebrow,
+.public-root .panel-kicker {
+	color: var(--color-brand-primary);
+}
+
+.public-root .public-cta-card {
+	background:
+		radial-gradient(circle at 90% 5%, rgb(99 91 255 / 28%), transparent 22rem),
+		var(--gradient-public-cta);
+	box-shadow: var(--shadow-public-cta);
+}
+
+.public-root .public-cta-card .eyebrow,
+.public-root .public-cta-card h2 {
+	color: var(--color-text-on-brand);
+}
+
+.public-root .public-cta-card .eyebrow {
+	opacity: 0.82;
+}

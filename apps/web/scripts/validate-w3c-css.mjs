@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
@@ -7,13 +7,14 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const vnuCli = require.resolve("vnu-jar/vnu-jar.js");
 const appRoot = process.cwd();
-const styleFiles = [
-  "styles/fonts.css",
-  "styles/tokens.css",
-  "styles/theme.css",
-  "styles/globals.css",
-  "styles/public-site.css",
-];
+const styleFiles = (await readdir(resolve(appRoot, "styles"), { withFileTypes: true }))
+  .filter((entry) => entry.isFile() && entry.name.endsWith(".css"))
+  .map((entry) => `styles/${entry.name}`)
+  .sort();
+
+if (styleFiles.length === 0) {
+  throw new Error("No CSS files found for W3C validation.");
+}
 
 function stripImports(source) {
   return source.replace(/^\s*@import\s+[^;]+;\s*$/gim, "");
@@ -53,19 +54,19 @@ try {
     styleBlocks.push(`/* ${file} */\n${source}`);
   }
 
-  tempDirectory = await mkdtemp(join(tmpdir(), "respio-w3c-css-"));
+  tempDirectory = await mkdtemp(join(tmpdir(), "mpreply-w3c-css-"));
   const fixture = join(tempDirectory, "styles.html");
   const html = [
     "<!doctype html>",
     '<html lang="ru">',
     "<head>",
     '<meta charset="utf-8">',
-    "<title>Respio CSS validation fixture</title>",
+    "<title>MPReply CSS validation fixture</title>",
     "<style>",
     ...styleBlocks,
     "</style>",
     "</head>",
-    "<body><main><h1>Respio CSS validation fixture</h1></main></body>",
+    "<body><main><h1>MPReply CSS validation fixture</h1></main></body>",
     "</html>",
   ].join("\n");
   await writeFile(fixture, html, "utf8");

@@ -1,5 +1,16 @@
 import { AnalyticsWorkspace } from "../../../components/analytics/AnalyticsWorkspace";
 
 export default function AnalyticsPage() {
-  return <section className="app-page"><section className="app-header"><p className="eyebrow">Аналитика</p><h1>Операционная аналитика Respio</h1><p>Показатели по обращениям, ответам, маркетплейсам, товарам и использованию ИИ в выбранной организации.</p></section><AnalyticsWorkspace /></section>;
+  return (
+    <section className="app-page app-page-wide analytics-page">
+      <header className="app-header analytics-page-header">
+        <h1>Аналитика</h1>
+        <p>
+          Следите за обращениями, скоростью ответов, площадками и товарами, которым нужно больше внимания.
+        </p>
+      </header>
+
+      <AnalyticsWorkspace />
+    </section>
+  );
 }

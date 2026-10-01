@@ -1,14 +1,32 @@
 import type { MetadataRoute } from "next";
 
-import { publicRoutes, siteConfig } from "../lib/site-config";
+import { localizedPath } from "../lib/i18n";
+import { indexablePublicRoutes, siteConfig } from "../lib/site-config";
+
+function absolute(path: string): string {
+  return `${siteConfig.origin}${path === "/" ? "" : path}`;
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
+  return indexablePublicRoutes.flatMap((path) => {
+    const ruPath = localizedPath("ru", path);
+    const enPath = localizedPath("en", path);
+    const alternates = {
+      languages: {
+        "ru-RU": absolute(ruPath),
+        en: absolute(enPath),
+        "x-default": absolute(ruPath),
+      },
+    };
+    const shared = {
+      changeFrequency: path === "/" ? "weekly" as const : "monthly" as const,
+      priority: path === "/" ? 1 : path.startsWith("/marketplaces/") ? 0.8 : 0.7,
+      alternates,
+    };
 
-  return publicRoutes.map((path) => ({
-    url: `${siteConfig.origin}${path === "/" ? "" : path}`,
-    lastModified: now,
-    changeFrequency: path === "/" ? "weekly" : "monthly",
-    priority: path === "/" ? 1 : path.startsWith("/marketplaces/") ? 0.8 : 0.7,
-  }));
+    return [
+      { url: absolute(ruPath), ...shared },
+      { url: absolute(enPath), ...shared },
+    ];
+  });
 }

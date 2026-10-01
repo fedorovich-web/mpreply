@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Literal
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.capabilities import MarketplaceStream, streams_for_scopes
@@ -14,12 +14,13 @@ from app.core.errors import bad_request, forbidden, not_found
 from app.models.enums import Marketplace
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.marketplace_sync_state import MarketplaceSyncState, SyncStateStatus
+from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.organization import OrganizationUser
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.services.audit_service import AuditService
+from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
 from app.services.scheduled_sync_service import ScheduledSyncService, StreamRunResult
 
 _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
@@ -47,6 +48,15 @@ class SyncStats:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class ManualSyncResult:
+    account: MarketplaceAccount
+    stats: SyncStats
+    status: Literal["success", "failed", "in_progress", "partial"]
+    error_code: str | None
+    error_message_safe: str | None
+
+
 class MarketplaceSyncService:
     def __init__(
         self,
@@ -65,7 +75,7 @@ class MarketplaceSyncService:
         *,
         actor: User,
         account_id: UUID,
-    ) -> tuple[MarketplaceAccount, SyncStats, str | None, str | None]:
+    ) -> ManualSyncResult:
         account = await self._get_account(actor=actor, account_id=account_id)
         if account.status != "active" or account.credentials_status != "valid":
             raise bad_request("Marketplace account is not available for sync")
@@ -119,17 +129,49 @@ class MarketplaceSyncService:
         results = [await runner.run_stream(state.id, owner, now) for state in states]
         stats = _sync_stats(results)
         first_failure = next((result for result in results if result.error_code is not None), None)
-        error_code = first_failure.error_code if first_failure is not None else None
-        error_message_safe = "Marketplace synchronization failed" if first_failure is not None else None
+        lease_contended = any(not result.acquired for result in results)
+        incomplete = any(result.acquired and not result.completed and result.error_code is None for result in results)
+        if first_failure is not None:
+            sync_status: Literal["success", "failed", "in_progress", "partial"] = "failed"
+            error_code = first_failure.error_code
+            error_message_safe = "Marketplace synchronization failed"
+        elif lease_contended:
+            sync_status = "in_progress"
+            error_code = "sync_in_progress"
+            error_message_safe = "Another marketplace synchronization is already in progress"
+        elif incomplete:
+            sync_status = "partial"
+            error_code = None
+            error_message_safe = None
+        else:
+            sync_status = "success"
+            error_code = None
+            error_message_safe = None
 
-        for result in results:
-            stream_name = result.stream.value if result.stream is not None else "unknown"
+        for state, result in zip(states, results, strict=True):
+            stream_name = result.stream.value if result.stream is not None else state.stream
+            if not result.acquired:
+                event_status = "skipped"
+                event_error_code = "sync_in_progress"
+                event_error_message = "Another marketplace synchronization is already in progress"
+            elif result.error_code is not None:
+                event_status = "failed"
+                event_error_code = result.error_code
+                event_error_message = "Marketplace synchronization failed"
+            elif not result.completed:
+                event_status = "partial"
+                event_error_code = None
+                event_error_message = None
+            else:
+                event_status = "success"
+                event_error_code = None
+                event_error_message = None
             await self._write_integration_event(
                 account=account,
                 event_type=f"sync.{stream_name}",
-                status="failed" if result.error_code is not None else "success",
-                error_code=result.error_code,
-                error_message_safe=(None if result.error_code is None else "Marketplace synchronization failed"),
+                status=event_status,
+                error_code=event_error_code,
+                error_message_safe=event_error_message,
                 metadata={
                     "created_messages": result.created_messages,
                     "updated_messages": result.updated_messages,
@@ -138,11 +180,16 @@ class MarketplaceSyncService:
             )
 
         finished_at = datetime.now(UTC)
-        if error_code is not None:
+        if first_failure is not None:
             job.status = "failed"
             job.error_message = error_message_safe
             account.last_error_sync_at = finished_at
             account.error_count = int(account.error_count or 0) + 1
+        elif lease_contended:
+            job.status = "partial" if any(result.acquired for result in results) else "skipped"
+            job.error_message = error_message_safe
+        elif incomplete:
+            job.status = "partial"
         else:
             job.status = "success"
             account.last_success_sync_at = finished_at
@@ -181,7 +228,7 @@ class MarketplaceSyncService:
             },
         )
         await self.session.flush()
-        return account, stats, error_code, error_message_safe
+        return ManualSyncResult(account, stats, sync_status, error_code, error_message_safe)
 
     async def _ensure_states(
         self,
@@ -199,24 +246,7 @@ class MarketplaceSyncService:
         )
         existing = {state.stream: state for state in result.scalars().all()}
         missing = [stream for stream in ordered_streams if stream.value not in existing]
-        for stream in missing:
-            await self.session.execute(
-                pg_insert(MarketplaceSyncState)
-                .values(
-                    id=uuid4(),
-                    organization_id=account.organization_id,
-                    marketplace_account_id=account.id,
-                    stream=stream.value,
-                    status=SyncStateStatus.IDLE.value,
-                    cursor=None,
-                    metadata_json={},
-                    next_run_at=now,
-                    consecutive_failures=0,
-                    created_at=now,
-                    updated_at=now,
-                )
-                .on_conflict_do_nothing(constraint="uq_marketplace_sync_states_account_stream")
-            )
+        await MarketplaceSyncStateService(self.session).ensure_streams(account, missing, now)
         if missing:
             result = await self.session.execute(
                 select(MarketplaceSyncState).where(

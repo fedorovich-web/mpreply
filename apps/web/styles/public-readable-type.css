@@ -1,0 +1,87 @@
+/* Supporting text follows the same hierarchy across public pages. */
+.public-root small {
+  font-size: max(var(--font-size-body-sm), .833em);
+}
+
+.public-root :is(button, input, select, textarea) {
+  font-size: max(var(--font-size-body-sm), 1em);
+}
+
+.public-root .homepage-hero-lead,
+.public-root .mockup-hero-copy > p,
+.public-root .marketplace-detail-mockup-copy > p,
+.public-root .demo-mockup-copy > p,
+.public-root .pricing-approved-hero-copy > p,
+.public-root .contacts-render-hero-copy > p,
+.public-root .public-hero h1 + p,
+.public-root .help-approved-hero .public-lead {
+  font-size: var(--font-size-public-hero-description);
+}
+
+.public-root .homepage-section-heading-left > p,
+.public-root .render-section-head > p:last-child,
+.public-root .mockup-section-head > p:last-child,
+.public-root .contacts-render-section-head > p:last-child,
+.public-root .public-section-heading > p:last-child {
+  font-size: var(--font-size-public-section-description);
+}
+
+.public-root .demo-answer-details {
+  margin-top: 12px;
+}
+
+.public-root .demo-answer-details > summary {
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+}
+
+.public-root .demo-answer-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.public-root .demo-answer-details > summary:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: 3px;
+}
+
+.public-root .demo-answer-details[open] > p {
+  margin-bottom: 0;
+}
+
+.public-root #demo-process {
+  scroll-margin-top: calc(var(--public-header-height) + 12px);
+}
+
+.public-root .demo-scenario-card:has(.demo-scenario-action[aria-pressed="true"]) {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 12px 30px rgb(24 99 225 / 10%);
+}
+
+.public-root .demo-scenario-action {
+  border: 0;
+  background: transparent;
+  color: var(--color-brand-primary);
+  padding: 0;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--duration-normal) var(--ease-out);
+}
+
+.public-root .demo-scenario-action:hover {
+  color: var(--color-brand-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.public-root .demo-scenario-action:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-root .demo-scenario-action {
+    transition: none;
+  }
+}

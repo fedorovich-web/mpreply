@@ -24,8 +24,8 @@ export function AuthShell({
     <main className={styles.page}>
       <section className={styles.formPanel} aria-labelledby="auth-title">
         <div className={styles.formContainer}>
-          <Link className={styles.brand} href="/" aria-label="Respio — на главную">
-            <span>Respio</span>
+          <Link className={styles.brand} href="/" aria-label="MPReply — на главную">
+            <span>MPReply</span>
           </Link>
 
           <div className={styles.heading}>
@@ -59,16 +59,16 @@ export function AuthShell({
 
       <aside className={styles.previewPanel} aria-labelledby="auth-overview-title">
         <div className={styles.previewCopy}>
-          <p className={styles.previewKicker}>Как работает Respio</p>
+          <p className={styles.previewKicker}>Как работает MPReply</p>
           <h2 id="auth-overview-title">Автоматизация с проверкой там, где она нужна</h2>
-          <p>Respio собирает отзывы и вопросы, помогает подготовить ответы и передаёт сложные случаи на проверку.</p>
+          <p>MPReply собирает обращения покупателей, помогает подготовить ответы и передаёт сложные случаи на проверку.</p>
         </div>
 
         <ol className={styles.workflow}>
           <li className={styles.workflowItem}>
             <div className={styles.workflowContent}>
               <strong>Обращения в очереди</strong>
-              <span>Отзывы и вопросы Wildberries собраны в одном месте.</span>
+              <span>Отзывы, вопросы и поддерживаемые сообщения собраны в одном месте.</span>
             </div>
           </li>
           <li className={styles.workflowItem}>
@@ -85,7 +85,7 @@ export function AuthShell({
           </li>
         </ol>
 
-        <p className={styles.marketplaceNote}>В MVP отправка ответов поддерживается через Wildberries.</p>
+        <p className={styles.marketplaceNote}>Подключайте кабинеты Wildberries, Ozon, Яндекс Маркета и Авито.</p>
       </aside>
     </main>
   );

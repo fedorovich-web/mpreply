@@ -5,10 +5,11 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Автоматические ответы на отзывы и вопросы Wildberries",
+  title: "Отзывы и вопросы Wildberries — ИИ-ответы и автоматизация",
   description:
-    "MVP-интеграция Respio для Wildberries: импорт отзывов и вопросов, ответы с помощью ИИ, SafetyGate, правила автоматизации и фоновая отправка.",
+    "MPReply собирает доступные отзывы и вопросы Wildberries в одну очередь, готовит ответы с контекстом товара и позволяет отправлять типовые ответы автоматически или после проверки.",
   path: "/marketplaces/wildberries",
+  localized: true,
 });
 
 const marketplace = getMarketplaceConfig("wildberries");

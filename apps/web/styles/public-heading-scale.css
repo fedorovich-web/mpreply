@@ -1,0 +1,14 @@
+/* One responsive type scale for all public pages. The earlier page-specific
+   styles set font sizes with differing specificity, so this final shared
+   rule keeps the heading hierarchy consistent. */
+.public-root main h1 {
+  font-size: var(--font-size-public-h1) !important;
+}
+
+.public-root main h2 {
+  font-size: var(--font-size-public-h2) !important;
+}
+
+.public-root main h3 {
+  font-size: var(--font-size-public-h3) !important;
+}

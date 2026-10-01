@@ -332,6 +332,7 @@ class ScheduledSyncService:
                 owner=owner,
                 now=release_at,
                 next_run_at=next_run_at,
+                completed=result.completed,
             )
         return _result(
             result.state.id,
@@ -423,6 +424,7 @@ class ScheduledSyncService:
                 owner=owner,
                 now=release_at,
                 next_run_at=release_at + timedelta(seconds=1),
+                completed=False,
             )
         return _result(state.id, stream, totals, completed=False)
 
@@ -465,6 +467,7 @@ class ScheduledSyncService:
                 owner=owner,
                 now=now,
                 next_run_at=now + _SUCCESS_INTERVAL,
+                completed=True,
             )
         return _result(state.id, stream, totals, completed=True)
 

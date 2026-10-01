@@ -1,0 +1,404 @@
+/* Final authenticated-app fidelity and responsive pass.
+   Keeps the live product structure while matching the approved dashboard density. */
+
+.app-sidebar {
+	grid-template-rows: auto auto minmax(0, 1fr) auto;
+	gap: 0.72rem;
+}
+
+.app-sidebar-brand {
+	min-height: 3.35rem;
+	border-bottom: 0;
+	padding: 0.12rem 0.38rem 0.28rem;
+}
+
+.app-logo {
+	gap: 0.65rem;
+}
+
+.app-logo .public-brand-mark {
+	width: 2.25rem;
+	height: 2.25rem;
+}
+
+.app-logo strong {
+	font-size: 1.14rem;
+	font-weight: 780;
+	letter-spacing: -0.035em;
+}
+
+.app-logo small {
+	display: none;
+}
+
+.app-sidebar-workspace {
+	display: grid;
+	grid-template-columns: 2.15rem minmax(0, 1fr);
+	align-items: center;
+	gap: 0.62rem;
+	min-width: 0;
+	border: 1px solid var(--color-border-subtle);
+	border-radius: 0.82rem;
+	background: var(--color-bg-surface);
+	box-shadow: var(--shadow-xs);
+	padding: 0.55rem 0.62rem;
+}
+
+.app-workspace-avatar {
+	display: grid;
+	width: 2.15rem;
+	height: 2.15rem;
+	place-items: center;
+	border-radius: 0.62rem;
+	background: var(--color-brand-primary);
+	color: var(--color-text-on-brand);
+	font-size: var(--font-size-body-sm);
+	font-weight: 800;
+	text-transform: uppercase;
+}
+
+.app-sidebar-workspace-copy,
+.app-sidebar-workspace-select {
+	display: grid;
+	min-width: 0;
+	gap: var(--space-2);
+}
+
+.app-sidebar-workspace-copy strong,
+.app-sidebar-workspace-select select {
+	min-width: 0;
+	overflow: hidden;
+	color: var(--color-text-primary);
+	font-size: var(--font-size-body-sm);
+	font-weight: 700;
+	line-height: 1.25;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.app-sidebar-workspace-copy small,
+.app-sidebar-workspace-select small {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-body-sm);
+	line-height: 1.25;
+}
+
+.app-sidebar-workspace-select select {
+	width: 100%;
+	min-height: 1.45rem;
+	border: 0;
+	background: transparent;
+	padding: 0 1.2rem 0 0;
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.app-sidebar-workspace-select select:focus-visible {
+	outline: var(--focus-ring-width) solid var(--focus-ring-color);
+	outline-offset: var(--focus-ring-offset);
+}
+
+.app-nav {
+	gap: 0.72rem;
+	padding-top: 0.15rem;
+}
+
+.app-nav-group {
+	gap: 0.28rem;
+}
+
+.app-nav-group-label {
+	font-size: var(--font-size-body-sm);
+	letter-spacing: 0.075em;
+}
+
+.app-nav-link {
+	min-height: 2.58rem;
+	border-radius: 0.72rem;
+	padding-block: 0.26rem;
+}
+
+.app-nav-label {
+	font-size: var(--font-size-body-sm);
+}
+
+.app-sidebar-footer {
+	padding-top: 0.62rem;
+}
+
+.app-topbar {
+	min-height: 4.05rem;
+}
+
+.app-topbar-user {
+	border-radius: var(--radius-lg);
+}
+
+.app-shell :is(
+	.dashboard-overview-header,
+	.inbox-page-header,
+	.review-queue-page-header,
+	.ai-assistant-page-header,
+	.automation-page-header,
+	.integrations-page-header,
+	.analytics-page-header,
+	.billing-page-header,
+	.admin-page-header
+) {
+	display: grid;
+	max-width: 52rem;
+	align-items: start;
+	gap: var(--space-3);
+	margin-bottom: var(--space-6);
+}
+
+.app-shell :is(
+	.dashboard-overview-header,
+	.inbox-page-header,
+	.review-queue-page-header,
+	.ai-assistant-page-header,
+	.automation-page-header,
+	.integrations-page-header,
+	.analytics-page-header,
+	.billing-page-header,
+	.admin-page-header
+) h1 {
+	max-width: none;
+	margin: 0;
+	font-size: clamp(1.85rem, 2.6vw, 2.45rem);
+	line-height: 1.2;
+	letter-spacing: -0.035em;
+}
+
+.app-shell :is(
+	.dashboard-overview-header,
+	.inbox-page-header,
+	.review-queue-page-header,
+	.ai-assistant-page-header,
+	.automation-page-header,
+	.integrations-page-header,
+	.analytics-page-header,
+	.billing-page-header,
+	.admin-page-header
+) > p:last-child,
+.app-shell .analytics-page-header > div:first-child > p:last-child {
+	max-width: 48rem;
+	margin: 0;
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-body-sm);
+	line-height: 1.5;
+}
+
+@media (max-width: 1180px) {
+	.review-queue-workspace,
+	.wildberries-layout {
+		grid-template-columns: 1fr;
+		min-height: 0;
+		overflow: visible;
+	}
+
+	.review-queue-list,
+	.integration-account-panel {
+		border-right: 0;
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.review-editor-slot,
+	.integration-account-detail {
+		border-left: 0;
+	}
+}
+
+@media (max-width: 1120px) {
+	.inbox-workspace,
+	.review-queue-workspace,
+	.ai-workspace-grid,
+	.wildberries-layout {
+		grid-template-columns: 1fr;
+		min-height: 0;
+		overflow: visible;
+	}
+
+	.inbox-list-panel,
+	.review-queue-list,
+	.integration-account-panel {
+		border-right: 0;
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.inbox-detail-panel,
+	.review-editor-slot,
+	.integration-account-detail {
+		border-left: 0;
+	}
+
+	.ai-panel + .ai-panel,
+	.ai-result-panel {
+		grid-column: auto;
+		border-top: 1px solid var(--color-border-subtle);
+		border-left: 0;
+	}
+
+	.message-stack,
+	.review-queue-stack,
+	.ai-message-list {
+		max-height: 28rem;
+	}
+}
+
+@media (max-width: 860px) {
+	.app-sidebar {
+		grid-template-rows: auto auto minmax(0, 1fr) auto;
+	}
+
+	.app-sidebar-workspace {
+		margin-inline: 0.05rem;
+	}
+
+	.app-shell :is(
+		.dashboard-overview-header,
+		.inbox-page-header,
+		.review-queue-page-header,
+		.ai-assistant-page-header,
+		.automation-page-header,
+		.integrations-page-header,
+		.analytics-page-header,
+		.billing-page-header,
+		.admin-page-header
+	) {
+		margin-bottom: 1.1rem;
+	}
+}
+
+@media (max-width: 520px) {
+	.app-shell :is(
+		.dashboard-overview-header,
+		.inbox-page-header,
+		.review-queue-page-header,
+		.ai-assistant-page-header,
+		.automation-page-header,
+		.integrations-page-header,
+		.analytics-page-header,
+		.billing-page-header,
+		.admin-page-header
+	) h1 {
+		font-size: clamp(1.65rem, 8.5vw, 2rem);
+	}
+
+	.app-shell :is(
+		.dashboard-overview-header,
+		.inbox-page-header,
+		.review-queue-page-header,
+		.ai-assistant-page-header,
+		.automation-page-header,
+		.integrations-page-header,
+		.analytics-page-header,
+		.billing-page-header,
+		.admin-page-header
+	) > p:last-child,
+	.app-shell .analytics-page-header > div:first-child > p:last-child {
+		font-size: var(--font-size-body-sm);
+	}
+}
+.app-shell small {
+  font-size: max(var(--font-size-body-sm), .833em);
+}
+
+.app-shell :is(button, input, select, textarea) {
+  font-size: max(var(--font-size-body-sm), 1em);
+}
+
+.app-shell :is(p, h1, h2, h3, label, strong) {
+	overflow-wrap: anywhere;
+}
+
+.app-message-table-wrap {
+	position: relative;
+	min-width: 0;
+}
+
+.app-message-table .ui-badge {
+	justify-self: start;
+	max-width: 100%;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.inbox-row-open-label {
+	display: none;
+}
+
+/* Narrow work areas show each message as a readable record, with the same table data. */
+@media (max-width: 1120px) {
+	.app-shell .app-message-table {
+		display: block;
+		min-width: 0;
+	}
+
+	.app-message-table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+
+	.app-message-table tbody {
+		display: block;
+	}
+
+	.app-message-table tbody tr {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-3);
+		border-bottom: 1px solid var(--color-border-subtle);
+		padding: var(--space-4);
+	}
+
+	.app-shell .app-message-table td {
+		display: grid;
+		width: auto;
+		min-width: 0;
+		gap: var(--space-2);
+		border: 0;
+		padding: 0;
+		text-align: left;
+		overflow-wrap: anywhere;
+	}
+
+	.app-message-table td::before {
+		content: attr(data-label);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-body-sm);
+	}
+
+	.app-message-table td:nth-child(-n + 3),
+	.app-message-table .inbox-row-action-cell {
+		grid-column: 1 / -1;
+	}
+
+	.app-message-table .inbox-row-action-cell::before {
+		content: none;
+	}
+
+	.app-message-table :is(.inbox-table-message, .dashboard-message-preview) {
+		display: block;
+		-webkit-line-clamp: unset;
+	}
+
+	.app-message-table .inbox-row-open {
+		justify-self: start;
+		width: auto;
+		min-height: 2.75rem;
+		padding-inline: var(--space-3);
+		border: 1px solid var(--color-border-subtle);
+	}
+
+	.inbox-row-open-label {
+		display: inline;
+	}
+
+	.inbox-row-open > span[aria-hidden] {
+		display: none;
+	}
+}

@@ -1,0 +1,177 @@
+/* Marketplace detail hero refinements from the approved render. */
+
+.mockup-page .detail-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 5px 6px;
+  border-radius: 7px;
+  color: #7384a2;
+  font-size: var(--font-size-body-sm);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.mockup-page .detail-sidebar-item > .public-icon-image {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  color: #8291aa;
+}
+
+.mockup-page .detail-sidebar-item > b {
+  margin-left: auto;
+  color: #7384a2;
+  font-size: var(--font-size-body-sm);
+  font-weight: 700;
+}
+
+.mockup-page .detail-sidebar-item.is-active {
+  background: #eaf4ff;
+  color: var(--color-brand-text-on-soft);
+  font-weight: 700;
+}
+
+.mockup-page .detail-sidebar-item.is-active > .public-icon-image,
+.mockup-page .detail-sidebar-item.is-active > b {
+  color: var(--color-brand-text-on-soft);
+}
+
+.mockup-page .marketplace-detail-compact-logo {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  object-fit: contain;
+}
+
+/* Marketplace card in the render is a white logo surface, not a synthetic brand gradient. */
+.mockup-page .detail-market-logo {
+  background: transparent;
+}
+
+.mockup-page .detail-market-card::after {
+  position: absolute;
+  right: -94px;
+  bottom: -11px;
+  width: 104px;
+  height: 54px;
+  border-right: 2px dashed rgb(11 104 246 / 55%);
+  border-bottom: 2px dashed rgb(11 104 246 / 55%);
+  border-radius: 0 0 42px 0;
+  color: var(--color-brand-primary);
+  content: "↗";
+  font-size: 19px;
+  line-height: 1;
+  text-align: right;
+  pointer-events: none;
+}
+
+/* Buyer metadata in the approved card starts with a soft user/avatar badge. */
+.mockup-page .detail-market-message strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mockup-page .detail-market-message strong::before {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 8px;
+  background-color: var(--color-brand-soft);
+  background-image:
+    radial-gradient(circle at 50% 36%, var(--color-brand-primary) 0 19%, transparent 21%),
+    radial-gradient(ellipse at 50% 86%, var(--color-brand-primary) 0 31%, transparent 33%);
+  content: '';
+}
+
+/* Keep the context visual at the approved 40px geometry for every marketplace. */
+.mockup-page .detail-product-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 10px;
+  background-color: #f4f6fb;
+}
+
+/* Only the product-question scenario uses the approved Wildberries product crop. */
+.mockup-page .detail-product-thumb.is-product.is-wildberries {
+  background-image: url("/images/mockups/product-shoe.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.mockup-page .detail-product-thumb:not(.is-product),
+.mockup-page .detail-product-thumb.is-product:not(.is-wildberries) {
+  background-color: var(--color-brand-soft);
+  color: var(--color-brand-primary);
+}
+
+.mockup-page .detail-product-thumb:not(.is-product) > .public-icon-image,
+.mockup-page .detail-product-thumb.is-product:not(.is-wildberries) > .public-icon-image {
+  width: 19px;
+  height: 19px;
+}
+
+/* The approved Wildberries app question card has no secondary context row. */
+.mockup-page.marketplace-detail-page.is-wildberries .detail-question > p {
+  display: none;
+}
+
+/* The approved detail FAQ uses compact rows rather than full-height cards. */
+.mockup-page .detail-faq-summary {
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 46px;
+  padding: 6px 12px;
+}
+
+.mockup-page .detail-faq-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.mockup-page .marketplace-detail-faq details:nth-of-type(3) .detail-faq-icon {
+  border-radius: 999px;
+  background: var(--color-brand-primary);
+  color: #fff;
+}
+
+.mockup-page .marketplace-detail-faq details:nth-of-type(3) .detail-faq-icon > .public-icon-image {
+  display: none;
+}
+
+.mockup-page .marketplace-detail-faq details:nth-of-type(3) .detail-faq-icon::before {
+  content: '✓';
+  font-size: var(--font-size-body-sm);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mockup-page .marketplace-detail-faq details > p {
+  padding: 0 12px 10px 50px;
+}
+
+@media (max-width: 720px) {
+  .mockup-page .detail-market-card::after {
+    display: none;
+  }
+
+  .mockup-page .detail-faq-summary {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding-inline: 10px;
+  }
+
+  .mockup-page .marketplace-detail-faq details > p {
+    padding-left: 47px;
+  }
+}

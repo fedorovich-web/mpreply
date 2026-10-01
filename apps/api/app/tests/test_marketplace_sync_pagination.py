@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import TracebackType
 from typing import cast
 from uuid import UUID, uuid4
@@ -16,8 +16,10 @@ from app.adapters.capabilities import AVITO_CAPABILITY, WILDBERRIES_CAPABILITY, 
 from app.adapters.registry import MarketplaceAdapterRegistry
 from app.core.security import CredentialEncryptionError, CredentialService
 from app.models.enums import Marketplace
+from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState, SyncStateStatus
+from app.models.sync_job import SyncJob
 from app.models.user import User
 from app.services.marketplace_ingest_service import IngestStats, MarketplaceIngestService
 from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
@@ -382,6 +384,24 @@ class _Runner:
         )
 
 
+class _ContendedRunner:
+    def __init__(self, states: list[MarketplaceSyncState], *, every_stream: bool) -> None:
+        self.calls: list[tuple[UUID, str]] = []
+        self.stream_by_state_id = {state.id: MarketplaceStream(state.stream) for state in states}
+        self.every_stream = every_stream
+
+    async def run_stream(self, state_id: UUID, owner: str, now: datetime) -> StreamRunResult:
+        skipped = self.every_stream or not self.calls
+        self.calls.append((state_id, owner))
+        return StreamRunResult(
+            state_id=state_id,
+            stream=None if skipped else self.stream_by_state_id[state_id],
+            acquired=not skipped,
+            completed=not skipped,
+            created_messages=0 if skipped else 1,
+        )
+
+
 @pytest.mark.asyncio
 async def test_manual_sync_routes_every_supported_stream_through_the_common_runner() -> None:
     account = _account()
@@ -406,18 +426,126 @@ async def test_manual_sync_routes_every_supported_stream_through_the_common_runn
     )
     actor = User(id=uuid4(), email="synthetic@example.com", password_hash="hash", status="active")
 
-    synced_account, stats, error_code, _ = await service.request_sync(
+    result = await service.request_sync(
         actor=actor,
         account_id=account.id,
     )
 
-    assert synced_account is account
-    assert stats.imported_reviews == 1
-    assert stats.imported_questions == 1
-    assert error_code is None
+    assert result.account is account
+    assert result.stats.imported_reviews == 1
+    assert result.stats.imported_questions == 1
+    assert result.status == "success"
+    assert result.error_code is None
     assert {call[0] for call in runner.calls} == {state.id for state in states}
     assert len({call[1] for call in runner.calls}) == 1
     assert session.commit_count >= 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("every_stream, expected_job_status", [(True, "skipped"), (False, "partial")])
+async def test_manual_sync_does_not_report_a_lease_contended_stream_as_success(
+    every_stream: bool,
+    expected_job_status: str,
+) -> None:
+    account = _account()
+    previous_success = NOW - timedelta(days=1)
+    account.last_success_sync_at = previous_success
+    account.error_count = 0
+    states = [
+        MarketplaceSyncState(
+            id=uuid4(),
+            organization_id=account.organization_id,
+            marketplace_account_id=account.id,
+            stream=stream.value,
+            status=SyncStateStatus.IDLE.value,
+            metadata_json={},
+            consecutive_failures=0,
+        )
+        for stream in (MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS)
+    ]
+    session = _ManualSession(account, states)
+    runner = _ContendedRunner(states, every_stream=every_stream)
+    service = MarketplaceSyncService(
+        cast(AsyncSession, session),
+        registry=cast(MarketplaceAdapterRegistry, _ManualRegistry()),
+        runner=cast(ScheduledSyncService, runner),
+    )
+    actor = User(id=uuid4(), email="synthetic@example.com", password_hash="hash", status="active")
+
+    result = await service.request_sync(actor=actor, account_id=account.id)
+
+    job = next(item for item in session.added if isinstance(item, SyncJob))
+    events = [item for item in session.added if isinstance(item, IntegrationEvent)]
+    assert result.status == "in_progress"
+    assert result.error_code == "sync_in_progress"
+    assert result.error_message_safe == "Another marketplace synchronization is already in progress"
+    assert job.status == expected_job_status
+    assert account.last_success_sync_at == previous_success
+    assert account.last_error_sync_at is None
+    assert account.error_count == 0
+    assert result.stats.skipped == (2 if every_stream else 1)
+    assert {(event.event_type, event.status) for event in events} == (
+        {("sync.reviews", "skipped"), ("sync.questions", "skipped")}
+        if every_stream
+        else {("sync.questions", "skipped"), ("sync.reviews", "success")}
+    )
+
+
+class _IncompleteRunner(_ContendedRunner):
+    def __init__(self, states: list[MarketplaceSyncState]) -> None:
+        super().__init__(states, every_stream=False)
+
+    async def run_stream(self, state_id: UUID, owner: str, now: datetime) -> StreamRunResult:
+        self.calls.append((state_id, owner))
+        return StreamRunResult(
+            state_id=state_id,
+            stream=self.stream_by_state_id[state_id],
+            acquired=True,
+            completed=len(self.calls) > 1,
+            created_messages=1,
+        )
+
+
+@pytest.mark.asyncio
+async def test_manual_sync_preserves_success_timestamp_when_a_stream_needs_another_batch() -> None:
+    account = _account()
+    previous_success = NOW - timedelta(days=1)
+    account.last_success_sync_at = previous_success
+    states = [
+        MarketplaceSyncState(
+            id=uuid4(),
+            organization_id=account.organization_id,
+            marketplace_account_id=account.id,
+            stream=stream.value,
+            status=SyncStateStatus.IDLE.value,
+            metadata_json={},
+            consecutive_failures=0,
+        )
+        for stream in (MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS)
+    ]
+    session = _ManualSession(account, states)
+    runner = _IncompleteRunner(states)
+    service = MarketplaceSyncService(
+        cast(AsyncSession, session),
+        registry=cast(MarketplaceAdapterRegistry, _ManualRegistry()),
+        runner=cast(ScheduledSyncService, runner),
+    )
+    actor = User(id=uuid4(), email="synthetic@example.com", password_hash="hash", status="active")
+
+    result = await service.request_sync(actor=actor, account_id=account.id)
+
+    job = next(item for item in session.added if isinstance(item, SyncJob))
+    events = [item for item in session.added if isinstance(item, IntegrationEvent)]
+    assert result.status == "partial"
+    assert result.error_code is None
+    assert result.stats.imported_reviews == 1
+    assert result.stats.imported_questions == 1
+    assert job.status == "partial"
+    assert account.last_success_sync_at == previous_success
+    assert {(event.event_type, event.status) for event in events} == {
+        ("sync.questions", "partial"),
+        ("sync.reviews", "success"),
+    }
 
 
 class _AvitoReviewOnlySession(_ManualSession):
@@ -468,11 +596,11 @@ async def test_avito_reviews_only_manual_sync_creates_no_chat_state() -> None:
     )
     actor = User(id=uuid4(), email="synthetic@example.com", password_hash="hash", status="active")
 
-    _, stats, error_code, _ = await service.request_sync(actor=actor, account_id=account.id)
+    result = await service.request_sync(actor=actor, account_id=account.id)
 
-    assert error_code is None
-    assert stats.imported_reviews == 1
-    assert stats.imported_chats == 0
+    assert result.error_code is None
+    assert result.stats.imported_reviews == 1
+    assert result.stats.imported_chats == 0
     assert session.inserted_streams == ["reviews"]
     assert [state.stream for state in session.states] == ["reviews"]
     assert len(runner.calls) == 1

@@ -8,7 +8,9 @@ import httpx
 import pytest
 from cryptography.fernet import Fernet
 from pydantic import SecretStr
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.dml import Insert, Update
 
 from app.adapters.avito_account import AvitoCredentialAdapter
 from app.adapters.capabilities import AVITO_CAPABILITY, MarketplaceStream, streams_for_scopes
@@ -100,9 +102,11 @@ class _Result:
 class _Session:
     def __init__(self, account: MarketplaceAccount) -> None:
         self.account = account
+        self.statements: list[object] = []
 
     async def execute(self, statement: object) -> _Result:
         assert statement is not None
+        self.statements.append(statement)
         return _Result(self.account)
 
     async def commit(self) -> None:
@@ -125,6 +129,10 @@ class _Registry:
     def credentials(self, marketplace: Marketplace) -> AvitoCredentialAdapter:
         assert marketplace is Marketplace.AVITO
         return self.adapter
+
+    def capability(self, marketplace: Marketplace) -> object:
+        assert marketplace is Marketplace.AVITO
+        return AVITO_CAPABILITY
 
 
 @pytest.mark.asyncio
@@ -168,6 +176,15 @@ async def test_account_persists_review_access_without_claiming_verified_write_pe
     assert "synthetic-secret" not in repr(account.scopes_json)
     assert "synthetic-token" not in repr(account.scopes_json)
     assert all(request.url.path != "/ratings/v1/answers" for request in transport.requests)
+    inserts = [statement for statement in session.statements if isinstance(statement, Insert)]
+    updates = [statement for statement in session.statements if isinstance(statement, Update)]
+    assert len(inserts) == 1
+    assert inserts[0].compile(dialect=postgresql.dialect()).params["stream"] == MarketplaceStream.REVIEWS.value
+    assert len(updates) == 2
+    update_sql = [str(statement.compile(dialect=postgresql.dialect())) for statement in updates]
+    assert all("marketplace_sync_states.organization_id" in sql for sql in update_sql)
+    assert "marketplace_sync_states.stream NOT IN" in update_sql[1]
+    scheduled_statement_count = len(session.statements)
 
     denied_transport = SequenceTransport([_token(), response(403)])
     async with httpx.AsyncClient(base_url="https://api.avito.ru", transport=denied_transport.mock()) as client:
@@ -185,3 +202,4 @@ async def test_account_persists_review_access_without_claiming_verified_write_pe
 
     assert failed.ok is False
     assert account.scopes_json == {}
+    assert len(session.statements) == scheduled_statement_count + 1

@@ -13,6 +13,7 @@ class AIDraftGenerateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     message_id: UUID
+    operation_key: UUID
     tone: AIDraftTone = "neutral"
     temperature: float = Field(default=0.3, ge=0.0, le=1.2)
     max_tokens: int = Field(default=600, ge=120, le=1500)

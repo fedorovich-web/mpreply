@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.27"
-EXPECTED_ALEMBIC_HEAD = "20260914_0015"
+EXPECTED_ALEMBIC_HEAD = "20260930_0018"
 
 ERRORS: list[str] = []
 
@@ -58,12 +58,19 @@ def resolve_ts_import(source: Path, specifier: str) -> bool:
 
 
 def check_ts_imports() -> None:
-    import_pattern = re.compile(r'(?:from\s+|import\s*\()\s*["\']([^"\']+)["\']')
+    static_import_pattern = re.compile(
+        r'^\s*import\s+(?:.*?\s+from\s+)?["\']([^"\']+)["\']',
+        flags=re.M | re.S,
+    )
+    reexport_pattern = re.compile(
+        r'^\s*export\s+(?:\*|\{[^}]*\})\s+from\s+["\']([^"\']+)["\']',
+        flags=re.M,
+    )
     for source in list(WEB.rglob("*.ts")) + list(WEB.rglob("*.tsx")):
         if any(part in {"node_modules", ".next"} for part in source.parts):
             continue
         text = source.read_text(encoding="utf-8")
-        for specifier in import_pattern.findall(text):
+        for specifier in static_import_pattern.findall(text) + reexport_pattern.findall(text):
             if not resolve_ts_import(source, specifier):
                 fail(f"Unresolved relative TypeScript import: {source.relative_to(ROOT)} -> {specifier}")
 
@@ -187,7 +194,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         "test:unit": "vitest run tests/unit",
         "test:design-tokens": "vitest run tests/design",
         "test:frontend": "npm run test:unit && npm run test:design-tokens",
-        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts --project=chromium",
+        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/help-center.spec.ts e2e/contact-form.spec.ts e2e/public-mockup-runtime.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts e2e/app-shell-responsive.spec.ts --project=chromium",
         "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts e2e/dark-theme-accessibility.spec.ts --project=chromium",
         "validate:css-syntax": "csstree-validator styles",
         "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
@@ -304,7 +311,7 @@ def check_deployment_contract() -> None:
         WEB / "vitest.config.ts",
         WEB / "vitest.setup.ts",
         WEB / "tests" / "unit" / "api-client.test.ts",
-        WEB / "tests" / "unit" / "theme-toggle.test.tsx",
+        WEB / "tests" / "unit" / "brand-theme-contract.test.ts",
         WEB / "tests" / "unit" / "automation-rules-contract.test.ts",
         WEB / "tests" / "unit" / "automation-rules-workspace.test.tsx",
         WEB / "tests" / "unit" / "ai-assistant-contract.test.ts",
@@ -326,7 +333,11 @@ def check_deployment_contract() -> None:
         WEB / "e2e" / "ai-assistant-accessibility.spec.ts",
         WEB / "e2e" / "helpers" / "ai-assistant-api.ts",
         WEB / "components" / "integrations" / "IntegrationsWorkspace.tsx",
-        WEB / "components" / "integrations" / "MarketplaceIntegrationWorkspace.tsx",
+        WEB / "components" / "integrations" / "WildberriesIntegrationWorkspace.tsx",
+        WEB / "components" / "integrations" / "OzonIntegrationWorkspace.tsx",
+        WEB / "components" / "integrations" / "YandexMarketIntegrationWorkspace.tsx",
+        WEB / "components" / "integrations" / "AvitoIntegrationWorkspace.tsx",
+        WEB / "proxy.ts",
         WEB / "tests" / "unit" / "integrations-contract.test.ts",
         WEB / "tests" / "unit" / "integrations-workspace.test.tsx",
         WEB / "e2e" / "helpers" / "integrations-api.ts",

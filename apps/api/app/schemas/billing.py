@@ -54,3 +54,17 @@ class BillingOverviewResponse(BaseModel):
     usage_period_end: datetime
     usage: list[UsageLimitItem]
     pricing_finalized: bool
+    reply_balance: ReplyBalanceResponse
+
+
+class ReplyBalanceResponse(BaseModel):
+    available: int = Field(ge=0)
+    spendable: int = Field(ge=0)
+    trial_available: int = Field(ge=0)
+    paid_available: int = Field(ge=0)
+    reserved: int = Field(ge=0)
+    consumed: int = Field(ge=0)
+    expired: int = Field(ge=0)
+    granted: int = Field(ge=0)
+    trial_ends_at: datetime | None
+    paid_entitled: bool

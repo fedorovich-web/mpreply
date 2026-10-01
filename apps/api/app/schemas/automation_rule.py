@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 AutomationMode = Literal["auto", "semi_auto"]
-AutomationAppliesTo = Literal["all", "review", "question"]
+AutomationAppliesTo = Literal["all", "review", "question", "chat"]
 MarketplaceName = Literal["wildberries", "ozon", "yandex_market", "avito"]
 _LIST_ITEM_MAX_LENGTHS = {
     "product_ids": 36,

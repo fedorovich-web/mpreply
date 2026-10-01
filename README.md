@@ -1,6 +1,6 @@
-# Respio
+# MPReply
 
-Respio is a SaaS platform for AI-assisted and automatic replies to marketplace reviews and questions. The product is auto-first by default: AI prepares a response, SafetyGate evaluates risk, automation rules decide whether to send automatically or require review, and worker-backed execution publishes through marketplace adapters with idempotency and retry controls.
+MPReply is a SaaS workspace for marketplace reviews, buyer questions and supported messages. AI prepares contextual replies, workspace rules decide whether a reply can be sent automatically or needs review, and worker-backed execution uses idempotency and retry controls.
 
 ## Current foundation
 
@@ -8,7 +8,7 @@ Implemented through Sprint 11:
 
 - FastAPI backend with organizations, RBAC and tenant isolation;
 - encrypted marketplace credentials;
-- Wildberries synchronization and reply execution foundation;
+- documentation-backed synchronization and reply adapters for Wildberries, Ozon, Yandex Market and Avito;
 - unified Inbox API and dashboard UI;
 - Groq/Qwen 3.8 AI draft generation;
 - deterministic SafetyGate;
@@ -19,7 +19,7 @@ Implemented through Sprint 11:
 - optional semi-automatic manual review workflow: draft editing, optimistic revision checks, SafetyGate re-checks, submit for review, approve/reject, idempotent queueing and marketplace execution;
 - live SaaS frontend data plane for authentication, first-workspace onboarding, organization selection, Inbox and Review Queue.
 
-Wildberries is the current MVP marketplace integration. Ozon, Yandex Market and Avito remain planned until current official API contracts and production sending capabilities are verified and implemented.
+Wildberries, Ozon and Yandex Market support review/question workflows; Avito supports chats and answerable reviews. These are code and API-contract capabilities, not proof of seller-account permissions or live provider sending. Production behavior still requires valid credentials and deployment verification.
 
 ## Repository structure
 
@@ -27,7 +27,7 @@ Wildberries is the current MVP marketplace integration. Ozon, Yandex Market and 
 apps/api        FastAPI backend, models, services, migrations and tests
 apps/web        Next.js App Router public site and SaaS frontend
 apps/worker     Dramatiq worker image
-apps/scheduler  Placeholder only; intentionally excluded from deployment
+apps/scheduler  Marketplace polling scheduler and dispatch recovery
 infra/docker    Local and production Compose manifests
 infra/dokploy   Dokploy deployment mapping and checklist
 docs            ADRs, security, QA, legal and operations runbooks
@@ -52,7 +52,7 @@ With Docker Desktop running:
 .\scripts\container-gate.ps1
 ```
 
-This builds and starts PostgreSQL, Redis, migrations, API, worker and web, waits for health checks and verifies API/web readiness. The stack is stopped after the gate unless `-KeepRunning` is supplied.
+This builds and starts PostgreSQL, Redis, migrations, API, worker, scheduler and web, waits for health checks and verifies API/web readiness. The stack is stopped after the gate unless `-KeepRunning` is supplied.
 
 ```powershell
 .\scripts\container-gate.ps1 -KeepRunning
@@ -61,7 +61,6 @@ This builds and starts PostgreSQL, Redis, migrations, API, worker and web, waits
 ## Manual local Compose
 
 ```powershell
-cd C:\Work\respio
 docker compose -f infra\docker\docker-compose.local.yml up --build -d --wait
 ```
 

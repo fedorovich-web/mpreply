@@ -2,12 +2,13 @@ import { DashboardMetrics } from "../../../components/dashboard/DashboardMetrics
 
 export default function DashboardPage() {
   return (
-    <section className="app-page">
-      <section className="app-header">
-        <p className="eyebrow">Рабочая панель</p>
-        <h1>Операционный центр Respio</h1>
-        <p>Текущая сводка по обращениям, автоматическим ответам, ручной проверке, использованию ИИ и тарифу выбранной организации.</p>
-      </section>
+    <section className="app-page dashboard-overview-page">
+      <header className="app-header dashboard-overview-header">
+        <h1>Обзор</h1>
+        <p>
+          Следите за обращениями, очередью проверки, автоматизацией и состоянием подключений в одном месте.
+        </p>
+      </header>
       <DashboardMetrics />
     </section>
   );

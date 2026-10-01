@@ -165,22 +165,22 @@ async def request_marketplace_sync(
     session: AsyncSession = Depends(get_db_session),
 ) -> MarketplaceSyncResponse:
     service = MarketplaceSyncService(session, registry=registry)
-    account, stats, error_code, error_message_safe = await service.request_sync(
+    result = await service.request_sync(
         actor=current_user,
         account_id=account_id,
     )
     await session.commit()
     return MarketplaceSyncResponse(
-        account_id=account.id,
-        marketplace=account.marketplace,
-        status="failed" if error_code else "success",
-        imported_reviews=stats.imported_reviews,
-        imported_questions=stats.imported_questions,
-        imported_chats=stats.imported_chats,
-        updated_reviews=stats.updated_reviews,
-        updated_questions=stats.updated_questions,
-        updated_chats=stats.updated_chats,
-        skipped=stats.skipped,
-        error_code=error_code,
-        error_message_safe=error_message_safe,
+        account_id=result.account.id,
+        marketplace=result.account.marketplace,
+        status=result.status,
+        imported_reviews=result.stats.imported_reviews,
+        imported_questions=result.stats.imported_questions,
+        imported_chats=result.stats.imported_chats,
+        updated_reviews=result.stats.updated_reviews,
+        updated_questions=result.stats.updated_questions,
+        updated_chats=result.stats.updated_chats,
+        skipped=result.stats.skipped,
+        error_code=result.error_code,
+        error_message_safe=result.error_message_safe,
     )

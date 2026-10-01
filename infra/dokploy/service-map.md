@@ -6,7 +6,7 @@ The intended MPReply topology is one Dokploy Docker Compose application per envi
 
 Production source:
 
-- repository: `fedorovich-web/respio`;
+- repository: `fedorovich-web/mpreply`;
 - branch: `main`;
 - Compose path: `./infra/docker/docker-compose.production.yml`;
 - production deploys follow verified merges to `main`.

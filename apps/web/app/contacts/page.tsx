@@ -1,62 +1,87 @@
+import Image from "next/image";
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { ContactMailForm } from "../../components/public-site/ContactMailForm";
+import { PublicIcon } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
 import { siteConfig } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Контакты Respio — демо, интеграция и пилот",
+  title: "Контакты MPReply — поддержка, демо и подключение",
   description:
-    "Связаться с Respio по вопросам демонстрации, пилота, интеграций маркетплейсов и будущего коммерческого подключения.",
+    "Свяжитесь с MPReply по вопросам подключения маркетплейсов, настройки автоматизации, демо и работы с обращениями покупателей.",
   path: "/contacts",
+  localized: true,
 });
 
 export default function ContactsPage() {
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-contacts">
-        <div className="public-container public-subhero-grid">
-          <div className="public-subhero-copy">
-            <p className="eyebrow">Контакты</p>
-            <h1>Обсудить демо, интеграцию или пилот Respio</h1>
-            <p className="public-lead">
-              Расскажите, с какими маркетплейсами работаете, какой объём отзывов и вопросов получаете и где сейчас возникает больше всего ручной работы.
-            </p>
+      <div className="contacts-render-page">
+        <section className="contacts-render-hero">
+          <div className="public-container contacts-render-hero-grid">
+            <div className="contacts-render-hero-copy">
+
+              <h1>Свяжитесь с нами</h1>
+              <p>
+                Мы рады помочь. Задайте вопрос, запросите демо или обсудите возможности для вашего бизнеса — пишите на <strong>{siteConfig.contactEmail}</strong>.
+              </p>
+              <div className="contacts-render-trust" role="group" aria-label="Контакт MPReply">
+                <span><PublicIcon name="users" />Реальные люди, а не боты</span>
+                <span><PublicIcon name="clock" />Быстрые и полезные ответы</span>
+                <span><PublicIcon name="shield-check" />Заботимся о вашем успехе</span>
+              </div>
+            </div>
+
+            <div className="contacts-render-hero-scene supplied-hero-scene">
+              <Image
+                alt="Связаться с MPReply по электронной почте"
+                className="supplied-hero-image"
+                src="/images/approved/02-contacts-hero.avif"
+                width={1656}
+                height={950}
+                sizes="(max-width: 1100px) 100vw, 50vw"
+                priority
+                unoptimized
+              />
+            </div>
           </div>
+        </section>
 
-          <aside className="contact-channel-panel">
-            <span className="panel-kicker">Поддержка</span>
-            <a className="contact-email" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
-            <p>Напишите нам по вопросам аккаунта, работы сервиса, интеграций или пилотного подключения.</p>
-          </aside>
-        </div>
-      </section>
+        <section className="contacts-render-main">
+          <div className="public-container contacts-render-main-grid">
+            <div className="contacts-render-form-card">
+              <div className="contacts-render-section-head">
+                <h2>Напишите нам</h2>
+                <p>Задайте вопрос через форму. Мы получим сообщение на {siteConfig.contactEmail}.</p>
+              </div>
+              <ContactMailForm supportEmail={siteConfig.contactEmail} />
+            </div>
 
-      <div className="public-section">
-        <div className="public-container contact-paths">
-          <article className="contact-path contact-path-primary">
-            <div>
-              <h2>Посмотреть, как работает автоматизация</h2>
-              <p>Разберите путь обращения через контекст, AI, SafetyGate, правила и очередь отправки.</p>
-            </div>
-            <Link className="button button-primary" href="/demo">Открыть демо</Link>
-          </article>
-          <article className="contact-path">
-            <div>
-              <h2>Проверить статус интеграции</h2>
-              <p>Узнайте, какая площадка уже входит в MVP-основу, а какая ещё требует проверки API.</p>
-            </div>
-            <Link className="button button-secondary" href="/marketplaces">Статусы интеграций</Link>
-          </article>
-          <article className="contact-path">
-            <div>
-              <h2>Изучить возможности продукта</h2>
-              <p>Inbox, SafetyGate, правила, очередь, повторы, usage accounting и журнал действий.</p>
-            </div>
-            <Link className="button button-secondary" href="/features">Все возможности</Link>
-          </article>
-        </div>
+            <aside className="contacts-render-info-column" aria-label="Контактная информация MPReply">
+              <article className="contacts-render-office-card">
+                <div className="contacts-render-info-icon"><PublicIcon name="inbox" /></div>
+                <div>
+                  <h3>Единый адрес поддержки</h3>
+                  <p>{siteConfig.contactEmail}</p>
+                  <span className="contacts-render-office-label">Все публичные обращения</span>
+                </div>
+              </article>
+
+              <article className="contacts-render-info-card">
+                <span className="contacts-render-info-icon"><PublicIcon name="message" /></span>
+                <div><h3>Что указать в письме</h3><p>Площадку, кабинет, задачу и состояние обращения — без секретных ключей доступа.</p></div>
+              </article>
+
+              <article className="contacts-render-info-card">
+                <span className="contacts-render-info-icon"><PublicIcon name="shield-check" /></span>
+                <div><h3>Безопасность</h3><p>Не отправляйте ключи доступа, пароли и другие секретные данные по электронной почте.</p></div>
+              </article>
+            </aside>
+          </div>
+        </section>
+
       </div>
     </PublicShell>
   );
