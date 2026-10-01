@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import and_, or_, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.dml import Update
 
 from app.adapters.base import MarketplaceErrorCode
+from app.adapters.capabilities import MarketplaceStream
+from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState, SyncStateStatus
 
 _MAX_CURSOR_LENGTH = 2048
@@ -24,6 +27,70 @@ class LeaseOwnershipError(RuntimeError):
 class MarketplaceSyncStateService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def ensure_streams(
+        self,
+        account: MarketplaceAccount,
+        streams: frozenset[MarketplaceStream] | list[MarketplaceStream],
+        now: datetime,
+    ) -> None:
+        _validate_aware_datetime(now, field_name="current time")
+        for stream in streams:
+            await self.session.execute(
+                pg_insert(MarketplaceSyncState)
+                .values(
+                    id=uuid4(),
+                    organization_id=account.organization_id,
+                    marketplace_account_id=account.id,
+                    stream=stream.value,
+                    status=SyncStateStatus.IDLE.value,
+                    cursor=None,
+                    metadata_json={},
+                    next_run_at=now,
+                    consecutive_failures=0,
+                    created_at=now,
+                    updated_at=now,
+                )
+                .on_conflict_do_nothing(constraint="uq_marketplace_sync_states_account_stream")
+            )
+
+    async def schedule_validated_streams(
+        self,
+        account: MarketplaceAccount,
+        streams: frozenset[MarketplaceStream],
+        now: datetime,
+    ) -> None:
+        await self.ensure_streams(account, streams, now)
+        stream_names = [stream.value for stream in streams]
+        await self.session.execute(
+            update(MarketplaceSyncState)
+            .where(
+                MarketplaceSyncState.organization_id == account.organization_id,
+                MarketplaceSyncState.marketplace_account_id == account.id,
+                MarketplaceSyncState.stream.in_(stream_names),
+                MarketplaceSyncState.status.in_((SyncStateStatus.PAUSED.value, SyncStateStatus.ERROR.value)),
+            )
+            .values(
+                status=SyncStateStatus.IDLE.value,
+                next_run_at=now,
+                consecutive_failures=0,
+                last_error_code=None,
+            )
+        )
+        await self.session.execute(
+            update(MarketplaceSyncState)
+            .where(
+                MarketplaceSyncState.organization_id == account.organization_id,
+                MarketplaceSyncState.marketplace_account_id == account.id,
+                MarketplaceSyncState.stream.not_in(stream_names),
+                MarketplaceSyncState.status.in_((SyncStateStatus.IDLE.value, SyncStateStatus.ERROR.value)),
+            )
+            .values(
+                status=SyncStateStatus.PAUSED.value,
+                next_run_at=None,
+                last_error_code="insufficient_scope",
+            )
+        )
 
     async def acquire(
         self,
@@ -123,10 +190,22 @@ class MarketplaceSyncStateService:
         owner: str,
         now: datetime,
         next_run_at: datetime,
+        completed: bool,
     ) -> MarketplaceSyncState:
         _validate_owner(owner)
         _validate_aware_datetime(now, field_name="current time")
         _validate_aware_datetime(next_run_at, field_name="next run")
+        values: dict[str, object] = {
+            "status": SyncStateStatus.IDLE.value,
+            "cursor": None,
+            "lease_owner": None,
+            "lease_expires_at": None,
+            "next_run_at": next_run_at,
+            "consecutive_failures": 0,
+            "last_error_code": None,
+        }
+        if completed:
+            values["last_success_at"] = now
         statement = (
             update(MarketplaceSyncState)
             .where(
@@ -134,16 +213,7 @@ class MarketplaceSyncStateService:
                 MarketplaceSyncState.status == SyncStateStatus.LEASED.value,
                 MarketplaceSyncState.lease_owner == owner,
             )
-            .values(
-                status=SyncStateStatus.IDLE.value,
-                cursor=None,
-                lease_owner=None,
-                lease_expires_at=None,
-                next_run_at=next_run_at,
-                consecutive_failures=0,
-                last_error_code=None,
-                last_success_at=now,
-            )
+            .values(**values)
             .returning(MarketplaceSyncState)
         )
         return await self._owned_result(statement)

@@ -169,7 +169,7 @@ function AuthCard({ title, description, children }: { title: string; description
   return (
     <AuthShell
       description={description}
-      eyebrow="Аккаунт Respio"
+      eyebrow="Аккаунт MPReply"
       footer={<p className="auth-footer"><Link href="/auth/login">Вернуться ко входу</Link></p>}
       title={title}
     >

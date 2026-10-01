@@ -1,0 +1,107 @@
+.brand-image-mark {
+  display: inline-flex;
+  width: 132px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.brand-image-mark img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.features-app-brand .brand-image-mark,
+.detail-app-brand .brand-image-mark,
+.marketplace-hub-brand .brand-image-mark {
+  width: 82px;
+}
+
+.app-logo .brand-image-mark,
+.workspace-onboarding-brand .brand-image-mark,
+.auth-brand .brand-image-mark,
+.auth-product-brand .brand-image-mark {
+  width: 132px;
+}
+
+.not-found-render-hero-grid {
+  position: relative;
+  display: block;
+  min-height: 705px;
+}
+
+.not-found-render-scene {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 640px;
+}
+
+.not-found-render-asset {
+  position: absolute;
+  max-width: none;
+  filter: none;
+}
+
+.not-found-render-robot {
+  left: -4%;
+  top: 0;
+  width: 50%;
+}
+
+.not-found-render-number {
+  left: 36%;
+  top: 0;
+  width: 43.6%;
+}
+
+.not-found-render-copy {
+  position: relative;
+  z-index: 1;
+  width: 45%;
+  margin-left: 55%;
+  padding-top: 410px;
+}
+
+@media (max-width: 520px) {
+  .home-reference-logo .brand-image-mark,
+  .public-brand .brand-image-mark {
+    width: 124px;
+  }
+
+  .not-found-render-hero-grid {
+    min-height: 0;
+  }
+
+  .not-found-render-scene {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1672 / 941;
+  }
+
+  .not-found-render-robot {
+    width: 60%;
+  }
+
+  .not-found-render-number {
+    left: 44%;
+    width: 52.32%;
+  }
+
+  .not-found-render-copy {
+    width: 100%;
+    margin: 0;
+    padding-top: 0;
+  }
+}
+
+/* A single action shape across marketing and workspace buttons. */
+.button,
+.public-root .button,
+.mockup-page .button,
+.homepage-reference-root .button {
+  border-radius: var(--radius-md);
+}

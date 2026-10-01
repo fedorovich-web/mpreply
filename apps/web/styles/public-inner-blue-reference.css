@@ -1,0 +1,280 @@
+/* Canonical brand layer for every public route except the immutable approved homepage.
+   Loaded after all public fidelity files and before homepage-reference-restore.css. */
+
+.public-root:not(.homepage-reference-root) {
+  --color-bg-page: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-subtle: #f6faff;
+  --color-bg-brand-soft: #eaf4ff;
+  --color-surface-cool: #f8fbff;
+  --color-kicker-text: #0b68f6;
+  --color-brand-text-on-soft: #0b61e8;
+  --color-border-subtle: #dceafa;
+  --color-border-strong: #b7d1f6;
+  --color-border-card: #dceafa;
+  --color-brand-primary: #0b68f6;
+  --color-brand-primary-strong: #0757d7;
+  --color-brand-deep: #064fc5;
+  --color-brand-primary-hover: #0757d7;
+  --color-brand-primary-active: #064fc5;
+  --color-brand-accent: #0b68f6;
+  --color-brand-accent-hover: #0757d7;
+  --color-brand-accent-soft: #b9d8ff;
+  --color-brand-mint-soft: #eaf4ff;
+  --color-focus-ring: #0b68f6;
+  --color-brand-soft: #eaf4ff;
+  --color-brand-soft-strong: rgb(11 104 246 / 14%);
+  --gradient-mpreply-action: linear-gradient(110deg, #0d6cf7 0%, #0674ff 58%, #0a5fe8 100%);
+  --gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  --gradient-public-cta: linear-gradient(115deg, #0757d7 0%, #0b68f6 52%, #0674ff 100%);
+  --gradient-hero:
+    radial-gradient(circle at top left, rgb(11 104 246 / 10%), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  --shadow-card: 0 16px 40px rgb(11 104 246 / 6%);
+  --shadow-public-card: 0 18px 54px rgb(20 85 170 / 9%);
+  --shadow-public-card-hover: 0 14px 32px rgb(20 85 170 / 10%);
+  --shadow-marketplace-hover: 0 12px 28px rgb(20 85 170 / 8%);
+  --shadow-public-panel: 0 24px 60px rgb(11 104 246 / 10%);
+  --shadow-public-cta: 0 28px 70px rgb(11 104 246 / 18%);
+}
+
+.public-root:not(.homepage-reference-root) .public-brand-mark {
+  background: linear-gradient(180deg, #1784ff 0%, #075fe8 100%);
+  box-shadow: 0 7px 17px rgb(13 105 235 / 18%);
+}
+
+.public-root:not(.homepage-reference-root) .button-primary,
+.public-root:not(.homepage-reference-root) .public-header-cta {
+  border-color: #0b68f6;
+  background: linear-gradient(180deg, #1280ff 0%, #0768f5 100%);
+  color: #fff;
+  box-shadow: 0 10px 24px rgb(10 105 244 / 20%);
+}
+
+.public-root:not(.homepage-reference-root) .button-primary:hover,
+.public-root:not(.homepage-reference-root) .public-header-cta:hover {
+  border-color: #0757d7;
+  background: linear-gradient(180deg, #0d72f4 0%, #075bd8 100%);
+  box-shadow: 0 14px 30px rgb(10 105 244 / 24%);
+}
+
+.public-root:not(.homepage-reference-root) .button-secondary:hover,
+.public-root:not(.homepage-reference-root) .public-login-link:hover,
+.public-root:not(.homepage-reference-root) .public-nav a:hover,
+.public-root:not(.homepage-reference-root) .public-nav a[aria-current="page"],
+.public-root:not(.homepage-reference-root) .text-link:hover {
+  border-color: #0b68f6;
+  color: #0b68f6;
+}
+
+.public-root:not(.homepage-reference-root) .public-nav a[aria-current="page"]::after {
+  background: #0b68f6;
+}
+
+/* Approved mockup pages: keep geometry, replace the old violet brand family. */
+.public-root:not(.homepage-reference-root):has(.mockup-page) {
+  --mockup-blue: #0b68f6;
+  --mockup-blue-deep: #0757d7;
+  --mockup-sky: #0b68f6;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-highlight,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-ai-card strong,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-process-answer strong,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-story-card.ai strong,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-scenario-card a,
+.public-root:not(.homepage-reference-root) .mockup-page .features-hero-note,
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hero-note,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-hero-note,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-hero-note,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-cta-note {
+  color: #0b68f6;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .features-app-nav strong,
+.public-root:not(.homepage-reference-root) .mockup-page .features-app-main .features-feed-tabs span:first-child,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-scenario-popular,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-faq-icon,
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-logo-card li::before {
+  background: #eaf4ff;
+  color: var(--color-brand-text-on-soft);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-icon-chip,
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-icon-chip.purple {
+  color: var(--color-brand-text-on-soft);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .features-app-nav strong b {
+  background: #0b68f6;
+  color: #fff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .demo-story-arrow,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-faq-chevron,
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-card-label > .public-icon-image {
+  color: #0b68f6;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-hero,
+.public-root:not(.homepage-reference-root) .mockup-page .marketplaces-mockup-hero {
+  background:
+    radial-gradient(circle at 77% 22%, rgb(11 104 246 / 11%), transparent 28%),
+    radial-gradient(circle at 88% 62%, rgb(6 116 255 / 7%), transparent 25%),
+    linear-gradient(180deg, #fff 0%, #f4f9ff 100%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-hero::before {
+  border-color: rgb(11 104 246 / 4%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-hero::after {
+  background: rgb(6 116 255 / 5%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-detail-mockup-hero {
+  background:
+    radial-gradient(circle at 8% 62%, rgb(6 116 255 / 7%), transparent 23%),
+    radial-gradient(circle at 87% 28%, rgb(11 104 246 / 11%), transparent 29%),
+    linear-gradient(180deg, #fbfdff 0%, #eef6ff 100%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-detail-mockup-hero::before {
+  border-color: rgb(11 104 246 / 4%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-mockup-hero {
+  background:
+    radial-gradient(circle at 50% 25%, rgb(11 104 246 / 8%), transparent 33%),
+    #fff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .demo-mockup-hero {
+  background:
+    radial-gradient(circle at 81% 28%, rgb(11 104 246 / 11%), transparent 28%),
+    linear-gradient(180deg, #fdfefe 0%, #eef6ff 100%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-section-soft {
+  background: linear-gradient(180deg, #fbfdff 0%, #eef6ff 100%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-core,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-ai-card > span {
+  background: linear-gradient(110deg, #0d6cf7 0%, #0674ff 58%, #0a5fe8 100%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-core,
+.public-root:not(.homepage-reference-root) .mockup-page .features-window,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-market-card,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-app-window,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-ai-card,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-story-card {
+  box-shadow: 0 24px 62px rgb(11 104 246 / 13%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-feature-list li::before,
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-comparison tbody td:nth-child(3),
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-comparison thead th:nth-child(3) {
+  color: var(--color-brand-text-on-soft);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-comparison tbody td:nth-child(3),
+.public-root:not(.homepage-reference-root) .mockup-page .pricing-comparison thead th:nth-child(3) {
+  background: #eef6ff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-cta,
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-cta-strip {
+  border-color: #cfe3fb;
+  background:
+    radial-gradient(circle at 82% 18%, rgb(6 116 255 / 15%), transparent 30%),
+    linear-gradient(125deg, #f8fbff 0%, #eaf4ff 100%);
+  box-shadow: 0 24px 60px rgb(11 104 246 / 10%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-trust-row span::before {
+  background: #eaf4ff;
+  color: #0b68f6;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplaces-mockup-hero .mockup-trust-row span:nth-child(3)::before,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-mockup-hero .mockup-trust-row span:nth-child(3)::before {
+  background:
+    linear-gradient(#0b68f6, #0b68f6) 3px 5px / 8px 2px no-repeat,
+    linear-gradient(#0b68f6, #0b68f6) 5px 8px / 7px 2px no-repeat,
+    linear-gradient(#0b68f6, #0b68f6) 3px 11px / 8px 2px no-repeat,
+    #eaf4ff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-cta-strip-icon {
+  color: #0b68f6;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .features-workflow-logo-chip,
+.public-root:not(.homepage-reference-root) .mockup-page .features-message-source,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-journey-marketplace-chip,
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-logo-card,
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-card-label {
+  box-shadow: 0 10px 24px rgb(11 104 246 / 9%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .features-app-brand .public-brand-mark,
+.public-root:not(.homepage-reference-root) .mockup-page .detail-app-brand .public-brand-mark {
+  background: linear-gradient(180deg, #1784ff 0%, #075fe8 100%);
+  box-shadow: 0 6px 14px rgb(13 105 235 / 18%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .features-app-nav strong {
+  background: #eaf4ff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .features-app-main .features-feed-tabs span:first-child {
+  background: #eef6ff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .features-hero-note-ai {
+  border-color: #dceafa;
+  box-shadow: 0 10px 24px rgb(11 104 246 / 10%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-core {
+  border-color: #d7e8fc;
+  box-shadow: 0 24px 58px rgb(11 104 246 / 17%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-line {
+  border-top-color: rgb(11 104 246 / 36%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-logo-card,
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-hub-card-label {
+  border-color: #dceafa;
+}
+
+/* Keep marketplace identity colors distinct; only MPReply chrome follows the blue reference. */
+.public-root:not(.homepage-reference-root) .mockup-page .marketplace-logo-card,
+.public-root:not(.homepage-reference-root) .mockup-page .mockup-market-logo,
+.public-root:not(.homepage-reference-root) .mockup-page [class*="marketplace-logo-"] {
+  --marketplace-brand-override: initial;
+}
+
+
+/* Final completeness pass: late fidelity surfaces that still carried lavender/indigo chrome.
+   Geometry remains owned by the render-fidelity files; only brand color is normalized here. */
+.public-root:not(.homepage-reference-root) .mockup-page .public-section:has(.features-benefit-grid) {
+  border-color: #dceafa;
+  background:
+    radial-gradient(circle at 92% 18%, rgb(11 104 246 / 8%), transparent 30%),
+    linear-gradient(135deg, #f7fbff 0%, #eef6ff 100%);
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .demo-story-review-bubble,
+.public-root:not(.homepage-reference-root) .mockup-page .demo-process-buyer-message p {
+  background: #eef6ff;
+}
+
+.public-root:not(.homepage-reference-root) .mockup-page .demo-process-avatar {
+  border-color: #dceafa;
+}

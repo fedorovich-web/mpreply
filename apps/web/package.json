@@ -1,5 +1,5 @@
 {
-  "name": "respio-web",
+  "name": "mpreply-web",
   "version": "0.1.27",
   "private": true,
   "scripts": {
@@ -8,8 +8,8 @@
     "start": "node .next/standalone/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts --project=chromium",
-    "test:e2e:all": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts",
+    "test:e2e": "playwright test e2e/public-site.spec.ts e2e/help-center.spec.ts e2e/contact-form.spec.ts e2e/public-mockup-runtime.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts e2e/app-shell-responsive.spec.ts --project=chromium",
+    "test:e2e:all": "playwright test e2e/public-site.spec.ts e2e/help-center.spec.ts e2e/contact-form.spec.ts e2e/public-mockup-runtime.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts e2e/app-shell-responsive.spec.ts",
     "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts e2e/dark-theme-accessibility.spec.ts --project=chromium",
     "test:visual:run": "playwright test e2e/visual.spec.ts --project=chromium --config=playwright.visual.config.ts",
     "test:visual": "npm run build && npm run test:visual:run",

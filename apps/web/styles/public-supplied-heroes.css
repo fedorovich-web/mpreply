@@ -1,0 +1,93 @@
+.mockup-page .supplied-hero-scene,
+.contacts-render-page .supplied-hero-scene {
+  width: min(100%, 720px);
+  min-height: 0;
+  margin-inline: auto;
+}
+
+.supplied-hero-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 520px) {
+  .homepage-reference-root .homepage-hero-grid,
+  .homepage-reference-root .homepage-hero-copy,
+  .homepage-reference-root .homepage-feature-layout,
+  .homepage-reference-root .homepage-section-heading-left,
+  .homepage-reference-root .homepage-final-cta-card,
+  .homepage-reference-root .homepage-final-cta-copy,
+  .mockup-page .mockup-hero-grid,
+  .mockup-page .marketplace-detail-mockup-grid,
+  .mockup-page .demo-mockup-grid,
+  .mockup-page .pricing-approved-hero-grid,
+  .contacts-render-page .contacts-render-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mockup-page .mockup-hero-copy,
+  .mockup-page .marketplace-detail-mockup-copy,
+  .mockup-page .demo-mockup-copy,
+  .mockup-page .pricing-approved-hero-copy,
+  .contacts-render-page .contacts-render-hero-copy,
+  .homepage-reference-root .homepage-section-heading-left {
+    min-width: 0;
+  }
+
+  .homepage-reference-root .homepage-final-cta-card {
+    padding-inline: 16px;
+  }
+
+  .homepage-reference-root .homepage-final-cta-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .homepage-reference-root .homepage-final-cta-actions .button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 12px;
+    white-space: normal;
+  }
+
+  .homepage-reference-root .home-reference-hero-art,
+  .mockup-page .supplied-hero-scene,
+  .contacts-render-page .supplied-hero-scene {
+    width: 100vw;
+    max-width: none;
+    min-height: 0;
+    margin-left: calc(-1 * var(--public-container-gutter));
+    overflow: visible;
+  }
+
+  .homepage-reference-root .home-reference-hero-art > img {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    filter: none;
+  }
+
+  .mockup-page .supplied-hero-image,
+  .contacts-render-page .supplied-hero-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .homepage-reference-root .homepage-hero-copy h1 {
+    font-size: clamp(2.3rem, 12vw, 2.6rem);
+  }
+
+  .homepage-reference-root .homepage-approved-final-cta .homepage-final-cta-card h2 {
+    font-size: 1.8rem;
+  }
+
+  .homepage-reference-root .homepage-feature-layout .homepage-section-heading-left h2 {
+    font-size: 2rem;
+  }
+}

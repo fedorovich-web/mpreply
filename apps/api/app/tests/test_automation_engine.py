@@ -100,3 +100,30 @@ def test_rating_restricted_rule_does_not_match_question_without_rating() -> None
 
     assert result.matched_rule_id is None
     assert result.mode == "auto"
+
+
+def test_chat_specific_rule_matches_avito_chat_but_not_review() -> None:
+    account_id = uuid4()
+    rule = AutomationRuleSnapshot(
+        id=uuid4(),
+        name="Buyer messages for review",
+        mode="semi_auto",
+        applies_to="chat",
+        marketplace="avito",
+    )
+    context = AutomationEvaluationContext(
+        organization_default_mode="auto",
+        marketplace_account_id=account_id,
+        marketplace="avito",
+        message_type="chat",
+        rating=None,
+        customer_text="Is this item still available?",
+        has_product_context=True,
+    )
+
+    chat_result = AutomationRuleEngine().evaluate(context, [rule])
+    review_result = AutomationRuleEngine().evaluate(context.model_copy(update={"message_type": "review"}), [rule])
+
+    assert chat_result.matched_rule_id == rule.id
+    assert chat_result.requires_manual_review is True
+    assert review_result.matched_rule_id is None

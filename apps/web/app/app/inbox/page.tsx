@@ -2,21 +2,13 @@ import { InboxWorkspace } from "../../../components/inbox/InboxWorkspace";
 
 export default function InboxPage() {
   return (
-    <section className="app-page app-page-wide">
-      <section className="app-header app-header-row">
-        <div>
-          <p className="eyebrow">Обращения</p>
-          <h1>Единая очередь отзывов и вопросов</h1>
-          <p>
-            Очередь загружается с сервера и поддерживает фильтры по типу, статусу, рейтингу и тексту.
-            Изменения статуса сохраняются сразу в выбранной организации.
-          </p>
-        </div>
-        <div className="app-header-actions">
-          <span className="status-badge">Автоматизация по умолчанию</span>
-          <span className="status-badge">Wildberries в MVP</span>
-        </div>
-      </section>
+    <section className="app-page app-page-wide inbox-page">
+      <header className="app-header inbox-page-header">
+        <h1>Обращения</h1>
+        <p>
+          Фильтруйте очередь по площадке, типу, статусу, оценке и ответственному — контекст и следующий шаг остаются рядом.
+        </p>
+      </header>
 
       <InboxWorkspace />
     </section>

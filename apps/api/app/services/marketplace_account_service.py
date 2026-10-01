@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, CredentialValidation
+from app.adapters.capabilities import streams_for_scopes
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.config import get_settings
 from app.core.errors import bad_request, conflict, forbidden, not_found, payment_required
@@ -18,6 +19,7 @@ from app.models.organization import OrganizationUser
 from app.models.user import User
 from app.schemas.marketplace_account import MarketplaceAccountResponse
 from app.services.audit_service import AuditService
+from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
 
@@ -294,6 +296,11 @@ class MarketplaceAccountService:
                 "checked_at": now.isoformat(),
                 **({"write_verification": validation.write_verification} if validation.write_verification is not None else {}),
             }
+            await MarketplaceSyncStateService(self.session).schedule_validated_streams(
+                account,
+                streams_for_scopes(registry.capability(marketplace).streams, account.scopes_json),
+                now,
+            )
             event_status = "success"
             error_code = None
             error_message_safe = None

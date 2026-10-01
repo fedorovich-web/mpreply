@@ -7,7 +7,7 @@ Create separate Dokploy environments for staging and production. Production must
 Create one **Docker Compose** application for MPReply and configure:
 
 ```text
-Repository: fedorovich-web/respio
+Repository: fedorovich-web/mpreply
 Branch: main
 Compose path: ./infra/docker/docker-compose.production.yml
 ```

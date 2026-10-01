@@ -1,0 +1,607 @@
+/* Render-derived scale tuning for the approved public mockups.
+   Keeps the user's +15px section rhythm while removing oversized legacy dimensions. */
+
+.public-root {
+  --public-header-height: 56px;
+  --mockup-section-base-spacing: 38px;
+}
+
+.public-root .public-header-inner {
+  min-height: var(--public-header-height);
+}
+
+.mockup-page .public-section,
+.mockup-page .public-section.public-cta-section {
+  padding-block: calc(var(--mockup-section-base-spacing) + var(--public-section-padding-extra));
+}
+
+.mockup-page .mockup-section-head,
+.mockup-page .render-section-head {
+  margin-bottom: 42px;
+}
+
+.mockup-page .mockup-section-head h2,
+.mockup-page .render-section-head h2,
+.mockup-page .detail-faq-layout h2 {
+  font-size: clamp(1.85rem, 2.6vw, 2.45rem);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+}
+
+.mockup-page .mockup-hero-copy h1,
+.mockup-page .marketplace-detail-mockup-copy h1,
+.mockup-page .pricing-mockup-hero h1,
+.mockup-page .demo-mockup-copy h1 {
+  font-size: clamp(2.2rem, 2.9vw, 2.4rem);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+}
+
+.mockup-page .mockup-hero {
+  padding-top: calc(34px + var(--public-section-padding-extra));
+  padding-bottom: calc(25px + var(--public-section-padding-extra));
+}
+
+.mockup-page .marketplace-detail-mockup-hero {
+  padding-top: calc(30px + var(--public-section-padding-extra));
+  padding-bottom: calc(22px + var(--public-section-padding-extra));
+}
+
+.mockup-page .pricing-mockup-hero {
+  padding-top: calc(42px + var(--public-section-padding-extra));
+  padding-bottom: calc(24px + var(--public-section-padding-extra));
+}
+
+.mockup-page .demo-mockup-hero {
+  padding-top: calc(30px + var(--public-section-padding-extra));
+  padding-bottom: calc(22px + var(--public-section-padding-extra));
+}
+
+.mockup-page .mockup-hero-grid,
+.mockup-page .marketplace-detail-mockup-grid,
+.mockup-page .demo-mockup-grid {
+  gap: clamp(28px, 3.8vw, 48px);
+}
+
+.mockup-page .features-mockup-scene {
+  min-height: 290px;
+}
+
+.mockup-page .marketplace-hub-scene {
+  min-height: 330px;
+}
+
+.mockup-page .marketplace-detail-render {
+  min-height: 340px;
+}
+
+.mockup-page .demo-hero-story {
+  min-height: 300px;
+}
+
+.mockup-page .mockup-icon-chip {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 20px;
+}
+
+.mockup-page .features-tool-card,
+.mockup-page .marketplace-benefit-card {
+  min-height: 148px;
+  padding: 18px;
+}
+
+.mockup-page .features-tool-card h3,
+.mockup-page .marketplace-benefit-card h3 {
+  margin: 14px 0 6px;
+  font-size: .9rem;
+}
+
+.mockup-page .features-tool-card p,
+.mockup-page .marketplace-benefit-card p {
+  font-size: var(--font-size-body-sm);
+  line-height: 1.5;
+}
+
+.mockup-page .features-workflow-card,
+.mockup-page .marketplace-connect-card {
+  min-height: 150px;
+  padding: 18px;
+}
+
+.mockup-page .features-workflow-card h3,
+.mockup-page .marketplace-connect-card h3 {
+  margin: 14px 0 6px;
+  font-size: .9rem;
+}
+
+.mockup-page .features-workflow-card p,
+.mockup-page .marketplace-connect-card p {
+  font-size: var(--font-size-body-sm);
+  line-height: 1.48;
+}
+
+.mockup-page .marketplace-logo-card {
+  min-height: 276px;
+}
+
+.mockup-page .detail-tool-card,
+.mockup-page .detail-benefit-card {
+  min-height: 148px;
+  padding: 18px;
+}
+
+.mockup-page .detail-tool-card h3,
+.mockup-page .detail-benefit-card h3 {
+  margin: 14px 0 6px;
+  font-size: .9rem;
+}
+
+.mockup-page .detail-tool-card p,
+.mockup-page .detail-benefit-card p {
+  font-size: var(--font-size-body-sm);
+  line-height: 1.5;
+}
+
+.mockup-page .detail-step-card {
+  min-height: 150px;
+  padding: 18px;
+}
+
+.mockup-page .detail-step-card .mockup-icon-chip {
+  margin: 4px 0 12px;
+}
+
+.mockup-page .detail-step-card h3 {
+  margin-bottom: 6px;
+  font-size: .88rem;
+}
+
+.mockup-page .detail-step-card p {
+  font-size: var(--font-size-body-sm);
+  line-height: 1.48;
+}
+
+.mockup-page .detail-market-card {
+  top: 43px;
+  width: 192px;
+  padding: 14px;
+}
+
+.mockup-page .detail-market-logo {
+  min-height: 54px;
+}
+
+.mockup-page .detail-market-message {
+  margin-top: 10px;
+  padding: 9px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .detail-product-row {
+  margin-top: 8px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .detail-product-thumb {
+  width: 40px;
+  height: 40px;
+}
+
+.mockup-page .detail-app-window {
+  top: 8px;
+  width: 320px;
+  min-height: 320px;
+  border-radius: 21px;
+}
+
+.mockup-page .detail-app-body {
+  grid-template-columns: 104px minmax(0, 1fr);
+  min-height: 260px;
+}
+
+.mockup-page .detail-sidebar {
+  gap: 8px;
+  padding: 12px 9px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .detail-question {
+  padding: 14px 13px;
+}
+
+.mockup-page .detail-question h2 {
+  margin: 10px 0 6px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .detail-question p {
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .detail-ai-card {
+  right: -2px;
+  bottom: 4px;
+  width: 218px;
+  padding: 13px;
+}
+
+.mockup-page .detail-ai-card p {
+  margin: 7px 0 9px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .detail-render-mascot {
+  right: -18px;
+  bottom: 92px;
+  width: 68px;
+  height: 68px;
+}
+
+.mockup-page .pricing-card {
+  min-height: 390px;
+  padding: 22px;
+}
+
+.mockup-page .pricing-card-grid {
+  margin-top: 32px;
+}
+
+.mockup-page .pricing-card > p {
+  min-height: 36px;
+}
+
+.mockup-page .pricing-price {
+  margin: 16px 0 14px;
+}
+
+.mockup-page .pricing-price strong {
+  font-size: 2.25rem;
+}
+
+.mockup-page .pricing-feature-list {
+  gap: 7px;
+  margin-top: 16px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .demo-journey-card {
+  min-height: 164px;
+  padding: 18px;
+}
+
+.mockup-page .demo-journey-card h3 {
+  margin: 13px 0 6px;
+  font-size: .9rem;
+}
+
+.mockup-page .demo-journey-card p {
+  font-size: var(--font-size-body-sm);
+  line-height: 1.48;
+}
+
+.mockup-page .demo-scenario-card {
+  padding: 18px;
+}
+
+.mockup-page .demo-process > div {
+  min-height: 230px;
+  padding: 18px;
+}
+
+.mockup-page .demo-process-event {
+  grid-template-columns: 36px 92px 1fr;
+  gap: 8px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .demo-story-card {
+  padding: 14px;
+}
+
+.mockup-page .demo-story-card.incoming {
+  left: 8px;
+  top: 14px;
+  width: 208px;
+}
+
+.mockup-page .demo-story-card.ai {
+  left: 118px;
+  top: 112px;
+  width: 258px;
+}
+
+.mockup-page .demo-story-card.review {
+  right: 0;
+  top: 42px;
+  width: 190px;
+}
+
+.mockup-page .demo-story-arrow.a1 {
+  left: 213px;
+  top: 67px;
+}
+
+.mockup-page .demo-story-arrow.a2 {
+  right: 177px;
+  top: 146px;
+}
+
+.mockup-page .demo-hero-mascot {
+  right: 35px;
+  bottom: 0;
+}
+
+.mockup-page .mockup-cta {
+  padding-block: 36px;
+}
+
+.mockup-page .features-window {
+  inset: 18px 8px 20px 0;
+}
+
+.mockup-page .features-app-sidebar {
+  gap: 12px;
+  padding: 13px 9px;
+}
+
+.mockup-page .features-app-main {
+  padding: 13px 14px 14px;
+}
+
+.mockup-page .features-feed-tabs {
+  gap: 5px;
+  margin-bottom: 7px;
+}
+
+.mockup-page .features-feed-tabs span {
+  padding: 4px 7px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .features-message {
+  grid-template-columns: 32px 1fr auto;
+  gap: 8px;
+  padding: 7px 5px;
+}
+
+.mockup-page .features-message-source {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+
+.mockup-page .features-market-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.mockup-page .features-message strong {
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .features-message p {
+  margin-top: 2px;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .features-message small {
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .features-workflow-logos {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.mockup-page .features-workflow-logo-chip {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgb(81 72 232 / 10%);
+}
+
+.mockup-page .features-workflow-logo-chip + .features-workflow-logo-chip {
+  margin-left: -7px;
+}
+
+.mockup-page .features-workflow-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.mockup-page .features-benefit-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 14px;
+  align-items: start;
+}
+
+.mockup-page .features-benefit-icon {
+  grid-row: 1 / span 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 20px;
+}
+
+.mockup-page .features-benefit-card strong {
+  align-self: end;
+  margin: 0 0 4px;
+}
+
+.mockup-page .features-benefit-card > span:last-child {
+  grid-column: 2;
+}
+
+@media (max-width: 1040px) {
+  .mockup-page .mockup-hero-copy h1,
+  .mockup-page .marketplace-detail-mockup-copy h1,
+  .mockup-page .pricing-mockup-hero h1,
+  .mockup-page .demo-mockup-copy h1 {
+    font-size: clamp(2.25rem, 6vw, 3rem);
+  }
+}
+
+@media (max-width: 860px) {
+  .mockup-page .features-mockup-scene,
+  .mockup-page .marketplace-hub-scene,
+  .mockup-page .marketplace-detail-render,
+  .mockup-page .demo-hero-story {
+    min-height: 320px;
+  }
+
+  .mockup-page .detail-app-window {
+    width: min(76vw, 330px);
+  }
+}
+
+@media (max-width: 720px) {
+  .public-root {
+    --mockup-section-base-spacing: 32px;
+  }
+
+  .mockup-page .public-section,
+  .mockup-page .public-section.public-cta-section {
+    padding-block: calc(var(--mockup-section-base-spacing) + var(--public-section-padding-extra));
+  }
+
+  .mockup-page .mockup-hero,
+  .mockup-page .marketplace-detail-mockup-hero,
+  .mockup-page .demo-mockup-hero {
+    padding-top: calc(28px + var(--public-section-padding-extra));
+    padding-bottom: calc(24px + var(--public-section-padding-extra));
+  }
+
+  .mockup-page .pricing-mockup-hero {
+    padding-top: calc(32px + var(--public-section-padding-extra));
+    padding-bottom: calc(20px + var(--public-section-padding-extra));
+  }
+
+  .mockup-page .mockup-hero-copy h1,
+  .mockup-page .marketplace-detail-mockup-copy h1,
+  .mockup-page .pricing-mockup-hero h1,
+  .mockup-page .demo-mockup-copy h1 {
+    font-size: clamp(2.05rem, 11vw, 2.7rem);
+  }
+
+  .mockup-page .mockup-section-head h2,
+  .mockup-page .render-section-head h2,
+  .mockup-page .detail-faq-layout h2 {
+    font-size: clamp(1.75rem, 8vw, 2.2rem);
+  }
+
+  .mockup-page .features-mockup-scene {
+    min-height: 320px;
+  }
+
+  .mockup-page .marketplace-hub-scene {
+    min-height: 470px;
+  }
+
+  .mockup-page .marketplace-hub-card {
+    width: 150px;
+  }
+
+  .mockup-page .marketplace-hub-core {
+    width: 104px;
+    height: 104px;
+  }
+
+  .mockup-page .marketplace-detail-render {
+    min-height: 520px;
+  }
+
+  .mockup-page .detail-market-card {
+    left: 0;
+    top: 0;
+    width: 180px;
+  }
+
+  .mockup-page .detail-app-window {
+    top: 118px;
+    right: 0;
+    width: calc(100% - 18px);
+  }
+
+  .mockup-page .detail-ai-card {
+    right: 0;
+    bottom: 4px;
+    width: 220px;
+  }
+
+  .mockup-page .detail-render-mascot {
+    right: 8px;
+    bottom: 118px;
+  }
+
+  .mockup-page .demo-hero-story {
+    min-height: 520px;
+  }
+
+  .mockup-page .demo-story-card.incoming {
+    left: 0;
+    top: 0;
+    width: min(100%, 230px);
+  }
+
+  .mockup-page .demo-story-card.ai {
+    left: 16px;
+    top: 168px;
+    width: calc(100% - 32px);
+  }
+
+  .mockup-page .demo-story-card.review {
+    right: 0;
+    top: 352px;
+    width: 220px;
+  }
+
+  .mockup-page .demo-story-arrow {
+    display: none;
+  }
+
+  .mockup-page .demo-hero-mascot {
+    right: 18px;
+    bottom: 0;
+  }
+
+  .mockup-page .features-benefit-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .mockup-page .demo-process > div {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .mockup-page .marketplace-hub-scene {
+    min-height: 440px;
+  }
+
+  .mockup-page .marketplace-hub-card {
+    width: 136px;
+  }
+
+  .mockup-page .marketplace-hub-core {
+    width: 94px;
+    height: 94px;
+  }
+
+  .mockup-page .marketplace-detail-render,
+  .mockup-page .demo-hero-story {
+    min-height: 500px;
+  }
+}

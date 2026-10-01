@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   agentRules: false,
+  images: {
+    formats: ["image/webp"],
+    qualities: [85],
+  },
   deploymentId: process.env.DEPLOYMENT_VERSION || undefined,
 };
 

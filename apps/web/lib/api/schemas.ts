@@ -42,7 +42,7 @@ export const automationRuleSchema = z.object({
   priority: z.number().int().min(0).max(10000),
   is_enabled: z.boolean(),
   mode: z.enum(["auto", "semi_auto"]),
-  applies_to: z.enum(["all", "review", "question"]),
+  applies_to: z.enum(["all", "review", "question", "chat"]),
   marketplace: z.enum(["wildberries", "ozon", "yandex_market", "avito"]).nullable(),
   min_rating: z.number().int().min(1).max(5).nullable(),
   max_rating: z.number().int().min(1).max(5).nullable(),
@@ -245,7 +245,7 @@ export const marketplaceAccountActionSchema = z.object({
 export const marketplaceSyncSchema = z.object({
   account_id: uuidSchema,
   marketplace: z.string().min(1),
-  status: z.enum(["success", "failed"]),
+  status: z.enum(["success", "failed", "in_progress", "partial"]),
   imported_reviews: z.number().int().nonnegative(),
   imported_questions: z.number().int().nonnegative(),
   imported_chats: z.number().int().nonnegative(),
@@ -320,6 +320,16 @@ export const productAnalyticsSchema = z.object({
   })),
 });
 
+export const teamAnalyticsSchema = z.object({
+  period: analyticsPeriodSchema,
+  items: z.array(z.object({
+    user_id: uuidSchema,
+    email: z.string().email(),
+    name: z.string().nullable(),
+    replies_sent: z.number().int().nonnegative(),
+  })),
+});
+
 export const aiUsageAnalyticsSchema = z.object({
   period: analyticsPeriodSchema,
   drafts_generated: z.number().int().nonnegative(),
@@ -380,6 +390,18 @@ export const billingOverviewSchema = z.object({
     allowed: z.boolean(),
   })),
   pricing_finalized: z.boolean(),
+  reply_balance: z.object({
+    available: z.number().int().nonnegative(),
+    spendable: z.number().int().nonnegative(),
+    trial_available: z.number().int().nonnegative(),
+    paid_available: z.number().int().nonnegative(),
+    reserved: z.number().int().nonnegative(),
+    consumed: z.number().int().nonnegative(),
+    expired: z.number().int().nonnegative(),
+    granted: z.number().int().nonnegative(),
+    trial_ends_at: timestampSchema.nullable(),
+    paid_entitled: z.boolean(),
+  }).optional(),
 });
 
 export const adminOverviewSchema = z.object({

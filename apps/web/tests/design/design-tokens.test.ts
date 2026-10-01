@@ -3,14 +3,10 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const tokenSource = readFileSync(resolve(process.cwd(), "styles/tokens.css"), "utf8");
-const themeSource = readFileSync(resolve(process.cwd(), "styles/theme.css"), "utf8");
+const brandThemeSource = readFileSync(resolve(process.cwd(), "styles/brand-theme.css"), "utf8");
 const globalStyleSource = readFileSync(resolve(process.cwd(), "styles/globals.css"), "utf8");
 const publicStyleSource = readFileSync(resolve(process.cwd(), "styles/public-site.css"), "utf8");
 const fontStyleSource = readFileSync(resolve(process.cwd(), "styles/fonts.css"), "utf8");
-const canvasSource = readFileSync(
-  resolve(process.cwd(), "components/public-site/HeroFlowCanvas.tsx"),
-  "utf8",
-);
 const tokenPattern = /(--[\w-]+)\s*:\s*([^;]+);/g;
 
 function readTokens(source: string): Map<string, string> {
@@ -25,6 +21,24 @@ function readTokens(source: string): Map<string, string> {
     tokens.set(name, value);
   }
   return tokens;
+}
+
+function readSelectorBlock(source: string, selector: string): string {
+  const selectorIndex = source.indexOf(selector);
+  if (selectorIndex < 0) throw new Error(`Missing selector block: ${selector}`);
+  const openIndex = source.indexOf("{", selectorIndex);
+  if (openIndex < 0) throw new Error(`Missing opening brace for: ${selector}`);
+
+  let depth = 0;
+  for (let index = openIndex; index < source.length; index += 1) {
+    const character = source[index];
+    if (character === "{") depth += 1;
+    if (character !== "}") continue;
+    depth -= 1;
+    if (depth === 0) return source.slice(openIndex + 1, index);
+  }
+
+  throw new Error(`Missing closing brace for: ${selector}`);
 }
 
 function parseHex(value: string): [number, number, number] {
@@ -79,7 +93,8 @@ function declarationsOutsideTokenFiles(source: string): string[] {
 }
 
 const tokens = readTokens(tokenSource);
-const darkThemeTokens = readTokens(themeSource);
+const lightBrandTokens = readTokens(readSelectorBlock(brandThemeSource, ":root"));
+const darkBrandTokens = readTokens(readSelectorBlock(brandThemeSource, "[data-theme='dark']"));
 
 function token(name: string): string {
   const value = tokens.get(name);
@@ -87,16 +102,20 @@ function token(name: string): string {
   return value;
 }
 
+function lightToken(name: string): string {
+  return lightBrandTokens.get(name) ?? token(name);
+}
+
 function darkToken(name: string): string {
-  return darkThemeTokens.get(name) ?? token(name);
+  return darkBrandTokens.get(name) ?? lightToken(name);
 }
 
 function expectOpaqueHexColor(value: string, label: string): void {
   expect(value, `${label} must be an opaque six-digit hex color`).toMatch(/^#[0-9a-f]{6}$/i);
 }
 
-describe("Respio design tokens", () => {
-  it("contains the complete public visual-system contract", () => {
+describe("MPReply base design tokens", () => {
+  it("contains the complete shared visual-system contract", () => {
     const requiredTokens = [
       "--color-bg-page",
       "--color-bg-surface",
@@ -131,8 +150,6 @@ describe("Respio design tokens", () => {
       "--color-border-subtle",
       "--gradient-public-hero",
       "--gradient-public-cta",
-      "--gradient-signal-track",
-      "--gradient-hero-glow",
       "--font-family-sans",
       "--font-weight-regular",
       "--font-weight-medium",
@@ -176,7 +193,7 @@ describe("Respio design tokens", () => {
     }
   });
 
-  it("keeps the approved Respio violet and mint while using a neutral near-white page canvas", () => {
+  it("keeps the legacy fallback palette beneath the authoritative MPReply runtime brand layer", () => {
     expect(token("--color-brand-primary").toLowerCase()).toBe("#6f33ab");
     expect(token("--color-brand-accent").toLowerCase()).toBe("#79d6b0");
     expect(token("--color-bg-page").toLowerCase()).toBe("#fbfafc");
@@ -184,8 +201,21 @@ describe("Respio design tokens", () => {
     expect(token("--color-public-section")).toBe("var(--color-bg-page)");
   });
 
-  it("keeps decorative mint distinct from semantic success", () => {
-    expect(token("--color-brand-accent").toLowerCase()).not.toBe(token("--color-success").toLowerCase());
+  it("keeps the approved blue runtime brand layer instead of the legacy fallback palette", () => {
+    expect(lightToken("--color-brand-primary").toLowerCase()).toBe("#0b68f6");
+    expect(lightToken("--color-brand-accent").toLowerCase()).toBe("#0b68f6");
+    expect(darkToken("--color-brand-primary").toLowerCase()).toBe("#5aa7ff");
+    expect(darkToken("--color-brand-accent").toLowerCase()).toBe("#5aa7ff");
+    expect(lightToken("--gradient-mpreply-action")).toBe(
+      "linear-gradient(110deg, #0d6cf7 0%, #0674ff 58%, #0a5fe8 100%)",
+    );
+    expect(darkToken("--gradient-mpreply-action")).toBe(
+      "linear-gradient(110deg, #1684ff 0%, #0b68f6 58%, #0757d7 100%)",
+    );
+  });
+
+  it("keeps decorative accent distinct from semantic success", () => {
+    expect(lightToken("--color-brand-accent").toLowerCase()).not.toBe(lightToken("--color-success").toLowerCase());
   });
 
   it("uses the self-hosted Onest RU/EN subset with explicit webfont performance contracts", () => {
@@ -228,44 +258,6 @@ describe("Respio design tokens", () => {
     }
   });
 
-  it("keeps Canvas presentation and animation fully driven by Respio tokens", () => {
-    const requiredCanvasTokens = [
-      "--canvas-color-violet",
-      "--canvas-color-mint",
-      "--canvas-color-soft-violet",
-      "--canvas-color-soft-mint",
-      "--canvas-opacity-violet",
-      "--canvas-opacity-mint",
-      "--canvas-amplitude-violet",
-      "--canvas-amplitude-mint",
-      "--canvas-speed-violet",
-      "--canvas-speed-mint",
-      "--canvas-fps",
-      "--canvas-dpr-max",
-      "--canvas-reduced-motion-time",
-    ];
-    for (const name of requiredCanvasTokens) {
-      expect(tokens.has(name), `${name} should exist`).toBe(true);
-    }
-    expect(canvasSource).toContain("`--canvas-color-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-opacity-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-amplitude-${suffix}`");
-    expect(canvasSource).toContain("`--canvas-speed-${suffix}`");
-    expect(canvasSource).toContain('"--canvas-fps"');
-    expect(canvasSource).toContain('"--canvas-dpr-max"');
-    expect(canvasSource).toContain('"--canvas-reduced-motion-time"');
-    expect(canvasSource).not.toMatch(/#[0-9a-f]{3,8}\b/i);
-    expect(canvasSource).toContain("prefers-reduced-motion: reduce");
-    expect(canvasSource).toContain("IntersectionObserver");
-    expect(canvasSource).toContain("ResizeObserver");
-  });
-
-  it("keeps process steps visually equal and SafetyGate semantic rather than oversized", () => {
-    expect(publicStyleSource).toContain(".signal-flow-step-safety > span:first-child");
-    expect(publicStyleSource).not.toMatch(/\.signal-flow-step-safety\s*\{[^}]*transform:/s);
-    expect(publicStyleSource).not.toMatch(/\.signal-flow-step-safety\s*\{[^}]*box-shadow:/s);
-  });
-
   it("keeps live Automation Rules on semantic tokens, focus contracts and responsive states", () => {
     const start = globalStyleSource.indexOf(".automation-workspace {");
     const end = globalStyleSource.indexOf(".review-queue-workspace {", start);
@@ -295,9 +287,9 @@ describe("Respio design tokens", () => {
     expect(integrationStyles).toContain("@media (max-width: 760px)");
   });
 
-  it("defines dark-theme overrides as custom-property values rather than component hacks", () => {
-    expect(themeSource).toMatch(/\[data-theme=['"]dark['"]\]/);
-    expect(themeSource).not.toMatch(/\.[\w-]+\s*\{/);
+  it("keeps brand-theme limited to token overrides rather than component hacks", () => {
+    expect(brandThemeSource).toMatch(/\[data-theme=['"]dark['"]\]/);
+    expect(brandThemeSource).not.toMatch(/\.[\w-]+\s*\{/);
   });
 
   it.each([
@@ -319,8 +311,8 @@ describe("Respio design tokens", () => {
     ["warning text on warning soft surface", "--color-warning-text", "--color-warning-soft", 4.5],
     ["danger text on danger soft surface", "--color-danger-text", "--color-danger-soft", 4.5],
     ["info text on info soft surface", "--color-info-text", "--color-info-soft", 4.5],
-  ])("meets WCAG AA contrast for light theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
-    expect(contrastRatio(token(foregroundToken), token(backgroundToken))).toBeGreaterThanOrEqual(minimum);
+  ])("meets WCAG AA contrast for light runtime theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
+    expect(contrastRatio(lightToken(foregroundToken), lightToken(backgroundToken))).toBeGreaterThanOrEqual(minimum);
   });
 
   it.each([
@@ -341,7 +333,7 @@ describe("Respio design tokens", () => {
     ["warning text on warning soft surface", "--color-warning-text", "--color-warning-soft", 4.5],
     ["danger text on danger soft surface", "--color-danger-text", "--color-danger-soft", 4.5],
     ["info text on info soft surface", "--color-info-text", "--color-info-soft", 4.5],
-  ])("meets WCAG AA contrast for dark theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
+  ])("meets WCAG AA contrast for dark runtime theme: %s", (_label, foregroundToken, backgroundToken, minimum) => {
     expect(contrastRatio(darkToken(foregroundToken), darkToken(backgroundToken))).toBeGreaterThanOrEqual(minimum);
   });
 
@@ -357,7 +349,7 @@ describe("Respio design tokens", () => {
     ["secondary text on brand soft", "--color-text-secondary", "--color-brand-soft"],
     ["muted text on brand soft", "--color-text-muted", "--color-brand-soft"],
   ])("keeps inherited neutral copy accessible on semantic soft surfaces: %s", (_label, foregroundToken, backgroundToken) => {
-    expect(contrastRatio(token(foregroundToken), token(backgroundToken))).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(lightToken(foregroundToken), lightToken(backgroundToken))).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio(darkToken(foregroundToken), darkToken(backgroundToken))).toBeGreaterThanOrEqual(4.5);
   });
 
@@ -371,12 +363,12 @@ describe("Respio design tokens", () => {
     ];
 
     for (const name of opaqueSoftTokens) {
-      expectOpaqueHexColor(token(name), `light ${name}`);
+      expectOpaqueHexColor(lightToken(name), `light ${name}`);
       expectOpaqueHexColor(darkToken(name), `dark ${name}`);
     }
 
-    expect(token("--app-nav-active-bg")).toBe("var(--color-brand-soft)");
-    expect(darkToken("--app-nav-active-bg")).toBe("var(--color-brand-soft)");
+    expect(lightToken("--app-nav-active-bg")).toBe(lightToken("--color-brand-soft"));
+    expect(darkToken("--app-nav-active-bg")).toBe(darkToken("--color-brand-soft"));
   });
 
   it("uses the dedicated brand text token on all soft brand text surfaces", () => {
@@ -400,9 +392,9 @@ describe("Respio design tokens", () => {
     expect(globalStyleSource).not.toMatch(/\.button-danger\s*\{[^}]*color:\s*var\(--color-text-on-brand\);/s);
   });
 
-  it("keeps public success badges on their own accessible semantic pair even inside dark readiness surfaces", () => {
-    expect(publicStyleSource).toMatch(/\.public-status-mvp\s*\{[^}]*background:\s*var\(--color-success-soft\);[^}]*color:\s*var\(--color-success-text\);/s);
-    expect(publicStyleSource).not.toMatch(/\.readiness-summary-primary\s+\.public-status-mvp\s*\{[^}]*color:/s);
+  it("keeps public supported badges on their accessible brand pair", () => {
+    expect(publicStyleSource).toMatch(/\.public-status-supported\s*\{[^}]*background:\s*var\(--color-bg-brand-soft\);[^}]*color:\s*var\(--color-brand-primary\);/s);
+    expect(publicStyleSource).not.toContain(".public-status-mvp");
   });
 
   it("keeps error copy on the dedicated danger text token instead of the lower-contrast accent token", () => {

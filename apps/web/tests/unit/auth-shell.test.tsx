@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 import { AuthShell } from "../../components/auth/AuthShell";
 
 describe("AuthShell", () => {
-  it("shows a truthful Respio workflow beside the auth content", () => {
+  it("shows the current MPReply marketplace workflow beside the auth content", () => {
     render(
       <AuthShell
         description="Продолжите работу с отзывами и сообщениями покупателей."
-        eyebrow="Аккаунт Respio"
+        eyebrow="Аккаунт MPReply"
         title="Вход"
       >
         <div>Форма входа</div>
@@ -23,9 +23,9 @@ describe("AuthShell", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Обращения в очереди")).toBeInTheDocument();
-    expect(screen.getByText("В MVP отправка ответов поддерживается через Wildberries.")).toBeInTheDocument();
-    expect(screen.queryByText("Ozon")).not.toBeInTheDocument();
-    expect(screen.queryByText("Яндекс Маркет")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "MPReply — на главную" })).toHaveAttribute("href", "/");
+    expect(screen.getByText(/Wildberries, Ozon, Яндекс Маркета и Авито/)).toBeInTheDocument();
+    expect(screen.queryByText(/Respio/)).not.toBeInTheDocument();
     expect(screen.queryByText(/\b\d+%\b/)).not.toBeInTheDocument();
   });
 
@@ -33,7 +33,7 @@ describe("AuthShell", () => {
     render(
       <AuthShell
         description="Создайте аккаунт."
-        eyebrow="Аккаунт Respio"
+        eyebrow="Аккаунт MPReply"
         showYandexButton
         title="Создать аккаунт"
       >

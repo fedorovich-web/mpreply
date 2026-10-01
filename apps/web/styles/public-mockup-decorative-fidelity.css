@@ -1,0 +1,380 @@
+/* Decorative details that are present in the approved public renders. */
+
+/* Features hero console: sidebar + unified queue, matching the approved render. */
+.mockup-page .features-window {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  inset: 26px 8px 28px 0;
+}
+
+.mockup-page .features-app-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 17px;
+  border-right: 1px solid #edf2fa;
+  background: #fff;
+  padding: 17px 12px;
+}
+
+.mockup-page .features-app-brand,
+.mockup-page .detail-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #071846;
+  font-size: var(--font-size-body-sm);
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.mockup-page .features-app-brand .public-brand-mark,
+.mockup-page .detail-app-brand .public-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--gradient-mpreply-action);
+  box-shadow: 0 6px 14px rgb(81 72 232 / 18%);
+}
+
+.mockup-page .features-app-nav {
+  display: grid;
+  gap: 10px;
+  color: #7384a2;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .features-app-nav strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 8px;
+  background: #f2f1ff;
+  color: var(--color-brand-primary);
+  padding: 8px 7px;
+}
+
+.mockup-page .features-app-nav strong b {
+  display: grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-brand-primary);
+  color: #fff;
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .features-app-nav span {
+  padding-inline: 7px;
+}
+
+.mockup-page .features-app-nav i {
+  height: 1px;
+  background: #edf2fa;
+}
+
+.mockup-page .features-app-main {
+  padding: 17px 18px 18px;
+  background: #fff;
+}
+
+.mockup-page .features-app-main .features-feed-tabs {
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.mockup-page .features-app-main .features-feed-tabs span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f5f6fb;
+  color: #7184a5;
+}
+
+.mockup-page .features-app-main .features-feed-tabs span:first-child {
+  background: #efefff;
+  color: var(--color-brand-primary);
+}
+
+.mockup-page .features-app-main .features-feed-tabs b {
+  font-size: var(--font-size-body-sm);
+}
+
+.mockup-page .features-app-main .features-feed {
+  border-right: 0;
+  padding: 0;
+}
+
+/* Handwritten-style annotations are DOM text, not baked into raster assets. */
+.mockup-page .features-hero-note,
+.mockup-page .marketplace-hero-note,
+.mockup-page .detail-hero-note,
+.mockup-page .demo-hero-note,
+.mockup-page .demo-cta-note {
+  position: absolute;
+  z-index: 6;
+  color: var(--color-brand-primary);
+  font-family: "Comic Sans MS", "Segoe Print", cursive;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: .01em;
+  pointer-events: none;
+}
+
+.mockup-page .features-hero-note-primary {
+  top: 38px;
+  right: -12px;
+  font-size: var(--font-size-body-sm);
+  transform: rotate(-7deg);
+}
+
+.mockup-page .features-hero-note-primary span,
+.mockup-page .features-hero-note-ai span,
+.mockup-page .detail-hero-note span,
+.mockup-page .demo-hero-note span {
+  position: absolute;
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+}
+
+.mockup-page .features-hero-note-primary span {
+  left: -25px;
+  bottom: -23px;
+  font-size: 27px;
+  transform: rotate(12deg);
+}
+
+.mockup-page .features-hero-note-ai {
+  right: -24px;
+  bottom: 53px;
+  border: 1px solid #ebe8ff;
+  border-radius: 11px;
+  background: rgb(255 255 255 / 92%);
+  padding: 8px 10px;
+  font-size: var(--font-size-body-sm);
+  box-shadow: 0 10px 24px rgb(81 72 232 / 10%);
+  transform: rotate(-5deg);
+}
+
+.mockup-page .features-hero-note-ai span {
+  left: -22px;
+  bottom: -20px;
+  font-size: 25px;
+  transform: rotate(20deg);
+}
+
+/* Demo journey marketplace chips. */
+.mockup-page .demo-journey-marketplaces {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  margin: 15px auto 0;
+}
+
+.mockup-page .demo-journey-marketplace-chip {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 7px 17px rgb(81 72 232 / 10%);
+}
+
+.mockup-page .demo-journey-marketplace-chip + .demo-journey-marketplace-chip {
+  margin-left: -6px;
+}
+
+.mockup-page .demo-journey-marketplace-chip img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.mockup-page .demo-hero-note {
+  right: -25px;
+  bottom: 72px;
+  width: 116px;
+  font-size: var(--font-size-body-sm);
+  transform: rotate(-6deg);
+}
+
+.mockup-page .demo-hero-note span {
+  left: -26px;
+  bottom: -24px;
+  font-size: 28px;
+  transform: rotate(18deg);
+}
+
+.mockup-page .demo-cta-strip {
+  position: relative;
+  padding-right: 176px;
+}
+
+.mockup-page .demo-cta-strip .mockup-cta-strip-side {
+  min-width: 238px;
+}
+
+.mockup-page .demo-cta-strip .mockup-cta-strip-side .button {
+  min-width: 230px;
+}
+
+.mockup-page .demo-cta-note {
+  top: 15px;
+  right: 18px;
+  width: 140px;
+  font-size: var(--font-size-body-sm);
+  transform: rotate(-6deg);
+}
+
+/* Marketplaces hero: real MPReply mark in the central hub. */
+.mockup-page .marketplace-hub-core {
+  border: 1px solid #e4e2fb;
+  background: rgb(255 255 255 / 96%);
+  color: #071846;
+  box-shadow: 0 24px 58px rgb(81 72 232 / 17%);
+}
+
+.mockup-page .marketplace-hub-brand {
+  display: grid;
+  place-items: center;
+  gap: 7px;
+}
+
+.mockup-page .marketplace-hub-brand .public-brand-mark {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  background: var(--gradient-mpreply-action);
+  box-shadow: 0 9px 20px rgb(81 72 232 / 22%);
+}
+
+.mockup-page .marketplace-hub-brand strong {
+  color: #071846;
+  font-size: .9rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+.mockup-page .marketplace-hero-note-primary {
+  top: 42px;
+  left: 55%;
+  font-size: var(--font-size-body-sm);
+  transform: rotate(-7deg);
+}
+
+.mockup-page .marketplace-hero-note-primary span {
+  position: absolute;
+  right: -18px;
+  bottom: -22px;
+  font-family: var(--font-family-sans);
+  font-size: 28px;
+  font-weight: 500;
+  transform: rotate(-15deg);
+}
+
+.mockup-page .marketplace-hero-note-sales {
+  right: -5px;
+  bottom: 24px;
+  border: 1px solid #ebe8ff;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 90%);
+  padding: 9px 11px;
+  font-size: var(--font-size-body-sm);
+  box-shadow: 0 12px 26px rgb(81 72 232 / 10%);
+  transform: rotate(-6deg);
+}
+
+/* Approved CTA notes include a curved handwritten arrow pointing back to the button. */
+.mockup-page .demo-cta-note::before {
+  position: absolute;
+  left: -38px;
+  top: 12px;
+  width: 30px;
+  height: 18px;
+  border-top: 2px solid var(--color-brand-primary);
+  border-left: 2px solid var(--color-brand-primary);
+  border-radius: 20px 0 0 0;
+  content: '';
+  transform: rotate(-24deg);
+}
+
+.mockup-page .demo-cta-note::after {
+  position: absolute;
+  left: -41px;
+  top: 23px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid var(--color-brand-primary);
+  border-left: 2px solid var(--color-brand-primary);
+  content: '';
+  transform: rotate(20deg);
+}
+
+/* Marketplace detail: real brand in the app chrome plus the render annotation. */
+.mockup-page .detail-app-top {
+  padding: 12px 16px;
+}
+
+.mockup-page .detail-app-brand .public-brand-mark {
+  width: 29px;
+  height: 29px;
+}
+
+.mockup-page .detail-hero-note {
+  top: 36px;
+  right: -29px;
+  width: 122px;
+  font-size: var(--font-size-body-sm);
+  transform: rotate(-6deg);
+}
+
+.mockup-page .detail-hero-note span {
+  left: -20px;
+  bottom: -26px;
+  font-size: 29px;
+  transform: rotate(16deg);
+}
+
+@media (max-width: 1040px) {
+  .mockup-page .marketplace-hero-note-primary {
+    left: auto;
+    right: 20%;
+  }
+
+  .mockup-page .features-hero-note-primary {
+    right: 6%;
+  }
+}
+
+@media (max-width: 860px) {
+  .mockup-page .demo-cta-strip {
+    padding-right: 22px;
+  }
+
+  .mockup-page .demo-cta-note {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .mockup-page .features-window {
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  .mockup-page .features-app-sidebar {
+    padding: 14px 8px;
+  }
+
+  .mockup-page .features-hero-note-primary,
+  .mockup-page .features-hero-note-ai,
+  .mockup-page .marketplace-hero-note-primary,
+  .mockup-page .marketplace-hero-note-sales,
+  .mockup-page .detail-hero-note,
+  .mockup-page .demo-hero-note {
+    display: none;
+  }
+}

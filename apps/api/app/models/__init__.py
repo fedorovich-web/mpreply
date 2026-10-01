@@ -2,6 +2,7 @@ from app.models.ai_draft import AIDraft
 from app.models.audit_log import AuditLog
 from app.models.auth_session import AuthSession
 from app.models.auth_token import AuthToken
+from app.models.automatic_draft_job import AutomaticDraftJob
 from app.models.automation_rule import AutomationRule
 from app.models.billing_plan import BillingPlan
 from app.models.customer_message import CustomerMessage
@@ -11,6 +12,7 @@ from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.organization import Organization, OrganizationUser
 from app.models.product import Product
 from app.models.reply import Reply
+from app.models.reply_credit import ReplyCreditEvent, ReplyCreditGrant, ReplyCreditOperation, ReplyTrialClaim
 from app.models.subscription import Subscription
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
@@ -21,6 +23,7 @@ __all__ = [
     "AuditLog",
     "AuthSession",
     "AuthToken",
+    "AutomaticDraftJob",
     "AutomationRule",
     "BillingPlan",
     "CustomerMessage",
@@ -31,6 +34,10 @@ __all__ = [
     "OrganizationUser",
     "Product",
     "Reply",
+    "ReplyCreditEvent",
+    "ReplyCreditGrant",
+    "ReplyCreditOperation",
+    "ReplyTrialClaim",
     "Subscription",
     "SyncJob",
     "UsageEvent",

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import decode_access_token_claims
 from app.core.cookies import ACCESS_COOKIE_NAME
 from app.core.csrf import require_cookie_auth_csrf
-from app.core.errors import unauthorized
+from app.core.errors import forbidden, unauthorized
 from app.db.session import get_db_session
 from app.models.user import User
 
@@ -35,10 +35,12 @@ async def get_current_user(
     claims = decode_access_token_claims(token)
     result = await session.execute(select(User).where(User.id == claims.user_id))
     user = result.scalar_one_or_none()
-    if user is None or user.status != "active":
+    if user is None or user.status not in {"active", "demo"}:
         raise unauthorized("User account is not active")
     if user.email_verified_at is None:
         raise unauthorized("Email verification is required")
     if user.auth_version != claims.auth_version:
         raise unauthorized("Session has been revoked")
+    if user.status == "demo" and request.method not in {"GET", "HEAD", "OPTIONS"}:
+        raise forbidden("Demo workspace is read-only")
     return user

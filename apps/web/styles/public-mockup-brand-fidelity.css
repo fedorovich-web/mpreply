@@ -1,0 +1,171 @@
+/* Approved MPReply palette for the public mockup-derived pages only.
+   This file is intentionally loaded after the legacy theme and does not recolor the approved homepage or dashboard. */
+
+.public-root:has(.mockup-page) {
+  /* The supplied renders are light-only presentation surfaces. Keep them stable even when dashboard theme=dark. */
+  --color-bg-page: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-subtle: #f6faff;
+  --color-public-page: #ffffff;
+  --color-public-section: #ffffff;
+  --color-public-section-subtle: #f6faff;
+  --color-public-header: rgb(255 255 255 / 96%);
+  --color-public-footer: #ffffff;
+  --color-text-primary: #071846;
+  --color-text-secondary: #50648a;
+  --color-text-muted: #6f82a7;
+  --color-border-subtle: #dceafa;
+  --color-border-strong: #bfd6f3;
+
+  /* Retarget legacy render tokens to the approved MPReply brand on these pages. */
+  --mockup-blue: #0b68f6;
+  --mockup-blue-deep: #0757d7;
+  --mockup-sky: #0b68f6;
+
+  --color-brand-primary: #0b68f6;
+  --color-brand-primary-hover: #0757d7;
+  --color-brand-primary-active: #064fc5;
+  --color-brand-accent: #0b68f6;
+  --color-brand-text-on-soft: #0b61e8;
+  --color-kicker-text: #0b68f6;
+  --color-focus-ring: #0b68f6;
+  --color-brand-soft: #eaf4ff;
+  --color-brand-soft-strong: rgb(11 104 246 / 14%);
+  --gradient-mpreply-action: linear-gradient(110deg, #0d6cf7 0%, #0674ff 58%, #0a5fe8 100%);
+}
+
+.public-root:has(.mockup-page) .public-brand-mark,
+.public-root:has(.mockup-page) .button-primary {
+  background: linear-gradient(110deg, #0b68f6 0%, #0674ff 58%, #0a5fe8 100%);
+  box-shadow: 0 10px 24px rgb(11 104 246 / 20%);
+}
+
+.public-root:has(.mockup-page) .button-primary:hover {
+  background: linear-gradient(110deg, #0757d7 0%, #0b68f6 58%, #0a5fe8 100%);
+  box-shadow: 0 14px 30px rgb(11 104 246 / 24%);
+}
+
+.public-root:has(.mockup-page) .button-secondary:hover,
+.public-root:has(.mockup-page) .public-nav a:hover,
+.public-root:has(.mockup-page) .text-link:hover {
+  border-color: #0b68f6;
+  color: #0b68f6;
+}
+
+.mockup-page .mockup-highlight,
+.mockup-page .detail-ai-card strong,
+.mockup-page .demo-process-answer strong,
+.mockup-page .demo-story-card.ai strong,
+.mockup-page .demo-scenario-card a {
+  color: #0b68f6;
+}
+
+.mockup-page .mockup-icon-chip {
+  color: #0b68f6;
+}
+
+.mockup-page .mockup-icon-chip.purple {
+  color: #0b68f6;
+}
+
+.mockup-page .mockup-icon-chip.green {
+  color: #10b981;
+}
+
+.mockup-page .mockup-icon-chip.orange {
+  color: #f59e0b;
+}
+
+.mockup-page .demo-story-arrow {
+  color: #0b68f6;
+}
+
+.mockup-page .mockup-hero,
+.mockup-page .marketplaces-mockup-hero {
+  background:
+    radial-gradient(circle at 77% 22%, rgb(11 104 246 / 11%), transparent 28%),
+    radial-gradient(circle at 88% 62%, rgb(6 116 255 / 7%), transparent 25%),
+    linear-gradient(180deg, #fff 0%, #f4f9ff 100%);
+}
+
+.mockup-page .mockup-hero::before {
+  border-color: rgb(11 104 246 / 4%);
+}
+
+.mockup-page .mockup-hero::after {
+  background: rgb(6 116 255 / 5%);
+}
+
+.mockup-page .marketplace-detail-mockup-hero {
+  background:
+    radial-gradient(circle at 8% 62%, rgb(6 116 255 / 7%), transparent 23%),
+    radial-gradient(circle at 87% 28%, rgb(11 104 246 / 11%), transparent 29%),
+    linear-gradient(180deg, #fbfdff 0%, #eef6ff 100%);
+}
+
+.mockup-page .marketplace-detail-mockup-hero::before {
+  border-color: rgb(11 104 246 / 4%);
+}
+
+.mockup-page .pricing-mockup-hero {
+  background:
+    radial-gradient(circle at 50% 25%, rgb(11 104 246 / 8%), transparent 33%),
+    #fff;
+}
+
+.mockup-page .demo-mockup-hero {
+  background:
+    radial-gradient(circle at 81% 28%, rgb(11 104 246 / 11%), transparent 28%),
+    linear-gradient(180deg, #fdfefe 0%, #eef6ff 100%);
+}
+
+.mockup-page .mockup-section-soft {
+  background: linear-gradient(180deg, #fbfdff 0%, #eef6ff 100%);
+}
+
+.mockup-page .marketplace-hub-core,
+.mockup-page .detail-ai-card > span {
+  background: linear-gradient(110deg, #0b68f6 0%, #0674ff 58%, #0a5fe8 100%);
+}
+
+.mockup-page .marketplace-hub-core,
+.mockup-page .features-window,
+.mockup-page .detail-market-card,
+.mockup-page .detail-app-window,
+.mockup-page .detail-ai-card,
+.mockup-page .demo-story-card {
+  box-shadow: 0 24px 62px rgb(11 104 246 / 13%);
+}
+
+.mockup-page .pricing-feature-list li::before,
+.mockup-page .pricing-comparison tbody td:nth-child(3),
+.mockup-page .pricing-comparison thead th:nth-child(3) {
+  color: #0b68f6;
+}
+
+.mockup-page .pricing-comparison tbody td:nth-child(3),
+.mockup-page .pricing-comparison thead th:nth-child(3) {
+  background: #eef6ff;
+}
+
+.mockup-page .mockup-cta {
+  border-color: #cfe3fb;
+  background:
+    radial-gradient(circle at 82% 18%, rgb(6 116 255 / 15%), transparent 30%),
+    linear-gradient(125deg, #fbfdff 0%, #eaf4ff 100%);
+  box-shadow: 0 24px 60px rgb(11 104 246 / 10%);
+}
+
+.mockup-page .features-workflow-logo-chip,
+.mockup-page .features-message-source {
+  box-shadow: 0 8px 18px rgb(11 104 246 / 8%);
+}
+
+/* Later fidelity layers refine geometry, but these demo accents must stay on the approved MPReply primary. */
+.public-root:has(.mockup-page) .mockup-page .demo-scenario-popular,
+.public-root:has(.mockup-page) .mockup-page .demo-story-ai-avatar,
+.public-root:has(.mockup-page) .mockup-page .demo-story-review-avatar,
+.public-root:has(.mockup-page) .mockup-page .demo-process-event-icon.purple {
+  color: #0b68f6;
+}

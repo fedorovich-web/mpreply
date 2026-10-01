@@ -91,7 +91,7 @@ class SessionService:
         user_result = await self.session.execute(
             select(User).where(
                 User.id == auth_session.user_id,
-                User.status == "active",
+                User.status.in_(("active", "demo")),
             )
         )
         user = user_result.scalar_one_or_none()

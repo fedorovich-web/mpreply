@@ -7,7 +7,6 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import payment_required
 from app.models.ai_draft import AIDraft
 from app.models.billing_plan import BillingPlan
 from app.models.marketplace_account import MarketplaceAccount
@@ -115,12 +114,6 @@ class PlanLimitService:
             remaining=remaining,
             allowed=limit is None or used < limit,
         )
-
-    async def enforce_ai_draft_limit(self, *, organization_id: UUID) -> UsageLimitDecision:
-        decision = await self.evaluate_metric(organization_id=organization_id, metric="ai_drafts_monthly")
-        if not decision.allowed:
-            raise payment_required("Monthly AI draft limit is exhausted for the current plan")
-        return decision
 
     async def _usage_value(
         self,

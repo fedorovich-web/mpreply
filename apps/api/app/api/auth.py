@@ -32,6 +32,7 @@ from app.schemas.auth import (
 )
 from app.schemas.common import MessageResponse
 from app.services.auth_service import AuthService
+from app.services.demo_workspace_service import ensure_demo_workspace
 from app.services.session_service import SessionError, SessionService
 from app.services.transactional_email import (
     EmailDeliveryError,
@@ -293,6 +294,29 @@ async def login(
         user_id=user.id,
         auth_version=user.auth_version,
     )
+    access_token = create_access_token(user_id=user.id, auth_version=user.auth_version)
+    set_access_cookie(response, access_token)
+    set_refresh_cookie(response, refresh_grant.raw_token)
+    await session.commit()
+    return AuthSessionResponse(user=UserResponse.model_validate(user))
+
+
+@router.post("/demo", response_model=AuthSessionResponse)
+async def open_demo(
+    request: Request,
+    response: Response,
+    _: None = Depends(require_csrf_header),
+    session: AsyncSession = Depends(get_db_session),
+) -> AuthSessionResponse:
+    await enforce_auth_rate_limit(
+        request,
+        scope="demo",
+        identifier=request.client.host if request.client else "unknown",
+        limit=60,
+        window_seconds=3600,
+    )
+    user = await ensure_demo_workspace(session)
+    refresh_grant = await SessionService(session).issue(user_id=user.id, auth_version=user.auth_version)
     access_token = create_access_token(user_id=user.id, auth_version=user.auth_version)
     set_access_cookie(response, access_token)
     set_refresh_cookie(response, refresh_grant.raw_token)

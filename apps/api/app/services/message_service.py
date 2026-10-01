@@ -96,8 +96,8 @@ class MessageService:
         result = await self.session.execute(stmt.order_by(CustomerMessage.marketplace_created_at.desc()).limit(page_size).offset((page - 1) * page_size))
         return [(row[0], row[1]) for row in result.all()], total
 
-    async def get_message(self, *, actor: User, message_id: UUID) -> tuple[CustomerMessage, Product | None]:
-        result = await self.session.execute(
+    async def get_message(self, *, actor: User, message_id: UUID, for_update: bool = False) -> tuple[CustomerMessage, Product | None]:
+        stmt = (
             select(CustomerMessage, Product)
             .join(
                 OrganizationUser,
@@ -116,6 +116,9 @@ class MessageService:
                 OrganizationUser.role.in_(_ALLOWED_READ_ROLES),
             )
         )
+        if for_update:
+            stmt = stmt.with_for_update(of=CustomerMessage).execution_options(populate_existing=True)
+        result = await self.session.execute(stmt)
         row = result.one_or_none()
         if row is None:
             raise not_found("Message not found")

@@ -2,21 +2,13 @@ import { ReviewQueueWorkspace } from "../../../components/review-queue/ReviewQue
 
 export default function ReviewQueuePage() {
   return (
-    <section className="app-page app-page-wide">
-      <section className="app-header app-header-row">
-        <div>
-          <p className="eyebrow">Ручная проверка</p>
-          <h1>Проверка отдельных ответов без отключения автоматизации</h1>
-          <p>
-            Здесь можно отредактировать ответ, повторно проверить его, одобрить или вернуть на доработку.
-            Версия записи защищает изменения от одновременного редактирования, а отправка выполняется в фоне.
-          </p>
-        </div>
-        <div className="app-header-actions">
-          <span className="status-badge">Автоматически по умолчанию</span>
-          <span className="status-badge">Подтверждение при необходимости</span>
-        </div>
-      </section>
+    <section className="app-page app-page-wide review-queue-page">
+      <header className="app-header review-queue-page-header">
+        <h1>На проверке</h1>
+        <p>
+          Проверяйте ответы, которым нужно решение: обращение, товар и причина остановки остаются рядом с текстом ответа.
+        </p>
+      </header>
 
       <ReviewQueueWorkspace />
     </section>

@@ -163,7 +163,8 @@ async def test_renew_requires_live_lease_owned_by_caller() -> None:
 
 
 @pytest.mark.asyncio
-async def test_release_clears_lease_and_schedules_next_run() -> None:
+@pytest.mark.parametrize("completed", [True, False])
+async def test_release_clears_lease_and_schedules_next_run(completed: bool) -> None:
     released = _state(owner="worker-a")
     session = _RecordingSession([released])
     service = MarketplaceSyncStateService(cast(AsyncSession, session))
@@ -174,13 +175,16 @@ async def test_release_clears_lease_and_schedules_next_run() -> None:
         owner="worker-a",
         now=NOW,
         next_run_at=next_run,
+        completed=completed,
     )
 
-    _, params = _compiled(session.statements[0])
+    sql, params = _compiled(session.statements[0])
     assert result is released
     assert SyncStateStatus.IDLE.value in params.values()
     assert next_run in params.values()
-    assert NOW in params.values()
+    update_clause = sql.partition(" WHERE ")[0]
+    assert ("last_success_at=" in update_clause) is completed
+    assert (NOW in params.values()) is completed
     assert None in params.values()
 
 
@@ -280,6 +284,7 @@ async def test_release_rejects_naive_timestamps(now: datetime, next_run_at: date
             owner="worker-a",
             now=now,
             next_run_at=next_run_at,
+            completed=True,
         )
 
 

@@ -5,16 +5,20 @@ from datetime import UTC, datetime
 
 from app.core.config import get_settings
 from app.workers.auto_reply import dispatch_due_replies
+from app.workers.automatic_drafts import dispatch_automatic_drafts
 from app.workers.marketplace_sync import enqueue_due_marketplace_streams
+from app.workers.reply_credit_maintenance import recover_due_reply_credits
 
 
 async def run_scheduler() -> None:
     settings = get_settings()
     while True:
+        await recover_due_reply_credits(datetime.now(UTC), limit=settings.marketplace_scheduler_batch_size)
         await enqueue_due_marketplace_streams(
             datetime.now(UTC),
             limit=settings.marketplace_scheduler_batch_size,
         )
+        await dispatch_automatic_drafts(datetime.now(UTC), limit=settings.marketplace_scheduler_batch_size)
         await dispatch_due_replies(
             datetime.now(UTC),
             limit=settings.marketplace_scheduler_batch_size,

@@ -1,0 +1,107 @@
+.public-root {
+	--color-bg-page: #ffffff;
+	--color-bg-surface: #ffffff;
+	--color-bg-elevated: #ffffff;
+	--color-bg-subtle: #f8f7ff;
+	--color-bg-brand-soft: #f0efff;
+	--color-text-primary: #071846;
+	--color-text-secondary: #50648a;
+	--color-text-muted: #6f82a7;
+	--color-kicker-text: #5148e8;
+	--color-border-subtle: #e3e0f6;
+	--color-border-strong: #c9c3ee;
+	--color-brand-primary: #5148e8;
+	--color-brand-primary-hover: #443bcf;
+	--color-brand-accent: #5148e8;
+	--color-brand-text-on-soft: #443bcf;
+	--color-brand-soft: #f0efff;
+	--color-brand-soft-strong: #e3e0ff;
+	--color-focus-ring: #5148e8;
+	--color-surface-dark: #071846;
+	--color-text-on-dark: #f8fbff;
+	--color-public-page: #ffffff;
+	--color-public-section: #ffffff;
+	--color-public-section-subtle: #f8f7ff;
+	--color-public-header: rgb(255 255 255 / 96%);
+	--color-public-footer: #fbfaff;
+	--gradient-public-blue: linear-gradient(110deg, #5148e8 0%, #635bff 58%, #5964ff 100%);
+	--gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+	--gradient-public-cta: linear-gradient(115deg, #3d35c0 0%, #5148e8 52%, #635bff 100%);
+	--public-section-spacing: clamp(6rem, 10vw, 9rem);
+	--shadow-public-card: 0 24px 60px rgb(49 43 112 / 10%);
+	--shadow-public-cta: 0 30px 72px rgb(81 72 232 / 20%);
+	--shadow-public-button: 0 10px 24px rgb(81 72 232 / 20%);
+	--shadow-public-button-hover: 0 14px 30px rgb(81 72 232 / 24%);
+	--shadow-public-brand-mark: 0 8px 18px rgb(81 72 232 / 20%);
+	background: var(--color-public-page);
+	color: var(--color-text-primary);
+}
+
+.public-root .public-header {
+	border-bottom-color: rgb(201 195 238 / 70%);
+	background: rgb(255 255 255 / 94%);
+}
+
+.public-root .public-header-inner {
+	min-height: 4.75rem;
+}
+
+.public-root .public-brand-mark {
+	background: var(--gradient-public-blue);
+	box-shadow: var(--shadow-public-brand-mark);
+}
+
+.public-root .public-brand-copy strong {
+	color: var(--color-text-primary);
+}
+
+.public-root .public-nav {
+	color: var(--color-text-secondary);
+}
+
+.public-root .public-nav a:hover,
+.public-root .text-link:hover {
+	color: var(--color-brand-primary);
+}
+
+.public-root .button-primary {
+	background: var(--color-brand-primary);
+	color: #ffffff;
+	box-shadow: var(--shadow-public-button);
+}
+
+.public-root .button-primary:hover {
+	background: var(--color-brand-primary-hover);
+	box-shadow: var(--shadow-public-button-hover);
+}
+
+.public-root .button-secondary {
+	border-color: var(--color-border-strong);
+	background: #ffffff;
+	color: var(--color-text-primary);
+}
+
+.public-root .button-secondary:hover {
+	border-color: var(--color-brand-primary);
+	background: #f8f7ff;
+}
+
+.public-root .public-section {
+	padding: var(--public-section-spacing) 0;
+}
+
+.public-root .public-footer {
+	border-top-color: var(--color-border-subtle);
+	background: #fbfaff;
+}
+
+.public-root .public-footer-brand p,
+.public-root .public-footer-bottom {
+	color: var(--color-text-secondary);
+}
+
+@media (max-width: 720px) {
+	.public-root {
+		--public-section-spacing: clamp(5rem, 16vw, 6.5rem);
+	}
+}

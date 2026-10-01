@@ -1,0 +1,269 @@
+/* Compact header chrome from the approved public mockups. */
+
+.public-root {
+  overflow-x: clip;
+  --public-header-height: 64px;
+}
+
+.public-root .button {
+  transition: var(--transition-interactive);
+}
+
+.public-root .button:active {
+  transform: translateY(0) scale(.98);
+}
+
+.public-root .public-mobile-menu-panel nav a {
+  transition: color var(--duration-normal) var(--ease-out), background-color var(--duration-normal) var(--ease-out);
+}
+
+.public-root .public-header-inner {
+  min-height: var(--public-header-height);
+  gap: 22px;
+}
+
+.public-root .public-brand {
+  gap: 9px;
+}
+
+.public-root .public-brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.public-root .public-brand-copy strong {
+  font-size: 1.06rem;
+  letter-spacing: -.035em;
+}
+
+.public-root .public-nav {
+  gap: clamp(14px, 1.8vw, 26px);
+  width: fit-content;
+  justify-self: center;
+  color: #526687;
+  font-size: 14px;
+}
+
+.public-root .public-nav a {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-inline: 0;
+  font-weight: 600;
+  transition: color var(--duration-normal) var(--ease-out);
+}
+
+.public-root .public-nav a:hover {
+  color: var(--color-brand-primary);
+}
+
+.public-root .public-nav a[aria-current="page"] {
+  color: var(--color-brand-primary);
+}
+
+.public-root .public-nav a::after {
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  left: 0;
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-brand-primary);
+  content: "";
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.public-root .public-nav a:hover::after,
+.public-root .public-nav a:focus-visible::after,
+.public-root .public-nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+.public-root .public-header-actions {
+  gap: 8px;
+}
+
+.public-root .public-header .public-language-link {
+  border-color: var(--public-header-control-border);
+  color: var(--color-brand-primary);
+}
+
+.public-root .public-header .public-language-link:hover {
+  border-color: var(--color-brand-primary);
+}
+
+.public-root .public-header-actions .button {
+  min-height: 42px;
+  padding-inline: 15px;
+  font-size: 14px;
+}
+
+.public-root .public-login-link {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: #52688d;
+}
+
+.public-root .public-login-link:hover {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-brand-primary);
+}
+
+.public-root .public-header-cta {
+  background: var(--gradient-mpreply-action);
+  box-shadow: 0 7px 18px rgb(81 72 232 / 18%);
+}
+
+@media (min-width: 1041px) and (max-width: 1180px) {
+  .public-root .public-header-inner {
+    gap: 12px;
+  }
+
+  .public-root .public-nav {
+    gap: 12px;
+  }
+
+  .public-root .public-header-actions .button {
+    padding-inline: 10px;
+  }
+}
+
+@media (max-width: 1040px) {
+  .public-root .public-header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .public-root .public-mobile-menu-trigger {
+    width: 46px;
+    height: 46px;
+    border-color: var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-brand-soft);
+    color: var(--color-brand-primary);
+    box-shadow: none;
+  }
+
+  .public-root .public-mobile-menu-trigger:hover,
+  .public-root .public-mobile-menu-trigger[aria-expanded='true'] {
+    border-color: var(--color-brand-primary);
+    background: var(--color-brand-soft-strong);
+    box-shadow: none;
+  }
+
+  .public-root .public-mobile-menu-trigger span {
+    width: 20px;
+  }
+
+  .public-root .public-mobile-menu-backdrop {
+    inset: var(--public-mobile-nav-top, var(--public-header-height)) 0 0;
+    width: 100vw;
+    height: calc(100dvh - var(--public-mobile-nav-top, var(--public-header-height)));
+    background: rgb(7 24 70 / 56%);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-normal) var(--ease-out), visibility 0s linear var(--duration-normal);
+  }
+
+  .public-root .public-mobile-menu-backdrop[data-open='true'] {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  .public-root .public-mobile-navigation .public-mobile-menu-panel {
+    top: var(--public-mobile-nav-top, var(--public-header-height));
+    right: 0;
+    bottom: auto;
+    left: auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    width: min(100vw, 380px);
+    height: calc(100dvh - var(--public-mobile-nav-top, var(--public-header-height)));
+    max-height: none;
+    gap: 16px;
+    border: 0;
+    border-radius: 0;
+    padding: 24px 24px max(24px, env(safe-area-inset-bottom));
+    box-shadow: -16px 0 48px rgb(7 24 70 / 14%);
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: transform var(--duration-slow) var(--ease-out), opacity var(--duration-normal) var(--ease-out), visibility 0s linear var(--duration-slow);
+  }
+
+  .public-root .public-mobile-navigation .public-mobile-menu-panel[data-open='true'] {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(0);
+    transition-delay: 0s;
+  }
+
+  .public-root .public-mobile-menu-panel nav {
+    align-content: start;
+  }
+
+  .public-root .public-mobile-menu-panel nav a {
+    min-height: 52px;
+    border: 0;
+    border-radius: 10px;
+    padding-inline: 16px;
+    color: var(--color-text-primary);
+    font-size: 16px;
+  }
+
+  .public-root .public-mobile-menu-panel nav a::after {
+    content: none;
+  }
+
+  .public-root .public-mobile-menu-panel nav a:hover,
+  .public-root .public-mobile-menu-panel nav a[aria-current='page'] {
+    background: var(--color-brand-soft);
+    color: var(--color-brand-primary);
+  }
+
+  .public-root .public-mobile-menu-panel nav a:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .public-root .public-mobile-menu-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    border-top: 1px solid var(--color-border-subtle);
+    padding-top: 14px;
+  }
+
+  .public-root .public-mobile-menu-actions .button {
+    min-height: 44px;
+    justify-content: center;
+    padding-inline: 10px;
+  }
+
+  .public-root .public-mobile-menu-actions .button:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .public-root .public-mobile-navigation .public-mobile-menu-panel {
+    width: min(88vw, 380px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-root .button,
+  .public-root .public-mobile-menu-trigger,
+  .public-root .public-mobile-menu-backdrop,
+  .public-root .public-mobile-navigation .public-mobile-menu-panel,
+  .public-root .public-mobile-menu-panel nav a {
+    transition: none;
+  }
+}

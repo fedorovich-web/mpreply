@@ -1,9 +1,13 @@
 import type { Page, Route } from "@playwright/test";
 
 export type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
-type Marketplace = "wildberries" | "ozon" | "yandex_market" | "avito";
+
+type MockIntegrationsApiOptions = {
+  includeSecondOrganization?: boolean;
+};
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
+const secondOrganizationId = "11111111-1111-4111-8111-222222222222";
 const userId = "22222222-2222-4222-8222-222222222222";
 const accountId = "33333333-3333-4333-8333-333333333333";
 const timestamp = "2026-07-12T06:00:00Z";
@@ -26,7 +30,11 @@ const account = {
   updated_at: timestamp,
 };
 
-export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "owner", marketplace: Marketplace = "wildberries") {
+export async function mockIntegrationsApi(
+  page: Page,
+  role: OrganizationRole = "owner",
+  options: MockIntegrationsApiOptions = {},
+) {
   const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
   const headers = {
     "access-control-allow-credentials": "true",
@@ -53,7 +61,7 @@ export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "
 
   await page.route("**/api/organizations", async (route) => {
     if (route.request().method() === "OPTIONS") return fulfillJson(route, null, 204);
-    return fulfillJson(route, [{
+    const organizations = [{
       id: organizationId,
       name: "Seller Group",
       slug: "seller-group",
@@ -64,7 +72,22 @@ export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "
       current_user_role: role,
       created_at: timestamp,
       updated_at: timestamp,
-    }]);
+    }];
+    if (options.includeSecondOrganization) {
+      organizations.push({
+        id: secondOrganizationId,
+        name: "Second Store",
+        slug: "second-store",
+        owner_user_id: userId,
+        plan_id: null,
+        default_response_mode: "auto",
+        status: "active",
+        current_user_role: role,
+        created_at: timestamp,
+        updated_at: timestamp,
+      });
+    }
+    return fulfillJson(route, organizations);
   });
 
   await page.route("**/api/marketplace-accounts**", async (route) => {
@@ -85,23 +108,26 @@ export async function mockIntegrationsApi(page: Page, role: OrganizationRole = "
     if (url.endsWith("/sync")) {
       return fulfillJson(route, {
         account_id: accountId,
-        marketplace,
+        marketplace: "wildberries",
         status: "success",
-        imported_reviews: marketplace === "avito" ? 0 : 4,
-        imported_questions: marketplace === "avito" ? 0 : 2,
-        imported_chats: marketplace === "avito" ? 6 : 0,
-        updated_reviews: marketplace === "avito" ? 0 : 1,
+        imported_reviews: 4,
+        imported_questions: 2,
+        imported_chats: 0,
+        updated_reviews: 1,
         updated_questions: 0,
-        updated_chats: marketplace === "avito" ? 1 : 0,
+        updated_chats: 0,
         skipped: 0,
         error_code: null,
         error_message_safe: null,
       }, 202);
     }
     if (method === "POST" && !url.includes("rotate-credentials") && !url.includes("revoke-credentials")) {
-      return fulfillJson(route, { ...account, marketplace }, 201);
+      return fulfillJson(route, account, 201);
     }
-    if (method === "GET") return fulfillJson(route, [{ ...account, marketplace }]);
-    return fulfillJson(route, { ...account, marketplace });
+    if (method === "GET") {
+      const requestedOrganizationId = new URL(url).searchParams.get("organization_id");
+      return fulfillJson(route, requestedOrganizationId === secondOrganizationId ? [] : [account]);
+    }
+    return fulfillJson(route, account);
   });
 }

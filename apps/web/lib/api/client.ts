@@ -4,7 +4,7 @@ const localDevelopmentApiBaseUrl = "http://localhost:8000";
 const csrfHeaderValue = "1";
 const csrfProtectedMethods = new Set(["DELETE", "PATCH", "POST", "PUT"]);
 
-const API_BASE_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
+const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -61,6 +61,7 @@ export async function apiRequest<T>(
   schema: ZodType<T>,
   options: ApiRequestOptions = {},
 ): Promise<T> {
+  const apiBaseUrl = resolveApiBaseUrl(configuredApiBaseUrl);
   const normalizedPath = normalizePath(path);
   const headers = new Headers(options.headers);
   let body: BodyInit | undefined;
@@ -81,7 +82,7 @@ export async function apiRequest<T>(
     cache: "no-store",
   };
 
-  let response = await fetch(`${API_BASE_URL}${normalizedPath}`, requestInit);
+  let response = await fetch(`${apiBaseUrl}${normalizedPath}`, requestInit);
   if (response.status === 401 && shouldAttemptSessionRefresh(normalizedPath)) {
     const refreshResult = await refreshSession();
     if (refreshResult === "unavailable") {
@@ -101,7 +102,7 @@ export async function apiRequest<T>(
       );
     }
 
-    response = await fetch(`${API_BASE_URL}${normalizedPath}`, requestInit);
+    response = await fetch(`${apiBaseUrl}${normalizedPath}`, requestInit);
     if (response.status === 401) {
       throw new ApiError(
         "Сессия истекла. Войдите снова.",
@@ -145,7 +146,8 @@ function shouldAttemptSessionRefresh(path: string): boolean {
 async function refreshSession(): Promise<SessionRefreshResult> {
   if (refreshInFlight !== null) return refreshInFlight;
 
-  const refreshRequest = fetch(`${API_BASE_URL}/api/auth/refresh`, {
+  const apiBaseUrl = resolveApiBaseUrl(configuredApiBaseUrl);
+  const refreshRequest = fetch(`${apiBaseUrl}/api/auth/refresh`, {
     method: "POST",
     credentials: "include",
     headers: { "X-CSRF-Token": csrfHeaderValue },
