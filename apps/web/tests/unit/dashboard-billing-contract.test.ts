@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/billing/BillingWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/billing/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-billing-approved.css"), "utf8");
 
 describe("billing and limits dashboard", () => {
@@ -54,7 +54,7 @@ describe("billing and limits dashboard", () => {
     expect(workspace).toContain("billing-overview-grid");
     expect(workspace).toContain("billing-summary-card");
     expect(workspace).toContain("billing-section");
-    expect(layout).toContain('import "../styles/dashboard-billing-approved.css"');
+    expect(layout).toContain('import "./dashboard-billing-approved.css"');
     expect(styles).toContain(".billing-page");
     expect(styles).toContain(".billing-usage-grid");
     expect(styles).toContain("@media (max-width: 520px)");

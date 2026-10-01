@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const dashboard = readFileSync(join(root, "components/dashboard/DashboardMetrics.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/dashboard/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-overview-approved.css"), "utf8");
 
 describe("dashboard overview", () => {
@@ -94,7 +94,7 @@ describe("dashboard overview", () => {
 
   it("keeps the approved raster icon policy and responsive product layer", () => {
     expect(page).toContain("<h1>Обзор</h1>");
-    expect(layout).toContain('import "../styles/dashboard-overview-approved.css"');
+    expect(layout).toContain('import "./dashboard-overview-approved.css"');
     expect(dashboard).toContain("/images/icons/final/05-chat.avif");
     expect(dashboard).toContain("/images/icons/final/34-ai-assistant.avif");
     expect(dashboard).not.toContain("<svg");

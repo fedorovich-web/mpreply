@@ -16,5 +16,5 @@ const iconSources: Record<HomeLineIconName, string> = {
 };
 
 export function HomeLineIcon({ name }: { name: HomeLineIconName }) {
-  return <Image className="home-line-icon" src={iconSources[name]} alt="" width={128} height={128} unoptimized />;
+  return <Image className="home-line-icon" src={iconSources[name]} alt="" width={128} height={128} quality={85} sizes="56px" />;
 }

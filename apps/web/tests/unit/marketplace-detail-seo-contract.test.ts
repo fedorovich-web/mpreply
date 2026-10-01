@@ -94,7 +94,10 @@ describe("marketplace detail SEO metadata contract", () => {
   it("keeps localized marketplace BreadcrumbList JSON-LD aligned with real routes", () => {
     expect(landing).toContain('locale === "en" ? "/en/marketplaces" : "/marketplaces"');
     expect(landing).toContain('"@type": "BreadcrumbList"');
-    expect(landing).toContain('type="application/ld+json"');
+    expect(landing).toContain("<JsonLd data={breadcrumbJsonLd} />");
+    const jsonLd = readFileSync(join(root, "components/seo/JsonLd.tsx"), "utf8");
+    expect(jsonLd).toContain('type="application/ld+json"');
+    expect(jsonLd).toContain("nonce={nonce}");
     expect(landing).toContain("siteConfig.origin");
     expect(landing).toContain("marketplace.path");
     expect(landing).toContain("`${siteConfig.origin}${marketplacesPath}`");

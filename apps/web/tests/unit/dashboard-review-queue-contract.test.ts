@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/review-queue/ReviewQueueWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/review-queue/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-review-queue-approved.css"), "utf8");
 
 describe("review queue operational workspace", () => {
@@ -73,7 +73,7 @@ describe("review queue operational workspace", () => {
   });
 
   it("loads a scoped responsive review style layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-review-queue-approved.css"');
+    expect(layout).toContain('import "./dashboard-review-queue-approved.css"');
     expect(styles).toContain(".review-queue-page");
     expect(styles).toContain(".review-queue-workspace");
     expect(styles).toContain(".review-attention-reason");

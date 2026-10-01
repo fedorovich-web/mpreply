@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/admin/AdminOverviewWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/admin/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-admin-approved.css"), "utf8");
 
 describe("superadmin dashboard", () => {
@@ -112,7 +112,7 @@ describe("superadmin dashboard", () => {
   });
 
   it("loads a scoped responsive admin layer without introducing a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-admin-approved.css"');
+    expect(layout).toContain('import "./dashboard-admin-approved.css"');
     expect(styles).toContain(".admin-page");
     expect(styles).toContain(".admin-section-incidents");
     expect(styles).not.toContain(".admin-page-hero");

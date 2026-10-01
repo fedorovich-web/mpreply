@@ -6,6 +6,8 @@ import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { billingOverviewSchema } from "../../lib/api/schemas";
 import type { Locale } from "../../lib/i18n";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { BillingCheckout } from "./BillingCheckout";
+import { BillingOrders } from "./BillingOrders";
 
 const metricLabels: Record<Locale, Record<string, string>> = {
   ru: {
@@ -237,6 +239,8 @@ export function BillingWorkspace() {
         </aside>
       </section>
 
+      <BillingCheckout />
+      <BillingOrders />
       <section className="billing-section" aria-labelledby="billing-usage-title">
         <div className="billing-section-heading">
           <div>

@@ -10,18 +10,21 @@ export class ApiError extends Error {
   readonly status: number;
   readonly requestId: string | null;
   readonly kind: "request" | "invalid-response" | "session-expired" | "session-refresh-unavailable";
+  readonly orderNotCreated: boolean;
 
   constructor(
     message: string,
     status: number,
     requestId: string | null = null,
     kind: ApiError["kind"] = "request",
+    orderNotCreated = false,
   ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.requestId = requestId;
     this.kind = kind;
+    this.orderNotCreated = orderNotCreated;
   }
 }
 
@@ -117,7 +120,9 @@ export async function apiRequest<T>(
   const payload: unknown = await readJson(response);
 
   if (!response.ok) {
-    throw new ApiError(extractErrorMessage(payload, response.status), response.status, requestId);
+    const orderNotCreated = normalizedPath === "/api/billing/orders" && options.method === "POST"
+      && [400, 409].includes(response.status) && response.headers.get("X-Billing-Order-Not-Created") === "1";
+    throw new ApiError(extractErrorMessage(payload, response.status), response.status, requestId, "request", orderNotCreated);
   }
 
   const parsed = schema.safeParse(payload);
@@ -138,9 +143,14 @@ export function buildApiQuery(path: string, params: Record<string, string | numb
   return query ? `${normalizePath(path)}?${query}` : normalizePath(path);
 }
 
+export function buildApiUrl(path: string): string {
+  if (!path.startsWith("/api/") || path.includes("\\")) throw new Error("Invalid API path");
+  return `${resolveApiBaseUrl(configuredApiBaseUrl)}${path}`;
+}
+
 function shouldAttemptSessionRefresh(path: string): boolean {
   if (!path.startsWith("/api/auth/")) return true;
-  return path === "/api/auth/me" || path === "/api/auth/change-password";
+  return ["/api/auth/me", "/api/auth/change-password", "/api/auth/identities", "/api/auth/yandex/link/start"].includes(path);
 }
 
 async function refreshSession(): Promise<SessionRefreshResult> {

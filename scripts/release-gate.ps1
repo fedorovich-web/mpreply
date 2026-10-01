@@ -126,6 +126,9 @@ try {
     Run-Step "Frontend accessibility" {
         & $Npm run test:a11y
     }
+    Run-Step "Production browser security" {
+        & $Npm run test:security
+    }
     Run-Step "Frontend visual regression" {
         & $Npm run test:visual:run
     }

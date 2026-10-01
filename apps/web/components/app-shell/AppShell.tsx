@@ -373,7 +373,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="app-topbar-user">
               <span className="app-status-dot" aria-hidden="true" />
               <span>
-                <strong>{user.name || user.email}</strong>
+                <Link href={localizedPath(locale, "/app/account")} aria-label={locale === "ru" ? "Аккаунт" : "Account"}><strong>{user.name || user.email}</strong></Link>
                 {user.name && !isDemo ? <small>{user.email}</small> : null}
               </span>
             </div>

@@ -60,8 +60,19 @@ def scrub_secrets(
     return {key: "[REDACTED]" if _normalized_key(key) in _SENSITIVE_KEYS else _scrub(value) for key, value in event_dict.items()}
 
 
+class QuerySafeAccessLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple) and len(record.args) == 5 and isinstance(record.args[2], str):
+            # Preserve Uvicorn's five formatter arguments, including status, without URL query secrets.
+            record.args = (*record.args[:2], record.args[2].split("?", 1)[0], *record.args[3:])
+        return True
+
+
 def configure_logging(level: str) -> None:
     logging.basicConfig(level=level.upper(), format="%(message)s")
+    access_logger = logging.getLogger("uvicorn.access")
+    if not any(isinstance(item, QuerySafeAccessLogFilter) for item in access_logger.filters):
+        access_logger.addFilter(QuerySafeAccessLogFilter())
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,

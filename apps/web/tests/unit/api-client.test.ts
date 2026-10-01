@@ -22,6 +22,16 @@ describe("buildApiQuery", () => {
 });
 
 describe("apiRequest", () => {
+  it.each(["/api/auth/identities", "/api/auth/yandex/link/start"])("refreshes an expired session for %s", async (path) => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "expired" }), { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ message: "Session refreshed" })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(apiRequest(path, z.object({ ok: z.boolean() }), path.endsWith("/start") ? { method: "POST", body: { locale: "ru" } } : {})).resolves.toEqual({ ok: true });
+    expect(fetchMock.mock.calls[1][0]).toBe("http://localhost:8000/api/auth/refresh");
+    expect(fetchMock.mock.calls[2][0]).toBe(`http://localhost:8000${path}`);
+  });
   it("sends JSON with credentialed no-store requests and validates the response", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () =>
       new Response(JSON.stringify({ ok: true }), {

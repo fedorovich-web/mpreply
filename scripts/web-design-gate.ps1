@@ -19,6 +19,7 @@ try {
   Run-Step "Frontend W3C HTML and CSS validation" { & $Npm run validate:w3c }
   if(-not $SkipBrowserInstall){ if($AllBrowsers){ Run-Step "Install Playwright browsers" { & $Npx playwright install chromium firefox webkit } } else { Run-Step "Install Playwright Chromium" { & $Npx playwright install chromium } } }
   Run-Step "Playwright public-site E2E" { & $Npm run test:e2e }
+  Run-Step "Production browser security" { & $Npm run test:security }
   Run-Step "Playwright accessibility scan" { & $Npm run test:a11y }
   Run-Step "Lighthouse CI" { & $Npm run lighthouse }
   Run-Step "Playwright visual regression" { & $Npm run test:visual }

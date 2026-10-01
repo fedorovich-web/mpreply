@@ -5,18 +5,6 @@ import { htmlLanguage, localeFromRequestHeader, localeRequestHeader } from "../l
 import { siteConfig } from "../lib/site-config";
 import "../styles/globals.css";
 import "../styles/brand-theme.css";
-import "../styles/dashboard-shell-approved.css";
-import "../styles/dashboard-overview-approved.css";
-import "../styles/dashboard-inbox-approved.css";
-import "../styles/dashboard-review-queue-approved.css";
-import "../styles/dashboard-ai-assistant-approved.css";
-import "../styles/dashboard-automation-approved.css";
-import "../styles/dashboard-integrations-approved.css";
-import "../styles/dashboard-analytics-approved.css";
-import "../styles/dashboard-billing-approved.css";
-import "../styles/dashboard-admin-approved.css";
-import "../styles/dashboard-final-fidelity.css";
-import "../styles/workspace-onboarding-approved.css";
 import "../styles/marketing-site.css";
 import "../styles/marketing-pages.css";
 import "../styles/help-legal-approved.css";
@@ -110,7 +98,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang={htmlLanguage(locale)} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script nonce={requestHeaders.get("x-nonce") ?? undefined} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>{children}</body>
     </html>

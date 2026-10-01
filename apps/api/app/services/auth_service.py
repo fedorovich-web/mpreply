@@ -76,9 +76,9 @@ class AuthService:
     async def authenticate_user(self, *, email: str, password: str) -> User:
         normalized_email = email.strip().lower()
         user = await self._find_user_by_email(normalized_email)
-        password_hash = user.password_hash if user is not None else _DUMMY_PASSWORD_HASH
+        password_hash = user.password_hash or _DUMMY_PASSWORD_HASH if user is not None else _DUMMY_PASSWORD_HASH
         password_matches = verify_password(password, password_hash)
-        if user is None or not password_matches:
+        if user is None or not user.password_hash or not password_matches:
             raise unauthorized("Invalid email or password")
         if user.status != "active":
             raise unauthorized("User account is not active")
@@ -156,6 +156,8 @@ class AuthService:
         return user
 
     async def change_password(self, *, user: User, current_password: str, new_password: str) -> User:
+        if not user.password_hash:
+            raise bad_request("Use password reset to set a password for this account")
         if not verify_password(current_password, user.password_hash):
             raise bad_request("Current password is incorrect")
         if verify_password(new_password, user.password_hash):

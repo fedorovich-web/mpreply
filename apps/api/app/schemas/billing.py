@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
 
 class BillingPlanResponse(BaseModel):
@@ -68,3 +69,58 @@ class ReplyBalanceResponse(BaseModel):
     granted: int = Field(ge=0)
     trial_ends_at: datetime | None
     paid_entitled: bool
+
+
+class PackPurchase(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    quantity: StrictInt = Field(gt=0, le=20000)
+    count: StrictInt = Field(gt=0, le=2147483647)
+
+
+class PurchaseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["plan", "addon"]
+    plan_code: str | None = Field(default=None, max_length=64)
+    months: StrictInt | None = None
+    packs: list[PackPurchase] = Field(default_factory=list[PackPurchase], max_length=32)
+
+
+class CreateOrderRequest(PurchaseRequest):
+    organization_id: UUID
+    idempotency_key: UUID
+
+
+class BillingOrderResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    organization_id: UUID
+    kind: str
+    amount_minor: int
+    currency: str
+    state: str
+    payment_url: str | None
+    monthly_credits: int
+    addon_credits: int
+    created_at: datetime
+    paid_at: datetime | None
+    last_error: str | None
+
+
+class CatalogPlan(BaseModel):
+    code: str
+    amount_month_minor: int
+    amount_year_minor: int
+    monthly_credits: int
+
+
+class CatalogPack(BaseModel):
+    quantity: int
+    amount_minor: int
+
+
+class BillingCatalogResponse(BaseModel):
+    enabled: bool
+    can_purchase: bool
+    currency: str = "RUB"
+    plans: list[CatalogPlan]
+    packs: list[CatalogPack]

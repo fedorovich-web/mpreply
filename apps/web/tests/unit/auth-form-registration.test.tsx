@@ -25,7 +25,8 @@ describe("AuthForm registration response contract", () => {
     router.replace.mockReset();
     router.refresh.mockReset();
     fetchMock.mockReset();
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => String(input).endsWith("/api/auth/providers")
+      ? Promise.resolve(new Response(JSON.stringify({ yandex: false }))) : fetchMock(input, init));
   });
   afterEach(() => vi.unstubAllGlobals());
 

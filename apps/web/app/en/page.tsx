@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import homeHero from "../../public/images/approved/01-home-hero.avif";
+import homeCta from "../../public/images/approved/04-marketplaces-cta.avif";
 
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { HomeWorkspaceTabs } from "../../components/public-site/HomeWorkspaceTabs";
@@ -68,7 +70,7 @@ export default function EnglishHomePage() {
             <div className="homepage-hero-benefits" role="group" aria-label="Getting started"><span>✓ Shared queue</span><span>✓ 14-day trial</span><span>✓ Review before sending</span></div>
           </div>
           <div className="homepage-hero-art home-reference-hero-art">
-            <Image alt="MPReply workspace with a unified customer-message queue and AI-assisted reply" height={1062} priority sizes="(max-width: 1100px) 100vw, 50vw" src="/images/approved/01-home-hero.avif" width={1481} unoptimized />
+            <Image alt="MPReply workspace with a unified customer-message queue and AI-assisted reply" height={1062} priority sizes="(max-width: 1100px) 100vw, 50vw" src={homeHero} width={1481} quality={85} />
           </div>
         </div>
       </section>
@@ -79,7 +81,7 @@ export default function EnglishHomePage() {
           <div className="homepage-marketplace-list">
             {homeMarketplaces.map((marketplace) => (
               <Link key={marketplace.key} className="homepage-marketplace-link" href={marketplace.path} aria-label={marketplace.name}>
-                <span className={`homepage-marketplace-logo homepage-marketplace-logo-${marketplace.key}`} aria-hidden="true"><Image src={homeMarketplaceLogos[marketplace.key]} alt="" width={256} height={256} unoptimized /></span>
+                <span className={`homepage-marketplace-logo homepage-marketplace-logo-${marketplace.key}`} aria-hidden="true"><Image src={homeMarketplaceLogos[marketplace.key]} alt="" width={256} height={256} quality={85} sizes="112px" /></span>
               </Link>
             ))}
           </div>
@@ -123,7 +125,7 @@ export default function EnglishHomePage() {
           <div className="homepage-section-heading-left homepage-process-heading"><h2>How it works</h2><p>Connect the marketplaces you use and bring supported customer messages into one workflow.</p></div>
           <ol className="homepage-horizontal-process">
             <li className="homepage-horizontal-step">
-              <div className="homepage-process-card homepage-process-card-connect"><span className="homepage-process-card-icon"><PublicIcon name="link" /></span><h3>Connect your<br />marketplaces</h3><p>Add a supported marketplace connection to the MPReply workspace.</p><div className="homepage-process-marketplaces" role="group" aria-label="Wildberries, Ozon, Yandex Market, Avito">{homeMarketplaceKeys.map((key) => <span key={key}><Image src={key === "avito" ? "/images/brands/avito-sign-logo.svg" : homeMarketplaceLogos[key]} alt={getMarketplaceConfig(key, "en").name} width={128} height={128} unoptimized /></span>)}</div></div>
+              <div className="homepage-process-card homepage-process-card-connect"><span className="homepage-process-card-icon"><PublicIcon name="link" /></span><h3>Connect your<br />marketplaces</h3><p>Add a supported marketplace connection to the MPReply workspace.</p><div className="homepage-process-marketplaces" role="group" aria-label="Wildberries, Ozon, Yandex Market, Avito">{homeMarketplaceKeys.map((key) => <span key={key}><Image src={key === "avito" ? "/images/brands/avito-sign-logo.svg" : homeMarketplaceLogos[key]} alt={getMarketplaceConfig(key, "en").name} width={128} height={128} quality={85} sizes="72px" /></span>)}</div></div>
             </li>
             <li className="homepage-horizontal-step">
               <h3>Collect customer messages</h3><p>Supported reviews, questions, and customer messages appear in one queue.</p><div className="homepage-process-card homepage-process-card-inbox" aria-hidden="true"><span><i><HomeLineIcon name="star" /></i><b>Review</b></span><span><i><HomeLineIcon name="question" /></i><b>Question</b></span><span><i><HomeLineIcon name="message" /></i><b>Message</b></span></div>
@@ -141,14 +143,14 @@ export default function EnglishHomePage() {
       <section className="public-section homepage-results-section home-reference-results">
         <div className="public-container homepage-results-layout">
           <div className="homepage-section-heading-left homepage-results-copy"><h2>One queue.<br />Context nearby.<br />Control before sending.</h2><p>MPReply combines supported customer messages, AI-assisted drafts, automation rules, and human review in one workflow.</p></div>
-          <div className="homepage-result-grid">{resultFacts.map((fact) => (<div className="homepage-result-card" key={fact.label}><span><Image src={fact.icon} alt="" width={128} height={128} unoptimized /></span><strong>{fact.value}</strong><p>{fact.label}</p></div>))}</div>
+          <div className="homepage-result-grid">{resultFacts.map((fact) => (<div className="homepage-result-card" key={fact.label}><span><Image src={fact.icon} alt="" width={128} height={128} quality={85} sizes="72px" /></span><strong>{fact.value}</strong><p>{fact.label}</p></div>))}</div>
         </div>
       </section>
 
       <section className="public-section homepage-approved-final-cta home-reference-final">
         <div className="public-container homepage-final-cta-card">
           <div className="homepage-final-cta-copy"><h2>Bring marketplace<br />customer communication<br />into one workflow</h2><p>Try MPReply for 14 days with 350 AI replies included in the trial.</p><div className="homepage-final-cta-actions"><Link className="button button-primary" href="/en/auth/register?intent=connect-marketplace">Start free&nbsp; →</Link><Link className="button button-secondary homepage-demo-button" href="/en/demo"><PublicIcon name="play" />View demo</Link></div><div className="homepage-final-benefits" role="group" aria-label="Getting started"><span>✓ 14-day trial</span><span>✓ Shared queue</span><span>✓ Review before sending</span></div></div>
-          <div className="homepage-cta-art home-reference-cta-art" aria-hidden="true"><Image alt="" height={1086} sizes="(max-width: 760px) 100vw, 38vw" src="/images/approved/04-marketplaces-cta.avif" width={1448} unoptimized /></div>
+          <div className="homepage-cta-art home-reference-cta-art" aria-hidden="true"><Image alt="" height={1086} sizes="(max-width: 760px) 100vw, 38vw" src={homeCta} width={1448} quality={85} /></div>
         </div>
       </section>
     </PublicShell>

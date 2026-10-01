@@ -9,17 +9,17 @@ const product = read("PRODUCT.md");
 const billingWorkspace = read("apps/web/components/billing/BillingWorkspace.tsx");
 const billingPage = read("apps/web/app/app/billing/page.tsx");
 
-describe("billing rollout boundary", () => {
-  it("documents that payment-provider billing work waits for the production domain", () => {
+describe("billing launch-stage boundary", () => {
+  it("documents authorized manual billing after the production domain became operational", () => {
     expect(product).toContain("production domain");
-    expect(product).toContain("payment-provider wiring is deferred");
-    expect(product).toContain("do not redesign the billing/payment flow");
+    expect(product).toContain("manual renewal and no automatic charges");
+    expect(product).toContain("Checkout remains disabled until configuration");
   });
 
-  it("preserves the existing billing boundary without inventing checkout actions", () => {
+  it("preserves the existing tariff fallback while connecting the verified checkout", () => {
     expect(billingWorkspace).toContain("data.pricing_finalized");
     expect(billingWorkspace).toContain(': "—"');
-    expect(billingWorkspace).not.toMatch(/checkout|оплатить сейчас|перейти к оплате/i);
+    expect(billingWorkspace).toContain("<BillingCheckout />");
     expect(billingPage).toContain("Тариф и лимиты");
   });
 });

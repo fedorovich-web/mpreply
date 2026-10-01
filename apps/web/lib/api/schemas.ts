@@ -1,5 +1,28 @@
 import { z } from "zod";
 
+export const authProvidersSchema = z.object({ yandex: z.boolean() });
+export const authIdentitiesSchema = z.object({ yandex_linked: z.boolean(), can_link_yandex: z.boolean() });
+function secureProviderUrl(value: string, provider: "lava" | "yandex"): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return false;
+    return provider === "lava" ? url.hostname === "lava.top" || url.hostname.endsWith(".lava.top")
+      : url.hostname === "oauth.yandex.ru" && url.pathname === "/authorize";
+  } catch { return false; }
+}
+export const authorizationUrlSchema = z.object({ authorization_url: z.string().url().refine((value) => secureProviderUrl(value, "yandex")) });
+export const billingCatalogSchema = z.object({
+  enabled: z.boolean(), can_purchase: z.boolean(), currency: z.literal("RUB"),
+  plans: z.array(z.object({ code: z.string(), amount_month_minor: z.number().int().positive(), amount_year_minor: z.number().int().positive(), monthly_credits: z.number().int().positive() })),
+  packs: z.array(z.object({ quantity: z.number().int().positive(), amount_minor: z.number().int().positive() })),
+});
+export const billingOrderSchema = z.object({
+  id: z.string().uuid(), organization_id: z.string().uuid(), kind: z.enum(["plan", "addon"]), amount_minor: z.number().int().positive(), currency: z.literal("RUB"),
+  state: z.enum(["creating", "pending", "review_required", "paid", "failed"]), payment_url: z.string().url().refine((value) => secureProviderUrl(value, "lava")).nullable(),
+  monthly_credits: z.number().int().nonnegative(), addon_credits: z.number().int().nonnegative(), created_at: z.string(), paid_at: z.string().nullable(), last_error: z.string().nullable(),
+});
+export const billingOrdersSchema = z.array(billingOrderSchema);
+
 const uuidSchema = z.string().uuid();
 const timestampSchema = z.string().min(1);
 

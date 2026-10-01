@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const provider = readFileSync(join(root, "components/workspace/WorkspaceProvider.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/workspace-onboarding-approved.css"), "utf8");
 
 describe("first workspace onboarding", () => {
@@ -43,7 +43,7 @@ describe("first workspace onboarding", () => {
   });
 
   it("uses a scoped responsive onboarding layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/workspace-onboarding-approved.css"');
+    expect(layout).toContain('import "./workspace-onboarding-approved.css"');
     expect(styles).toContain(".workspace-onboarding-page");
     expect(styles).toContain(".workspace-onboarding-brand");
     expect(styles).toContain(".workspace-onboarding-marketplaces");

@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.27"
-EXPECTED_ALEMBIC_HEAD = "20260930_0018"
+EXPECTED_ALEMBIC_HEAD = "20261001_0020"
 
 ERRORS: list[str] = []
 
@@ -201,8 +201,9 @@ def check_versions_and_frontend_security_baseline() -> None:
         "test:unit": "vitest run tests/unit",
         "test:design-tokens": "vitest run tests/design",
         "test:frontend": "npm run test:unit && npm run test:design-tokens",
-        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/help-center.spec.ts e2e/contact-form.spec.ts e2e/public-mockup-runtime.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts e2e/app-shell-responsive.spec.ts --project=chromium",
-        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts e2e/dark-theme-accessibility.spec.ts --project=chromium",
+        "test:security": "playwright test e2e/security-headers.spec.ts --project=chromium --config=playwright.visual.config.ts",
+        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/help-center.spec.ts e2e/contact-form.spec.ts e2e/public-mockup-runtime.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts e2e/app-shell-responsive.spec.ts e2e/lava-yandex.spec.ts --project=chromium",
+        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts e2e/dark-theme-accessibility.spec.ts e2e/lava-yandex.spec.ts --project=chromium",
         "validate:css-syntax": "csstree-validator styles",
         "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
         "validate:w3c:css": "node scripts/validate-w3c-css.mjs",
@@ -241,6 +242,7 @@ def check_release_gate_contract() -> None:
         "Frontend accessibility",
         "& $Npm run test:a11y",
         "Frontend visual regression",
+        "& $Npm run test:security",
         "& $Npm run test:visual:run",
         "Frontend Lighthouse",
         "& $Npm run lighthouse",
@@ -266,6 +268,7 @@ def check_release_gate_contract() -> None:
         "npx playwright install --with-deps chromium",
         "npm run test:e2e",
         "npm run test:a11y",
+        "npm run test:security",
         "npm run test:visual:run",
         "npm run lighthouse",
     ]:

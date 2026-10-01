@@ -58,7 +58,7 @@ The fourth public plan is `Корпоративный`, with an individual quote
 
 These values are the approved public-site source of truth. Pricing and credit balances need matching backend entitlements before a production release. Do not invent additional prices, discounts, crossed-out anchors, urgency or trial terms beyond them.
 
-Production payment-provider wiring is deferred until the site is running on its production domain. Until that deployment step, do not redesign the billing/payment flow, invent checkout actions, or reinterpret the existing tariff presentation as a product error. Billing/provider integration is a separate launch-stage task.
+The site is now running on its production domain. On 2026-10-01 the product owner authorized the separate launch-stage task: Lava.top payments with manual renewal and no automatic charges. New paid periods follow the current paid-through date; annual reply allowances are granted monthly. Checkout remains disabled until configuration, verified-payment credit grants and deployment checks are complete. Preserve the approved tariff presentation and existing price fallback during this implementation.
 
 ### Public contact truth
 

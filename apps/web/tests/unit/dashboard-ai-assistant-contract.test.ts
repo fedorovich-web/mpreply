@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/ai-assistant/AIAssistantWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/ai-assistant/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-ai-assistant-approved.css"), "utf8");
 
 describe("AI assistant operational workspace", () => {
@@ -39,7 +39,7 @@ describe("AI assistant operational workspace", () => {
   });
 
   it("uses the approved blue dashboard layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-ai-assistant-approved.css"');
+    expect(layout).toContain('import "./dashboard-ai-assistant-approved.css"');
     expect(styles).toContain(".ai-assistant-page");
     expect(styles).toContain(".ai-workspace-grid");
     expect(styles).toContain(".ai-draft-editor-field");

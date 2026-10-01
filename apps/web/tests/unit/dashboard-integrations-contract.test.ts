@@ -10,7 +10,7 @@ const wildberriesPage = readFileSync(join(root, "app/app/integrations/wildberrie
 const ozonPage = readFileSync(join(root, "app/app/integrations/ozon/page.tsx"), "utf8");
 const yandexPage = readFileSync(join(root, "app/app/integrations/yandex-market/page.tsx"), "utf8");
 const avitoPage = readFileSync(join(root, "app/app/integrations/avito/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-integrations-approved.css"), "utf8");
 
 describe("integrations dashboard", () => {
@@ -91,7 +91,7 @@ describe("integrations dashboard", () => {
   });
 
   it("uses the scoped responsive integrations layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-integrations-approved.css"');
+    expect(layout).toContain('import "./dashboard-integrations-approved.css"');
     expect(styles).toContain(".integrations-page");
     expect(styles).toContain(".integration-market-card");
     expect(styles).toContain(".marketplace-integration-page");

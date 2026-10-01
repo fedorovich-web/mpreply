@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const inbox = readFileSync(join(root, "components/inbox/InboxWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/inbox/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-inbox-approved.css"), "utf8");
 
 describe("inbox operational workspace", () => {
@@ -105,7 +105,7 @@ describe("inbox operational workspace", () => {
   });
 
   it("loads a scoped responsive inbox style layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-inbox-approved.css"');
+    expect(layout).toContain('import "./dashboard-inbox-approved.css"');
     expect(styles).toContain(".inbox-workspace");
     expect(styles).toContain(".inbox-kpi-grid");
     expect(styles).toContain(".inbox-toolbar");

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { JsonLd } from "../seo/JsonLd";
 
 import { getMarketplaceDetailContent } from "../../lib/marketplace-detail-content";
 import { getMarketplaceDetailContentEn } from "../../lib/marketplace-detail-content-en";
@@ -129,10 +130,7 @@ export function MarketplaceLanding({ marketplace, locale = "ru" }: MarketplaceLa
 
   return (
     <PublicShell locale={locale}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
-      />
+      <JsonLd data={breadcrumbJsonLd} />
       <div className={`mockup-page marketplace-detail-page is-${marketplace.key}`}>
         <section className="marketplace-detail-mockup-hero">
           <div className="public-container marketplace-detail-mockup-grid">
