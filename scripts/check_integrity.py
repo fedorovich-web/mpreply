@@ -44,6 +44,13 @@ def check_public_routes() -> None:
 def resolve_ts_import(source: Path, specifier: str) -> bool:
     if not specifier.startswith("."):
         return True
+    # Next.js writes these declarations during type generation/build. The
+    # repository integrity gate also runs before any frontend build in CI.
+    if source == WEB / "next-env.d.ts" and specifier in {
+        "./.next/types/routes.d.ts",
+        "./.next/types/root-params.d.ts",
+    }:
+        return True
     base = (source.parent / specifier).resolve()
     candidates = [
         base,
@@ -168,8 +175,8 @@ def check_versions_and_frontend_security_baseline() -> None:
         fail(f"Web health route version != {EXPECTED_VERSION}")
 
     expected_dependencies = {
-        ("dependencies", "next"): "16.3.4",
-        ("devDependencies", "eslint-config-next"): "16.3.4",
+        ("dependencies", "next"): "16.3.8",
+        ("devDependencies", "eslint-config-next"): "16.3.8",
         ("devDependencies", "vitest"): "5.0.0",
         ("devDependencies", "@testing-library/react"): "16.3.2",
         ("devDependencies", "@testing-library/jest-dom"): "6.9.1",
