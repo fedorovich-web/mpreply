@@ -7,7 +7,9 @@ import urllib.error
 import urllib.request
 from email.message import Message
 from pathlib import Path
+from typing import cast
 
+import httpx
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -39,7 +41,7 @@ def test_container_healthcheck_passes_production_host_guard(source: str, monkeyp
     application = FastAPI()
     application.include_router(health.router)
     application.add_middleware(TrustedHostMiddleware, allowed_hosts=["api.mpreply.ru"])
-    client = TestClient(application)
+    client = cast(httpx.Client, TestClient(application))
 
     def request_through_host_guard(request: str | urllib.request.Request, timeout: float) -> io.BytesIO:
         url = request if isinstance(request, str) else request.full_url
@@ -58,5 +60,6 @@ def test_production_health_host_guard_still_rejects_loopback() -> None:
     application = FastAPI()
     application.include_router(health.router)
     application.add_middleware(TrustedHostMiddleware, allowed_hosts=["api.mpreply.ru"])
-    response = TestClient(application).get("http://127.0.0.1:8000/health/live")
+    client = cast(httpx.Client, TestClient(application))
+    response = client.get("http://127.0.0.1:8000/health/live")
     assert response.status_code == 400
