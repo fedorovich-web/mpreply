@@ -46,6 +46,16 @@ if ($null -eq $NpmCommand) {
 }
 $Npm = $NpmCommand.Source
 
+Run-Step "Repository integrity regression tests" {
+    Push-Location $Root
+    try {
+        & $VenvPython -m unittest discover -s scripts/tests
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 Run-Step "Repository integrity" {
     & $VenvPython (Join-Path $Root "scripts\check_integrity.py")
 }
