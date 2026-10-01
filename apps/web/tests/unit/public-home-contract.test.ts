@@ -17,13 +17,14 @@ describe("approved RU/EN homepage contract", () => {
       expect(source).toContain("HomeWorkspaceTabs");
     }
   });
-  it("serves fully decodable original AVIF hero and CTA art without another lossy encode", async () => {
+  it("keeps decodable approved AVIF originals and uses their versioned responsive derivatives", async () => {
     for (const [asset, width, height] of [["01-home-hero.avif", 1481, 1062], ["04-marketplaces-cta.avif", 1448, 1086]] as const) {
       for (const source of [page, englishPage]) {
-        expect(source).toContain('src="/images/approved/' + asset + '"');
+        expect(source).toContain("/public/images/approved/" + asset);
+        expect(source).toContain(asset === "01-home-hero.avif" ? "src={homeHero}" : "src={homeCta}");
         expect(source).toContain("width={" + width + "}");
         expect(source).toContain("height={" + height + "}");
-        expect(source).toContain("unoptimized");
+        expect(source).toContain("quality={85}");
       }
       const image = sharp(join(root, "public/images/approved", asset));
       expect(await image.metadata()).toMatchObject({ width, height, compression: "av1", hasAlpha: true });

@@ -16,6 +16,7 @@ from app.api.marketplace_accounts import router as marketplace_accounts_router
 from app.api.messages import router as messages_router
 from app.api.organizations import router as organizations_router
 from app.api.replies import router as replies_router
+from app.api.yandex_auth import router as yandex_auth_router
 from app.core.config import get_settings
 from app.core.lifecycle import application_lifespan
 from app.core.logging import configure_logging
@@ -46,7 +47,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Organization-Id", "X-Request-ID"],
-        expose_headers=["X-Request-ID"],
+        expose_headers=["X-Request-ID", "X-Billing-Order-Not-Created"],
     )
 
     app.include_router(health_router)
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     app.include_router(ai_router)
     app.include_router(automation_rules_router)
     app.include_router(auth_router)
+    app.include_router(yandex_auth_router)
     app.include_router(organizations_router)
     app.include_router(marketplace_accounts_router)
     app.include_router(messages_router)

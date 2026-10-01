@@ -13,6 +13,7 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.organization import Organization, OrganizationUser
 from app.models.reply import Reply
 from app.models.subscription import Subscription
+from app.services.billing_period_service import BillingPeriodService, period_boundary
 
 _LIMIT_METRICS = (
     "ai_drafts_monthly",
@@ -45,6 +46,7 @@ class PlanLimitService:
 
     async def get_billing_context(self, *, organization_id: UUID, now: datetime | None = None) -> BillingContext:
         current = now or datetime.now(UTC)
+        paid_period = await BillingPeriodService(self.session).materialize_current(organization_id=organization_id, now=current)
         period_start, period_end = self.month_period(current)
 
         subscription_result = await self.session.execute(
@@ -76,6 +78,10 @@ class PlanLimitService:
 
         effective_start = subscription.current_period_start if subscription and subscription.current_period_start else period_start
         effective_end = subscription.current_period_end if subscription and subscription.current_period_end else period_end
+        if paid_period is not None:
+            month_index = min(paid_period.months - 1, max(0, paid_period.next_grant_index - 1))
+            effective_start = period_boundary(paid_period, month_index)
+            effective_end = period_boundary(paid_period, month_index + 1)
         return BillingContext(plan=plan, subscription=subscription, period_start=effective_start, period_end=effective_end)
 
     async def evaluate_all(self, *, organization_id: UUID, now: datetime | None = None) -> tuple[BillingContext, list[UsageLimitDecision]]:

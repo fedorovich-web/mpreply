@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/automation-rules/AutomationRulesWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/automation-rules/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-automation-approved.css"), "utf8");
 
 describe("automation operational workspace", () => {
@@ -23,7 +23,7 @@ describe("automation operational workspace", () => {
   });
 
   it("loads a scoped responsive automation layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-automation-approved.css"');
+    expect(layout).toContain('import "./dashboard-automation-approved.css"');
     expect(styles).toContain(".automation-page");
     expect(styles).toContain(".automation-live-layout");
     expect(styles).toContain(".automation-rule-row");

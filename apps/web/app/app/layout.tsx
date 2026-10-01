@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "../../styles/dashboard";
 
 import { AppShell } from "../../components/app-shell/AppShell";
 import { AppProviders } from "../../components/providers/AppProviders";

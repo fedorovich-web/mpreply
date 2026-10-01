@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const workspace = readFileSync(join(root, "components/analytics/AnalyticsWorkspace.tsx"), "utf8");
 const page = readFileSync(join(root, "app/app/analytics/page.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-analytics-approved.css"), "utf8");
 
 describe("analytics operational dashboard", () => {
@@ -54,7 +54,7 @@ describe("analytics operational dashboard", () => {
   });
 
   it("uses a scoped responsive analytics layer without a second palette", () => {
-    expect(layout).toContain('import "../styles/dashboard-analytics-approved.css"');
+    expect(layout).toContain('import "./dashboard-analytics-approved.css"');
     expect(styles).toContain(".analytics-page");
     expect(styles).toContain(".analytics-metric-grid");
     expect(styles).toContain(".analytics-panel-grid");

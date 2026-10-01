@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const shell = readFileSync(join(root, "components/app-shell/AppShell.tsx"), "utf8");
 const workspaceProvider = readFileSync(join(root, "components/workspace/WorkspaceProvider.tsx"), "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "styles/dashboard.ts"), "utf8");
 const styles = readFileSync(join(root, "styles/dashboard-shell-approved.css"), "utf8");
 
 const requiredRoutes = [
@@ -93,7 +93,7 @@ describe("dashboard shell information architecture", () => {
   });
 
   it("loads a focused shell style layer instead of rewriting global workspace styles", () => {
-    expect(layout).toContain('import "../styles/dashboard-shell-approved.css"');
+    expect(layout).toContain('import "./dashboard-shell-approved.css"');
     expect(styles).toContain(".app-nav-group");
     expect(styles).toContain(".app-nav-group-label");
     expect(styles).toContain(".app-nav-link-active");

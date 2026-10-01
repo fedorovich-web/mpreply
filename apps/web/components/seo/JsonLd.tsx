@@ -2,8 +2,10 @@ type JsonLdProps = {
   data: Record<string, unknown> | Array<Record<string, unknown>>;
 };
 
-export function JsonLd({ data }: JsonLdProps) {
+export async function JsonLd({ data }: JsonLdProps) {
   const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
+  return <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
 }
+import { headers } from "next/headers";

@@ -9,6 +9,7 @@ import { ApiError, apiRequest } from "../../lib/api/client";
 import { authSessionSchema, messageResponseSchema } from "../../lib/api/schemas";
 import { localizedPath, type Locale } from "../../lib/i18n";
 import { PublicBrandMark } from "../public-site/PublicBrandMark";
+import { YandexAuthButton, yandexErrorMessage } from "./YandexAuthButton";
 
 type AuthMode = "login" | "register";
 
@@ -73,6 +74,7 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
   const [password, setPassword] = useState("");
   const isLogin = mode === "login";
   const labels = copy[locale];
+  const oauthError = yandexErrorMessage(searchParams.get("oauth_error"), locale);
   const requestedNext = searchParams.get("next");
   const intent = searchParams.get("intent");
   const appPrefix = locale === "en" ? "/en/app/" : "/app/";
@@ -206,6 +208,8 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
               </form>
             )}
 
+            {oauthError ? <p className="form-error" role="alert">{oauthError}</p> : null}
+            <YandexAuthButton locale={locale} next={safeRequestedNext} intent={intent} />
             <p className="auth-footer">
               {isLogin ? (
                 <>{labels.noAccount} <Link href={alternateAuthHref}>{labels.createAccount}</Link></>

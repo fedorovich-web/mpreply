@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const read = (path: string) => readFileSync(join(root, path), "utf8");
 
-const layout = read("app/layout.tsx");
+const layout = read("styles/dashboard.ts");
 const fidelity = read("styles/dashboard-final-fidelity.css");
 const shell = read("components/app-shell/AppShell.tsx");
 
@@ -23,7 +23,7 @@ const pagePaths = [
 
 describe("authenticated visual fidelity and responsive QA", () => {
   it("loads the final fidelity layer after page-specific dashboard styles", () => {
-    expect(layout).toContain('import "../styles/dashboard-final-fidelity.css"');
+    expect(layout).toContain('import "./dashboard-final-fidelity.css"');
     expect(layout.indexOf("dashboard-final-fidelity.css")).toBeGreaterThan(layout.indexOf("dashboard-admin-approved.css"));
   });
 

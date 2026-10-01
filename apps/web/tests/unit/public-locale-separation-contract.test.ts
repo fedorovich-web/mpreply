@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { renderServer } from "../helpers/render-server";
 import { describe, expect, it, vi } from "vitest";
 import * as Home from "../../app/en/page";
 import * as Features from "../../app/en/features/page";
@@ -23,6 +24,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/en",
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
 }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-nonce": "test-nonce" }) }));
 const pages = [
   { path: "/", page: Home }, { path: "/features", page: Features },
   { path: "/marketplaces", page: Marketplaces },
@@ -33,8 +35,8 @@ const pages = [
 ];
 
 describe("public RU/EN separation", () => {
-  it.each(pages)("keeps rendered English text and local navigation separate on $path", ({ page }) => {
-    const document = new DOMParser().parseFromString(renderToStaticMarkup(createElement(page.default)), "text/html");
+  it.each(pages)("keeps rendered English text and local navigation separate on $path", async ({ page }) => {
+    const document = new DOMParser().parseFromString(await renderServer(createElement(page.default)), "text/html");
     expect(document.querySelectorAll("h1")).toHaveLength(1);
     expect(document.body.textContent).not.toMatch(/[А-Яа-яЁё]/);
     for (const link of document.querySelectorAll("a")) {

@@ -9,17 +9,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import bad_request, conflict, not_found, payment_required
+from app.core.time import utc
+from app.models.billing_order import BillingOrder
+from app.models.billing_period import BillingPeriod
 from app.models.organization import Organization
 from app.models.reply_credit import ReplyCreditEvent, ReplyCreditGrant, ReplyCreditOperation, ReplyTrialClaim
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.services.billing_period_service import BillingPeriodService
 
 CreditKind = Literal["trial", "monthly", "addon"]
-
-
-def utc(value: datetime) -> datetime:
-    # SQLite test storage omits timezone metadata; PostgreSQL stores timestamptz.
-    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
 
 @dataclass(frozen=True)
@@ -175,6 +174,13 @@ class ReplyCreditService:
 
     async def paid_entitled(self, *, organization_id: UUID, now: datetime | None = None) -> bool:
         now = now or datetime.now(UTC)
+        manual_period = await self.session.scalar(select(BillingPeriod.id).join(BillingOrder, BillingOrder.id == BillingPeriod.order_id).where(
+            BillingPeriod.organization_id == organization_id, BillingOrder.organization_id == organization_id,
+            BillingOrder.state == "paid", BillingOrder.provider_invoice_id.is_not(None), BillingOrder.paid_at.is_not(None),
+            BillingPeriod.starts_at <= now, BillingPeriod.ends_at > now,
+        ).limit(1))
+        if manual_period is not None:
+            return True
         subscription = await self.session.scalar(select(Subscription).where(Subscription.organization_id == organization_id))
         # A locally created 'active' subscription with no provider is not payment proof.
         return bool(
@@ -212,6 +218,7 @@ class ReplyCreditService:
         if len(request_hash) != 64 or lease_seconds < 1:
             raise bad_request("Invalid credit reservation")
         await self._lock(organization_id)
+        await BillingPeriodService(self.session).materialize_current(organization_id=organization_id, now=now)
         if paid_entitled is None:
             paid_entitled = await self.paid_entitled(organization_id=organization_id, now=now)
         await self._recover(organization_id, now)

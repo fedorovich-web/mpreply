@@ -3,9 +3,10 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal, Self
 from urllib.parse import urlparse
+from uuid import UUID
 
 from cryptography.fernet import Fernet
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _INSECURE_SECRET_MARKERS = {
@@ -47,6 +48,47 @@ class Settings(BaseSettings):
     resend_timeout_seconds: float = Field(default=10.0, gt=0.0, le=30.0)
     transactional_email_from: str = "MPReply <no-reply@mpreply.ru>"
     support_email: str = "support@mpreply.ru"
+
+    lava_enabled: bool = False
+    lava_api_key: SecretStr = Field(default=SecretStr(""))
+    lava_webhook_secret: SecretStr = Field(default=SecretStr(""))
+    lava_offer_id: UUID | None = None
+    lava_product_id: UUID | None = None
+
+    @field_validator("lava_offer_id", "lava_product_id", mode="before")
+    @classmethod
+    def empty_provider_identifier(cls, value: object) -> object:
+        return None if value == "" else value
+
+    yandex_oauth_enabled: bool = False
+    yandex_oauth_client_id: str = Field(default="", max_length=128)
+    yandex_oauth_client_secret: SecretStr = Field(default=SecretStr(""))
+
+    @model_validator(mode="after")
+    def validate_yandex_oauth_contract(self) -> Self:
+        if self.yandex_oauth_enabled:
+            if not self.yandex_oauth_client_id.strip() or not self.yandex_oauth_client_secret.get_secret_value().strip():
+                raise ValueError("Enabled Yandex ID requires client ID and client secret")
+            try:
+                Fernet(self.credentials_encryption_key.get_secret_value().encode())
+            except (ValueError, TypeError):
+                raise ValueError("Enabled Yandex ID requires a valid credentials encryption key") from None
+            self._require_https_origin("API_BASE_URL", self.api_base_url)
+            self._require_https_origin("WEB_APP_URL", self.web_app_url)
+        return self
+
+    @model_validator(mode="after")
+    def validate_lava_contract(self) -> Self:
+        if self.lava_enabled:
+            api_key = self.lava_api_key.get_secret_value()
+            webhook_key = self.lava_webhook_secret.get_secret_value()
+            if not api_key.strip() or self.lava_offer_id is None or self.lava_product_id is None:
+                raise ValueError("Enabled Lava requires API key, offer and product IDs")
+            if not 32 <= len(webhook_key) <= 80 or not webhook_key.isascii() or any(char.isspace() for char in webhook_key):
+                raise ValueError("Lava webhook secret must contain 32 to 80 ASCII characters without whitespace")
+            if api_key == webhook_key:
+                raise ValueError("Lava webhook secret must differ from the provider API key")
+        return self
 
     credentials_encryption_key: SecretStr = Field(default=SecretStr("replace-with-fernet-compatible-key"))
     groq_api_key: SecretStr = Field(default=SecretStr("replace-only-in-real-env"))
