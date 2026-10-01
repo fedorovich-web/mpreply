@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { ApiError, apiRequest } from "../../lib/api/client";
-import { authSessionSchema } from "../../lib/api/schemas";
+import { authSessionSchema, messageResponseSchema } from "../../lib/api/schemas";
 import { localizedPath, type Locale } from "../../lib/i18n";
 import { PublicBrandMark } from "../public-site/PublicBrandMark";
 
@@ -36,6 +36,7 @@ const copy = {
     noAccount: "Нет аккаунта?",
     createAccount: "Создать аккаунт",
     haveAccount: "Уже есть аккаунт?",
+    verificationSent: "Если адрес доступен для регистрации, мы отправили письмо для подтверждения email. Откройте ссылку в письме, затем войдите в MPReply.",
   },
   en: {
     workspace: "MPReply workspace",
@@ -60,6 +61,7 @@ const copy = {
     noAccount: "New to MPReply?",
     createAccount: "Create account",
     haveAccount: "Already have an account?",
+    verificationSent: "If this address is available for registration, we sent a link to verify your email. Open the link in the email, then log in to MPReply.",
   },
 } as const;
 
@@ -88,15 +90,23 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
   })();
 
   const mutation = useMutation({
-    mutationFn: () =>
-      apiRequest(`/api/auth/${mode}`, authSessionSchema, {
+    mutationFn: async () => {
+      const options = {
         method: "POST",
         body:
           mode === "register"
             ? { email: email.trim(), password, name: name.trim() || null }
             : { email: email.trim(), password },
-      }),
+      };
+      return isLogin
+        ? apiRequest(`/api/auth/${mode}`, authSessionSchema, options)
+        : apiRequest(`/api/auth/${mode}`, messageResponseSchema, options);
+    },
     onSuccess: () => {
+      if (!isLogin) {
+        setPassword("");
+        return;
+      }
       const target = safeRequestedNext
         ?? (intent === "connect-marketplace"
           ? `${appRoot}/integrations`
@@ -134,63 +144,67 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
               {isLogin ? labels.loginDescription : labels.registerDescription}
             </p>
 
-            <form
-              className="auth-form"
-              onSubmit={(event) => {
-                event.preventDefault();
-                mutation.mutate();
-              }}
-            >
-              {!isLogin ? (
+            {!isLogin && mutation.isSuccess ? (
+              <p className="auth-description" role="status">{labels.verificationSent}</p>
+            ) : (
+              <form
+                className="auth-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  mutation.mutate();
+                }}
+              >
+                {!isLogin ? (
+                  <label>
+                    {labels.name}
+                    <input
+                      autoComplete="name"
+                      maxLength={255}
+                      name="name"
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder={labels.namePlaceholder}
+                      type="text"
+                      value={name}
+                    />
+                  </label>
+                ) : null}
                 <label>
-                  {labels.name}
+                  Email
                   <input
-                    autoComplete="name"
-                    maxLength={255}
-                    name="name"
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder={labels.namePlaceholder}
-                    type="text"
-                    value={name}
+                    autoComplete="email"
+                    name="email"
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    type="email"
+                    value={email}
                   />
                 </label>
-              ) : null}
-              <label>
-                Email
-                <input
-                  autoComplete="email"
-                  name="email"
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  type="email"
-                  value={email}
-                />
-              </label>
-              <label>
-                {labels.password}
-                <input
-                  autoComplete={isLogin ? "current-password" : "new-password"}
-                  minLength={isLogin ? 1 : 10}
-                  name="password"
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder={isLogin ? labels.loginPassword : labels.registerPassword}
-                  required
-                  type="password"
-                  value={password}
-                />
-              </label>
+                <label>
+                  {labels.password}
+                  <input
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    minLength={isLogin ? 1 : 10}
+                    name="password"
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder={isLogin ? labels.loginPassword : labels.registerPassword}
+                    required
+                    type="password"
+                    value={password}
+                  />
+                </label>
 
-              {mutation.error ? (
-                <p className="form-error" role="alert">
-                  {authErrorMessage(mutation.error, isLogin, locale)}
-                </p>
-              ) : null}
+                {mutation.error ? (
+                  <p className="form-error" role="alert">
+                    {authErrorMessage(mutation.error, isLogin, locale)}
+                  </p>
+                ) : null}
 
-              <button className="button button-primary" disabled={mutation.isPending} type="submit">
-                {mutation.isPending ? labels.pending : isLogin ? labels.login : labels.continue}
-              </button>
-            </form>
+                <button className="button button-primary" disabled={mutation.isPending} type="submit">
+                  {mutation.isPending ? labels.pending : isLogin ? labels.login : labels.continue}
+                </button>
+              </form>
+            )}
 
             <p className="auth-footer">
               {isLogin ? (
