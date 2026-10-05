@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -26,12 +25,12 @@ logger = structlog.get_logger(__name__)
 
 
 @dramatiq.actor(queue_name="marketplace-sync", max_retries=0)
-def marketplace_sync_actor(state_id: str) -> None:
+async def marketplace_sync_actor(state_id: str) -> None:
     try:
         parsed_id = UUID(state_id)
     except ValueError as exc:
         raise ValueError("marketplace sync state ID is invalid") from exc
-    asyncio.run(_execute_claimed_stream(parsed_id))
+    await _execute_claimed_stream(parsed_id)
 
 
 async def enqueue_due_marketplace_streams(

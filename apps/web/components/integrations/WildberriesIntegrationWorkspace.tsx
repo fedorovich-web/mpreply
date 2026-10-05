@@ -114,6 +114,7 @@ const integrationCopy = {
     validate: "Проверить подключение",
     syncing: "Обновляем...",
     sync: "Обновить данные",
+    syncReviewsQuestions: "Загрузить отзывы и вопросы",
     newCredentialsAria: "Новые данные для подключения",
     accessEyebrow: "Доступ",
     rotateTitle: "Обновить данные для подключения",
@@ -218,6 +219,7 @@ const integrationCopy = {
     validate: "Validate connection",
     syncing: "Syncing...",
     sync: "Sync data",
+    syncReviewsQuestions: "Load reviews and questions",
     newCredentialsAria: "New connection credentials",
     accessEyebrow: "Access",
     rotateTitle: "Replace connection credentials",
@@ -696,8 +698,18 @@ function AccountDetail({
   );
   const syncAction = (
     <button className="button button-secondary" disabled={busy || account.credentials_status !== "valid"} onClick={() => syncMutation.mutate()} type="button">
-      {syncMutation.isPending ? t.syncing : t.sync}
+      {syncMutation.isPending ? t.syncing : account.marketplace === "wildberries" ? t.syncReviewsQuestions : t.sync}
     </button>
+  );
+  const connectionActions = (
+    <div className="integration-action-grid" aria-label={t.actionsAria}>
+      {canManage ? (
+        <button className="button button-primary" disabled={busy || account.credentials_status === "revoked"} onClick={() => validateMutation.mutate()} type="button">
+          {validateMutation.isPending ? t.validating : t.validate}
+        </button>
+      ) : null}
+      {syncAction}
+    </div>
   );
 
   return (
@@ -709,6 +721,8 @@ function AccountDetail({
         </div>
         <StatusBadge account={account} locale={locale} />
       </div>
+
+      {canSync && account.marketplace === "wildberries" ? connectionActions : null}
 
       <dl className="integration-health-grid">
         <HealthItem label={t.accessState} value={credentialsStatusLabel(account.credentials_status, locale)} />
@@ -766,12 +780,7 @@ function AccountDetail({
             </button>
           </form>
 
-          <div className="integration-action-grid" aria-label={t.actionsAria}>
-            <button className="button button-primary" disabled={busy || account.credentials_status === "revoked"} onClick={() => validateMutation.mutate()} type="button">
-              {validateMutation.isPending ? t.validating : t.validate}
-            </button>
-            {syncAction}
-          </div>
+          {account.marketplace !== "wildberries" ? connectionActions : null}
 
           <form
             className="settings-form integration-rotate-form"
@@ -838,7 +847,7 @@ function AccountDetail({
         </>
       ) : (
         <>
-          {canSync ? <div className="integration-action-grid" aria-label={t.actionsAria}>{syncAction}</div> : null}
+          {canSync && account.marketplace !== "wildberries" ? connectionActions : null}
           <div className="workspace-inline-state">
             <strong>{t.adminOnlyTitle}</strong>
             <p>{t.adminOnlyText}</p>
