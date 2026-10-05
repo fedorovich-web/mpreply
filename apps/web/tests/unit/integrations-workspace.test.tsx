@@ -433,6 +433,43 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.queryByText("Активно")).not.toBeInTheDocument();
   });
 
+  it("does not claim that access was preserved when a rate-limited account was already invalid", async () => {
+    mockWorkspace("owner");
+    const invalidAccount = {
+      ...account,
+      status: "error",
+      credentials_status: "rate_limited",
+      last_success_sync_at: null,
+      last_error_sync_at: timestamp,
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        return new Response(
+          JSON.stringify({
+            id: account.id,
+            status: "error",
+            credentials_status: "rate_limited",
+            scopes: [],
+            checked_at: timestamp,
+            error_code: "rate_limited",
+            error_message_safe: "Wildberries rate limit was exceeded",
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify([invalidAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Проверить подключение" }));
+
+    expect(await screen.findByText("Wildberries временно ограничил проверку. Повторите позже.")).toBeInTheDocument();
+    expect(screen.queryByText(/Доступ сохранён/)).not.toBeInTheDocument();
+  });
+
   it("keeps viewer membership read-only and hides credential actions", async () => {
     mockWorkspace("viewer");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
