@@ -126,6 +126,12 @@ const integrationCopy = {
     disconnectConfirm: "Отключить этот кабинет от MPReply?",
     disconnecting: "Отключаем...",
     disconnect: "Отключить кабинет",
+    deleteTitle: "Удалить кабинет и его данные",
+    deleteText: "Будут удалены кабинет, загруженные обращения, товары, черновики ответов и правила этого кабинета. Восстановить данные нельзя.",
+    deleteConfirm: "Удалить этот кабинет и все его данные? Отменить действие нельзя.",
+    deleting: "Удаляем...",
+    deleteAccount: "Удалить кабинет",
+    deletedNotice: "Кабинет и его данные удалены.",
     actionError: "Не удалось выполнить действие. Проверьте подключение и попробуйте ещё раз.",
     adminOnlyTitle: "Настройки доступны владельцу и администратору",
     adminOnlyText: "Для вашей роли доступен просмотр состояния подключения. Изменение настроек и данных доступа недоступно.",
@@ -233,6 +239,12 @@ const integrationCopy = {
     disconnectConfirm: "Disconnect this seller account from MPReply?",
     disconnecting: "Disconnecting...",
     disconnect: "Disconnect seller account",
+    deleteTitle: "Delete seller account and its data",
+    deleteText: "This removes the seller account, imported customer messages, products, reply drafts, and rules for this account. The data cannot be restored.",
+    deleteConfirm: "Delete this seller account and all of its data? This cannot be undone.",
+    deleting: "Deleting...",
+    deleteAccount: "Delete seller account",
+    deletedNotice: "Seller account and its data were deleted.",
     actionError: "The action could not be completed. Check the connection and try again.",
     adminOnlyTitle: "Settings are available to owners and administrators",
     adminOnlyText: "Your role can view connection status, but cannot change settings or access credentials.",
@@ -698,8 +710,17 @@ function AccountDetail({
     },
   });
 
-  const busy = updateMutation.isPending || validateMutation.isPending || syncMutation.isPending || rotateMutation.isPending || revokeMutation.isPending;
-  const mutationError = localError ?? updateMutation.error ?? validateMutation.error ?? syncMutation.error ?? rotateMutation.error ?? revokeMutation.error;
+  const deleteMutation = useMutation({
+    mutationFn: () =>
+      apiRequest(`/api/marketplace-accounts/${account.id}`, marketplaceAccountActionSchema, { method: "DELETE" }),
+    onSuccess: async () => {
+      onNotice({ tone: "success", message: t.deletedNotice });
+      await invalidate();
+    },
+  });
+
+  const busy = updateMutation.isPending || validateMutation.isPending || syncMutation.isPending || rotateMutation.isPending || revokeMutation.isPending || deleteMutation.isPending;
+  const mutationError = localError ?? updateMutation.error ?? validateMutation.error ?? syncMutation.error ?? rotateMutation.error ?? revokeMutation.error ?? deleteMutation.error;
   const detailSellerIdValid =
     sellerIdHiddenAfterSave && sellerId.trim().length === 0 ? true : sellerIdIsValid(sellerId, sellerIdMode);
   const rotationCredentialsValid = credentialsAreValid(
@@ -849,6 +870,24 @@ function AccountDetail({
               type="button"
             >
               {revokeMutation.isPending ? t.disconnecting : t.disconnect}
+            </button>
+          </div>
+
+          <div className="integration-danger-zone integration-delete-zone">
+            <div>
+              <strong>{t.deleteTitle}</strong>
+              <p>{t.deleteText}</p>
+            </div>
+            <button
+              className="button button-danger"
+              disabled={busy}
+              onClick={() => {
+                setLocalError(null);
+                if (window.confirm(t.deleteConfirm)) deleteMutation.mutate();
+              }}
+              type="button"
+            >
+              {deleteMutation.isPending ? t.deleting : t.deleteAccount}
             </button>
           </div>
 

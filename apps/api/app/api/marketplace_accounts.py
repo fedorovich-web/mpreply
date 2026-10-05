@@ -69,6 +69,25 @@ async def get_marketplace_account(
     return service.to_response(account)
 
 
+@router.delete("/{account_id}", response_model=MarketplaceAccountActionResponse)
+async def delete_marketplace_account(
+    account_id: UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> MarketplaceAccountActionResponse:
+    service = MarketplaceAccountService(session)
+    account = await service.delete_account(actor=current_user, account_id=account_id)
+    credentials_masked = service.credentials.mask_fingerprint(account.credentials_fingerprint)
+    await session.commit()
+    return MarketplaceAccountActionResponse(
+        id=account.id,
+        status="deleted",
+        credentials_status="deleted",
+        credentials_masked=credentials_masked,
+        message="Marketplace account and related data deleted.",
+    )
+
+
 @router.patch("/{account_id}", response_model=MarketplaceAccountResponse)
 async def update_marketplace_account(
     account_id: UUID,
