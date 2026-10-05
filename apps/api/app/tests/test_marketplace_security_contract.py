@@ -257,6 +257,63 @@ async def test_credential_change_removes_stale_validated_scopes(operation: str) 
     assert account.status == ("pending_validation" if operation == "rotate" else "disabled")
 
 
+@pytest.mark.asyncio
+async def test_delete_marketplace_account_requires_management_and_removes_related_rows_in_order() -> None:
+    account = MarketplaceAccount(
+        id=uuid4(),
+        organization_id=uuid4(),
+        marketplace="wildberries",
+        display_name="WB account",
+        seller_id=None,
+        status="disabled",
+        credentials_encrypted="unused",
+        credentials_fingerprint="fingerprint",
+        credentials_status="revoked",
+        scopes_json={},
+        default_response_mode="inherit",
+    )
+    session = AsyncMock(spec=AsyncSession)
+    with patch("app.services.marketplace_account_service.get_settings", return_value=_settings()):
+        service = MarketplaceAccountService(session)
+    actor = _actor()
+    with (
+        patch.object(service, "get_account", new=AsyncMock(return_value=account)),
+        patch.object(service.organization_service, "require_membership_role", new=AsyncMock()) as require_role,
+        patch.object(service.audit, "write", new=AsyncMock()) as write_audit,
+    ):
+        deleted = await service.delete_account(actor=actor, account_id=account.id)
+
+    require_role.assert_awaited_once_with(
+        organization_id=account.organization_id,
+        user_id=actor.id,
+        allowed_roles={"owner", "admin"},
+    )
+    write_audit.assert_awaited_once()
+    session.delete.assert_awaited_once_with(account)
+    assert deleted is account
+
+    rendered = [
+        str(cast(ClauseElement, call.args[0]).compile(dialect=postgresql.dialect()))
+        for call in session.execute.await_args_list
+    ]
+    tables = [
+        "reply_credit_events",
+        "reply_credit_operations",
+        "automatic_draft_jobs",
+        "replies",
+        "ai_drafts",
+        "customer_messages",
+        "products",
+        "automation_rules",
+        "integration_events",
+        "sync_jobs",
+        "marketplace_sync_states",
+    ]
+    assert len(rendered) == len(tables)
+    for sql, table in zip(rendered, tables, strict=True):
+        assert f"DELETE FROM {table}" in sql
+
+
 @pytest.mark.parametrize("operation", ["validate", "rotate", "revoke"])
 @pytest.mark.asyncio
 async def test_cross_tenant_marketplace_account_mutation_stops_at_scoped_lookup(operation: str) -> None:

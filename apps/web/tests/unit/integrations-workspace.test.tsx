@@ -470,6 +470,39 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.queryByText(/Доступ сохранён/)).not.toBeInTheDocument();
   });
 
+  it("deletes a seller account only after explicit confirmation", async () => {
+    mockWorkspace("owner");
+    let deleted = false;
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "DELETE") {
+        deleted = true;
+        return new Response(
+          JSON.stringify({
+            id: account.id,
+            status: "deleted",
+            credentials_status: "deleted",
+            credentials_masked: account.credentials_masked,
+            message: "Marketplace account and related data deleted.",
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify(deleted ? [] : [account]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("confirm", vi.fn(() => true));
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Удалить кабинет" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).endsWith(`/${account.id}`) && init?.method === "DELETE")).toBe(true);
+    });
+    expect(await screen.findByText("Кабинет и его данные удалены.")).toBeInTheDocument();
+  });
+
   it("keeps viewer membership read-only and hides credential actions", async () => {
     mockWorkspace("viewer");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
