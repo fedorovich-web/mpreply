@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, CredentialValidation
@@ -12,19 +12,12 @@ from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabil
 from app.core.config import get_settings
 from app.core.errors import bad_request, conflict, forbidden, not_found, payment_required
 from app.core.security import CredentialService
-from app.models.ai_draft import AIDraft
-from app.models.automatic_draft_job import AutomaticDraftJob
 from app.models.automation_rule import AutomationRule
-from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
 from app.models.organization import OrganizationUser
-from app.models.product import Product
-from app.models.reply import Reply
-from app.models.reply_credit import ReplyCreditEvent, ReplyCreditOperation
-from app.models.sync_job import SyncJob
 from app.models.user import User
 from app.schemas.marketplace_account import MarketplaceAccountResponse
 from app.services.audit_service import AuditService
@@ -104,12 +97,15 @@ class MarketplaceAccountService:
             allowed_roles=_ALLOWED_READ_ROLES,
         )
         result = await self.session.execute(
-            select(MarketplaceAccount).where(MarketplaceAccount.organization_id == organization_id).order_by(MarketplaceAccount.created_at.desc())
+            select(MarketplaceAccount).where(
+                MarketplaceAccount.organization_id == organization_id,
+                MarketplaceAccount.status != "deleted",
+            ).order_by(MarketplaceAccount.created_at.desc())
         )
         return list(result.scalars().all())
 
-    async def get_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
-        result = await self.session.execute(
+    async def get_account(self, *, actor: User, account_id: UUID, for_update: bool = False) -> MarketplaceAccount:
+        statement = (
             select(MarketplaceAccount)
             .join(
                 OrganizationUser,
@@ -117,11 +113,15 @@ class MarketplaceAccountService:
             )
             .where(
                 MarketplaceAccount.id == account_id,
+                MarketplaceAccount.status != "deleted",
                 OrganizationUser.user_id == actor.id,
                 OrganizationUser.status == "active",
                 OrganizationUser.role.in_(_ALLOWED_READ_ROLES),
             )
         )
+        if for_update:
+            statement = statement.with_for_update(of=MarketplaceAccount).execution_options(populate_existing=True)
+        result = await self.session.execute(statement)
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")
@@ -138,7 +138,7 @@ class MarketplaceAccountService:
         default_response_mode: ResponseMode | None = None,
         status: str | None = None,
     ) -> MarketplaceAccount:
-        account = await self.get_account(actor=actor, account_id=account_id)
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
@@ -186,7 +186,7 @@ class MarketplaceAccountService:
         return account
 
     async def rotate_credentials(self, *, actor: User, account_id: UUID, raw_credentials: str) -> MarketplaceAccount:
-        account = await self.get_account(actor=actor, account_id=account_id)
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
@@ -211,7 +211,7 @@ class MarketplaceAccountService:
         return account
 
     async def revoke_credentials(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
-        account = await self.get_account(actor=actor, account_id=account_id)
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
@@ -232,124 +232,43 @@ class MarketplaceAccountService:
         return account
 
     async def delete_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
-        """Permanently remove an account and all data owned by that connection.
-
-        Disconnecting deliberately keeps the account and its history.  This
-        operation is the explicit, destructive alternative: every row that is
-        linked to the account (including message processing artifacts) is
-        removed in dependency order inside the caller's transaction.
-        """
-        account = await self.get_account(actor=actor, account_id=account_id)
+        """Remove a connection, destroy its credentials and retain historical records."""
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
-
-        account_id = account.id
-        organization_id = account.organization_id
-        message_ids = select(CustomerMessage.id).where(
-            CustomerMessage.organization_id == organization_id,
-            CustomerMessage.marketplace_account_id == account_id,
-        )
-        draft_ids = select(AIDraft.id).where(
-            AIDraft.organization_id == organization_id,
-            AIDraft.message_id.in_(message_ids),
-        )
-        operation_ids = select(ReplyCreditOperation.id).where(
-            ReplyCreditOperation.organization_id == organization_id,
-            ReplyCreditOperation.draft_id.in_(draft_ids),
-        )
-        rule_ids = select(AutomationRule.id).where(
-            AutomationRule.organization_id == organization_id,
-            AutomationRule.marketplace_account_id == account_id,
-        )
-
-        # Delete children before their tenant-scoped parents.  These tables do
-        # not all have ON DELETE CASCADE because normal message retention is
-        # intentional, so relying on ORM cascade would leave FK violations.
+        # Retain the tenant-scoped identity for historical messages and the
+        # immutable credit ledger. The connection is permanently removed from
+        # management and cannot be reactivated or use its discarded secret.
+        account.status = "deleted"
+        account.credentials_status = "revoked"
+        account.credentials_encrypted = ""
+        account.credentials_fingerprint = "deleted"
+        account.seller_id = None
+        account.scopes_json = {}
         await self.session.execute(
-            delete(ReplyCreditEvent).where(
-                ReplyCreditEvent.organization_id == organization_id,
-                ReplyCreditEvent.operation_id.in_(operation_ids),
-            )
+            update(MarketplaceSyncState).where(
+                MarketplaceSyncState.organization_id == account.organization_id,
+                MarketplaceSyncState.marketplace_account_id == account.id,
+            ).values(status="paused", lease_owner=None, lease_expires_at=None, next_run_at=None)
         )
         await self.session.execute(
-            delete(ReplyCreditOperation).where(
-                ReplyCreditOperation.organization_id == organization_id,
-                ReplyCreditOperation.draft_id.in_(draft_ids),
-            )
-        )
-        await self.session.execute(
-            delete(AutomaticDraftJob).where(
-                AutomaticDraftJob.organization_id == organization_id,
-                or_(
-                    AutomaticDraftJob.message_id.in_(message_ids),
-                    AutomaticDraftJob.draft_id.in_(draft_ids),
-                ),
-            )
-        )
-        await self.session.execute(
-            delete(Reply).where(
-                Reply.organization_id == organization_id,
-                or_(
-                    Reply.message_id.in_(message_ids),
-                    Reply.ai_draft_id.in_(draft_ids),
-                    Reply.automation_rule_id.in_(rule_ids),
-                ),
-            )
-        )
-        await self.session.execute(
-            delete(AIDraft).where(
-                AIDraft.organization_id == organization_id,
-                AIDraft.id.in_(draft_ids),
-            )
-        )
-        await self.session.execute(
-            delete(CustomerMessage).where(
-                CustomerMessage.organization_id == organization_id,
-                CustomerMessage.marketplace_account_id == account_id,
-            )
-        )
-        await self.session.execute(
-            delete(Product).where(
-                Product.organization_id == organization_id,
-                Product.marketplace_account_id == account_id,
-            )
-        )
-        await self.session.execute(
-            delete(AutomationRule).where(
-                AutomationRule.organization_id == organization_id,
-                AutomationRule.marketplace_account_id == account_id,
-            )
-        )
-        await self.session.execute(
-            delete(IntegrationEvent).where(
-                IntegrationEvent.organization_id == organization_id,
-                IntegrationEvent.marketplace_account_id == account_id,
-            )
-        )
-        await self.session.execute(
-            delete(SyncJob).where(
-                SyncJob.organization_id == organization_id,
-                SyncJob.marketplace_account_id == account_id,
-            )
-        )
-        await self.session.execute(
-            delete(MarketplaceSyncState).where(
-                MarketplaceSyncState.organization_id == organization_id,
-                MarketplaceSyncState.marketplace_account_id == account_id,
-            )
+            update(AutomationRule).where(
+                AutomationRule.organization_id == account.organization_id,
+                AutomationRule.marketplace_account_id == account.id,
+            ).values(is_enabled=False)
         )
         await self.audit.write(
             action="marketplace_account.deleted",
             entity_type="marketplace_account",
-            organization_id=organization_id,
+            organization_id=account.organization_id,
             actor_user_id=actor.id,
-            entity_id=str(account_id),
-            metadata={"marketplace": account.marketplace, "related_data_deleted": True},
+            entity_id=str(account.id),
+            metadata={"marketplace": account.marketplace, "credentials_destroyed": True},
         )
-        await self.session.delete(account)
+        await self.session.flush()
         return account
 
     async def validate_credentials(

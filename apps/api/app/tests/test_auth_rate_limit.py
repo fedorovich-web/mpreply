@@ -63,7 +63,7 @@ def fake_redis(monkeypatch: pytest.MonkeyPatch) -> FakeRedis:
         return redis
 
     monkeypatch.setattr(rate_limit_module, "get_settings", lambda: settings)
-    monkeypatch.setattr(rate_limit_module, "_redis_from_url", redis_from_url)
+    monkeypatch.setattr(rate_limit_module, "redis_from_url", redis_from_url)
     return redis
 
 

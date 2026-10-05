@@ -84,7 +84,7 @@ async def delete_marketplace_account(
         status="deleted",
         credentials_status="deleted",
         credentials_masked=credentials_masked,
-        message="Marketplace account and related data deleted.",
+        message="Marketplace connection deleted. Historical messages and billing records retained.",
     )
 
 

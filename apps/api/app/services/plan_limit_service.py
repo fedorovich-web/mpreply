@@ -145,7 +145,7 @@ class PlanLimitService:
         elif metric == "marketplace_accounts":
             stmt = select(func.count(MarketplaceAccount.id)).where(
                 MarketplaceAccount.organization_id == organization_id,
-                MarketplaceAccount.status != "revoked",
+                MarketplaceAccount.status.not_in({"revoked", "deleted"}),
             )
         elif metric == "members":
             stmt = select(func.count(OrganizationUser.id)).where(

@@ -37,6 +37,27 @@ def _token(*, scope: int) -> str:
 
 
 @pytest.mark.asyncio
+async def test_wildberries_validation_uses_one_category_ping_without_consuming_question_list() -> None:
+    transport = SequenceTransport([response(200, json={"TS": "2026-10-05T15:00:00Z", "Status": "OK"})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await WildberriesAdapter(client).validate_credentials(_token(scope=1 << 7))
+    assert result.ok
+    assert result.data is not None and "questions:read" in result.data.scopes
+    assert len(transport.requests) == 1
+    assert transport.requests[0].url.path == "/ping"
+    assert not transport.requests[0].url.params
+
+
+@pytest.mark.parametrize("payload", [{}, {"Status": "ERROR"}, {"data": {"questions": []}}])
+@pytest.mark.asyncio
+async def test_wildberries_ping_does_not_accept_an_unproven_success(payload: dict[str, object]) -> None:
+    transport = SequenceTransport([response(200, json=payload)])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await WildberriesAdapter(client).validate_credentials(_token(scope=1 << 7))
+    assert result.error_code == "malformed_payload"
+
+
+@pytest.mark.asyncio
 async def test_wildberries_validation_requires_writable_feedback_scope() -> None:
     transport = SequenceTransport([])
     async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
@@ -95,6 +116,17 @@ async def test_wildberries_photo_only_feedback_does_not_fail_the_page() -> None:
     assert len(result.data.items) == 1
     assert result.data.items[0].customer_text == ""
     assert result.data.items[0].customer_photos == ("https://feedback.example.test/photo.webp",)
+
+
+@pytest.mark.asyncio
+async def test_wildberries_rating_only_feedback_keeps_the_page_loadable_without_inventing_text() -> None:
+    record = {**_record(), "text": "", "photoLinks": None, "video": None}
+    transport = SequenceTransport([response(200, json={"data": {"feedbacks": [record]}})])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        result = await WildberriesAdapter(client).fetch_page("synthetic-token", None, MarketplaceStream.REVIEWS, None)
+    assert result.ok and result.data is not None
+    assert result.data.items[0].customer_text == ""
+    assert result.data.items[0].rating == 5
 
 
 @pytest.mark.parametrize(

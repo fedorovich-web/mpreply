@@ -179,7 +179,7 @@ async def test_marketplace_http_clients_close_every_owned_client() -> None:
 
 @pytest.mark.asyncio
 async def test_registry_wildberries_validation_uses_injected_client() -> None:
-    transport = SequenceTransport([response(200, json={"data": {"questions": []}})])
+    transport = SequenceTransport([response(200, json={"Status": "OK", "TS": "2026-10-05T15:00:00Z"})])
     clients = MarketplaceHttpClients.create(transport=transport.mock())
     registry = create_marketplace_registry(clients)
 
