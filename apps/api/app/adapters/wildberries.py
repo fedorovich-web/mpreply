@@ -23,6 +23,7 @@ from app.adapters.base import (
 )
 from app.adapters.capabilities import MarketplaceStream
 from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_with_retry
+from app.adapters.wildberries_read_limiter import WildberriesReadLimiter
 from app.models.enums import Marketplace, MessageType
 
 _PAGE_SIZE = 50
@@ -42,9 +43,11 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         client: httpx.AsyncClient,
         *,
         read_retry_policy: ReadRetryPolicy = ReadRetryPolicy(),
+        read_limiter: WildberriesReadLimiter | None = None,
     ) -> None:
         self._client = client
         self._read_retry_policy = read_retry_policy
+        self._read_limiter = read_limiter
 
     async def validate_credentials(
         self,
@@ -64,12 +67,9 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 error_code="insufficient_scope",
                 error_message_safe="Wildberries API key cannot read and answer feedbacks and questions",
             )
-        result = await self.fetch_page(
-            credential,
-            seller_id,
-            MarketplaceStream.QUESTIONS,
-            None,
-        )
+        # WB provides a category-specific authentication probe. Do not spend a
+        # question-list request or make authentication depend on its records.
+        result = await self._read("/ping", credential, params={})
         if not result.ok:
             return AdapterResult(
                 False,
@@ -77,6 +77,9 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 error_message_safe=result.error_message_safe,
                 retry_after_seconds=result.retry_after_seconds,
             )
+        payload = result.data
+        if not isinstance(payload, dict) or cast(dict[str, object], payload).get("Status") != "OK":
+            return AdapterResult(False, error_code="malformed_payload", error_message_safe="Wildberries access check could not be proven")
         return AdapterResult(
             ok=True,
             data=CredentialValidation(
@@ -290,7 +293,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         if raw_text is not None and not isinstance(raw_text, str):
             raise ValueError("Wildberries feedback text is malformed")
         text = raw_text.strip() if isinstance(raw_text, str) else ""
-        if len(text) > 12_000 or "\x00" in text or (not text and not photos and not video_url and not deficiencies):
+        rating = self._rating(raw.get("productValuation"))
+        if len(text) > 12_000 or "\x00" in text or (not text and not photos and not video_url and not deficiencies and rating is None):
             raise ValueError("Wildberries feedback content is missing")
         return NormalizedMessage(
             external_id=self._required_string(
@@ -298,7 +302,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 field_name="feedback ID",
             ),
             message_type=MessageType.REVIEW,
-            rating=self._rating(raw.get("productValuation")),
+            rating=rating,
             customer_display_name=self._optional_string(raw.get("userName")),
             customer_text=text,
             customer_photos=photos,
@@ -358,16 +362,15 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         *,
         params: dict[str, str | int],
     ) -> AdapterResult[object]:
-        try:
-            response = await request_read_with_retry(
-                self._client,
-                "GET",
-                path,
-                headers=self._headers(credential),
-                params=params,
-                policy=self._read_retry_policy,
+        async def request() -> httpx.Response:
+            return await request_read_with_retry(
+                self._client, "GET", path, headers=self._headers(credential), params=params,
+                policy=ReadRetryPolicy(max_attempts=1) if self._read_limiter else self._read_retry_policy,
                 rate_limit_delay=self._rate_limit_delay,
             )
+
+        try:
+            response = await self._read_limiter.read(credential, path, request) if self._read_limiter else await request()
         except httpx.TimeoutException:
             return AdapterResult(
                 False,

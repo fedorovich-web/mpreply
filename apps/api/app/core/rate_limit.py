@@ -23,7 +23,7 @@ return counts
 """
 
 
-def _redis_from_url(url: str) -> Redis:
+def redis_from_url(url: str) -> Redis:
     parsed = urlsplit(url)
     if parsed.scheme not in {"redis", "rediss"}:
         raise ValueError("REDIS_URL must use redis:// or rediss://")
@@ -78,7 +78,7 @@ async def enforce_auth_rate_limit(
         _rate_limit_key(scope=f"{scope}:ip", identifier=client_host),
         _rate_limit_key(scope=f"{scope}:identifier", identifier=identifier),
     )
-    redis = _redis_from_url(settings.redis_url.get_secret_value())
+    redis = redis_from_url(settings.redis_url.get_secret_value())
     try:
         raw_counts: object = await redis.eval(
             _RATE_LIMIT_SCRIPT,

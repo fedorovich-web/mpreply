@@ -192,7 +192,7 @@ class MarketplaceIngestService:
                 await self.session.flush()
             return product, True
         except IntegrityError as exc:
-            if _constraint_name(exc) != _PRODUCT_CONSTRAINT:
+            if database_constraint_name(exc) != _PRODUCT_CONSTRAINT:
                 raise
 
         winner = await self.session.scalar(
@@ -238,7 +238,7 @@ class MarketplaceIngestService:
                 await self.session.flush()
             return message, True
         except IntegrityError as exc:
-            if _constraint_name(exc) != _MESSAGE_CONSTRAINT:
+            if database_constraint_name(exc) != _MESSAGE_CONSTRAINT:
                 raise
 
         winner = await self.session.scalar(
@@ -339,7 +339,14 @@ def _sanitize_metadata(
     return sanitized
 
 
-def _constraint_name(exc: IntegrityError) -> str | None:
+def database_constraint_name(exc: IntegrityError) -> str | None:
+    # SQLAlchemy's asyncpg adapter wraps the native exception; unlike psycopg,
+    # it does not expose .diag. The original constraint lives on the cause.
+    native = exc.orig.__cause__ if exc.orig is not None else None
+    if native is not None:
+        name: object = getattr(native, "constraint_name", None)
+        if isinstance(name, str):
+            return name
     try:
         name = cast(_DatabaseError, exc.orig).diag.constraint_name
     except AttributeError:

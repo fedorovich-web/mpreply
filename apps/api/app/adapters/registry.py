@@ -21,7 +21,9 @@ from app.adapters.conversation import ConversationAdapter
 from app.adapters.http import MarketplaceHttpClients
 from app.adapters.ozon import OzonAdapter
 from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.wildberries_read_limiter import WildberriesReadLimiter
 from app.adapters.yandex_market import YandexMarketAdapter
+from app.core.config import get_settings
 from app.models.enums import Marketplace
 
 ProviderFactory = Callable[[], object]
@@ -103,6 +105,7 @@ class MarketplaceAdapterRegistry:
 
 def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceAdapterRegistry:
     avito_resolver = AvitoCredentialResolver(clients.avito)
+    wb_limiter = WildberriesReadLimiter() if get_settings().app_env == "production" else None
     return MarketplaceAdapterRegistry(
         {
             Marketplace.AVITO: ProviderRegistration(
@@ -113,8 +116,8 @@ def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceA
             ),
             Marketplace.WILDBERRIES: ProviderRegistration(
                 capability=WILDBERRIES_CAPABILITY,
-                credential_factory=lambda: WildberriesAdapter(client=clients.wildberries),
-                review_factory=lambda: WildberriesAdapter(client=clients.wildberries),
+                credential_factory=lambda: WildberriesAdapter(client=clients.wildberries, read_limiter=wb_limiter),
+                review_factory=lambda: WildberriesAdapter(client=clients.wildberries, read_limiter=wb_limiter),
             ),
             Marketplace.OZON: ProviderRegistration(
                 capability=OZON_CAPABILITY,

@@ -470,7 +470,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.queryByText(/Доступ сохранён/)).not.toBeInTheDocument();
   });
 
-  it("deletes a seller account only after explicit confirmation", async () => {
+  it.each(["wildberries", "ozon", "yandex_market", "avito"] as const)("deletes a %s account only after explicit confirmation", async (marketplace) => {
     mockWorkspace("owner");
     let deleted = false;
     const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
@@ -487,12 +487,12 @@ describe("WildberriesIntegrationWorkspace", () => {
           { status: 200 },
         );
       }
-      return new Response(JSON.stringify(deleted ? [] : [account]), { status: 200 });
+      return new Response(JSON.stringify(deleted ? [] : [{ ...account, marketplace }]), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal("confirm", vi.fn(() => true));
 
-    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+    renderWithQueryClient(<MarketplaceIntegrationWorkspace marketplace={marketplace} marketplaceName={marketplace} credentialLabel="Access key" placeholder="Name" />);
 
     expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Удалить кабинет" }));
@@ -500,7 +500,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     await waitFor(() => {
       expect(fetchMock.mock.calls.some(([input, init]) => String(input).endsWith(`/${account.id}`) && init?.method === "DELETE")).toBe(true);
     });
-    expect(await screen.findByText("Кабинет и его данные удалены.")).toBeInTheDocument();
+    expect(await screen.findByText("Кабинет удалён. История обращений сохранена.")).toBeInTheDocument();
   });
 
   it("keeps viewer membership read-only and hides credential actions", async () => {

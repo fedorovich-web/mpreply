@@ -97,6 +97,7 @@ const integrationCopy = {
     newMessages: "новых обращений",
     updated: "обновлено",
     syncFailed: "Не удалось полностью обновить данные. Проверьте подключение и попробуйте ещё раз.",
+    syncRateLimited: "Wildberries временно ограничил загрузку. MPReply продолжит обновление после окончания указанной площадкой паузы.",
     syncInProgress: "Другое обновление этого кабинета уже выполняется. Подождите и попробуйте снова.",
     syncPartial: "Часть данных загружена. Обновление продолжится автоматически.",
     credentialsRotated: "Данные для подключения заменены. Проверьте подключение перед следующим обновлением.",
@@ -126,12 +127,12 @@ const integrationCopy = {
     disconnectConfirm: "Отключить этот кабинет от MPReply?",
     disconnecting: "Отключаем...",
     disconnect: "Отключить кабинет",
-    deleteTitle: "Удалить кабинет и его данные",
-    deleteText: "Будут удалены кабинет, загруженные обращения, товары, черновики ответов и правила этого кабинета. Восстановить данные нельзя.",
-    deleteConfirm: "Удалить этот кабинет и все его данные? Отменить действие нельзя.",
+    deleteTitle: "Удалить кабинет",
+    deleteText: "Кабинет исчезнет из списка, данные доступа будут удалены, обновления и автоматизация остановятся. История обращений и оплат сохранится. Для подключения понадобится заново добавить кабинет.",
+    deleteConfirm: "Удалить кабинет «{name}»? Данные доступа будут удалены. История обращений и оплат сохранится.",
     deleting: "Удаляем...",
     deleteAccount: "Удалить кабинет",
-    deletedNotice: "Кабинет и его данные удалены.",
+    deletedNotice: "Кабинет удалён. История обращений сохранена.",
     actionError: "Не удалось выполнить действие. Проверьте подключение и попробуйте ещё раз.",
     adminOnlyTitle: "Настройки доступны владельцу и администратору",
     adminOnlyText: "Для вашей роли доступен просмотр состояния подключения. Изменение настроек и данных доступа недоступно.",
@@ -210,6 +211,7 @@ const integrationCopy = {
     newMessages: "new customer messages",
     updated: "updated",
     syncFailed: "The data sync did not complete successfully. Check the connection and try again.",
+    syncRateLimited: "Wildberries temporarily limited data loading. MPReply will resume after the marketplace's waiting period.",
     syncInProgress: "Another sync for this seller account is already running. Wait for it to finish, then try again.",
     syncPartial: "Some data has loaded. The remaining data will sync automatically.",
     credentialsRotated: "Connection credentials replaced. Validate the connection before the next sync.",
@@ -239,12 +241,12 @@ const integrationCopy = {
     disconnectConfirm: "Disconnect this seller account from MPReply?",
     disconnecting: "Disconnecting...",
     disconnect: "Disconnect seller account",
-    deleteTitle: "Delete seller account and its data",
-    deleteText: "This removes the seller account, imported customer messages, products, reply drafts, and rules for this account. The data cannot be restored.",
-    deleteConfirm: "Delete this seller account and all of its data? This cannot be undone.",
+    deleteTitle: "Delete seller account",
+    deleteText: "The account will disappear from connections, its credentials will be deleted, and sync and automation will stop. Message and payment history will remain. Reconnecting requires adding a new account.",
+    deleteConfirm: "Delete seller account ‘{name}’? Its credentials will be deleted. Message and payment history will remain.",
     deleting: "Deleting...",
     deleteAccount: "Delete seller account",
-    deletedNotice: "Seller account and its data were deleted.",
+    deletedNotice: "Seller account deleted. Message history retained.",
     actionError: "The action could not be completed. Check the connection and try again.",
     adminOnlyTitle: "Settings are available to owners and administrators",
     adminOnlyText: "Your role can view connection status, but cannot change settings or access credentials.",
@@ -677,7 +679,7 @@ function AccountDetail({
       } else if (result.status === "partial") {
         message = t.syncPartial;
       } else {
-        message = t.syncFailed;
+        message = result.error_code === "rate_limited" && account.marketplace === "wildberries" ? t.syncRateLimited : t.syncFailed;
       }
       onNotice({
         tone: result.status === "success" ? "success" : "warning",
@@ -714,6 +716,7 @@ function AccountDetail({
     mutationFn: () =>
       apiRequest(`/api/marketplace-accounts/${account.id}`, marketplaceAccountActionSchema, { method: "DELETE" }),
     onSuccess: async () => {
+      queryClient.setQueryData<MarketplaceAccount[]>(["marketplace-accounts", organizationId], (previous) => previous?.filter((item) => item.id !== account.id));
       onNotice({ tone: "success", message: t.deletedNotice });
       await invalidate();
     },
@@ -883,7 +886,7 @@ function AccountDetail({
               disabled={busy}
               onClick={() => {
                 setLocalError(null);
-                if (window.confirm(t.deleteConfirm)) deleteMutation.mutate();
+                if (window.confirm(t.deleteConfirm.replace("{name}", account.display_name))) deleteMutation.mutate();
               }}
               type="button"
             >
