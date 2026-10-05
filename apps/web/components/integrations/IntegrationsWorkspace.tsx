@@ -95,6 +95,7 @@ const integrationsCopy = {
     open: "Открыть",
     available: "Подключение доступно",
     stateAttention: "Требует внимания",
+    connectedLoadingAttention: "Подключён · загрузка требует внимания",
     incomplete: "Настройка не завершена",
     disconnected: "Не подключено",
     one: "подключение",
@@ -122,6 +123,7 @@ const integrationsCopy = {
     open: "Open",
     available: "Connection available",
     stateAttention: "Needs attention",
+    connectedLoadingAttention: "Connected · loading needs attention",
     incomplete: "Setup incomplete",
     disconnected: "Not connected",
     one: "connection",
@@ -212,7 +214,8 @@ export function IntegrationsWorkspace() {
           const connectedCount = marketplaceAccounts.length;
           const hasProblem = marketplaceAccounts.some(needsConnectionAttention);
           const hasActive = marketplaceAccounts.some(isHealthyConnection);
-          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem }, locale);
+          const hasValidAccess = marketplaceAccounts.every((account) => account.status === "active" && account.credentials_status === "valid");
+          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem, hasValidAccess }, locale);
           const actionLabel = canManage
             ? connectedCount > 0
               ? `${t.manage} ${marketplace.name}`
@@ -265,14 +268,16 @@ function getConnectionState({
   connectedCount,
   hasActive,
   hasProblem,
+  hasValidAccess,
 }: {
   connectedCount: number;
   hasActive: boolean;
   hasProblem: boolean;
+  hasValidAccess: boolean;
 }, locale: Locale): { label: string; tone: "neutral" | "success" | "warning" } {
   const t = integrationsCopy[locale];
   if (hasProblem) {
-    return { label: t.stateAttention, tone: "warning" };
+    return { label: hasValidAccess ? t.connectedLoadingAttention : t.stateAttention, tone: "warning" };
   }
   if (hasActive) {
     return { label: `${connectedCount} ${accountWord(connectedCount, locale)}`, tone: "success" };

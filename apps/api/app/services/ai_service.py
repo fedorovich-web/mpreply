@@ -31,6 +31,7 @@ from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
 from app.services.audit_service import AuditService
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
+from app.services.product_research_service import ProductResearchService, research_context
 from app.services.reply_credit_service import ReplyCreditService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager"}
@@ -66,6 +67,10 @@ _MODEL_SAFETY_FLAGS = frozenset(
     }
 )
 _MAX_MODEL_OUTPUT_CHARS = 16_384
+
+
+def _sum_usage(first: int | None, second: int | None) -> int | None:
+    return None if first is None and second is None else (first or 0) + (second or 0)
 
 
 class AIService:
@@ -177,6 +182,13 @@ class AIService:
         organization_id = message.organization_id
 
         settings = get_settings()
+        provider = GroqProvider(
+            api_key=settings.groq_api_key.get_secret_value(), base_url=settings.groq_base_url,
+            timeout_seconds=settings.groq_timeout_seconds,
+        )
+        research = await ProductResearchService(self.session).ensure(product=product, provider=provider)
+        if automatic_job is not None:
+            await self._require_automatic_generation(automatic_job, message, actor)
         prompt = build_marketplace_reply_prompt(
             marketplace=message.marketplace,
             message_type=message.type,
@@ -186,11 +198,6 @@ class AIService:
             tone=tone,
             brand_rules=brand_rules,
             knowledge_base=knowledge_base,
-        )
-        provider = GroqProvider(
-            api_key=settings.groq_api_key.get_secret_value(),
-            base_url=settings.groq_base_url,
-            timeout_seconds=settings.groq_timeout_seconds,
         )
         await self.session.commit()
         try:
@@ -207,13 +214,16 @@ class AIService:
             parsed = self._parse_model_output(completion.text)
         except ModelOutputError as exc:
             raise bad_gateway("AI provider returned an invalid response") from exc
+        if not research.verified:
+            parsed = ParsedModelOutput(parsed.answer, min(parsed.confidence_score, 0.74),
+                                       list(set(parsed.safety_flags) | {"missing_product_context", "needs_manual_review"}))
         safety = self.safety_gate.evaluate(
             SafetyInput(
                 draft_text=parsed.answer,
                 confidence_score=parsed.confidence_score,
                 message_type=message.type,
                 rating=message.rating,
-                has_product_context=product is not None,
+                has_product_context=research.verified,
                 model_flags=parsed.safety_flags,
             )
         )
@@ -259,10 +269,12 @@ class AIService:
             prompt_version=prompt.version,
             prompt_input_hash=prompt.input_hash,
             draft_text=parsed.answer,
-            tokens_input=completion.usage.prompt_tokens,
-            tokens_output=completion.usage.completion_tokens,
-            latency_ms=completion.latency_ms,
-            cost_estimate=completion.usage.cost,
+            tokens_input=_sum_usage(completion.usage.prompt_tokens, research.usage.prompt_tokens),
+            tokens_output=_sum_usage(completion.usage.completion_tokens, research.usage.completion_tokens),
+            latency_ms=completion.latency_ms + research.latency_ms,
+            cost_estimate=(completion.usage.cost + research.usage.cost
+                           if completion.usage.cost is not None and research.usage.cost is not None
+                           else completion.usage.cost if research.cached else None),
             confidence_score=parsed.confidence_score,
             safety_flags_json=flags,
             created_by=actor.id,
@@ -275,7 +287,8 @@ class AIService:
             SafetyDecision.BLOCK: "safety_blocked",
         }
         message.status = status_by_decision[safety.decision]
-        await self._write_usage(actor=actor, message=message, draft=draft, total_tokens=completion.usage.total_tokens)
+        await self._write_usage(actor=actor, message=message, draft=draft,
+                                total_tokens=_sum_usage(completion.usage.total_tokens, research.usage.total_tokens))
         await self.audit.write(
             action="ai_draft.generated",
             entity_type="ai_draft",
@@ -290,6 +303,8 @@ class AIService:
                 "safety_decision": safety.decision.value,
                 "safety_flags": flags,
                 "safety_reasons": safety.reasons,
+                "product_research": {"verified": research.verified, "cached": research.cached,
+                                     "error_code": research.error_code, "latency_ms": research.latency_ms},
             },
         )
         await self.session.flush()
@@ -398,7 +413,7 @@ class AIService:
             "brand": product.brand,
             "category": product.category,
             "external_id": product.external_id,
-            "metadata": product.metadata_json or {},
+            "metadata": research_context(product.metadata_json or {}),
         }
 
     @staticmethod

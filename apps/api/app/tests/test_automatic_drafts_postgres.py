@@ -25,7 +25,7 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.organization import Organization
 from app.models.reply import Reply
 from app.models.user import User
-from app.providers.groq import GroqProvider, LLMCompletion
+from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductResearch
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService
 from app.services.reply_credit_service import ReplyCreditService
@@ -186,6 +186,10 @@ async def test_postgres_import_ai_rules_and_adapter_send_complete_with_one_credi
     postgres_credits: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Real persistence and Ozon adapter, synthetic credentials and mocked HTTP only."""
+    monkeypatch.setattr(GroqProvider, "research_product", AsyncMock(return_value=ProductResearch(
+        [{"url": "https://parts.example/tp123", "title": "TP123", "excerpt": "Test product TP123"}],
+        "search-test", LLMUsage(1, 2, 3, None), 1,
+    )))
     transport = SequenceTransport([
         response(200, json={"answers": [], "last_id": ""}), response(200, json={"answer_id": "synthetic-answer"}),
     ])
