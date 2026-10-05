@@ -90,7 +90,8 @@ const integrationCopy = {
     noSelectionChoose: "Выберите кабинет из списка.",
     settingsSaved: "Настройки кабинета сохранены.",
     validateFailed: "Не удалось подтвердить доступ к кабинету. Проверьте данные для подключения.",
-    validationRateLimited: "Wildberries временно ограничил проверку. Доступ сохранён, повторите позже.",
+    validationRateLimited: "Wildberries временно ограничил проверку. Повторите позже.",
+    validationRateLimitedPreserved: "Wildberries временно ограничил проверку. Доступ сохранён, повторите позже.",
     works: "Подключение работает.",
     syncSuccessPrefix: "Данные обновлены",
     newMessages: "новых обращений",
@@ -196,7 +197,8 @@ const integrationCopy = {
     noSelectionChoose: "Choose a seller account from the list.",
     settingsSaved: "Seller-account settings saved.",
     validateFailed: "Could not confirm access to the seller account. Check the connection credentials.",
-    validationRateLimited: "Wildberries temporarily limited validation. Your saved access is preserved; try again later.",
+    validationRateLimited: "Wildberries temporarily limited validation. Try again later.",
+    validationRateLimitedPreserved: "Wildberries temporarily limited validation. Your saved access is preserved; try again later.",
     works: "Connection is working.",
     syncSuccessPrefix: "Data updated",
     newMessages: "new customer messages",
@@ -636,7 +638,14 @@ function AccountDetail({
     onSuccess: async (result) => {
       onNotice({
         tone: result.error_code ? "warning" : "success",
-        message: result.error_code === "rate_limited" ? t.validationRateLimited : result.error_code ? t.validateFailed : t.works,
+        message:
+          result.error_code === "rate_limited"
+            ? result.status === "active" && result.credentials_status === "valid"
+              ? t.validationRateLimitedPreserved
+              : t.validationRateLimited
+            : result.error_code
+              ? t.validateFailed
+              : t.works,
       });
       await invalidate();
     },
