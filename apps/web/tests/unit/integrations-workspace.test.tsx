@@ -196,7 +196,7 @@ describe("IntegrationsWorkspace", () => {
       expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("0");
       expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
     });
-    expect(screen.getByText("Требует внимания")).toBeInTheDocument();
+    expect(screen.getByText("Подключён · загрузка требует внимания")).toBeInTheDocument();
   });
 });
 
@@ -416,7 +416,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.getByRole("button", { name: "Загрузить отзывы и вопросы" })).toBeInTheDocument();
   });
 
-  it("shows a current sync failure instead of calling an active account healthy", async () => {
+  it("distinguishes valid access from a current loading failure", async () => {
     mockWorkspace("owner");
     const accountWithCurrentSyncError = {
       ...account,
@@ -429,7 +429,8 @@ describe("WildberriesIntegrationWorkspace", () => {
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
     expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
-    expect(screen.getAllByText("Требует внимания").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Подключён · загрузка требует внимания").length).toBeGreaterThan(0);
+    expect(screen.getByText("Проверен")).toBeInTheDocument();
     expect(screen.queryByText("Активно")).not.toBeInTheDocument();
   });
 

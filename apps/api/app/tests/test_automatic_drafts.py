@@ -23,7 +23,7 @@ from app.models.product import Product
 from app.models.reply import Reply
 from app.models.reply_credit import ReplyCreditOperation
 from app.models.user import User
-from app.providers.groq import GroqProvider, GroqProviderError, LLMCompletion
+from app.providers.groq import GroqProvider, GroqProviderError, LLMCompletion, LLMUsage, ProductResearch
 from app.services.ai_service import AIService
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService
@@ -55,7 +55,7 @@ async def seed(session: AsyncSession, mode: str = "auto") -> CustomerMessage:
     await session.flush()
     product = Product(
         organization_id=organization.id, marketplace_account_id=account.id,
-        marketplace="ozon", external_id="automatic-product", name="Test product",
+        marketplace="ozon", external_id="automatic-product", name="Test product TP123", sku="TP123",
     )
     session.add(product)
     await session.flush()
@@ -85,6 +85,10 @@ async def test_imported_message_generates_once_and_routes_by_workspace_rules(
     mode: str, expected_status: str, reply_count: int,
 ) -> None:
     monkeypatch.setattr(GroqProvider, "complete", AsyncMock(return_value=VALID_COMPLETION))
+    monkeypatch.setattr(GroqProvider, "research_product", AsyncMock(return_value=ProductResearch(
+        sources=[{"url": "https://product.example/tp123", "title": "TP123", "excerpt": "Test product TP123"}],
+        model="synthetic-search", usage=LLMUsage(1, 1, 2, None), latency_ms=1,
+    )))
     async with automatic_db() as session:
         message = await seed(session, mode)
         service = AutomaticDraftService(session)

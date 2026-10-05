@@ -287,6 +287,8 @@ class MarketplaceIngestService:
         marketplace: Marketplace,
         normalized: NormalizedProduct,
     ) -> None:
+        research = (product.metadata_json or {}).get("web_research")
+        same_identity = (product.sku, product.name, product.brand) == (normalized.sku, normalized.name, normalized.brand)
         product.sku = normalized.sku
         product.name = normalized.name
         product.brand = normalized.brand
@@ -294,6 +296,8 @@ class MarketplaceIngestService:
         product.image_url = normalized.image_url
         product.product_url = normalized.product_url
         product.metadata_json = sanitize_product_metadata(marketplace, normalized.metadata)
+        if same_identity and isinstance(research, dict):
+            product.metadata_json = {**product.metadata_json, "web_research": research}
 
     @staticmethod
     def _update_message(
