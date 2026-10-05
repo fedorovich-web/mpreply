@@ -8,6 +8,8 @@ from typing import cast
 from uuid import uuid4
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,6 +58,9 @@ class _SharedRecords:
 
 
 class _ConcurrentSession:
+    def get_bind(self) -> Engine:
+        return create_engine("sqlite://")
+
     def __init__(self, shared: _SharedRecords, *, constraint_name: str | None = None) -> None:
         self.shared = shared
         self.constraint_name = constraint_name

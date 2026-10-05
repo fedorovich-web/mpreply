@@ -6,6 +6,7 @@ from typing import Protocol, cast
 from urllib.parse import urlsplit
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -186,21 +187,33 @@ class MarketplaceIngestService:
             product_url=normalized.product_url,
             metadata_json=sanitize_product_metadata(marketplace, normalized.metadata),
         )
-        try:
-            async with self.session.begin_nested():
-                self.session.add(product)
-                await self.session.flush()
-            return product, True
-        except IntegrityError as exc:
-            if database_constraint_name(exc) != _PRODUCT_CONSTRAINT:
-                raise
+        if self.session.get_bind().dialect.name == "postgresql":
+            inserted = await self.session.scalar(
+                pg_insert(Product).values(
+                    organization_id=product.organization_id, marketplace_account_id=product.marketplace_account_id,
+                    marketplace=product.marketplace, external_id=product.external_id, sku=product.sku, name=product.name,
+                    brand=product.brand, category=product.category, image_url=product.image_url, product_url=product.product_url,
+                    metadata_json=product.metadata_json,
+                ).on_conflict_do_nothing(constraint=_PRODUCT_CONSTRAINT).returning(Product)
+            )
+            if inserted is not None:
+                return inserted, True
+        else:
+            try:
+                async with self.session.begin_nested():
+                    self.session.add(product)
+                    await self.session.flush()
+                return product, True
+            except IntegrityError as exc:
+                if database_constraint_name(exc) != _PRODUCT_CONSTRAINT:
+                    raise
 
         winner = await self.session.scalar(
             select(Product).where(
                 Product.organization_id == account.organization_id,
                 Product.marketplace_account_id == account.id,
                 Product.external_id == normalized.external_id,
-            )
+            ).with_for_update()
         )
         if winner is None:
             raise RuntimeError("unique product winner was not visible after conflict")
@@ -232,14 +245,28 @@ class MarketplaceIngestService:
             priority=_priority_for(normalized),
             metadata_json=sanitize_message_metadata(marketplace, normalized.metadata),
         )
-        try:
-            async with self.session.begin_nested():
-                self.session.add(message)
-                await self.session.flush()
-            return message, True
-        except IntegrityError as exc:
-            if database_constraint_name(exc) != _MESSAGE_CONSTRAINT:
-                raise
+        if self.session.get_bind().dialect.name == "postgresql":
+            inserted = await self.session.scalar(
+                pg_insert(CustomerMessage).values(
+                    organization_id=message.organization_id, marketplace_account_id=message.marketplace_account_id,
+                    product_id=message.product_id, marketplace=message.marketplace, external_id=message.external_id,
+                    type=message.type, status=message.status, rating=message.rating, customer_display_name=message.customer_display_name,
+                    customer_text=message.customer_text, customer_photos_json=message.customer_photos_json,
+                    marketplace_created_at=message.marketplace_created_at, imported_at=message.imported_at,
+                    last_synced_at=message.last_synced_at, priority=message.priority, metadata_json=message.metadata_json,
+                ).on_conflict_do_nothing(constraint=_MESSAGE_CONSTRAINT).returning(CustomerMessage)
+            )
+            if inserted is not None:
+                return inserted, True
+        else:
+            try:
+                async with self.session.begin_nested():
+                    self.session.add(message)
+                    await self.session.flush()
+                return message, True
+            except IntegrityError as exc:
+                if database_constraint_name(exc) != _MESSAGE_CONSTRAINT:
+                    raise
 
         winner = await self.session.scalar(
             select(CustomerMessage).where(
@@ -248,7 +275,7 @@ class MarketplaceIngestService:
                 CustomerMessage.marketplace == marketplace.value,
                 CustomerMessage.external_id == normalized.external_id,
                 CustomerMessage.type == normalized.message_type.value,
-            )
+            ).with_for_update()
         )
         if winner is None:
             raise RuntimeError("unique message winner was not visible after conflict")
