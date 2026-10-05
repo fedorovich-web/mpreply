@@ -366,6 +366,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 headers=self._headers(credential),
                 params=params,
                 policy=self._read_retry_policy,
+                rate_limit_delay=self._rate_limit_delay,
             )
         except httpx.TimeoutException:
             return AdapterResult(
@@ -388,15 +389,7 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         return AdapterResult(ok=True, data=payload)
 
     def _map_error_response(self, response: httpx.Response) -> AdapterResult[object]:
-        retry_after = (
-            parse_retry_after(
-                response.headers.get("Retry-After"),
-                now=datetime.now(UTC),
-                maximum_seconds=self._read_retry_policy.max_retry_after_seconds,
-            )
-            if response.status_code == 429
-            else None
-        )
+        retry_after = self._rate_limit_delay(response) if response.status_code == 429 else None
         if response.status_code == 401:
             code = "invalid_credentials"
             message = "Wildberries API key is invalid"
@@ -421,6 +414,16 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             error_message_safe=message,
             retry_after_seconds=retry_after,
         )
+
+    @staticmethod
+    def _rate_limit_delay(response: httpx.Response) -> int | None:
+        now = datetime.now(UTC)
+        delays = [
+            delay
+            for name in ("Retry-After", "X-Ratelimit-Retry")
+            if (delay := parse_retry_after(response.headers.get(name), now=now, maximum_seconds=86_400)) is not None
+        ]
+        return max(delays) if delays else None
 
     @staticmethod
     def _malformed_payload(message: str) -> AdapterResult[object]:
