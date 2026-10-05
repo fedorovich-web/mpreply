@@ -8,6 +8,8 @@ from uuid import UUID, uuid4
 
 import httpx
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ClauseElement
 
@@ -37,6 +39,9 @@ class _Savepoint(AbstractAsyncContextManager[None]):
 
 
 class _Session:
+    def get_bind(self) -> Engine:
+        return create_engine("sqlite://")
+
     def __init__(self, messages: list[CustomerMessage] | None = None, reply_message_ids: set[UUID] | None = None) -> None:
         self.messages = messages or []
         self.reply_message_ids = reply_message_ids or set()
