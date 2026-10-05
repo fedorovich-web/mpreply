@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
@@ -103,11 +104,17 @@ async def validate_marketplace_account(
         registry=registry,
     )
     await session.commit()
+    stored_scopes = account.scopes_json.get("scopes")
+    scopes = (
+        [scope for scope in cast(list[object], stored_scopes) if isinstance(scope, str) and scope]
+        if isinstance(stored_scopes, list)
+        else []
+    )
     return MarketplaceAccountValidateResponse(
         id=account.id,
         status=account.status,
         credentials_status=account.credentials_status,
-        scopes=list(result.data.scopes) if result.data is not None else [],
+        scopes=list(result.data.scopes) if result.data is not None else scopes,
         checked_at=datetime.now(UTC),
         error_code=result.error_code,
         error_message_safe=result.error_message_safe,

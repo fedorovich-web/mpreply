@@ -1,14 +1,15 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("public pages omit labels above headings in both languages", async ({ page }) => {
-  for (const prefix of ["", "/en"]) {
-    for (const route of ["/", "/features", "/pricing", "/marketplaces", "/marketplaces/wildberries", "/marketplaces/ozon", "/marketplaces/yandex-market", "/marketplaces/avito", "/help", "/contacts", "/privacy", "/terms"]) {
-      await page.goto(prefix + (prefix && route === "/" ? "" : route));
+for (const prefix of ["", "/en"]) {
+  for (const route of ["/", "/features", "/pricing", "/marketplaces", "/marketplaces/wildberries", "/marketplaces/ozon", "/marketplaces/yandex-market", "/marketplaces/avito", "/help", "/contacts", "/privacy", "/terms"]) {
+    const path = prefix + (prefix && route === "/" ? "" : route);
+    test(`public page ${path} omits labels above headings`, async ({ page }) => {
+      await page.goto(path);
       await expect(page.locator("main [class*='kicker'], main [class*='eyebrow'], .faq-breadcrumb")).toHaveCount(0);
-    }
+    });
   }
-});
+}
 
 for (const width of [320, 390, 768, 1440]) {
   test(`FAQ assets, text and accessibility at ${width}px`, async ({ page }) => {
@@ -62,10 +63,10 @@ test("English FAQ deep links and answers stay localized", async ({ page }) => {
   await expect(page.locator("#faq-answer-trial a")).toHaveAttribute("href", "/en/demo");
 });
 
-test("public sections use one equal vertical padding at every breakpoint", async ({ page }) => {
-  for (const width of [390, 768, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
-    for (const route of ["/", "/features", "/pricing", "/marketplaces", "/help", "/contacts", "/privacy"]) {
+for (const width of [390, 768, 1440]) {
+  for (const route of ["/", "/features", "/pricing", "/marketplaces", "/help", "/contacts", "/privacy"]) {
+    test(`public sections on ${route} use equal vertical padding at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
       await page.goto(route);
       const measurements = await page.evaluate(() => {
         const root = document.querySelector(".public-root")!;
@@ -81,6 +82,6 @@ test("public sections use one equal vertical padding at every breakpoint", async
         expect(section.top, `${route} ${width}px ${section.name}: top`).toBe(measurements.expected);
         expect(section.bottom, `${route} ${width}px ${section.name}: bottom`).toBe(measurements.expected);
       }
-    }
+    });
   }
-});
+}

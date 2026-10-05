@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.base import AdapterResult, CredentialValidation
-from app.adapters.capabilities import streams_for_scopes
+from app.adapters.capabilities import streams_for_scopes, validated_scope_names
 from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.config import get_settings
 from app.core.errors import bad_request, conflict, forbidden, not_found, payment_required
@@ -25,6 +25,7 @@ from app.services.plan_limit_service import PlanLimitService
 
 _ALLOWED_MANAGE_ROLES = {"owner", "admin"}
 _ALLOWED_READ_ROLES = {"owner", "admin", "manager", "viewer"}
+_TRANSIENT_VALIDATION_ERRORS = frozenset({"rate_limited", "marketplace_unavailable", "network_timeout", "network_error"})
 
 
 class MarketplaceAccountService:
@@ -306,15 +307,26 @@ class MarketplaceAccountService:
             error_message_safe = None
             action = "marketplace_account.credentials.validated"
         else:
-            account.credentials_status = result.error_code or "invalid"
-            account.status = "error"
-            account.scopes_json = {}
+            preserve_validated_access = (
+                result.error_code in _TRANSIENT_VALIDATION_ERRORS
+                and account.status == "active"
+                and account.credentials_status == "valid"
+                and bool(validated_scope_names(account.scopes_json))
+            )
+            if not preserve_validated_access:
+                account.credentials_status = result.error_code or "invalid"
+                account.status = "error"
+                account.scopes_json = {}
             account.last_error_sync_at = now
             account.error_count = int(account.error_count or 0) + 1
             event_status = "failed"
             error_code = result.error_code
             error_message_safe = result.error_message_safe
-            action = "marketplace_account.credentials.validation_failed"
+            action = (
+                "marketplace_account.credentials.validation_deferred"
+                if preserve_validated_access
+                else "marketplace_account.credentials.validation_failed"
+            )
 
         await self._write_integration_event(
             account=account,
