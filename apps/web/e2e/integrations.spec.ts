@@ -19,9 +19,10 @@ test("owner sees live Wildberries account and can run validation and sync", asyn
   await page.goto("/app/integrations/wildberries", { waitUntil: "networkidle" });
 
   await expect(page.getByRole("heading", { name: "WB основной кабинет" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Загрузить отзывы и вопросы" })).toBeInViewport();
   await page.getByRole("button", { name: "Проверить подключение" }).click();
   await expect(page.getByText("Подключение работает.")).toBeVisible();
-  await page.getByRole("button", { name: "Обновить данные" }).click();
+  await page.getByRole("button", { name: "Загрузить отзывы и вопросы" }).click();
   await expect(page.getByText(/Данные обновлены: новых обращений 6, обновлено 1/)).toBeVisible();
 });
 
@@ -48,6 +49,6 @@ test("viewer sees integration health without credential actions", async ({ page 
 
   await expect(page.getByText("Только просмотр")).toBeVisible();
   await expect(page.getByRole("button", { name: "Проверить подключение" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Обновить данные" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Загрузить отзывы и вопросы" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Отключить кабинет" })).toHaveCount(0);
 });

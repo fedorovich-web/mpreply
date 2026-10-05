@@ -413,7 +413,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.getByText("Последнее успешное обновление")).toBeInTheDocument();
     expect(screen.getByText("Последняя ошибка")).toBeInTheDocument();
     expect(screen.queryByText("Ошибки синхронизации")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Обновить данные" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Загрузить отзывы и вопросы" })).toBeInTheDocument();
   });
 
   it("shows a current sync failure instead of calling an active account healthy", async () => {
@@ -443,7 +443,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.queryByRole("form", { name: "Новое подключение Wildberries" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Заменить ключ/i })).not.toBeInTheDocument();
     expect(screen.getByText("Только просмотр")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Обновить данные" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Загрузить отзывы и вопросы" })).not.toBeInTheDocument();
   });
 
   it("lets a manager sync an account without exposing credential management", async () => {
@@ -475,7 +475,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     expect(screen.getByText("Можно обновлять обращения")).toBeInTheDocument();
     expect(screen.queryByRole("form", { name: "Настройки кабинета Wildberries" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Проверить подключение" })).not.toBeInTheDocument();
-    const syncButton = screen.getByRole("button", { name: "Обновить данные" });
+    const syncButton = screen.getByRole("button", { name: "Загрузить отзывы и вопросы" });
     fireEvent.click(syncButton);
 
     await waitFor(() => {

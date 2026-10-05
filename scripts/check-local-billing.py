@@ -41,7 +41,7 @@ def main() -> None:
     for direction, revision in [("upgrade", "head"), ("downgrade", "20260930_0018"), ("upgrade", "head")]:
         subprocess.run([str(python), "-m", "alembic", direction, revision], cwd=api, env=env, check=True)
     subprocess.run([str(python), "-m", "pytest", "app/tests/test_billing_orders_postgres.py", "app/tests/test_yandex_postgres.py",
-                    "app/tests/test_reply_credits_postgres.py", "-q"],
+                    "app/tests/test_reply_credits_postgres.py", "app/tests/test_worker_async_runtime.py", "-q"],
                    cwd=api, env=env, check=True)
 
 

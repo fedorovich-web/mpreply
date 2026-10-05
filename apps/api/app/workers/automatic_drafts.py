@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from uuid import UUID
 
@@ -18,8 +17,8 @@ logger = structlog.get_logger(__name__)
 
 
 @dramatiq.actor(queue_name="automatic-drafts", max_retries=0)
-def automatic_draft_actor(job_id: str, token: str) -> None:
-    asyncio.run(_process(UUID(job_id), UUID(token)))
+async def automatic_draft_actor(job_id: str, token: str) -> None:
+    await _process(UUID(job_id), UUID(token))
 
 
 async def _process(job_id: UUID, token: UUID) -> None:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -28,12 +27,12 @@ logger = structlog.get_logger(__name__)
     queue_name="auto-replies",
     max_retries=0,
 )
-def auto_reply_actor(reply_id: str) -> None:
+async def auto_reply_actor(reply_id: str) -> None:
     try:
         parsed_id = UUID(reply_id)
     except ValueError as exc:
         raise ValueError("reply ID is invalid") from exc
-    asyncio.run(_execute_reply(parsed_id))
+    await _execute_reply(parsed_id)
 
 
 async def _execute_reply(reply_id: UUID) -> ExecuteReplyResult:
