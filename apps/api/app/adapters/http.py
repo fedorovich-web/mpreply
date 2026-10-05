@@ -115,11 +115,14 @@ def parse_retry_after(
     now: datetime,
     maximum_seconds: int,
 ) -> int | None:
-    if value is None or not 0 <= maximum_seconds <= 300:
+    if value is None or not 0 <= maximum_seconds <= 86_400:
         return None
     normalized = value.strip()
     if normalized.isascii() and normalized.isdecimal():
-        seconds = int(normalized)
+        digits = normalized.lstrip("0") or "0"
+        if len(digits) > len(str(maximum_seconds)):
+            return None
+        seconds = int(digits)
     else:
         try:
             retry_at = parsedate_to_datetime(normalized)
@@ -141,6 +144,7 @@ async def request_read_with_retry(
     json: object | None = None,
     policy: ReadRetryPolicy = ReadRetryPolicy(),
     sleep: Sleep = asyncio.sleep,
+    rate_limit_delay: Callable[[httpx.Response], int | None] | None = None,
 ) -> httpx.Response:
     request_path = ensure_relative_provider_path(path)
     for attempt in range(1, policy.max_attempts + 1):
@@ -159,6 +163,13 @@ async def request_read_with_retry(
         else:
             if response.status_code not in _TRANSIENT_HTTP_STATUSES or attempt == policy.max_attempts:
                 return response
+            if response.status_code == 429 and rate_limit_delay is not None:
+                delay = rate_limit_delay(response)
+                if delay is not None:
+                    if delay > policy.max_retry_after_seconds:
+                        return response
+                    await sleep(float(delay))
+                    continue
             retry_response = response
         await sleep(_retry_delay(retry_response, attempt, policy))
     raise RuntimeError("bounded retry loop exhausted without returning")
