@@ -75,6 +75,7 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
   const isLogin = mode === "login";
   const labels = copy[locale];
   const oauthError = yandexErrorMessage(searchParams.get("oauth_error"), locale);
+  const pendingYandexLink = isLogin && searchParams.get("oauth_error") === "account_link_required";
   const requestedNext = searchParams.get("next");
   const intent = searchParams.get("intent");
   const appPrefix = locale === "en" ? "/en/app/" : "/app/";
@@ -100,9 +101,12 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
             ? { email: email.trim(), password, name: name.trim() || null }
             : { email: email.trim(), password },
       };
-      return isLogin
-        ? apiRequest(`/api/auth/${mode}`, authSessionSchema, options)
-        : apiRequest(`/api/auth/${mode}`, messageResponseSchema, options);
+      if (!isLogin) return apiRequest(`/api/auth/${mode}`, messageResponseSchema, options);
+      const session = await apiRequest(`/api/auth/${mode}`, authSessionSchema, options);
+      if (pendingYandexLink) {
+        await apiRequest("/api/auth/yandex/link/complete", messageResponseSchema, { method: "POST" });
+      }
+      return session;
     },
     onSuccess: () => {
       if (!isLogin) {
@@ -198,12 +202,16 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
 
                 {mutation.error ? (
                   <p className="form-error" role="alert">
-                    {authErrorMessage(mutation.error, isLogin, locale)}
+                    {pendingYandexLink && mutation.error instanceof ApiError && mutation.error.status === 409
+                      ? locale === "ru" ? "Подтверждение Яндекса истекло или выбран другой аккаунт. Нажмите «Войти через Яндекс» и повторите вход." : "Yandex confirmation expired or belongs to another account. Start Yandex sign-in again."
+                      : authErrorMessage(mutation.error, isLogin, locale)}
                   </p>
                 ) : null}
 
                 <button className="button button-primary" disabled={mutation.isPending} type="submit">
-                  {mutation.isPending ? labels.pending : isLogin ? labels.login : labels.continue}
+                  {mutation.isPending ? labels.pending : pendingYandexLink
+                    ? locale === "ru" ? "Подтвердить и связать Яндекс" : "Confirm and link Yandex"
+                    : isLogin ? labels.login : labels.continue}
                 </button>
               </form>
             )}

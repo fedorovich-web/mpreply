@@ -23,6 +23,7 @@ describe("Yandex registration action", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ yandex: true }))));
     show("en");
     const action = await screen.findByRole("link", { name: "Continue with Yandex" });
+    expect(action.querySelector("img")).toBeVisible();
     const url = new URL(action.getAttribute("href")!);
     expect(url.pathname).toBe("/api/auth/yandex/start");
     expect(url.searchParams.get("locale")).toBe("en");

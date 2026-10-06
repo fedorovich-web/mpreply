@@ -5,9 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthForm } from "../../components/auth/AuthForm";
 
 const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
+const navigation = vi.hoisted(() => ({ query: "intent=connect-marketplace" }));
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
-  useSearchParams: () => new URLSearchParams("intent=connect-marketplace"),
+  useSearchParams: () => new URLSearchParams(navigation.query),
 }));
 
 const fetchMock = vi.fn();
@@ -22,6 +23,7 @@ function submit(mode: "login" | "register", locale: "ru" | "en" = "ru") {
 
 describe("AuthForm registration response contract", () => {
   beforeEach(() => {
+    navigation.query = "intent=connect-marketplace";
     router.replace.mockReset();
     router.refresh.mockReset();
     fetchMock.mockReset();
@@ -57,5 +59,18 @@ describe("AuthForm registration response contract", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toBeVisible());
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("completes pending Yandex linking after password login before entering the workspace", async () => {
+    navigation.query = "oauth_error=account_link_required&next=%2Fapp%2Fdashboard";
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ user: {
+      id: "22222222-2222-4222-8222-222222222222", email: "seller@example.com", name: null,
+      status: "active", is_superadmin: false, created_at: "2026-10-01T12:00:00Z", updated_at: "2026-10-01T12:00:00Z",
+    } }))).mockResolvedValueOnce(new Response(JSON.stringify({ message: "Yandex linked" })));
+    submit("login");
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/app/dashboard"));
+    expect(fetchMock.mock.calls.map((call) => new URL(String(call[0])).pathname)).toEqual([
+      "/api/auth/login", "/api/auth/yandex/link/complete",
+    ]);
   });
 });

@@ -9,12 +9,12 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+import app.services.product_research_service as product_research_service
 from app.adapters.base import MarketplacePage, NormalizedMessage, NormalizedProduct
 from app.models.enums import MessageType
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.product import Product
 from app.providers.groq import GroqProvider, LLMUsage, ProductResearch
-from app.services import product_research_service
 from app.services.marketplace_ingest_service import MarketplaceIngestService
 from app.services.product_research_service import ProductResearchService
 from app.tests.test_automatic_drafts import seed, synthetic_encryption_key
