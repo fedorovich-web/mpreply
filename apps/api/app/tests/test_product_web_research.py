@@ -175,6 +175,26 @@ async def test_changed_product_identity_invalidates_research_cache(
         assert product_identity(product) != first_identity and search.await_count == 2
 
 
+async def test_unconfirmed_brand_keeps_found_sources_for_review_and_reuses_search(
+    research_db: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = GroqProvider(api_key="synthetic-key", transport=httpx.MockTransport(search_response))
+    search = AsyncMock(side_effect=provider.research_product)
+    monkeypatch.setattr(provider, "research_product", search)
+    async with research_db() as session:
+        message = await seed(session)
+        product = await session.get(Product, message.product_id)
+        assert product is not None
+        product.name, product.sku, product.brand = "Haier 0530023778", "0530023778", "Seller brand"
+        await session.commit()
+        service = ProductResearchService(session)
+        first = await service.ensure(product=product, provider=provider)
+        second = await service.ensure(product=product, provider=provider)
+        assert not first.verified and not second.verified and second.cached and search.await_count == 1
+        data = cast(dict[str, object], product.metadata_json["web_research"])
+        assert data["status"] == "needs_review" and data["sources"]
+
+
 @pytest.mark.parametrize("mode,evidence,expected", [
     ("auto", True, "auto_reply_pending"), ("auto", False, "waiting_review"),
     ("semi_auto", True, "waiting_review"), ("semi_auto", False, "waiting_review"),

@@ -137,11 +137,16 @@ class ProductResearchService:
         error_code = None
         usage, latency = _EMPTY_USAGE, 0
         sources: list[dict[str, str]] = []
+        verified = False
         try:
             async with asyncio.timeout(RESEARCH_TIMEOUT_SECONDS):
                 research = await provider.research_product(name=product.name or "", sku=product.sku, brand=product.brand)
             usage, latency = research.usage, research.latency_ms
-            sources = [source for source in research.sources if source_matches_product(source, product)][:5]
+            matches = [source for source in research.sources if source_matches_product(source, product)][:5]
+            verified = bool(matches)
+            # Retain actual provider evidence for a person even when seller/manufacturer identity differs.
+            # These candidates must never enable automatic sending.
+            sources = matches or research.sources[:5]
         except GroqProviderError as exc:
             error_code = exc.error_code
         except TimeoutError:
@@ -151,11 +156,11 @@ class ProductResearchService:
         if not isinstance(pending, dict) or cast(dict[str, object], pending).get("lease_token") != token:
             raise conflict("Product research lease changed; start a new generation")
         now = datetime.now(UTC)
-        status = "error" if error_code else "verified" if sources else "not_found"
+        status = "error" if error_code else "verified" if verified else "needs_review" if sources else "not_found"
         product.metadata_json = {**(product.metadata_json or {}), RESEARCH_KEY: {
             "identity": identity, "status": status, "sources": sources, "error_code": error_code,
             "checked_at": now.isoformat(),
             "expires_at": (now + timedelta(hours=24) if sources else now + timedelta(minutes=1)).isoformat(),
         }}
         await self.session.commit()
-        return ResearchRun(verified=bool(sources), usage=usage, latency_ms=latency, error_code=error_code)
+        return ResearchRun(verified=verified, usage=usage, latency_ms=latency, error_code=error_code)

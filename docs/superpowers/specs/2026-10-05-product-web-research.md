@@ -6,6 +6,8 @@ Research uses openai/gpt-oss-20b with the required browser_search tool, low reas
 
 A product-scoped database lease coalesces concurrent searches without holding a database lock across network I/O. Verified results are cached for 24 hours in internal product metadata. Negative/error results have a one-minute retry delay. Import refresh preserves research only while product identity is unchanged. The cache is organization/account/product scoped. One generation reserves and consumes one reply credit; research and writing token usage are combined, and replay does not repeat either provider call.
 
+When pages were found but seller/manufacturer identity does not fully match, provider excerpts are retained with needs_review for 24 hours. They are candidate evidence for human review and never enable automatic sending. This prevents repeated browsing and preserves the information needed to evaluate seller-branded replacement parts.
+
 Connection access and loading health remain separate: a valid marketplace key with a newer loading failure is shown as connected with a loading issue. Sync errors remain visible and successful-sync timestamps are not advanced for partial/failed imports.
 
 Verification covers manual/automatic routing, exact model mismatch, tool-only sources, public URL validation, identity invalidation, one-credit replay, and native PostgreSQL concurrent research. Production evidence must include the deployed commit, health and a real product research result; local mocks alone do not certify live provider access.
