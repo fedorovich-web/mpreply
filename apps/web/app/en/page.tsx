@@ -30,11 +30,11 @@ const homeMarketplaceLogos = {
   avito: "/images/icons/final/04-avito.avif",
 } as const;
 
-const aiModels = [
-  { name: "GPT 6", provider: "OpenAI", icon: "/images/brands/chatgpt-sign-logo.svg" },
-  { name: "Claude Sonnet 5.5", provider: "Anthropic", icon: "/images/brands/claude-icon-logo.svg" },
-  { name: "Gemini 3.8", provider: "Google", icon: "/images/brands/gemini.svg" },
-  { name: "DeepSeek V4.1 Flash", provider: "DeepSeek", icon: "/images/brands/deepseek-sign-logo.svg" },
+const replyContext = [
+  { name: "Product information", label: "Product", icon: "search" },
+  { name: "Customer question", label: "Message", icon: "message" },
+  { name: "Your brand voice", label: "Reply style", icon: "document" },
+  { name: "Rules and review", label: "Controls", icon: "shield-check" },
 ] as const;
 
 const resultFacts = [
@@ -105,15 +105,16 @@ export default function EnglishHomePage() {
         <div className="public-container homepage-models-layout">
           <div className="homepage-section-heading-left">
 
-            <h2>4 AI models for different tasks</h2>
-            <p>Each customer message follows a reply scenario suited to the request.</p>
+            <h2>Reply drafts use the available information</h2>
+            <p>AI considers the message, product details, and team rules. Unconfirmed compatibility is routed for review.</p>
+            <Link href="/en/features">How MPReply prepares replies&nbsp; →</Link>
           </div>
-          <div className="homepage-model-grid" role="group" aria-label="Four AI models">
-            {aiModels.map((model) => (
-              <div className="homepage-model-card" key={model.name}>
-                <span className="homepage-model-mark" aria-hidden="true"><Image src={model.icon} alt="" width={44} height={44} unoptimized /></span>
-                <small>{model.provider}</small>
-                <strong>{model.name}</strong>
+          <div className="homepage-model-grid" role="group" aria-label="Context and controls">
+            {replyContext.map((context) => (
+              <div className="homepage-model-card" key={context.name}>
+                <span className="homepage-model-mark" aria-hidden="true"><PublicIcon name={context.icon} /></span>
+                <small>{context.label}</small>
+                <strong>{context.name}</strong>
               </div>
             ))}
           </div>
@@ -123,20 +124,25 @@ export default function EnglishHomePage() {
       <section className="public-section homepage-approved-process home-reference-process" id="how-it-works">
         <div className="public-container">
           <div className="homepage-section-heading-left homepage-process-heading"><h2>How it works</h2><p>Connect the marketplaces you use and bring supported customer messages into one workflow.</p></div>
+          <div className="homepage-process-visual">
+          <svg className="homepage-process-path" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M20 22 C110 -8 220 -8 315 22 S510 78 615 54 S810 -8 915 22" />
+          </svg>
           <ol className="homepage-horizontal-process">
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">1</span></div>
               <div className="homepage-process-card homepage-process-card-connect"><span className="homepage-process-card-icon"><PublicIcon name="link" /></span><h3>Connect your<br />marketplaces</h3><p>Add a supported marketplace connection to the MPReply workspace.</p><div className="homepage-process-marketplaces" role="group" aria-label="Wildberries, Ozon, Yandex Market, Avito">{homeMarketplaceKeys.map((key) => <span key={key}><Image src={key === "avito" ? "/images/brands/avito-sign-logo.svg" : homeMarketplaceLogos[key]} alt={getMarketplaceConfig(key, "en").name} width={128} height={128} quality={85} sizes="72px" /></span>)}</div></div>
             </li>
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">2</span></div>
               <h3>Collect customer messages</h3><p>Supported reviews, questions, and customer messages appear in one queue.</p><div className="homepage-process-card homepage-process-card-inbox" aria-hidden="true"><span><i><HomeLineIcon name="star" /></i><b>Review</b></span><span><i><HomeLineIcon name="question" /></i><b>Question</b></span><span><i><HomeLineIcon name="message" /></i><b>Message</b></span></div>
             </li>
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">3</span></div>
               <h3>AI drafts the reply</h3><p>Use product context, message details, and your team rules.</p><div className="homepage-process-card homepage-process-card-ai" aria-hidden="true"><strong>✦ &nbsp; Draft ready!</strong><span /><span /><span /></div>
             </li>
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">4</span></div>
               <div className="homepage-process-card homepage-process-card-send"><span className="homepage-process-card-icon"><PublicIcon name="send" /></span><h3>Send with control</h3><p>Send automatically where your rules allow it, or review before sending.</p><div className="homepage-process-switches" aria-hidden="true"><span><b>✦ Automatic</b><i className="is-on" /></span><span><b>⌁ Needs review</b><i /></span><span><b>✓ Sent</b><i /></span></div></div>
             </li>
           </ol>
+          </div>
         </div>
       </section>
 
