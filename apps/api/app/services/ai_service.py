@@ -14,7 +14,7 @@ from fastapi import HTTPException
 from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.prompt_strategy import ResponseTone, build_marketplace_reply_prompt
+from app.ai.prompt_strategy import ResponseTone, build_marketplace_reply_prompt, compatibility_clarification
 from app.core.config import get_settings
 from app.core.errors import bad_gateway, bad_request, conflict, not_found
 from app.models.ai_draft import AIDraft
@@ -186,8 +186,8 @@ class AIService:
             api_key=settings.groq_api_key.get_secret_value(), base_url=settings.groq_base_url,
             timeout_seconds=settings.groq_timeout_seconds,
         )
-        research = await ProductResearchService(self.session).ensure(product=product, provider=provider,
-                                                                   models=compatibility_models(message.customer_text))
+        target_models = compatibility_models(message.customer_text)
+        research = await ProductResearchService(self.session).ensure(product=product, provider=provider, models=target_models)
         if automatic_job is not None:
             await self._require_automatic_generation(automatic_job, message, actor)
         prompt = build_marketplace_reply_prompt(
@@ -216,7 +216,12 @@ class AIService:
         except ModelOutputError as exc:
             raise bad_gateway("AI provider returned an invalid response") from exc
         if not research.verified:
-            parsed = ParsedModelOutput(parsed.answer, min(parsed.confidence_score, 0.74),
+            # Public catalogues cannot establish this seller's inventory, and
+            # an unconfirmed device match cannot establish compatibility.
+            # Keep this visibly flagged for review with a concrete next step.
+            answer = (compatibility_clarification(target_models)
+                      if message.type == "question" and target_models else parsed.answer)
+            parsed = ParsedModelOutput(answer, min(parsed.confidence_score, 0.74),
                                        list(set(parsed.safety_flags) | {"missing_product_context", "needs_manual_review"}))
         safety = self.safety_gate.evaluate(
             SafetyInput(

@@ -15,7 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.models.customer_message import CustomerMessage
 from app.models.organization import OrganizationUser
 from app.models.product import Product
-from app.providers.groq import GroqProvider, GroqProviderError, LLMUsage, ProductResearch, public_source_url
+from app.models.user import User
+from app.providers.groq import GroqProvider, GroqProviderError, LLMCompletion, LLMUsage, ProductResearch, public_source_url
 from app.services.ai_service import AIService
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.demo_workspace_service import ensure_demo_workspace
@@ -26,6 +27,41 @@ from app.tests.test_automatic_drafts import seed, synthetic_encryption_key
 from app.tests.test_reply_credits import credit_session_factory
 
 __all__ = ["synthetic_encryption_key"]
+
+
+@pytest.mark.parametrize("confirmed", [False, True])
+async def test_compatibility_draft_uses_confirmed_fit_or_requests_marking_without_inventing_inventory(
+    research_db: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch, confirmed: bool,
+) -> None:
+    monkeypatch.setattr(GroqProvider, "research_product", AsyncMock(return_value=ProductResearch(
+        [{"url": "https://parts.example/tp123", "title": "Test product TP123",
+          "excerpt": "Test product TP123 fits HCE63" if confirmed else "Test product TP123"}],
+        "search-test", LLMUsage(1, 1, 2, None), 1,
+    )))
+    writer_answer = "Деталь TP123 подходит для HCE63." if confirmed else "Нет датчика. Обратитесь в сервисный центр."
+    monkeypatch.setattr(GroqProvider, "complete", AsyncMock(return_value=LLMCompletion(
+        json.dumps({"answer": writer_answer, "confidence_score": 0.99, "safety_flags": []}),
+        "writer-test", LLMUsage(1, 1, 2, None), 1,
+    )))
+    async with research_db() as session:
+        message = await seed(session)
+        message.customer_text = "Подойдёт к HCE63?"
+        actor = await session.scalar(select(User).join(OrganizationUser, OrganizationUser.user_id == User.id)
+                                     .where(OrganizationUser.organization_id == message.organization_id))
+        assert actor is not None
+        await session.commit()
+        draft = await AIService(session).generate_draft(actor=actor, message_id=message.id, operation_key=uuid4())
+        assert "HCE63" in draft.draft_text
+        assert "нет датчика" not in draft.draft_text and "сервисный центр" not in draft.draft_text
+        if confirmed:
+            assert draft.draft_text == writer_answer and not draft.safety_flags_json
+            assert message.status == "ai_draft_ready"
+        else:
+            assert "маркировки" in draft.draft_text
+            assert {"missing_product_context", "needs_manual_review"}.issubset(draft.safety_flags_json)
+            assert message.status == "needs_manual_check"
+        balance = await ReplyCreditService(session).balance(organization_id=message.organization_id)
+        assert balance.consumed == 1 and balance.reserved == 0
 
 
 def search_response(request: httpx.Request, *, evidence: bool = True) -> httpx.Response:

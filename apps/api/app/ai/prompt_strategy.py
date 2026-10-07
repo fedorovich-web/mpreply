@@ -5,8 +5,14 @@ import json
 from dataclasses import dataclass
 from typing import Literal
 
-PROMPT_VERSION = "marketplace-reply-v3-compatibility"
+PROMPT_VERSION = "marketplace-reply-v3.1-compatibility"
 ResponseTone = Literal["neutral", "friendly", "formal", "apologetic"]
+
+
+def compatibility_clarification(models: tuple[str, ...]) -> str:
+    """A review draft asks for evidence; it never asserts unverified stock or fit."""
+    return (f"Здравствуйте! Чтобы проверить совместимость с моделью {', '.join(models)}, "
+            "пришлите, пожалуйста, артикул заменяемой детали или фото её маркировки.")
 
 
 @dataclass(frozen=True)
