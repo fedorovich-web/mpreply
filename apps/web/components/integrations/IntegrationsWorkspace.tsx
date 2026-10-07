@@ -95,7 +95,6 @@ const integrationsCopy = {
     open: "Открыть",
     available: "Подключение доступно",
     stateAttention: "Требует внимания",
-    connectedLoadingAttention: "Подключён · загрузка требует внимания",
     incomplete: "Настройка не завершена",
     disconnected: "Не подключено",
     one: "подключение",
@@ -123,7 +122,6 @@ const integrationsCopy = {
     open: "Open",
     available: "Connection available",
     stateAttention: "Needs attention",
-    connectedLoadingAttention: "Connected · loading needs attention",
     incomplete: "Setup incomplete",
     disconnected: "Not connected",
     one: "connection",
@@ -288,7 +286,7 @@ function getConnectionState({
     return { label: `${connectedCount} ${accountWord(connectedCount, locale)}`, tone: "success" };
   }
   if (hasProblem) {
-    return { label: hasValidAccess ? t.connectedLoadingAttention : t.stateAttention, tone: "warning" };
+    return { label: t.stateAttention, tone: "warning" };
   }
   if (hasActive) {
     return { label: `${connectedCount} ${accountWord(connectedCount, locale)}`, tone: "success" };

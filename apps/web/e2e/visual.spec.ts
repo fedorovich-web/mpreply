@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { VISUAL_ROUTES } from "./helpers/public-routes";
 
 const RESPONSIVE_VIEWPORTS = [
@@ -32,20 +32,29 @@ async function prepareFullPageCapture(page: Page) {
   });
 }
 
+async function attachFullPageCapture(page: Page, testInfo: TestInfo, name: string) {
+  await testInfo.attach(name, {
+    body: await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide", scale: "css" }),
+    contentType: "image/png",
+  });
+}
+
 for (const route of VISUAL_ROUTES) {
-  test(`${route.slug} desktop visual baseline`, async ({ page }) => {
+  test(`${route.slug} desktop visual baseline`, async ({ page }, testInfo) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 1440, height: 1200 });
     await page.goto(route.path, { waitUntil: "networkidle" });
     await prepareFullPageCapture(page);
+    await attachFullPageCapture(page, testInfo, `${route.slug}-desktop-observed.png`);
     await expect(page).toHaveScreenshot(`${route.slug}-desktop.png`, { fullPage: true });
   });
 
-  test(`${route.slug} mobile visual baseline`, async ({ page }) => {
+  test(`${route.slug} mobile visual baseline`, async ({ page }, testInfo) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(route.path, { waitUntil: "networkidle" });
     await prepareFullPageCapture(page);
+    await attachFullPageCapture(page, testInfo, `${route.slug}-mobile-observed.png`);
     await expect(page).toHaveScreenshot(`${route.slug}-mobile.png`, { fullPage: true });
   });
 }
