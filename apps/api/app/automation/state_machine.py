@@ -147,6 +147,7 @@ _REPLY_TRANSITIONS: dict[str, frozenset[str]] = {
         {
             ReplyStatus.QUEUED.value,
             ReplyStatus.SENDING.value,
+            ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
         }
     ),
 }

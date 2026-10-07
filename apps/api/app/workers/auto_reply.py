@@ -127,6 +127,7 @@ async def claim_due_replies(
 async def dispatch_due_replies(now: datetime, *, limit: int = 25) -> tuple[UUID, ...]:
     owner = f"scheduler:{uuid4()}"
     async with AsyncSessionLocal() as session:
+        await ReplyExecutionService(session).recover_throttled_replies(limit=limit)
         reply_ids = await claim_due_replies(
             session,
             now=now,

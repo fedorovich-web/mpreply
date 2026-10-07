@@ -44,7 +44,7 @@ async def create_marketplace_account(
         default_response_mode=payload.default_response_mode,
     )
     await session.commit()
-    return service.to_response(account)
+    return await service.to_response(account)
 
 
 @router.get("", response_model=list[MarketplaceAccountResponse])
@@ -55,7 +55,7 @@ async def list_marketplace_accounts(
 ) -> list[MarketplaceAccountResponse]:
     service = MarketplaceAccountService(session)
     accounts = await service.list_accounts(actor=current_user, organization_id=organization_id)
-    return [service.to_response(account) for account in accounts]
+    return [await service.to_response(account) for account in accounts]
 
 
 @router.get("/{account_id}", response_model=MarketplaceAccountResponse)
@@ -66,7 +66,7 @@ async def get_marketplace_account(
 ) -> MarketplaceAccountResponse:
     service = MarketplaceAccountService(session)
     account = await service.get_account(actor=current_user, account_id=account_id)
-    return service.to_response(account)
+    return await service.to_response(account)
 
 
 @router.delete("/{account_id}", response_model=MarketplaceAccountActionResponse)
@@ -106,7 +106,7 @@ async def update_marketplace_account(
         status=payload.status,
     )
     await session.commit()
-    return service.to_response(account)
+    return await service.to_response(account)
 
 
 @router.post("/{account_id}/validate", response_model=MarketplaceAccountValidateResponse)
@@ -154,7 +154,7 @@ async def rotate_marketplace_credentials(
         raw_credentials=payload.credentials,
     )
     await session.commit()
-    response = service.to_response(account)
+    response = await service.to_response(account)
     return MarketplaceAccountActionResponse(
         id=account.id,
         status=account.status,
@@ -173,7 +173,7 @@ async def revoke_marketplace_credentials(
     service = MarketplaceAccountService(session)
     account = await service.revoke_credentials(actor=current_user, account_id=account_id)
     await session.commit()
-    response = service.to_response(account)
+    response = await service.to_response(account)
     return MarketplaceAccountActionResponse(
         id=account.id,
         status=account.status,

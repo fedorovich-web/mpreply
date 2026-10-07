@@ -97,6 +97,47 @@ async def test_absolute_research_timeout_cancels_slow_provider_and_coalesces_rev
     assert cancelled.is_set() and search.await_count == 1
 
 
+async def test_concurrent_target_models_keep_separate_cache_entries(
+    postgres_credits: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async with postgres_credits() as session:
+        message = await seed(session)
+        product_id = message.product_id
+    entered, release = asyncio.Event(), asyncio.Event()
+    count = 0
+
+    async def search(**kwargs: object) -> ProductResearch:
+        nonlocal count
+        count += 1
+        if count == 2:
+            entered.set()
+        await release.wait()
+        models = cast(tuple[str, ...], kwargs["compatibility_models"])
+        return ProductResearch([{"url": "https://parts.example/tp123", "title": "Test product TP123",
+                                 "excerpt": f"Test product TP123 for {models[0]}"}],
+                               "search-test", LLMUsage(1, 2, 3, None), 1)
+
+    monkeypatch.setattr(GroqProvider, "research_product", AsyncMock(side_effect=search))
+
+    async def ensure(model: str) -> bool:
+        async with postgres_credits() as session:
+            product = await session.get(Product, product_id)
+            assert product is not None
+            return (await ProductResearchService(session).ensure(product=product, provider=GroqProvider(api_key="test"),
+                                                                  models=(model,))).verified
+
+    async with asyncio.timeout(5):
+        first, second = asyncio.create_task(ensure("HCE63")), asyncio.create_task(ensure("HCE64"))
+        await entered.wait()
+        release.set()
+        assert await asyncio.gather(first, second) == [True, True]
+    async with postgres_credits() as session:
+        product = await session.get(Product, product_id)
+        assert product is not None
+        data = cast(dict[str, object], product.metadata_json["web_compatibility_research"])
+        assert len(data) == 2
+
+
 @pytest.mark.parametrize("changed", [False, True])
 async def test_marketplace_refresh_retains_only_research_for_same_product(
     postgres_credits: async_sessionmaker[AsyncSession], changed: bool,
@@ -106,7 +147,8 @@ async def test_marketplace_refresh_retains_only_research_for_same_product(
         product = await session.get(Product, message.product_id)
         account = await session.get(MarketplaceAccount, message.marketplace_account_id)
         assert product is not None and account is not None
-        product.metadata_json = {"web_research": {"status": "verified", "sources": []}}
+        product.metadata_json = {"web_research": {"status": "verified", "sources": []},
+                                 "web_compatibility_research": {"one": {"status": "verified", "sources": []}}}
         await session.commit()
         normalized = NormalizedProduct(external_id=product.external_id, sku=product.sku,
                                        name="Different TP124" if changed else product.name, brand=product.brand,
@@ -118,6 +160,7 @@ async def test_marketplace_refresh_retains_only_research_for_same_product(
                                    customer_photos=(), marketplace_created_at=now, product=normalized)
         await MarketplaceIngestService(session).ingest_page(account, MarketplacePage(items=(record,), next_cursor=None), now)
         assert ("web_research" in product.metadata_json) is not changed
+        assert ("web_compatibility_research" in product.metadata_json) is not changed
         if not changed:
             assert cast(dict[str, object], product.metadata_json["web_research"])["status"] == "verified"
 

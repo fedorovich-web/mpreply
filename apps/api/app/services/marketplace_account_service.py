@@ -399,7 +399,27 @@ class MarketplaceAccountService:
         await self.session.flush()
         return account, result
 
-    def to_response(self, account: MarketplaceAccount) -> MarketplaceAccountResponse:
+    async def to_response(self, account: MarketplaceAccount) -> MarketplaceAccountResponse:
+        states = list((await self.session.scalars(select(MarketplaceSyncState).where(
+            MarketplaceSyncState.organization_id == account.organization_id,
+            MarketplaceSyncState.marketplace_account_id == account.id,
+        ))).all())
+        last_success = account.last_success_sync_at
+        last_error = account.last_error_sync_at
+        # Only completion of every configured stream can supersede an old
+        # account-level failure. Partial imports never become success.
+        successes = [state.last_success_at for state in states if state.last_success_at is not None]
+        if states and len(successes) == len(states):
+            completed_at = min(value.replace(tzinfo=UTC) for value in successes)
+            last_success = max(completed_at, last_success.replace(tzinfo=UTC)) if last_success else completed_at
+        errors = [state for state in states if state.last_error_code is not None]
+        attempts = [state.last_attempt_at.replace(tzinfo=UTC) for state in errors if state.last_attempt_at is not None]
+        if attempts:
+            latest_attempt = max(attempts)
+            last_error = max(latest_attempt, last_error.replace(tzinfo=UTC)) if last_error else latest_attempt
+        retry_times = [state.next_run_at for state in errors if state.next_run_at is not None]
+        error = max(errors, key=lambda state: (state.last_error_code != "rate_limited",
+                    state.last_attempt_at.replace(tzinfo=UTC) if state.last_attempt_at else datetime.min.replace(tzinfo=UTC))) if errors else None
         return MarketplaceAccountResponse(
             id=account.id,
             organization_id=account.organization_id,
@@ -411,8 +431,10 @@ class MarketplaceAccountService:
             credentials_status=account.credentials_status,
             scopes_json=account.scopes_json or {},
             default_response_mode=account.default_response_mode,
-            last_success_sync_at=account.last_success_sync_at,
-            last_error_sync_at=account.last_error_sync_at,
+            last_success_sync_at=last_success,
+            last_error_sync_at=last_error,
+            sync_error_code=error.last_error_code if error else None,
+            sync_next_retry_at=max(value.replace(tzinfo=UTC) for value in retry_times) if retry_times else None,
             error_count=account.error_count,
             created_at=account.created_at,
             updated_at=account.updated_at,

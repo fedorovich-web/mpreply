@@ -145,7 +145,7 @@ class AutomaticDraftService:
                 ).execution_options(populate_existing=True)) if message.product_id is not None else None
                 prompt = build_marketplace_reply_prompt(
                     marketplace=message.marketplace, message_type=message.type, customer_text=message.customer_text,
-                    rating=message.rating, product=AIService.product_context(product), tone="neutral",
+                    rating=message.rating, product=AIService.product_context(product, customer_text=message.customer_text), tone="neutral",
                 )
                 if prompt.input_hash != draft.prompt_input_hash:
                     message.status = "needs_manual_check"

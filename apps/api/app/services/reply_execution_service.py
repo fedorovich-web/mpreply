@@ -28,7 +28,7 @@ from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.organization import OrganizationUser
+from app.models.organization import Organization, OrganizationUser
 from app.models.reply import Reply
 from app.models.usage_event import UsageEvent
 from app.models.user import User
@@ -292,6 +292,70 @@ class ReplyExecutionService:
         )
         return reply
 
+    async def recover_throttled_replies(self, *, limit: int = 25) -> int:
+        """Recover legacy exhausted 429s without publishing stale question drafts."""
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("reply recovery limit must be between 1 and 100")
+        rows = (await self.session.execute(select(Reply, CustomerMessage).join(
+            CustomerMessage, (CustomerMessage.id == Reply.message_id)
+            & (CustomerMessage.organization_id == Reply.organization_id),
+        ).join(
+            OrganizationUser, (OrganizationUser.organization_id == Reply.organization_id)
+            & (OrganizationUser.user_id == Reply.created_by),
+        ).join(User, User.id == Reply.created_by).join(Organization, Organization.id == Reply.organization_id).where(
+            Reply.status == ReplyStatus.FAILED.value, Reply.error_code == "rate_limited",
+            Reply.attempt_count >= Reply.max_attempts,
+            CustomerMessage.status == MessageStatus.FAILED.value,
+            Reply.metadata_json["provider_write_ambiguity"].as_string().is_(None),
+            OrganizationUser.status == "active", OrganizationUser.role.in_(_WRITE_ROLES),
+            User.status == "active", Organization.status == "active",
+        ).order_by(Reply.created_at).with_for_update(of=(Reply, CustomerMessage), skip_locked=True)
+          .execution_options(populate_existing=True).limit(limit))).tuples().all()
+        for reply, message in rows:
+            if (reply.metadata_json or {}).get("provider_write_ambiguity"):
+                continue
+            actor = await self.session.get(User, reply.created_by)
+            draft = await self.session.get(AIDraft, reply.ai_draft_id) if reply.ai_draft_id else None
+            can_queue = False
+            if actor is not None and draft is not None and message.type == MessageType.REVIEW.value:
+                _, product = await self.message_service.get_message(actor=actor, message_id=message.id)
+                confidence = draft.confidence_score or 0.0
+                safety = self.safety_gate.evaluate(SafetyInput(
+                    draft_text=reply.reply_text, confidence_score=confidence, message_type=message.type,
+                    rating=message.rating, has_product_context=product is not None,
+                    model_flags=draft.safety_flags_json or [],
+                ))
+                if reply.mode == ResponseMode.AUTO.value:
+                    automation = await self.automation_service.evaluate_message(
+                        actor=actor, message_id=message.id, confidence_score=confidence,
+                    )
+                    can_queue = (safety.decision is SafetyDecision.ALLOW
+                                 and automation.mode == ResponseMode.AUTO.value and not automation.requires_manual_review)
+                    if can_queue:
+                        reply.automation_rule_id = automation.matched_rule_id
+                else:
+                    can_queue = safety.decision is SafetyDecision.ALLOW and reply.approved_by is not None
+            previous_max = reply.max_attempts
+            reply.max_attempts = reply.attempt_count + get_settings().auto_reply_max_attempts
+            self._transition_reply(reply, ReplyStatus.QUEUED.value if can_queue else ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
+            target = (MessageStatus.AUTO_REPLY_PENDING.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.APPROVED.value)
+            self._transition_message(message, target if can_queue else MessageStatus.NEEDS_MANUAL_CHECK.value)
+            reply.next_retry_at = None
+            reply.worker_message_id = None
+            reply.last_dispatched_at = None
+            reply.dispatch_owner = None
+            reply.dispatch_lease_expires_at = None
+            reply.error_code = None if can_queue else "legacy_draft_review_required"
+            reply.failed_reason = None if can_queue else "Review the old draft before publication"
+            await self.audit.write(
+                action="reply.throttle_recovered", entity_type="reply", entity_id=str(reply.id),
+                organization_id=reply.organization_id,
+                metadata={"attempt_count": reply.attempt_count, "previous_max_attempts": previous_max,
+                          "previous_error_code": "rate_limited", "status": reply.status},
+            )
+        await self.session.commit()
+        return len(rows)
+
     async def execute_reply(self, *, reply_id: UUID) -> ExecuteReplyResult:
         reply = await self._get_reply_for_update(reply_id)
         reply.dispatch_owner = None
@@ -495,6 +559,10 @@ class ReplyExecutionService:
                 return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
             message = await self._get_message(owned.message_id, organization_id=owned.organization_id)
             error_code = failed_result.error_code or "malformed_payload"
+            if error_code == "rate_limited":
+                # No write was attempted. Waiting for a shared/provider read
+                # cooldown must not consume the bounded write retry budget.
+                owned.attempt_count -= 1
             retryable = error_code in _RETRYABLE_ERRORS and owned.attempt_count < owned.max_attempts
             if retryable:
                 await self._mark_retry_pending(reply=owned, message=message, result=failed_result)
@@ -604,6 +672,10 @@ class ReplyExecutionService:
         if error_code in _AMBIGUOUS_WRITE_ERRORS:
             await self._mark_ambiguous_write(reply=reply, message=message, result=result)
             return ExecuteReplyResult(reply.id, reply.status, False, error_code)
+        if error_code == "rate_limited":
+            # A provider 429 explicitly rejected the write. It is a deferred
+            # request, not a failed/ambiguous publication attempt.
+            reply.attempt_count -= 1
         retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
         if retryable:
             await self._mark_retry_pending(reply=reply, message=message, result=result)
@@ -836,7 +908,7 @@ class ReplyExecutionService:
         reply.error_code = result.error_code
         reply.failed_reason = result.error_message_safe
         reply.worker_message_id = None
-        delay_seconds = min(60, 2 ** max(reply.attempt_count - 1, 0))
+        delay_seconds = max(result.retry_after_seconds or 0, min(60, 2 ** max(reply.attempt_count - 1, 0)))
         reply.next_retry_at = datetime.now(UTC) + timedelta(seconds=delay_seconds)
         await self._write_integration_event(
             reply=reply,

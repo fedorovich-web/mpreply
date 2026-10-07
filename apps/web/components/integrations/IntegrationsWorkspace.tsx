@@ -215,7 +215,9 @@ export function IntegrationsWorkspace() {
           const hasProblem = marketplaceAccounts.some(needsConnectionAttention);
           const hasActive = marketplaceAccounts.some(isHealthyConnection);
           const hasValidAccess = marketplaceAccounts.every((account) => account.status === "active" && account.credentials_status === "valid");
-          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem, hasValidAccess }, locale);
+          const waitingForMarketplace = marketplaceAccounts.some((account) => account.sync_error_code === "rate_limited")
+            && marketplaceAccounts.filter(needsConnectionAttention).every((account) => account.sync_error_code === "rate_limited");
+          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem, hasValidAccess, waitingForMarketplace }, locale);
           const actionLabel = canManage
             ? connectedCount > 0
               ? `${t.manage} ${marketplace.name}`
@@ -269,13 +271,18 @@ function getConnectionState({
   hasActive,
   hasProblem,
   hasValidAccess,
+  waitingForMarketplace,
 }: {
   connectedCount: number;
   hasActive: boolean;
   hasProblem: boolean;
   hasValidAccess: boolean;
+  waitingForMarketplace: boolean;
 }, locale: Locale): { label: string; tone: "neutral" | "success" | "warning" } {
   const t = integrationsCopy[locale];
+  if (hasValidAccess && waitingForMarketplace) {
+    return { label: locale === "ru" ? "Подключён · ожидание маркетплейса" : "Connected · waiting for marketplace", tone: "warning" };
+  }
   if (hasProblem) {
     return { label: hasValidAccess ? t.connectedLoadingAttention : t.stateAttention, tone: "warning" };
   }

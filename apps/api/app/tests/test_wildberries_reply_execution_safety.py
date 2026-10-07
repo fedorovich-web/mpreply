@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import TracebackType
 from typing import cast
 from uuid import uuid4
@@ -399,6 +399,55 @@ async def test_preflight_read_retry_exhaustion_does_not_send() -> None:
     assert result.retryable is True
     assert rows.reply.status == ReplyStatus.RETRY_PENDING.value
     assert rows.reply.error_code == "network_timeout"
+
+
+@pytest.mark.asyncio
+async def test_preflight_cooldown_does_not_exhaust_write_attempts() -> None:
+    rows = _rows()
+    service, adapter, _ = _service(
+        rows, preflight=AdapterResult(False, error_code="rate_limited", retry_after_seconds=600),
+        send=AdapterResult(ok=True, data=ProviderWriteReceipt("unused")),
+    )
+    for _ in range(6):
+        result = await service.execute_reply(reply_id=rows.reply.id)
+        assert result.retryable
+        assert rows.reply.status == ReplyStatus.RETRY_PENDING.value
+        assert rows.reply.attempt_count == 0
+        assert rows.reply.next_retry_at is not None
+        assert rows.reply.next_retry_at >= datetime.now(UTC) + timedelta(seconds=599)
+    assert adapter.send_calls == 0
+    adapter.preflight = _absent()
+    result = await service.execute_reply(reply_id=rows.reply.id)
+    assert rows.reply.status == ReplyStatus.SENT.value
+    assert rows.reply.attempt_count == 1
+    assert adapter.send_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_rejected_write_respects_provider_cooldown() -> None:
+    rows = _rows()
+    service, _, _ = _service(
+        rows, preflight=_absent(),
+        send=AdapterResult(False, error_code="rate_limited", retry_after_seconds=720),
+    )
+    result = await service.execute_reply(reply_id=rows.reply.id)
+    assert result.retryable and rows.reply.attempt_count == 0
+    assert rows.reply.next_retry_at is not None
+    assert rows.reply.next_retry_at >= datetime.now(UTC) + timedelta(seconds=719)
+
+
+@pytest.mark.asyncio
+async def test_repeated_provider_throttle_does_not_turn_a_rejected_write_into_terminal_failure() -> None:
+    rows = _rows()
+    service, adapter, _ = _service(
+        rows, preflight=_absent(), send=AdapterResult(False, error_code="rate_limited", retry_after_seconds=600),
+    )
+    for _ in range(6):
+        result = await service.execute_reply(reply_id=rows.reply.id)
+        assert result.retryable and rows.reply.status == ReplyStatus.RETRY_PENDING.value
+    adapter.send = AdapterResult(ok=True, data=ProviderWriteReceipt("sent-after-cooldown"))
+    await service.execute_reply(reply_id=rows.reply.id)
+    assert rows.reply.status == ReplyStatus.SENT.value
 
 
 @pytest.mark.parametrize("message_type", [MessageType.REVIEW, MessageType.QUESTION])

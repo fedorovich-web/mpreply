@@ -84,6 +84,8 @@ class MarketplaceAccountResponse(BaseModel):
     default_response_mode: str
     last_success_sync_at: datetime | None = None
     last_error_sync_at: datetime | None = None
+    sync_error_code: str | None = None
+    sync_next_retry_at: datetime | None = None
     error_count: int = 0
     created_at: datetime
     updated_at: datetime
