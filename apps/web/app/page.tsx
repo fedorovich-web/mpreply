@@ -29,17 +29,17 @@ const homeMarketplaceLogos = {
   avito: "/images/icons/final/04-avito.avif",
 } as const;
 
-const aiModels = [
-  { name: "GPT 6", provider: "OpenAI", icon: "/images/brands/chatgpt-sign-logo.svg" },
-  { name: "Claude Sonnet 5.5", provider: "Anthropic", icon: "/images/brands/claude-icon-logo.svg" },
-  { name: "Gemini 3.8", provider: "Google", icon: "/images/brands/gemini.svg" },
-  { name: "DeepSeek V4.1 Flash", provider: "DeepSeek", icon: "/images/brands/deepseek-sign-logo.svg" },
+const replyContext = [
+  { name: "Сведения о товаре", label: "Товар", icon: "search" },
+  { name: "Вопрос покупателя", label: "Обращение", icon: "message" },
+  { name: "Стиль вашего бренда", label: "Тон ответа", icon: "document" },
+  { name: "Правила и проверка", label: "Контроль", icon: "shield-check" },
 ] as const;
 
 const resultFacts = [
   { icon: "/images/icons/final/16-history-clock.avif", value: "350", label: "ИИ-ответов в пробном периоде" },
   { icon: "/images/icons/final/05-chat.avif", value: "3", label: "типа обращений в одном окне" },
-  { icon: "/images/icons/final/34-ai-assistant.avif", value: "4", label: "нейросети для разных сценариев" },
+  { icon: "/images/icons/final/34-ai-assistant.avif", value: "2", label: "режима: автоматически или после проверки" },
   { icon: "/images/icons/final/19-team-users.avif", value: "1", label: "рабочее окно вместо нескольких кабинетов" },
 ] as const;
 
@@ -101,15 +101,16 @@ export default function HomePage() {
         <div className="public-container homepage-models-layout">
           <div className="homepage-section-heading-left">
 
-            <h2>Используем лучшие нейросети для точных и естественных ответов</h2>
-            <p>Четыре нейросети для разных типов обращений покупателей.</p>
+            <h2>Черновик ответа опирается на доступные данные</h2>
+            <p>ИИ учитывает обращение, сведения о товаре и правила команды. Неподтверждённая совместимость передаётся на проверку.</p>
+            <Link href="/features">Как MPReply готовит ответы&nbsp; →</Link>
           </div>
-          <div className="homepage-model-grid" role="group" aria-label="Четыре нейросети">
-            {aiModels.map((model) => (
-              <div className="homepage-model-card" key={model.name}>
-                <span className="homepage-model-mark" aria-hidden="true"><Image src={model.icon} alt="" width={44} height={44} unoptimized /></span>
-                <small>{model.provider}</small>
-                <strong>{model.name}</strong>
+          <div className="homepage-model-grid" role="group" aria-label="Контекст и контроль">
+            {replyContext.map((context) => (
+              <div className="homepage-model-card" key={context.name}>
+                <span className="homepage-model-mark" aria-hidden="true"><PublicIcon name={context.icon} /></span>
+                <small>{context.label}</small>
+                <strong>{context.name}</strong>
               </div>
             ))}
           </div>
@@ -120,17 +121,20 @@ export default function HomePage() {
         <div className="public-container">
           <div className="homepage-section-heading-left homepage-process-heading"><h2>Как это работает</h2><p>Подключите площадки, настройте правила и проверяйте ответы там, где это нужно.</p></div>
           <div className="homepage-process-visual">
+          <svg className="homepage-process-path" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M20 22 C110 -8 220 -8 315 22 S510 78 615 54 S810 -8 915 22" />
+          </svg>
           <ol className="homepage-horizontal-process">
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">1</span></div>
               <div className="homepage-process-card homepage-process-card-connect"><span className="homepage-process-card-icon"><PublicIcon name="link" /></span><h3>Подключите<br />маркетплейсы</h3><p>Добавьте свои кабинеты Wildberries, Ozon, Яндекс Маркета и Авито в рабочем пространстве.</p><div className="homepage-process-marketplaces" role="group" aria-label="Wildberries, Ozon, Яндекс Маркет, Авито">{homeMarketplaceKeys.map((key) => <span key={key}><Image src={key === "avito" ? "/images/brands/avito-sign-logo.svg" : homeMarketplaceLogos[key]} alt={getMarketplaceConfig(key).name} width={64} height={64} quality={85} sizes="64px" /></span>)}</div></div>
             </li>
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">2</span></div>
               <h3>Получайте обращения</h3><p>Все отзывы, вопросы и сообщения собираются в единую очередь.</p><div className="homepage-process-card homepage-process-card-inbox" aria-hidden="true"><span><i><HomeLineIcon name="star" /></i><b>Отзыв</b></span><span><i><HomeLineIcon name="question" /></i><b>Вопрос</b></span><span><i><HomeLineIcon name="message" /></i><b>Сообщение</b></span></div>
             </li>
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">3</span></div>
               <h3>ИИ готовит ответы</h3><p>С учётом товара, контекста и ваших правил.</p><div className="homepage-process-card homepage-process-card-ai" aria-hidden="true"><strong><HomeLineIcon name="sparkle" /> Ответ готов!</strong><span /><span /><span /></div>
             </li>
-            <li className="homepage-horizontal-step">
+            <li className="homepage-horizontal-step"><div className="homepage-horizontal-step-topline" aria-hidden="true"><span className="homepage-process-number-circle">4</span></div>
               <div className="homepage-process-card homepage-process-card-send"><span className="homepage-process-card-icon"><PublicIcon name="send" /></span><h3>Отправляйте</h3><p>Автоматически или после проверки сотрудником.</p><div className="homepage-process-switches" aria-hidden="true"><span><b>✦ Автоотправка</b><i className="is-on" /></span><span><b>⌁ На проверке</b><i /></span><span><b>✓ Отправлено</b><i /></span></div></div>
             </li>
           </ol>

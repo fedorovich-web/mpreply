@@ -126,21 +126,20 @@ test("homepage reflects the ready marketplace integrations", async ({ page }) =>
   const pageCopy = await page.locator("main").innerText();
   expect(pageCopy).not.toMatch(/3\s+маркетплейса/i);
   expect(pageCopy).not.toMatch(/интеграц(?:ия|ии).{0,24}(?:скоро|планиру|в разработке)/i);
-  expect(pageCopy).toContain("GPT 6");
-  expect(pageCopy).toContain("Claude Sonnet 5.5");
-  expect(pageCopy).toContain("Gemini 3.8");
-  expect(pageCopy).toContain("DeepSeek V4.1 Flash");
+  expect(pageCopy).not.toMatch(/GPT 6|Claude Sonnet 5\.5|Gemini 3\.8|DeepSeek V4\.1 Flash/);
+  await expect(page.getByRole("group", { name: "Контекст и контроль" })).toBeVisible();
 });
 
-test("homepage keeps the model and results sections and contains preview controls", async ({ page }) => {
+test("homepage keeps context and results sections and contains preview controls", async ({ page }) => {
   for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
     await page.setViewportSize(viewport);
     await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator(".homepage-model-card")).toHaveCount(4);
+    if (viewport.width > 768) await expect(page.locator(".homepage-process-path")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Меньше рутины. Больше времени на развитие бизнеса." })).toBeVisible();
     await expect(page.locator(".homepage-result-card")).toHaveCount(4);
-    await expect(page.locator(".homepage-result-card").nth(2)).toContainText("4нейросети для разных сценариев");
+    await expect(page.locator(".homepage-result-card").nth(2)).toContainText("2режима: автоматически или после проверки");
     const layout = await page.evaluate(() => {
       const answer = document.querySelector(".homepage-workspace-answer")!.getBoundingClientRect();
       const action = document.querySelector(".homepage-workspace-answer-actions a")!.getBoundingClientRect();
