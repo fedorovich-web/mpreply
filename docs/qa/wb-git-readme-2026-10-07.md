@@ -26,6 +26,8 @@ A real home defect was repaired first: the approved ordered journey had lost its
 
 Only the ten corresponding platform-independent PNG baselines were migrated to those individually reviewed captures. Previous PNGs and review captures were preserved outside the repository. This is explicit acceptance of approved changes after correcting and visually reviewing the home defect; tests, tolerances and route coverage were not weakened. The migrated comparisons still require a fresh run and GitHub CI verification.
 
+The first Linux CI run (`37640132771`, head `f273b9a9`) passed all desktop comparisons but found five stable mobile differences of about 2% against Windows captures. Snapshot identity now includes the actual platform, as recommended by [Playwright](https://playwright.dev/docs/test-snapshots); the reviewed Windows images are preserved under that identity. Missing baselines fail without automatic acceptance (`updateSnapshots: none`). CI runs visual comparisons before the other browser suites so failures are found earlier, and preserves failure images/reports for seven days using an immutable upload-artifact action revision. Linux captures must be retrieved and independently inspected before they become expected images. Tolerances and coverage remain unchanged.
+
 ## Git and documentation
 
 Twenty stale remote branches were removed only after verifying that their commits were reachable through retained refs and no open PR used their head/base. A verified Git bundle and branch/SHA manifest were preserved before deletion. Active PR branches and five branches with unique work were retained. `main` remains the canonical branch and target for production source selection.
