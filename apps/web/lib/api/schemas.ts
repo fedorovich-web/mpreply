@@ -240,6 +240,8 @@ export const marketplaceAccountSchema = z.object({
   default_response_mode: z.enum(["inherit", "auto", "semi_auto"]),
   last_success_sync_at: timestampSchema.nullable(),
   last_error_sync_at: timestampSchema.nullable(),
+  sync_error_code: z.string().nullable().optional(),
+  sync_next_retry_at: timestampSchema.nullable().optional(),
   error_count: z.number().int().nonnegative(),
   created_at: timestampSchema,
   updated_at: timestampSchema,

@@ -85,6 +85,16 @@ function renderWithQueryClient(component: React.ReactNode) {
 }
 
 describe("IntegrationsWorkspace", () => {
+  it("shows a connected account waiting for provider cooldown and its automatic resume time", async () => {
+    mockWorkspace("owner");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([{
+      ...account, last_error_sync_at: "2026-10-06T13:00:00Z", sync_error_code: "rate_limited",
+      sync_next_retry_at: "2026-10-06T13:10:00Z",
+    }]), { status: 200 })));
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+    expect((await screen.findAllByText("Подключён · ожидание маркетплейса")).length).toBeGreaterThan(0);
+    expect(screen.getByText("Загрузка продолжится автоматически")).toBeInTheDocument();
+  });
   it("shows all four marketplace integrations as ready and distinguishes connection state", async () => {
     mockWorkspace("owner");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));

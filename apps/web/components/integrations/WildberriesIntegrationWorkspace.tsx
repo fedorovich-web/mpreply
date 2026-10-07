@@ -766,6 +766,10 @@ function AccountDetail({
         <HealthItem label={t.connectionData} value={account.credentials_masked} />
         <HealthItem label={t.lastSuccess} value={formatDateTime(account.last_success_sync_at, locale)} />
         <HealthItem label={t.lastError} value={formatDateTime(account.last_error_sync_at, locale)} />
+        {account.sync_error_code === "rate_limited" && account.sync_next_retry_at ? (
+          <HealthItem label={locale === "ru" ? "Загрузка продолжится автоматически" : "Loading resumes automatically"}
+            value={formatDateTime(account.sync_next_retry_at, locale)} />
+        ) : null}
         <HealthItem label={t.permissions} value={formatValidatedScopes(account.scopes_json, locale)} />
       </dl>
 
@@ -1035,6 +1039,9 @@ function accountStatusLabel(account: MarketplaceAccount, locale: Locale): string
   const t = integrationCopy[locale];
   if (account.credentials_status === "revoked") return t.revoked;
   if (account.status === "error") return t.error;
+  if (account.status === "active" && account.credentials_status === "valid" && account.sync_error_code === "rate_limited") {
+    return locale === "ru" ? "Подключён · ожидание маркетплейса" : "Connected · waiting for marketplace";
+  }
   if (hasCurrentIntegrationProblem(account)) {
     return account.status === "active" && account.credentials_status === "valid" ? t.connectedLoadingAttention : t.attention;
   }

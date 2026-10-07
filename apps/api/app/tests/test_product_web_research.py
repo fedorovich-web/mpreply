@@ -131,6 +131,97 @@ def test_similar_product_model_is_not_accepted_as_exact_evidence() -> None:
     assert source_matches_product({"title": "Haier 0530023778", "excerpt": "180 mm electric hotplate"}, product)
 
 
+def test_exact_oem_product_name_does_not_require_reseller_brand_in_manufacturer_source() -> None:
+    product = Product(name="Haier electric hotplate 0530023778", sku="supplier-sku-1", brand="ZIP-R")
+    assert source_matches_product({"title": "Haier electric hotplate 0530023778", "excerpt": "180 mm hotplate"}, product)
+    assert not source_matches_product({"title": "Haier electric hotplate 0530023779", "excerpt": "180 mm hotplate"}, product)
+    assert not source_matches_product({"title": "Other hotplate 0530023778", "excerpt": "180 mm hotplate"}, product)
+
+
+@pytest.mark.asyncio
+async def test_search_keeps_product_facts_after_long_page_navigation() -> None:
+    content = ("Navigation and menus. " * 300) + "Haier 0530023778 compatible with HCE63. Diameter 180 mm."
+    payload: dict[str, object] = {"choices": [{"message": {"executed_tools": [{"browser_results": [{
+        "title": "Haier 0530023778", "url": "https://parts.example/0530023778", "content": content,
+    }]}]}}]}
+    sources = GroqProvider.extract_research_sources(payload)
+    assert "compatible with HCE63" in sources[0]["excerpt"]
+
+
+@pytest.mark.parametrize("question,models", [
+    ("Compatible with Indesit w 84 TX?", ("W84TX",)),
+    ("Compatible with Haier CEF535ASG?", ("CEF535ASG",)),
+    ("For Beko WB6108SE, old belt EL1269 J5?", ("WB6108SE", "EL1269J5")),
+    ("My email is w84tx@example.com, phone +79991234567. Compatible with Haier CEF535ASG?", ("CEF535ASG",)),
+    ("Good product, 5 stars!", ()),
+    ("Номер заказа AB123456, подойдёт к W84TX?", ("W84TX",)),
+    ("Мой Telegram ivan123, подходит к CEF535ASG?", ("CEF535ASG",)),
+    ("Логин owner123 пароль secret987. Подойдёт к W84TX?", ("W84TX",)),
+    ("My order number AB123456. Compatible with W84TX?", ("W84TX",)),
+    ("For contact use ivan123, compatible with W84TX?", ("W84TX",)),
+    ("Fits W84TX order number is AB123456", ("W84TX",)),
+    ("Для связи ivan123, подойдёт к W84TX?", ("W84TX",)),
+])
+def test_compatibility_search_extracts_model_identifiers_without_customer_contacts(question: str, models: tuple[str, ...]) -> None:
+    from app.services.product_research_service import compatibility_models
+    assert compatibility_models(question) == models
+
+
+async def test_compatibility_cache_is_specific_to_target_model_and_prompt_ignores_other_targets(
+    research_db: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    search = AsyncMock(return_value=ProductResearch(
+        [{"url": "https://parts.example/0530023778", "title": "Haier 0530023778", "excerpt": "Haier 0530023778 for HCE63"}],
+        "search-test", LLMUsage(1, 1, 2, None), 1,
+    ))
+    monkeypatch.setattr(GroqProvider, "research_product", search)
+    async with research_db() as session:
+        message = await seed(session)
+        product = await session.get(Product, message.product_id)
+        assert product is not None
+        product.name, product.sku, product.brand = "Haier 0530023778", "0530023778", "Haier"
+        await session.commit()
+        service = ProductResearchService(session)
+        provider = GroqProvider(api_key="test")
+        first = await service.ensure(product=product, provider=provider, models=("HCE63",))
+        assert first.verified
+        original_prompt = AIService.product_context(product, customer_text="Compatible with HCE63?")
+        assert (await service.ensure(product=product, provider=provider, models=("HCE63",))).cached
+        await service.ensure(product=product, provider=provider, models=("HCE64",))
+        assert search.await_count == 2
+        assert AIService.product_context(product, customer_text="Compatible with HCE63?") == original_prompt
+        assert search.call_args_list[0].kwargs["compatibility_models"] == ("HCE63",)
+
+
+@pytest.mark.parametrize("live", [False, True])
+async def test_full_compatibility_cache_evicts_only_completed_or_expired_leases(
+    research_db: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch, live: bool,
+) -> None:
+    from fastapi import HTTPException
+    search = AsyncMock(return_value=ProductResearch(
+        [{"url": "https://parts.example/tp123", "title": "Test product TP123", "excerpt": "Test product TP123 for HCE63"}],
+        "search-test", LLMUsage(1, 1, 2, None), 1,
+    ))
+    monkeypatch.setattr(GroqProvider, "research_product", search)
+    async with research_db() as session:
+        message = await seed(session)
+        product = await session.get(Product, message.product_id)
+        assert product is not None
+        expiry = datetime.now(UTC) + timedelta(minutes=1) if live else datetime.now(UTC) - timedelta(minutes=1)
+        product.metadata_json = {"web_compatibility_research": {str(index): {
+            "status": "pending", "lease_until": expiry.isoformat(), "identity": product_identity(product),
+        } for index in range(16)}}
+        await session.commit()
+        service = ProductResearchService(session)
+        if live:
+            with pytest.raises(HTTPException) as exc:
+                await service.ensure(product=product, provider=GroqProvider(api_key="test"), models=("HCE63",))
+            assert exc.value.status_code == 409 and search.await_count == 0
+        else:
+            assert (await service.ensure(product=product, provider=GroqProvider(api_key="test"), models=("HCE63",))).verified
+            assert len(cast(dict[str, object], product.metadata_json["web_compatibility_research"])) == 16
+
+
 @pytest.mark.parametrize("name,source", [
     ("Samsung Galaxy A55 SM-A556 5000mAh", "Samsung Galaxy A54 SM-A546 5000mAh"),
     ("Haier 0530023778", "Haier 05300237780"),
@@ -185,7 +276,7 @@ async def test_unconfirmed_brand_keeps_found_sources_for_review_and_reuses_searc
         message = await seed(session)
         product = await session.get(Product, message.product_id)
         assert product is not None
-        product.name, product.sku, product.brand = "Haier 0530023778", "0530023778", "Seller brand"
+        product.name, product.sku, product.brand = "Different manufacturer 0530023778", "0530023778", "Seller brand"
         await session.commit()
         service = ProductResearchService(session)
         first = await service.ensure(product=product, provider=provider)

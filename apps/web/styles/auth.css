@@ -153,6 +153,15 @@
 	margin: 0;
 }
 
+.auth-yandex-button {
+	gap: var(--space-3);
+}
+
+.auth-yandex-icon {
+	flex-shrink: 0;
+	border-radius: var(--radius-round);
+}
+
 .auth-card h1 {
 	max-width: 12ch;
 	font-size: clamp(1.8rem, 3vw, 2.35rem);

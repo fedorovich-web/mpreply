@@ -9,10 +9,10 @@ import type { Locale } from "../../lib/i18n";
 export function YandexAuthButton({ locale, next, intent }: { locale: Locale; next?: string | null; intent?: string | null }) {
   const providers = useQuery({ queryKey: ["auth", "providers"], queryFn: () => apiRequest("/api/auth/providers", authProvidersSchema), retry: false, staleTime: 60000 });
   if (!providers.data?.yandex) return null;
-  return <a className="button button-secondary" href={buildApiUrl(buildApiQuery("/api/auth/yandex/start", {
+  return <a className="button button-secondary auth-yandex-button" href={buildApiUrl(buildApiQuery("/api/auth/yandex/start", {
     locale, next, intent: intent === "connect-marketplace" ? intent : null,
-  }))}><Image src="/images/brands/yandex-id.svg" width={24} height={24} alt="" aria-hidden="true" />
-    {locale === "ru" ? "Войти через Яндекс" : "Continue with Yandex"}</a>;
+  }))}><Image className="auth-yandex-icon" src="/images/brands/yandex-id.svg" width={24} height={24} alt="" aria-hidden="true" />
+    <span>{locale === "ru" ? "Войти через Яндекс" : "Continue with Yandex"}</span></a>;
 }
 
 export function yandexErrorMessage(code: string | null, locale: Locale): string | null {

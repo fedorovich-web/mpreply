@@ -17,6 +17,7 @@ from app.models.product import Product
 from app.providers.groq import GroqProvider, GroqProviderError, LLMUsage
 
 RESEARCH_KEY = "web_research"
+COMPATIBILITY_KEY = "web_compatibility_research"
 RESEARCH_TIMEOUT_SECONDS = 55
 _EMPTY_USAGE = LLMUsage(None, None, None, None)
 _UNITS = frozenset({"mm", "cm", "m", "mah", "w", "v", "kg", "g", "l", "ml", "hz", "gb", "tb",
@@ -25,7 +26,75 @@ _UNITS = frozenset({"mm", "cm", "m", "mah", "w", "v", "kg", "g", "l", "ml", "hz"
 
 
 def product_identity(product: Product) -> str:
-    return sha256(json.dumps([product.name, product.sku, product.brand], ensure_ascii=False).encode()).hexdigest()
+    return sha256(json.dumps(["research-v3", product.name, product.sku, product.brand], ensure_ascii=False).encode()).hexdigest()
+
+
+def compatibility_models(customer_text: str) -> tuple[str, ...]:
+    """Extract only public-looking device identifiers, never buyer prose/contacts."""
+    text = customer_text[:4096]
+    text = re.sub(r"https?://\S+|[\w.+-]+@[\w.-]+|(?<!\w)\+?\d[\d ()-]{7,}\d", " ", text)
+    private_labels = (r"(?:номер\s+)?заказ\w*|логин\w*|парол\w*|телеграм\w*|серийн\w*\s+номер|"
+                      r"код\s+(?:подтвержден\w*|доступ\w*)|telegram|username|login|password|"
+                      r"order(?:\s+(?:number|id))?|tracking(?:\s+number)?|serial(?:\s+number)?|otp|token")
+    # Drop the private fragment, including connectors such as "number is".
+    # Keeping its trailing identifier would let an earlier compatibility cue
+    # accidentally turn an order number into a public search term.
+    text = re.sub(r"\b(?:" + private_labels + r")\b[^,;?!\n.]*", " ", text, flags=re.IGNORECASE)
+    pattern = r"(?<![\w@])([A-Za-z]{1,12}[ -]?\d{1,6}[A-Za-z0-9]*(?:[-/._][A-Za-z0-9]+)*(?:\s+[A-Z][A-Z0-9]{0,3})?)(?![\w@])"
+    context = r"\b(?:подойд\w*|подход\w*|совмест\w*|модел\w*|замен\w*|для|на|к|for|fits?|compatib\w*|model|replacement|old\s+belt)\b"
+    models: list[str] = []
+    for match in re.finditer(pattern, text):
+        # A model must follow a device/compatibility cue in this clause. An
+        # arbitrary buyer handle or order identifier is not a search term.
+        prefix = re.split(r"[,;!?\n]|(?<!\d)\.(?!\d)", text[:match.start()])[-1][-100:]
+        contact_context = r"\b(?:contact|reach|email|handle|связ\w*|контакт\w*|почт\w*)\b"
+        if not re.search(contact_context, prefix, flags=re.IGNORECASE) and re.search(context, prefix, flags=re.IGNORECASE):
+            models.append(re.sub(r"\s+", "", match.group(1)).upper())
+    return tuple(dict.fromkeys(model for model in models if 3 <= len(model) <= 40))[:4]
+
+
+def _query_key(models: tuple[str, ...]) -> str:
+    return sha256(json.dumps(sorted(_normalized(model) for model in models)).encode()).hexdigest()
+
+
+def _research_entry(metadata: dict[str, object], models: tuple[str, ...]) -> object:
+    if not models:
+        return metadata.get(RESEARCH_KEY)
+    raw = metadata.get(COMPATIBILITY_KEY)
+    return cast(dict[str, object], raw).get(_query_key(models)) if isinstance(raw, dict) else None
+
+
+def _store_research(product: Product, models: tuple[str, ...], entry: dict[str, object]) -> None:
+    metadata = dict(product.metadata_json or {})
+    if not models:
+        metadata[RESEARCH_KEY] = entry
+    else:
+        raw = metadata.get(COMPATIBILITY_KEY)
+        entries: dict[str, object] = dict(cast(dict[str, object], raw)) if isinstance(raw, dict) else {}
+        key = _query_key(models)
+        if key not in entries and len(entries) >= 16:
+            now = datetime.now(UTC).isoformat()
+            removable: list[str] = []
+            for name, value in entries.items():
+                if isinstance(value, dict):
+                    cached = cast(dict[str, object], value)
+                    lease_until = cached.get("lease_until")
+                    if cached.get("status") != "pending" or (isinstance(lease_until, str) and lease_until <= now):
+                        removable.append(name)
+            if not removable:
+                raise conflict("Product compatibility research is busy; retry shortly")
+            del entries[removable[0]]
+        entries[key] = entry
+        metadata[COMPATIBILITY_KEY] = entries
+    product.metadata_json = metadata
+
+
+def _contains_model(text: str, model: str) -> bool:
+    # Spaces/hyphens in appliance model spelling are interchangeable, but
+    # a prefix such as W84TX must not match W84TX2.
+    letters = _normalized(model)
+    pattern = r"(?<![a-z0-9])" + r"[\s./_-]*".join(re.escape(char) for char in letters) + r"(?![a-z0-9])"
+    return bool(re.search(pattern, text.casefold()))
 
 
 def _normalized(value: str) -> str:
@@ -39,8 +108,7 @@ def source_matches_product(source: dict[str, str], product: Product) -> bool:
     name = product.name or ""
     tokens = [_normalized(token) for token in re.findall(r"[\w-]+", name)]
     brand_tokens = [_normalized(token) for token in re.findall(r"[\w-]+", product.brand or "")]
-    if brand_tokens and not all(token in source_tokens for token in brand_tokens):
-        return False
+    brand_matches = not brand_tokens or all(token in source_tokens for token in brand_tokens)
     variants = {"pro", "max", "plus", "lite", "mini", "ultra", "neo", "fe", "se"}.intersection(tokens)
     if not variants.issubset(source_tokens):
         return False
@@ -58,7 +126,14 @@ def source_matches_product(source: dict[str, str], product: Product) -> bool:
         models.append(token)
     if models:
         # A shared size/capacity never substitutes for the exact model or part identifier.
-        return all(model in source_tokens for model in models)
+        model_matches = all(model in source_tokens for model in models)
+        # A reseller brand can differ from the OEM. Accept that exception only
+        # when a strong part identifier AND the complete product title match.
+        exact_title = _normalized(name) in _normalized(source["title"])
+        strong_part = any(sum(char.isdigit() for char in model) >= 6 for model in models)
+        return model_matches and (brand_matches or (exact_title and strong_part))
+    if not brand_matches:
+        return False
     article = _normalized(product.sku or "")
     if article:
         return len(article) >= 4 and article in source_tokens
@@ -67,10 +142,12 @@ def source_matches_product(source: dict[str, str], product: Product) -> bool:
     return bool(words and brand and brand in source_tokens and sum(word in source_tokens for word in words) / len(words) >= 0.7)
 
 
-def research_context(metadata: dict[str, object]) -> dict[str, object]:
+def research_context(metadata: dict[str, object], models: tuple[str, ...] = ()) -> dict[str, object]:
     """Lease/expiry/usage telemetry never enters the reply hash or model instructions."""
     result = dict(metadata)
-    raw = result.get(RESEARCH_KEY)
+    raw = _research_entry(metadata, models)
+    result.pop(COMPATIBILITY_KEY, None)
+    result.pop(RESEARCH_KEY, None)
     if isinstance(raw, dict):
         result[RESEARCH_KEY] = {key: raw[key] for key in ("identity", "status", "sources") if key in raw}
     return result
@@ -89,7 +166,7 @@ class ProductResearchService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def ensure(self, *, product: Product | None, provider: GroqProvider) -> ResearchRun:
+    async def ensure(self, *, product: Product | None, provider: GroqProvider, models: tuple[str, ...] = ()) -> ResearchRun:
         if product is None or not product.name or not product.name.strip():
             return ResearchRun(verified=False, error_code="product_identity_missing")
         identity = product_identity(product)
@@ -110,7 +187,7 @@ class ProductResearchService:
         while True:
             product = await load()
             now = datetime.now(UTC)
-            raw = (product.metadata_json or {}).get(RESEARCH_KEY)
+            raw = _research_entry(product.metadata_json or {}, models)
             cached = cast(dict[str, object], raw) if isinstance(raw, dict) else {}
             if cached.get("identity") != identity:
                 cached = {}
@@ -127,10 +204,10 @@ class ProductResearchService:
                     raise conflict("Product research is already in progress; retry shortly")
                 await asyncio.sleep(0.25)
                 continue
-            product.metadata_json = {**(product.metadata_json or {}), RESEARCH_KEY: {
+            _store_research(product, models, {
                 "identity": identity, "status": "pending", "lease_token": token,
                 "lease_until": (now + timedelta(seconds=65)).isoformat(), "sources": [],
-            }}
+            })
             await self.session.commit()
             break
 
@@ -140,10 +217,12 @@ class ProductResearchService:
         verified = False
         try:
             async with asyncio.timeout(RESEARCH_TIMEOUT_SECONDS):
-                research = await provider.research_product(name=product.name or "", sku=product.sku, brand=product.brand)
+                research = await provider.research_product(name=product.name or "", sku=product.sku, brand=product.brand,
+                                                          compatibility_models=models)
             usage, latency = research.usage, research.latency_ms
             matches = [source for source in research.sources if source_matches_product(source, product)][:5]
-            verified = bool(matches)
+            verified = bool(matches) and all(any(_contains_model(source["title"] + " " + source["excerpt"], model)
+                                                for source in matches) for model in models)
             # Retain actual provider evidence for a person even when seller/manufacturer identity differs.
             # These candidates must never enable automatic sending.
             sources = matches or research.sources[:5]
@@ -152,15 +231,15 @@ class ProductResearchService:
         except TimeoutError:
             error_code = "groq_timeout"
         product = await load()
-        pending = (product.metadata_json or {}).get(RESEARCH_KEY)
+        pending = _research_entry(product.metadata_json or {}, models)
         if not isinstance(pending, dict) or cast(dict[str, object], pending).get("lease_token") != token:
             raise conflict("Product research lease changed; start a new generation")
         now = datetime.now(UTC)
         status = "error" if error_code else "verified" if verified else "needs_review" if sources else "not_found"
-        product.metadata_json = {**(product.metadata_json or {}), RESEARCH_KEY: {
+        _store_research(product, models, {
             "identity": identity, "status": status, "sources": sources, "error_code": error_code,
             "checked_at": now.isoformat(),
             "expires_at": (now + timedelta(hours=24) if sources else now + timedelta(minutes=1)).isoformat(),
-        }}
+        })
         await self.session.commit()
         return ResearchRun(verified=verified, usage=usage, latency_ms=latency, error_code=error_code)

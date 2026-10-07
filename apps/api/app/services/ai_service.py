@@ -31,7 +31,7 @@ from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
 from app.services.audit_service import AuditService
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
-from app.services.product_research_service import ProductResearchService, research_context
+from app.services.product_research_service import ProductResearchService, compatibility_models, research_context
 from app.services.reply_credit_service import ReplyCreditService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager"}
@@ -186,7 +186,8 @@ class AIService:
             api_key=settings.groq_api_key.get_secret_value(), base_url=settings.groq_base_url,
             timeout_seconds=settings.groq_timeout_seconds,
         )
-        research = await ProductResearchService(self.session).ensure(product=product, provider=provider)
+        research = await ProductResearchService(self.session).ensure(product=product, provider=provider,
+                                                                   models=compatibility_models(message.customer_text))
         if automatic_job is not None:
             await self._require_automatic_generation(automatic_job, message, actor)
         prompt = build_marketplace_reply_prompt(
@@ -194,7 +195,7 @@ class AIService:
             message_type=message.type,
             customer_text=message.customer_text,
             rating=message.rating,
-            product=self.product_context(product),
+            product=self.product_context(product, customer_text=message.customer_text),
             tone=tone,
             brand_rules=brand_rules,
             knowledge_base=knowledge_base,
@@ -255,7 +256,7 @@ class AIService:
         )
         current_prompt = build_marketplace_reply_prompt(
             marketplace=message.marketplace, message_type=message.type, customer_text=message.customer_text,
-            rating=message.rating, product=self.product_context(product), tone=tone,
+            rating=message.rating, product=self.product_context(product, customer_text=message.customer_text), tone=tone,
             brand_rules=brand_rules, knowledge_base=knowledge_base,
         )
         if message.status != original_status or current_prompt.input_hash != prompt.input_hash:
@@ -404,7 +405,7 @@ class AIService:
             raise conflict("Automatic generation lease or eligibility changed")
 
     @staticmethod
-    def product_context(product: Product | None) -> dict[str, object] | None:
+    def product_context(product: Product | None, *, customer_text: str = "") -> dict[str, object] | None:
         if product is None:
             return None
         return {
@@ -413,7 +414,7 @@ class AIService:
             "brand": product.brand,
             "category": product.category,
             "external_id": product.external_id,
-            "metadata": research_context(product.metadata_json or {}),
+            "metadata": research_context(product.metadata_json or {}, compatibility_models(customer_text)),
         }
 
     @staticmethod
