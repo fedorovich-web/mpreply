@@ -28,6 +28,8 @@ Only the ten corresponding platform-independent PNG baselines were migrated to t
 
 The first Linux CI run (`37640132771`, head `f273b9a9`) passed all desktop comparisons but found five stable mobile differences of about 2% against Windows captures. Snapshot identity now includes the actual platform, as recommended by [Playwright](https://playwright.dev/docs/test-snapshots); the reviewed Windows images are preserved under that identity. Missing baselines fail without automatic acceptance (`updateSnapshots: none`). CI runs visual comparisons before the other browser suites so failures are found earlier, and preserves failure images/reports for seven days using an immutable upload-artifact action revision. Linux captures must be retrieved and independently inspected before they become expected images. Tolerances and coverage remain unchanged.
 
+The first strict missing-baseline diagnostic run (`37642919653`, head `998a4afb`) preserved viewport failure screenshots and approved-width attachments, but the snapshot matcher returns early for a missing expected file. Each desktop/mobile comparison now explicitly attaches its prepared full-page observed image before asserting. This provides inspectable evidence without accepting a missing reference or changing the comparison outcome.
+
 ## Git and documentation
 
 Twenty stale remote branches were removed only after verifying that their commits were reachable through retained refs and no open PR used their head/base. A verified Git bundle and branch/SHA manifest were preserved before deletion. Active PR branches and five branches with unique work were retained. `main` remains the canonical branch and target for production source selection.

@@ -145,7 +145,6 @@ const integrationCopy = {
     revoked: "Доступ отозван",
     error: "Ошибка",
     attention: "Требует внимания",
-    connectedLoadingAttention: "Подключён · загрузка требует внимания",
     connected: "Подключено",
     disabled: "Отключено",
     needsCheck: "Нужна проверка",
@@ -260,7 +259,6 @@ const integrationCopy = {
     revoked: "Access revoked",
     error: "Error",
     attention: "Needs attention",
-    connectedLoadingAttention: "Connected · loading needs attention",
     connected: "Connected",
     disabled: "Disabled",
     needsCheck: "Needs validation",
@@ -1044,7 +1042,7 @@ function accountStatusLabel(account: MarketplaceAccount, locale: Locale): string
   if (account.status === "error") return t.error;
   if (account.status === "active" && account.credentials_status === "valid") return t.connected;
   if (hasCurrentIntegrationProblem(account)) {
-    return account.status === "active" && account.credentials_status === "valid" ? t.connectedLoadingAttention : t.attention;
+    return t.attention;
   }
   if (account.status === "disabled") return t.disabled;
   return t.needsCheck;
