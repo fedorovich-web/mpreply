@@ -95,6 +95,7 @@ class Settings(BaseSettings):
     groq_base_url: str = "https://api.groq.com/openai/v1"
     groq_default_model: str = "qwen/qwen3.8-27b"
     groq_timeout_seconds: float = 45.0
+    wb_service_secret: SecretStr = Field(default=SecretStr(""))
 
     sentry_dsn: str | None = None
     sentry_traces_sample_rate: float = Field(default=0.0, ge=0.0, le=1.0)

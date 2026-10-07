@@ -21,7 +21,7 @@ from app.adapters.conversation import ConversationAdapter
 from app.adapters.http import MarketplaceHttpClients
 from app.adapters.ozon import OzonAdapter
 from app.adapters.wildberries import WildberriesAdapter
-from app.adapters.wildberries_read_limiter import WildberriesReadLimiter
+from app.adapters.wildberries_request_limiter import WildberriesRequestLimiter
 from app.adapters.yandex_market import YandexMarketAdapter
 from app.core.config import get_settings
 from app.models.enums import Marketplace
@@ -105,7 +105,10 @@ class MarketplaceAdapterRegistry:
 
 def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceAdapterRegistry:
     avito_resolver = AvitoCredentialResolver(clients.avito)
-    wb_limiter = WildberriesReadLimiter() if get_settings().app_env == "production" else None
+    settings = get_settings()
+    wb_cloud = settings.app_env == "production"
+    wb_limiter = WildberriesRequestLimiter() if wb_cloud else None
+    wb_service_secret = settings.wb_service_secret.get_secret_value() or None
     return MarketplaceAdapterRegistry(
         {
             Marketplace.AVITO: ProviderRegistration(
@@ -116,8 +119,12 @@ def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceA
             ),
             Marketplace.WILDBERRIES: ProviderRegistration(
                 capability=WILDBERRIES_CAPABILITY,
-                credential_factory=lambda: WildberriesAdapter(client=clients.wildberries, read_limiter=wb_limiter),
-                review_factory=lambda: WildberriesAdapter(client=clients.wildberries, read_limiter=wb_limiter),
+                credential_factory=lambda: WildberriesAdapter(
+                    client=clients.wildberries, read_limiter=wb_limiter, service_secret=wb_service_secret, cloud_integration=wb_cloud,
+                ),
+                review_factory=lambda: WildberriesAdapter(
+                    client=clients.wildberries, read_limiter=wb_limiter, service_secret=wb_service_secret, cloud_integration=wb_cloud,
+                ),
             ),
             Marketplace.OZON: ProviderRegistration(
                 capability=OZON_CAPABILITY,

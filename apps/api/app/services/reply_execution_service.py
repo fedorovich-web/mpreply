@@ -41,7 +41,7 @@ from app.services.quota_service import QuotaDecision, QuotaService
 
 _WRITE_ROLES = {"owner", "admin", "manager"}
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
-_RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable"})
+_RETRYABLE_ERRORS = frozenset({"network_timeout", "network_error", "rate_limited", "marketplace_unavailable", "coordination_unavailable"})
 _BLOCKING_MARKETPLACE_ERRORS = frozenset({"invalid_credentials", "insufficient_scope"})
 _AMBIGUOUS_WRITE_ERRORS = frozenset({"malformed_payload", "marketplace_unavailable", "network_error", "network_timeout"})
 _NON_PUBLISHABLE_PROVIDER_STATES = frozenset({"unmoderated", "banned", "deleted", "unknown", "moderation", "rejected", "not_public"})
@@ -578,7 +578,7 @@ class ReplyExecutionService:
                 return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
             message = await self._get_message(owned.message_id, organization_id=owned.organization_id)
             error_code = failed_result.error_code or "malformed_payload"
-            if error_code == "rate_limited":
+            if error_code in {"rate_limited", "coordination_unavailable"}:
                 # No write was attempted. Waiting for a shared/provider read
                 # cooldown must not consume the bounded write retry budget.
                 owned.attempt_count -= 1
@@ -691,7 +691,7 @@ class ReplyExecutionService:
         if error_code in _AMBIGUOUS_WRITE_ERRORS:
             await self._mark_ambiguous_write(reply=reply, message=message, result=result)
             return ExecuteReplyResult(reply.id, reply.status, False, error_code)
-        if error_code == "rate_limited":
+        if error_code in {"rate_limited", "coordination_unavailable"}:
             # A provider 429 explicitly rejected the write. It is a deferred
             # request, not a failed/ambiguous publication attempt.
             reply.attempt_count -= 1

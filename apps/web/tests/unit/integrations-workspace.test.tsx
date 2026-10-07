@@ -92,8 +92,23 @@ describe("IntegrationsWorkspace", () => {
       sync_next_retry_at: "2026-10-06T13:10:00Z",
     }]), { status: 200 })));
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
-    expect((await screen.findAllByText("Подключён · ожидание маркетплейса")).length).toBeGreaterThan(0);
+    const badges = await screen.findAllByText("Подключено", { selector: ".ui-badge" });
+    expect(badges.length).toBeGreaterThan(0);
+    for (const badge of badges) expect(badge).toHaveClass("ui-badge-success");
     expect(screen.getByText("Загрузка продолжится автоматически")).toBeInTheDocument();
+  });
+  it("keeps valid access green in the catalog and shows the loading delay separately", async () => {
+    mockWorkspace("owner");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([{
+      ...account, last_error_sync_at: "2026-10-06T13:00:00Z", sync_error_code: "rate_limited",
+      sync_next_retry_at: "2026-10-06T13:10:00Z",
+    }]), { status: 200 })));
+    renderWithQueryClient(<IntegrationsWorkspace />);
+    expect(await screen.findByText("1 подключение")).toHaveClass("ui-badge-success");
+    expect(screen.getByText("Загрузка ожидает разрешения маркетплейса и продолжится автоматически.")).toBeInTheDocument();
+    const summary = screen.getByLabelText("Сводка подключений");
+    expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("1");
+    expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("0");
   });
   it("shows all four marketplace integrations as ready and distinguishes connection state", async () => {
     mockWorkspace("owner");
@@ -166,7 +181,7 @@ describe("IntegrationsWorkspace", () => {
 
     const summary = await screen.findByLabelText("Сводка подключений");
     await waitFor(() => {
-      expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("1");
+      expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("1");
       expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("0");
     });
   });
@@ -183,7 +198,7 @@ describe("IntegrationsWorkspace", () => {
 
     const summary = await screen.findByLabelText("Сводка подключений");
     await waitFor(() => {
-      expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("0");
+      expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("0");
       expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
     });
     expect(screen.getByText("Требует внимания")).toBeInTheDocument();
@@ -203,10 +218,11 @@ describe("IntegrationsWorkspace", () => {
 
     const summary = await screen.findByLabelText("Сводка подключений");
     await waitFor(() => {
-      expect(within(summary).getByText("Работают нормально").parentElement).toHaveTextContent("0");
+      expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("1");
       expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
     });
-    expect(screen.getByText("Подключён · загрузка требует внимания")).toBeInTheDocument();
+    expect(screen.getByText("1 подключение")).toHaveClass("ui-badge-success");
+    expect(screen.getByText("Загрузка требует внимания. Откройте кабинет, чтобы проверить причину.")).toBeInTheDocument();
   });
 });
 
@@ -439,7 +455,10 @@ describe("WildberriesIntegrationWorkspace", () => {
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
     expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
-    expect(screen.getAllByText("Подключён · загрузка требует внимания").length).toBeGreaterThan(0);
+    for (const badge of screen.getAllByText("Подключено", { selector: ".ui-badge" })) {
+      expect(badge).toHaveClass("ui-badge-success");
+    }
+    expect(screen.getByText("Загрузка требует внимания")).toBeInTheDocument();
     expect(screen.getByText("Проверен")).toBeInTheDocument();
     expect(screen.queryByText("Активно")).not.toBeInTheDocument();
   });
