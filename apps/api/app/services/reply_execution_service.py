@@ -296,6 +296,21 @@ class ReplyExecutionService:
         """Recover legacy exhausted 429s without publishing stale question drafts."""
         if type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError("reply recovery limit must be between 1 and 100")
+        # Earlier releases left automatic recovery drafts outside the review
+        # queue. Route only untouched drafts and preserve handled messages.
+        legacy = (await self.session.execute(select(Reply, CustomerMessage).join(
+            CustomerMessage, (CustomerMessage.id == Reply.message_id)
+            & (CustomerMessage.organization_id == Reply.organization_id),
+        ).where(Reply.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
+                Reply.error_code == "legacy_draft_review_required", Reply.mode == ResponseMode.AUTO.value,
+                Reply.revision == 1, CustomerMessage.status == MessageStatus.NEEDS_MANUAL_CHECK.value)
+          .with_for_update(of=(Reply, CustomerMessage), skip_locked=True)
+          .execution_options(populate_existing=True).limit(limit))).tuples().all()
+        for old_reply, _ in legacy:
+            old_reply.mode = ResponseMode.SEMI_AUTO.value
+            await self.audit.write(action="reply.legacy_review_routed", entity_type="reply",
+                                   entity_id=str(old_reply.id), organization_id=old_reply.organization_id,
+                                   metadata={"previous_mode": ResponseMode.AUTO.value})
         rows = (await self.session.execute(select(Reply, CustomerMessage).join(
             CustomerMessage, (CustomerMessage.id == Reply.message_id)
             & (CustomerMessage.organization_id == Reply.organization_id),
@@ -305,7 +320,7 @@ class ReplyExecutionService:
         ).join(User, User.id == Reply.created_by).join(Organization, Organization.id == Reply.organization_id).where(
             Reply.status == ReplyStatus.FAILED.value, Reply.error_code == "rate_limited",
             Reply.attempt_count >= Reply.max_attempts,
-            CustomerMessage.status == MessageStatus.FAILED.value,
+            CustomerMessage.status.in_((MessageStatus.FAILED.value, MessageStatus.NEEDS_MANUAL_CHECK.value)),
             Reply.metadata_json["provider_write_ambiguity"].as_string().is_(None),
             OrganizationUser.status == "active", OrganizationUser.role.in_(_WRITE_ROLES),
             User.status == "active", Organization.status == "active",
@@ -317,7 +332,8 @@ class ReplyExecutionService:
             actor = await self.session.get(User, reply.created_by)
             draft = await self.session.get(AIDraft, reply.ai_draft_id) if reply.ai_draft_id else None
             can_queue = False
-            if actor is not None and draft is not None and message.type == MessageType.REVIEW.value:
+            if (actor is not None and draft is not None and message.type == MessageType.REVIEW.value
+                    and message.status == MessageStatus.FAILED.value):
                 _, product = await self.message_service.get_message(actor=actor, message_id=message.id)
                 confidence = draft.confidence_score or 0.0
                 safety = self.safety_gate.evaluate(SafetyInput(
@@ -336,6 +352,7 @@ class ReplyExecutionService:
                 else:
                     can_queue = safety.decision is SafetyDecision.ALLOW and reply.approved_by is not None
             previous_max = reply.max_attempts
+            previous_mode = reply.mode
             reply.max_attempts = reply.attempt_count + get_settings().auto_reply_max_attempts
             self._transition_reply(reply, ReplyStatus.QUEUED.value if can_queue else ReplyStatus.MANUAL_REVIEW_REQUIRED.value)
             target = (MessageStatus.AUTO_REPLY_PENDING.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.APPROVED.value)
@@ -347,14 +364,16 @@ class ReplyExecutionService:
             reply.dispatch_lease_expires_at = None
             reply.error_code = None if can_queue else "legacy_draft_review_required"
             reply.failed_reason = None if can_queue else "Review the old draft before publication"
+            if not can_queue:
+                reply.mode = ResponseMode.SEMI_AUTO.value
             await self.audit.write(
                 action="reply.throttle_recovered", entity_type="reply", entity_id=str(reply.id),
                 organization_id=reply.organization_id,
                 metadata={"attempt_count": reply.attempt_count, "previous_max_attempts": previous_max,
-                          "previous_error_code": "rate_limited", "status": reply.status},
+                          "previous_error_code": "rate_limited", "previous_mode": previous_mode, "status": reply.status},
             )
         await self.session.commit()
-        return len(rows)
+        return len(rows) + len(legacy)
 
     async def execute_reply(self, *, reply_id: UUID) -> ExecuteReplyResult:
         reply = await self._get_reply_for_update(reply_id)
