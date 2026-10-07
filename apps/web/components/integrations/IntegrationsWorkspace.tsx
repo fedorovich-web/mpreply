@@ -78,7 +78,7 @@ const integrationsCopy = {
     workspaceAria: "Интеграции маркетплейсов",
     summaryAria: "Сводка подключений",
     connected: "Подключённых кабинетов",
-    healthy: "Работают нормально",
+    healthy: "Доступ подтверждён",
     attention: "Требуют внимания",
     refreshing: "Обновляем...",
     refresh: "Обновить подключения",
@@ -106,7 +106,7 @@ const integrationsCopy = {
     workspaceAria: "Marketplace integrations",
     summaryAria: "Connection summary",
     connected: "Connected seller accounts",
-    healthy: "Working normally",
+    healthy: "Access verified",
     attention: "Need attention",
     refreshing: "Refreshing...",
     refresh: "Refresh connections",
@@ -215,9 +215,10 @@ export function IntegrationsWorkspace() {
           const hasProblem = marketplaceAccounts.some(needsConnectionAttention);
           const hasActive = marketplaceAccounts.some(isHealthyConnection);
           const hasValidAccess = marketplaceAccounts.every((account) => account.status === "active" && account.credentials_status === "valid");
-          const waitingForMarketplace = marketplaceAccounts.some((account) => account.sync_error_code === "rate_limited")
-            && marketplaceAccounts.filter(needsConnectionAttention).every((account) => account.sync_error_code === "rate_limited");
-          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem, hasValidAccess, waitingForMarketplace }, locale);
+          const loadingProblems = marketplaceAccounts.filter(hasCurrentIntegrationProblem);
+          const waitingForMarketplace = loadingProblems.length > 0
+            && loadingProblems.every((account) => account.sync_error_code === "rate_limited");
+          const connectionState = getConnectionState({ connectedCount, hasActive, hasProblem, hasValidAccess }, locale);
           const actionLabel = canManage
             ? connectedCount > 0
               ? `${t.manage} ${marketplace.name}`
@@ -244,6 +245,11 @@ export function IntegrationsWorkspace() {
                 <span className={`ui-badge ui-badge-${connectionState.tone}`}>{connectionState.label}</span>
               </div>
               <p>{marketplace.description}</p>
+              {loadingProblems.length > 0 ? (
+                <p role="status">{waitingForMarketplace
+                  ? locale === "ru" ? "Загрузка ожидает разрешения маркетплейса и продолжится автоматически." : "Loading is waiting for the marketplace and will resume automatically."
+                  : locale === "ru" ? "Загрузка требует внимания. Откройте кабинет, чтобы проверить причину." : "Loading needs attention. Open the account to check the cause."}</p>
+              ) : null}
               <Link className="button button-secondary" href={localizedPath(locale, marketplace.href)}>
                 {actionLabel}
               </Link>
@@ -271,17 +277,15 @@ function getConnectionState({
   hasActive,
   hasProblem,
   hasValidAccess,
-  waitingForMarketplace,
 }: {
   connectedCount: number;
   hasActive: boolean;
   hasProblem: boolean;
   hasValidAccess: boolean;
-  waitingForMarketplace: boolean;
 }, locale: Locale): { label: string; tone: "neutral" | "success" | "warning" } {
   const t = integrationsCopy[locale];
-  if (hasValidAccess && waitingForMarketplace) {
-    return { label: locale === "ru" ? "Подключён · ожидание маркетплейса" : "Connected · waiting for marketplace", tone: "warning" };
+  if (connectedCount > 0 && hasValidAccess) {
+    return { label: `${connectedCount} ${accountWord(connectedCount, locale)}`, tone: "success" };
   }
   if (hasProblem) {
     return { label: hasValidAccess ? t.connectedLoadingAttention : t.stateAttention, tone: "warning" };
@@ -302,8 +306,7 @@ function isHealthyConnection(account: {
   last_error_sync_at: string | null;
 }): boolean {
   return account.status === "active"
-    && account.credentials_status === "valid"
-    && !hasCurrentIntegrationProblem(account);
+    && account.credentials_status === "valid";
 }
 
 function needsConnectionAttention(account: {
@@ -311,11 +314,12 @@ function needsConnectionAttention(account: {
   credentials_status: string;
   last_success_sync_at: string | null;
   last_error_sync_at: string | null;
+  sync_error_code?: string | null;
 }): boolean {
   return account.status === "error"
     || account.credentials_status === "invalid"
     || account.credentials_status === "revoked"
-    || hasCurrentIntegrationProblem(account);
+    || (hasCurrentIntegrationProblem(account) && account.sync_error_code !== "rate_limited");
 }
 
 function accountWord(value: number, locale: Locale): string {

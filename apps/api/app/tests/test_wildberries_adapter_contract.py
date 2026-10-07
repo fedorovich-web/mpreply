@@ -18,6 +18,44 @@ BASE_URL = "https://feedbacks-api.wildberries.ru"
 NO_RETRY = ReadRetryPolicy(max_attempts=1)
 
 
+@pytest.mark.parametrize("account_type", [2, 3])
+async def test_cloud_wb_rejects_test_and_personal_tokens_before_request(account_type: int) -> None:
+    payload = base64.urlsafe_b64encode(json.dumps({"s": 1 << 7, "acc": account_type, "t": account_type == 2}).encode()).decode().rstrip("=")
+    credential = f"synthetic.{payload}.signature"
+    transport = SequenceTransport([])
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=transport.mock()) as client:
+        adapter = WildberriesAdapter(client, cloud_integration=True)
+        validation = await adapter.validate_credentials(credential)
+        sent = await adapter.send_reply(credential, None, ProviderMessageContext(
+            message_type=MessageType.REVIEW, external_id="review-1", marketplace_created_at=datetime.now(UTC),
+        ), "Synthetic answer")
+    assert validation.error_code == "insufficient_scope"
+    assert sent.error_code == "insufficient_scope"
+    assert transport.requests == []
+
+
+@pytest.mark.asyncio
+async def test_wb_service_secret_signs_both_reads_and_writes() -> None:
+    requests: list[httpx.Request] = []
+
+    def provider(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.method == "GET":
+            return httpx.Response(200, json={"Status": "OK", "TS": "2026-10-07T14:00:00Z"})
+        return httpx.Response(204)
+
+    async with httpx.AsyncClient(base_url=BASE_URL, transport=httpx.MockTransport(provider)) as client:
+        adapter = WildberriesAdapter(client, service_secret="synthetic-service-secret")
+        validation = await adapter.validate_credentials(_token(scope=1 << 7))
+        sent = await adapter.send_reply("synthetic-token", None, ProviderMessageContext(
+            message_type=MessageType.REVIEW, external_id="review-1", marketplace_created_at=datetime.now(UTC),
+        ), "Synthetic answer")
+    assert validation.ok and sent.ok
+    assert [request.method for request in requests] == ["GET", "POST"]
+    for request in requests:
+        assert request.headers["X-Client-Secret"] == "synthetic-service-secret"
+
+
 def _record(index: int = 1) -> dict[str, object]:
     return {
         "id": f"feedback-{index}",

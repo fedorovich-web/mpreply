@@ -6,11 +6,19 @@ from hashlib import sha256
 from uuid import uuid4
 
 import httpx
+import structlog
 from redis.exceptions import RedisError
 
 from app.adapters.http import parse_retry_after
+from app.adapters.wildberries_token import quota_identity
 from app.core.config import get_settings
 from app.core.rate_limit import redis_from_url
+
+logger = structlog.get_logger(__name__)
+
+
+class WildberriesCoordinationUnavailable(RuntimeError):
+    """The coordination gate failed before any request reached WB."""
 
 _ACQUIRE = """
 local ttl = redis.call('TTL', KEYS[1])
@@ -28,14 +36,15 @@ return 0
 """
 
 
-class WildberriesReadLimiter:
+class WildberriesRequestLimiter:
     """Share provider cooldowns between API, workers and duplicate connections."""
 
-    async def read(self, credential: str, path: str, request: Callable[[], Awaitable[httpx.Response]]) -> httpx.Response:
-        # Keys never contain a raw API token. Limits are method-specific; ping
-        # has its own budget and must not block data synchronization.
-        digest = sha256(f"{credential}\x00{path}".encode()).hexdigest()
-        prefix = f"marketplace:wb:read:{digest}"
+    async def request(self, credential: str, path: str, request: Callable[[], Awaitable[httpx.Response]]) -> httpx.Response:
+        # Reviews/questions share the seller's category budget across methods.
+        # Ping has its own budget. Neither tokens nor seller IDs appear in keys.
+        category = "ping" if path == "/ping" else "feedbacks-and-questions"
+        digest = sha256(f"{quota_identity(credential)}\x00{category}".encode()).hexdigest()
+        prefix = f"marketplace:wb:category:v2:{digest}"
         keys = (f"{prefix}:cooldown", f"{prefix}:lock")
         owner = str(uuid4())
         redis = redis_from_url(get_settings().redis_url.get_secret_value())
@@ -56,13 +65,22 @@ class WildberriesReadLimiter:
             elif response.headers.get("X-Ratelimit-Remaining") == "0":
                 cooldown = parse_retry_after(response.headers.get("X-Ratelimit-Reset"), now=datetime.now(UTC), maximum_seconds=86400) or 0
             return response
-        except RedisError:
+        except RedisError as exc:
             # Do not send an uncoordinated request when the safety boundary is
             # unavailable. The normal scheduler backoff will try again later.
-            return httpx.Response(503)
+            raise WildberriesCoordinationUnavailable("WB request coordination is unavailable") from exc
         finally:
             try:
                 if acquired:
-                    await redis.eval(_RELEASE, len(keys), *keys, owner, cooldown)
+                    try:
+                        await redis.eval(_RELEASE, len(keys), *keys, owner, cooldown)
+                    except RedisError:
+                        # Preserve a received write receipt or original timeout.
+                        # The request lock still expires, and future acquisition
+                        # remains closed whenever Redis is unavailable.
+                        logger.warning("wb_request_coordination_release_failed")
             finally:
-                await redis.aclose()
+                try:
+                    await redis.aclose()
+                except RedisError:
+                    logger.warning("wb_request_coordination_close_failed")

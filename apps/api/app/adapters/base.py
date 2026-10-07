@@ -14,6 +14,7 @@ MarketplaceErrorCode = Literal[
     "marketplace_not_found",
     "rate_limited",
     "marketplace_unavailable",
+    "coordination_unavailable",
     "network_timeout",
     "network_error",
     "malformed_payload",

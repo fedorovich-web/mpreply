@@ -763,10 +763,16 @@ function AccountDetail({
 
       <dl className="integration-health-grid">
         <HealthItem label={t.accessState} value={credentialsStatusLabel(account.credentials_status, locale)} />
+        {hasCurrentIntegrationProblem(account) ? (
+          <HealthItem label={locale === "ru" ? "Загрузка" : "Loading"}
+            value={account.sync_error_code === "rate_limited"
+              ? locale === "ru" ? "Ожидание разрешения маркетплейса" : "Waiting for the marketplace"
+              : locale === "ru" ? "Загрузка требует внимания" : "Loading needs attention"} />
+        ) : null}
         <HealthItem label={t.connectionData} value={account.credentials_masked} />
         <HealthItem label={t.lastSuccess} value={formatDateTime(account.last_success_sync_at, locale)} />
         <HealthItem label={t.lastError} value={formatDateTime(account.last_error_sync_at, locale)} />
-        {account.sync_error_code === "rate_limited" && account.sync_next_retry_at ? (
+        {hasCurrentIntegrationProblem(account) && account.sync_error_code === "rate_limited" && account.sync_next_retry_at ? (
           <HealthItem label={locale === "ru" ? "Загрузка продолжится автоматически" : "Loading resumes automatically"}
             value={formatDateTime(account.sync_next_retry_at, locale)} />
         ) : null}
@@ -919,12 +925,9 @@ function AccountDetail({
 }
 
 function StatusBadge({ account, locale }: { account: MarketplaceAccount; locale: Locale }) {
-  const hasProblem = hasCurrentIntegrationProblem(account);
-  const tone = account.status === "error" || account.credentials_status === "revoked"
+  const tone = account.status === "error" || account.credentials_status === "revoked" || account.credentials_status === "invalid"
     ? "ui-badge-danger"
-    : hasProblem
-      ? "ui-badge-warning"
-      : account.status === "active" && account.credentials_status === "valid"
+    : account.status === "active" && account.credentials_status === "valid"
         ? "ui-badge-success"
         : "ui-badge-warning";
   return <span className={`ui-badge ${tone}`}>{accountStatusLabel(account, locale)}</span>;
@@ -1039,13 +1042,10 @@ function accountStatusLabel(account: MarketplaceAccount, locale: Locale): string
   const t = integrationCopy[locale];
   if (account.credentials_status === "revoked") return t.revoked;
   if (account.status === "error") return t.error;
-  if (account.status === "active" && account.credentials_status === "valid" && account.sync_error_code === "rate_limited") {
-    return locale === "ru" ? "Подключён · ожидание маркетплейса" : "Connected · waiting for marketplace";
-  }
+  if (account.status === "active" && account.credentials_status === "valid") return t.connected;
   if (hasCurrentIntegrationProblem(account)) {
     return account.status === "active" && account.credentials_status === "valid" ? t.connectedLoadingAttention : t.attention;
   }
-  if (account.status === "active" && account.credentials_status === "valid") return t.connected;
   if (account.status === "disabled") return t.disabled;
   return t.needsCheck;
 }

@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import base64
-import binascii
-import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import cast
@@ -23,7 +20,8 @@ from app.adapters.base import (
 )
 from app.adapters.capabilities import MarketplaceStream
 from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_with_retry
-from app.adapters.wildberries_read_limiter import WildberriesReadLimiter
+from app.adapters.wildberries_request_limiter import WildberriesCoordinationUnavailable, WildberriesRequestLimiter
+from app.adapters.wildberries_token import token_payload
 from app.models.enums import Marketplace, MessageType
 
 _PAGE_SIZE = 50
@@ -43,11 +41,15 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         client: httpx.AsyncClient,
         *,
         read_retry_policy: ReadRetryPolicy = ReadRetryPolicy(),
-        read_limiter: WildberriesReadLimiter | None = None,
+        read_limiter: WildberriesRequestLimiter | None = None,
+        service_secret: str | None = None,
+        cloud_integration: bool = False,
     ) -> None:
         self._client = client
         self._read_retry_policy = read_retry_policy
         self._read_limiter = read_limiter
+        self._service_secret = service_secret
+        self._cloud_integration = cloud_integration or bool(service_secret)
 
     async def validate_credentials(
         self,
@@ -218,6 +220,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         text: str,
     ) -> AdapterResult[ProviderWriteReceipt]:
         del seller_id
+        if self._cloud_token_error(credential):
+            return AdapterResult(False, error_code="insufficient_scope", error_message_safe="Use a Wildberries token issued for this cloud service")
         if (
             not context.external_id
             or len(context.external_id) > 255
@@ -247,12 +251,13 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 error_message_safe="Wildberries message type is not supported",
             )
         try:
-            response = await self._client.request(
-                method,
-                path,
-                headers=self._headers(credential),
-                json=write_payload,
-            )
+            async def request() -> httpx.Response:
+                return await self._client.request(method, path, headers=self._headers(credential), json=write_payload)
+
+            response = await self._read_limiter.request(credential, path, request) if self._read_limiter else await request()
+        except WildberriesCoordinationUnavailable:
+            return AdapterResult(False, error_code="coordination_unavailable", retry_after_seconds=30,
+                                 error_message_safe="Request was not sent; coordination is temporarily unavailable")
         except httpx.TimeoutException:
             return AdapterResult(
                 False,
@@ -362,6 +367,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         *,
         params: dict[str, str | int],
     ) -> AdapterResult[object]:
+        if self._cloud_token_error(credential):
+            return AdapterResult(False, error_code="insufficient_scope", error_message_safe="Use a Wildberries token issued for this cloud service")
         async def request() -> httpx.Response:
             return await request_read_with_retry(
                 self._client, "GET", path, headers=self._headers(credential), params=params,
@@ -370,7 +377,10 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             )
 
         try:
-            response = await self._read_limiter.read(credential, path, request) if self._read_limiter else await request()
+            response = await self._read_limiter.request(credential, path, request) if self._read_limiter else await request()
+        except WildberriesCoordinationUnavailable:
+            return AdapterResult(False, error_code="coordination_unavailable", retry_after_seconds=30,
+                                 error_message_safe="Request was not sent; coordination is temporarily unavailable")
         except httpx.TimeoutException:
             return AdapterResult(
                 False,
@@ -432,9 +442,15 @@ class WildberriesAdapter(ReviewQuestionAdapter):
     def _malformed_payload(message: str) -> AdapterResult[object]:
         return AdapterResult(False, error_code="malformed_payload", error_message_safe=message)
 
-    @staticmethod
-    def _headers(credential: str) -> dict[str, str]:
-        return {"Authorization": credential}
+    def _headers(self, credential: str) -> dict[str, str]:
+        headers = {"Authorization": credential}
+        if self._service_secret:
+            headers["X-Client-Secret"] = self._service_secret
+        return headers
+
+    def _cloud_token_error(self, credential: str) -> bool:
+        payload = token_payload(credential)
+        return bool(self._cloud_integration and payload and (payload.get("acc") in (2, 3) or payload.get("t") is True))
 
     @staticmethod
     def _parse_cursor(cursor: str | None, *, max_offset: int) -> int | None:
@@ -447,25 +463,9 @@ class WildberriesAdapter(ReviewQuestionAdapter):
 
     @staticmethod
     def _token_scope(credential: str) -> int | None:
-        if not credential or credential != credential.strip() or len(credential) > 16_384:
+        mapping = token_payload(credential)
+        if mapping is None:
             return None
-        segments = credential.split(".")
-        if len(segments) != 3 or not segments[1]:
-            return None
-        encoded_payload = segments[1]
-        padding = "=" * (-len(encoded_payload) % 4)
-        try:
-            payload_bytes = base64.b64decode(
-                encoded_payload + padding,
-                altchars=b"-_",
-                validate=True,
-            )
-            payload: object = json.loads(payload_bytes, object_pairs_hook=_unique_object)
-        except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError, ValueError):
-            return None
-        if not isinstance(payload, dict):
-            return None
-        mapping = cast(dict[str, object], payload)
         scope = mapping.get("s")
         if isinstance(scope, bool) or not isinstance(scope, int) or scope < 0:
             return None
@@ -657,12 +657,3 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         if not 1 <= rating <= 5:
             raise ValueError("Wildberries rating is malformed")
         return rating
-
-
-def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError("duplicate JSON key")
-        result[key] = value
-    return result

@@ -436,6 +436,18 @@ async def test_rejected_write_respects_provider_cooldown() -> None:
     assert rows.reply.next_retry_at >= datetime.now(UTC) + timedelta(seconds=719)
 
 
+async def test_local_coordination_outage_retries_without_consuming_publication_attempts() -> None:
+    rows = _rows()
+    service, _, _ = _service(rows, preflight=_absent(),
+        send=AdapterResult(False, error_code="coordination_unavailable", retry_after_seconds=30))
+    result = await service.execute_reply(reply_id=rows.reply.id)
+    assert result.retryable
+    assert rows.reply.status == ReplyStatus.RETRY_PENDING.value
+    assert rows.reply.attempt_count == 0
+    assert rows.reply.next_retry_at is not None
+    assert rows.reply.next_retry_at >= datetime.now(UTC) + timedelta(seconds=29)
+
+
 @pytest.mark.asyncio
 async def test_repeated_provider_throttle_does_not_turn_a_rejected_write_into_terminal_failure() -> None:
     rows = _rows()
