@@ -46,6 +46,23 @@ def test_valid_production_settings_pass() -> None:
     assert settings.rate_limit_enabled is True
 
 
+def test_wb_self_hosted_requires_an_explicit_seller_binding() -> None:
+    with pytest.raises(ValidationError, match="seller"):
+        _production_settings(wb_integration_mode="self_hosted")
+
+
+def test_wb_self_hosted_rejects_service_auth() -> None:
+    with pytest.raises(ValidationError, match="service secret"):
+        _production_settings(wb_integration_mode="self_hosted", wb_self_hosted_seller_hash="a" * 64, wb_service_secret="synthetic-secret")
+
+
+def test_wb_default_cloud_and_valid_self_hosted_settings() -> None:
+    assert _production_settings().wb_integration_mode == "cloud"
+    settings = _production_settings(wb_integration_mode="self_hosted", wb_self_hosted_seller_hash="a" * 64)
+    assert settings.wb_self_hosted_seller_hash == "a" * 64
+    assert settings.app_env == "production" and settings.rate_limit_enabled
+
+
 def test_dokploy_example_targets_mpreply_hosts(monkeypatch: pytest.MonkeyPatch) -> None:
     for name in ("APP_NAME", "API_BASE_URL", "WEB_APP_URL", "PUBLIC_SITE_URL", "CORS_ALLOWED_ORIGINS", "ALLOWED_HOSTS"):
         monkeypatch.delenv(name, raising=False)

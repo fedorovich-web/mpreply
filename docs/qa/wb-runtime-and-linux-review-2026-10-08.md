@@ -43,3 +43,13 @@ The two stage regressions failed first because events lacked stage/delay fields.
 The new code received an independent read-only review with no remaining P1/P2 in this patch. External-answer rows still affect pre-existing runtime quotas/plan-limit accounting; these conservative send constraints were not loosened by the analytics change.
 
 CI run `37727780272` on `ae46419a` passed backend and the full frontend gate, including the ten Linux comparisons. Container validation and API/worker image builds passed, but the web image build failed because the workflow omitted its mandatory `NEXT_PUBLIC_API_BASE_URL` argument. The workflow now supplies the same public local API URL used by the frontend job; the Dockerfile's required-argument guard is unchanged. No local Docker invocation or gate suppression was used. The corrected head requires a new CI run.
+
+CI `37729162663` on `599925b0` completed successfully: backend, frontend and containers all passed.
+
+## Own-seller installation
+
+The owner confirmed that cabinet `123` belongs to him and this installation is used only for that cabinet. A fresh backend-only routing inspection found the stored key is basic (`acc=1`, `t=false`), has writable category scope, and is valid. No raw token or seller UUID was printed. Writable rights do not change the basic category quota.
+
+The explicit `self_hosted` mode requires a SHA256 binding to the canonical seller UUID. It permits only non-test basic/personal keys for that seller and forbids mixing a service secret with own mode. Cloud remains the default and continues to reject personal/test keys. Production Redis coordination stays enabled for both modes and adapter roles. Preflight, idempotency, leases, receipt handling and ambiguous-write behavior are untouched.
+
+New tests first failed for missing configuration/constructor support; the production registry regression separately failed with `insufficient_scope`. The implementation passed 75 focused tests, then the full backend suite: 696 passed, 46 skipped, two existing dependency deprecation warnings. Ruff and integrity passed. Strict Pyright identified test argument typing; after explicit annotations it passed with zero errors and all 13 own-mode cases passed. An independent read-only review found no P1/P2. Effective Dokploy patch/environment and live key type must be verified after deployment before claiming working provider sends.
