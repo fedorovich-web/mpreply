@@ -36,7 +36,7 @@ MPReply собирает поддерживаемые обращения с ма
 
 Все четыре интеграции представлены в интерфейсе. Доступ конкретного кабинета зависит от прав его ключа и доступности API маркетплейса. Наличие адаптера и успешные локальные тесты не заменяют проверку реального кабинета.
 
-WB ограничивает запросы на стороне продавца и категории API. MPReply учитывает общий бюджет отзывов и вопросов для чтения и отправки; проверка `/ping` имеет отдельный бюджет. Для облачной интеграции сервисный секрет, выданный Wildberries самому MPReply, передаётся отдельно от ключа продавца. [Правила авторизации WB](https://dev.wildberries.ru/news/144).
+WB ограничивает запросы на стороне продавца и категории API. MPReply учитывает общий бюджет отзывов и вопросов для чтения и отправки; проверка `/ping` имеет отдельный бюджет. Базовый ключ предусмотрен для подключений вне Каталога решений. По текущей документации его бюджет категории — 5 запросов в час, интервал 12 минут и всплеск 1; `X-Ratelimit-Limit` обозначает всплеск, а не всю часовую квоту. Опциональный `WB_SERVICE_SECRET` передаёт выданный WB секрет авторизованного сервиса; отсутствие такого секрета само по себе не означает недействительный базовый ключ. [Документация методов и лимитов WB](https://dev.wildberries.ru/docs/openapi/customer-communication), [авторизация и типы доступа](https://dev.wildberries.ru/docs/openapi/api-information).
 
 ## Архитектура
 
@@ -136,7 +136,7 @@ docker compose -f infra/docker/docker-compose.local.yml up --build -d --wait
 | Авторизация и шифрование | `AUTH_SECRET_KEY`, `CREDENTIALS_ENCRYPTION_KEY` |
 | ИИ | `GROQ_API_KEY`, `GROQ_DEFAULT_MODEL` |
 | Письма | `RESEND_API_KEY`, `TRANSACTIONAL_EMAIL_FROM` |
-| Wildberries | `WB_SERVICE_SECRET` — выданный WB секрет самого сервиса; ключи продавцов хранятся в зашифрованном виде в базе |
+| Wildberries | Ключ продавца хранится в зашифрованном виде в базе. Опциональный `WB_SERVICE_SECRET` — выданный WB секрет авторизованного сервиса; для обычного базового подключения вне Каталога не требуется |
 | Яндекс ID | `YANDEX_OAUTH_ENABLED`, `YANDEX_OAUTH_CLIENT_ID`, `YANDEX_OAUTH_CLIENT_SECRET` |
 | Lava.top | `LAVA_ENABLED`, `LAVA_API_KEY`, `LAVA_PRODUCT_ID`, `LAVA_OFFER_ID`, `LAVA_WEBHOOK_SECRET` |
 | Производственное окружение | `CORS_ALLOWED_ORIGINS`, `ALLOWED_HOSTS`, `FORWARDED_ALLOW_IPS`, `DEPLOYMENT_VERSION` |

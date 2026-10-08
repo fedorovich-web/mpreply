@@ -148,4 +148,4 @@ jobs:
               run: |
                   docker build -f apps/api/Dockerfile apps/api
                   docker build -f apps/worker/Dockerfile .
-                  docker build -f apps/web/Dockerfile apps/web
+                  docker build --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 -f apps/web/Dockerfile apps/web
