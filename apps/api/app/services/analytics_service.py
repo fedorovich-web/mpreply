@@ -32,6 +32,9 @@ from app.schemas.analytics import (
 from app.services.organization_service import OrganizationService
 
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
+# Preflight convergence prevents another write; it is not an MPReply send.
+# Missing flags on legacy receipts continue to count.
+_OWN_REPLY_SEND = Reply.metadata_json["externally_already_answered"].as_boolean().is_not(True)
 _ANSWERED_STATUSES = {MessageStatus.ANSWERED.value, MessageStatus.AUTO_REPLY_SENT.value}
 _UNANSWERED_STATUSES = {
     MessageStatus.NEW.value,
@@ -79,6 +82,7 @@ class AnalyticsService:
             ).where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -95,6 +99,7 @@ class AnalyticsService:
                 Reply.organization_id == organization_id,
                 Reply.ai_draft_id.is_not(None),
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -112,6 +117,7 @@ class AnalyticsService:
             .where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -148,6 +154,7 @@ class AnalyticsService:
             select(Reply.sent_at).where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -257,6 +264,7 @@ class AnalyticsService:
             .where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
