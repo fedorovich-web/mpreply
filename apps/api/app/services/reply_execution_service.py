@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -584,7 +585,7 @@ class ReplyExecutionService:
                 owned.attempt_count -= 1
             retryable = error_code in _RETRYABLE_ERRORS and owned.attempt_count < owned.max_attempts
             if retryable:
-                await self._mark_retry_pending(reply=owned, message=message, result=failed_result)
+                await self._mark_retry_pending(reply=owned, message=message, result=failed_result, execution_stage="preflight")
             else:
                 await self._mark_terminal_marketplace_failure(
                     reply=owned,
@@ -697,7 +698,7 @@ class ReplyExecutionService:
             reply.attempt_count -= 1
         retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
         if retryable:
-            await self._mark_retry_pending(reply=reply, message=message, result=result)
+            await self._mark_retry_pending(reply=reply, message=message, result=result, execution_stage="write")
         else:
             await self._mark_terminal_marketplace_failure(reply=reply, message=message, result=result)
         return ExecuteReplyResult(reply.id, reply.status, retryable, error_code)
@@ -920,6 +921,7 @@ class ReplyExecutionService:
         reply: Reply,
         message: CustomerMessage,
         result: AdapterResult,
+        execution_stage: Literal["preflight", "write"],
     ) -> None:
         self._transition_reply(reply, ReplyStatus.RETRY_PENDING.value)
         message_target = MessageStatus.AUTO_REPLY_PENDING.value if reply.mode == ResponseMode.AUTO.value else MessageStatus.APPROVED.value
@@ -935,6 +937,9 @@ class ReplyExecutionService:
             status="retry_pending",
             error_code=result.error_code,
             error_message_safe=result.error_message_safe,
+            execution_stage=execution_stage,
+            retry_after_seconds=result.retry_after_seconds,
+            retry_delay_seconds=delay_seconds,
         )
         action_prefix = "auto_reply" if reply.mode == ResponseMode.AUTO.value else "manual_reply"
         await self.audit.write(
@@ -1112,6 +1117,9 @@ class ReplyExecutionService:
         status: str,
         error_code: str | None,
         error_message_safe: str | None,
+        execution_stage: Literal["preflight", "write"] | None = None,
+        retry_after_seconds: int | None = None,
+        retry_delay_seconds: int | None = None,
     ) -> None:
         self.session.add(
             IntegrationEvent(
@@ -1126,6 +1134,9 @@ class ReplyExecutionService:
                     "reply_id": str(reply.id),
                     "message_id": str(message.id),
                     "attempt_count": reply.attempt_count,
+                    **({"execution_stage": execution_stage} if execution_stage is not None else {}),
+                    **({"retry_after_seconds": retry_after_seconds} if retry_after_seconds is not None else {}),
+                    **({"retry_delay_seconds": retry_delay_seconds} if retry_delay_seconds is not None else {}),
                 },
             )
         )

@@ -21,6 +21,7 @@ from app.adapters.registry import MarketplaceAdapterRegistry
 from app.core.security import CredentialEncryptionError, CredentialService
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
+from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.reply import Reply
 from app.services.reply_execution_service import ReplyExecutionService
@@ -434,6 +435,34 @@ async def test_rejected_write_respects_provider_cooldown() -> None:
     assert result.retryable and rows.reply.attempt_count == 0
     assert rows.reply.next_retry_at is not None
     assert rows.reply.next_retry_at >= datetime.now(UTC) + timedelta(seconds=719)
+
+
+@pytest.mark.parametrize("stage", ["preflight", "write"])
+async def test_retry_event_identifies_the_blocked_stage_without_customer_or_credential_data(stage: str) -> None:
+    rows = _rows()
+    service, adapter, session = _service(
+        rows,
+        preflight=AdapterResult(False, error_code="rate_limited", retry_after_seconds=600) if stage == "preflight" else _absent(),
+        send=AdapterResult(False, error_code="rate_limited", retry_after_seconds=600)
+        if stage == "write" else AdapterResult(ok=True, data=ProviderWriteReceipt("unused")),
+    )
+
+    await service.execute_reply(reply_id=rows.reply.id)
+
+    events = [event for event in session.added if isinstance(event, IntegrationEvent)]
+    assert len(events) == 1
+    assert events[0].status == "retry_pending"
+    assert events[0].metadata_json == {
+        "reply_id": str(rows.reply.id),
+        "message_id": str(rows.message.id),
+        "attempt_count": 0,
+        "execution_stage": stage,
+        "retry_after_seconds": 600,
+        "retry_delay_seconds": 600,
+    }
+    assert rows.reply.status == ReplyStatus.RETRY_PENDING.value
+    assert rows.reply.attempt_count == 0
+    assert adapter.send_calls == (1 if stage == "write" else 0)
 
 
 async def test_local_coordination_outage_retries_without_consuming_publication_attempts() -> None:
