@@ -13,28 +13,140 @@ import {
   type User,
   userSchema,
 } from "../../lib/api/schemas";
+import { localizedPath, type Locale } from "../../lib/i18n";
+import { PublicBrandMark } from "../public-site/PublicBrandMark";
 
-const ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId";
+const ACTIVE_ORGANIZATION_KEY = "mpreply.activeOrganizationId";
+const LEGACY_ACTIVE_ORGANIZATION_KEY = "respio.activeOrganizationId";
+
+function readStoredActiveOrganizationId(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const current = window.localStorage.getItem(ACTIVE_ORGANIZATION_KEY);
+    if (current !== null) return current;
+
+    const legacy = window.localStorage.getItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+    if (legacy === null) return null;
+
+    try {
+      window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, legacy);
+      window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+    } catch {
+      // Keep the legacy value usable even when storage writes are unavailable.
+    }
+    return legacy;
+  } catch {
+    return null;
+  }
+}
+
+function storeActiveOrganizationId(organizationId: string) {
+  try {
+    window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organizationId);
+    window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+  } catch {
+    // Organization switching must still work for the current session without storage.
+  }
+}
+
+function clearStoredActiveOrganizationId() {
+  try {
+    window.localStorage.removeItem(ACTIVE_ORGANIZATION_KEY);
+  } catch {
+    // Logout must continue even when storage is unavailable.
+  }
+  try {
+    window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
+  } catch {
+    // Logout must continue even when legacy storage is unavailable.
+  }
+}
 
 type WorkspaceContextValue = {
+  locale: Locale;
   user: User;
   organizations: Organization[];
   activeOrganization: Organization;
   setActiveOrganizationId: (organizationId: string) => void;
-  logout: () => Promise<void>;
+  logout: () => void;
   isLoggingOut: boolean;
+  logoutError: string | null;
 };
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
-export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
+const workspaceCopy = {
+  ru: {
+    opening: "Открываем кабинет",
+    loadingAccount: "Загружаем аккаунт и рабочие пространства.",
+    loginAgain: "Нужно войти снова",
+    redirectLogin: "Перенаправляем на страницу входа.",
+    openFailed: "Не удалось открыть кабинет",
+    openFailedDescription: "Повторите загрузку. Если ошибка сохранится, войдите в аккаунт заново.",
+    retry: "Повторить",
+    orgsFailed: "Не удалось загрузить рабочие пространства",
+    orgsFailedDescription: "Повторите попытку. Данные аккаунта останутся без изменений.",
+    accountFailed: "Не удалось открыть аккаунт",
+    accountFailedDescription: "Повторите вход в MPReply.",
+    openingWorkspace: "Открываем рабочее пространство",
+    preparingWorkspace: "Подготавливаем данные организации.",
+    logoutFailed: "Не удалось выйти. Проверьте соединение и попробуйте ещё раз.",
+    firstStep: "Первый шаг",
+    createWorkspace: "Создайте рабочее пространство",
+    onboardingText: (email: string) =>
+      <>Аккаунт <strong>{email}</strong> готов. Назовите магазин, бренд или команду — после этого перейдём к подключению маркетплейсов.</>,
+    readyIntegrations: "Площадки MPReply",
+    yandex: "Яндекс Маркет",
+    avito: "Авито",
+    integrationsCount: "4 площадки в одном рабочем процессе",
+    workspaceName: "Название рабочего пространства",
+    workspacePlaceholder: "Например, Seller Group",
+    creating: "Создаём...",
+    createAndConnect: "Создать и перейти к подключениям",
+  },
+  en: {
+    opening: "Opening your workspace",
+    loadingAccount: "Loading your account and workspaces.",
+    loginAgain: "Please log in again",
+    redirectLogin: "Redirecting to the login page.",
+    openFailed: "Could not open the workspace",
+    openFailedDescription: "Try loading again. If the issue continues, log in again.",
+    retry: "Retry",
+    orgsFailed: "Could not load workspaces",
+    orgsFailedDescription: "Try again. Your account data will not be changed.",
+    accountFailed: "Could not open the account",
+    accountFailedDescription: "Log in to MPReply again.",
+    openingWorkspace: "Opening the workspace",
+    preparingWorkspace: "Preparing organization data.",
+    logoutFailed: "Could not log out. Check your connection and try again.",
+    firstStep: "First step",
+    createWorkspace: "Create your workspace",
+    onboardingText: (email: string) =>
+      <>Your account <strong>{email}</strong> is ready. Name the store, brand, or team, then continue to marketplace connections.</>,
+    readyIntegrations: "MPReply marketplaces",
+    yandex: "Yandex Market",
+    avito: "Avito",
+    integrationsCount: "4 marketplaces in one workflow",
+    workspaceName: "Workspace name",
+    workspacePlaceholder: "For example, Seller Group",
+    creating: "Creating...",
+    createAndConnect: "Create workspace and continue to integrations",
+  },
+} as const;
+
+export function WorkspaceProvider({
+  children,
+  locale = "ru",
+}: {
+  children: React.ReactNode;
+  locale?: Locale;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const [activeOrganizationId, setActiveOrganizationIdState] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(ACTIVE_ORGANIZATION_KEY);
-  });
+  const labels = workspaceCopy[locale];
+  const [activeOrganizationId, setActiveOrganizationIdState] = useState<string | null>(readStoredActiveOrganizationId);
 
   const userQuery = useQuery({
     queryKey: ["session", "me"],
@@ -50,8 +162,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!(userQuery.error instanceof ApiError) || userQuery.error.status !== 401) return;
     const next = pathname ? `?next=${encodeURIComponent(pathname)}` : "";
-    router.replace(`/auth/login${next}`);
-  }, [pathname, router, userQuery.error]);
+    router.replace(`${localizedPath(locale, "/auth/login")}${next}`);
+  }, [locale, pathname, router, userQuery.error]);
 
   const activeOrganization = useMemo(() => {
     if (!organizationsQuery.data || organizationsQuery.data.length === 0) return null;
@@ -64,32 +176,32 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest("/api/auth/logout", messageResponseSchema, { method: "POST" }),
-    onSuccess: async () => {
-      window.localStorage.removeItem(ACTIVE_ORGANIZATION_KEY);
+    onSuccess: () => {
+      clearStoredActiveOrganizationId();
       queryClient.clear();
-      router.replace("/auth/login");
+      router.replace(localizedPath(locale, userQuery.data?.status === "demo" ? "/" : "/auth/login"));
     },
   });
 
   function setActiveOrganizationId(organizationId: string) {
     if (!organizationsQuery.data?.some((organization) => organization.id === organizationId)) return;
-    window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organizationId);
+    storeActiveOrganizationId(organizationId);
     setActiveOrganizationIdState(organizationId);
   }
 
   if (userQuery.isPending || (userQuery.isSuccess && organizationsQuery.isPending)) {
-    return <WorkspaceBootState title="Загружаем workspace" description="Проверяем сессию и доступные организации." />;
+    return <WorkspaceBootState title={labels.opening} description={labels.loadingAccount} />;
   }
 
   if (userQuery.error) {
     if (userQuery.error instanceof ApiError && userQuery.error.status === 401) {
-      return <WorkspaceBootState title="Сессия завершена" description="Перенаправляем на страницу входа." />;
+      return <WorkspaceBootState title={labels.loginAgain} description={labels.redirectLogin} />;
     }
     return (
       <WorkspaceBootState
-        title="Не удалось загрузить сессию"
-        description={errorMessage(userQuery.error)}
-        actionLabel="Повторить"
+        title={labels.openFailed}
+        description={labels.openFailedDescription}
+        actionLabel={labels.retry}
         onAction={() => void userQuery.refetch()}
       />
     );
@@ -98,37 +210,37 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   if (organizationsQuery.error) {
     return (
       <WorkspaceBootState
-        title="Не удалось загрузить организации"
-        description={errorMessage(organizationsQuery.error)}
-        actionLabel="Повторить"
+        title={labels.orgsFailed}
+        description={labels.orgsFailedDescription}
+        actionLabel={labels.retry}
         onAction={() => void organizationsQuery.refetch()}
       />
     );
   }
 
   if (!userQuery.data) {
-    return <WorkspaceBootState title="Нет данных сессии" description="Повторите вход в аккаунт." />;
+    return <WorkspaceBootState title={labels.accountFailed} description={labels.accountFailedDescription} />;
   }
 
   if (!organizationsQuery.data || organizationsQuery.data.length === 0) {
-    return <WorkspaceOnboarding user={userQuery.data} />;
+    return <WorkspaceOnboarding user={userQuery.data} locale={locale} />;
   }
 
   if (!activeOrganization) {
-    return <WorkspaceBootState title="Выбираем workspace" description="Подготавливаем рабочее пространство." />;
+    return <WorkspaceBootState title={labels.openingWorkspace} description={labels.preparingWorkspace} />;
   }
 
   return (
     <WorkspaceContext.Provider
       value={{
+        locale,
         user: userQuery.data,
         organizations: organizationsQuery.data,
         activeOrganization,
         setActiveOrganizationId,
-        logout: async () => {
-          await logoutMutation.mutateAsync();
-        },
+        logout: () => logoutMutation.mutate(),
         isLoggingOut: logoutMutation.isPending,
+        logoutError: logoutMutation.error ? labels.logoutFailed : null,
       }}
     >
       {children}
@@ -142,8 +254,10 @@ export function useWorkspace(): WorkspaceContextValue {
   return value;
 }
 
-function WorkspaceOnboarding({ user }: { user: User }) {
+function WorkspaceOnboarding({ user, locale }: { user: User; locale: Locale }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const labels = workspaceCopy[locale];
   const [name, setName] = useState("");
   const createMutation = useMutation({
     mutationFn: () =>
@@ -152,20 +266,35 @@ function WorkspaceOnboarding({ user }: { user: User }) {
         body: { name: name.trim() },
       }),
     onSuccess: async (organization) => {
-      window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organization.id);
+      storeActiveOrganizationId(organization.id);
       await queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      router.replace(localizedPath(locale, "/app/integrations"));
     },
   });
 
   return (
     <main className="workspace-onboarding-page">
       <section className="workspace-onboarding-card" aria-labelledby="workspace-onboarding-title">
-        <p className="eyebrow">Первый workspace</p>
-        <h1 id="workspace-onboarding-title">Создайте организацию</h1>
-        <p>
-          Аккаунт <strong>{user.email}</strong> уже создан. Теперь нужен workspace для интеграций,
-          обращений и правил автоответов.
-        </p>
+        <div className="workspace-onboarding-brand" aria-label="MPReply">
+          <PublicBrandMark />
+        </div>
+
+        <div className="workspace-onboarding-copy">
+          <p className="eyebrow">{labels.firstStep}</p>
+          <h1 id="workspace-onboarding-title">{labels.createWorkspace}</h1>
+          <p>{labels.onboardingText(user.email)}</p>
+        </div>
+
+        <div className="workspace-onboarding-marketplaces" aria-label={labels.readyIntegrations}>
+          <div>
+            <span>Wildberries</span>
+            <span>Ozon</span>
+            <span>{labels.yandex}</span>
+            <span>{labels.avito}</span>
+          </div>
+          <small>{labels.integrationsCount}</small>
+        </div>
+
         <form
           className="workspace-onboarding-form"
           onSubmit={(event) => {
@@ -174,19 +303,21 @@ function WorkspaceOnboarding({ user }: { user: User }) {
           }}
         >
           <label>
-            Название организации
+            {labels.workspaceName}
             <input
               autoComplete="organization"
               minLength={2}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Например, Seller Group"
+              placeholder={labels.workspacePlaceholder}
               required
               value={name}
             />
           </label>
-          {createMutation.error ? <p className="form-error" role="alert">{errorMessage(createMutation.error)}</p> : null}
+          {createMutation.error ? (
+            <p className="form-error" role="alert">{errorMessage(createMutation.error, locale)}</p>
+          ) : null}
           <button className="button button-primary" disabled={createMutation.isPending || name.trim().length < 2} type="submit">
-            {createMutation.isPending ? "Создаём..." : "Создать workspace"}
+            {createMutation.isPending ? labels.creating : labels.createAndConnect}
           </button>
         </form>
       </section>
@@ -221,6 +352,24 @@ function WorkspaceBootState({
   );
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Неизвестная ошибка";
+function errorMessage(error: unknown, locale: Locale): string {
+  if (locale === "en") {
+    if (error instanceof ApiError) {
+      if (error.status === 401) return "Your session expired. Log in again.";
+      if (error.status === 403) return "You do not have permission to create a workspace.";
+      if (error.status === 409) return "A workspace with this name already exists. Change the name and try again.";
+      if (error.status === 422) return "Check the workspace name.";
+      if (error.status === 429) return "Too many attempts. Wait a moment and try again.";
+    }
+    return "Could not create the workspace. Check your connection and try again.";
+  }
+
+  if (error instanceof ApiError) {
+    if (error.status === 401) return "Сессия истекла. Войдите снова.";
+    if (error.status === 403) return "Недостаточно прав для создания рабочего пространства.";
+    if (error.status === 409) return "Такое рабочее пространство уже существует. Измените название и попробуйте снова.";
+    if (error.status === 422) return "Проверьте название рабочего пространства.";
+    if (error.status === 429) return "Слишком много попыток подряд. Подождите немного и попробуйте снова.";
+  }
+  return "Не удалось создать рабочее пространство. Проверьте соединение и попробуйте снова.";
 }

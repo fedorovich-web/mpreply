@@ -1,4 +1,4 @@
-# Respio visual asset policy
+# MPReply visual asset policy
 
 The current `R` in a rounded square is placeholder, not final logo.
 

@@ -1,0 +1,42 @@
+/* Public hero geometry and surface come from the shared design tokens. */
+.public-root main :is(
+  .homepage-approved-hero,
+  .mockup-hero,
+  .marketplace-detail-mockup-hero,
+  .pricing-mockup-hero,
+  .demo-mockup-hero,
+  .help-approved-hero,
+  .contacts-render-hero,
+  .legal-approved-hero
+) {
+  display: grid;
+  min-height: var(--public-hero-min-height) !important;
+  align-items: center;
+  padding-block: var(--public-hero-padding-block) !important;
+  background: var(--public-hero-background) !important;
+}
+
+.home-reference-marketplace-band {
+  background: var(--public-hero-tail-background);
+  padding-block: 20px 28px;
+}
+
+.homepage-reference-root .home-reference-marketplace-band .home-reference-marketplaces {
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .public-root main :is(
+    .homepage-approved-hero,
+    .mockup-hero,
+    .marketplace-detail-mockup-hero,
+    .pricing-mockup-hero,
+    .demo-mockup-hero,
+    .help-approved-hero,
+    .contacts-render-hero,
+    .legal-approved-hero
+  ) {
+    min-height: 0 !important;
+    padding-block: var(--public-hero-padding-block) !important;
+  }
+}

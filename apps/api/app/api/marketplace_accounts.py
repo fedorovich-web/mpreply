@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.adapters.registry import MarketplaceAdapterRegistry
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
+from app.dependencies.marketplace import get_marketplace_registry
 from app.models.user import User
 from app.schemas.marketplace_account import (
     MarketplaceAccountActionResponse,
@@ -41,7 +44,7 @@ async def create_marketplace_account(
         default_response_mode=payload.default_response_mode,
     )
     await session.commit()
-    return service.to_response(account)
+    return await service.to_response(account)
 
 
 @router.get("", response_model=list[MarketplaceAccountResponse])
@@ -52,7 +55,7 @@ async def list_marketplace_accounts(
 ) -> list[MarketplaceAccountResponse]:
     service = MarketplaceAccountService(session)
     accounts = await service.list_accounts(actor=current_user, organization_id=organization_id)
-    return [service.to_response(account) for account in accounts]
+    return [await service.to_response(account) for account in accounts]
 
 
 @router.get("/{account_id}", response_model=MarketplaceAccountResponse)
@@ -63,7 +66,26 @@ async def get_marketplace_account(
 ) -> MarketplaceAccountResponse:
     service = MarketplaceAccountService(session)
     account = await service.get_account(actor=current_user, account_id=account_id)
-    return service.to_response(account)
+    return await service.to_response(account)
+
+
+@router.delete("/{account_id}", response_model=MarketplaceAccountActionResponse)
+async def delete_marketplace_account(
+    account_id: UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> MarketplaceAccountActionResponse:
+    service = MarketplaceAccountService(session)
+    account = await service.delete_account(actor=current_user, account_id=account_id)
+    credentials_masked = service.credentials.mask_fingerprint(account.credentials_fingerprint)
+    await session.commit()
+    return MarketplaceAccountActionResponse(
+        id=account.id,
+        status="deleted",
+        credentials_status="deleted",
+        credentials_masked=credentials_masked,
+        message="Marketplace connection deleted. Historical messages and billing records retained.",
+    )
 
 
 @router.patch("/{account_id}", response_model=MarketplaceAccountResponse)
@@ -79,27 +101,39 @@ async def update_marketplace_account(
         account_id=account_id,
         display_name=payload.display_name,
         seller_id=payload.seller_id,
+        seller_id_supplied="seller_id" in payload.model_fields_set,
         default_response_mode=payload.default_response_mode,
         status=payload.status,
     )
     await session.commit()
-    return service.to_response(account)
+    return await service.to_response(account)
 
 
 @router.post("/{account_id}/validate", response_model=MarketplaceAccountValidateResponse)
 async def validate_marketplace_account(
     account_id: UUID,
+    registry: MarketplaceAdapterRegistry = Depends(get_marketplace_registry),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> MarketplaceAccountValidateResponse:
     service = MarketplaceAccountService(session)
-    account, result = await service.validate_credentials(actor=current_user, account_id=account_id)
+    account, result = await service.validate_credentials(
+        actor=current_user,
+        account_id=account_id,
+        registry=registry,
+    )
     await session.commit()
+    stored_scopes = account.scopes_json.get("scopes")
+    scopes = (
+        [scope for scope in cast(list[object], stored_scopes) if isinstance(scope, str) and scope]
+        if isinstance(stored_scopes, list)
+        else []
+    )
     return MarketplaceAccountValidateResponse(
         id=account.id,
         status=account.status,
         credentials_status=account.credentials_status,
-        scopes=list((account.scopes_json or {}).keys()),
+        scopes=list(result.data.scopes) if result.data is not None else scopes,
         checked_at=datetime.now(UTC),
         error_code=result.error_code,
         error_message_safe=result.error_message_safe,
@@ -120,7 +154,7 @@ async def rotate_marketplace_credentials(
         raw_credentials=payload.credentials,
     )
     await session.commit()
-    response = service.to_response(account)
+    response = await service.to_response(account)
     return MarketplaceAccountActionResponse(
         id=account.id,
         status=account.status,
@@ -139,7 +173,7 @@ async def revoke_marketplace_credentials(
     service = MarketplaceAccountService(session)
     account = await service.revoke_credentials(actor=current_user, account_id=account_id)
     await session.commit()
-    response = service.to_response(account)
+    response = await service.to_response(account)
     return MarketplaceAccountActionResponse(
         id=account.id,
         status=account.status,
@@ -152,24 +186,27 @@ async def revoke_marketplace_credentials(
 @router.post("/{account_id}/sync", response_model=MarketplaceSyncResponse, status_code=status.HTTP_202_ACCEPTED)
 async def request_marketplace_sync(
     account_id: UUID,
+    registry: MarketplaceAdapterRegistry = Depends(get_marketplace_registry),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> MarketplaceSyncResponse:
-    service = MarketplaceSyncService(session)
-    account, stats, error_code, error_message_safe = await service.sync_account(
+    service = MarketplaceSyncService(session, registry=registry)
+    result = await service.request_sync(
         actor=current_user,
         account_id=account_id,
     )
     await session.commit()
     return MarketplaceSyncResponse(
-        account_id=account.id,
-        marketplace=account.marketplace,
-        status="failed" if error_code else "success",
-        imported_reviews=stats.imported_reviews,
-        imported_questions=stats.imported_questions,
-        updated_reviews=stats.updated_reviews,
-        updated_questions=stats.updated_questions,
-        skipped=stats.skipped,
-        error_code=error_code,
-        error_message_safe=error_message_safe,
+        account_id=result.account.id,
+        marketplace=result.account.marketplace,
+        status=result.status,
+        imported_reviews=result.stats.imported_reviews,
+        imported_questions=result.stats.imported_questions,
+        imported_chats=result.stats.imported_chats,
+        updated_reviews=result.stats.updated_reviews,
+        updated_questions=result.stats.updated_questions,
+        updated_chats=result.stats.updated_chats,
+        skipped=result.stats.skipped,
+        error_code=result.error_code,
+        error_message_safe=result.error_message_safe,
     )

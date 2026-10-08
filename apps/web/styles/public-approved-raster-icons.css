@@ -1,0 +1,62 @@
+/* Supplied transparent AVIF icons. Keep the source at or below 64 CSS pixels. */
+.public-icon-image {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: -0.12em;
+}
+
+.public-icon-image > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.public-root .button > .public-inline-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-right: .45rem;
+  vertical-align: middle;
+}
+
+.mockup-icon-chip > .public-icon-image,
+.contacts-render-info-icon > .public-icon-image,
+.not-found-route-icon > .public-icon-image,
+.mockup-cta-strip-icon > .public-icon-image {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.mockup-page .features-tool-card .mockup-icon-chip,
+.mockup-page .marketplace-benefit-card .mockup-icon-chip,
+.mockup-page .marketplace-connect-card .mockup-icon-chip {
+  width: 50px;
+  height: 50px;
+}
+
+.mockup-page .features-tool-card .mockup-icon-chip > .public-icon-image,
+.mockup-page .features-workflow-card .mockup-icon-chip > .public-icon-image,
+.mockup-page .features-benefit-icon > .public-icon-image,
+.mockup-page .marketplace-benefit-card .mockup-icon-chip > .public-icon-image,
+.mockup-page .marketplace-connect-card .mockup-icon-chip > .public-icon-image {
+  width: 44px;
+  height: 44px;
+  background-size: contain;
+}
+
+.mockup-page .detail-tool-card .mockup-icon-chip > .public-icon-image,
+.mockup-page .detail-step-card .mockup-icon-chip > .public-icon-image,
+.mockup-page .detail-benefit-card .mockup-icon-chip > .public-icon-image,
+.mockup-page .demo-journey-card .mockup-icon-chip > .public-icon-image {
+  width: 40px;
+  height: 40px;
+}
+
+.mockup-page .demo-team-tool .mockup-icon-chip > .public-icon-image {
+  width: 44px;
+  height: 44px;
+}

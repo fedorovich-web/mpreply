@@ -7,7 +7,7 @@ import { mockIntegrationsApi } from "./helpers/integrations-api";
 
 async function useDarkTheme(page: import("@playwright/test").Page) {
   await page.addInitScript(() => {
-    window.localStorage.setItem("respio-theme", "dark");
+    window.localStorage.setItem("mpreply-theme", "dark");
     document.documentElement.dataset.theme = "dark";
   });
 }

@@ -1,4 +1,4 @@
-import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
@@ -6,8 +6,9 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const vnuCli = require.resolve("vnu-jar/vnu-jar.js");
-const nextCli = require.resolve("next/dist/bin/next");
 const appRoot = process.cwd();
+const standaloneServer = resolve(appRoot, ".next", "standalone", "server.js");
+const appPathsManifest = resolve(appRoot, ".next", "server", "app-paths-manifest.json");
 const port = Number.parseInt(process.env.W3C_VALIDATOR_PORT ?? "3119", 10);
 const origin = `http://127.0.0.1:${port}`;
 const renderedRoutes = [
@@ -20,20 +21,78 @@ const renderedRoutes = [
   "/marketplaces/avito",
   "/pricing",
   "/demo",
-  "/resources",
+  "/help",
   "/contacts",
   "/privacy",
   "/terms",
   "/app/ai-assistant",
+  "/app",
+  "/app/admin",
+  "/app/account",
+  "/app/analytics",
+  "/app/automation-rules",
+  "/app/billing",
+  "/app/dashboard",
+  "/app/inbox",
   "/app/integrations",
   "/app/integrations/wildberries",
+  "/app/integrations/ozon",
+  "/app/integrations/yandex-market",
+  "/app/integrations/avito",
+  "/app/review-queue",
+  "/auth/forgot-password",
+  "/auth/login",
+  "/auth/register",
+  "/auth/resend-verification",
+  "/auth/reset-password",
+  "/auth/verify-email",
+  "/en",
+  "/en/app",
+  "/en/app/admin",
+  "/en/app/account",
+  "/en/app/ai-assistant",
+  "/en/app/analytics",
+  "/en/app/automation-rules",
+  "/en/app/billing",
+  "/en/app/dashboard",
+  "/en/app/inbox",
+  "/en/app/integrations",
+  "/en/app/integrations/wildberries",
+  "/en/app/integrations/ozon",
+  "/en/app/integrations/yandex-market",
+  "/en/app/integrations/avito",
+  "/en/app/review-queue",
+  "/en/auth/login",
+  "/en/auth/register",
+  "/en/contacts",
+  "/en/demo",
+  "/en/features",
+  "/en/help",
+  "/en/marketplaces",
+  "/en/marketplaces/wildberries",
+  "/en/marketplaces/ozon",
+  "/en/marketplaces/yandex-market",
+  "/en/marketplaces/avito",
+  "/en/pricing",
+  "/en/privacy",
+  "/en/terms",
 ];
 
 async function ensureBuildExists() {
   try {
-    await stat(resolve(appRoot, ".next/BUILD_ID"));
+    await stat(standaloneServer);
   } catch {
     throw new Error("Next.js production build not found. Run `npm run build` before W3C validation.");
+  }
+
+  const appPaths = JSON.parse(await readFile(appPathsManifest, "utf8"));
+  const missingRoutes = Object.keys(appPaths)
+    .filter((route) => route.endsWith("/page"))
+    .map((route) => route.slice(0, -5) || "/")
+    .filter((route) => route !== "/_global-error" && route !== "/_not-found")
+    .filter((route) => !renderedRoutes.includes(route));
+  if (missingRoutes.length > 0) {
+    throw new Error(`W3C validation is missing rendered routes: ${missingRoutes.join(", ")}`);
   }
 }
 
@@ -42,9 +101,15 @@ function routeFileName(route) {
 }
 
 function startServer() {
-  const child = spawn(process.execPath, [nextCli, "start", "--hostname", "127.0.0.1", "--port", String(port)], {
+  const child = spawn(process.execPath, [standaloneServer], {
     cwd: appRoot,
-    env: { ...process.env, NODE_ENV: "production" },
+    env: {
+      ...process.env,
+      HOSTNAME: "127.0.0.1",
+      NODE_ENV: "production",
+      NEXT_PUBLIC_API_BASE_URL: "http://127.0.0.1:8000",
+      PORT: String(port),
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -116,7 +181,7 @@ let tempDirectory;
 
 try {
   await ensureBuildExists();
-  tempDirectory = await mkdtemp(join(tmpdir(), "respio-w3c-html-"));
+  tempDirectory = await mkdtemp(join(tmpdir(), "mpreply-w3c-html-"));
   server = startServer();
   await waitForServer();
   await fetchRenderedPages(tempDirectory);

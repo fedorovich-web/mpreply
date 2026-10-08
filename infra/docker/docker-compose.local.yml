@@ -2,7 +2,7 @@ name: respio-local
 
 x-backend-env: &backend-env
   APP_ENV: local
-  APP_NAME: Respio
+  APP_NAME: MPReply
   APP_VERSION: 0.1.27
   API_BASE_URL: http://localhost:8000
   WEB_APP_URL: http://localhost:3000
@@ -17,6 +17,17 @@ x-backend-env: &backend-env
   GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai/v1}
   GROQ_DEFAULT_MODEL: ${GROQ_DEFAULT_MODEL:-qwen/qwen3.8-27b}
   GROQ_TIMEOUT_SECONDS: ${GROQ_TIMEOUT_SECONDS:-45}
+  WB_SERVICE_SECRET: ${WB_SERVICE_SECRET:-}
+  WB_INTEGRATION_MODE: ${WB_INTEGRATION_MODE:-cloud}
+  WB_SELF_HOSTED_SELLER_HASH: ${WB_SELF_HOSTED_SELLER_HASH:-}
+  LAVA_ENABLED: ${LAVA_ENABLED:-false}
+  LAVA_API_KEY: ${LAVA_API_KEY:-}
+  LAVA_PRODUCT_ID: ${LAVA_PRODUCT_ID:-}
+  LAVA_OFFER_ID: ${LAVA_OFFER_ID:-}
+  LAVA_WEBHOOK_SECRET: ${LAVA_WEBHOOK_SECRET:-}
+  YANDEX_OAUTH_ENABLED: ${YANDEX_OAUTH_ENABLED:-false}
+  YANDEX_OAUTH_CLIENT_ID: ${YANDEX_OAUTH_CLIENT_ID:-}
+  YANDEX_OAUTH_CLIENT_SECRET: ${YANDEX_OAUTH_CLIENT_SECRET:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
   SENTRY_TRACES_SAMPLE_RATE: "0.0"
   LOG_LEVEL: INFO
@@ -26,6 +37,8 @@ x-backend-env: &backend-env
   SECURITY_HEADERS_ENABLED: "true"
   FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
   DEPLOYMENT_VERSION: local
+  MARKETPLACE_SCHEDULER_INTERVAL_SECONDS: ${MARKETPLACE_SCHEDULER_INTERVAL_SECONDS:-30}
+  MARKETPLACE_SCHEDULER_BATCH_SIZE: ${MARKETPLACE_SCHEDULER_BATCH_SIZE:-25}
 
 services:
   postgres:
@@ -97,6 +110,19 @@ services:
     build:
       context: ../..
       dockerfile: apps/worker/Dockerfile
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: apps/scheduler/Dockerfile
     environment: *backend-env
     depends_on:
       migrate:

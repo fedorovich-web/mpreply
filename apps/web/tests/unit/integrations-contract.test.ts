@@ -38,6 +38,10 @@ describe("marketplace integration API contracts", () => {
     expect(() => marketplaceAccountSchema.parse({ ...account, organization_id: "not-a-uuid" })).toThrow();
   });
 
+  it("rejects an unknown response mode instead of silently changing it", () => {
+    expect(() => marketplaceAccountSchema.parse({ ...account, default_response_mode: "unknown" })).toThrow();
+  });
+
   it("accepts validation, rotation and sync result contracts", () => {
     expect(
       marketplaceAccountValidateSchema.parse({
@@ -61,19 +65,21 @@ describe("marketplace integration API contracts", () => {
       }).status,
     ).toBe("pending_validation");
 
-    expect(
-      marketplaceSyncSchema.parse({
-        account_id: account.id,
-        marketplace: "wildberries",
-        status: "success",
-        imported_reviews: 4,
-        imported_questions: 3,
-        updated_reviews: 1,
-        updated_questions: 2,
-        skipped: 0,
-        error_code: null,
-        error_message_safe: null,
-      }).imported_reviews,
-    ).toBe(4);
+    const syncResponse = {
+      account_id: account.id,
+      marketplace: "wildberries",
+      status: "success",
+      imported_reviews: 4,
+      imported_questions: 3,
+      imported_chats: 0,
+      updated_reviews: 1,
+      updated_questions: 2,
+      updated_chats: 0,
+      skipped: 0,
+      error_code: null,
+      error_message_safe: null,
+    };
+    expect(marketplaceSyncSchema.parse(syncResponse).imported_reviews).toBe(4);
+    expect(marketplaceSyncSchema.parse({ ...syncResponse, status: "partial" }).status).toBe("partial");
   });
 });

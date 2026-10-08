@@ -13,12 +13,8 @@ class Subscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "subscriptions"
     __table_args__ = (UniqueConstraint("organization_id", name="uq_subscriptions_organization"),)
 
-    organization_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    plan_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("billing_plans.id"), nullable=False, index=True
-    )
+    organization_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    plan_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("billing_plans.id"), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(32), default="active", nullable=False, index=True)
     current_period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

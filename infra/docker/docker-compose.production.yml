@@ -1,8 +1,8 @@
-name: respio-production
+name: mpreply-production
 
 x-backend-env: &backend-env
   APP_ENV: production
-  APP_NAME: Respio
+  APP_NAME: MPReply
   APP_VERSION: 0.1.27
   API_BASE_URL: ${API_BASE_URL:?API_BASE_URL is required}
   WEB_APP_URL: ${WEB_APP_URL:?WEB_APP_URL is required}
@@ -14,20 +14,42 @@ x-backend-env: &backend-env
   AUTH_REFRESH_TOKEN_TTL_DAYS: ${AUTH_REFRESH_TOKEN_TTL_DAYS:-30}
   AUTH_COOKIE_SECURE: "true"
   AUTH_COOKIE_SAMESITE: ${AUTH_COOKIE_SAMESITE:-lax}
+  AUTH_EMAIL_VERIFICATION_TTL_HOURS: ${AUTH_EMAIL_VERIFICATION_TTL_HOURS:-24}
+  AUTH_PASSWORD_RESET_TTL_MINUTES: ${AUTH_PASSWORD_RESET_TTL_MINUTES:-30}
+  AUTH_ACTION_TOKEN_COOLDOWN_SECONDS: ${AUTH_ACTION_TOKEN_COOLDOWN_SECONDS:-60}
   CREDENTIALS_ENCRYPTION_KEY: ${CREDENTIALS_ENCRYPTION_KEY:?CREDENTIALS_ENCRYPTION_KEY is required}
+  RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+  RESEND_API_URL: ${RESEND_API_URL:-https://api.resend.com/emails}
+  RESEND_TIMEOUT_SECONDS: ${RESEND_TIMEOUT_SECONDS:-10}
+  TRANSACTIONAL_EMAIL_FROM: ${TRANSACTIONAL_EMAIL_FROM:-MPReply <no-reply@mpreply.ru>}
+  SUPPORT_EMAIL: ${SUPPORT_EMAIL:-support@mpreply.ru}
+  LAVA_ENABLED: ${LAVA_ENABLED:-false}
+  LAVA_API_KEY: ${LAVA_API_KEY:-}
+  LAVA_WEBHOOK_SECRET: ${LAVA_WEBHOOK_SECRET:-}
+  LAVA_OFFER_ID: ${LAVA_OFFER_ID:-}
+  LAVA_PRODUCT_ID: ${LAVA_PRODUCT_ID:-}
+  YANDEX_OAUTH_ENABLED: ${YANDEX_OAUTH_ENABLED:-false}
+  YANDEX_OAUTH_CLIENT_ID: ${YANDEX_OAUTH_CLIENT_ID:-}
+  YANDEX_OAUTH_CLIENT_SECRET: ${YANDEX_OAUTH_CLIENT_SECRET:-}
   GROQ_API_KEY: ${GROQ_API_KEY:?GROQ_API_KEY is required}
   GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai/v1}
   GROQ_DEFAULT_MODEL: ${GROQ_DEFAULT_MODEL:-qwen/qwen3.8-27b}
   GROQ_TIMEOUT_SECONDS: ${GROQ_TIMEOUT_SECONDS:-45}
+  WB_SERVICE_SECRET: ${WB_SERVICE_SECRET:-}
+  WB_INTEGRATION_MODE: ${WB_INTEGRATION_MODE:-cloud}
+  WB_SELF_HOSTED_SELLER_HASH: ${WB_SELF_HOSTED_SELLER_HASH:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
   SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.05}
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS JSON array is required}
   ALLOWED_HOSTS: ${ALLOWED_HOSTS:?ALLOWED_HOSTS JSON array is required}
   READINESS_TIMEOUT_SECONDS: ${READINESS_TIMEOUT_SECONDS:-3.0}
   SECURITY_HEADERS_ENABLED: "true"
   FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:?FORWARDED_ALLOW_IPS is required}
   DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:?DEPLOYMENT_VERSION is required}
+  MARKETPLACE_SCHEDULER_INTERVAL_SECONDS: ${MARKETPLACE_SCHEDULER_INTERVAL_SECONDS:-30}
+  MARKETPLACE_SCHEDULER_BATCH_SIZE: ${MARKETPLACE_SCHEDULER_BATCH_SIZE:-25}
 
 services:
   migrate:
@@ -54,7 +76,7 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3).read()"]
+      test: ["CMD", "python", "-c", "import os, urllib.parse, urllib.request; request = urllib.request.Request('http://127.0.0.1:8000/health/ready', headers={'Host': urllib.parse.urlparse(os.environ['API_BASE_URL']).netloc}); urllib.request.urlopen(request, timeout=3).read()"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -85,13 +107,30 @@ services:
       - /tmp
     restart: unless-stopped
 
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: apps/scheduler/Dockerfile
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
   web:
     build:
       context: ../../apps/web
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?PUBLIC_SITE_URL is required}
-        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-support@mpreply.ru}
         NEXT_PUBLIC_API_BASE_URL: ${API_BASE_URL:?API_BASE_URL is required}
         DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:?DEPLOYMENT_VERSION is required}
     environment:

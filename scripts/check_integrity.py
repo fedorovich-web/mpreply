@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.27"
-EXPECTED_ALEMBIC_HEAD = "20260710_0009"
+EXPECTED_ALEMBIC_HEAD = "20261001_0020"
 
 ERRORS: list[str] = []
 
@@ -44,12 +44,19 @@ def check_public_routes() -> None:
 def resolve_ts_import(source: Path, specifier: str) -> bool:
     if not specifier.startswith("."):
         return True
+    # Next.js writes these declarations during type generation/build. The
+    # repository integrity gate also runs before any frontend build in CI.
+    if source == WEB / "next-env.d.ts" and specifier in {
+        "./.next/types/routes.d.ts",
+        "./.next/types/root-params.d.ts",
+    }:
+        return True
     base = (source.parent / specifier).resolve()
     candidates = [
         base,
-        base.with_suffix(".ts"),
-        base.with_suffix(".tsx"),
-        base.with_suffix(".js"),
+        Path(f"{base}.ts"),
+        Path(f"{base}.tsx"),
+        Path(f"{base}.js"),
         base / "index.ts",
         base / "index.tsx",
         base / "index.js",
@@ -58,12 +65,19 @@ def resolve_ts_import(source: Path, specifier: str) -> bool:
 
 
 def check_ts_imports() -> None:
-    import_pattern = re.compile(r'(?:from\s+|import\s*\()\s*["\']([^"\']+)["\']')
+    static_import_pattern = re.compile(
+        r'^\s*import\s+(?:.*?\s+from\s+)?["\']([^"\']+)["\']',
+        flags=re.M | re.S,
+    )
+    reexport_pattern = re.compile(
+        r'^\s*export\s+(?:\*|\{[^}]*\})\s+from\s+["\']([^"\']+)["\']',
+        flags=re.M,
+    )
     for source in list(WEB.rglob("*.ts")) + list(WEB.rglob("*.tsx")):
         if any(part in {"node_modules", ".next"} for part in source.parts):
             continue
         text = source.read_text(encoding="utf-8")
-        for specifier in import_pattern.findall(text):
+        for specifier in static_import_pattern.findall(text) + reexport_pattern.findall(text):
             if not resolve_ts_import(source, specifier):
                 fail(f"Unresolved relative TypeScript import: {source.relative_to(ROOT)} -> {specifier}")
 
@@ -161,13 +175,12 @@ def check_versions_and_frontend_security_baseline() -> None:
         fail(f"Web health route version != {EXPECTED_VERSION}")
 
     expected_dependencies = {
-        ("dependencies", "next"): "16.3.4",
-        ("devDependencies", "eslint-config-next"): "16.3.4",
+        ("dependencies", "next"): "16.3.8",
+        ("devDependencies", "eslint-config-next"): "16.3.8",
         ("devDependencies", "vitest"): "5.0.0",
         ("devDependencies", "@testing-library/react"): "16.3.2",
         ("devDependencies", "@testing-library/jest-dom"): "6.9.1",
         ("devDependencies", "jsdom"): "29.1.1",
-        ("devDependencies", "impeccable"): "3.2.1",
         ("devDependencies", "@playwright/test"): "1.61.1",
         ("devDependencies", "playwright-core"): "1.61.1",
         ("devDependencies", "@axe-core/playwright"): "4.12.1",
@@ -175,6 +188,7 @@ def check_versions_and_frontend_security_baseline() -> None:
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
         ("overrides", "postcss"): "8.5.28",
+        ("overrides", "qs"): "6.16.0",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
     }
@@ -187,8 +201,9 @@ def check_versions_and_frontend_security_baseline() -> None:
         "test:unit": "vitest run tests/unit",
         "test:design-tokens": "vitest run tests/design",
         "test:frontend": "npm run test:unit && npm run test:design-tokens",
-        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts --project=chromium",
-        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts e2e/dark-theme-accessibility.spec.ts --project=chromium",
+        "test:security": "playwright test e2e/security-headers.spec.ts --project=chromium --config=playwright.visual.config.ts",
+        "test:e2e": "playwright test e2e/public-site.spec.ts e2e/help-center.spec.ts e2e/contact-form.spec.ts e2e/public-mockup-runtime.spec.ts e2e/automation-rules.spec.ts e2e/ai-assistant.spec.ts e2e/integrations.spec.ts e2e/app-shell-responsive.spec.ts e2e/lava-yandex.spec.ts --project=chromium",
+        "test:a11y": "playwright test e2e/accessibility.spec.ts e2e/automation-rules-accessibility.spec.ts e2e/ai-assistant-accessibility.spec.ts e2e/integrations-accessibility.spec.ts e2e/dark-theme-accessibility.spec.ts e2e/lava-yandex.spec.ts --project=chromium",
         "validate:css-syntax": "csstree-validator styles",
         "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
         "validate:w3c:css": "node scripts/validate-w3c-css.mjs",
@@ -210,14 +225,14 @@ def check_release_gate_contract() -> None:
         "--pythonpath $VenvPython app",
         "Backend environment smoke test",
         "Backend dependency consistency",
+        "Backend dependency security audit",
+        "& $VenvPipAudit --strict .",
         "Frontend production dependency security audit",
         "& $Npm audit --omit=dev --audit-level=high",
         "Frontend unit tests",
         "& $Npm run test:unit",
         "Design token tests",
         "& $Npm run test:design-tokens",
-        "Frontend design anti-pattern scan",
-        "& $Npm run design:detect",
         "Frontend CSS syntax validation",
         "& $Npm run validate:css-syntax",
         "Frontend W3C HTML and CSS validation",
@@ -226,6 +241,11 @@ def check_release_gate_contract() -> None:
         "& $Npm run test:e2e",
         "Frontend accessibility",
         "& $Npm run test:a11y",
+        "Frontend visual regression",
+        "& $Npm run test:security",
+        "& $Npm run test:visual:run",
+        "Frontend Lighthouse",
+        "& $Npm run lighthouse",
         "Release gate stopped",
     ]
     for token in required_local_tokens:
@@ -243,12 +263,13 @@ def check_release_gate_contract() -> None:
     for token in [
         "npm run test:unit",
         "npm run test:design-tokens",
-        "npm run design:detect",
         "npm run validate:css-syntax",
         "npm run validate:w3c",
         "npx playwright install --with-deps chromium",
         "npm run test:e2e",
         "npm run test:a11y",
+        "npm run test:security",
+        "npm run test:visual:run",
         "npm run lighthouse",
     ]:
         if token not in workflow:
@@ -296,10 +317,11 @@ def check_deployment_contract() -> None:
         ROOT / "PRODUCT.md",
         ROOT / "DESIGN.md",
         ROOT / "AGENTS.md",
+        WEB / "knip.json",
         WEB / "vitest.config.ts",
         WEB / "vitest.setup.ts",
         WEB / "tests" / "unit" / "api-client.test.ts",
-        WEB / "tests" / "unit" / "theme-toggle.test.tsx",
+        WEB / "tests" / "unit" / "brand-theme-contract.test.ts",
         WEB / "tests" / "unit" / "automation-rules-contract.test.ts",
         WEB / "tests" / "unit" / "automation-rules-workspace.test.tsx",
         WEB / "tests" / "unit" / "ai-assistant-contract.test.ts",
@@ -322,6 +344,10 @@ def check_deployment_contract() -> None:
         WEB / "e2e" / "helpers" / "ai-assistant-api.ts",
         WEB / "components" / "integrations" / "IntegrationsWorkspace.tsx",
         WEB / "components" / "integrations" / "WildberriesIntegrationWorkspace.tsx",
+        WEB / "components" / "integrations" / "OzonIntegrationWorkspace.tsx",
+        WEB / "components" / "integrations" / "YandexMarketIntegrationWorkspace.tsx",
+        WEB / "components" / "integrations" / "AvitoIntegrationWorkspace.tsx",
+        WEB / "proxy.ts",
         WEB / "tests" / "unit" / "integrations-contract.test.ts",
         WEB / "tests" / "unit" / "integrations-workspace.test.tsx",
         WEB / "e2e" / "helpers" / "integrations-api.ts",
@@ -352,7 +378,6 @@ def check_deployment_contract() -> None:
         ROOT / "docs" / "qa" / "patch-0.1.25-release-report.md",
         ROOT / "docs" / "qa" / "patch-0.1.26-release-report.md",
         ROOT / "vendor" / "npm" / "README.md",
-        ROOT / "vendor" / "npm" / "impeccable-3.2.1.tgz",
         ROOT / "vendor" / "npm" / "playwright-test-1.61.1.tgz",
         ROOT / "vendor" / "npm" / "axe-core-playwright-4.12.1.tgz",
         ROOT / "vendor" / "npm" / "lhci-cli-0.15.1.tgz",

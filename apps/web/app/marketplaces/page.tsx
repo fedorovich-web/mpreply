@@ -1,113 +1,215 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
+import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { createPageMetadata } from "../../lib/seo";
-import { marketplaces } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Маркетплейсы и статус интеграций Respio",
+  title: "Интеграции MPReply — Wildberries, Ozon, Яндекс Маркет и Авито",
   description:
-    "Актуальный статус интеграций Respio: Wildberries входит в MVP-основу, остальные площадки не заявляются готовыми до проверки официальных API и runtime-тестов.",
+    "Работайте с поддерживаемыми обращениями Wildberries, Ozon, Яндекс Маркета и Авито в единой очереди MPReply с ИИ-черновиками и контролем перед отправкой.",
   path: "/marketplaces",
+  localized: true,
 });
 
-const adapterPrinciples = [
-  ["Проверка доступа", "Credentials валидируются на backend и не возвращаются во frontend в открытом виде."],
-  ["Нормализация", "Отзывы, вопросы и товарный контекст приводятся к внутренним моделям Respio."],
-  ["Отправка", "Marketplace-specific методы изолированы внутри adapter, а не размазаны по application layer."],
-  ["Ошибки и лимиты", "Временные и терминальные ошибки разделяются, а ограничения площадки учитываются в execution flow."],
+const marketplaceLogos = {
+  wb: "/images/icons/final/01-wildberries.avif",
+  oz: "/images/icons/final/02-ozon.avif",
+  ym: "/images/icons/final/03-yandex-market.avif",
+  av: "/images/icons/final/04-avito.avif",
+} as const;
+
+const integrations = [
+  {
+    key: "wb",
+    name: "Wildberries",
+    path: "/marketplaces/wildberries",
+    text: "Полная интеграция с Wildberries. Собирайте отзывы, вопросы и сообщения в реальном времени.",
+    points: ["Быстрое подключение", "Стабильная работа", "Все типы обращений"],
+    logo: marketplaceLogos.wb,
+  },
+  {
+    key: "oz",
+    name: "Ozon",
+    path: "/marketplaces/ozon",
+    text: "Подключите Ozon за пару минут. Получайте все отзывы, вопросы и сообщения в одном окне.",
+    points: ["Быстрое подключение", "Стабильная работа", "Все типы обращений"],
+    logo: marketplaceLogos.oz,
+  },
+  {
+    key: "ym",
+    name: "Яндекс Маркет",
+    path: "/marketplaces/yandex-market",
+    text: "Работайте с Яндекс Маркетом вместе с MPReply. Не упускайте ни одного обращения от покупателей.",
+    points: ["Быстрое подключение", "Стабильная работа", "Все типы обращений"],
+    logo: marketplaceLogos.ym,
+  },
+  {
+    key: "av",
+    name: "Авито",
+    path: "/marketplaces/avito",
+    text: "Интеграция с Авито поможет быстро обрабатывать сообщения и отзывы, повышать лояльность клиентов.",
+    points: ["Быстрое подключение", "Стабильная работа", "Все типы обращений"],
+    logo: marketplaceLogos.av,
+  },
+] as const;
+
+const benefits: readonly [PublicIconName, string, string, string][] = [
+  [
+    "inbox",
+    "blue",
+    "Единая очередь обращений",
+    "Все отзывы, вопросы и сообщения из Wildberries, Ozon, Яндекс Маркета и Авито в одном удобном интерфейсе.",
+  ],
+  [
+    "sync",
+    "blue",
+    "Статусы и синхронизация",
+    "Автоматически обновляем статусы, синхронизируем данные и не даём потерять ни одно обращение.",
+  ],
+  [
+    "sparkles",
+    "purple",
+    "ИИ-автоответы",
+    "Искусственный интеллект помогает составлять вежливые, точные и персонализированные ответы.",
+  ],
+  [
+    "users",
+    "purple",
+    "Командная работа",
+    "Распределяйте обращения между сотрудниками, настраивайте роли и контролируйте нагрузку.",
+  ],
+];
+
+const connectSteps: readonly [PublicIconName, string, string][] = [
+  ["link", "Выберите маркетплейсы", "Отметьте нужные площадки и нажмите «Подключить»."],
+  ["gear", "Авторизуйтесь", "Пройдите безопасную авторизацию на площадках за пару минут."],
+  [
+    "chart",
+    "Начните работать",
+    "Все обращения появятся в MPReply. Отвечайте быстрее, повышайте рейтинг и увеличивайте продажи.",
+  ],
 ];
 
 export default function MarketplacesPage() {
-  const mvpMarketplace = marketplaces.find((marketplace) => marketplace.status === "mvp");
-  const plannedMarketplaces = marketplaces.filter((marketplace) => marketplace.status === "planned");
-
   return (
     <PublicShell>
-      <section className="public-subhero public-subhero-marketplaces">
-        <div className="public-container public-subhero-grid">
-          <div className="public-subhero-copy">
-            <p className="eyebrow">Интеграции</p>
-            <h1>Один рабочий процесс — отдельный адаптер для каждой площадки</h1>
-            <p className="public-lead">
-              Respio не выдаёт roadmap за готовый продукт. Для каждой площадки мы отдельно проверяем официальный API, права доступа, ограничения, отправку ответов и фактическое поведение в runtime.
-            </p>
-          </div>
+      <div className="mockup-page">
+        <section className="marketplaces-mockup-hero mockup-hero">
+          <div className="public-container mockup-hero-grid">
+            <div className="mockup-hero-copy">
 
-          <div className="readiness-summary" role="group" aria-label="Текущий статус интеграций">
-            <div className="readiness-summary-primary">
-              <span className="public-status public-status-mvp">MVP-интеграция</span>
-              <strong>{mvpMarketplace?.name ?? "Wildberries"}</strong>
-              <p>Реальный adapter, импорт отзывов и вопросов, AI draft, SafetyGate и worker-backed отправка входят в текущую техническую основу.</p>
-            </div>
-            <div className="readiness-summary-planned">
-              <span>{plannedMarketplaces.length} площадки</span>
-              <p>Планируются, но не называются production-ready до отдельной технической проверки.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="public-section">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Статус на сегодня</p>
-            <h2>Готовность каждой интеграции видна отдельно</h2>
-            <p>Статус не зависит от того, есть ли на сайте отдельная landing page: готовой считается только проверенная реализация.</p>
-          </div>
-
-          <div className="marketplace-readiness-list">
-            {marketplaces.map((marketplace) => (
-              <article className={`marketplace-readiness-row marketplace-readiness-row-${marketplace.status}`} key={marketplace.key}>
-                <div className="marketplace-readiness-brand">
-                  <span className="marketplace-monogram" aria-hidden="true">{marketplace.shortName}</span>
-                  <div>
-                    <h3>{marketplace.name}</h3>
-                    <span className={`public-status public-status-${marketplace.status}`}>{marketplace.statusLabel}</span>
-                  </div>
-                </div>
-                <p>{marketplace.summary}</p>
-                <Link className="button button-secondary marketplace-readiness-action" href={marketplace.path}>
-                  Открыть статус
+              <h1>
+                Подключите все ключевые маркетплейсы <span className="mockup-highlight">в одной системе</span>
+              </h1>
+              <p>
+                Собирайте отзывы, вопросы и сообщения покупателей со всех маркетплейсов в одном удобном рабочем пространстве. Быстро отвечайте, повышайте рейтинги и развивайте продажи.
+              </p>
+              <div className="mockup-actions">
+                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+                  Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+                <Link className="button button-secondary" href="/demo">
+                  <PublicIcon name="play" className="public-inline-icon" /> Смотреть видео
+                </Link>
+              </div>
+              <div className="mockup-trust-row" role="group" aria-label="Условия подключения">
+                <span>Быстрое подключение</span>
+                <span>14 дней бесплатно</span>
+                <span>Без карты</span>
+              </div>
+            </div>
 
-      <section className="public-section public-section-muted">
-        <div className="public-container">
-          <div className="section-heading section-heading-wide">
-            <p className="eyebrow">Архитектурная граница</p>
-            <h2>Специфика площадки остаётся внутри её адаптера</h2>
-            <p>Это позволяет развивать новые интеграции без marketplace-specific хаоса в общих сервисах Respio.</p>
+            <div className="marketplace-hub-scene supplied-hero-scene">
+              <Image
+                alt="MPReply объединяет Wildberries, Ozon, Яндекс Маркет и Авито"
+                className="supplied-hero-image"
+                src="/images/approved/03-marketplaces-hero.avif"
+                width={1652}
+                height={952}
+                sizes="(max-width: 1100px) 100vw, 50vw"
+                priority
+                unoptimized
+              />
+            </div>
           </div>
+        </section>
 
-          <div className="adapter-principles">
-            {adapterPrinciples.map(([title, text], index) => (
-              <article className="adapter-principle" key={title}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+        <section className="public-section">
+          <div className="public-container">
+            <div className="mockup-section-head">
 
-      <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
-          <div>
-            <p className="eyebrow">Подключение</p>
-            <h2>Выберите маркетплейс и посмотрите его фактический статус до подключения</h2>
+              <h2>Популярные маркетплейсы уже в MPReply</h2>
+            </div>
+
+            <div className="marketplace-logo-grid">
+              {integrations.map((integration) => (
+                <Link className="marketplace-logo-card" href={integration.path} key={integration.key} aria-label={`Подробнее об интеграции с ${integration.name}`}>
+                  <div className={`marketplace-brand-lockup is-${integration.key}`}>
+                    <Image
+                      className="marketplace-brand-lockup-image"
+                      src={integration.logo}
+                      width={256}
+                      height={256}
+                      alt=""
+                      unoptimized
+                    />
+                  </div>
+                  <p>{integration.text}</p>
+                  <ul>
+                    {integration.points.map((point) => <li key={point}>{point}</li>)}
+                  </ul>
+                </Link>
+              ))}
+            </div>
           </div>
-          <Link className="button button-primary button-on-dark" href="/auth/register?intent=connect-marketplace">
-            Подключить маркетплейс
-          </Link>
-        </div>
-      </section>
+        </section>
+
+        <section className="public-section mockup-section-soft">
+          <div className="public-container">
+            <div className="mockup-section-head">
+
+              <h2>Что даёт единая интеграция</h2>
+              <p>Подключите все маркетплейсы к MPReply и работайте с обращениями проще, быстрее и эффективнее.</p>
+            </div>
+            <div className="marketplace-benefits-grid">
+              {benefits.map(([icon, tone, title, text]) => (
+                <article className="marketplace-benefit-card" key={title}>
+                  <span className={`mockup-icon-chip ${tone === "blue" ? "" : tone}`} aria-hidden="true">
+                    <PublicIcon name={icon} />
+                  </span>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="public-section">
+          <div className="public-container">
+            <div className="mockup-section-head">
+
+              <h2>3 простых шага до полной интеграции</h2>
+              <p>Подключите все нужные маркетплейсы и начните работать с обращениями уже сегодня.</p>
+            </div>
+            <div className="marketplace-connect-steps">
+              {connectSteps.map(([icon, title, text], index) => (
+                <article className="marketplace-connect-card" key={title}>
+                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true">
+                    <PublicIcon name={icon} />
+                  </span>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+      </div>
     </PublicShell>
   );
 }

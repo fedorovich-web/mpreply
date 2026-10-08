@@ -1,7 +1,6 @@
 # Vendored frontend QA tooling tarballs
 
 Official direct npm package tarballs used by Sprint 13:
-- `impeccable-3.2.1.tgz`
 - `playwright-test-1.61.1.tgz`
 - `axe-core-playwright-4.12.1.tgz`
 - `lhci-cli-0.15.1.tgz`

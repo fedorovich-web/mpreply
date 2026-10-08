@@ -1,155 +1,376 @@
+import Image from "next/image";
 import Link from "next/link";
+import { JsonLd } from "../seo/JsonLd";
 
-import type { MarketplaceConfig } from "../../lib/site-config";
+import { getMarketplaceDetailContent } from "../../lib/marketplace-detail-content";
+import { getMarketplaceDetailContentEn } from "../../lib/marketplace-detail-content-en";
+import type { Locale } from "../../lib/i18n";
+import { getSiteConfig, type MarketplaceConfig, type MarketplaceKey } from "../../lib/site-config";
+import { PublicBrandMark } from "./PublicBrandMark";
+import { PublicIcon } from "./PublicIcon";
 import { PublicShell } from "./PublicShell";
 
 type MarketplaceLandingProps = {
   marketplace: MarketplaceConfig;
+  locale?: Locale;
 };
 
-const implementationChecks = [
-  "Проверить актуальный официальный API и доступные права",
-  "Подтвердить получение отзывов и вопросов в реальном кабинете",
-  "Проверить отправку ответа, статусы модерации и ограничения",
-  "Реализовать нормализацию, ошибки, лимиты и health-check",
-  "Пройти end-to-end тест с реальными credentials без утечки секретов",
-];
+const marketplaceLogos: Record<MarketplaceKey, { src: string; compactSrc: string; width: number; height: number }> = {
+  wildberries: {
+    src: "/images/icons/final/01-wildberries.avif",
+    compactSrc: "/images/icons/final/01-wildberries.avif",
+    width: 256,
+    height: 256,
+  },
+  ozon: {
+    src: "/images/icons/final/02-ozon.avif",
+    compactSrc: "/images/icons/final/02-ozon.avif",
+    width: 256,
+    height: 256,
+  },
+  "yandex-market": {
+    src: "/images/icons/final/03-yandex-market.avif",
+    compactSrc: "/images/icons/final/03-yandex-market.avif",
+    width: 256,
+    height: 256,
+  },
+  avito: {
+    src: "/images/icons/final/04-avito.avif",
+    compactSrc: "/images/brands/avito-sign-logo.svg",
+    width: 256,
+    height: 256,
+  },
+};
 
-export function MarketplaceLanding({ marketplace }: MarketplaceLandingProps) {
-  const isMvp = marketplace.status === "mvp";
+const approvedHeroImages: Record<MarketplaceKey, { src: string; width: number; height: number }> = {
+  wildberries: { src: "/images/approved/04-wildberries-hero-corrected.avif", width: 1736, height: 906 },
+  ozon: { src: "/images/approved/hero-ozon.avif", width: 1000, height: 563 },
+  "yandex-market": { src: "/images/approved/hero-yandex-market.avif", width: 1000, height: 563 },
+  avito: { src: "/images/approved/hero-avito.avif", width: 1000, height: 563 },
+};
+
+const sampleVisualIcons = {
+  product: "archive",
+  review: "star",
+  order: "archive",
+  listing: "message",
+} as const;
+
+function MultilineText({ value }: { value: string }) {
+  const lines = value.split("\n");
 
   return (
-    <PublicShell>
-      <section className="public-subhero public-subhero-marketplace-detail">
-        <div className="public-container public-subhero-grid">
-          <div className="public-subhero-copy">
-            <span className={`public-status public-status-${marketplace.status}`}>
-              {marketplace.statusLabel}
-            </span>
-            <p className="eyebrow">Respio × {marketplace.name}</p>
-            <h1>
-              {isMvp
-                ? `Автоматические ответы на отзывы и вопросы ${marketplace.name}`
-                : `Интеграция Respio с ${marketplace.name}: текущий статус и план проверки`}
-            </h1>
-            <p className="public-lead">{marketplace.summary}</p>
-            <div className="hero-actions">
-              <Link className="button button-primary" href={isMvp ? "/auth/register?intent=connect-marketplace" : "/contacts"}>
-                {isMvp ? "Подключить маркетплейс" : "Обсудить интеграцию"}
-              </Link>
-              <Link className="button button-secondary" href="/marketplaces">
-                Все маркетплейсы
-              </Link>
-            </div>
-          </div>
+    <>
+      {lines.map((line, index) => (
+        <span key={`${line}-${index}`}>
+          {index > 0 ? <br /> : null}
+          {line}
+        </span>
+      ))}
+    </>
+  );
+}
 
-          <aside className={`integration-status-panel integration-status-panel-${marketplace.status}`} aria-label="Статус интеграции">
-            <div className="integration-status-topline">
-              <span className="marketplace-monogram marketplace-monogram-large" aria-hidden="true">{marketplace.shortName}</span>
-              <span className={`public-status public-status-${marketplace.status}`}>{marketplace.statusLabel}</span>
-            </div>
-            <strong>{isMvp ? "Техническая основа уже существует" : "Production-доступность пока не заявляется"}</strong>
-            <p>
-              {isMvp
-                ? "Перед production-запуском всё равно нужны реальные API credentials, проверка scopes, rate limits и end-to-end тест с конкретным кабинетом."
-                : "Отдельная публичная страница не означает готовую интеграцию. Сначала нужно подтвердить официальный API-контракт и фактический сценарий отправки ответов."}
-            </p>
-          </aside>
-        </div>
-      </section>
+export function MarketplaceLanding({ marketplace, locale = "ru" }: MarketplaceLandingProps) {
+  const logo = marketplaceLogos[marketplace.key];
+  const approvedHero = approvedHeroImages[marketplace.key];
+  const detailContent = locale === "en"
+    ? getMarketplaceDetailContentEn(marketplace.key)
+    : getMarketplaceDetailContent(marketplace.key);
+  const siteConfig = getSiteConfig(locale);
+  const copy = locale === "en"
+    ? {
+        integrations: "Integrations",
+        connect: "Connect",
+        viewDemo: "View demo",
+        startTerms: "Getting started",
+        imageLabel: "customer-message workflow in MPReply",
+        ago: "12 min ago",
+        ai: "AI",
+        useReply: "Use reply",
+        faq: "Frequently asked questions",
+      }
+    : {
+        integrations: "Интеграции",
+        connect: "Подключить",
+        viewDemo: "Посмотреть демо",
+        startTerms: "Условия старта",
+        imageLabel: "Обработка обращения в MPReply",
+        ago: "12 мин назад",
+        ai: "ИИ",
+        useReply: "Использовать ответ",
+        faq: "Частые вопросы",
+      };
+  const marketplacesPath = locale === "en" ? "/en/marketplaces" : "/marketplaces";
+  const demoPath = locale === "en" ? "/en/demo" : "/demo";
+  const registerPath = locale === "en"
+    ? "/en/auth/register?intent=connect-marketplace"
+    : "/auth/register?intent=connect-marketplace";
+  const sampleVisual = detailContent.sampleVisual;
+  const useApprovedProductCrop = marketplace.key === "wildberries" && sampleVisual === "product";
+  const sampleVisualIcon = useApprovedProductCrop ? null : sampleVisualIcons[sampleVisual];
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: copy.integrations,
+        item: `${siteConfig.origin}${marketplacesPath}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: marketplace.name,
+        item: `${siteConfig.origin}${marketplace.path}`,
+      },
+    ],
+  };
 
-      {isMvp ? (
-        <>
-          <section className="public-section">
-            <div className="public-container">
-              <div className="section-heading section-heading-wide">
-                <p className="eyebrow">Что уже входит в MVP-основу</p>
-                <h2>Путь от импорта обращения до контролируемой отправки</h2>
-                <p>Это описание текущей технической реализации, а не обещание production-готовности без проверки реального кабинета.</p>
+  return (
+    <PublicShell locale={locale}>
+      <JsonLd data={breadcrumbJsonLd} />
+      <div className={`mockup-page marketplace-detail-page is-${marketplace.key}`}>
+        <section className="marketplace-detail-mockup-hero">
+          <div className="public-container marketplace-detail-mockup-grid">
+            <div className="marketplace-detail-mockup-copy">
+
+              <h1>{detailContent.heroTitle}</h1>
+              <p>{detailContent.heroDescription}</p>
+              <div className="mockup-actions">
+                <Link className="button button-primary" href={registerPath}>
+                  {copy.connect} {marketplace.name} <span aria-hidden="true">→</span>
+                </Link>
+                <Link className="button button-secondary" href={demoPath}>
+                  <PublicIcon name="play" className="public-inline-icon" /> {copy.viewDemo}
+                </Link>
               </div>
-
-              <div className="integration-flow-list" role="group" aria-label="Этапы обработки обращения">
-                {[
-                  ["01", "Получить и нормализовать", "Adapter получает отзывы и вопросы, приводит payload к внутренним моделям и подавляет дубли."],
-                  ["02", "Подготовить ответ", "AI использует необходимый контекст, а система фиксирует модель, токены, задержку и стоимость."],
-                  ["03", "Проверить через SafetyGate", "Рискованные обещания, недостаток контекста и низкая уверенность могут остановить автоотправку."],
-                  ["04", "Применить правила и квоты", "Учитываются тип обращения, рейтинг, ключевые слова, товары, чувствительные темы и лимиты."],
-                  ["05", "Отправить через очередь", "Worker выполняет задачу, временные ошибки могут перейти в retry, результат фиксируется в audit trail."],
-                ].map(([number, title, text]) => (
-                  <article className="integration-flow-row" key={number}>
-                    <span>{number}</span>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                  </article>
+              <div className="mockup-trust-row" role="group" aria-label={copy.startTerms}>
+                {detailContent.trustItems.map((item) => (
+                  <span key={item}>{item}</span>
                 ))}
               </div>
             </div>
-          </section>
 
-          <section className="public-section public-section-muted">
-            <div className="public-container public-two-column public-two-column-balanced">
-              <div>
-                <p className="eyebrow">Что ещё нужно подтвердить перед production</p>
-                <h2>Наличие кода — не то же самое, что проверенная интеграция</h2>
+            {locale === "ru" ? (
+              <div className="marketplace-detail-render supplied-hero-scene">
+                <Image
+                  alt={`Обращение ${marketplace.name} и подготовленный ИИ-черновик в MPReply`}
+                  className="supplied-hero-image"
+                  src={approvedHero.src}
+                  width={approvedHero.width}
+                  height={approvedHero.height}
+                  sizes="(max-width: 1100px) 100vw, 50vw"
+                  priority
+                  unoptimized
+                />
               </div>
-              <div className="public-check-list public-check-list-large">
-                <p>Права реального API-ключа и допустимые scopes.</p>
-                <p>Поведение API на реальных отзывах и вопросах.</p>
-                <p>Rate limits, модерация ответа и marketplace-specific ошибки.</p>
-                <p>End-to-end отправка, retry и защита от дублей с конкретным кабинетом.</p>
-              </div>
-            </div>
-          </section>
-        </>
-      ) : (
-        <>
-          <section className="public-section">
-            <div className="public-container">
-              <div className="section-heading section-heading-wide">
-                <p className="eyebrow">До начала реализации</p>
-                <h2>Пять проверок, без которых интеграция не считается готовой</h2>
-                <p>Мы не создаём пустой adapter и не показываем неподтверждённую функцию как доступную пользователю.</p>
-              </div>
+            ) : (
+              <div
+                className="marketplace-detail-render"
+                role="group"
+                aria-label={`${marketplace.name} ${copy.imageLabel}`}
+              >
+                <div className="detail-market-card">
+                  <div className="detail-market-logo">
+                    <Image
+                      className="marketplace-detail-logo"
+                      src={logo.src}
+                      width={logo.width}
+                      height={logo.height}
+                      alt={marketplace.name}
+                      unoptimized
+                    />
+                  </div>
+                  <div className="detail-market-message">
+                    <strong>{detailContent.sampleType} · {copy.ago}</strong>
+                    {detailContent.sampleMessage}
+                  </div>
+                  <div className="detail-product-row">
+                    <span
+                      className={`detail-product-thumb is-${sampleVisual} is-${marketplace.key}`}
+                      aria-hidden="true"
+                    >
+                      {sampleVisualIcon ? <PublicIcon name={sampleVisualIcon} /> : null}
+                    </span>
+                    <span>
+                      <MultilineText value={detailContent.sampleContext} />
+                    </span>
+                  </div>
+                </div>
 
-              <ol className="integration-checklist">
-                {implementationChecks.map((item, index) => (
-                  <li key={item}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <p>{item}</p>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section>
+                <div className="detail-app-window">
+                  <div className="detail-app-top">
+                    <div className="detail-app-brand">
+                      <PublicBrandMark />
+                    </div>
+                  </div>
+                  <div className="detail-app-body">
+                    <aside className="detail-sidebar" aria-hidden="true">
+                      {detailContent.sidebarItems.map((item) => (
+                        <span
+                          className={item.active ? "detail-sidebar-item is-active" : "detail-sidebar-item"}
+                          key={item.label}
+                        >
+                          <PublicIcon name={item.icon} />
+                          {item.label}
+                          {item.count !== undefined ? <b>{item.count}</b> : null}
+                        </span>
+                      ))}
+                    </aside>
+                    <div className="detail-question">
+                      <div className="detail-question-top">
+                        <Image
+                          className="marketplace-detail-compact-logo"
+                          src={logo.compactSrc}
+                          width={64}
+                          height={64}
+                          alt=""
+                          aria-hidden="true"
+                          unoptimized
+                        />
+                        <strong>{detailContent.sampleType}</strong>
+                        <span>{copy.ago}</span>
+                      </div>
+                      <h2>{detailContent.sampleMessage}</h2>
+                      <p>{detailContent.sampleContext.replace("\n", " · ")}</p>
+                    </div>
+                  </div>
+                </div>
 
-          <section className="public-section public-section-muted">
-            <div className="public-container public-two-column public-two-column-balanced">
-              <div>
-                <p className="eyebrow">Что уже подготовлено на уровне продукта</p>
-                <h2>Новая площадка должна встроиться в общий pipeline, а не породить параллельную архитектуру</h2>
-              </div>
-              <div className="public-check-list public-check-list-large">
-                <p>Общие внутренние модели сообщений и товаров.</p>
-                <p>SafetyGate и правила автоматизации поверх нормализованного контекста.</p>
-                <p>Очередь, повторы, ключи идемпотентности и журнал событий.</p>
-                <p>Backend-only хранение зашифрованных marketplace credentials.</p>
-              </div>
-            </div>
-          </section>
-        </>
-      )}
+                <div className="detail-ai-card">
+                  <strong>
+                    <PublicIcon name="sparkles" className="public-inline-icon" /> {copy.ai}
+                  </strong>
+                  <p>{detailContent.sampleReply}</p>
+                  <span>{copy.useReply}</span>
+                </div>
 
-      <section className="public-section public-cta-section">
-        <div className="public-container public-cta-card">
-          <div>
-            <p className="eyebrow">Следующий шаг</p>
-            <h2>{isMvp ? "Посмотрите, как Respio принимает решение об автоматической отправке" : `Нужна интеграция с ${marketplace.name}? Обсудим реальный сценарий и API-доступ`}</h2>
+                <div className="detail-hero-note" aria-hidden="true">
+                  <MultilineText value={detailContent.heroNote} />
+                  <span>↙</span>
+                </div>
+                <div className="mockup-mascot detail-render-mascot" aria-hidden="true" />
+              </div>
+            )}
           </div>
-          <Link className="button button-primary button-on-dark" href={isMvp ? "/demo" : "/contacts"}>
-            {isMvp ? "Открыть демо" : "Обсудить интеграцию"}
-          </Link>
-        </div>
-      </section>
+        </section>
+
+        <section className="public-section">
+          <div className="public-container">
+            <div className="render-section-head">
+
+              <h2>{detailContent.toolsHeading}</h2>
+              <p>{detailContent.toolsDescription}</p>
+            </div>
+            <div className="marketplace-detail-tools">
+              {detailContent.tools.map((tool) => (
+                <article className="detail-tool-card" key={tool.title}>
+                  <span className={`mockup-icon-chip ${tool.tone === "blue" ? "" : tool.tone}`} aria-hidden="true">
+                    <PublicIcon name={tool.icon} />
+                  </span>
+                  <h3>{tool.title}</h3>
+                  <p>{tool.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="public-section mockup-section-soft">
+          <div className="public-container">
+            <div className="render-section-head">
+
+              <h2>{detailContent.stepsHeading}</h2>
+              <p>{detailContent.stepsDescription}</p>
+            </div>
+            <div className="marketplace-detail-steps">
+              {detailContent.steps.map((step, index) => (
+                <article className="detail-step-card" key={step.title}>
+                  <span className={`mockup-icon-chip ${index === 1 ? "purple" : ""}`} aria-hidden="true">
+                    <PublicIcon name={step.icon} />
+                  </span>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="public-section">
+          <div className="public-container">
+            <div className="render-section-head">
+
+              <h2>{detailContent.benefitsHeading}</h2>
+              <p>{detailContent.benefitsDescription}</p>
+            </div>
+            <div className="marketplace-detail-benefits">
+              {detailContent.benefits.map((benefit) => (
+                <article className="detail-benefit-card" key={benefit.title}>
+                  <span
+                    className={`mockup-icon-chip ${benefit.tone === "blue" ? "" : benefit.tone}`}
+                    aria-hidden="true"
+                  >
+                    <PublicIcon name={benefit.icon} />
+                  </span>
+                  <h3>{benefit.title}</h3>
+                  <p>{benefit.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="public-section mockup-section-soft">
+          <div className="public-container detail-faq-layout">
+            <div>
+
+              <h2>{copy.faq}</h2>
+              <p>{detailContent.faqIntro}</p>
+            </div>
+            <div className="marketplace-detail-faq">
+              {detailContent.faq.map((item) => (
+                <details key={item.question}>
+                  <summary className="detail-faq-summary">
+                    <span className="detail-faq-icon" aria-hidden="true">
+                      <PublicIcon name={item.icon} />
+                    </span>
+                    <span>{item.question}</span>
+                    <span className="detail-faq-chevron" aria-hidden="true">⌄</span>
+                  </summary>
+                  <p>{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="public-section public-cta-section">
+          <div className="public-container">
+            <div className="mockup-cta-strip">
+              <span className="mockup-cta-strip-icon" aria-hidden="true">
+                <PublicIcon name="send" />
+              </span>
+              <div className="mockup-cta-strip-copy">
+                <h2>{detailContent.finalTitle}</h2>
+                <p>{detailContent.finalDescription}</p>
+              </div>
+              <div className="mockup-cta-strip-side">
+                <Link className="button button-primary" href={registerPath}>
+                  {copy.connect} {marketplace.name} <span aria-hidden="true">→</span>
+                </Link>
+                <div className="mockup-trust-row" role="group" aria-label={copy.startTerms}>
+                  {detailContent.trustItems.map((item) => (
+                    <span key={`final-${item}`}>{item}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </PublicShell>
   );
 }

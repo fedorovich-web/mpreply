@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+
 import pytest
-from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
 from app.api import health as health_module
 from app.api.health import DependencyHealth
@@ -9,19 +11,22 @@ from app.main import app
 
 
 @pytest.fixture
-def client() -> TestClient:
-    return TestClient(app)
+async def client() -> AsyncIterator[AsyncClient]:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as test_client:
+        yield test_client
 
 
-def test_liveness_endpoint(client: TestClient) -> None:
-    response = client.get("/health/live")
+@pytest.mark.asyncio
+async def test_liveness_endpoint(client: AsyncClient) -> None:
+    response = await client.get("/health/live")
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 
-def test_request_id_and_security_headers(client: TestClient) -> None:
-    response = client.get("/health/live", headers={"X-Request-ID": "qa-request-123"})
+@pytest.mark.asyncio
+async def test_request_id_and_security_headers(client: AsyncClient) -> None:
+    response = await client.get("/health/live", headers={"X-Request-ID": "qa-request-123"})
 
     assert response.status_code == 200
     assert response.headers["X-Request-ID"] == "qa-request-123"
@@ -29,7 +34,8 @@ def test_request_id_and_security_headers(client: TestClient) -> None:
     assert response.headers["X-Frame-Options"] == "DENY"
 
 
-def test_readiness_success(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.asyncio
+async def test_readiness_success(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
     async def healthy_database(_: float) -> DependencyHealth:
         return DependencyHealth(status="ok", latency_ms=1.2)
 
@@ -39,13 +45,14 @@ def test_readiness_success(client: TestClient, monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(health_module, "_check_database", healthy_database)
     monkeypatch.setattr(health_module, "_check_redis", healthy_redis)
 
-    response = client.get("/health/ready")
+    response = await client.get("/health/ready")
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 
-def test_readiness_failure_returns_503(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.asyncio
+async def test_readiness_failure_returns_503(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
     async def healthy_database(_: float) -> DependencyHealth:
         return DependencyHealth(status="ok", latency_ms=1.0)
 
@@ -55,7 +62,7 @@ def test_readiness_failure_returns_503(client: TestClient, monkeypatch: pytest.M
     monkeypatch.setattr(health_module, "_check_database", healthy_database)
     monkeypatch.setattr(health_module, "_check_redis", failed_redis)
 
-    response = client.get("/health/ready")
+    response = await client.get("/health/ready")
 
     assert response.status_code == 503
     payload = response.json()

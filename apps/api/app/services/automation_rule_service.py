@@ -9,6 +9,7 @@ from app.automation.engine import AutomationEvaluationContext, AutomationEvaluat
 from app.core.errors import bad_request, not_found
 from app.models.automation_rule import AutomationRule
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.organization import OrganizationUser
 from app.models.user import User
 from app.schemas.automation_rule import AutomationRuleCreateRequest, AutomationRuleUpdateRequest
 from app.services.audit_service import AuditService
@@ -97,15 +98,22 @@ class AutomationRuleService:
         return list(result.scalars().all()), total
 
     async def get_rule(self, *, actor: User, rule_id: UUID) -> AutomationRule:
-        result = await self.session.execute(select(AutomationRule).where(AutomationRule.id == rule_id))
+        result = await self.session.execute(
+            select(AutomationRule)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == AutomationRule.organization_id,
+            )
+            .where(
+                AutomationRule.id == rule_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_READ_ROLES),
+            )
+        )
         rule = result.scalar_one_or_none()
         if rule is None:
             raise not_found("Automation rule not found")
-        await self.organization_service.require_membership_role(
-            organization_id=rule.organization_id,
-            user_id=actor.id,
-            allowed_roles=_READ_ROLES,
-        )
         return rule
 
     async def update_rule(

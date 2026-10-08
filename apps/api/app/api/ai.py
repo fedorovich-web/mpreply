@@ -25,6 +25,7 @@ async def generate_ai_draft(
     draft = await service.generate_draft(
         actor=current_user,
         message_id=payload.message_id,
+        operation_key=payload.operation_key,
         tone=payload.tone,
         temperature=payload.temperature,
         max_tokens=payload.max_tokens,

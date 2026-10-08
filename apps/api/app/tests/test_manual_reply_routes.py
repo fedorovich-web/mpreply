@@ -1,15 +1,9 @@
-from fastapi.routing import APIRoute
-
 from app.main import app
 
 
 def test_manual_reply_workflow_routes_are_registered() -> None:
-    routes = {
-        (route.path, method)
-        for route in app.routes
-        if isinstance(route, APIRoute)
-        for method in route.methods
-    }
+    paths = app.openapi()["paths"]
+    routes = {(path, method.upper()) for path, operations in paths.items() for method in operations}
 
     expected = {
         ("/api/replies/manual", "POST"),

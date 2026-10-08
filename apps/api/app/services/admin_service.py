@@ -27,16 +27,10 @@ class AdminService:
         since_24h = now - timedelta(hours=24)
 
         organizations_total = await self._scalar_count(select(func.count(Organization.id)))
-        organizations_active = await self._scalar_count(
-            select(func.count(Organization.id)).where(Organization.status == "active")
-        )
+        organizations_active = await self._scalar_count(select(func.count(Organization.id)).where(Organization.status == "active"))
         users_total = await self._scalar_count(select(func.count(User.id)))
-        subscriptions_active = await self._scalar_count(
-            select(func.count(Subscription.id)).where(Subscription.status.in_({"active", "trialing"}))
-        )
-        usage_events_30d = await self._scalar_count(
-            select(func.count(UsageEvent.id)).where(UsageEvent.created_at >= since_30d)
-        )
+        subscriptions_active = await self._scalar_count(select(func.count(Subscription.id)).where(Subscription.status.in_({"active", "trialing"})))
+        usage_events_30d = await self._scalar_count(select(func.count(UsageEvent.id)).where(UsageEvent.created_at >= since_30d))
         integration_failures_24h = await self._scalar_count(
             select(func.count(IntegrationEvent.id)).where(
                 IntegrationEvent.status == "failed",
@@ -49,9 +43,7 @@ class AdminService:
                 Reply.updated_at >= since_24h,
             )
         )
-        cost_result = await self.session.execute(
-            select(func.coalesce(func.sum(AIDraft.cost_estimate), 0)).where(AIDraft.created_at >= since_30d)
-        )
+        cost_result = await self.session.execute(select(func.coalesce(func.sum(AIDraft.cost_estimate), 0)).where(AIDraft.created_at >= since_30d))
         cost_raw = cost_result.scalar_one()
         cost = float(cost_raw) if isinstance(cost_raw, (Decimal, float, int)) else 0.0
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "../../styles/dashboard";
 
 import { AppShell } from "../../components/app-shell/AppShell";
 import { AppProviders } from "../../components/providers/AppProviders";
@@ -6,6 +7,10 @@ import { WorkspaceProvider } from "../../components/workspace/WorkspaceProvider"
 
 export const metadata: Metadata = {
   title: "Workspace",
+  description: null,
+  alternates: null,
+  openGraph: null,
+  twitter: null,
   robots: {
     index: false,
     follow: false,

@@ -92,10 +92,6 @@ class QuotaService:
             Reply.mode == "auto",
         )
         if not force_all_rules:
-            stmt = (
-                stmt.where(Reply.automation_rule_id.is_(None))
-                if automation_rule_id is None
-                else stmt.where(Reply.automation_rule_id == automation_rule_id)
-            )
+            stmt = stmt.where(Reply.automation_rule_id.is_(None)) if automation_rule_id is None else stmt.where(Reply.automation_rule_id == automation_rule_id)
         result = await self.session.execute(stmt)
         return int(result.scalar_one())

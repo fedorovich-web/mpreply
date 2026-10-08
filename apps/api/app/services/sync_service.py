@@ -2,25 +2,26 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
-from uuid import UUID
+from typing import Literal
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.wildberries import WildberriesAdapter
-from app.core.config import get_settings
+from app.adapters.capabilities import MarketplaceStream, streams_for_scopes
+from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.errors import bad_request, forbidden, not_found
-from app.core.security import CredentialService
-from app.models.customer_message import CustomerMessage
+from app.models.enums import Marketplace
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.product import Product
+from app.models.marketplace_sync_state import MarketplaceSyncState
+from app.models.organization import OrganizationUser
 from app.models.sync_job import SyncJob
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.services.audit_service import AuditService
-from app.services.organization_service import OrganizationService
+from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
+from app.services.scheduled_sync_service import ScheduledSyncService, StreamRunResult
 
 _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
 
@@ -29,41 +30,74 @@ _ALLOWED_SYNC_ROLES = {"owner", "admin", "manager"}
 class SyncStats:
     imported_reviews: int = 0
     imported_questions: int = 0
+    imported_chats: int = 0
     updated_reviews: int = 0
     updated_questions: int = 0
+    updated_chats: int = 0
     skipped: int = 0
 
     def as_dict(self) -> dict[str, object]:
         return {
             "imported_reviews": self.imported_reviews,
             "imported_questions": self.imported_questions,
+            "imported_chats": self.imported_chats,
             "updated_reviews": self.updated_reviews,
             "updated_questions": self.updated_questions,
+            "updated_chats": self.updated_chats,
             "skipped": self.skipped,
         }
 
 
-class MarketplaceSyncService:
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-        self.organization_service = OrganizationService(session)
-        self.audit = AuditService(session)
-        settings = get_settings()
-        self.credentials = CredentialService(settings.credentials_encryption_key.get_secret_value())
+@dataclass(frozen=True, slots=True)
+class ManualSyncResult:
+    account: MarketplaceAccount
+    stats: SyncStats
+    status: Literal["success", "failed", "in_progress", "partial"]
+    error_code: str | None
+    error_message_safe: str | None
 
-    async def sync_account(self, *, actor: User, account_id: UUID) -> tuple[MarketplaceAccount, SyncStats, str | None, str | None]:
-        account = await self._get_account(account_id)
-        await self.organization_service.require_membership_role(
-            organization_id=account.organization_id,
-            user_id=actor.id,
-            allowed_roles=_ALLOWED_SYNC_ROLES,
-        )
-        if account.status not in {"active", "pending_validation", "error"}:
+
+class MarketplaceSyncService:
+    def __init__(
+        self,
+        session: AsyncSession,
+        *,
+        registry: MarketplaceAdapterRegistry,
+        runner: ScheduledSyncService | None = None,
+    ) -> None:
+        self.session = session
+        self.audit = AuditService(session)
+        self.registry = registry
+        self.runner = runner
+
+    async def request_sync(
+        self,
+        *,
+        actor: User,
+        account_id: UUID,
+    ) -> ManualSyncResult:
+        account = await self._get_account(actor=actor, account_id=account_id)
+        if account.status != "active" or account.credentials_status != "valid":
             raise bad_request("Marketplace account is not available for sync")
-        adapter = self._adapter_for(account.marketplace)
-        credential = self.credentials.decrypt(account.credentials_encrypted)
+        try:
+            marketplace = Marketplace(account.marketplace)
+        except ValueError:
+            raise forbidden("Marketplace adapter is not enabled yet") from None
+        registry = self.registry
+        try:
+            capability = registry.capability(marketplace)
+            for stream in capability.streams & {MarketplaceStream.REVIEWS, MarketplaceStream.QUESTIONS}:
+                registry.review_questions(marketplace, stream)
+            if MarketplaceStream.CHATS in capability.streams:
+                registry.conversations(marketplace)
+            if not capability.streams:
+                raise UnsupportedCapabilityError(marketplace, capability.streams)
+        except UnsupportedCapabilityError:
+            raise forbidden("Marketplace adapter is not enabled yet") from None
+
         now = datetime.now(UTC)
         job = SyncJob(
+            id=uuid4(),
             organization_id=account.organization_id,
             marketplace_account_id=account.id,
             job_type="manual_sync",
@@ -81,218 +115,169 @@ class MarketplaceSyncService:
             entity_id=str(account.id),
             metadata={"marketplace": account.marketplace, "sync_job_id": str(job.id)},
         )
+        supported_streams = streams_for_scopes(
+            capability.streams,
+            account.scopes_json or {},
+        )
+        if not supported_streams:
+            raise forbidden("Marketplace account has no validated synchronization scope")
+        states = await self._ensure_states(account, supported_streams, now)
+        await self.session.commit()
 
-        stats = SyncStats()
-        error_code: str | None = None
-        error_message_safe: str | None = None
-        try:
-            reviews_result = await adapter.fetch_reviews(credential=credential)
-            if reviews_result.ok:
-                for raw in adapter.extract_reviews(reviews_result.data):
-                    normalized = adapter.normalize_review(raw)
-                    outcome = await self._upsert_normalized_message(account, normalized)
-                    if outcome == "created":
-                        stats.imported_reviews += 1
-                    elif outcome == "updated":
-                        stats.updated_reviews += 1
-                    else:
-                        stats.skipped += 1
-                await self._write_integration_event(
-                    account=account,
-                    event_type="sync.feedbacks",
-                    status="success",
-                    metadata={"count": stats.imported_reviews + stats.updated_reviews},
-                )
-            else:
-                error_code = reviews_result.error_code
-                error_message_safe = reviews_result.error_message_safe
-                await self._write_integration_event(
-                    account=account,
-                    event_type="sync.feedbacks",
-                    status="failed",
-                    error_code=reviews_result.error_code,
-                    error_message_safe=reviews_result.error_message_safe,
-                )
+        runner = self.runner or ScheduledSyncService(self.session, registry=registry)
+        owner = f"manual-sync:{job.id}"
+        results = [await runner.run_stream(state.id, owner, now) for state in states]
+        stats = _sync_stats(results)
+        first_failure = next((result for result in results if result.error_code is not None), None)
+        lease_contended = any(not result.acquired for result in results)
+        incomplete = any(result.acquired and not result.completed and result.error_code is None for result in results)
+        if first_failure is not None:
+            sync_status: Literal["success", "failed", "in_progress", "partial"] = "failed"
+            error_code = first_failure.error_code
+            error_message_safe = "Marketplace synchronization failed"
+        elif lease_contended:
+            sync_status = "in_progress"
+            error_code = "sync_in_progress"
+            error_message_safe = "Another marketplace synchronization is already in progress"
+        elif incomplete:
+            sync_status = "partial"
+            error_code = None
+            error_message_safe = None
+        else:
+            sync_status = "success"
+            error_code = None
+            error_message_safe = None
 
-            questions_result = await adapter.fetch_questions(credential=credential)
-            if questions_result.ok:
-                for raw in adapter.extract_questions(questions_result.data):
-                    normalized = adapter.normalize_question(raw)
-                    outcome = await self._upsert_normalized_message(account, normalized)
-                    if outcome == "created":
-                        stats.imported_questions += 1
-                    elif outcome == "updated":
-                        stats.updated_questions += 1
-                    else:
-                        stats.skipped += 1
-                await self._write_integration_event(
-                    account=account,
-                    event_type="sync.questions",
-                    status="success",
-                    metadata={"count": stats.imported_questions + stats.updated_questions},
-                )
+        for state, result in zip(states, results, strict=True):
+            stream_name = result.stream.value if result.stream is not None else state.stream
+            if not result.acquired:
+                event_status = "skipped"
+                event_error_code = "sync_in_progress"
+                event_error_message = "Another marketplace synchronization is already in progress"
+            elif result.error_code is not None:
+                event_status = "failed"
+                event_error_code = result.error_code
+                event_error_message = "Marketplace synchronization failed"
+            elif not result.completed:
+                event_status = "partial"
+                event_error_code = None
+                event_error_message = None
             else:
-                error_code = error_code or questions_result.error_code
-                error_message_safe = error_message_safe or questions_result.error_message_safe
-                await self._write_integration_event(
-                    account=account,
-                    event_type="sync.questions",
-                    status="failed",
-                    error_code=questions_result.error_code,
-                    error_message_safe=questions_result.error_message_safe,
-                )
-
-            if error_code:
-                job.status = "failed"
-                job.error_message = error_message_safe
-                account.last_error_sync_at = datetime.now(UTC)
-                account.error_count = int(account.error_count or 0) + 1
-            else:
-                job.status = "success"
-                account.last_success_sync_at = datetime.now(UTC)
-                account.status = "active"
-                account.credentials_status = "valid"
-            job.finished_at = datetime.now(UTC)
-            job.stats_json = stats.as_dict()
-            imported_total = stats.imported_reviews + stats.imported_questions
-            if imported_total > 0:
-                self.session.add(
-                    UsageEvent(
-                        organization_id=account.organization_id,
-                        user_id=actor.id,
-                        event_type="marketplace.messages_imported",
-                        quantity=imported_total,
-                        metadata_json={
-                            "marketplace": account.marketplace,
-                            "marketplace_account_id": str(account.id),
-                            "sync_job_id": str(job.id),
-                            "imported_reviews": stats.imported_reviews,
-                            "imported_questions": stats.imported_questions,
-                        },
-                    )
-                )
-            await self.audit.write(
-                action="marketplace_account.sync.finished",
-                entity_type="sync_job",
-                organization_id=account.organization_id,
-                actor_user_id=actor.id,
-                entity_id=str(job.id),
-                metadata={"marketplace_account_id": str(account.id), "status": job.status, **stats.as_dict()},
-            )
-            await self.session.flush()
-            return account, stats, error_code, error_message_safe
-        except Exception as exc:
-            job.status = "failed"
-            job.finished_at = datetime.now(UTC)
-            job.error_message = "Sync failed unexpectedly"
-            account.last_error_sync_at = datetime.now(UTC)
-            account.error_count = int(account.error_count or 0) + 1
+                event_status = "success"
+                event_error_code = None
+                event_error_message = None
             await self._write_integration_event(
                 account=account,
-                event_type="sync.unhandled_error",
-                status="failed",
-                error_code="sync_unhandled_error",
-                error_message_safe="Sync failed unexpectedly",
-                metadata={"error_type": type(exc).__name__},
+                event_type=f"sync.{stream_name}",
+                status=event_status,
+                error_code=event_error_code,
+                error_message_safe=event_error_message,
+                metadata={
+                    "created_messages": result.created_messages,
+                    "updated_messages": result.updated_messages,
+                    "completed": result.completed,
+                },
             )
-            await self.session.flush()
-            return account, stats, "sync_unhandled_error", "Sync failed unexpectedly"
 
-    async def _get_account(self, account_id: UUID) -> MarketplaceAccount:
-        result = await self.session.execute(select(MarketplaceAccount).where(MarketplaceAccount.id == account_id))
+        finished_at = datetime.now(UTC)
+        if first_failure is not None:
+            job.status = "failed"
+            job.error_message = error_message_safe
+            account.last_error_sync_at = finished_at
+            account.error_count = int(account.error_count or 0) + 1
+        elif lease_contended:
+            job.status = "partial" if any(result.acquired for result in results) else "skipped"
+            job.error_message = error_message_safe
+        elif incomplete:
+            job.status = "partial"
+        else:
+            job.status = "success"
+            account.last_success_sync_at = finished_at
+            account.status = "active"
+            account.credentials_status = "valid"
+        job.finished_at = finished_at
+        job.stats_json = stats.as_dict()
+        imported_total = stats.imported_reviews + stats.imported_questions + stats.imported_chats
+        if imported_total > 0:
+            self.session.add(
+                UsageEvent(
+                    organization_id=account.organization_id,
+                    user_id=actor.id,
+                    event_type="marketplace.messages_imported",
+                    quantity=imported_total,
+                    metadata_json={
+                        "marketplace": account.marketplace,
+                        "marketplace_account_id": str(account.id),
+                        "sync_job_id": str(job.id),
+                        "imported_reviews": stats.imported_reviews,
+                        "imported_questions": stats.imported_questions,
+                        "imported_chats": stats.imported_chats,
+                    },
+                )
+            )
+        await self.audit.write(
+            action="marketplace_account.sync.finished",
+            entity_type="sync_job",
+            organization_id=account.organization_id,
+            actor_user_id=actor.id,
+            entity_id=str(job.id),
+            metadata={
+                "marketplace_account_id": str(account.id),
+                "status": job.status,
+                **stats.as_dict(),
+            },
+        )
+        await self.session.flush()
+        return ManualSyncResult(account, stats, sync_status, error_code, error_message_safe)
+
+    async def _ensure_states(
+        self,
+        account: MarketplaceAccount,
+        supported_streams: frozenset[MarketplaceStream],
+        now: datetime,
+    ) -> list[MarketplaceSyncState]:
+        ordered_streams = sorted(supported_streams, key=lambda stream: stream.value)
+        result = await self.session.execute(
+            select(MarketplaceSyncState).where(
+                MarketplaceSyncState.marketplace_account_id == account.id,
+                MarketplaceSyncState.organization_id == account.organization_id,
+                MarketplaceSyncState.stream.in_([stream.value for stream in ordered_streams]),
+            )
+        )
+        existing = {state.stream: state for state in result.scalars().all()}
+        missing = [stream for stream in ordered_streams if stream.value not in existing]
+        await MarketplaceSyncStateService(self.session).ensure_streams(account, missing, now)
+        if missing:
+            result = await self.session.execute(
+                select(MarketplaceSyncState).where(
+                    MarketplaceSyncState.marketplace_account_id == account.id,
+                    MarketplaceSyncState.organization_id == account.organization_id,
+                    MarketplaceSyncState.stream.in_([stream.value for stream in ordered_streams]),
+                )
+            )
+            existing = {state.stream: state for state in result.scalars().all()}
+        if len(existing) != len(ordered_streams):
+            raise RuntimeError("marketplace sync states could not be initialized")
+        return [existing[stream.value] for stream in ordered_streams]
+
+    async def _get_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
+        result = await self.session.execute(
+            select(MarketplaceAccount)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == MarketplaceAccount.organization_id,
+            )
+            .where(
+                MarketplaceAccount.id == account_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_ALLOWED_SYNC_ROLES),
+            )
+        )
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")
         return account
-
-    def _adapter_for(self, marketplace: str) -> WildberriesAdapter:
-        if marketplace == "wildberries":
-            return WildberriesAdapter()
-        raise forbidden("Marketplace adapter is not enabled yet")
-
-    async def _upsert_normalized_message(self, account: MarketplaceAccount, normalized: dict[str, Any]) -> str:
-        if not normalized.get("external_id") or not normalized.get("customer_text"):
-            return "skipped"
-        now = datetime.now(UTC)
-        product = await self._upsert_product(account, normalized["product"])
-        result = await self.session.execute(
-            select(CustomerMessage).where(
-                CustomerMessage.organization_id == account.organization_id,
-                CustomerMessage.marketplace_account_id == account.id,
-                CustomerMessage.marketplace == account.marketplace,
-                CustomerMessage.external_id == normalized["external_id"],
-                CustomerMessage.type == normalized["type"],
-            )
-        )
-        message = result.scalar_one_or_none()
-        if message is None:
-            message = CustomerMessage(
-                organization_id=account.organization_id,
-                marketplace_account_id=account.id,
-                product_id=product.id,
-                marketplace=account.marketplace,
-                external_id=normalized["external_id"],
-                type=normalized["type"],
-                status=normalized["status"],
-                rating=normalized.get("rating"),
-                customer_display_name=normalized.get("customer_display_name"),
-                customer_text=normalized["customer_text"],
-                customer_photos_json=normalized.get("customer_photos_json") or [],
-                marketplace_created_at=normalized["marketplace_created_at"],
-                imported_at=now,
-                last_synced_at=now,
-                priority=self._priority_for(normalized),
-                metadata_json=normalized.get("metadata_json") or {},
-            )
-            self.session.add(message)
-            await self.session.flush()
-            return "created"
-        message.product_id = product.id
-        message.rating = normalized.get("rating")
-        message.customer_display_name = normalized.get("customer_display_name")
-        message.customer_text = normalized["customer_text"]
-        message.customer_photos_json = normalized.get("customer_photos_json") or []
-        message.last_synced_at = now
-        message.metadata_json = {**(message.metadata_json or {}), **(normalized.get("metadata_json") or {})}
-        await self.session.flush()
-        return "updated"
-
-    async def _upsert_product(self, account: MarketplaceAccount, product_payload: dict[str, Any]) -> Product:
-        external_id = product_payload.get("external_id") or "unknown"
-        result = await self.session.execute(
-            select(Product).where(
-                Product.organization_id == account.organization_id,
-                Product.marketplace_account_id == account.id,
-                Product.external_id == external_id,
-            )
-        )
-        product = result.scalar_one_or_none()
-        if product is None:
-            product = Product(
-                organization_id=account.organization_id,
-                marketplace_account_id=account.id,
-                marketplace=account.marketplace,
-                external_id=external_id,
-                sku=product_payload.get("sku"),
-                name=product_payload.get("name") or "Wildberries product",
-                brand=product_payload.get("brand"),
-                category=product_payload.get("category"),
-                image_url=product_payload.get("image_url"),
-                product_url=product_payload.get("product_url"),
-                metadata_json=product_payload.get("metadata_json") or {},
-            )
-            self.session.add(product)
-            await self.session.flush()
-            return product
-        product.sku = product_payload.get("sku")
-        product.name = product_payload.get("name") or product.name
-        product.brand = product_payload.get("brand")
-        product.category = product_payload.get("category")
-        product.image_url = product_payload.get("image_url")
-        product.product_url = product_payload.get("product_url")
-        product.metadata_json = {**(product.metadata_json or {}), **(product_payload.get("metadata_json") or {})}
-        await self.session.flush()
-        return product
 
     async def _write_integration_event(
         self,
@@ -302,7 +287,7 @@ class MarketplaceSyncService:
         status: str,
         error_code: str | None = None,
         error_message_safe: str | None = None,
-        metadata: dict[str, Any] | None = None,
+        metadata: dict[str, object] | None = None,
     ) -> IntegrationEvent:
         event = IntegrationEvent(
             organization_id=account.organization_id,
@@ -318,9 +303,19 @@ class MarketplaceSyncService:
         await self.session.flush()
         return event
 
-    @staticmethod
-    def _priority_for(normalized: dict[str, Any]) -> str:
-        rating = normalized.get("rating")
-        if rating is not None and rating <= 2:
-            return "high"
-        return "normal"
+
+def _sync_stats(results: list[StreamRunResult]) -> SyncStats:
+    stats = SyncStats()
+    for result in results:
+        if not result.acquired:
+            stats.skipped += 1
+        elif result.stream is MarketplaceStream.REVIEWS:
+            stats.imported_reviews += result.created_messages
+            stats.updated_reviews += result.updated_messages
+        elif result.stream is MarketplaceStream.QUESTIONS:
+            stats.imported_questions += result.created_messages
+            stats.updated_questions += result.updated_messages
+        elif result.stream is MarketplaceStream.CHATS:
+            stats.imported_chats += result.created_messages
+            stats.updated_chats += result.updated_messages
+    return stats

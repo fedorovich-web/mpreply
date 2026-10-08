@@ -32,6 +32,9 @@ from app.schemas.analytics import (
 from app.services.organization_service import OrganizationService
 
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
+# Preflight convergence prevents another write; it is not an MPReply send.
+# Missing flags on legacy receipts continue to count.
+_OWN_REPLY_SEND = Reply.metadata_json["externally_already_answered"].as_boolean().is_not(True)
 _ANSWERED_STATUSES = {MessageStatus.ANSWERED.value, MessageStatus.AUTO_REPLY_SENT.value}
 _UNANSWERED_STATUSES = {
     MessageStatus.NEW.value,
@@ -79,6 +82,7 @@ class AnalyticsService:
             ).where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -95,6 +99,7 @@ class AnalyticsService:
                 Reply.organization_id == organization_id,
                 Reply.ai_draft_id.is_not(None),
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -105,10 +110,14 @@ class AnalyticsService:
 
         average_response_result = await self.session.execute(
             select(func.avg(func.extract("epoch", Reply.sent_at - CustomerMessage.marketplace_created_at)))
-            .join(CustomerMessage, CustomerMessage.id == Reply.message_id)
+            .join(
+                CustomerMessage,
+                (CustomerMessage.id == Reply.message_id) & (CustomerMessage.organization_id == Reply.organization_id),
+            )
             .where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -145,6 +154,7 @@ class AnalyticsService:
             select(Reply.sent_at).where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -219,7 +229,12 @@ class AnalyticsService:
                 func.count(CustomerMessage.id).label("messages"),
                 func.count(case(((CustomerMessage.type == "review") & (CustomerMessage.rating <= 2), 1))).label("negative_reviews"),
             )
-            .join(CustomerMessage, CustomerMessage.product_id == Product.id)
+            .join(
+                CustomerMessage,
+                (CustomerMessage.product_id == Product.id)
+                & (CustomerMessage.organization_id == Product.organization_id)
+                & (CustomerMessage.marketplace_account_id == Product.marketplace_account_id),
+            )
             .where(
                 Product.organization_id == organization_id,
                 CustomerMessage.imported_at >= period.start,
@@ -249,6 +264,7 @@ class AnalyticsService:
             .where(
                 Reply.organization_id == organization_id,
                 Reply.status == ReplyStatus.SENT.value,
+                _OWN_REPLY_SEND,
                 Reply.sent_at.is_not(None),
                 Reply.sent_at >= period.start,
                 Reply.sent_at < period.end,
@@ -257,8 +273,7 @@ class AnalyticsService:
             .order_by(func.count(Reply.id).desc())
         )
         items = [
-            TeamAnalyticsItem(user_id=user_id, email=email, name=name, replies_sent=int(replies_sent))
-            for user_id, email, name, replies_sent in result.all()
+            TeamAnalyticsItem(user_id=user_id, email=email, name=name, replies_sent=int(replies_sent)) for user_id, email, name, replies_sent in result.all()
         ]
         return TeamAnalyticsResponse(period=period, items=items)
 

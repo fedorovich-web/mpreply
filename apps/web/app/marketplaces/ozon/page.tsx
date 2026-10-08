@@ -5,10 +5,11 @@ import { createPageMetadata } from "../../../lib/seo";
 import { getMarketplaceConfig } from "../../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Интеграция Respio с Ozon — статус и планы",
+  title: "Обращения покупателей Ozon — единая очередь MPReply",
   description:
-    "Текущий статус интеграции Respio с Ozon. Production-доступность не заявляется до проверки официального API, ограничений и runtime-сценариев отправки.",
+    "Посмотрите, как MPReply организует поддерживаемые обращения Ozon в одной очереди с доступным контекстом, ИИ-черновиками и контролем перед отправкой.",
   path: "/marketplaces/ozon",
+  localized: true,
 });
 
 const marketplace = getMarketplaceConfig("ozon");
