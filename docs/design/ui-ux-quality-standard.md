@@ -1,4 +1,4 @@
-# Respio UI/UX quality standard
+# MPReply UI/UX quality standard
 
 ## Hierarchy
 
@@ -38,4 +38,4 @@ Protect Core Web Vitals. Prefer server-rendered public content. Avoid large clie
 
 ## QA
 
-Run `design:detect`, typecheck, lint, build. Browser work runs E2E, axe and Lighthouse. Visual baselines are intentionally approved; never updated solely to make CI green.
+Run unit and design-token tests, typecheck, lint, CSS syntax, build, and W3C validation. Browser work runs E2E, axe, visual regression and Lighthouse. Visual baselines are intentionally approved; never update them solely to make CI green. Subjective design heuristics do not block user-approved work.

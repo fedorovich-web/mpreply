@@ -1,23 +1,172 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import {
-  aiUsageAnalyticsSchema,
   analyticsOverviewSchema,
   marketplaceAnalyticsSchema,
   messageAnalyticsSchema,
   productAnalyticsSchema,
+  teamAnalyticsSchema,
 } from "../../lib/api/schemas";
+import type { Locale } from "../../lib/i18n";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const dayOptions = [7, 30, 90] as const;
+type DayOption = (typeof dayOptions)[number];
+const analyticsCopy = {
+  ru: {
+    workspace: "Рабочее пространство",
+    refreshing: "Обновляем данные…",
+    periodAria: "Период аналитики",
+    period: "Период",
+    days: "дней",
+    loadingDescription: "Собираем обращения и ответы за выбранный период.",
+    loadingTitle: "Загружаем аналитику",
+    retry: "Повторить",
+    loadErrorDescription: "Не удалось получить основные показатели. Проверьте соединение и повторите попытку.",
+    loadErrorTitle: "Аналитика временно недоступна",
+    metricsAria: "Ключевые показатели",
+    newForPeriod: "новых за период",
+    totalMessages: "Всего обращений",
+    alreadyHandled: "уже обработано",
+    needsReply: "Требуют ответа",
+    automatic: "автоматически",
+    afterReview: "вручную",
+    repliesSent: "Ответов отправлено",
+    responseTimeHelper: "От обращения до отправки ответа",
+    averageResponse: "Среднее время ответа",
+    dynamics: "Динамика",
+    dailyMessages: "Обращения и ответы по дням",
+    legend: "Легенда",
+    imported: "Получено",
+    answered: "Отвечено",
+    loadingDynamics: "Загружаем динамику…",
+    dynamicsError: "Не удалось загрузить динамику обращений.",
+    dynamicsAria: "Динамика обращений по дням",
+    importedLower: "получено",
+    answeredLower: "отвечено",
+    noMessages: "За выбранный период обращений пока нет.",
+    processing: "Обработка",
+    replyFlow: "Что происходит с ответами",
+    answeredMessages: "Отвечено на обращения",
+    sentAutomatically: "Отправлено автоматически",
+    sentAfterReview: "Отправлено вручную",
+    aiDrafts: "Подготовлено черновиков с ИИ",
+    aiDraftsSent: "Доля черновиков с ИИ, дошедших до отправки",
+    negativeReviews: "Негативные отзывы",
+    marketplaces: "Площадки",
+    marketplaceVolume: "Где больше обращений",
+    loadingMarketplaces: "Загружаем данные по площадкам…",
+    marketplacesError: "Не удалось загрузить данные по площадкам.",
+    marketplace: "Площадка",
+    messages: "Обращения",
+    handled: "Обработано",
+    syncFailures: "Сбои обновления",
+    noMarketplaceData: "Данные по площадкам появятся после получения обращений.",
+    products: "Товары",
+    productsTitle: "Товары с наибольшим числом обращений",
+    loadingProducts: "Загружаем данные по товарам…",
+    productsError: "Не удалось загрузить данные по товарам.",
+    sku: "Артикул",
+    noSku: "Артикул не указан",
+    negativeCount: "Негативных отзывов",
+    noProducts: "Данные по товарам появятся, когда обращения будут связаны с товарами.",
+    team: "Команда",
+    teamTitle: "Ответы за выбранный период",
+    loadingTeam: "Загружаем данные по команде…",
+    teamError: "Не удалось загрузить данные по команде.",
+    repliesSentLower: "отправлено ответов",
+    noTeamData: "За выбранный период команда ещё не отправляла ответы.",
+    mainRefreshError: "Не удалось обновить основные показатели. Показаны последние доступные данные.",
+    refresh: "Обновить",
+    panelRefreshError: "Не удалось обновить. Показаны последние доступные данные.",
+    seconds: "сек",
+    minutes: "мин",
+    hours: "ч",
+    yandex: "Яндекс Маркет",
+    avito: "Авито",
+  },
+  en: {
+    workspace: "Workspace",
+    refreshing: "Refreshing data…",
+    periodAria: "Analytics period",
+    period: "Period",
+    days: "days",
+    loadingDescription: "Collecting customer messages and replies for the selected period.",
+    loadingTitle: "Loading analytics",
+    retry: "Retry",
+    loadErrorDescription: "Could not load the main metrics. Check your connection and try again.",
+    loadErrorTitle: "Analytics is temporarily unavailable",
+    metricsAria: "Key metrics",
+    newForPeriod: "new in period",
+    totalMessages: "Total customer messages",
+    alreadyHandled: "already handled",
+    needsReply: "Need a reply",
+    automatic: "automatically",
+    afterReview: "manually",
+    repliesSent: "Replies sent",
+    responseTimeHelper: "From customer message to sent reply",
+    averageResponse: "Average response time",
+    dynamics: "Activity",
+    dailyMessages: "Customer messages and replies by day",
+    legend: "Legend",
+    imported: "Received",
+    answered: "Answered",
+    loadingDynamics: "Loading daily activity…",
+    dynamicsError: "Could not load daily customer-message activity.",
+    dynamicsAria: "Customer-message activity by day",
+    importedLower: "received",
+    answeredLower: "answered",
+    noMessages: "There were no customer messages in the selected period.",
+    processing: "Reply handling",
+    replyFlow: "What happens to replies",
+    answeredMessages: "Customer messages answered",
+    sentAutomatically: "Sent automatically",
+    sentAfterReview: "Sent manually",
+    aiDrafts: "AI drafts prepared",
+    aiDraftsSent: "AI draft send-through rate",
+    negativeReviews: "Negative reviews",
+    marketplaces: "Marketplaces",
+    marketplaceVolume: "Where customer-message volume is highest",
+    loadingMarketplaces: "Loading marketplace data…",
+    marketplacesError: "Could not load marketplace data.",
+    marketplace: "Marketplace",
+    messages: "Messages",
+    handled: "Handled",
+    syncFailures: "Sync failures",
+    noMarketplaceData: "Marketplace data will appear after customer messages are received.",
+    products: "Products",
+    productsTitle: "Products with the most customer messages",
+    loadingProducts: "Loading product data…",
+    productsError: "Could not load product data.",
+    sku: "SKU",
+    noSku: "SKU not provided",
+    negativeCount: "Negative reviews",
+    noProducts: "Product data will appear when customer messages are linked to products.",
+    team: "Team",
+    teamTitle: "Replies during the selected period",
+    loadingTeam: "Loading team data…",
+    teamError: "Could not load team data.",
+    repliesSentLower: "replies sent",
+    noTeamData: "The team has not sent any replies during the selected period.",
+    mainRefreshError: "Could not refresh the main metrics. Showing the latest available data.",
+    refresh: "Refresh",
+    panelRefreshError: "Could not refresh. Showing the latest available data.",
+    seconds: "sec",
+    minutes: "min",
+    hours: "hr",
+    yandex: "Yandex Market",
+    avito: "Avito",
+  },
+} as const;
 
 export function AnalyticsWorkspace() {
-  const { activeOrganization } = useWorkspace();
-  const [days, setDays] = useState<number>(30);
+  const { activeOrganization, locale } = useWorkspace();
+  const t = analyticsCopy[locale];
+  const [days, setDays] = useState<DayOption>(30);
   const queryBase = { organization_id: activeOrganization.id, days };
 
   const overviewQuery = useQuery({
@@ -36,155 +185,398 @@ export function AnalyticsWorkspace() {
     queryKey: ["analytics", "products", activeOrganization.id, days],
     queryFn: () => apiRequest(buildApiQuery("/api/analytics/products", queryBase), productAnalyticsSchema),
   });
-  const aiUsageQuery = useQuery({
-    queryKey: ["analytics", "ai-usage", activeOrganization.id, days],
-    queryFn: () => apiRequest(buildApiQuery("/api/analytics/ai-usage", queryBase), aiUsageAnalyticsSchema),
+  const teamQuery = useQuery({
+    queryKey: ["analytics", "team", activeOrganization.id, days],
+    queryFn: () => apiRequest(buildApiQuery("/api/analytics/team", queryBase), teamAnalyticsSchema),
   });
 
-  const firstError = [overviewQuery.error, messagesQuery.error, marketplacesQuery.error, productsQuery.error, aiUsageQuery.error].find(Boolean);
-  const isLoading = [overviewQuery, messagesQuery, marketplacesQuery, productsQuery, aiUsageQuery].some((query) => query.isLoading);
-  const maxDaily = useMemo(() => {
-    const points = messagesQuery.data?.points ?? [];
-    return Math.max(1, ...points.flatMap((point) => [point.imported, point.answered]));
-  }, [messagesQuery.data]);
+  const messagePoints = messagesQuery.data?.points ?? [];
+  const hasMessageActivity = messagePoints.some((point) => point.imported > 0 || point.answered > 0);
+  const maxDaily = Math.max(1, ...messagePoints.flatMap((point) => [point.imported, point.answered]));
+  const isRefreshing = [overviewQuery, messagesQuery, marketplacesQuery, productsQuery, teamQuery].some(
+    (query) => query.isFetching,
+  );
+
+  function retryAnalytics() {
+    void Promise.all([
+      overviewQuery.refetch(),
+      messagesQuery.refetch(),
+      marketplacesQuery.refetch(),
+      productsQuery.refetch(),
+      teamQuery.refetch(),
+    ]);
+  }
 
   return (
     <section className="analytics-workspace">
       <div className="analytics-toolbar">
         <div>
-          <span className="panel-kicker">Live analytics</span>
+          <span className="panel-kicker">{t.workspace}</span>
           <strong>{activeOrganization.name}</strong>
         </div>
-        <label className="analytics-period-select">
-          <span>Период</span>
-          <select onChange={(event) => setDays(Number(event.target.value))} value={days}>
-            {dayOptions.map((option) => <option key={option} value={option}>{option} дней</option>)}
-          </select>
-        </label>
+
+        <div className="analytics-toolbar-controls">
+          {isRefreshing ? <span aria-live="polite" className="analytics-refresh-state">{t.refreshing}</span> : null}
+          <div className="analytics-period-control" aria-label={t.periodAria}>
+            <span>{t.period}</span>
+            <div className="analytics-period-options">
+              {dayOptions.map((option) => (
+                <button
+                  aria-pressed={days === option}
+                  className={days === option ? "analytics-period-option analytics-period-option-active" : "analytics-period-option"}
+                  key={option}
+                  onClick={() => setDays(option)}
+                  type="button"
+                >
+                  {option} {t.days}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {firstError ? <WorkspaceState title="Не удалось загрузить аналитику" description={errorMessage(firstError)} tone="error" /> : null}
-      {isLoading && !overviewQuery.data ? <WorkspaceState title="Считаем показатели" description="Агрегируем обращения, ответы и AI usage." /> : null}
+      {overviewQuery.error && overviewQuery.data ? (
+        <DataNotice onRetry={retryAnalytics} text={t.mainRefreshError} actionLabel={t.refresh} />
+      ) : null}
+
+      {overviewQuery.isLoading && !overviewQuery.data ? (
+        <WorkspaceState
+          description={t.loadingDescription}
+          title={t.loadingTitle}
+        />
+      ) : null}
+
+      {overviewQuery.error && !overviewQuery.data ? (
+        <WorkspaceState
+          actionLabel={t.retry}
+          description={t.loadErrorDescription}
+          onAction={retryAnalytics}
+          title={t.loadErrorTitle}
+          tone="error"
+        />
+      ) : null}
 
       {overviewQuery.data ? (
         <>
-          <section className="analytics-metric-grid" aria-label="Ключевые показатели">
-            <Metric label="Обращения" value={formatNumber(overviewQuery.data.total_messages)} helper={`${overviewQuery.data.new_messages} новых`} />
-            <Metric label="Без ответа" value={formatNumber(overviewQuery.data.unanswered_messages)} helper={`${overviewQuery.data.answered_messages} отвечено`} tone={overviewQuery.data.unanswered_messages > 0 ? "warning" : "default"} />
-            <Metric label="Ответы отправлены" value={formatNumber(overviewQuery.data.replies_sent)} helper={`${overviewQuery.data.auto_replies_sent} auto · ${overviewQuery.data.manual_replies_sent} manual`} />
-            <Metric label="AI-черновики" value={formatNumber(overviewQuery.data.ai_drafts_generated)} helper={formatAcceptance(overviewQuery.data.ai_acceptance_rate)} />
-            <Metric label="Среднее время ответа" value={formatDuration(overviewQuery.data.average_response_seconds)} helper="От создания обращения до отправки" />
-            <Metric label="Негативные отзывы" value={formatNumber(overviewQuery.data.negative_reviews)} helper="Оценка 1–2" tone={overviewQuery.data.negative_reviews > 0 ? "danger" : "default"} />
+          <section className="analytics-metric-grid" aria-label={t.metricsAria}>
+            <Metric
+              helper={`${formatNumber(overviewQuery.data.new_messages, locale)} ${t.newForPeriod}`}
+              label={t.totalMessages}
+              value={formatNumber(overviewQuery.data.total_messages, locale)}
+            />
+            <Metric
+              helper={`${formatNumber(overviewQuery.data.answered_messages, locale)} ${t.alreadyHandled}`}
+              label={t.needsReply}
+              tone={overviewQuery.data.unanswered_messages > 0 ? "warning" : "default"}
+              value={formatNumber(overviewQuery.data.unanswered_messages, locale)}
+            />
+            <Metric
+              helper={`${formatNumber(overviewQuery.data.auto_replies_sent, locale)} ${t.automatic} · ${formatNumber(overviewQuery.data.manual_replies_sent, locale)} ${t.afterReview}`}
+              label={t.repliesSent}
+              value={formatNumber(overviewQuery.data.replies_sent, locale)}
+            />
+            <Metric
+              helper={t.responseTimeHelper}
+              label={t.averageResponse}
+              value={formatDuration(overviewQuery.data.average_response_seconds, locale)}
+            />
           </section>
 
           <section className="analytics-panel-grid">
             <article className="analytics-panel analytics-panel-wide">
               <div className="analytics-panel-heading">
-                <div><span className="panel-kicker">Volume</span><h2>Обращения и ответы по дням</h2></div>
-                <div className="analytics-legend"><span><i className="legend-dot legend-imported" />Импортировано</span><span><i className="legend-dot legend-answered" />Отвечено</span></div>
+                <div>
+                  <span className="panel-kicker">{t.dynamics}</span>
+                  <h2>{t.dailyMessages}</h2>
+                </div>
+                <div className="analytics-legend" aria-label={t.legend}>
+                  <span><i className="legend-dot legend-imported" />{t.imported}</span>
+                  <span><i className="legend-dot legend-answered" />{t.answered}</span>
+                </div>
               </div>
-              {messagesQuery.data?.points.length ? (
-                <div className="analytics-bars" aria-label="Динамика обращений по дням">
-                  {messagesQuery.data.points.map((point) => (
-                    <div className="analytics-bar-column" key={point.date} title={`${point.date}: ${point.imported} импортировано, ${point.answered} отвечено`}>
+
+              {messagesQuery.error && messagesQuery.data ? <PanelNotice text={t.panelRefreshError} /> : null}
+              {messagesQuery.isLoading && !messagesQuery.data ? <PanelState text={t.loadingDynamics} /> : null}
+              {messagesQuery.error && !messagesQuery.data ? <PanelState text={t.dynamicsError} /> : null}
+              {messagesQuery.data && hasMessageActivity ? (
+                <div className="analytics-bars" aria-label={t.dynamicsAria}>
+                  {messagePoints.map((point) => (
+                    <div
+                      className="analytics-bar-column"
+                      key={point.date}
+                      title={`${formatDate(point.date, locale)}: ${point.imported} ${t.importedLower}, ${point.answered} ${t.answeredLower}`}
+                    >
                       <div className="analytics-bar-stack">
-                        <span className="analytics-bar analytics-bar-imported" style={{ height: `${Math.max((point.imported / maxDaily) * 100, point.imported ? 6 : 0)}%` }} />
-                        <span className="analytics-bar analytics-bar-answered" style={{ height: `${Math.max((point.answered / maxDaily) * 100, point.answered ? 6 : 0)}%` }} />
+                        <span
+                          className="analytics-bar analytics-bar-imported"
+                          style={{ height: `${Math.max((point.imported / maxDaily) * 100, point.imported ? 6 : 0)}%` }}
+                        />
+                        <span
+                          className="analytics-bar analytics-bar-answered"
+                          style={{ height: `${Math.max((point.answered / maxDaily) * 100, point.answered ? 6 : 0)}%` }}
+                        />
                       </div>
-                      <small>{formatDay(point.date)}</small>
+                      <small>{formatDay(point.date, locale)}</small>
                     </div>
                   ))}
                 </div>
-              ) : <EmptyData text="За выбранный период обращений пока нет." />}
+              ) : null}
+              {messagesQuery.data && !hasMessageActivity ? <EmptyData text={t.noMessages} /> : null}
             </article>
 
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">AI cost</span><h2>OpenRouter usage</h2></div></div>
-              {aiUsageQuery.data ? (
-                <div className="analytics-summary-list">
-                  <SummaryRow label="Черновики" value={formatNumber(aiUsageQuery.data.drafts_generated)} />
-                  <SummaryRow label="Input tokens" value={formatNumber(aiUsageQuery.data.tokens_input)} />
-                  <SummaryRow label="Output tokens" value={formatNumber(aiUsageQuery.data.tokens_output)} />
-                  <SummaryRow label="Оценка стоимости" value={formatUsd(aiUsageQuery.data.cost_estimate)} />
-                  <SummaryRow label="Средняя latency" value={formatLatency(aiUsageQuery.data.average_latency_ms)} />
-                  <SummaryRow label="Safety flags" value={formatNumber(aiUsageQuery.data.safety_flagged_drafts)} />
+              <div className="analytics-panel-heading">
+                <div>
+                  <span className="panel-kicker">{t.processing}</span>
+                  <h2>{t.replyFlow}</h2>
                 </div>
-              ) : <EmptyData text="AI usage пока отсутствует." />}
+              </div>
+              <div className="analytics-summary-list">
+                <SummaryRow label={t.answeredMessages} value={formatNumber(overviewQuery.data.answered_messages, locale)} />
+                <SummaryRow label={t.sentAutomatically} value={formatNumber(overviewQuery.data.auto_replies_sent, locale)} />
+                <SummaryRow label={t.sentAfterReview} value={formatNumber(overviewQuery.data.manual_replies_sent, locale)} />
+                <SummaryRow label={t.aiDrafts} value={formatNumber(overviewQuery.data.ai_drafts_generated, locale)} />
+                <SummaryRow label={t.aiDraftsSent} value={formatAcceptance(overviewQuery.data.ai_acceptance_rate)} />
+                <SummaryRow
+                  label={t.negativeReviews}
+                  value={formatNumber(overviewQuery.data.negative_reviews, locale)}
+                  tone={overviewQuery.data.negative_reviews > 0 ? "danger" : "default"}
+                />
+              </div>
             </article>
           </section>
 
-          <section className="analytics-panel-grid">
+          <section className="analytics-panel-grid analytics-panel-grid-even">
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">Channels</span><h2>Маркетплейсы</h2></div></div>
+              <div className="analytics-panel-heading">
+                <div>
+                  <span className="panel-kicker">{t.marketplaces}</span>
+                  <h2>{t.marketplaceVolume}</h2>
+                </div>
+              </div>
+
+              {marketplacesQuery.error && marketplacesQuery.data ? <PanelNotice text={t.panelRefreshError} /> : null}
+              {marketplacesQuery.isLoading && !marketplacesQuery.data ? <PanelState text={t.loadingMarketplaces} /> : null}
+              {marketplacesQuery.error && !marketplacesQuery.data ? <PanelState text={t.marketplacesError} /> : null}
               {marketplacesQuery.data?.items.length ? (
                 <div className="analytics-table-wrap">
-                  <table className="analytics-table"><thead><tr><th>Канал</th><th>Обращения</th><th>Отвечено</th><th>Ошибки API</th></tr></thead><tbody>
-                    {marketplacesQuery.data.items.map((item) => <tr key={item.marketplace}><td>{marketplaceLabel(item.marketplace)}</td><td>{formatNumber(item.messages)}</td><td>{formatNumber(item.answered)}</td><td>{formatNumber(item.failed_integration_events)}</td></tr>)}
-                  </tbody></table>
+                  <table className="analytics-table">
+                    <thead>
+                      <tr>
+                        <th>{t.marketplace}</th>
+                        <th>{t.messages}</th>
+                        <th>{t.handled}</th>
+                        <th>{t.syncFailures}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {marketplacesQuery.data.items.map((item) => (
+                        <tr key={item.marketplace}>
+                          <td>{marketplaceLabel(item.marketplace, locale)}</td>
+                          <td>{formatNumber(item.messages, locale)}</td>
+                          <td>{formatNumber(item.answered, locale)}</td>
+                          <td>{formatNumber(item.failed_integration_events, locale)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ) : <EmptyData text="Нет данных по маркетплейсам." />}
+              ) : null}
+              {marketplacesQuery.data && !marketplacesQuery.data.items.length ? (
+                <EmptyData text={t.noMarketplaceData} />
+              ) : null}
             </article>
 
             <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">Products</span><h2>Товары с наибольшим потоком</h2></div></div>
+              <div className="analytics-panel-heading">
+                <div>
+                  <span className="panel-kicker">{t.products}</span>
+                  <h2>{t.productsTitle}</h2>
+                </div>
+              </div>
+
+              {productsQuery.error && productsQuery.data ? <PanelNotice text={t.panelRefreshError} /> : null}
+              {productsQuery.isLoading && !productsQuery.data ? <PanelState text={t.loadingProducts} /> : null}
+              {productsQuery.error && !productsQuery.data ? <PanelState text={t.productsError} /> : null}
               {productsQuery.data?.items.length ? (
                 <div className="analytics-product-list">
                   {productsQuery.data.items.slice(0, 8).map((item) => (
                     <div className="analytics-product-row" key={item.product_id}>
-                      <div><strong>{item.name}</strong><small>{item.sku ? `SKU ${item.sku}` : "Без SKU"}</small></div>
-                      <div><span>{formatNumber(item.messages)}</span><small>{item.negative_reviews} негативных</small></div>
+                      <div>
+                        <strong>{item.name}</strong>
+                        <small>{item.sku ? `${t.sku}: ${item.sku}` : t.noSku}</small>
+                      </div>
+                      <div>
+                        <span>{formatNumber(item.messages, locale)}</span>
+                        <small>{t.negativeCount}: {formatNumber(item.negative_reviews, locale)}</small>
+                      </div>
                     </div>
                   ))}
                 </div>
-              ) : <EmptyData text="Товарная аналитика появится после синхронизации." />}
+              ) : null}
+              {productsQuery.data && !productsQuery.data.items.length ? (
+                <EmptyData text={t.noProducts} />
+              ) : null}
             </article>
           </section>
 
-          {aiUsageQuery.data?.models.length ? (
-            <article className="analytics-panel">
-              <div className="analytics-panel-heading"><div><span className="panel-kicker">Models</span><h2>Использование AI-моделей</h2></div></div>
-              <div className="analytics-table-wrap">
-                <table className="analytics-table"><thead><tr><th>Модель</th><th>Черновики</th><th>Токены</th><th>Стоимость</th><th>Latency</th></tr></thead><tbody>
-                  {aiUsageQuery.data.models.map((model) => <tr key={model.model}><td>{model.model}</td><td>{formatNumber(model.drafts)}</td><td>{formatNumber(model.tokens_input + model.tokens_output)}</td><td>{formatUsd(model.cost_estimate)}</td><td>{formatLatency(model.average_latency_ms)}</td></tr>)}
-                </tbody></table>
+          <article className="analytics-panel analytics-team-panel">
+            <div className="analytics-panel-heading">
+              <div>
+                <span className="panel-kicker">{t.team}</span>
+                <h2>{t.teamTitle}</h2>
               </div>
-            </article>
-          ) : null}
+            </div>
+
+            {teamQuery.error && teamQuery.data ? <PanelNotice text={t.panelRefreshError} /> : null}
+            {teamQuery.isLoading && !teamQuery.data ? <PanelState text={t.loadingTeam} /> : null}
+            {teamQuery.error && !teamQuery.data ? <PanelState text={t.teamError} /> : null}
+            {teamQuery.data?.items.length ? (
+              <div className="analytics-team-list">
+                {teamQuery.data.items.slice(0, 8).map((item) => (
+                  <div className="analytics-team-row" key={item.user_id}>
+                    <div>
+                      <strong>{item.name || item.email}</strong>
+                      {item.name ? <small>{item.email}</small> : null}
+                    </div>
+                    <div>
+                      <strong>{formatNumber(item.replies_sent, locale)}</strong>
+                      <small>{t.repliesSentLower}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {teamQuery.data && !teamQuery.data.items.length ? (
+              <EmptyData text={t.noTeamData} />
+            ) : null}
+          </article>
         </>
       ) : null}
     </section>
   );
 }
 
-function Metric({ label, value, helper, tone = "default" }: { label: string; value: string; helper: string; tone?: "default" | "warning" | "danger" }) {
-  return <article className={`analytics-metric analytics-metric-${tone}`}><span>{label}</span><strong>{value}</strong><p>{helper}</p></article>;
+function Metric({
+  label,
+  value,
+  helper,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  tone?: "default" | "warning";
+}) {
+  return (
+    <article className={`analytics-metric analytics-metric-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <p>{helper}</p>
+    </article>
+  );
 }
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return <div className="analytics-summary-row"><span>{label}</span><strong>{value}</strong></div>;
+function SummaryRow({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <div className={`analytics-summary-row analytics-summary-row-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function DataNotice({ onRetry, text, actionLabel }: { onRetry: () => void; text: string; actionLabel: string }) {
+  return (
+    <div className="analytics-data-notice" role="status">
+      <span>{text}</span>
+      <button onClick={onRetry} type="button">{actionLabel}</button>
+    </div>
+  );
+}
+
+function PanelNotice({ text }: { text: string }) {
+  return <p className="analytics-panel-notice">{text}</p>;
+}
+
+function PanelState({ text }: { text: string }) {
+  return <p className="analytics-panel-state">{text}</p>;
 }
 
 function EmptyData({ text }: { text: string }) {
   return <p className="analytics-empty">{text}</p>;
 }
 
-function WorkspaceState({ title, description, tone = "default" }: { title: string; description: string; tone?: "default" | "error" }) {
-  return <div className={tone === "error" ? "workspace-inline-state workspace-inline-state-error" : "workspace-inline-state"}><strong>{title}</strong><p>{description}</p></div>;
+function WorkspaceState({
+  title,
+  description,
+  tone = "default",
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  description: string;
+  tone?: "default" | "error";
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div className={tone === "error" ? "workspace-inline-state workspace-inline-state-error" : "workspace-inline-state"}>
+      <strong>{title}</strong>
+      <p>{description}</p>
+      {actionLabel && onAction ? (
+        <button className="button button-secondary button-compact" onClick={onAction} type="button">
+          {actionLabel}
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
-function formatNumber(value: number): string { return new Intl.NumberFormat("ru-RU").format(value); }
-function formatUsd(value: number): string { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 4 }).format(value); }
-function formatLatency(value: number | null): string { return value === null ? "—" : `${Math.round(value)} мс`; }
-function formatAcceptance(value: number | null): string { return value === null ? "Пока нет отправленных AI-ответов" : `${Math.round(value * 100)}% дошли до отправки`; }
-function formatDuration(value: number | null): string {
-  if (value === null) return "—";
-  if (value < 60) return `${Math.round(value)} сек`;
-  if (value < 3600) return `${Math.round(value / 60)} мин`;
-  return `${(value / 3600).toFixed(1)} ч`;
+function formatNumber(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "ru-RU").format(value);
 }
-function formatDay(value: string): string { return new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "short" }).format(new Date(`${value}T00:00:00Z`)); }
-function marketplaceLabel(value: string): string {
-  const labels: Record<string, string> = { wildberries: "Wildberries", ozon: "Ozon", yandex_market: "Яндекс Маркет", avito: "Авито" };
+
+function formatAcceptance(value: number | null): string {
+  return value === null ? "—" : `${Math.round(value * 100)}%`;
+}
+
+function formatDuration(value: number | null, locale: Locale): string {
+  const t = analyticsCopy[locale];
+  if (value === null) return "—";
+  if (value < 60) return `${Math.round(value)} ${t.seconds}`;
+  if (value < 3600) return `${Math.round(value / 60)} ${t.minutes}`;
+  return `${(value / 3600).toFixed(1)} ${t.hours}`;
+}
+
+function formatDay(value: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ru-RU", { day: "2-digit", month: "short", timeZone: "UTC" }).format(
+    new Date(`${value}T00:00:00Z`),
+  );
+}
+
+function formatDate(value: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ru-RU", { day: "numeric", month: "long", timeZone: "UTC" }).format(
+    new Date(`${value}T00:00:00Z`),
+  );
+}
+
+function marketplaceLabel(value: string, locale: Locale): string {
+  const t = analyticsCopy[locale];
+  const labels: Record<string, string> = {
+    wildberries: "Wildberries",
+    ozon: "Ozon",
+    yandex_market: t.yandex,
+    avito: t.avito,
+  };
   return labels[value] ?? value;
 }
-function errorMessage(error: unknown): string { return error instanceof Error ? error.message : "Неизвестная ошибка"; }

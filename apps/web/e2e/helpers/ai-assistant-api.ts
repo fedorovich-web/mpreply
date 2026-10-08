@@ -46,7 +46,7 @@ const message = {
     external_id: "wb-product-1",
     sku: "SKU-1",
     name: "Термокружка",
-    brand: "Respio Test",
+    brand: "Test Brand",
     category: "Посуда",
     image_url: null,
     product_url: null,
@@ -74,7 +74,11 @@ const generatedDraft = {
   updated_at: timestamp,
 };
 
-export async function mockAIAssistantApi(page: Page, role: OrganizationRole = "manager") {
+export async function mockAIAssistantApi(
+  page: Page,
+  role: OrganizationRole = "manager",
+  content: { productName?: string; customerName?: string; customerText?: string } = {},
+) {
   const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
   const headers = {
     "access-control-allow-credentials": "true",
@@ -112,7 +116,17 @@ export async function mockAIAssistantApi(page: Page, role: OrganizationRole = "m
 
   await page.route("**/api/messages**", async (route) => {
     if (route.request().method() === "OPTIONS") return fulfillJson(route, null, 204);
-    return fulfillJson(route, { items: [message], total: 1, page: 1, page_size: 50 });
+    return fulfillJson(route, {
+      items: [{
+        ...message,
+        customer_display_name: content.customerName ?? message.customer_display_name,
+        customer_text: content.customerText ?? message.customer_text,
+        product: { ...message.product, name: content.productName ?? message.product.name },
+      }],
+      total: 1,
+      page: 1,
+      page_size: 50,
+    });
   });
 
   await page.route("**/api/ai/drafts/generate", async (route) => {

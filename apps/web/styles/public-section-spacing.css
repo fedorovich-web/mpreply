@@ -1,0 +1,92 @@
+/* One vertical rhythm for top-level public sections across all public routes. */
+.public-root {
+  --public-section-padding-block: 96px;
+  --public-hero-padding-block: var(--public-section-padding-block);
+}
+
+.public-root main > section,
+.public-root main > section.public-section,
+.public-root main > .mockup-page > section,
+.public-root main > .mockup-page > section.public-section,
+.public-root main > .contacts-render-page > section,
+.public-root main > .not-found-render-page > section,
+.public-root main > .faq-page > section,
+.public-root main > .legal-approved-layout {
+  padding-block: var(--public-section-padding-block);
+}
+
+.mockup-page:has(.pricing-mockup-hero) .render-section-head {
+  margin-bottom: 24px;
+}
+
+.mockup-page:has(.pricing-mockup-hero) .pricing-comparison {
+  width: 100%;
+}
+
+.mockup-page:has(.pricing-mockup-hero) .pricing-comparison th,
+.mockup-page:has(.pricing-mockup-hero) .pricing-comparison td {
+  padding-block: 6px;
+}
+
+.mockup-page:has(.pricing-mockup-hero) .pricing-approved-faq-layout .pricing-faq details {
+  min-height: 36px;
+  padding: 9px 12px;
+}
+
+.mockup-page:has(.pricing-mockup-hero) .pricing-card .button span {
+  margin-left: 8px;
+}
+
+@media (max-width: 900px) {
+  .public-root {
+    --public-section-padding-block: 80px;
+  }
+}
+
+@media (max-width: 600px) {
+  .public-root {
+    --public-section-padding-block: 64px;
+  }
+
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison table,
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison tbody,
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison tr {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison tr + tr {
+    border-top: 1px solid #dfe8f5;
+  }
+
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison td {
+    display: flex;
+    min-width: 0;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 16px;
+    text-align: right;
+  }
+
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison td:first-child {
+    background: #f8fbff;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .mockup-page:has(.pricing-mockup-hero) .pricing-comparison td:not(:first-child)::before {
+    content: attr(data-plan);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+  }
+}

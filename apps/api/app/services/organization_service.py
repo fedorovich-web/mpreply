@@ -16,6 +16,7 @@ from app.models.subscription import Subscription
 from app.models.user import User
 from app.services.audit_service import AuditService
 from app.services.plan_limit_service import PlanLimitService
+from app.services.reply_credit_service import ReplyCreditService
 
 _ALLOWED_ROLES = {"owner", "admin", "manager", "viewer"}
 
@@ -33,9 +34,9 @@ class OrganizationService:
         self.plan_limits = PlanLimitService(session)
 
     async def create_organization(self, *, owner: User, name: str, slug: str | None) -> Organization:
-        plan_result = await self.session.execute(
-            select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1)
-        )
+        # Serialize trial claims before inserting membership foreign keys.
+        await self.session.scalar(select(User.id).where(User.id == owner.id).with_for_update(key_share=True))
+        plan_result = await self.session.execute(select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1))
         default_plan = plan_result.scalar_one_or_none()
         organization = Organization(
             name=name.strip(),
@@ -61,15 +62,17 @@ class OrganizationService:
         self.session.add(membership)
         await self.session.flush()
 
+        trial = await ReplyCreditService(self.session).activate_trial(organization_id=organization.id, owner_user_id=owner.id)
         if default_plan is not None:
             period_start, period_end = PlanLimitService.month_period(datetime.now(UTC))
             self.session.add(
                 Subscription(
                     organization_id=organization.id,
                     plan_id=default_plan.id,
-                    status="active",
-                    current_period_start=period_start,
-                    current_period_end=period_end,
+                    status="trialing" if trial is not None else "inactive",
+                    current_period_start=trial.starts_at if trial is not None else period_start,
+                    current_period_end=trial.ends_at if trial is not None else period_end,
+                    trial_ends_at=trial.ends_at if trial is not None else None,
                     provider=None,
                 )
             )
@@ -127,9 +130,7 @@ class OrganizationService:
             raise not_found("Organization membership not found")
         return membership
 
-    async def require_membership_role(
-        self, *, organization_id: UUID, user_id: UUID, allowed_roles: set[str]
-    ) -> OrganizationUser:
+    async def require_membership_role(self, *, organization_id: UUID, user_id: UUID, allowed_roles: set[str]) -> OrganizationUser:
         membership = await self.get_membership(organization_id=organization_id, user_id=user_id)
         if membership.role not in allowed_roles:
             raise forbidden("You do not have permission to perform this action")

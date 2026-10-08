@@ -4,11 +4,18 @@ from datetime import datetime
 from typing import Literal, Self, cast
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 AutomationMode = Literal["auto", "semi_auto"]
-AutomationAppliesTo = Literal["all", "review", "question"]
+AutomationAppliesTo = Literal["all", "review", "question", "chat"]
 MarketplaceName = Literal["wildberries", "ozon", "yandex_market", "avito"]
+_LIST_ITEM_MAX_LENGTHS = {
+    "product_ids": 36,
+    "category_ids": 255,
+    "include_keywords": 200,
+    "exclude_keywords": 200,
+    "sensitive_topics": 200,
+}
 
 
 class AutomationRuleCreateRequest(BaseModel):
@@ -45,19 +52,8 @@ class AutomationRuleCreateRequest(BaseModel):
         mode="before",
     )
     @classmethod
-    def normalize_string_lists(cls, value: object) -> object:
-        if not isinstance(value, list):
-            return value
-        items = cast(list[object], value)
-        normalized: list[str] = []
-        seen: set[str] = set()
-        for item in items:
-            cleaned = str(item).strip()
-            key = cleaned.casefold()
-            if cleaned and key not in seen:
-                normalized.append(cleaned)
-                seen.add(key)
-        return normalized
+    def normalize_string_lists(cls, value: object, info: ValidationInfo) -> object:
+        return _normalize_string_list(value, field_name=_required_field_name(info))
 
     @model_validator(mode="after")
     def validate_rating_range(self) -> Self:
@@ -99,19 +95,10 @@ class AutomationRuleUpdateRequest(BaseModel):
         mode="before",
     )
     @classmethod
-    def normalize_string_lists(cls, value: object) -> object:
-        if value is None or not isinstance(value, list):
-            return value
-        items = cast(list[object], value)
-        normalized: list[str] = []
-        seen: set[str] = set()
-        for item in items:
-            cleaned = str(item).strip()
-            key = cleaned.casefold()
-            if cleaned and key not in seen:
-                normalized.append(cleaned)
-                seen.add(key)
-        return normalized
+    def normalize_string_lists(cls, value: object, info: ValidationInfo) -> object:
+        if value is None:
+            return None
+        return _normalize_string_list(value, field_name=_required_field_name(info))
 
     @model_validator(mode="after")
     def validate_rating_range(self) -> Self:
@@ -182,3 +169,34 @@ class AutomationRuleActionResponse(BaseModel):
     ok: bool = True
     id: UUID
     is_enabled: bool
+
+
+def _normalize_string_list(value: object, *, field_name: str) -> object:
+    if not isinstance(value, list):
+        return value
+    items = cast(list[object], value)
+    maximum = _LIST_ITEM_MAX_LENGTHS[field_name]
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        if not isinstance(item, str):
+            raise ValueError(f"{field_name} entries must be strings")
+        cleaned = item.strip()
+        if not cleaned or "\x00" in cleaned or len(cleaned) > maximum:
+            raise ValueError(f"{field_name} contains an invalid entry")
+        if field_name == "product_ids":
+            try:
+                cleaned = str(UUID(cleaned))
+            except ValueError as exc:
+                raise ValueError("product_ids entries must be UUIDs") from exc
+        key = cleaned.casefold()
+        if key not in seen:
+            normalized.append(cleaned)
+            seen.add(key)
+    return normalized
+
+
+def _required_field_name(info: ValidationInfo) -> str:
+    if info.field_name is None:
+        raise RuntimeError("automation rule list validator requires a field name")
+    return info.field_name

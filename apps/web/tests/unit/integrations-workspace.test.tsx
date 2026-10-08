@@ -2,8 +2,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { AvitoIntegrationWorkspace } from "../../components/integrations/AvitoIntegrationWorkspace";
 import { IntegrationsWorkspace } from "../../components/integrations/IntegrationsWorkspace";
-import { WildberriesIntegrationWorkspace } from "../../components/integrations/WildberriesIntegrationWorkspace";
+import { OzonIntegrationWorkspace } from "../../components/integrations/OzonIntegrationWorkspace";
+import {
+  MarketplaceIntegrationWorkspace,
+  WildberriesIntegrationWorkspace,
+} from "../../components/integrations/WildberriesIntegrationWorkspace";
+import { YandexMarketIntegrationWorkspace } from "../../components/integrations/YandexMarketIntegrationWorkspace";
 import { useWorkspace } from "../../components/workspace/WorkspaceProvider";
 
 vi.mock("../../components/workspace/WorkspaceProvider", () => ({
@@ -28,13 +34,13 @@ const account = {
   id: "33333333-3333-4333-8333-333333333333",
   organization_id: organization.id,
   marketplace: "wildberries",
-  display_name: "WB основной кабинет",
-  seller_id: "seller-42",
+  display_name: "Основной кабинет",
+  seller_id: "seller-1",
   status: "active",
-  credentials_masked: "sha256:ab12…90ef",
+  credentials_masked: "••••••••abcd",
   credentials_status: "valid",
-  scopes_json: { validated: true },
-  default_response_mode: "inherit",
+  scopes_json: {},
+  default_response_mode: "auto",
   last_success_sync_at: timestamp,
   last_error_sync_at: null,
   error_count: 0,
@@ -46,7 +52,7 @@ const mockedUseWorkspace = vi.mocked(useWorkspace);
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  vi.restoreAllMocks();
+  vi.clearAllMocks();
 });
 
 function mockWorkspace(role: "owner" | "admin" | "manager" | "viewer") {
@@ -63,9 +69,11 @@ function mockWorkspace(role: "owner" | "admin" | "manager" | "viewer") {
     },
     organizations: [activeOrganization],
     activeOrganization,
+    locale: "ru",
     setActiveOrganizationId: vi.fn(),
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
+    logoutError: null,
   });
 }
 
@@ -77,19 +85,307 @@ function renderWithQueryClient(component: React.ReactNode) {
 }
 
 describe("IntegrationsWorkspace", () => {
-  it("loads real marketplace accounts and keeps unsupported adapters explicit", async () => {
+  it("shows a connected account waiting for provider cooldown and its automatic resume time", async () => {
+    mockWorkspace("owner");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([{
+      ...account, last_error_sync_at: "2026-10-06T13:00:00Z", sync_error_code: "rate_limited",
+      sync_next_retry_at: "2026-10-06T13:10:00Z",
+    }]), { status: 200 })));
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+    const badges = await screen.findAllByText("Подключено", { selector: ".ui-badge" });
+    expect(badges.length).toBeGreaterThan(0);
+    for (const badge of badges) expect(badge).toHaveClass("ui-badge-success");
+    expect(screen.getByText("Загрузка продолжится автоматически")).toBeInTheDocument();
+  });
+  it("keeps valid access green in the catalog and shows the loading delay separately", async () => {
+    mockWorkspace("owner");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([{
+      ...account, last_error_sync_at: "2026-10-06T13:00:00Z", sync_error_code: "rate_limited",
+      sync_next_retry_at: "2026-10-06T13:10:00Z",
+    }]), { status: 200 })));
+    renderWithQueryClient(<IntegrationsWorkspace />);
+    expect(await screen.findByText("1 подключение")).toHaveClass("ui-badge-success");
+    expect(screen.getByText("Загрузка ожидает разрешения маркетплейса и продолжится автоматически.")).toBeInTheDocument();
+    const summary = screen.getByLabelText("Сводка подключений");
+    expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("1");
+    expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("0");
+  });
+  it("shows all four marketplace integrations as ready and distinguishes connection state", async () => {
     mockWorkspace("owner");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([account]), { status: 200 })));
 
     renderWithQueryClient(<IntegrationsWorkspace />);
 
     expect(await screen.findByText("1 подключение")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Управлять подключениями" })).toHaveAttribute(
+    expect(screen.getByRole("heading", { name: "Wildberries" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ozon" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Яндекс Маркет" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Авито" })).toBeInTheDocument();
+    expect(screen.getByText(/Чаты и отзывы Авито в общей очереди/)).toBeInTheDocument();
+    expect(screen.getAllByText("Подключение доступно")).toHaveLength(4);
+    expect(screen.getAllByText("Не подключено")).toHaveLength(3);
+    expect(screen.queryByText(/Planned|Пока недоступно|MVP adapter|production readiness/i)).not.toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: "Управлять Wildberries" })).toHaveAttribute(
       "href",
       "/app/integrations/wildberries",
     );
-    expect(screen.getAllByText("Пока недоступно")).toHaveLength(3);
-    expect(screen.getAllByText("Без ложного обещания production readiness.")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "Подключить Ozon" })).toHaveAttribute(
+      "href",
+      "/app/integrations/ozon",
+    );
+    expect(screen.getByRole("link", { name: "Подключить Яндекс Маркет" })).toHaveAttribute(
+      "href",
+      "/app/integrations/yandex-market",
+    );
+    expect(screen.getByRole("link", { name: "Подключить Авито" })).toHaveAttribute(
+      "href",
+      "/app/integrations/avito",
+    );
+  });
+
+  it("keeps marketplace cards visible when a manual refresh fails", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async () => {
+      requests += 1;
+      if (requests === 1) {
+        return new Response(JSON.stringify([account]), { status: 200 });
+      }
+      return new Response(JSON.stringify({ detail: "connection_pool_timeout" }), { status: 503 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Wildberries" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Обновить подключения" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Не удалось обновить подключения");
+    expect(alert).not.toHaveTextContent("connection_pool_timeout");
+    expect(screen.getByRole("heading", { name: "Wildberries" })).toBeInTheDocument();
+  });
+
+  it("keeps a recovered account healthy even when its cumulative error count is nonzero", async () => {
+    mockWorkspace("owner");
+    const recoveredAccount = {
+      ...account,
+      error_count: 3,
+      last_error_sync_at: "2026-07-12T05:30:00Z",
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([recoveredAccount]), { status: 200 })));
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    const summary = await screen.findByLabelText("Сводка подключений");
+    await waitFor(() => {
+      expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("1");
+      expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("0");
+    });
+  });
+
+  it("does not call an account healthy when its access is no longer valid", async () => {
+    mockWorkspace("owner");
+    const accountWithInvalidAccess = {
+      ...account,
+      credentials_status: "invalid",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithInvalidAccess]), { status: 200 })));
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    const summary = await screen.findByLabelText("Сводка подключений");
+    await waitFor(() => {
+      expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("0");
+      expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
+    });
+    expect(screen.getByText("Требует внимания")).toBeInTheDocument();
+  });
+
+  it("marks an active account as requiring attention when its latest sync failed", async () => {
+    mockWorkspace("owner");
+    const accountWithCurrentSyncError = {
+      ...account,
+      error_count: 1,
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+      last_error_sync_at: "2026-07-12T06:30:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithCurrentSyncError]), { status: 200 })));
+
+    renderWithQueryClient(<IntegrationsWorkspace />);
+
+    const summary = await screen.findByLabelText("Сводка подключений");
+    await waitFor(() => {
+      expect(within(summary).getByText("Доступ подтверждён").parentElement).toHaveTextContent("1");
+      expect(within(summary).getByText("Требуют внимания").parentElement).toHaveTextContent("1");
+    });
+    expect(screen.getByText("1 подключение")).toHaveClass("ui-badge-success");
+    expect(screen.getByText("Загрузка требует внимания. Откройте кабинет, чтобы проверить причину.")).toBeInTheDocument();
+  });
+});
+
+describe("MarketplaceIntegrationWorkspace", () => {
+  it("uses the selected marketplace in labels, filtering and create payload", async () => {
+    mockWorkspace("owner");
+    const ozonAccount = { ...account, id: "55555555-5555-4555-8555-555555555555", marketplace: "ozon", display_name: "Ozon основной" };
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({ ...ozonAccount, ...payload }), { status: 200 });
+      }
+      return new Response(JSON.stringify([account, ozonAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(
+      <MarketplaceIntegrationWorkspace
+        credentialLabel="Данные доступа Ozon"
+        marketplace="ozon"
+        marketplaceName="Ozon"
+        placeholder="Например, Ozon — основной магазин"
+      />,
+    );
+
+    expect(await screen.findByText("Кабинеты Ozon")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Ozon основной" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Основной кабинет" })).not.toBeInTheDocument();
+
+    const form = screen.getByRole("form", { name: "Новое подключение Ozon" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый Ozon" } });
+    fireEvent.change(within(form).getByLabelText("Данные доступа Ozon"), { target: { value: "secret-token" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true);
+    });
+
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("ozon");
+    expect(body.organization_id).toBe(organization.id);
+  });
+});
+
+describe("Specialized marketplace connection forms", () => {
+  function mockEmptyAccounts() {
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            ...account,
+            id: "66666666-6666-4666-8666-666666666666",
+            marketplace: payload.marketplace,
+            display_name: payload.display_name,
+            seller_id: null,
+            default_response_mode: payload.default_response_mode,
+            status: "pending_validation",
+            credentials_status: "pending_validation",
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify([]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  it("requires Ozon Client ID and sends it with the API key", async () => {
+    mockWorkspace("owner");
+    const fetchMock = mockEmptyAccounts();
+    renderWithQueryClient(<OzonIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Ozon" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Ozon основной" } });
+    fireEvent.change(within(form).getByLabelText("API-ключ Ozon"), { target: { value: "ozon-api-key" } });
+    expect(within(form).getByRole("button", { name: "Добавить кабинет" })).toBeDisabled();
+
+    fireEvent.change(within(form).getByLabelText("Client ID"), { target: { value: "client-123" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("ozon");
+    expect(body.seller_id).toBe("client-123");
+    expect(body.credentials).toBe("ozon-api-key");
+  });
+
+  it("requires a positive Yandex Market Business ID", async () => {
+    mockWorkspace("owner");
+    const fetchMock = mockEmptyAccounts();
+    renderWithQueryClient(<YandexMarketIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Яндекс Маркет" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Маркет" } });
+    fireEvent.change(within(form).getByLabelText("API-ключ Яндекс Маркета"), { target: { value: "yandex-api-key" } });
+    fireEvent.change(within(form).getByLabelText("Business ID"), { target: { value: "0" } });
+    expect(within(form).getByRole("button", { name: "Добавить кабинет" })).toBeDisabled();
+
+    fireEvent.change(within(form).getByLabelText("Business ID"), { target: { value: "42" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("yandex_market");
+    expect(body.seller_id).toBe("42");
+  });
+
+  it("encodes Avito Client ID and Client Secret without exposing them as separate API fields", async () => {
+    mockWorkspace("owner");
+    const fetchMock = mockEmptyAccounts();
+    renderWithQueryClient(<AvitoIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Новое подключение Авито" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Авито основной" } });
+    fireEvent.change(within(form).getByLabelText("Avito User ID"), { target: { value: "123456" } });
+    fireEvent.change(within(form).getByLabelText("Client ID"), { target: { value: "avito-client" } });
+    fireEvent.change(within(form).getByLabelText("Client Secret"), { target: { value: "avito-secret" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(true));
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.marketplace).toBe("avito");
+    expect(body.seller_id).toBe("123456");
+    expect(JSON.parse(String(body.credentials))).toEqual({
+      version: 1,
+      client_id: "avito-client",
+      client_secret: "avito-secret",
+    });
+    expect(body).not.toHaveProperty("client_id");
+    expect(body).not.toHaveProperty("client_secret");
+  });
+
+  it("preserves a stored Avito User ID when saving other account settings", async () => {
+    mockWorkspace("owner");
+    const avitoAccount = { ...account, marketplace: "avito", seller_id: "123456" };
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "PATCH") {
+        return new Response(JSON.stringify(avitoAccount), { status: 200 });
+      }
+      return new Response(JSON.stringify([avitoAccount]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<AvitoIntegrationWorkspace />);
+
+    const form = await screen.findByRole("form", { name: "Настройки кабинета Авито" });
+    expect(within(form).getByLabelText(/Avito User ID/)).toHaveValue("");
+    fireEvent.change(within(form).getByLabelText("Название"), {
+      target: { value: "Авито обновлён" },
+    });
+    fireEvent.click(within(form).getByRole("button", { name: "Сохранить настройки" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(true));
+    const patchCall = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH");
+    const body = JSON.parse(String(patchCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.display_name).toBe("Авито обновлён");
+    expect(body).not.toHaveProperty("seller_id");
   });
 });
 
@@ -99,18 +395,7 @@ describe("WildberriesIntegrationWorkspace", () => {
     const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
       if (init?.method === "POST") {
         const payload = JSON.parse(String(init.body)) as Record<string, unknown>;
-        return new Response(
-          JSON.stringify({
-            ...account,
-            ...payload,
-            id: "44444444-4444-4444-8444-444444444444",
-            seller_id: payload.seller_id ?? null,
-            credentials_masked: "sha256:new1…safe",
-            credentials_status: "pending_validation",
-            status: "pending_validation",
-          }),
-          { status: 201 },
-        );
+        return new Response(JSON.stringify({ ...account, ...payload }), { status: 200 });
       }
       return new Response(JSON.stringify([]), { status: 200 });
     });
@@ -118,15 +403,12 @@ describe("WildberriesIntegrationWorkspace", () => {
 
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
-    const form = await screen.findByRole("form", { name: "Новое подключение Wildberries" });
-    expect(within(form).queryByLabelText(/Organization ID/i)).not.toBeInTheDocument();
+    expect(await screen.findByText("Кабинеты Wildberries")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/organization/i)).not.toBeInTheDocument();
 
-    fireEvent.change(within(form).getByLabelText("Название подключения"), {
-      target: { value: "WB второй кабинет" },
-    });
-    fireEvent.change(within(form).getByLabelText("API-ключ Wildberries"), {
-      target: { value: "super-secret-wb-token" },
-    });
+    const form = screen.getByRole("form", { name: "Новое подключение Wildberries" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Новый WB" } });
+    fireEvent.change(within(form).getByLabelText("Ключ доступа Wildberries"), { target: { value: "secret-token" } });
     fireEvent.click(within(form).getByRole("button", { name: "Добавить кабинет" }));
 
     await waitFor(() => {
@@ -134,14 +416,121 @@ describe("WildberriesIntegrationWorkspace", () => {
     });
 
     const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
-    const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
-    expect(payload).toMatchObject({
-      organization_id: organization.id,
-      marketplace: "wildberries",
-      display_name: "WB второй кабинет",
-      credentials: "super-secret-wb-token",
-      default_response_mode: "inherit",
+    expect(postCall).toBeTruthy();
+    const body = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>;
+    expect(body.organization_id).toBe(organization.id);
+    expect(body.display_name).toBe("Новый WB");
+    expect(body.credentials).toBe("secret-token");
+  });
+
+  it("shows human connection labels instead of technical synchronization counters", async () => {
+    mockWorkspace("owner");
+    const accountWithHistory = {
+      ...account,
+      error_count: 7,
+      last_error_sync_at: "2026-07-11T22:00:00Z",
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithHistory]), { status: 200 })));
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    expect(screen.getByText("Последнее успешное обновление")).toBeInTheDocument();
+    expect(screen.getByText("Последняя ошибка")).toBeInTheDocument();
+    expect(screen.queryByText("Ошибки синхронизации")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Загрузить отзывы и вопросы" })).toBeInTheDocument();
+  });
+
+  it("distinguishes valid access from a current loading failure", async () => {
+    mockWorkspace("owner");
+    const accountWithCurrentSyncError = {
+      ...account,
+      error_count: 1,
+      last_success_sync_at: "2026-07-12T06:00:00Z",
+      last_error_sync_at: "2026-07-12T06:30:00Z",
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([accountWithCurrentSyncError]), { status: 200 })));
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    for (const badge of screen.getAllByText("Подключено", { selector: ".ui-badge" })) {
+      expect(badge).toHaveClass("ui-badge-success");
+    }
+    expect(screen.getByText("Загрузка требует внимания")).toBeInTheDocument();
+    expect(screen.getByText("Проверен")).toBeInTheDocument();
+    expect(screen.queryByText("Активно")).not.toBeInTheDocument();
+  });
+
+  it("does not claim that access was preserved when a rate-limited account was already invalid", async () => {
+    mockWorkspace("owner");
+    const invalidAccount = {
+      ...account,
+      status: "error",
+      credentials_status: "rate_limited",
+      last_success_sync_at: null,
+      last_error_sync_at: timestamp,
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        return new Response(
+          JSON.stringify({
+            id: account.id,
+            status: "error",
+            credentials_status: "rate_limited",
+            scopes: [],
+            checked_at: timestamp,
+            error_code: "rate_limited",
+            error_message_safe: "Wildberries rate limit was exceeded",
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify([invalidAccount]), { status: 200 });
     });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Проверить подключение" }));
+
+    expect(await screen.findByText("Wildberries временно ограничил проверку. Повторите позже.")).toBeInTheDocument();
+    expect(screen.queryByText(/Доступ сохранён/)).not.toBeInTheDocument();
+  });
+
+  it.each(["wildberries", "ozon", "yandex_market", "avito"] as const)("deletes a %s account only after explicit confirmation", async (marketplace) => {
+    mockWorkspace("owner");
+    let deleted = false;
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "DELETE") {
+        deleted = true;
+        return new Response(
+          JSON.stringify({
+            id: account.id,
+            status: "deleted",
+            credentials_status: "deleted",
+            credentials_masked: account.credentials_masked,
+            message: "Marketplace account and related data deleted.",
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify(deleted ? [] : [{ ...account, marketplace }]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("confirm", vi.fn(() => true));
+
+    renderWithQueryClient(<MarketplaceIntegrationWorkspace marketplace={marketplace} marketplaceName={marketplace} credentialLabel="Access key" placeholder="Name" />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Удалить кабинет" }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).endsWith(`/${account.id}`) && init?.method === "DELETE")).toBe(true);
+    });
+    expect(await screen.findByText("Кабинет удалён. История обращений сохранена.")).toBeInTheDocument();
   });
 
   it("keeps viewer membership read-only and hides credential actions", async () => {
@@ -150,11 +539,48 @@ describe("WildberriesIntegrationWorkspace", () => {
 
     renderWithQueryClient(<WildberriesIntegrationWorkspace />);
 
-    expect(await screen.findByRole("heading", { name: account.display_name })).toBeInTheDocument();
-    expect(screen.getByText(/Только просмотр/)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
     expect(screen.queryByRole("form", { name: "Новое подключение Wildberries" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Проверить ключ" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Синхронизировать сейчас" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Отозвать ключ" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Заменить ключ/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Только просмотр")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Загрузить отзывы и вопросы" })).not.toBeInTheDocument();
+  });
+
+  it("lets a manager sync an account without exposing credential management", async () => {
+    mockWorkspace("manager");
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "POST") {
+        return new Response(JSON.stringify({
+          account_id: account.id,
+          marketplace: "wildberries",
+          status: "in_progress",
+          imported_reviews: 0,
+          imported_questions: 0,
+          imported_chats: 0,
+          updated_reviews: 0,
+          updated_questions: 0,
+          updated_chats: 0,
+          skipped: 1,
+          error_code: "sync_in_progress",
+          error_message_safe: "Another marketplace synchronization is already in progress",
+        }), { status: 202 });
+      }
+      return new Response(JSON.stringify([account]), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(<WildberriesIntegrationWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Основной кабинет" })).toBeInTheDocument();
+    expect(screen.getByText("Можно обновлять обращения")).toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "Настройки кабинета Wildberries" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Проверить подключение" })).not.toBeInTheDocument();
+    const syncButton = screen.getByRole("button", { name: "Загрузить отзывы и вопросы" });
+    fireEvent.click(syncButton);
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => String(input).endsWith(`${account.id}/sync`) && init?.method === "POST")).toBe(true);
+    });
+    expect(await screen.findByText(/Другое обновление этого кабинета уже выполняется/)).toBeInTheDocument();
   });
 });

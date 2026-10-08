@@ -30,8 +30,7 @@ class CredentialService:
 
     @staticmethod
     def fingerprint(secret: str) -> str:
-        digest = hashlib.sha256(secret.encode("utf-8")).hexdigest()
-        return digest[-12:].upper()
+        return hashlib.sha256(secret.encode("utf-8")).hexdigest().upper()
 
     @staticmethod
     def mask_fingerprint(fingerprint: str) -> str:

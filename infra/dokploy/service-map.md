@@ -2,11 +2,11 @@
 
 ## Deployment model
 
-Respio is deployed as one Dokploy Docker Compose application per environment from this repository.
+The intended MPReply topology is one Dokploy Docker Compose application per environment from this repository.
 
 Production source:
 
-- repository: `fedorovich-web/respio`;
+- repository: `fedorovich-web/mpreply`;
 - branch: `main`;
 - Compose path: `./infra/docker/docker-compose.production.yml`;
 - production deploys follow verified merges to `main`.
@@ -19,10 +19,9 @@ The production Compose application contains:
 
 - `migrate` — one-shot Alembic migration gate;
 - `api` — FastAPI backend, internal port `8000`;
-- `worker` — Dramatiq auto-reply execution;
+- `worker` — Dramatiq auto-reply and marketplace-stream execution;
+- `scheduler` — bounded polling and enqueueing of due marketplace streams;
 - `web` — Next.js public site and SaaS frontend, internal port `3000`.
-
-The scheduler placeholder remains excluded until a real scheduler responsibility and implementation exist.
 
 ## Stateful resources
 
@@ -34,12 +33,12 @@ Use separate state, credentials and backups for staging and production.
 
 Configure these mappings in the Dokploy **Domains** tab for the Docker Compose application:
 
-- `respio.ru` -> service `web`, port `3000`;
-- `www.respio.ru` -> redirect/canonical handling to `respio.ru`;
-- `app.respio.ru` -> service `web`, port `3000`;
-- `api.respio.ru` -> service `api`, port `8000`.
+- `mpreply.ru` -> service `web`, port `3000`;
+- `www.mpreply.ru` -> redirect/canonical handling to `mpreply.ru`;
+- `app.mpreply.ru` -> service `web`, port `3000`;
+- `api.mpreply.ru` -> service `api`, port `8000`.
 
-Reserved only until implemented: `admin.respio.ru`, `status.respio.ru`, `docs.respio.ru`.
+Reserved only until implemented: `admin.mpreply.ru`, `status.mpreply.ru`, `docs.mpreply.ru`.
 
 ## Environment and secrets
 
@@ -52,6 +51,7 @@ Keep real values only in Dokploy environment/service variables or a configured e
 - No floating `latest` tags for application/runtime images.
 - No public PostgreSQL or Redis ports.
 - API routing depends on `/health/ready`, not liveness alone.
-- `migrate` must complete successfully before API and worker startup.
+- `migrate` must complete successfully before API, worker and scheduler startup.
 - Production rollback does not automatically downgrade the database schema.
 - Review Dokploy **Preview Compose** before the first production deploy and after domain/network changes.
+- The production Compose project is named `mpreply-production`. If an existing stack uses the former project name, migrate it explicitly before deployment; changing the name alone would create a separate stack.

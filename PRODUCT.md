@@ -1,147 +1,186 @@
-# Respio — Product Context
+# MPReply — Product Context
 
-Status: authoritative product context for design, marketing, frontend, SEO, copy and AI coding agents.
-Version: 0.1.27
+Status: authoritative product context for design, frontend, dashboard UX, marketing, SEO, copy and AI coding agents.
 
 ## Product
 
-Respio is a multi-tenant SaaS for marketplace sellers, operators and agencies. It centralizes reviews and questions, prepares replies with AI, applies SafetyGate and automation rules, and sends approved replies through supported official integrations. Respio is an operational product, not a generic AI text generator.
+MPReply is a multi-tenant SaaS workspace for marketplace sellers, marketplace managers, teams and agencies. It centralizes customer communication from marketplaces, prepares contextual replies with AI, applies workspace rules and sends replies automatically or after human review.
+
+The product is an operational communication system, not a generic AI text generator.
+
+## Core workflow
+
+1. Connect marketplace accounts.
+2. Collect reviews, buyer questions and supported buyer messages into one workspace.
+3. Add product, marketplace and team context to the incoming request.
+4. Prepare a reply with AI.
+5. Apply automation and review rules.
+6. Send automatically or route the reply to a person for review.
+7. Keep status, errors and meaningful history visible to the team.
+
+## Current product truth
+
+The product UI supports these marketplace integrations:
+
+- Wildberries;
+- Ozon;
+- Yandex Market;
+- Avito.
+
+All four are shown as available integrations in MPReply. The primary integration CTA is account-state based rather than marketplace-specific:
+
+- no account connected for the current organization → `Подключить <marketplace>`;
+- account already connected → `Управлять <marketplace>`.
+
+Do not hard-code a Wildberries-only UX or return Ozon, Yandex Market or Avito to `planned` messaging.
+
+### Release certification
+
+Product/UI support and production release certification are separate concepts. Public production claims must be deployed only together with the backend/runtime work that makes the corresponding integration true in production.
+
+A frontend branch may implement the final supported-state UX before that backend work lands, but it must not be merged or deployed ahead of the required backend/runtime release certification.
+
+### Billing rollout boundary
+
+The product owner approved this public tariff presentation on 2026-09-27:
+
+- `Старт` — `1 290 ₽ / мес`, 300 ИИ-ответов в месяц;
+- `Команда` — `3 490 ₽ / мес`, 800 ИИ-ответов в месяц;
+- `Бизнес` — `6 990 ₽ / мес`, 1 600 ИИ-ответов в месяц;
+- annual payment presentation — `-20%`;
+- approved trial presentation — `14 дней` and 350 ИИ-ответов.
+
+Optional extra-reply packs for the pricing calculator: 50 / 100 / 250 / 500 / 1 000 / 2 000 / 5 000 / 10 000 / 15 000 / 20 000 replies at 299 / 549 / 1 290 / 2 490 / 4 790 / 9 290 / 22 490 / 43 900 / 65 400 / 86 900 ₽. The calculator may combine packs for an exact quantity in 50-reply steps. Packs add to the reply balance without changing the plan. Purchase remains unavailable until a payment provider and confirmed-credit grant are connected on the production domain.
+
+Unused paid monthly AI replies and additional paid reply packs carry over without expiration. Spending paid credits requires an active paid subscription. The trial allowance is distinct from the monthly Start allowance: 350 replies expire after 14 days and do not carry over.
+
+The fourth public plan is `Корпоративный`, with an individual quote through the website contact form. `Бизнес` remains a standard plan at the approved fixed price, with the same registration/plan entry path as `Старт` and `Команда`. Do not turn Business into a sales-only plan or invent corporate prices, allowances, SLA or dedicated-manager promises.
+
+These values are the approved public-site source of truth. Pricing and credit balances need matching backend entitlements before a production release. Do not invent additional prices, discounts, crossed-out anchors, urgency or trial terms beyond them.
+
+The site is now running on its production domain. On 2026-10-01 the product owner authorized the separate launch-stage task: Lava.top payments with manual renewal and no automatic charges. New paid periods follow the current paid-through date; annual reply allowances are granted monthly. Checkout remains disabled until configuration, verified-payment credit grants and deployment checks are complete. Preserve the approved tariff presentation and existing price fallback during this implementation.
+
+### Public contact truth
+
+The only verified public contact channel is the email `support@mpreply.ru`.
+
+MPReply currently has no public Telegram contact and no public social-network accounts. Do not render Telegram, VK, YouTube or other social links/icons in the public site unless the user explicitly adds and verifies those channels later.
+
+No public office address or support schedule is currently verified. Do not publish a physical office/address, office card, opening hours, response-hours badge or support SLA unless the user explicitly supplies and verifies those details later.
+
+### Public content architecture
+
+MPReply has no public blog. Do not create a `/blog` route, show `Блог` in navigation or footers, or use `/help` as a disguised editorial/blog section. `/help` remains a task-oriented support, knowledge-base and FAQ surface.
+
+## AI capability truth
+
+Normal product and marketing copy should describe the user-facing capability:
+
+- `ИИ готовит ответ`;
+- reply generation uses message/product/team context;
+- automation rules determine automatic handling versus review where implemented.
+
+Do not publish exact provider/model names as marketing proof unless those exact models are implemented and verified on the branch that will be deployed. Provider/model/token/latency telemetry belongs in diagnostics or explicit technical/admin contexts, not the ordinary seller workflow.
+
+Provider credentials and marketplace credentials remain backend-only. Secrets must never be rendered back to the browser or written to normal logs.
 
 ## Operating model
 
-- Default mode: auto-first.
-- Semi-automatic/manual review: optional fallback or explicit workspace choice.
-- Low-confidence, risky or under-contextualized replies must not be blindly auto-sent.
-- Marketplace credentials stay backend-only, encrypted at rest, excluded from frontend responses and normal logs.
-- External sending must respect official marketplace APIs, limits and policies.
+- Automation handles routine cases where configured rules allow it.
+- Human review is a first-class path for exceptions, uncertainty and team-controlled workflows.
+- The UX should explain why an answer requires attention instead of exposing internal implementation nouns.
+- External sending must respect official marketplace API contracts, limits and policies.
+- Retries, idempotency and failure handling must avoid duplicate external actions.
 
-## Current implementation truth
+## Security and tenancy
 
-- Wildberries: current MVP adapter and real execution path.
-- Ozon, Yandex Market and Avito: do not imply production-ready sending until official contracts are verified, adapters implemented and runtime-tested.
-- Groq: backend-only provider; MVP model is `qwen/qwen3.8-27b` with strict structured output and reasoning disabled for reply generation.
-- Existing layers: auth, organizations, RBAC, integrations, Inbox, AI drafts, SafetyGate, automation rules, worker queue, auto replies, manual review, analytics, billing foundation, admin and Docker deployment foundation.
+- Marketplace credentials are encrypted at rest and backend-only.
+- Tenant isolation is mandatory for all organization-scoped data and actions.
+- Backend RBAC remains the security boundary.
+- Frontend permissions should prevent confusing or knowingly forbidden actions before click, but never replace backend authorization.
+- Destructive credential/account operations require explicit, understandable confirmation.
 
 ## Primary audiences
 
-1. Individual seller — fast setup, safe defaults, visible outcomes.
-2. Marketplace manager — one Inbox, filters, state clarity and reliable AI behavior.
-3. Team lead/support manager — queues, approvals, analytics, audit and roles.
-4. Agency/multi-workspace operator — tenant isolation, repeatable onboarding and reporting.
+1. Individual seller who wants to stop switching between multiple marketplace cabinets.
+2. Marketplace manager processing a recurring queue of reviews, questions and buyer messages.
+3. Team lead who needs consistent response quality, clear exceptions, rules and visibility.
+4. Agency or multi-account operator managing several seller workspaces.
 
 ## Jobs to be done
 
-- Collect customer reviews/questions in one queue.
-- Reduce response time without sacrificing accuracy or marketplace compliance.
-- Keep brand tone consistent.
-- Route uncertain cases to humans.
-- See unanswered, risky, failed or delayed work.
-- Measure workload, automation, response speed, AI usage and cost.
+- See customer communication in one workspace.
+- Understand what needs attention now.
+- Prepare consistent replies with relevant context.
+- Automate repetitive cases without losing control of exceptions.
+- Know whether an answer was prepared, reviewed, sent, failed or needs action.
+- Manage marketplace connections without exposing credentials.
+- Understand workload and operational outcomes without raw provider telemetry dominating the UI.
 
-## Brand voice
+## Public positioning
 
-Calm, competent, concise, specific and operational. Use native Russian, concrete verbs, evidence and explicit limitations. Never use fake urgency, fabricated customers/logos/testimonials/metrics/prices, “магия AI”, “100% безопасно”, or unsupported claims.
+Core product promise:
 
-## Public redesign progress
+> Bring marketplace customer communication into one workflow, prepare contextual replies with AI, automate routine cases and keep control over exceptions.
 
-- `0.1.14`: approved Signal Flow foundation — full header, light-first theme, violet/mint tokens and animated hero canvas.
-- `0.1.15`: secondary public routes aligned to the same system; public copy prefers natural Russian product language over internal implementation jargon.
-- `0.1.16`: public shell polish — active navigation, accessible mobile menu, clearer theme switching, stronger footer and expandable FAQ.
+Public copy should lead with seller outcomes and workflow, not infrastructure terminology.
 
-## Quality foundation progress
+Allowed proof:
+- real product mechanics;
+- real supported integrations;
+- real UI states;
+- implemented security/control mechanisms;
+- verified technical quality where relevant;
+- the currently approved public tariff and trial presentation listed in this document.
 
-- `0.1.17`: frontend unit-test foundation, automated design-token/contrast tests and CI/local-gate enforcement added before the next substantial dashboard vertical slice.
-
-## Product dashboard progress
-
-- `0.1.18`: Automation Rules became a live, tenant-scoped workspace over the existing backend CRUD/evaluation model. Owner/admin roles can create, edit, enable and disable rules; manager/viewer roles remain read-only. Organization responses now expose the current membership role so the UI does not guess authorization from hidden controls or post-click `403` responses. Critical Automation Rules unit, E2E and accessibility contracts are part of the release tooling.
-
-## Public visual-system stabilization · 0.1.19
-
-- The public site uses self-hosted Onest with optimized Russian/English WOFF2 subsets for weights 400, 500, 600 and 700.
-- Public typography, colors, semantic states, page/surface backgrounds, gradients, spacing, radii, shadows, focus rings, transition durations/easings and Canvas parameters are centralized in CSS custom properties rather than page-local visual literals.
-- The default public background is a neutral near-white system, avoiding uncontrolled beige/white/light-violet section jumps.
-- CTA hierarchy is singular and contextual: the hero retains the primary connection action, the header opens the demo, and the final conversion section uses a contact-oriented action instead of repeating the same primary label.
-- Process steps are visually equal; SafetyGate remains meaningful through content and status semantics rather than an oversized third-step card.
-- Rendered public HTML and public stylesheet sources are checked by local Nu HTML Checker tooling, with CSS syntax validation enforced separately.
-
-## Public-site conversion priorities
-
-1. Make Respio understandable on the first screen.
-2. Explain why it is more than a text generator.
-3. Show auto-first + SafetyGate + human fallback clearly.
-4. Build trust through architecture, security and readiness honesty.
-5. Move qualified visitors toward a real demo/contact/onboarding action.
+Forbidden proof:
+- fabricated customers or logos;
+- fake testimonials or ratings;
+- invented savings percentages or hours saved;
+- fake uptime/compliance claims;
+- prices, discounts or trial terms beyond the currently approved commercial presentation;
+- exact model/provider claims not backed by the deployment runtime.
 
 ## Public routes
 
-`/`, `/features`, `/marketplaces`, `/marketplaces/wildberries`, `/marketplaces/ozon`, `/marketplaces/yandex-market`, `/marketplaces/avito`, `/pricing`, `/demo`, `/resources`, `/contacts`, `/privacy`, `/terms`.
+`/`, `/features`, `/marketplaces`, `/marketplaces/wildberries`, `/marketplaces/ozon`, `/marketplaces/yandex-market`, `/marketplaces/avito`, `/pricing`, `/demo`, `/help`, `/contacts`, `/privacy`, `/terms`.
 
-Do not create mass SEO pages without unique value and verified intent.
+Every route needs a distinct purpose and page-specific copy. Marketplace pages must not be generated by mechanically replacing the marketplace name.
 
-## Product UI priorities
+## Dashboard priorities
 
-Scan speed, state clarity, operational confidence, low cognitive load, accessibility, responsive behavior, visible error/retry states and safe destructive actions.
+The authenticated product is task-oriented rather than promotional. Priorities:
 
-## Hard constraints
+- scan speed;
+- state clarity;
+- obvious next action;
+- contextual information next to the decision;
+- useful loading, empty, error and read-only states;
+- low cognitive load;
+- safe permissions/destructive actions;
+- accessible desktop and mobile behavior.
 
-- Performance-first and Core Web Vitals-aware.
-- Accessibility mandatory.
-- Reusable visual values live in CSS variables/design tokens.
-- No mixed icon systems or emoji as production UI icons.
-- No generic purple/blue AI landing page, decorative glassmorphism, excessive glow, nested cards or decorative gradients as defaults.
-- Respect `prefers-reduced-motion`.
-- No production claim without implementation evidence.
+Normal user-facing navigation:
 
-## Tooling policy
+- Обзор;
+- Обращения;
+- На проверке;
+- ИИ-ассистент;
+- Автоматизация;
+- Интеграции;
+- Аналитика;
+- Тариф и лимиты.
 
-- Impeccable: deterministic design anti-pattern scan and optional provider skill integration.
-- Playwright: E2E, responsive and visual testing.
-- `@axe-core/playwright`: automated accessibility checks.
-- Lighthouse CI: performance/SEO/accessibility regression monitoring.
-- Composio: intentionally excluded from current core stack; not needed for public-site design, SEO, marketing or current marketplace adapters.
+## Brand and copy voice
 
-## Definition of done for public redesign
+Calm, competent, specific and operational. Use native Russian and concrete verbs. Public copy should be informed by real competitor/category research, then rewritten for MPReply and its actual capabilities. Do not copy competitor wording verbatim and do not invent generic AI/SaaS filler.
 
-Approved IA/copy hierarchy, semantic HTML, correct metadata/canonical, responsive behavior, keyboard accessibility, no serious/critical configured axe violations, no undocumented Impeccable findings, critical Playwright coverage, no fabricated claims, Lighthouse budgets, desktop/mobile visual QA and approved brand system.
+## Definition of done for product-facing changes
 
-## Product dashboard progress · Live AI Assistant · 0.1.20
+A product-facing change is not complete until:
 
-- AI Assistant is now a real tenant-scoped workspace over the existing `/api/messages` and `/api/ai/drafts` contracts instead of a static Sprint-era information screen.
-- Owner/admin/manager memberships can generate drafts through the backend-only Groq/Qwen 3.8 flow; viewer memberships remain read-only and can inspect persisted draft history.
-- The workspace exposes the operational result that matters: generated answer, provider/model, prompt version, confidence, token usage, latency and safety flags, with loading/error/retry/empty/read-only states.
-- The browser never receives an Groq API key and does not call the provider directly.
-
-## Product dashboard progress · Live Integrations · 0.1.21
-
-- Integrations is now a live tenant-scoped workspace over the existing marketplace-account API instead of a static Sprint-era card grid and non-functional Wildberries form.
-- The overview loads real marketplace accounts for the active organization, reports active/problem states, and keeps Ozon, Yandex Market and Avito explicitly unavailable until real adapters are implemented and verified.
-- The Wildberries workspace supports the existing backend capabilities: create account, inspect masked credential fingerprint, validate credentials, update account metadata/default response mode, rotate credentials, revoke credentials and request a manual sync.
-- Owner/admin memberships receive management controls; manager/viewer memberships remain read-only. Backend RBAC remains the security boundary.
-- Raw marketplace credentials are accepted only in create/rotate forms, sent to the backend, cleared from local form state after success and never read back from marketplace-account API responses.
-
-## CI recovery · 0.1.22
-
-Restored the tracked frontend unit-test foundation required by the Quality Gate. This closes the gap where incremental patches assumed `vitest.config.ts`, `vitest.setup.ts`, and the baseline API/theme tests already existed in the repository.
-
-## CI E2E recovery · 0.1.23
-
-Three Chromium E2E failures from the `0.1.22` Quality Gate were corrected without changing product behavior: Automation Rules now uses an unambiguous semantic heading locator, and the AI draft-history mock no longer shadows the generation endpoint. A unit regression contract protects the route matcher.
-
-
-## CI E2E recovery · 0.1.24
-
-The Automation Rules browser test now uses a stateful mock contract: a created rule remains available when the workspace refetches the collection after creation. This fixes the GitHub Chromium failure without changing customer-facing product behavior.
-
-
-## Accessibility CI recovery · 0.1.25
-
-Patch 0.1.25 is a focused accessibility hotfix for the remaining GitHub Quality Gate contrast blockers. It does not add product scope or change marketplace/backend business logic.
-
-
-## Accessibility contrast hardening · 0.1.26
-
-Patch 0.1.26 closes the remaining Wildberries accessibility failure from GitHub Actions and hardens the visual system instead of applying another selector-specific color patch. The audit covered semantic status usage across public-site and dashboard CSS, selected/nested surfaces, brand-soft active states, light/dark theme contracts and representative browser-level axe flows.
-
-The key architectural fix is that text-bearing soft surfaces are no longer translucent. Their computed contrast no longer changes depending on the parent card or selected row underneath. The audit also corrected latent dark-theme issues in kicker text, active navigation, brand-soft labels, processing states and the danger-button text contract. A dedicated dark-theme accessibility suite is now part of the frontend a11y gate.
-
+- product claims match this document and release dependencies;
+- UX states are understandable without developer terminology;
+- reusable visual decisions use the shared design system;
+- accessibility and responsive behavior are preserved;
+- objective unit, type, lint, CSS, build, W3C, E2E, accessibility, visual-regression and Lighthouse checks pass where applicable.

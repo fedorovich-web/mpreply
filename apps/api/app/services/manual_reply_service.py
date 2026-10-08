@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import cast
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.automation.state_machine import ensure_message_transition, ensure_reply_transition
@@ -14,6 +14,7 @@ from app.core.errors import conflict, not_found
 from app.models.ai_draft import AIDraft
 from app.models.customer_message import CustomerMessage
 from app.models.enums import MessageStatus, ReplyStatus, ResponseMode
+from app.models.organization import OrganizationUser
 from app.models.product import Product
 from app.models.reply import Reply
 from app.models.user import User
@@ -83,8 +84,16 @@ class ManualReplyService:
 
         stmt = (
             select(Reply, CustomerMessage, Product)
-            .join(CustomerMessage, Reply.message_id == CustomerMessage.id)
-            .outerjoin(Product, CustomerMessage.product_id == Product.id)
+            .join(
+                CustomerMessage,
+                (Reply.message_id == CustomerMessage.id) & (Reply.organization_id == CustomerMessage.organization_id),
+            )
+            .outerjoin(
+                Product,
+                (CustomerMessage.product_id == Product.id)
+                & (CustomerMessage.organization_id == Product.organization_id)
+                & (CustomerMessage.marketplace_account_id == Product.marketplace_account_id),
+            )
             .where(*filters)
             .order_by(Reply.updated_at.desc(), Reply.created_at.desc())
             .offset((normalized_page - 1) * normalized_page_size)
@@ -115,10 +124,11 @@ class ManualReplyService:
         ai_draft_id: UUID | None,
         reply_text: str | None,
     ) -> tuple[Reply, SafetyResult]:
-        message, product = await self.messages.get_message(actor=actor, message_id=message_id)
+        # Serialize creation with automatic generation completion and routing.
+        # Refresh status after acquiring the lock before accepting a human draft.
+        message, product = await self.messages.get_message(actor=actor, message_id=message_id, for_update=True)
         await self._require_write_role(actor=actor, organization_id=message.organization_id)
         await self._ensure_message_can_receive_reply(message)
-        await self._ensure_no_open_semi_auto_reply(message.id)
 
         ai_draft = await self._get_ai_draft(message=message, ai_draft_id=ai_draft_id) if ai_draft_id is not None else None
         text = (reply_text if reply_text is not None else ai_draft.draft_text if ai_draft is not None else "").strip()
@@ -126,6 +136,28 @@ class ManualReplyService:
             raise conflict("Reply text must not be empty")
 
         safety = self._evaluate_safety(message=message, has_product_context=product is not None, ai_draft=ai_draft, text=text)
+        recovered = await self.session.scalar(select(Reply).where(
+            Reply.message_id == message.id, Reply.organization_id == message.organization_id,
+            Reply.mode.in_((ResponseMode.SEMI_AUTO.value, ResponseMode.AUTO.value)),
+            Reply.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
+            Reply.error_code == "legacy_draft_review_required", Reply.revision == 1,
+        ).with_for_update(skip_locked=True).execution_options(populate_existing=True))
+        if recovered is not None and ai_draft is not None and recovered.ai_draft_id != ai_draft.id:
+            old_draft_id = recovered.ai_draft_id
+            recovered.mode = ResponseMode.SEMI_AUTO.value
+            recovered.ai_draft_id, recovered.reply_text = ai_draft.id, text
+            recovered.revision += 1
+            self._transition_reply(recovered, ReplyStatus.DRAFT.value)
+            recovered.error_code = recovered.failed_reason = None
+            recovered.approved_by = recovered.approved_at = None
+            recovered.metadata_json = {**(recovered.metadata_json or {}), **self._safety_metadata(safety)}
+            await self.audit.write(action="manual_reply.legacy_draft_replaced", entity_type="reply",
+                                   entity_id=str(recovered.id), organization_id=message.organization_id,
+                                   actor_user_id=actor.id,
+                                   metadata={"previous_ai_draft_id": str(old_draft_id), "ai_draft_id": str(ai_draft.id),
+                                             "revision": recovered.revision})
+            return recovered, safety
+        await self._ensure_no_open_semi_auto_reply(message.id)
         reply = Reply(
             organization_id=message.organization_id,
             message_id=message.id,
@@ -164,7 +196,7 @@ class ManualReplyService:
         reply_text: str,
         expected_revision: int,
     ) -> tuple[Reply, SafetyResult]:
-        reply = await self._get_reply_for_update(reply_id)
+        reply = await self._get_reply_for_update(actor=actor, reply_id=reply_id)
         await self._require_write_role(actor=actor, organization_id=reply.organization_id)
         if reply.mode != ResponseMode.SEMI_AUTO.value:
             raise conflict("Only semi-automatic replies can be edited through the manual review workflow")
@@ -199,7 +231,7 @@ class ManualReplyService:
         return reply, safety
 
     async def submit_for_review(self, *, actor: User, reply_id: UUID) -> tuple[Reply, SafetyResult]:
-        reply = await self._get_reply_for_update(reply_id)
+        reply = await self._get_reply_for_update(actor=actor, reply_id=reply_id)
         await self._require_write_role(actor=actor, organization_id=reply.organization_id)
         if reply.mode != ResponseMode.SEMI_AUTO.value:
             raise conflict("Only semi-automatic replies use the manual review workflow")
@@ -244,7 +276,7 @@ class ManualReplyService:
         return reply, safety
 
     async def approve(self, *, actor: User, reply_id: UUID) -> tuple[Reply, SafetyResult]:
-        reply = await self._get_reply_for_update(reply_id)
+        reply = await self._get_reply_for_update(actor=actor, reply_id=reply_id)
         await self._require_write_role(actor=actor, organization_id=reply.organization_id)
         if reply.status != ReplyStatus.WAITING_REVIEW.value:
             raise conflict("Only replies waiting for review can be approved")
@@ -278,12 +310,15 @@ class ManualReplyService:
         return reply, safety
 
     async def reject(self, *, actor: User, reply_id: UUID, reason: str) -> Reply:
-        reply = await self._get_reply_for_update(reply_id)
+        reply = await self._get_reply_for_update(actor=actor, reply_id=reply_id)
         await self._require_write_role(actor=actor, organization_id=reply.organization_id)
         if reply.status != ReplyStatus.WAITING_REVIEW.value:
             raise conflict("Only replies waiting for review can be rejected")
 
-        message = await self._get_message(reply.message_id)
+        message = await self._get_message(
+            reply.message_id,
+            organization_id=reply.organization_id,
+        )
         self._transition_reply(reply, ReplyStatus.DRAFT.value)
         self._transition_message(message, MessageStatus.NEEDS_MANUAL_CHECK.value)
         reply.rejection_reason = reason.strip()
@@ -301,7 +336,7 @@ class ManualReplyService:
         return reply
 
     async def prepare_send(self, *, actor: User, reply_id: UUID) -> ManualReplySendResult:
-        reply = await self._get_reply_for_update(reply_id)
+        reply = await self._get_reply_for_update(actor=actor, reply_id=reply_id)
         await self._require_write_role(actor=actor, organization_id=reply.organization_id)
         if reply.mode != ResponseMode.SEMI_AUTO.value:
             raise conflict("Only approved semi-automatic replies can be sent through this endpoint")
@@ -320,7 +355,10 @@ class ManualReplyService:
             raise conflict("SafetyGate blocked this reply at send time")
 
         idempotency_key = ReplyExecutionService.build_idempotency_key(message)
-        existing = await self._get_reply_by_idempotency_key(idempotency_key)
+        existing = await self._get_reply_by_idempotency_key(
+            idempotency_key,
+            organization_id=reply.organization_id,
+        )
         if existing is not None and existing.id != reply.id:
             await self.audit.write(
                 action="manual_reply.duplicate_suppressed",
@@ -372,16 +410,19 @@ class ManualReplyService:
         result = await self.session.execute(
             select(Reply).where(
                 Reply.message_id == message_id,
-                Reply.mode == ResponseMode.SEMI_AUTO.value,
-                Reply.status.in_({
-                    ReplyStatus.DRAFT.value,
-                    ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
-                    ReplyStatus.WAITING_REVIEW.value,
-                    ReplyStatus.APPROVED.value,
-                    ReplyStatus.QUEUED.value,
-                    ReplyStatus.SENDING.value,
-                    ReplyStatus.RETRY_PENDING.value,
-                }),
+                or_(Reply.mode == ResponseMode.SEMI_AUTO.value,
+                    and_(Reply.mode == ResponseMode.AUTO.value, Reply.error_code == "legacy_draft_review_required")),
+                Reply.status.in_(
+                    {
+                        ReplyStatus.DRAFT.value,
+                        ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
+                        ReplyStatus.WAITING_REVIEW.value,
+                        ReplyStatus.APPROVED.value,
+                        ReplyStatus.QUEUED.value,
+                        ReplyStatus.SENDING.value,
+                        ReplyStatus.RETRY_PENDING.value,
+                    }
+                ),
             )
         )
         if result.scalars().first() is not None:
@@ -400,19 +441,51 @@ class ManualReplyService:
             raise not_found("AI draft not found for this message")
         return draft
 
-    async def _get_reply_for_update(self, reply_id: UUID) -> Reply:
-        result = await self.session.execute(select(Reply).where(Reply.id == reply_id).with_for_update())
+    async def _get_reply_for_update(self, *, actor: User, reply_id: UUID) -> Reply:
+        result = await self.session.execute(
+            select(Reply)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == Reply.organization_id,
+            )
+            .where(
+                Reply.id == reply_id,
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+            )
+            .with_for_update(of=Reply)
+        )
         reply = result.scalar_one_or_none()
         if reply is None:
             raise not_found("Reply not found")
         return reply
 
-    async def _get_reply_by_idempotency_key(self, idempotency_key: str) -> Reply | None:
-        result = await self.session.execute(select(Reply).where(Reply.idempotency_key == idempotency_key))
+    async def _get_reply_by_idempotency_key(
+        self,
+        idempotency_key: str,
+        *,
+        organization_id: UUID,
+    ) -> Reply | None:
+        result = await self.session.execute(
+            select(Reply).where(
+                Reply.idempotency_key == idempotency_key,
+                Reply.organization_id == organization_id,
+            )
+        )
         return result.scalar_one_or_none()
 
-    async def _get_message(self, message_id: UUID) -> CustomerMessage:
-        result = await self.session.execute(select(CustomerMessage).where(CustomerMessage.id == message_id))
+    async def _get_message(
+        self,
+        message_id: UUID,
+        *,
+        organization_id: UUID,
+    ) -> CustomerMessage:
+        result = await self.session.execute(
+            select(CustomerMessage).where(
+                CustomerMessage.id == message_id,
+                CustomerMessage.organization_id == organization_id,
+            )
+        )
         message = result.scalar_one_or_none()
         if message is None:
             raise not_found("Customer message not found")

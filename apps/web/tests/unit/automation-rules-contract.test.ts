@@ -56,6 +56,15 @@ describe("Automation Rules API contracts", () => {
     );
   });
 
+  it("accepts buyer-message automation rules", () => {
+    const parsed = automationRuleListSchema.parse({
+      items: [{ ...rule, name: "Сообщения покупателей", applies_to: "chat", min_rating: null, max_rating: null }],
+      total: 1,
+    });
+
+    expect(parsed.items[0]?.applies_to).toBe("chat");
+  });
+
   it("keeps a newly created rule in the E2E mock list after the POST response", () => {
     const state = createAutomationRulesMockState();
 

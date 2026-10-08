@@ -1,0 +1,126 @@
+:root {
+	/* Shared MPReply palette derived from the approved blue homepage reference. */
+	--color-bg-page: #f7fbff;
+	--color-bg-surface: #ffffff;
+	--color-bg-elevated: #ffffff;
+	--color-bg-subtle: #f4f8fd;
+	--color-bg-brand-soft: #eaf4ff;
+	--color-surface-cool: #f6faff;
+	--color-text-primary: #071846;
+	--color-text-secondary: #50648a;
+	--color-text-muted: #566b8e;
+	--color-kicker-text: #0b68f6;
+	--color-brand-text-on-soft: #0b61e8;
+	--color-border-subtle: #dce9f8;
+	--color-border-strong: #b7d1f6;
+	--color-border-card: #dce9f8;
+	--color-brand-primary: #0b68f6;
+	--color-brand-primary-strong: #0757d7;
+	--color-brand-deep: #0649b8;
+	--color-brand-primary-hover: #0757d7;
+	--color-brand-primary-active: #0649b8;
+	--color-brand-accent: #0b68f6;
+	--color-brand-accent-hover: #0757d7;
+	--color-brand-accent-soft: #b9dcff;
+	--color-brand-mint-soft: #eaf4ff;
+	--color-focus-ring: #0b68f6;
+	--color-text-on-brand: #ffffff;
+	--color-text-on-dark: #f8fbff;
+	--color-surface-dark: #071846;
+	--color-brand-soft: #eaf4ff;
+	--color-brand-soft-strong: rgb(11 104 246 / 15%);
+	--color-info: #0b68f6;
+	--color-info-text: #0b61e8;
+	--color-info-soft: #eaf4ff;
+	--color-success-text-on-dark: #7dd3fc;
+	--color-surface-mint-tint: #f0f9ff;
+
+	--radius-card: 1rem;
+	--radius-panel: 1.65rem;
+	--space-section-public: clamp(7rem, 10vw, 10rem);
+
+	--gradient-mpreply-action: linear-gradient(110deg, #0d6cf7 0%, #0674ff 58%, #0a5fe8 100%);
+	--gradient-public-hero: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+	--gradient-public-cta: linear-gradient(115deg, #0757d7 0%, #0b68f6 52%, #1684ff 100%);
+	--gradient-hero:
+		radial-gradient(circle at top left, rgb(11 104 246 / 10%), transparent 34%),
+		linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+
+	--shadow-xs: 0 1px 2px rgb(7 69 143 / 5%);
+	--shadow-sm: 0 2px 8px rgb(7 69 143 / 7%);
+	--shadow-md: 0 10px 26px rgb(7 69 143 / 9%);
+	--shadow-lg: 0 24px 56px rgb(7 69 143 / 12%);
+	--shadow-card: 0 16px 40px rgb(11 104 246 / 6%);
+	--shadow-public-card: 0 18px 54px rgb(7 69 143 / 9%);
+	--shadow-public-card-hover: 0 14px 32px rgb(7 69 143 / 10%);
+	--shadow-marketplace-hover: 0 12px 28px rgb(7 69 143 / 8%);
+	--shadow-public-panel: 0 24px 60px rgb(7 69 143 / 10%);
+	--shadow-public-cta: 0 28px 70px rgb(11 104 246 / 18%);
+	--shadow-secondary-button: inset 0 1px 0 rgb(255 255 255 / 80%), 0 8px 20px rgb(7 69 143 / 6%);
+
+	/* Authenticated application surfaces intentionally use the same brand family. */
+	--app-sidebar-bg: #ffffff;
+	--app-topbar-bg: rgb(255 255 255 / 90%);
+	--app-nav-active-bg: #eaf4ff;
+	--app-nav-hover-bg: #f6faff;
+	--app-card-hover-shadow: 0 16px 36px rgb(7 69 143 / 10%);
+}
+
+[data-theme='dark'] {
+	--color-bg-page: #06111f;
+	--color-bg-surface: #0a182b;
+	--color-bg-elevated: #0e2038;
+	--color-bg-subtle: #081524;
+	--color-bg-brand-soft: #0b2b57;
+	--color-surface-cool: #081725;
+	--color-text-primary: #f8fbff;
+	--color-text-secondary: #c8d6e9;
+	--color-text-muted: #8ea4c4;
+	--color-kicker-text: #69b1ff;
+	--color-brand-text-on-soft: #8cc7ff;
+	--color-border-subtle: #183a62;
+	--color-border-strong: #275786;
+	--color-border-card: #183a62;
+	--color-brand-primary: #5aa7ff;
+	--color-brand-primary-strong: #82bdff;
+	--color-brand-deep: #318cf6;
+	--color-brand-primary-hover: #82bdff;
+	--color-brand-primary-active: #4196f8;
+	--color-brand-accent: #5aa7ff;
+	--color-brand-accent-hover: #82bdff;
+	--color-brand-accent-soft: #9fd0ff;
+	--color-brand-mint-soft: #0b2b57;
+	--color-focus-ring: #5aa7ff;
+	--color-text-on-brand: #031024;
+	--color-text-on-dark: #f8fbff;
+	--color-surface-dark: #040b14;
+	--color-brand-soft: #0b2b57;
+	--color-brand-soft-strong: rgb(90 167 255 / 18%);
+	--color-success-text: #75e0a7;
+	--color-success-soft: #053321;
+	--color-warning-text: #fec84b;
+	--color-warning-soft: #3f2a0a;
+	--color-danger-text: #fda29b;
+	--color-danger-soft: #55160c;
+	--color-info: #5aa7ff;
+	--color-info-text: #8cc7ff;
+	--color-info-soft: #0b2b57;
+	--color-surface-mint-tint: #0b1f31;
+	--color-public-page: var(--color-bg-page);
+	--color-public-section: var(--color-bg-page);
+	--color-public-section-subtle: var(--color-bg-subtle);
+	--color-public-surface: var(--color-bg-surface);
+	--color-public-header: rgb(10 24 43 / 92%);
+	--color-public-footer: var(--color-bg-page);
+	--gradient-mpreply-action: linear-gradient(110deg, #1684ff 0%, #0b68f6 58%, #0757d7 100%);
+	--gradient-public-hero: linear-gradient(180deg, #0a182b 0%, #06111f 100%);
+	--gradient-public-cta: linear-gradient(115deg, #0757d7 0%, #0b68f6 55%, #1684ff 100%);
+	--gradient-hero:
+		radial-gradient(circle at top left, rgb(90 167 255 / 13%), transparent 34%),
+		linear-gradient(180deg, #0a182b 0%, #06111f 100%);
+	--app-sidebar-bg: #0a182b;
+	--app-topbar-bg: rgb(10 24 43 / 88%);
+	--app-nav-active-bg: #0b2b57;
+	--app-nav-hover-bg: rgb(90 167 255 / 8%);
+	--app-card-hover-shadow: 0 16px 36px rgb(0 0 0 / 24%);
+}

@@ -7,13 +7,13 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import payment_required
 from app.models.ai_draft import AIDraft
 from app.models.billing_plan import BillingPlan
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.organization import Organization, OrganizationUser
 from app.models.reply import Reply
 from app.models.subscription import Subscription
+from app.services.billing_period_service import BillingPeriodService, period_boundary
 
 _LIMIT_METRICS = (
     "ai_drafts_monthly",
@@ -46,6 +46,7 @@ class PlanLimitService:
 
     async def get_billing_context(self, *, organization_id: UUID, now: datetime | None = None) -> BillingContext:
         current = now or datetime.now(UTC)
+        paid_period = await BillingPeriodService(self.session).materialize_current(organization_id=organization_id, now=current)
         period_start, period_end = self.month_period(current)
 
         subscription_result = await self.session.execute(
@@ -69,9 +70,7 @@ class PlanLimitService:
                 plan = plan_result.scalar_one_or_none()
 
         if plan is None:
-            plan_result = await self.session.execute(
-                select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1)
-            )
+            plan_result = await self.session.execute(select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1))
             plan = plan_result.scalar_one_or_none()
 
         if plan is None:
@@ -79,6 +78,10 @@ class PlanLimitService:
 
         effective_start = subscription.current_period_start if subscription and subscription.current_period_start else period_start
         effective_end = subscription.current_period_end if subscription and subscription.current_period_end else period_end
+        if paid_period is not None:
+            month_index = min(paid_period.months - 1, max(0, paid_period.next_grant_index - 1))
+            effective_start = period_boundary(paid_period, month_index)
+            effective_end = period_boundary(paid_period, month_index + 1)
         return BillingContext(plan=plan, subscription=subscription, period_start=effective_start, period_end=effective_end)
 
     async def evaluate_all(self, *, organization_id: UUID, now: datetime | None = None) -> tuple[BillingContext, list[UsageLimitDecision]]:
@@ -118,12 +121,6 @@ class PlanLimitService:
             allowed=limit is None or used < limit,
         )
 
-    async def enforce_ai_draft_limit(self, *, organization_id: UUID) -> UsageLimitDecision:
-        decision = await self.evaluate_metric(organization_id=organization_id, metric="ai_drafts_monthly")
-        if not decision.allowed:
-            raise payment_required("Monthly AI draft limit is exhausted for the current plan")
-        return decision
-
     async def _usage_value(
         self,
         *,
@@ -148,7 +145,7 @@ class PlanLimitService:
         elif metric == "marketplace_accounts":
             stmt = select(func.count(MarketplaceAccount.id)).where(
                 MarketplaceAccount.organization_id == organization_id,
-                MarketplaceAccount.status != "revoked",
+                MarketplaceAccount.status.not_in({"revoked", "deleted"}),
             )
         elif metric == "members":
             stmt = select(func.count(OrganizationUser.id)).where(
@@ -174,9 +171,5 @@ class PlanLimitService:
     def month_period(now: datetime) -> tuple[datetime, datetime]:
         normalized = now.astimezone(UTC)
         start = datetime(normalized.year, normalized.month, 1, tzinfo=UTC)
-        end = (
-            datetime(normalized.year + 1, 1, 1, tzinfo=UTC)
-            if normalized.month == 12
-            else datetime(normalized.year, normalized.month + 1, 1, tzinfo=UTC)
-        )
+        end = datetime(normalized.year + 1, 1, 1, tzinfo=UTC) if normalized.month == 12 else datetime(normalized.year, normalized.month + 1, 1, tzinfo=UTC)
         return start, end

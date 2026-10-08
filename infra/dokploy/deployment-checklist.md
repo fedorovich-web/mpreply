@@ -4,10 +4,10 @@
 
 Create separate Dokploy environments for staging and production. Production must deploy from `main` only after the repository Quality Gate passes.
 
-Create one **Docker Compose** application for Respio and configure:
+Create one **Docker Compose** application for MPReply and configure:
 
 ```text
-Repository: fedorovich-web/respio
+Repository: fedorovich-web/mpreply
 Branch: main
 Compose path: ./infra/docker/docker-compose.production.yml
 ```
@@ -54,12 +54,12 @@ For `FORWARDED_ALLOW_IPS`, use the actual Dokploy/Traefik proxy address or trust
 Use Dokploy's native **Domains** tab for the Compose application:
 
 ```text
-respio.ru      -> web:3000
-app.respio.ru  -> web:3000
-api.respio.ru  -> api:8000
+mpreply.ru      -> web:3000
+app.mpreply.ru  -> web:3000
+api.mpreply.ru  -> api:8000
 ```
 
-Configure `www.respio.ru` to canonicalize/redirect to `respio.ru`. DNS must point to the Dokploy host and public routes must use HTTPS.
+Configure `www.mpreply.ru` to canonicalize/redirect to `mpreply.ru`. DNS must point to the Dokploy host and public routes must use HTTPS.
 
 Do not hardcode Traefik labels into `docker-compose.production.yml` unless native Dokploy domain management cannot satisfy a documented requirement.
 
@@ -84,9 +84,10 @@ Required order is enforced by Compose where applicable:
 2. `migrate` runs `alembic upgrade head` and exits successfully.
 3. `api` starts and reaches `/health/ready`.
 4. `worker` starts.
-5. `web` starts and reaches `/api/health`.
-6. Run production smoke checks.
-7. Only then enable/resume automatic reply execution.
+5. `scheduler` starts.
+6. `web` starts and reaches `/api/health`.
+7. Run production smoke checks.
+8. Only then enable/resume automatic reply execution.
 
 ## 6. Security and operational checks
 

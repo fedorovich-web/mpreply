@@ -3,24 +3,31 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.base import AdapterResult
-from app.adapters.wildberries import WildberriesAdapter
+from app.adapters.base import AdapterResult, CredentialValidation
+from app.adapters.capabilities import streams_for_scopes, validated_scope_names
+from app.adapters.registry import MarketplaceAdapterRegistry, UnsupportedCapabilityError
 from app.core.config import get_settings
-from app.core.errors import bad_request, forbidden, not_found, payment_required
+from app.core.errors import bad_request, conflict, forbidden, not_found, payment_required
 from app.core.security import CredentialService
+from app.models.automation_rule import AutomationRule
 from app.models.enums import Marketplace, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.marketplace_sync_state import MarketplaceSyncState
+from app.models.organization import OrganizationUser
 from app.models.user import User
+from app.schemas.marketplace_account import MarketplaceAccountResponse
 from app.services.audit_service import AuditService
+from app.services.marketplace_sync_state_service import MarketplaceSyncStateService
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
 
 _ALLOWED_MANAGE_ROLES = {"owner", "admin"}
 _ALLOWED_READ_ROLES = {"owner", "admin", "manager", "viewer"}
+_TRANSIENT_VALIDATION_ERRORS = frozenset({"rate_limited", "marketplace_unavailable", "network_timeout", "network_error"})
 
 
 class MarketplaceAccountService:
@@ -90,22 +97,34 @@ class MarketplaceAccountService:
             allowed_roles=_ALLOWED_READ_ROLES,
         )
         result = await self.session.execute(
-            select(MarketplaceAccount)
-            .where(MarketplaceAccount.organization_id == organization_id)
-            .order_by(MarketplaceAccount.created_at.desc())
+            select(MarketplaceAccount).where(
+                MarketplaceAccount.organization_id == organization_id,
+                MarketplaceAccount.status != "deleted",
+            ).order_by(MarketplaceAccount.created_at.desc())
         )
         return list(result.scalars().all())
 
-    async def get_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
-        result = await self.session.execute(select(MarketplaceAccount).where(MarketplaceAccount.id == account_id))
+    async def get_account(self, *, actor: User, account_id: UUID, for_update: bool = False) -> MarketplaceAccount:
+        statement = (
+            select(MarketplaceAccount)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == MarketplaceAccount.organization_id,
+            )
+            .where(
+                MarketplaceAccount.id == account_id,
+                MarketplaceAccount.status != "deleted",
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_ALLOWED_READ_ROLES),
+            )
+        )
+        if for_update:
+            statement = statement.with_for_update(of=MarketplaceAccount).execution_options(populate_existing=True)
+        result = await self.session.execute(statement)
         account = result.scalar_one_or_none()
         if account is None:
             raise not_found("Marketplace account not found")
-        await self.organization_service.require_membership_role(
-            organization_id=account.organization_id,
-            user_id=actor.id,
-            allowed_roles=_ALLOWED_READ_ROLES,
-        )
         return account
 
     async def update_account(
@@ -115,10 +134,11 @@ class MarketplaceAccountService:
         account_id: UUID,
         display_name: str | None = None,
         seller_id: str | None = None,
+        seller_id_supplied: bool = False,
         default_response_mode: ResponseMode | None = None,
         status: str | None = None,
     ) -> MarketplaceAccount:
-        account = await self.get_account(actor=actor, account_id=account_id)
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
@@ -126,14 +146,23 @@ class MarketplaceAccountService:
         )
         if display_name is not None:
             account.display_name = display_name.strip()
-        if seller_id is not None:
-            account.seller_id = seller_id.strip() or None
         if default_response_mode is not None:
             account.default_response_mode = default_response_mode.value
         if status is not None:
             if status not in {"active", "disabled", "pending_validation"}:
                 raise bad_request("Unsupported marketplace account status")
             account.status = status
+        if seller_id_supplied:
+            normalized_seller_id = seller_id.strip() if seller_id is not None else ""
+            new_seller_id = normalized_seller_id or None
+            if new_seller_id != account.seller_id:
+                account.seller_id = new_seller_id
+                account.scopes_json = {}
+                if account.credentials_status != "revoked":
+                    account.credentials_status = "pending_validation"
+                    account.status = "pending_validation"
+                else:
+                    account.status = "disabled"
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.updated",
@@ -141,19 +170,23 @@ class MarketplaceAccountService:
             organization_id=account.organization_id,
             actor_user_id=actor.id,
             entity_id=str(account.id),
-            metadata={"fields_changed": [k for k, v in {
-                "display_name": display_name,
-                "seller_id": seller_id,
-                "default_response_mode": default_response_mode.value if default_response_mode else None,
-                "status": status,
-            }.items() if v is not None]},
+            metadata={
+                "fields_changed": [
+                    k
+                    for k, v in {
+                        "display_name": display_name,
+                        "seller_id": seller_id if seller_id_supplied else None,
+                        "default_response_mode": default_response_mode.value if default_response_mode else None,
+                        "status": status,
+                    }.items()
+                    if v is not None or (k == "seller_id" and seller_id_supplied)
+                ]
+            },
         )
         return account
 
-    async def rotate_credentials(
-        self, *, actor: User, account_id: UUID, raw_credentials: str
-    ) -> MarketplaceAccount:
-        account = await self.get_account(actor=actor, account_id=account_id)
+    async def rotate_credentials(self, *, actor: User, account_id: UUID, raw_credentials: str) -> MarketplaceAccount:
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
@@ -165,6 +198,7 @@ class MarketplaceAccountService:
         account.credentials_last_rotated_at = datetime.now(UTC)
         account.credentials_status = "pending_validation"
         account.status = "pending_validation"
+        account.scopes_json = {}
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.rotated",
@@ -177,7 +211,7 @@ class MarketplaceAccountService:
         return account
 
     async def revoke_credentials(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
-        account = await self.get_account(actor=actor, account_id=account_id)
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
@@ -185,6 +219,7 @@ class MarketplaceAccountService:
         )
         account.credentials_status = "revoked"
         account.status = "disabled"
+        account.scopes_json = {}
         await self.session.flush()
         await self.audit.write(
             action="marketplace_account.credentials.revoked",
@@ -196,14 +231,71 @@ class MarketplaceAccountService:
         )
         return account
 
-    async def validate_credentials(self, *, actor: User, account_id: UUID) -> tuple[MarketplaceAccount, AdapterResult]:
+    async def delete_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
+        """Remove a connection, destroy its credentials and retain historical records."""
+        account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
+        await self.organization_service.require_membership_role(
+            organization_id=account.organization_id,
+            user_id=actor.id,
+            allowed_roles=_ALLOWED_MANAGE_ROLES,
+        )
+        # Retain the tenant-scoped identity for historical messages and the
+        # immutable credit ledger. The connection is permanently removed from
+        # management and cannot be reactivated or use its discarded secret.
+        account.status = "deleted"
+        account.credentials_status = "revoked"
+        account.credentials_encrypted = ""
+        account.credentials_fingerprint = "deleted"
+        account.seller_id = None
+        account.scopes_json = {}
+        await self.session.execute(
+            update(MarketplaceSyncState).where(
+                MarketplaceSyncState.organization_id == account.organization_id,
+                MarketplaceSyncState.marketplace_account_id == account.id,
+            ).values(status="paused", lease_owner=None, lease_expires_at=None, next_run_at=None)
+        )
+        await self.session.execute(
+            update(AutomationRule).where(
+                AutomationRule.organization_id == account.organization_id,
+                AutomationRule.marketplace_account_id == account.id,
+            ).values(is_enabled=False)
+        )
+        await self.audit.write(
+            action="marketplace_account.deleted",
+            entity_type="marketplace_account",
+            organization_id=account.organization_id,
+            actor_user_id=actor.id,
+            entity_id=str(account.id),
+            metadata={"marketplace": account.marketplace, "credentials_destroyed": True},
+        )
+        await self.session.flush()
+        return account
+
+    async def validate_credentials(
+        self,
+        *,
+        actor: User,
+        account_id: UUID,
+        registry: MarketplaceAdapterRegistry,
+    ) -> tuple[MarketplaceAccount, AdapterResult[CredentialValidation]]:
         account = await self.get_account(actor=actor, account_id=account_id)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
+        if account.credentials_status == "revoked":
+            raise conflict("Rotate revoked credentials before validation")
+        try:
+            marketplace = Marketplace(account.marketplace)
+            adapter = registry.credentials(marketplace)
+        except (ValueError, UnsupportedCapabilityError):
+            raise forbidden("Marketplace adapter is not enabled yet") from None
         credential = self.credentials.decrypt(account.credentials_encrypted)
+        expected_fingerprint = account.credentials_fingerprint
+        expected_organization_id = account.organization_id
+        expected_account_id = account.id
+        seller_id = account.seller_id
         await self.audit.write(
             action="marketplace_account.credentials.used_for_validation",
             entity_type="marketplace_account",
@@ -212,27 +304,78 @@ class MarketplaceAccountService:
             entity_id=str(account.id),
             metadata={"marketplace": account.marketplace},
         )
-        adapter = self._adapter_for(account.marketplace)
-        result = await adapter.validate_credentials(credential)
+        # Persist the authorization/audit boundary before the provider call. This
+        # also guarantees that no database transaction is held open during I/O.
+        await self.session.commit()
+        result = await adapter.validate_credentials(credential, seller_id)
+        current_result = await self.session.execute(
+            select(MarketplaceAccount)
+            .join(
+                OrganizationUser,
+                OrganizationUser.organization_id == MarketplaceAccount.organization_id,
+            )
+            .where(
+                MarketplaceAccount.id == expected_account_id,
+                MarketplaceAccount.organization_id == expected_organization_id,
+                MarketplaceAccount.credentials_fingerprint == expected_fingerprint,
+                MarketplaceAccount.seller_id == seller_id,
+                MarketplaceAccount.credentials_status != "revoked",
+                OrganizationUser.user_id == actor.id,
+                OrganizationUser.status == "active",
+                OrganizationUser.role.in_(_ALLOWED_MANAGE_ROLES),
+            )
+            .with_for_update(of=MarketplaceAccount)
+        )
+        account = current_result.scalar_one_or_none()
+        if account is None:
+            raise conflict("Marketplace credentials changed during validation")
         now = datetime.now(UTC)
+        validation = result.data if result.ok else None
+        if result.ok and validation is None:
+            result = AdapterResult[CredentialValidation](
+                False,
+                error_code="malformed_payload",
+                error_message_safe="Marketplace credential validation could not be proven",
+            )
 
-        if result.ok:
+        if validation is not None:
             account.status = "active"
             account.credentials_status = "valid"
-            account.scopes_json = {"validated": True, "checked_at": now.isoformat()}
+            account.scopes_json = {
+                "scopes": list(validation.scopes),
+                "checked_at": now.isoformat(),
+                **({"write_verification": validation.write_verification} if validation.write_verification is not None else {}),
+            }
+            await MarketplaceSyncStateService(self.session).schedule_validated_streams(
+                account,
+                streams_for_scopes(registry.capability(marketplace).streams, account.scopes_json),
+                now,
+            )
             event_status = "success"
             error_code = None
             error_message_safe = None
             action = "marketplace_account.credentials.validated"
         else:
-            account.credentials_status = result.error_code or "invalid"
-            account.status = "error"
+            preserve_validated_access = (
+                result.error_code in _TRANSIENT_VALIDATION_ERRORS
+                and account.status == "active"
+                and account.credentials_status == "valid"
+                and bool(validated_scope_names(account.scopes_json))
+            )
+            if not preserve_validated_access:
+                account.credentials_status = result.error_code or "invalid"
+                account.status = "error"
+                account.scopes_json = {}
             account.last_error_sync_at = now
             account.error_count = int(account.error_count or 0) + 1
             event_status = "failed"
             error_code = result.error_code
             error_message_safe = result.error_message_safe
-            action = "marketplace_account.credentials.validation_failed"
+            action = (
+                "marketplace_account.credentials.validation_deferred"
+                if preserve_validated_access
+                else "marketplace_account.credentials.validation_failed"
+            )
 
         await self._write_integration_event(
             account=account,
@@ -256,9 +399,27 @@ class MarketplaceAccountService:
         await self.session.flush()
         return account, result
 
-    def to_response(self, account: MarketplaceAccount):
-        from app.schemas.marketplace_account import MarketplaceAccountResponse
-
+    async def to_response(self, account: MarketplaceAccount) -> MarketplaceAccountResponse:
+        states = list((await self.session.scalars(select(MarketplaceSyncState).where(
+            MarketplaceSyncState.organization_id == account.organization_id,
+            MarketplaceSyncState.marketplace_account_id == account.id,
+        ))).all())
+        last_success = account.last_success_sync_at
+        last_error = account.last_error_sync_at
+        # Only completion of every configured stream can supersede an old
+        # account-level failure. Partial imports never become success.
+        successes = [state.last_success_at for state in states if state.last_success_at is not None]
+        if states and len(successes) == len(states):
+            completed_at = min(value.replace(tzinfo=UTC) for value in successes)
+            last_success = max(completed_at, last_success.replace(tzinfo=UTC)) if last_success else completed_at
+        errors = [state for state in states if state.last_error_code is not None]
+        attempts = [state.last_attempt_at.replace(tzinfo=UTC) for state in errors if state.last_attempt_at is not None]
+        if attempts:
+            latest_attempt = max(attempts)
+            last_error = max(latest_attempt, last_error.replace(tzinfo=UTC)) if last_error else latest_attempt
+        retry_times = [state.next_run_at for state in errors if state.next_run_at is not None]
+        error = max(errors, key=lambda state: (state.last_error_code != "rate_limited",
+                    state.last_attempt_at.replace(tzinfo=UTC) if state.last_attempt_at else datetime.min.replace(tzinfo=UTC))) if errors else None
         return MarketplaceAccountResponse(
             id=account.id,
             organization_id=account.organization_id,
@@ -270,17 +431,14 @@ class MarketplaceAccountService:
             credentials_status=account.credentials_status,
             scopes_json=account.scopes_json or {},
             default_response_mode=account.default_response_mode,
-            last_success_sync_at=getattr(account, "last_success_sync_at", None),
-            last_error_sync_at=getattr(account, "last_error_sync_at", None),
-            error_count=int(getattr(account, "error_count", 0) or 0),
+            last_success_sync_at=last_success,
+            last_error_sync_at=last_error,
+            sync_error_code=error.last_error_code if error else None,
+            sync_next_retry_at=max(value.replace(tzinfo=UTC) for value in retry_times) if retry_times else None,
+            error_count=account.error_count,
             created_at=account.created_at,
             updated_at=account.updated_at,
         )
-
-    def _adapter_for(self, marketplace: str):
-        if marketplace == Marketplace.WILDBERRIES.value:
-            return WildberriesAdapter()
-        raise forbidden("Marketplace adapter is not enabled yet")
 
     async def _write_integration_event(
         self,

@@ -1,5 +1,28 @@
 import { z } from "zod";
 
+export const authProvidersSchema = z.object({ yandex: z.boolean() });
+export const authIdentitiesSchema = z.object({ yandex_linked: z.boolean(), can_link_yandex: z.boolean() });
+function secureProviderUrl(value: string, provider: "lava" | "yandex"): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return false;
+    return provider === "lava" ? url.hostname === "lava.top" || url.hostname.endsWith(".lava.top")
+      : url.hostname === "oauth.yandex.ru" && url.pathname === "/authorize";
+  } catch { return false; }
+}
+export const authorizationUrlSchema = z.object({ authorization_url: z.string().url().refine((value) => secureProviderUrl(value, "yandex")) });
+export const billingCatalogSchema = z.object({
+  enabled: z.boolean(), can_purchase: z.boolean(), currency: z.literal("RUB"),
+  plans: z.array(z.object({ code: z.string(), amount_month_minor: z.number().int().positive(), amount_year_minor: z.number().int().positive(), monthly_credits: z.number().int().positive() })),
+  packs: z.array(z.object({ quantity: z.number().int().positive(), amount_minor: z.number().int().positive() })),
+});
+export const billingOrderSchema = z.object({
+  id: z.string().uuid(), organization_id: z.string().uuid(), kind: z.enum(["plan", "addon"]), amount_minor: z.number().int().positive(), currency: z.literal("RUB"),
+  state: z.enum(["creating", "pending", "review_required", "paid", "failed"]), payment_url: z.string().url().refine((value) => secureProviderUrl(value, "lava")).nullable(),
+  monthly_credits: z.number().int().nonnegative(), addon_credits: z.number().int().nonnegative(), created_at: z.string(), paid_at: z.string().nullable(), last_error: z.string().nullable(),
+});
+export const billingOrdersSchema = z.array(billingOrderSchema);
+
 const uuidSchema = z.string().uuid();
 const timestampSchema = z.string().min(1);
 
@@ -17,7 +40,7 @@ export const authSessionSchema = z.object({
   user: userSchema,
 });
 
-export const organizationRoleSchema = z.enum(["owner", "admin", "manager", "viewer"]);
+const organizationRoleSchema = z.enum(["owner", "admin", "manager", "viewer"]);
 
 export const organizationSchema = z.object({
   id: uuidSchema,
@@ -42,7 +65,7 @@ export const automationRuleSchema = z.object({
   priority: z.number().int().min(0).max(10000),
   is_enabled: z.boolean(),
   mode: z.enum(["auto", "semi_auto"]),
-  applies_to: z.enum(["all", "review", "question"]),
+  applies_to: z.enum(["all", "review", "question", "chat"]),
   marketplace: z.enum(["wildberries", "ozon", "yandex_market", "avito"]).nullable(),
   min_rating: z.number().int().min(1).max(5).nullable(),
   max_rating: z.number().int().min(1).max(5).nullable(),
@@ -74,11 +97,11 @@ export const automationRuleActionSchema = z.object({
   is_enabled: z.boolean(),
 });
 
-export const productSummarySchema = z.object({
+const productSummarySchema = z.object({
   id: uuidSchema,
   external_id: z.string(),
   sku: z.string().nullable(),
-  name: z.string(),
+  name: z.string().nullable(),
   brand: z.string().nullable(),
   category: z.string().nullable(),
   image_url: z.string().nullable(),
@@ -172,7 +195,7 @@ export const replySchema = z.object({
   updated_at: timestampSchema,
 });
 
-export const safetySummarySchema = z.object({
+const safetySummarySchema = z.object({
   decision: z.string(),
   flags: z.array(z.string()),
   reasons: z.array(z.string()),
@@ -214,9 +237,11 @@ export const marketplaceAccountSchema = z.object({
   credentials_masked: z.string().min(1),
   credentials_status: z.string().min(1),
   scopes_json: z.record(z.string(), z.unknown()),
-  default_response_mode: z.string().min(1),
+  default_response_mode: z.enum(["inherit", "auto", "semi_auto"]),
   last_success_sync_at: timestampSchema.nullable(),
   last_error_sync_at: timestampSchema.nullable(),
+  sync_error_code: z.string().nullable().optional(),
+  sync_next_retry_at: timestampSchema.nullable().optional(),
   error_count: z.number().int().nonnegative(),
   created_at: timestampSchema,
   updated_at: timestampSchema,
@@ -245,21 +270,19 @@ export const marketplaceAccountActionSchema = z.object({
 export const marketplaceSyncSchema = z.object({
   account_id: uuidSchema,
   marketplace: z.string().min(1),
-  status: z.enum(["success", "failed"]),
+  status: z.enum(["success", "failed", "in_progress", "partial"]),
   imported_reviews: z.number().int().nonnegative(),
   imported_questions: z.number().int().nonnegative(),
+  imported_chats: z.number().int().nonnegative(),
   updated_reviews: z.number().int().nonnegative(),
   updated_questions: z.number().int().nonnegative(),
+  updated_chats: z.number().int().nonnegative(),
   skipped: z.number().int().nonnegative(),
   error_code: z.string().nullable(),
   error_message_safe: z.string().nullable(),
 });
 
 export type MarketplaceAccount = z.infer<typeof marketplaceAccountSchema>;
-export type MarketplaceAccountValidate = z.infer<typeof marketplaceAccountValidateSchema>;
-export type MarketplaceAccountAction = z.infer<typeof marketplaceAccountActionSchema>;
-export type MarketplaceSync = z.infer<typeof marketplaceSyncSchema>;
-
 export const messageResponseSchema = z.object({
   message: z.string(),
 });
@@ -267,17 +290,11 @@ export const messageResponseSchema = z.object({
 export type User = z.infer<typeof userSchema>;
 export type Organization = z.infer<typeof organizationSchema>;
 export type AutomationRule = z.infer<typeof automationRuleSchema>;
-export type AutomationRuleList = z.infer<typeof automationRuleListSchema>;
 export type CustomerMessage = z.infer<typeof customerMessageSchema>;
-export type CustomerMessageList = z.infer<typeof customerMessageListSchema>;
 export type AIDraft = z.infer<typeof aiDraftSchema>;
-export type AIDraftList = z.infer<typeof aiDraftListSchema>;
-export type Reply = z.infer<typeof replySchema>;
-export type SafetySummary = z.infer<typeof safetySummarySchema>;
 export type ReviewQueueItem = z.infer<typeof reviewQueueItemSchema>;
-export type ReviewQueueList = z.infer<typeof reviewQueueListSchema>;
 
-export const analyticsPeriodSchema = z.object({
+const analyticsPeriodSchema = z.object({
   start: timestampSchema,
   end: timestampSchema,
   days: z.number().int().min(1).max(366),
@@ -356,7 +373,7 @@ export const aiUsageAnalyticsSchema = z.object({
   })),
 });
 
-export const billingPlanSchema = z.object({
+const billingPlanSchema = z.object({
   id: uuidSchema,
   code: z.string(),
   name: z.string(),
@@ -368,7 +385,7 @@ export const billingPlanSchema = z.object({
   is_default: z.boolean(),
 });
 
-export const subscriptionSchema = z.object({
+const subscriptionSchema = z.object({
   id: uuidSchema,
   organization_id: uuidSchema,
   plan_id: uuidSchema,
@@ -398,6 +415,18 @@ export const billingOverviewSchema = z.object({
     allowed: z.boolean(),
   })),
   pricing_finalized: z.boolean(),
+  reply_balance: z.object({
+    available: z.number().int().nonnegative(),
+    spendable: z.number().int().nonnegative(),
+    trial_available: z.number().int().nonnegative(),
+    paid_available: z.number().int().nonnegative(),
+    reserved: z.number().int().nonnegative(),
+    consumed: z.number().int().nonnegative(),
+    expired: z.number().int().nonnegative(),
+    granted: z.number().int().nonnegative(),
+    trial_ends_at: timestampSchema.nullable(),
+    paid_entitled: z.boolean(),
+  }).optional(),
 });
 
 export const adminOverviewSchema = z.object({
@@ -411,12 +440,3 @@ export const adminOverviewSchema = z.object({
   integration_failures_24h: z.number().int().nonnegative(),
   replies_failed_24h: z.number().int().nonnegative(),
 });
-
-export type AnalyticsOverview = z.infer<typeof analyticsOverviewSchema>;
-export type MessageAnalytics = z.infer<typeof messageAnalyticsSchema>;
-export type MarketplaceAnalytics = z.infer<typeof marketplaceAnalyticsSchema>;
-export type ProductAnalytics = z.infer<typeof productAnalyticsSchema>;
-export type TeamAnalytics = z.infer<typeof teamAnalyticsSchema>;
-export type AIUsageAnalytics = z.infer<typeof aiUsageAnalyticsSchema>;
-export type BillingOverview = z.infer<typeof billingOverviewSchema>;
-export type AdminOverview = z.infer<typeof adminOverviewSchema>;

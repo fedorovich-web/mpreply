@@ -22,6 +22,8 @@ def test_build_marketplace_reply_prompt_hash_is_stable() -> None:
     assert first.version == PROMPT_VERSION
     assert first.input_hash == second.input_hash
     assert first.messages[0]["role"] == "system"
+    assert "MPReply" in first.messages[0]["content"]
+    assert "Respio" not in first.messages[0]["content"]
     assert "строго JSON" in first.messages[0]["content"]
     assert first.messages[1]["role"] == "user"
     assert "Кружка" in first.messages[1]["content"]

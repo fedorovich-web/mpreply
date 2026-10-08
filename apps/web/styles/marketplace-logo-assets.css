@@ -1,0 +1,48 @@
+/* Square marketplace icons from the supplied transparent AVIF pack. */
+.mockup-market-logo,
+.marketplace-brand-logo,
+.marketplace-detail-logo {
+  display: block;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.marketplace-hub-card .mockup-market-logo {
+  justify-self: center;
+}
+
+.marketplace-brand-logo {
+  margin: 0 0 8px;
+}
+
+.mockup-page .marketplace-brand-lockup {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 4px;
+}
+
+.mockup-page .marketplace-brand-lockup-image {
+  display: block;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 88px;
+  object-fit: contain;
+}
+
+.detail-market-logo {
+  display: grid;
+  min-height: 88px;
+  place-items: center;
+}
+
+@media (max-width: 720px) {
+  .marketplace-hub-card .mockup-market-logo,
+  .marketplace-brand-logo {
+    width: 80px;
+    height: 80px;
+  }
+}

@@ -4,21 +4,20 @@ import { WildberriesIntegrationWorkspace } from "../../../../components/integrat
 
 export default function WildberriesIntegrationPage() {
   return (
-    <section className="app-page app-page-wide">
-      <header className="app-header app-header-row">
+    <section className="app-page app-page-wide marketplace-integration-page">
+      <header className="app-header app-header-row marketplace-integration-header">
         <div>
           <p className="eyebrow">Wildberries</p>
-          <h1>Кабинеты Wildberries, ключи и синхронизация</h1>
+          <h1>Подключение кабинетов Wildberries</h1>
           <p>
-            Управляйте реальными marketplace accounts: создавайте подключение, проверяйте API-ключ,
-            запускайте синхронизацию, заменяйте или отзывайте credentials без возврата raw secret во frontend.
+            Добавляйте кабинеты, проверяйте подключение, обновляйте обращения покупателей и выбирайте, как MPReply должен отправлять ответы.
           </p>
         </div>
         <div className="app-header-actions">
           <Link className="button button-secondary button-compact" href="/app/integrations">
             Все интеграции
           </Link>
-          <span className="status-badge">WB MVP adapter</span>
+          <span className="status-badge">Подключение доступно</span>
         </div>
       </header>
 

@@ -1,5 +1,16 @@
 import { AdminOverviewWorkspace } from "../../../components/admin/AdminOverviewWorkspace";
 
 export default function AdminPage() {
-  return <section className="app-page"><section className="app-header"><p className="eyebrow">Internal admin</p><h1>Respio superadmin overview</h1><p>Внутренняя системная сводка. Доступ контролируется backend-флагом <code>is_superadmin</code>, а не frontend bypass.</p></section><AdminOverviewWorkspace /></section>;
+  return (
+    <section className="app-page app-page-wide admin-page">
+      <header className="app-header admin-page-header">
+        <h1>Администрирование</h1>
+        <p>
+          Сверяйте состояние продукта, организаций, подписок и фоновых процессов по одной системной сводке.
+        </p>
+      </header>
+
+      <AdminOverviewWorkspace />
+    </section>
+  );
 }

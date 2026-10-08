@@ -2,19 +2,12 @@ import { IntegrationsWorkspace } from "../../../components/integrations/Integrat
 
 export default function IntegrationsPage() {
   return (
-    <section className="app-page app-page-wide">
-      <header className="app-header app-header-row">
-        <div>
-          <p className="eyebrow">Integrations</p>
-          <h1>Подключения маркетплейсов и состояние API</h1>
-          <p>
-            Respio показывает реальные кабинеты текущей организации и не выдаёт planned marketplace adapters за готовые production-интеграции.
-          </p>
-        </div>
-        <div className="app-header-actions">
-          <span className="status-badge">Encrypted credentials</span>
-          <span className="status-badge">Tenant scoped</span>
-        </div>
+    <section className="app-page app-page-wide integrations-page">
+      <header className="app-header integrations-page-header">
+        <h1>Интеграции</h1>
+        <p>
+          Подключайте Wildberries, Ozon, Яндекс Маркет и Авито и проверяйте состояние кабинетов в одном месте.
+        </p>
       </header>
 
       <IntegrationsWorkspace />

@@ -17,10 +17,7 @@ Use the existing Next.js App Router application for both the public site and Saa
 
 ## Marketplace truthfulness
 
-- Wildberries: MVP adapter implemented in the technical foundation.
-- Ozon, Yandex Market, Avito: roadmap/planned, not represented as production-ready.
-
-This is an explicit product-trust constraint.
+Wildberries, Ozon, Yandex Market and Avito are represented as supported product integrations. The backend has documentation-backed synchronization and reply contracts for the supported streams; Avito covers chats and answerable reviews. Public production claims still require matching deployment and live-account verification. The UI must not imply that a configured account has valid permissions before validation succeeds.
 
 ## Legal status
 
