@@ -21,7 +21,7 @@ from app.adapters.base import (
 from app.adapters.capabilities import MarketplaceStream
 from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_with_retry
 from app.adapters.wildberries_request_limiter import WildberriesCoordinationUnavailable, WildberriesRequestLimiter
-from app.adapters.wildberries_token import token_payload
+from app.adapters.wildberries_token import seller_identity_hash, token_payload
 from app.models.enums import Marketplace, MessageType
 
 _PAGE_SIZE = 50
@@ -44,12 +44,16 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         read_limiter: WildberriesRequestLimiter | None = None,
         service_secret: str | None = None,
         cloud_integration: bool = False,
+        self_hosted_seller_hash: str | None = None,
     ) -> None:
+        if self_hosted_seller_hash and (cloud_integration or service_secret):
+            raise ValueError("Wildberries self-hosted and cloud authentication are mutually exclusive")
         self._client = client
         self._read_retry_policy = read_retry_policy
         self._read_limiter = read_limiter
         self._service_secret = service_secret
         self._cloud_integration = cloud_integration or bool(service_secret)
+        self._self_hosted_seller_hash = self_hosted_seller_hash
 
     async def validate_credentials(
         self,
@@ -220,8 +224,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         text: str,
     ) -> AdapterResult[ProviderWriteReceipt]:
         del seller_id
-        if self._cloud_token_error(credential):
-            return AdapterResult(False, error_code="insufficient_scope", error_message_safe="Use a Wildberries token issued for this cloud service")
+        if self._token_usage_error(credential):
+            return AdapterResult(False, error_code="insufficient_scope", error_message_safe="Wildberries API key is not permitted for this installation")
         if (
             not context.external_id
             or len(context.external_id) > 255
@@ -367,8 +371,8 @@ class WildberriesAdapter(ReviewQuestionAdapter):
         *,
         params: dict[str, str | int],
     ) -> AdapterResult[object]:
-        if self._cloud_token_error(credential):
-            return AdapterResult(False, error_code="insufficient_scope", error_message_safe="Use a Wildberries token issued for this cloud service")
+        if self._token_usage_error(credential):
+            return AdapterResult(False, error_code="insufficient_scope", error_message_safe="Wildberries API key is not permitted for this installation")
         async def request() -> httpx.Response:
             return await request_read_with_retry(
                 self._client, "GET", path, headers=self._headers(credential), params=params,
@@ -448,8 +452,17 @@ class WildberriesAdapter(ReviewQuestionAdapter):
             headers["X-Client-Secret"] = self._service_secret
         return headers
 
-    def _cloud_token_error(self, credential: str) -> bool:
+    def _token_usage_error(self, credential: str) -> bool:
         payload = token_payload(credential)
+        if self._self_hosted_seller_hash:
+            account_type = payload.get("acc") if payload else None
+            return (
+                payload is None
+                or type(account_type) is not int
+                or account_type not in (1, 3)
+                or payload.get("t") is not False
+                or seller_identity_hash(credential) != self._self_hosted_seller_hash
+            )
         return bool(self._cloud_integration and payload and (payload.get("acc") in (2, 3) or payload.get("t") is True))
 
     @staticmethod

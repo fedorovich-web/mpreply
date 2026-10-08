@@ -106,8 +106,10 @@ class MarketplaceAdapterRegistry:
 def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceAdapterRegistry:
     avito_resolver = AvitoCredentialResolver(clients.avito)
     settings = get_settings()
-    wb_cloud = settings.app_env == "production"
-    wb_limiter = WildberriesRequestLimiter() if wb_cloud else None
+    wb_production = settings.app_env == "production"
+    wb_cloud = wb_production and settings.wb_integration_mode == "cloud"
+    wb_limiter = WildberriesRequestLimiter() if wb_production else None
+    wb_seller_hash = settings.wb_self_hosted_seller_hash if settings.wb_integration_mode == "self_hosted" else None
     wb_service_secret = settings.wb_service_secret.get_secret_value() or None
     return MarketplaceAdapterRegistry(
         {
@@ -121,9 +123,11 @@ def create_marketplace_registry(clients: MarketplaceHttpClients) -> MarketplaceA
                 capability=WILDBERRIES_CAPABILITY,
                 credential_factory=lambda: WildberriesAdapter(
                     client=clients.wildberries, read_limiter=wb_limiter, service_secret=wb_service_secret, cloud_integration=wb_cloud,
+                    self_hosted_seller_hash=wb_seller_hash,
                 ),
                 review_factory=lambda: WildberriesAdapter(
                     client=clients.wildberries, read_limiter=wb_limiter, service_secret=wb_service_secret, cloud_integration=wb_cloud,
+                    self_hosted_seller_hash=wb_seller_hash,
                 ),
             ),
             Marketplace.OZON: ProviderRegistration(

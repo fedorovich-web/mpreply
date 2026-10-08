@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import binascii
 import json
+from hashlib import sha256
 from typing import cast
 from uuid import UUID
 
@@ -32,6 +33,19 @@ def quota_identity(credential: str) -> str:
         except ValueError:
             pass
     return f"credential:{credential}"
+
+
+def seller_identity_hash(credential: str) -> str | None:
+    """Bind an own installation to a seller, without exposing its UUID or key."""
+    payload = token_payload(credential)
+    seller = payload.get("sid") if payload else None
+    if not isinstance(seller, str):
+        return None
+    try:
+        identity = f"seller:{UUID(seller)}"
+    except ValueError:
+        return None
+    return sha256(identity.encode()).hexdigest()
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:

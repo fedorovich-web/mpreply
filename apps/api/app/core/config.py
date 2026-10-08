@@ -96,6 +96,19 @@ class Settings(BaseSettings):
     groq_default_model: str = "qwen/qwen3.8-27b"
     groq_timeout_seconds: float = 45.0
     wb_service_secret: SecretStr = Field(default=SecretStr(""))
+    wb_integration_mode: Literal["cloud", "self_hosted"] = "cloud"
+    wb_self_hosted_seller_hash: str = Field(default="", pattern=r"^(?:[0-9a-f]{64})?$")
+
+    @model_validator(mode="after")
+    def validate_wb_installation(self) -> Self:
+        if self.wb_integration_mode == "self_hosted":
+            if not self.wb_self_hosted_seller_hash:
+                raise ValueError("Wildberries self-hosted installation requires an explicit seller hash")
+            if self.wb_service_secret.get_secret_value():
+                raise ValueError("Wildberries self-hosted installation cannot use a service secret")
+        elif self.wb_self_hosted_seller_hash:
+            raise ValueError("Wildberries seller binding requires self-hosted mode")
+        return self
 
     sentry_dsn: str | None = None
     sentry_traces_sample_rate: float = Field(default=0.0, ge=0.0, le=1.0)
