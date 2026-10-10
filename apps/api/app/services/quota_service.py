@@ -82,7 +82,6 @@ class QuotaService:
         )
 
     async def _count_quota_usage(
-        """Count sent replies and active in-flight auto-send reservations in a time window."""
         self,
         *,
         organization_id: UUID,
@@ -91,6 +90,7 @@ class QuotaService:
         automation_rule_id: UUID | None,
         force_all_rules: bool = False,
     ) -> int:
+        """Count sent replies and active in-flight auto-send reservations in a time window."""
         sent_in_window = and_(
             Reply.status == ReplyStatus.SENT.value,
             Reply.sent_at.is_not(None),
