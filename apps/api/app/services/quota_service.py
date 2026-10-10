@@ -43,19 +43,19 @@ class QuotaService:
         organization_daily_limit = settings.auto_reply_daily_limit_default
         active_sending_since = current - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
 
-        hourly_count = await self._count_sent(
+        hourly_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=hour_start,
             active_sending_since=active_sending_since,
             automation_rule_id=automation_rule_id,
         )
-        daily_count = await self._count_sent(
+        daily_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=day_start,
             active_sending_since=active_sending_since,
             automation_rule_id=automation_rule_id,
         )
-        organization_daily_count = await self._count_sent(
+        organization_daily_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=day_start,
             active_sending_since=active_sending_since,
@@ -81,7 +81,8 @@ class QuotaService:
             reason=reason,
         )
 
-    async def _count_sent(
+    async def _count_quota_usage(
+        """Count sent replies and active in-flight auto-send reservations in a time window."""
         self,
         *,
         organization_id: UUID,
