@@ -11,7 +11,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 2,
   reporter: process.env.CI
-    ? [["line"], ["html", { outputFolder: "playwright-report", open: "never" }]]
+    ? [["dot"], ["html", { outputFolder: "playwright-report", open: "never" }]]
     : [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: {
     baseURL,
