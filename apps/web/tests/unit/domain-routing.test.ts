@@ -55,6 +55,7 @@ describe("canonical MPReply domain boundaries", () => {
   it("forbids indexing workspace pages and redirects public-host auth URLs", () => {
     const workspace = proxy(new NextRequest(appOrigin + "/app/dashboard"));
     expect(workspace.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
+    expect(workspace.headers.get("Content-Security-Policy")).toContain("connect-src");
     const auth = proxy(new NextRequest(publicOrigin + "/auth/login?next=%2Fapp%2Finbox"));
     expect(auth.status).toBe(307);
     expect(auth.headers.get("location")).toBe(appOrigin + "/auth/login?next=%2Fapp%2Finbox");
