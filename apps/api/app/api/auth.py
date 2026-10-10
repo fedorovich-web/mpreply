@@ -228,6 +228,8 @@ async def reset_password(
     await _notify_best_effort(
         build_password_changed_email(
             recipient=user.email,
+            user_id=user.id,
+            auth_version=user.auth_version,
             sender=settings.transactional_email_from,
             reply_to=settings.support_email,
         ),
@@ -264,6 +266,8 @@ async def change_password(
     await _notify_best_effort(
         build_password_changed_email(
             recipient=user.email,
+            user_id=user.id,
+            auth_version=user.auth_version,
             sender=settings.transactional_email_from,
             reply_to=settings.support_email,
         ),
