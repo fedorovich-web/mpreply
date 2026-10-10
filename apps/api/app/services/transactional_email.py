@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
 from html import escape
+from uuid import UUID
 
 import httpx
 
@@ -28,8 +29,8 @@ class EmailDeliveryError(RuntimeError):
     pass
 
 
-def _idempotency_key(*, kind: str, recipient: str, action_url: str = "") -> str:
-    payload = f"{kind}\0{recipient.strip().lower()}\0{action_url}"
+def _idempotency_key(*, kind: str, recipient: str, context: str = "") -> str:
+    payload = f"{kind}\0{recipient.strip().lower()}\0{context}"
     return f"auth-{kind}-{sha256(payload.encode('utf-8')).hexdigest()}"
 
 
@@ -76,7 +77,7 @@ def build_verification_email(
         subject=subject,
         text=text,
         html=html,
-        idempotency_key=_idempotency_key(kind="verify", recipient=recipient, action_url=verification_url),
+        idempotency_key=_idempotency_key(kind="verify", recipient=recipient, context=verification_url),
     )
 
 
@@ -104,13 +105,15 @@ def build_password_reset_email(
         subject=subject,
         text=text,
         html=html,
-        idempotency_key=_idempotency_key(kind="reset", recipient=recipient, action_url=reset_url),
+        idempotency_key=_idempotency_key(kind="reset", recipient=recipient, context=reset_url),
     )
 
 
 def build_password_changed_email(
     *,
     recipient: str,
+    user_id: UUID,
+    auth_version: int,
     sender: str = DEFAULT_TRANSACTIONAL_SENDER,
     reply_to: str = DEFAULT_SUPPORT_EMAIL,
 ) -> TransactionalEmail:
@@ -129,7 +132,9 @@ def build_password_changed_email(
         subject=subject,
         text=text,
         html=html,
-        idempotency_key=_idempotency_key(kind="password-changed", recipient=recipient),
+        idempotency_key=_idempotency_key(
+            kind="password-changed", recipient=recipient, context=f"{user_id}:{auth_version}"
+        ),
     )
 
 
