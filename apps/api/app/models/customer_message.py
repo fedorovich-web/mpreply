@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -12,6 +12,8 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 class CustomerMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "customer_messages"
     __table_args__ = (
+        Index("ix_customer_messages_org_marketplace_status_created", "organization_id", "marketplace", "status", "marketplace_created_at"),
+        Index("ix_customer_messages_org_type_status", "organization_id", "type", "status"),
         UniqueConstraint(
             "organization_id",
             "marketplace_account_id",
