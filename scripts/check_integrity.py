@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 API = ROOT / "apps" / "api"
 EXPECTED_VERSION = "0.1.27"
-EXPECTED_ALEMBIC_HEAD = "20261001_0020"
+EXPECTED_ALEMBIC_HEAD = "20261010_0021"
 
 ERRORS: list[str] = []
 
