@@ -7,8 +7,19 @@ import { resolveDomainRoute } from "./lib/domain-routing";
 export function proxy(request: NextRequest) {
   const publicOrigin = process.env.NEXT_PUBLIC_SITE_URL || "https://mpreply.ru";
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://app.mpreply.ru";
-  const route = resolveDomainRoute(new URL(request.url), publicOrigin, appOrigin);
-  const isAppHost = request.nextUrl.hostname === new URL(appOrigin).hostname;
+  // Next.js can expose the container URL instead of the browser host behind Traefik.
+  // Accept only the two configured canonical hosts; never redirect to a header-supplied origin.
+  const canonicalHosts = new Set([new URL(publicOrigin).hostname, new URL(appOrigin).hostname]);
+  const effectiveUrl = new URL(request.url);
+  for (const rawHost of [request.headers.get("host"), request.headers.get("x-forwarded-host")]) {
+    const hostname = rawHost?.trim().toLowerCase().replace(/:\d+$/, "");
+    if (hostname && canonicalHosts.has(hostname)) {
+      effectiveUrl.hostname = hostname;
+      break;
+    }
+  }
+  const route = resolveDomainRoute(effectiveUrl, publicOrigin, appOrigin);
+  const isAppHost = effectiveUrl.hostname === new URL(appOrigin).hostname;
 
   if (route.kind === "redirect") {
     const response = NextResponse.redirect(route.destination, 307);
