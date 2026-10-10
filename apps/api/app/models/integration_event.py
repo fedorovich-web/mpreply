@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, String, Text
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -11,6 +11,7 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 class IntegrationEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "integration_events"
     __table_args__ = (
+        Index("ix_integration_events_org_account_created", "organization_id", "marketplace_account_id", "created_at"),
         ForeignKeyConstraint(
             ["marketplace_account_id", "organization_id"],
             ["marketplace_accounts.id", "marketplace_accounts.organization_id"],

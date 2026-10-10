@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, String, Text
+from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -12,6 +12,7 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 class SyncJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "sync_jobs"
     __table_args__ = (
+        Index("ix_sync_jobs_org_account_created", "organization_id", "marketplace_account_id", "created_at"),
         ForeignKeyConstraint(
             ["marketplace_account_id", "organization_id"],
             ["marketplace_accounts.id", "marketplace_accounts.organization_id"],

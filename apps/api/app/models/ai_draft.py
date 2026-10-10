@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import Float, ForeignKey, ForeignKeyConstraint, Integer, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Float, ForeignKey, ForeignKeyConstraint, Index, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -12,6 +12,8 @@ class AIDraft(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "ai_drafts"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", name="uq_ai_drafts_id_organization_id"),
+        Index("ix_ai_drafts_org_message_created", "organization_id", "message_id", "created_at"),
+        Index("ix_ai_drafts_org_prompt_created", "organization_id", "prompt_version", "created_at"),
         ForeignKeyConstraint(
             ["message_id", "organization_id"],
             ["customer_messages.id", "customer_messages.organization_id"],
