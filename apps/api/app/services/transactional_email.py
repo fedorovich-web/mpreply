@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
-from uuid import UUID
 from html import escape
+from uuid import UUID
 
 import httpx
 
