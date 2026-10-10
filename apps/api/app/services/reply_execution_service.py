@@ -489,7 +489,7 @@ class ReplyExecutionService:
             await self.session.scalar(
                 select(Organization.id)
                 .where(Organization.id == message.organization_id)
-                .with_for_update()
+                .with_for_update(key_share=True)
             )
             rule = await self._get_rule(
                 reply.automation_rule_id,
