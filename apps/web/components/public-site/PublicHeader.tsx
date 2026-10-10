@@ -9,7 +9,7 @@ import {
   localizedPath,
   type Locale,
 } from "../../lib/i18n";
-import { getSiteConfig } from "../../lib/site-config";
+import { appOrigin, getSiteConfig } from "../../lib/site-config";
 import { PublicBrandMark } from "./PublicBrandMark";
 import { PublicMobileNavigation } from "./PublicMobileNavigation";
 
@@ -47,8 +47,8 @@ export function PublicHeader({ locale = "ru" }: { locale?: Locale }) {
   const labels = copy[locale];
   const otherLocale = alternateLocale(locale);
   const languageHref = localizedPath(otherLocale, basePathFromLocalizedPath(pathname));
-  const loginHref = localizedPath(locale, "/auth/login");
-  const registerHref = localizedPath(locale, "/auth/register?intent=connect-marketplace");
+  const loginHref = appOrigin + localizedPath(locale, "/auth/login");
+  const registerHref = appOrigin + localizedPath(locale, "/auth/register?intent=connect-marketplace");
 
   return (
     <header className="public-header">

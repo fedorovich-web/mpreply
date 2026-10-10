@@ -130,6 +130,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?PUBLIC_SITE_URL is required}
+        NEXT_PUBLIC_APP_URL: ${WEB_APP_URL:?WEB_APP_URL is required}
         NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-support@mpreply.ru}
         NEXT_PUBLIC_API_BASE_URL: ${API_BASE_URL:?API_BASE_URL is required}
         DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:?DEPLOYMENT_VERSION is required}
