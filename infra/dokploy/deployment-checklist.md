@@ -63,6 +63,8 @@ Configure `www.mpreply.ru` to canonicalize/redirect to `mpreply.ru`. DNS must po
 
 Do not hardcode Traefik labels into `docker-compose.production.yml` unless native Dokploy domain management cannot satisfy a documented requirement.
 
+Verify production build args include `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_APP_URL`. Smoke-check `mpreply.ru/auth/login` redirects to `app.mpreply.ru/auth/login`, `app.mpreply.ru/` opens the workspace flow, and marketing URLs requested on the app host redirect to the public site. Preserve query strings and RU/EN paths.
+
 ## 5. Health and deployment order
 
 API health endpoints:
