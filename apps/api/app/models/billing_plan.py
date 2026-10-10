@@ -8,7 +8,7 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 class BillingPlan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "billing_plans"
 
-    code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     price_month_minor: Mapped[int | None] = mapped_column(Integer, nullable=True)
     currency: Mapped[str] = mapped_column(String(3), default="RUB", nullable=False)

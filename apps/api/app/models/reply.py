@@ -51,6 +51,10 @@ class Reply(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "((dispatch_owner IS NULL AND dispatch_lease_expires_at IS NULL) OR (dispatch_owner IS NOT NULL AND dispatch_lease_expires_at IS NOT NULL))",
             name="ck_replies_dispatch_lease_shape",
         ),
+        Index("ux_replies_idempotency_key", "idempotency_key", unique=True),
+        Index("ix_replies_org_status_created", "organization_id", "status", "created_at"),
+        Index("ix_replies_org_rule_sent", "organization_id", "automation_rule_id", "sent_at"),
+        Index("ix_replies_org_mode_status_created", "organization_id", "mode", "status", "created_at"),
         Index(
             "ix_replies_dispatch_due",
             "status",

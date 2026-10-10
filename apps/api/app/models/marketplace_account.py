@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,6 +13,8 @@ from app.models.enums import ResponseMode
 class MarketplaceAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "marketplace_accounts"
     __table_args__ = (
+        Index("ix_marketplace_accounts_org_credentials_status", "organization_id", "credentials_status"),
+        Index("ix_marketplace_accounts_org_status", "organization_id", "status"),
         UniqueConstraint(
             "id",
             "organization_id",
