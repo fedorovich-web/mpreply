@@ -40,6 +40,8 @@ Configure these mappings in the Dokploy **Domains** tab for the Docker Compose a
 
 Reserved only until implemented: `admin.mpreply.ru`, `status.mpreply.ru`, `docs.mpreply.ru`.
 
+The same Next.js service handles both hosts. `apps/web/proxy.ts` enforces canonical separation: public pages only on `mpreply.ru`, authenticated routes only on `app.mpreply.ru`. The app root opens the workspace (or login for an anonymous session). The app host has its own non-indexable robots policy.
+
 ## Environment and secrets
 
 Dokploy Compose environment values are used for `${VAR_NAME}` interpolation by `docker-compose.production.yml`; the Compose file explicitly injects the required values into containers.
