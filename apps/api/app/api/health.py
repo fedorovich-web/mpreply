@@ -40,6 +40,15 @@ class ReadinessResponse(BaseModel):
     dependencies: dict[str, DependencyHealth]
 
 
+@router.get("/", include_in_schema=False)
+async def api_root() -> JSONResponse:
+    """Human-readable entry point; dependency health belongs to /health/ready."""
+    return JSONResponse(
+        content={"service": "MPReply API", "status": "ok"},
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 @router.get("/health", response_model=HealthResponse)
 @router.get("/health/live", response_model=HealthResponse)
 async def healthcheck() -> HealthResponse:
