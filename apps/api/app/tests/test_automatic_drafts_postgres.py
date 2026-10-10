@@ -18,6 +18,7 @@ from app.adapters.registry import MarketplaceAdapterRegistry, ProviderRegistrati
 from app.core.config import get_settings
 from app.core.security import CredentialService
 from app.models.ai_draft import AIDraft
+from app.models.automation_rule import AutomationRule
 from app.models.automatic_draft_job import AutomaticDraftJob
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace
@@ -29,7 +30,8 @@ from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductRes
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService
 from app.services.reply_credit_service import ReplyCreditService
-from app.services.reply_execution_service import ReplyExecutionService
+from app.services.reply_execution_service import ExecuteReplyResult, ReplyExecutionService
+from app.services.quota_service import QuotaDecision
 from app.tests.marketplace_fixtures import SequenceTransport, response
 from app.tests.test_ai_credit_generation import VALID_COMPLETION
 from app.tests.test_automatic_drafts import seed, synthetic_encryption_key
@@ -296,7 +298,9 @@ async def test_postgres_concurrent_auto_sends_reserve_organization_quota(
     quota_checks_finished = 0
     both_quota_checks_finished = asyncio.Event()
 
-    async def delayed_check(self, *, message, rule):
+    async def delayed_check(
+        self: ReplyExecutionService, *, message: CustomerMessage, rule: AutomationRule | None,
+    ) -> QuotaDecision:
         nonlocal quota_checks_finished
         decision = await original_check(self, message=message, rule=rule)
         await asyncio.sleep(0.15)
@@ -334,7 +338,7 @@ async def test_postgres_concurrent_auto_sends_reserve_organization_quota(
             capability=OZON_CAPABILITY, credential_factory=lambda: adapter, review_factory=lambda: adapter,
         )})
 
-        async def execute(reply_id: UUID):
+        async def execute(reply_id: UUID) -> ExecuteReplyResult:
             async with postgres_credits() as session:
                 return await ReplyExecutionService(session, registry=registry).execute_reply(reply_id=reply_id)
 
