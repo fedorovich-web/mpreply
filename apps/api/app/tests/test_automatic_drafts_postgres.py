@@ -28,8 +28,9 @@ from app.models.user import User
 from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductResearch
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService
+from app.services.quota_service import QuotaDecision, QuotaService
 from app.services.reply_credit_service import ReplyCreditService
-from app.services.reply_execution_service import ReplyExecutionService
+from app.services.reply_execution_service import ExecuteReplyResult, ReplyExecutionService
 from app.tests.marketplace_fixtures import SequenceTransport, response
 from app.tests.test_ai_credit_generation import VALID_COMPLETION
 from app.tests.test_automatic_drafts import seed, synthetic_encryption_key
@@ -224,3 +225,148 @@ async def test_postgres_import_ai_rules_and_adapter_send_complete_with_one_credi
         assert [request.url.path for request in transport.requests] == ["/v1/question/answer/list", "/v1/question/answer/create"]
         balance = await ReplyCreditService(session).balance(organization_id=message.organization_id)
         assert (balance.consumed, balance.reserved) == (1, 0)
+
+
+
+async def test_postgres_concurrent_auto_sends_reserve_organization_quota(
+    postgres_credits: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Concurrent workers must reserve quota before either performs provider I/O."""
+    settings = get_settings()
+    monkeypatch.setattr(settings, "auto_reply_daily_limit_default", 100)
+    monkeypatch.setattr(
+        GroqProvider,
+        "research_product",
+        AsyncMock(return_value=ProductResearch(
+            [{"url": "https://parts.example/tp123", "title": "TP123", "excerpt": "Test product TP123"}],
+            "search-test", LLMUsage(1, 2, 3, None), 1,
+        )),
+    )
+    monkeypatch.setattr(GroqProvider, "complete", AsyncMock(return_value=VALID_COMPLETION))
+
+    async with postgres_credits() as session:
+        first_message = await seed(session)
+        account = await session.get(MarketplaceAccount, first_message.marketplace_account_id)
+        assert account is not None
+        account.seller_id = "100200"
+        account.scopes_json = {"scopes": ["questions:read", "questions:write"]}
+        account.credentials_encrypted = CredentialService(
+            settings.credentials_encryption_key.get_secret_value()
+        ).encrypt("synthetic-api-key")
+        first_message.metadata_json = {"sku": 646399170}
+
+        now = datetime.now(UTC)
+        second_message = CustomerMessage(
+            organization_id=first_message.organization_id,
+            marketplace_account_id=first_message.marketplace_account_id,
+            product_id=first_message.product_id,
+            marketplace="ozon",
+            external_id=str(uuid4()),
+            type="question",
+            rating=5,
+            status="needs_reply",
+            customer_text="Will this item fit my model?",
+            imported_at=now,
+            last_synced_at=now,
+            marketplace_created_at=now,
+            metadata_json={"sku": 646399171},
+        )
+        session.add(second_message)
+        await session.flush()
+        message_ids = (first_message.id, second_message.id)
+        await session.commit()
+
+        pipeline = AutomaticDraftService(session)
+        await pipeline.discover(limit=100)
+        claims = dict(await pipeline.claim_due(now=datetime.now(UTC), limit=100))
+        jobs = (await session.scalars(
+            select(AutomaticDraftJob).where(AutomaticDraftJob.message_id.in_(message_ids))
+        )).all()
+        assert len(jobs) == 2 and all(job.id in claims for job in jobs)
+        for job in jobs:
+            await pipeline.process(job_id=job.id, token=claims[job.id])
+
+        replies = (await session.scalars(
+            select(Reply).where(Reply.message_id.in_(message_ids))
+        )).all()
+        assert len(replies) == 2 and all(reply.status == "queued" for reply in replies)
+        reply_ids = tuple(reply.id for reply in replies)
+
+    monkeypatch.setattr(settings, "auto_reply_daily_limit_default", 1)
+    original_check = QuotaService.check_auto_reply_quota
+    quota_checks_finished = 0
+    both_quota_checks_finished = asyncio.Event()
+
+    async def delayed_check(
+        self: QuotaService,
+        *,
+        organization_id: UUID,
+        automation_rule_id: UUID | None,
+        hourly_limit: int | None,
+        daily_limit: int | None,
+        now: datetime | None = None,
+    ) -> QuotaDecision:
+        nonlocal quota_checks_finished
+        decision = await original_check(
+            self,
+            organization_id=organization_id,
+            automation_rule_id=automation_rule_id,
+            hourly_limit=hourly_limit,
+            daily_limit=daily_limit,
+            now=now,
+        )
+        await asyncio.sleep(0.15)
+        quota_checks_finished += 1
+        if quota_checks_finished == 2:
+            both_quota_checks_finished.set()
+        return decision
+
+    monkeypatch.setattr(QuotaService, "check_auto_reply_quota", delayed_check)
+
+    first_preflight_entered = asyncio.Event()
+    release_first_preflight = asyncio.Event()
+    preflight_calls = 0
+    send_calls = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal preflight_calls, send_calls
+        if request.url.path == "/v1/question/answer/list":
+            preflight_calls += 1
+            if preflight_calls == 1:
+                first_preflight_entered.set()
+                await release_first_preflight.wait()
+            return httpx.Response(200, json={"answers": [], "last_id": ""})
+        if request.url.path == "/v1/question/answer/create":
+            send_calls += 1
+            return httpx.Response(200, json={"answer_id": str(uuid4())})
+        return httpx.Response(404, json={"error": "unexpected endpoint"})
+
+    async with httpx.AsyncClient(
+        base_url="https://api-seller.ozon.ru",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        adapter = OzonAdapter(client, read_retry_policy=ReadRetryPolicy(max_attempts=1))
+        registry = MarketplaceAdapterRegistry({Marketplace.OZON: ProviderRegistration(
+            capability=OZON_CAPABILITY, credential_factory=lambda: adapter, review_factory=lambda: adapter,
+        )})
+
+        async def execute(reply_id: UUID) -> ExecuteReplyResult:
+            async with postgres_credits() as session:
+                return await ReplyExecutionService(session, registry=registry).execute_reply(reply_id=reply_id)
+
+        tasks = [asyncio.create_task(execute(reply_id)) for reply_id in reply_ids]
+        try:
+            await asyncio.wait_for(first_preflight_entered.wait(), timeout=5)
+            await asyncio.wait_for(both_quota_checks_finished.wait(), timeout=5)
+        finally:
+            release_first_preflight.set()
+        results = await asyncio.wait_for(asyncio.gather(*tasks), timeout=10)
+
+    assert sum(result.status == "sent" for result in results) == 1
+    assert sum(
+        result.status == "manual_review_required"
+        and result.error_code == "organization_daily_limit_exceeded"
+        for result in results
+    ) == 1
+    assert preflight_calls == 1
+    assert send_calls == 1
