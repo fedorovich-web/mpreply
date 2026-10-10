@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, String
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -11,6 +11,7 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 class AuditLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "audit_logs"
     __table_args__ = (
+        Index("ix_audit_logs_org_created_at", "organization_id", "created_at"),
         ForeignKeyConstraint(
             ["organization_id", "actor_user_id"],
             ["organization_users.organization_id", "organization_users.user_id"],
