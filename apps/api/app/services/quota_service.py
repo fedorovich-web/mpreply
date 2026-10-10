@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -39,21 +39,26 @@ class QuotaService:
         current = now or datetime.now(UTC)
         hour_start = current - timedelta(hours=1)
         day_start = current - timedelta(days=1)
-        organization_daily_limit = get_settings().auto_reply_daily_limit_default
+        settings = get_settings()
+        organization_daily_limit = settings.auto_reply_daily_limit_default
+        active_sending_since = current - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
 
-        hourly_count = await self._count_sent(
+        hourly_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=hour_start,
+            active_sending_since=active_sending_since,
             automation_rule_id=automation_rule_id,
         )
-        daily_count = await self._count_sent(
+        daily_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=day_start,
+            active_sending_since=active_sending_since,
             automation_rule_id=automation_rule_id,
         )
-        organization_daily_count = await self._count_sent(
+        organization_daily_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=day_start,
+            active_sending_since=active_sending_since,
             automation_rule_id=None,
             force_all_rules=True,
         )
@@ -76,19 +81,29 @@ class QuotaService:
             reason=reason,
         )
 
-    async def _count_sent(
+    async def _count_quota_usage(
         self,
         *,
         organization_id: UUID,
         since: datetime,
+        active_sending_since: datetime,
         automation_rule_id: UUID | None,
         force_all_rules: bool = False,
     ) -> int:
-        stmt = select(func.count(Reply.id)).where(
-            Reply.organization_id == organization_id,
+        """Count sent replies and active in-flight auto-send reservations in a time window."""
+        sent_in_window = and_(
             Reply.status == ReplyStatus.SENT.value,
             Reply.sent_at.is_not(None),
             Reply.sent_at >= since,
+        )
+        active_reservation = and_(
+            Reply.status == ReplyStatus.SENDING.value,
+            Reply.last_attempt_at.is_not(None),
+            Reply.last_attempt_at >= max(since, active_sending_since),
+        )
+        stmt = select(func.count(Reply.id)).where(
+            Reply.organization_id == organization_id,
+            or_(sent_in_window, active_reservation),
             Reply.mode == "auto",
         )
         if not force_all_rules:
