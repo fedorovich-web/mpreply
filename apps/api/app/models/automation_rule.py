@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import Boolean, Float, ForeignKey, ForeignKeyConstraint, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Float, ForeignKey, ForeignKeyConstraint, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -12,6 +12,8 @@ class AutomationRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "automation_rules"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", name="uq_automation_rules_id_organization_id"),
+        Index("ix_automation_rules_org_enabled_priority", "organization_id", "is_enabled", "priority"),
+        Index("ix_automation_rules_org_marketplace_account", "organization_id", "marketplace_account_id"),
         ForeignKeyConstraint(
             ["marketplace_account_id", "organization_id"],
             ["marketplace_accounts.id", "marketplace_accounts.organization_id"],
