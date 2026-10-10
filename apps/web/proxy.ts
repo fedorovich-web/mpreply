@@ -16,7 +16,7 @@ export function proxy(request: NextRequest) {
     return response;
   }
   if (route.kind === "robots") {
-    return new NextResponse("User-agent: *\\nDisallow: /\\n", {
+    return new NextResponse("User-agent: *\nDisallow: /\n", {
       status: 200,
       headers: { "Content-Type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex, nofollow" },
     });
