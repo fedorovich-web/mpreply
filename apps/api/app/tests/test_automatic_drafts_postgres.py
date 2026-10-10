@@ -19,7 +19,6 @@ from app.core.config import get_settings
 from app.core.security import CredentialService
 from app.models.ai_draft import AIDraft
 from app.models.automatic_draft_job import AutomaticDraftJob
-from app.models.automation_rule import AutomationRule
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace
 from app.models.marketplace_account import MarketplaceAccount
