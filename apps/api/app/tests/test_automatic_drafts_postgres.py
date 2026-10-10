@@ -29,7 +29,7 @@ from app.models.user import User
 from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductResearch
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService
-from app.services.quota_service import QuotaDecision
+from app.services.quota_service import QuotaDecision, QuotaService
 from app.services.reply_credit_service import ReplyCreditService
 from app.services.reply_execution_service import ExecuteReplyResult, ReplyExecutionService
 from app.tests.marketplace_fixtures import SequenceTransport, response
@@ -294,22 +294,35 @@ async def test_postgres_concurrent_auto_sends_reserve_organization_quota(
         reply_ids = tuple(reply.id for reply in replies)
 
     monkeypatch.setattr(settings, "auto_reply_daily_limit_default", 1)
-    original_check = ReplyExecutionService._check_quota
+    original_check = QuotaService.check_auto_reply_quota
     quota_checks_finished = 0
     both_quota_checks_finished = asyncio.Event()
 
     async def delayed_check(
-        self: ReplyExecutionService, *, message: CustomerMessage, rule: AutomationRule | None,
+        self: QuotaService,
+        *,
+        organization_id: UUID,
+        automation_rule_id: UUID | None,
+        hourly_limit: int | None,
+        daily_limit: int | None,
+        now: datetime | None = None,
     ) -> QuotaDecision:
         nonlocal quota_checks_finished
-        decision = await original_check(self, message=message, rule=rule)
+        decision = await original_check(
+            self,
+            organization_id=organization_id,
+            automation_rule_id=automation_rule_id,
+            hourly_limit=hourly_limit,
+            daily_limit=daily_limit,
+            now=now,
+        )
         await asyncio.sleep(0.15)
         quota_checks_finished += 1
         if quota_checks_finished == 2:
             both_quota_checks_finished.set()
         return decision
 
-    monkeypatch.setattr(ReplyExecutionService, "_check_quota", delayed_check)
+    monkeypatch.setattr(QuotaService, "check_auto_reply_quota", delayed_check)
 
     first_preflight_entered = asyncio.Event()
     release_first_preflight = asyncio.Event()
