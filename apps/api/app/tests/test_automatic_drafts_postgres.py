@@ -22,7 +22,7 @@ from app.models.automatic_draft_job import AutomaticDraftJob
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.organization import Organization
+from app.models.organization import Organization, OrganizationUser
 from app.models.reply import Reply
 from app.models.user import User
 from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductResearch
@@ -370,3 +370,57 @@ async def test_postgres_concurrent_auto_sends_reserve_organization_quota(
     ) == 1
     assert preflight_calls == 1
     assert send_calls == 1
+
+
+
+async def test_postgres_ambiguous_auto_write_keeps_daily_quota_reserved(
+    postgres_credits: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "auto_reply_daily_limit_default", 1)
+
+    async with postgres_credits() as session:
+        message = await seed(session)
+        owner_id = await session.scalar(
+            select(OrganizationUser.user_id).where(
+                OrganizationUser.organization_id == message.organization_id,
+                OrganizationUser.role == "owner",
+            )
+        )
+        assert owner_id is not None
+        now = datetime.now(UTC)
+        message.status = "needs_manual_check"
+        session.add(Reply(
+            organization_id=message.organization_id,
+            marketplace_account_id=message.marketplace_account_id,
+            message_id=message.id,
+            reply_text="Thank you for your question.",
+            status="manual_review_required",
+            mode="auto",
+            created_by=owner_id,
+            idempotency_key=f"ambiguous-{uuid4()}",
+            attempt_count=1,
+            max_attempts=4,
+            last_attempt_at=now,
+            metadata_json={
+                "provider_write_ambiguity": {
+                    "active": True,
+                    "attempt_count": 1,
+                    "error_code": "network_error",
+                },
+            },
+        ))
+        await session.commit()
+
+        quota = await QuotaService(session).check_auto_reply_quota(
+            organization_id=message.organization_id,
+            automation_rule_id=None,
+            hourly_limit=None,
+            daily_limit=None,
+            now=now,
+        )
+
+    assert not quota.allowed
+    assert quota.reason == "organization_daily_limit_exceeded"
+    assert quota.organization_daily_limit == 1
+    assert quota.daily_count == 1
