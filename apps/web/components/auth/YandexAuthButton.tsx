@@ -17,6 +17,9 @@ export function YandexAuthButton({ locale, next, intent }: { locale: Locale; nex
 
 export function yandexErrorMessage(code: string | null, locale: Locale): string | null {
   if (!code) return null;
+  if (code === "link_retry_required") return locale === "ru"
+    ? "Вход выполнен, но Яндекс ещё не привязан. Нажмите «Связать Яндекс» в разделе способов входа."
+    : "You are signed in, but Yandex is not linked yet. Select Link Yandex in sign-in settings.";
   if (code === "account_link_required") return locale === "ru"
     ? "На этот email уже есть аккаунт MPReply. Подтвердите вход паролем этого аккаунта — Яндекс подключится автоматически."
     : "An MPReply account already uses this email. Confirm its password to link Yandex automatically.";

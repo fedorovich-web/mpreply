@@ -59,6 +59,8 @@ export const siteConfigs = {
 
 export const siteConfig = siteConfigs.ru;
 
+export const appOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "") || "https://app.mpreply.ru";
+
 export function getSiteConfig(locale: Locale) {
   return siteConfigs[locale];
 }

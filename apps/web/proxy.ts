@@ -2,8 +2,29 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { localeFromPathname, localeRequestHeader } from "./lib/i18n";
+import { resolveDomainRoute } from "./lib/domain-routing";
 
 export function proxy(request: NextRequest) {
+  const publicOrigin = process.env.NEXT_PUBLIC_SITE_URL || "https://mpreply.ru";
+  const appOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://app.mpreply.ru";
+  const route = resolveDomainRoute(new URL(request.url), publicOrigin, appOrigin);
+  const isAppHost = request.nextUrl.hostname === new URL(appOrigin).hostname;
+
+  if (route.kind === "redirect") {
+    const response = NextResponse.redirect(route.destination, 307);
+    if (isAppHost) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
+  if (route.kind === "robots") {
+    return new NextResponse("User-agent: *\nDisallow: /\n", {
+      status: 200,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex, nofollow" },
+    });
+  }
+  if (route.kind === "not_found") {
+    return new NextResponse(null, { status: 404, headers: { "X-Robots-Tag": "noindex, nofollow" } });
+  }
+
   const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString("base64");
   const development = process.env.NODE_ENV === "development";
   const configuredApi = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -31,9 +52,10 @@ export function proxy(request: NextRequest) {
     request: { headers: requestHeaders },
   });
   response.headers.set("Content-Security-Policy", csp);
+  if (isAppHost) response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }
 
 export const config = {
-  matcher: ["/((?!api/|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.[a-zA-Z0-9]+$).*)"],
+  matcher: ["/robots.txt", "/sitemap.xml", "/((?!api/|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.[a-zA-Z0-9]+$).*)"],
 };

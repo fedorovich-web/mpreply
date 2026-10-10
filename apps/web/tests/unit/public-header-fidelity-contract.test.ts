@@ -20,8 +20,8 @@ describe("shared public header fidelity", () => {
     const document = header("ru", pathname);
     const cta = document.querySelector(".public-header-cta");
     expect(cta?.textContent).toContain("Попробовать бесплатно");
-    expect(cta?.getAttribute("href")).toBe("/auth/register?intent=connect-marketplace");
-    expect(document.querySelector(".public-login-link")?.getAttribute("href")).toBe("/auth/login");
+    expect(cta?.getAttribute("href")).toBe("https://app.mpreply.ru/auth/register?intent=connect-marketplace");
+    expect(document.querySelector(".public-login-link")?.getAttribute("href")).toBe("https://app.mpreply.ru/auth/login");
   });
 
   it("marks the parent marketplace route active and switches locale without losing the detail path", () => {
@@ -29,7 +29,7 @@ describe("shared public header fidelity", () => {
     expect(document.querySelector(".public-nav a[aria-current=page]")?.getAttribute("href")).toBe("/en/marketplaces");
     expect(document.querySelector(".public-language-link")?.getAttribute("href")).toBe("/marketplaces/ozon");
     expect(document.querySelector(".public-header-cta")?.textContent).toContain("Start free");
-    expect(document.querySelector(".public-header-cta")?.getAttribute("href")).toBe("/en/auth/register?intent=connect-marketplace");
+    expect(document.querySelector(".public-header-cta")?.getAttribute("href")).toBe("https://app.mpreply.ru/en/auth/register?intent=connect-marketplace");
   });
 
   it("keeps shared navigation at least 14px and accessible control sizes", () => {

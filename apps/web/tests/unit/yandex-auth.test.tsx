@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { YandexAuthButton } from "../../components/auth/YandexAuthButton";
+import { YandexAuthButton, yandexErrorMessage } from "../../components/auth/YandexAuthButton";
 
 function show(locale: "ru" | "en" = "ru") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -30,5 +30,9 @@ describe("Yandex registration action", () => {
     expect(url.searchParams.get("next")).toBe("/en/app/billing");
     expect(url.searchParams.get("intent")).toBe("connect-marketplace");
     expect(url.searchParams.has("client_secret")).toBe(false);
+  });
+  it("offers accurate recovery instructions when account linking must be repeated", () => {
+    expect(yandexErrorMessage("link_retry_required", "ru")).toContain("Вход выполнен");
+    expect(yandexErrorMessage("link_retry_required", "en")).toContain("signed in");
   });
 });

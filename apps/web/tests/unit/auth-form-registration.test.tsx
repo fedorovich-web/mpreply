@@ -73,4 +73,17 @@ describe("AuthForm registration response contract", () => {
       "/api/auth/login", "/api/auth/yandex/link/complete",
     ]);
   });
+  it("preserves password login if the pending Yandex link expired", async () => {
+    navigation.query = "oauth_error=account_link_required&next=%2Fapp%2Fdashboard";
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ user: {
+      id: "22222222-2222-4222-8222-222222222222", email: "seller@example.com", name: null,
+      status: "active", is_superadmin: false, created_at: "2026-10-01T12:00:00Z", updated_at: "2026-10-01T12:00:00Z",
+    } }))).mockResolvedValueOnce(new Response(JSON.stringify({ detail: "oauth_expired" }), { status: 409 }));
+    submit("login");
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/app/account?oauth_error=link_retry_required"));
+    expect(router.refresh).toHaveBeenCalledOnce();
+    expect(fetchMock.mock.calls.map((call) => new URL(String(call[0])).pathname)).toEqual([
+      "/api/auth/login", "/api/auth/yandex/link/complete",
+    ]);
+  });
 });

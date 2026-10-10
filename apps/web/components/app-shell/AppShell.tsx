@@ -24,7 +24,8 @@ type NavIconName =
   | "analytics"
   | "billing"
   | "admin"
-  | "help";
+  | "help"
+  | "account";
 
 type NavItem = {
   href: string;
@@ -66,6 +67,7 @@ const navDefinitions: Record<Locale, NavGroup[]> = {
         { href: "/app/integrations", label: "Интеграции", icon: "integrations" },
         { href: "/app/analytics", label: "Аналитика", icon: "analytics" },
         { href: "/app/billing", label: "Тариф и лимиты", icon: "billing" },
+        { href: "/app/account", label: "Аккаунт и вход", icon: "account" },
       ],
     },
   ],
@@ -94,6 +96,7 @@ const navDefinitions: Record<Locale, NavGroup[]> = {
         { href: "/app/integrations", label: "Integrations", icon: "integrations" },
         { href: "/app/analytics", label: "Analytics", icon: "analytics" },
         { href: "/app/billing", label: "Plan and limits", icon: "billing" },
+        { href: "/app/account", label: "Account and sign-in", icon: "account" },
       ],
     },
   ],
@@ -162,6 +165,7 @@ const navIconSources: Record<NavIconName, string> = {
   billing: "/images/icons/final/21-database.avif",
   admin: "/images/icons/final/28-security-lock.avif",
   help: "/images/icons/final/09-question-chat.avif",
+  account: "/images/icons/final/28-security-lock.avif",
 };
 
 function NavIcon({ name }: { name: NavIconName }) {

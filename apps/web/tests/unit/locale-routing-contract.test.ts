@@ -56,7 +56,7 @@ describe("RU/EN locale architecture", () => {
   it("does not use IP or browser-language redirects", () => {
     expect(proxy).not.toContain("Accept-Language");
     expect(proxy).not.toContain("geo");
-    expect(proxy).not.toContain("redirect(");
+    expect(proxy).toContain("resolveDomainRoute");
     expect(policy).toContain("Не перенаправлять пользователя автоматически");
   });
 });

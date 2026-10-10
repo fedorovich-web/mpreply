@@ -8,6 +8,7 @@ import { useState } from "react";
 import { ApiError, apiRequest } from "../../lib/api/client";
 import { authSessionSchema, messageResponseSchema } from "../../lib/api/schemas";
 import { localizedPath, type Locale } from "../../lib/i18n";
+import { getSiteConfig } from "../../lib/site-config";
 import { PublicBrandMark } from "../public-site/PublicBrandMark";
 import { YandexAuthButton, yandexErrorMessage } from "./YandexAuthButton";
 
@@ -80,6 +81,7 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
   const intent = searchParams.get("intent");
   const appPrefix = locale === "en" ? "/en/app/" : "/app/";
   const appRoot = locale === "en" ? "/en/app" : "/app";
+  const publicHome = getSiteConfig(locale).origin + localizedPath(locale, "/");
 
   const safeRequestedNext = requestedNext?.startsWith(appPrefix) ? requestedNext : null;
 
@@ -102,15 +104,24 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
             : { email: email.trim(), password },
       };
       if (!isLogin) return apiRequest(`/api/auth/${mode}`, messageResponseSchema, options);
-      const session = await apiRequest(`/api/auth/${mode}`, authSessionSchema, options);
-      if (pendingYandexLink) {
+      await apiRequest(`/api/auth/${mode}`, authSessionSchema, options);
+      if (!pendingYandexLink) return { yandexLinkFailed: false };
+      try {
         await apiRequest("/api/auth/yandex/link/complete", messageResponseSchema, { method: "POST" });
+        return { yandexLinkFailed: false };
+      } catch {
+        // Password authentication succeeded; a stale linking attestation must not undo the login.
+        return { yandexLinkFailed: true };
       }
-      return session;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       if (!isLogin) {
         setPassword("");
+        return;
+      }
+      if ("yandexLinkFailed" in result && result.yandexLinkFailed) {
+        router.replace(`${appRoot}/account?oauth_error=link_retry_required`);
+        router.refresh();
         return;
       }
       const target = safeRequestedNext
@@ -126,7 +137,7 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
     <main className="auth-page">
       <div className="auth-shell">
         <aside className="auth-product-panel" aria-label={labels.workspace}>
-          <Link className="auth-product-brand" href={localizedPath(locale, "/")} aria-label={labels.home}>
+          <Link className="auth-product-brand" href={publicHome} aria-label={labels.home}>
             <PublicBrandMark />
           </Link>
 
@@ -140,7 +151,7 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
 
         <section className="auth-form-panel" aria-labelledby={`${mode}-title`}>
           <div className="auth-card">
-            <Link className="auth-brand" href={localizedPath(locale, "/")} aria-label={labels.home}>
+            <Link className="auth-brand" href={publicHome} aria-label={labels.home}>
               <PublicBrandMark />
             </Link>
 
