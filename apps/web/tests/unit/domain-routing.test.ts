@@ -52,6 +52,39 @@ describe("canonical MPReply domain boundaries", () => {
     expect(sitemap.status).toBe(404);
   });
 
+  it("uses the forwarded public host when Next.js exposes an internal container URL", () => {
+    const request = new NextRequest("http://web:3000/auth/login?next=%2Fapp", {
+      headers: { host: "web:3000", "x-forwarded-host": "mpreply.ru" },
+    });
+    const response = proxy(request);
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://app.mpreply.ru/auth/login?next=%2Fapp");
+  });
+
+  it("uses the forwarded app host for workspace routing and private robots rules", () => {
+    const headers = { host: "web:3000", "x-forwarded-host": "app.mpreply.ru" };
+    const home = proxy(new NextRequest("http://web:3000/", { headers }));
+    expect(home.status).toBe(307);
+    expect(home.headers.get("location")).toBe("https://app.mpreply.ru/app/dashboard");
+    const pricing = proxy(new NextRequest("http://web:3000/pricing", { headers }));
+    expect(pricing.headers.get("location")).toBe("https://mpreply.ru/pricing");
+    const robots = proxy(new NextRequest("http://web:3000/robots.txt", { headers }));
+    expect(robots.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
+    const sitemap = proxy(new NextRequest("http://web:3000/sitemap.xml", { headers }));
+    expect(sitemap.status).toBe(404);
+  });
+
+  it("prioritizes an allowed Host header over spoofed forwarded headers", () => {
+    const request = new NextRequest("http://web:3000/auth/login", {
+      headers: { host: "app.mpreply.ru", "x-forwarded-host": "mpreply.ru" },
+    });
+    expect(proxy(request).status).toBe(200);
+    const unknown = new NextRequest("http://staging.internal:3000/", {
+      headers: { host: "staging.internal:3000", "x-forwarded-host": "attacker.example" },
+    });
+    expect(proxy(unknown).status).toBe(200);
+  });
+
   it("forbids indexing workspace pages and redirects public-host auth URLs", () => {
     const workspace = proxy(new NextRequest(appOrigin + "/app/dashboard"));
     expect(workspace.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
