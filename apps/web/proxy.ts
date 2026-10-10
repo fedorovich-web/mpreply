@@ -7,7 +7,7 @@ import { resolveDomainRoute } from "./lib/domain-routing";
 export function proxy(request: NextRequest) {
   const publicOrigin = process.env.NEXT_PUBLIC_SITE_URL || "https://mpreply.ru";
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://app.mpreply.ru";
-  const route = resolveDomainRoute(request.nextUrl, publicOrigin, appOrigin);
+  const route = resolveDomainRoute(new URL(request.url), publicOrigin, appOrigin);
   const isAppHost = request.nextUrl.hostname === new URL(appOrigin).hostname;
 
   if (route.kind === "redirect") {
