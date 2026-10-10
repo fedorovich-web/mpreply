@@ -483,6 +483,14 @@ class ReplyExecutionService:
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         if reply.mode == ResponseMode.AUTO.value:
+            # Serialize auto-send quota reservations per organization. The SENDING
+            # state is committed below before any provider I/O, so the next worker
+            # sees this attempt while calculating its own quota.
+            await self.session.scalar(
+                select(Organization.id)
+                .where(Organization.id == message.organization_id)
+                .with_for_update()
+            )
             rule = await self._get_rule(
                 reply.automation_rule_id,
                 organization_id=message.organization_id,
