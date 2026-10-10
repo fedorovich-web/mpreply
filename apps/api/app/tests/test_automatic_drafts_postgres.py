@@ -18,8 +18,8 @@ from app.adapters.registry import MarketplaceAdapterRegistry, ProviderRegistrati
 from app.core.config import get_settings
 from app.core.security import CredentialService
 from app.models.ai_draft import AIDraft
-from app.models.automation_rule import AutomationRule
 from app.models.automatic_draft_job import AutomaticDraftJob
+from app.models.automation_rule import AutomationRule
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace
 from app.models.marketplace_account import MarketplaceAccount
@@ -29,9 +29,9 @@ from app.models.user import User
 from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductResearch
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService
+from app.services.quota_service import QuotaDecision
 from app.services.reply_credit_service import ReplyCreditService
 from app.services.reply_execution_service import ExecuteReplyResult, ReplyExecutionService
-from app.services.quota_service import QuotaDecision
 from app.tests.marketplace_fixtures import SequenceTransport, response
 from app.tests.test_ai_credit_generation import VALID_COMPLETION
 from app.tests.test_automatic_drafts import seed, synthetic_encryption_key
