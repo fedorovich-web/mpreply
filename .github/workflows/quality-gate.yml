@@ -92,10 +92,14 @@ jobs:
             - name: Apply production migrations to isolated PostgreSQL
               working-directory: apps/api
               run: alembic upgrade head
-            - name: Run PostgreSQL billing, credits, OAuth and worker tests
+            - name: Check ORM metadata against migrated PostgreSQL schema
+              working-directory: apps/api
+              run: alembic check
+            - name: Run PostgreSQL billing, credits, OAuth, ingestion and worker tests
               working-directory: apps/api
               run: >-
                   pytest -q
+                  --junitxml=postgres-integration-results.xml
                   app/tests/test_billing_orders_postgres.py
                   app/tests/test_yandex_postgres.py
                   app/tests/test_reply_credits_postgres.py
@@ -103,6 +107,10 @@ jobs:
                   app/tests/test_automatic_drafts_postgres.py
                   app/tests/test_marketplace_ingest_postgres.py
                   app/tests/test_product_research_postgres.py
+            - name: Require all PostgreSQL integration tests to execute
+              working-directory: apps/api
+              run: |
+                  python -c "import sys, xml.etree.ElementTree as ET; root=ET.parse('postgres-integration-results.xml').getroot(); suites=[root] if root.tag == 'testsuite' else root.findall('.//testsuite'); skipped=sum(int(s.get('skipped', '0')) for s in suites); tests=sum(int(s.get('tests', '0')) for s in suites); print(f'PostgreSQL integration tests: {tests} executed, {skipped} skipped'); sys.exit(1 if skipped else 0)"
 
     frontend:
         runs-on: ubuntu-latest
