@@ -100,6 +100,9 @@ jobs:
                   app/tests/test_yandex_postgres.py
                   app/tests/test_reply_credits_postgres.py
                   app/tests/test_worker_async_runtime.py
+                  app/tests/test_automatic_drafts_postgres.py
+                  app/tests/test_marketplace_ingest_postgres.py
+                  app/tests/test_product_research_postgres.py
 
     frontend:
         runs-on: ubuntu-latest
