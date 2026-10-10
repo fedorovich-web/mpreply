@@ -21,7 +21,7 @@ jobs:
                   cache-dependency-path: apps/api/pyproject.toml
             - uses: actions/setup-node@v6
               with:
-                  node-version: '22'
+                  node-version: '24'
             - name: Install backend dependencies
               working-directory: apps/api
               run: pip install -e ".[dev]"
@@ -54,6 +54,53 @@ jobs:
               working-directory: apps/api
               run: alembic heads
 
+    postgres-integration:
+        name: Backend / PostgreSQL integration
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        services:
+            postgres:
+                image: postgres:18
+                env:
+                    POSTGRES_DB: mpreply_credit_test_ci
+                    POSTGRES_USER: mpreply_local
+                    POSTGRES_PASSWORD: mpreply_ci_password
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U mpreply_local -d mpreply_credit_test_ci"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 20
+        env:
+            APP_ENV: local
+            DATABASE_URL: postgresql+asyncpg://mpreply_local:mpreply_ci_password@127.0.0.1:5432/mpreply_credit_test_ci
+            MPREPLY_CREDIT_TEST_DATABASE_URL: postgresql+asyncpg://mpreply_local:mpreply_ci_password@127.0.0.1:5432/mpreply_credit_test_ci
+            MPREPLY_BILLING_TEST_DATABASE_URL: postgresql+asyncpg://mpreply_local:mpreply_ci_password@127.0.0.1:5432/mpreply_credit_test_ci
+            AUTH_SECRET_KEY: ci-only-auth-secret-not-for-production-0123456789
+            CREDENTIALS_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: '3.13'
+                  cache: pip
+                  cache-dependency-path: apps/api/pyproject.toml
+            - name: Install backend dependencies
+              working-directory: apps/api
+              run: pip install -e ".[dev]"
+            - name: Apply production migrations to isolated PostgreSQL
+              working-directory: apps/api
+              run: alembic upgrade head
+            - name: Run PostgreSQL billing, credits, OAuth and worker tests
+              working-directory: apps/api
+              run: >-
+                  pytest -q
+                  app/tests/test_billing_orders_postgres.py
+                  app/tests/test_yandex_postgres.py
+                  app/tests/test_reply_credits_postgres.py
+                  app/tests/test_worker_async_runtime.py
+
     frontend:
         runs-on: ubuntu-latest
         env:
@@ -62,7 +109,7 @@ jobs:
             - uses: actions/checkout@v7
             - uses: actions/setup-node@v6
               with:
-                  node-version: '22'
+                  node-version: '24'
                   cache: npm
                   cache-dependency-path: apps/web/package-lock.json
             - name: Install frontend dependencies
@@ -115,7 +162,7 @@ jobs:
             - uses: actions/checkout@v7
             - uses: actions/setup-node@v6
               with:
-                  node-version: '22'
+                  node-version: '24'
                   cache: npm
                   cache-dependency-path: apps/web/package-lock.json
             - name: Install frontend dependencies
