@@ -151,7 +151,7 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
 
         <section className="auth-form-panel" aria-labelledby={`${mode}-title`}>
           <div className="auth-card">
-            <Link className="auth-brand" href={localizedPath(locale, "/")} aria-label={labels.home}>
+            <Link className="auth-brand" href={publicHome} aria-label={labels.home}>
               <PublicBrandMark />
             </Link>
 
