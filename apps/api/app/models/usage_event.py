@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, Integer, String
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -11,6 +11,8 @@ from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 class UsageEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "usage_events"
     __table_args__ = (
+        Index("ix_usage_events_org_event_created", "organization_id", "event_type", "created_at"),
+        Index("ix_usage_events_org_user_created", "organization_id", "user_id", "created_at"),
         ForeignKeyConstraint(
             ["organization_id", "user_id"],
             ["organization_users.organization_id", "organization_users.user_id"],
