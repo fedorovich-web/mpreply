@@ -39,26 +39,21 @@ class QuotaService:
         current = now or datetime.now(UTC)
         hour_start = current - timedelta(hours=1)
         day_start = current - timedelta(days=1)
-        settings = get_settings()
-        organization_daily_limit = settings.auto_reply_daily_limit_default
-        active_sending_since = current - timedelta(seconds=settings.auto_reply_execution_lease_seconds)
+        organization_daily_limit = get_settings().auto_reply_daily_limit_default
 
         hourly_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=hour_start,
-            active_sending_since=active_sending_since,
             automation_rule_id=automation_rule_id,
         )
         daily_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=day_start,
-            active_sending_since=active_sending_since,
             automation_rule_id=automation_rule_id,
         )
         organization_daily_count = await self._count_quota_usage(
             organization_id=organization_id,
             since=day_start,
-            active_sending_since=active_sending_since,
             automation_rule_id=None,
             force_all_rules=True,
         )
@@ -86,11 +81,10 @@ class QuotaService:
         *,
         organization_id: UUID,
         since: datetime,
-        active_sending_since: datetime,
         automation_rule_id: UUID | None,
         force_all_rules: bool = False,
     ) -> int:
-        """Count sent replies and active in-flight auto-send reservations in a time window."""
+        """Count confirmed sends and unresolved provider writes that may have succeeded."""
         sent_in_window = and_(
             Reply.status == ReplyStatus.SENT.value,
             Reply.sent_at.is_not(None),
@@ -99,11 +93,17 @@ class QuotaService:
         active_reservation = and_(
             Reply.status == ReplyStatus.SENDING.value,
             Reply.last_attempt_at.is_not(None),
-            Reply.last_attempt_at >= max(since, active_sending_since),
+            Reply.last_attempt_at >= since,
+        )
+        ambiguous_reservation = and_(
+            Reply.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value,
+            Reply.metadata_json["provider_write_ambiguity"]["active"].as_boolean().is_(True),
+            Reply.last_attempt_at.is_not(None),
+            Reply.last_attempt_at >= since,
         )
         stmt = select(func.count(Reply.id)).where(
             Reply.organization_id == organization_id,
-            or_(sent_in_window, active_reservation),
+            or_(sent_in_window, active_reservation, ambiguous_reservation),
             Reply.mode == "auto",
         )
         if not force_all_rules:
