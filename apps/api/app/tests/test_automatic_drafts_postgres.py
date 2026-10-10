@@ -392,7 +392,6 @@ async def test_postgres_ambiguous_auto_write_keeps_daily_quota_reserved(
         message.status = "needs_manual_check"
         session.add(Reply(
             organization_id=message.organization_id,
-            marketplace_account_id=message.marketplace_account_id,
             message_id=message.id,
             reply_text="Thank you for your question.",
             status="manual_review_required",
