@@ -14,6 +14,7 @@ try {
   Run-Step "Design token tests" { & $Npm run test:design-tokens }
   Run-Step "Frontend typecheck" { & $Npm run typecheck }
   Run-Step "Frontend lint" { & $Npm run lint }
+  Run-Step "Frontend unused code analysis" { & $Npm run test:unused }
   Run-Step "Frontend CSS syntax validation" { & $Npm run validate:css-syntax }
   Run-Step "Frontend production build" { & $Npm run build }
   Run-Step "Frontend W3C HTML and CSS validation" { & $Npm run validate:w3c }
@@ -22,6 +23,6 @@ try {
   Run-Step "Production browser security" { & $Npm run test:security }
   Run-Step "Playwright accessibility scan" { & $Npm run test:a11y }
   Run-Step "Lighthouse CI" { & $Npm run lighthouse }
-  Run-Step "Playwright visual regression" { & $Npm run test:visual }
+  Run-Step "Playwright visual regression" { & $Npm run test:visual:run }
 } finally { Pop-Location }
 Write-Host "`nAll web-design-gate checks passed." -ForegroundColor Green

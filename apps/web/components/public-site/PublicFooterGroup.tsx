@@ -9,7 +9,7 @@ type PublicFooterGroupProps = {
   className?: string;
 };
 
-export function PublicFooterDisclosure({ title, children, className = "" }: PublicFooterGroupProps) {
+function PublicFooterDisclosure({ title, children, className = "" }: PublicFooterGroupProps) {
   const [open, setOpen] = useState(false);
   const contentId = useId();
 

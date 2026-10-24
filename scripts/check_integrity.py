@@ -175,22 +175,28 @@ def check_versions_and_frontend_security_baseline() -> None:
         fail(f"Web health route version != {EXPECTED_VERSION}")
 
     expected_dependencies = {
-        ("dependencies", "next"): "16.3.8",
-        ("devDependencies", "eslint-config-next"): "16.3.8",
-        ("devDependencies", "vitest"): "5.0.0",
+        ("dependencies", "next"): "16.4.3",
+        ("dependencies", "zod"): "4.6.7",
+        ("devDependencies", "eslint-config-next"): "16.4.3",
+        ("devDependencies", "vitest"): "5.0.5",
         ("devDependencies", "@testing-library/react"): "16.3.2",
         ("devDependencies", "@testing-library/jest-dom"): "6.9.1",
         ("devDependencies", "jsdom"): "29.1.1",
         ("devDependencies", "@playwright/test"): "1.61.1",
         ("devDependencies", "playwright-core"): "1.61.1",
+        ("devDependencies", "puppeteer-core"): "25.16.0",
         ("devDependencies", "@axe-core/playwright"): "4.12.1",
         ("devDependencies", "@lhci/cli"): "0.15.1",
         ("devDependencies", "vnu-jar"): "26.7.11",
         ("devDependencies", "csstree-validator"): "4.0.1",
+        ("devDependencies", "knip"): "5.88.1",
+        ("devDependencies", "sharp"): "0.35.5",
         ("overrides", "postcss"): "8.5.28",
         ("overrides", "qs"): "6.16.0",
         ("overrides", "tmp"): "0.2.7",
         ("overrides", "uuid"): "11.1.1",
+        ("overrides", "lighthouse"): "13.5.0",
+        ("overrides", "basic-ftp"): "6.2.3",
     }
     for (section, name), expected in expected_dependencies.items():
         actual = package.get(section, {}).get(name)
@@ -198,6 +204,8 @@ def check_versions_and_frontend_security_baseline() -> None:
             fail(f"apps/web/package.json {section}.{name} != {expected}; got {actual!r}")
 
     expected_scripts = {
+        "lighthouse": "node scripts/run-lighthouse.mjs --config=./lighthouserc.cjs",
+        "lighthouse:mobile": "node scripts/run-lighthouse.mjs --config=./lighthouserc.mobile.json",
         "test:unit": "vitest run tests/unit",
         "test:design-tokens": "vitest run tests/design",
         "test:frontend": "npm run test:unit && npm run test:design-tokens",

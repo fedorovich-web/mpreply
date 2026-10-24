@@ -17,7 +17,7 @@ import { hasCurrentIntegrationProblem } from "../../lib/marketplace-account-heal
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 type ResponseMode = "inherit" | "auto" | "semi_auto";
-export type MarketplaceIntegrationKey = "wildberries" | "ozon" | "yandex_market" | "avito";
+type MarketplaceIntegrationKey = "wildberries" | "ozon" | "yandex_market" | "avito";
 
 type Notice = {
   tone: "success" | "warning";

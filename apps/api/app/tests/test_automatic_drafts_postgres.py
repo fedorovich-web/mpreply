@@ -22,7 +22,7 @@ from app.models.automatic_draft_job import AutomaticDraftJob
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.organization import Organization
+from app.models.organization import Organization, OrganizationUser
 from app.models.reply import Reply
 from app.models.user import User
 from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductResearch
@@ -370,3 +370,74 @@ async def test_postgres_concurrent_auto_sends_reserve_organization_quota(
     ) == 1
     assert preflight_calls == 1
     assert send_calls == 1
+
+
+@pytest.mark.parametrize(
+    ("reply_status", "reply_mode", "ambiguity_active", "foreign_tenant", "expected_count"),
+    [
+        pytest.param("sending", "auto", False, False, 1, id="expired-sending-still-reserved"),
+        pytest.param("manual_review_required", "auto", True, False, 1, id="active-ambiguity-reserved"),
+        pytest.param("manual_review_required", "auto", False, False, 0, id="inactive-ambiguity-excluded"),
+        pytest.param("manual_review_required", "semi_auto", True, False, 0, id="semi-auto-excluded"),
+        pytest.param("manual_review_required", "auto", True, True, 0, id="foreign-tenant-excluded"),
+    ],
+)
+async def test_postgres_unresolved_auto_writes_reserve_only_their_tenants_quota(
+    postgres_credits: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
+    reply_status: str, reply_mode: str, ambiguity_active: bool, foreign_tenant: bool, expected_count: int,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "auto_reply_daily_limit_default", 1)
+    monkeypatch.setattr(settings, "auto_reply_execution_lease_seconds", 120)
+
+    async with postgres_credits() as session:
+        message = await seed(session)
+        organization_id = message.organization_id
+        if foreign_tenant:
+            message = await seed(session)
+        owner_id = await session.scalar(
+            select(OrganizationUser.user_id).where(
+                OrganizationUser.organization_id == message.organization_id,
+                OrganizationUser.role == "owner",
+            )
+        )
+        assert owner_id is not None
+        now = datetime.now(UTC)
+        # Losing an execution lease must not erase a possible publication from
+        # the hourly/daily window. Every case is older than that lease.
+        last_attempt_at = now - timedelta(seconds=settings.auto_reply_execution_lease_seconds + 1)
+        message.status = "sending" if reply_status == "sending" else "needs_manual_check"
+        session.add(Reply(
+            organization_id=message.organization_id,
+            message_id=message.id,
+            reply_text="Thank you for your question.",
+            status=reply_status,
+            mode=reply_mode,
+            created_by=owner_id,
+            idempotency_key=f"unresolved-{uuid4()}",
+            attempt_count=1,
+            max_attempts=4,
+            last_attempt_at=last_attempt_at,
+            metadata_json={
+                "provider_write_ambiguity": {
+                    "active": ambiguity_active,
+                    "attempt_count": 1,
+                    "error_code": "network_error",
+                },
+            },
+        ))
+        await session.commit()
+
+        quota = await QuotaService(session).check_auto_reply_quota(
+            organization_id=organization_id,
+            automation_rule_id=None,
+            hourly_limit=1,
+            daily_limit=1,
+            now=now,
+        )
+
+    assert quota.allowed is (expected_count == 0)
+    assert quota.reason == ("organization_daily_limit_exceeded" if expected_count else None)
+    assert quota.organization_daily_limit == 1
+    assert quota.hourly_count == expected_count
+    assert quota.daily_count == expected_count

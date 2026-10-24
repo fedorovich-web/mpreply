@@ -3,7 +3,7 @@
  * Both hosts intentionally share a Next.js deployment; routing is host-aware.
  * Unknown hosts (localhost/staging) keep ordinary path-based routing.
  */
-export type DomainRoute =
+type DomainRoute =
   | { kind: "next" }
   | { kind: "redirect"; destination: string }
   | { kind: "robots" }
