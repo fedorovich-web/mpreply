@@ -6,6 +6,7 @@ import homeCta from "../../public/images/approved/04-marketplaces-cta.avif";
 
 import { PublicShell } from "../../components/public-site/PublicShell";
 import { HomeWorkspaceTabs } from "../../components/public-site/HomeWorkspaceTabs";
+import { HomeModelsSection } from "../../components/public-site/HomeModelsSection";
 import { HomeLineIcon } from "../../components/public-site/HomeLineIcon";
 import { PublicIcon } from "../../components/public-site/PublicIcon";
 import { JsonLd } from "../../components/seo/JsonLd";
@@ -29,13 +30,6 @@ const homeMarketplaceLogos = {
   "yandex-market": "/images/icons/final/03-yandex-market.avif",
   avito: "/images/icons/final/04-avito.avif",
 } as const;
-
-const replyContext = [
-  { name: "Product information", label: "Product", icon: "search" },
-  { name: "Customer question", label: "Message", icon: "message" },
-  { name: "Your brand voice", label: "Reply style", icon: "document" },
-  { name: "Rules and review", label: "Controls", icon: "shield-check" },
-] as const;
 
 const resultFacts = [
   { icon: "/images/icons/final/01-wildberries.avif", value: "4", label: "marketplace surfaces in MPReply" },
@@ -101,25 +95,7 @@ export default function EnglishHomePage() {
         </div>
       </section>
 
-      <section className="public-section homepage-models-section home-reference-models">
-        <div className="public-container homepage-models-layout">
-          <div className="homepage-section-heading-left">
-
-            <h2>Reply drafts use the available information</h2>
-            <p>AI considers the message, product details, and team rules. Unconfirmed compatibility is routed for review.</p>
-            <Link href="/en/features">How MPReply prepares replies&nbsp; →</Link>
-          </div>
-          <div className="homepage-model-grid" role="group" aria-label="Context and controls">
-            {replyContext.map((context) => (
-              <div className="homepage-model-card" key={context.name}>
-                <span className="homepage-model-mark" aria-hidden="true"><PublicIcon name={context.icon} /></span>
-                <small>{context.label}</small>
-                <strong>{context.name}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomeModelsSection locale="en" />
 
       <section className="public-section homepage-approved-process home-reference-process" id="how-it-works">
         <div className="public-container">

@@ -14,11 +14,21 @@ describe("homepage capability truth", () => {
     expect(Array.from(journey?.querySelectorAll(".homepage-process-number-circle") ?? [], (marker) => marker.textContent)).toEqual(["1", "2", "3", "4"]);
     expect(document.querySelector(".homepage-process-visual svg.homepage-process-path path")).not.toBeNull();
   });
-  it.each([HomePage, EnglishHomePage])("describes implemented context without claiming unavailable provider routing", async (Page) => {
+  it.each([HomePage, EnglishHomePage])("preserves the owner's four model cards, source logos and concise descriptions", async (Page) => {
     const document = new DOMParser().parseFromString(await renderServer(createElement(Page)), "text/html");
     const section = document.querySelector(".homepage-models-section");
-    expect(section?.textContent).not.toMatch(/GPT 6|Claude Sonnet 5\.5|Gemini 3\.8|DeepSeek V4\.1 Flash/);
-    expect(section?.querySelectorAll(".homepage-model-card")).toHaveLength(4);
-    expect(section?.querySelector("a")?.getAttribute("href")).toMatch(/\/features$/);
+    const cards = Array.from(section?.querySelectorAll(".homepage-model-card") ?? []);
+    expect(cards.map((card) => card.querySelector("strong")?.textContent)).toEqual([
+      "GPT-6 Luna", "Claude Sonnet 5.5", "Gemini 3.8", "DeepSeek V4.1",
+    ]);
+    expect(cards.map((card) => card.querySelector("img")?.getAttribute("src"))).toEqual([
+      "/images/brands/chatgpt-sign-logo.svg", "/images/brands/claude-icon-logo.svg",
+      "/images/brands/gemini.svg", "/images/brands/deepseek-sign-logo.svg",
+    ]);
+    for (const card of cards) {
+      expect(card.querySelector(".homepage-model-description")?.textContent?.trim().length).toBeGreaterThan(30);
+      expect(card.querySelector("img")?.getAttribute("alt")).toBe("");
+    }
+    expect(section?.textContent).not.toMatch(/Контекст и контроль|Context and controls/);
   });
 });
