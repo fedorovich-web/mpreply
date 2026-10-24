@@ -1,4 +1,3 @@
-/* Public hero geometry and surface come from the shared design tokens. */
 .public-root main :is(
   .homepage-approved-hero,
   .mockup-hero,

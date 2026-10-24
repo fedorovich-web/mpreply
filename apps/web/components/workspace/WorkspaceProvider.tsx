@@ -33,7 +33,6 @@ function readStoredActiveOrganizationId(): string | null {
       window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, legacy);
       window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
     } catch {
-      // Keep the legacy value usable even when storage writes are unavailable.
     }
     return legacy;
   } catch {
@@ -46,7 +45,6 @@ function storeActiveOrganizationId(organizationId: string) {
     window.localStorage.setItem(ACTIVE_ORGANIZATION_KEY, organizationId);
     window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
   } catch {
-    // Organization switching must still work for the current session without storage.
   }
 }
 
@@ -54,12 +52,10 @@ function clearStoredActiveOrganizationId() {
   try {
     window.localStorage.removeItem(ACTIVE_ORGANIZATION_KEY);
   } catch {
-    // Logout must continue even when storage is unavailable.
   }
   try {
     window.localStorage.removeItem(LEGACY_ACTIVE_ORGANIZATION_KEY);
   } catch {
-    // Logout must continue even when legacy storage is unavailable.
   }
 }
 
@@ -158,12 +154,15 @@ export function WorkspaceProvider({
     queryFn: () => apiRequest("/api/organizations", organizationListSchema),
     enabled: userQuery.isSuccess,
   });
+  const sessionExpired = userQuery.error instanceof ApiError
+    && userQuery.error.status === 401
+    && userQuery.error.kind !== "session-refresh-unavailable";
 
   useEffect(() => {
-    if (!(userQuery.error instanceof ApiError) || userQuery.error.status !== 401) return;
+    if (!sessionExpired) return;
     const next = pathname ? `?next=${encodeURIComponent(pathname)}` : "";
     router.replace(`${localizedPath(locale, "/auth/login")}${next}`);
-  }, [locale, pathname, router, userQuery.error]);
+  }, [locale, pathname, router, sessionExpired]);
 
   const activeOrganization = useMemo(() => {
     if (!organizationsQuery.data || organizationsQuery.data.length === 0) return null;
@@ -194,7 +193,7 @@ export function WorkspaceProvider({
   }
 
   if (userQuery.error) {
-    if (userQuery.error instanceof ApiError && userQuery.error.status === 401) {
+    if (sessionExpired) {
       return <WorkspaceBootState title={labels.loginAgain} description={labels.redirectLogin} />;
     }
     return (

@@ -464,7 +464,6 @@ h1 {
 	}
 }
 
-/* Sprint 4 dashboard shell */
 .app-shell {
 	display: grid;
 	grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
@@ -1992,7 +1991,6 @@ h1 {
 	}
 }
 
-/* Sprint 11: live API/auth/workspace states */
 .sr-only {
 	position: absolute;
 	width: 1px;
@@ -2234,7 +2232,6 @@ h1 {
 	justify-self: start;
 }
 
-/* Sprint 12 · analytics, billing and internal admin */
 .analytics-workspace,
 .billing-workspace {
 	display: grid;
@@ -2708,7 +2705,6 @@ h1 {
 	}
 }
 
-/* Live marketplace integrations workspace */
 .integrations-workspace,
 .wildberries-workspace {
 	display: grid;

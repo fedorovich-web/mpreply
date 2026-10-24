@@ -34,7 +34,6 @@ async def test_concurrent_research_performs_one_search_with_no_database_lock_dur
     async def search(**_: object) -> ProductResearch:
         entered.set()
         async with asyncio.timeout(5):
-            # A second session can acquire the product row lock during provider I/O.
             async with postgres_credits() as concurrent:
                 row = await concurrent.scalar(select(Product).where(Product.id == product_id).with_for_update())
                 assert row is not None

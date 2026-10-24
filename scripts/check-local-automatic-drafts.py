@@ -1,8 +1,3 @@
-"""Verify the new automatic-generation migration and jobs on isolated native PostgreSQL.
-
-Reads only synthetic local-runtime credentials; external provider calls are mocked.
-Does not migrate the demo database or start workers against seller accounts.
-"""
 
 from __future__ import annotations
 
@@ -27,7 +22,6 @@ def main() -> None:
     })
     api = root / "apps" / "api"
     python = api / ".venv" / "Scripts" / "python.exe"
-    # Verify only the new migration's reversal, preserving the tested credit schema.
     revisions = [("upgrade", "head")]
     if "--check-migration" in sys.argv[1:]:
         revisions.extend([("downgrade", "20260930_0017"), ("upgrade", "head")])

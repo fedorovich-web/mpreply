@@ -95,7 +95,6 @@ class AIService:
         knowledge_base: str | None = None,
         automatic_job: tuple[UUID, UUID] | None = None,
     ) -> AIDraft:
-        """Owns short transactions; no transaction or tenant lock spans provider I/O."""
         message, _ = await self.message_service.get_message(actor=actor, message_id=message_id)
         org_id, actor_id = message.organization_id, actor.id
         await self.organization_service.require_membership_role(
@@ -122,7 +121,6 @@ class AIService:
             raise conflict("Reply generation is already in progress")
 
         try:
-            # HTTP attempt retries cannot outlive the durable 300-second reservation.
             async with asyncio.timeout(240):
                 draft = await self._generate_reserved_draft(
                     actor=actor, message_id=message_id, tone=tone, temperature=temperature,
@@ -216,9 +214,6 @@ class AIService:
         except ModelOutputError as exc:
             raise bad_gateway("AI provider returned an invalid response") from exc
         if not research.verified:
-            # Public catalogues cannot establish this seller's inventory, and
-            # an unconfirmed device match cannot establish compatibility.
-            # Keep this visibly flagged for review with a concrete next step.
             answer = (compatibility_clarification(target_models)
                       if message.type == "question" and target_models else parsed.answer)
             parsed = ParsedModelOutput(answer, min(parsed.confidence_score, 0.74),
@@ -233,8 +228,6 @@ class AIService:
                 model_flags=parsed.safety_flags,
             )
         )
-        # A reply or marketplace refresh can finish while the model is running.
-        # Lock only during completion, never across the external request.
         if automatic_job is not None:
             await self._require_automatic_generation(automatic_job, message, actor)
         current_message = await self.session.scalar(

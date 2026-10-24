@@ -312,7 +312,6 @@ body,
 	}
 }
 
-/* MPReply secondary public routes */
 .public-subhero {
 	position: relative;
 	overflow: hidden;
@@ -996,7 +995,6 @@ body,
 	}
 }
 
-/* MPReply navigation and public shell */
 .public-nav a[aria-current='page'] {
 	color: var(--color-brand-primary);
 }

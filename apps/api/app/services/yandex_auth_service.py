@@ -63,7 +63,6 @@ class YandexAuthService:
             raise YandexIDError("email_required")
         email = profile.default_email.strip().lower()
         if await self.session.scalar(select(User.id).where(User.email == email)) is not None:
-            # Another callback may have committed this same subject since the first lookup.
             existing = await self._identity_user(profile.subject)
             if existing is not None:
                 return _active(existing)

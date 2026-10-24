@@ -1,8 +1,3 @@
-/**
- * Keep public pages and the authenticated workspace on separate canonical hosts.
- * Both hosts intentionally share a Next.js deployment; routing is host-aware.
- * Unknown hosts (localhost/staging) keep ordinary path-based routing.
- */
 type DomainRoute =
   | { kind: "next" }
   | { kind: "redirect"; destination: string }

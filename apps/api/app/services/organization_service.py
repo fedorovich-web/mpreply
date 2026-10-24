@@ -34,7 +34,6 @@ class OrganizationService:
         self.plan_limits = PlanLimitService(session)
 
     async def create_organization(self, *, owner: User, name: str, slug: str | None) -> Organization:
-        # Serialize trial claims before inserting membership foreign keys.
         await self.session.scalar(select(User.id).where(User.id == owner.id).with_for_update(key_share=True))
         plan_result = await self.session.execute(select(BillingPlan).where(BillingPlan.is_default.is_(True), BillingPlan.is_active.is_(True)).limit(1))
         default_plan = plan_result.scalar_one_or_none()
@@ -87,10 +86,6 @@ class OrganizationService:
             metadata={"name": organization.name, "slug": organization.slug},
         )
         return organization
-
-    async def list_for_user(self, *, user_id: UUID) -> list[Organization]:
-        rows = await self.list_for_user_with_roles(user_id=user_id)
-        return [organization for organization, _role in rows]
 
     async def list_for_user_with_roles(self, *, user_id: UUID) -> list[tuple[Organization, str]]:
         stmt = (

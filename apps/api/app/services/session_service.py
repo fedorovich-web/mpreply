@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth_tokens import digest_auth_token, new_auth_token
 from app.core.config import get_settings
+from app.core.time import utc
 from app.models.auth_session import AuthSession
 from app.models.user import User
 
@@ -27,12 +28,6 @@ class RefreshSessionGrant:
     user_id: UUID
     auth_version: int
     family_id: UUID
-
-
-def _as_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
 
 
 class SessionService:
@@ -85,7 +80,7 @@ class SessionService:
                 await self.revoke_family(auth_session.family_id, revoked_at=now)
                 raise SessionError("refresh_session_reused")
             raise SessionError("invalid_refresh_session")
-        if _as_utc(auth_session.expires_at) <= now:
+        if utc(auth_session.expires_at) <= now:
             raise SessionError("invalid_refresh_session")
 
         user_result = await self.session.execute(

@@ -1,5 +1,4 @@
 :root {
-	/* Brand and neutral colors */
 	--color-transparent: transparent;
 	--color-white: #ffffff;
 	--color-black: #000000;
@@ -44,7 +43,6 @@
 	--color-danger-soft: #fef3f2;
 	--color-info-soft: #eff8ff;
 
-	/* Public-site background system */
 	--color-public-page: var(--color-bg-page);
 	--color-public-section: var(--color-bg-page);
 	--color-public-section-subtle: var(--color-bg-subtle);
@@ -70,7 +68,6 @@
 	--color-border-warning-muted: color-mix(in srgb, var(--color-warning), transparent 72%);
 	--color-border-danger-muted: color-mix(in srgb, var(--color-danger), transparent 72%);
 
-	/* Gradients and decorative effects */
 	--gradient-public-hero: linear-gradient(180deg, var(--color-white) 0%, var(--color-bg-page) 100%);
 	--gradient-public-cta: linear-gradient(135deg, var(--color-surface-dark) 0%, #563078 100%);
 	--gradient-cta-accent: radial-gradient(
@@ -82,17 +79,14 @@
 		radial-gradient(circle at top left, rgb(111 51 171 / 14%), var(--color-transparent) 32%),
 		linear-gradient(180deg, var(--color-white) 0%, var(--color-bg-page) 100%);
 
-	/* Font families */
 	--font-family-sans: 'Onest', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	--font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-	/* Font weights */
 	--font-weight-regular: 400;
 	--font-weight-medium: 500;
 	--font-weight-semibold: 600;
 	--font-weight-bold: 700;
 
-	/* Fluid typography roles */
 	--font-size-display: clamp(3.4rem, 6.4vw, 6.15rem);
 	--font-size-display-tablet: clamp(3rem, 11vw, 5rem);
 	--font-size-display-mobile: clamp(2.75rem, 14vw, 4.2rem);
@@ -119,7 +113,6 @@
 	--font-size-public-h2: clamp(1.75rem, 2.7vw, 2.25rem);
 	--font-size-public-h3: clamp(1.125rem, 1.4vw, 1.25rem);
 
-	/* Backward-compatible type scale */
 	--font-size-xs: var(--font-size-caption);
 	--font-size-sm: var(--font-size-body-sm);
 	--font-size-md: var(--font-size-body);
@@ -130,7 +123,6 @@
 	--font-size-4xl: 3.5rem;
 	--font-size-5xl: 4.5rem;
 
-	/* Line-height roles */
 	--line-height-display: 0.96;
 	--line-height-solid: 1;
 	--line-height-title: 1.08;
@@ -146,7 +138,6 @@
 	--line-height-copy: 1.65;
 	--line-height-relaxed: 1.7;
 
-	/* Letter-spacing roles */
 	--letter-spacing-display: -0.04em;
 	--letter-spacing-heading: -0.035em;
 	--letter-spacing-subheading: -0.025em;
@@ -157,7 +148,6 @@
 	--letter-spacing-brand: -0.03em;
 	--letter-spacing-nav: -0.02em;
 
-	/* Spacing scale */
 	--space-0: 0;
 	--space-half: 0.125rem;
 	--space-fine: 0.2rem;
@@ -185,7 +175,6 @@
 	--space-32: 8rem;
 	--space-34: 8.5rem;
 
-	/* Component spacing */
 	--public-container-gutter: var(--space-6);
 	--public-section-spacing: clamp(var(--space-16), 7vw, var(--space-24));
 	--public-card-padding: var(--space-6);
@@ -194,12 +183,10 @@
 	--public-chip-padding-inline: 0.625rem;
 	--public-subhero-padding: clamp(var(--space-20), 9vw, var(--space-34)) var(--space-0) clamp(var(--space-18), 8vw, var(--space-28));
 
-	/* AI Assistant workspace layout */
 	--ai-workspace-grid-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1.15fr);
 	--ai-workspace-message-max-height: 38rem;
 	--ai-result-copy-min-height: 10rem;
 
-	/* Radius */
 	--radius-sm: 0.375rem;
 	--radius-md: 0.625rem;
 	--radius-lg: 0.875rem;
@@ -212,7 +199,6 @@
 	--radius-round: 50%;
 	--radius-full: 999px;
 
-	/* Borders and focus */
 	--border-width-hairline: 1px;
 	--border-width-accent: 0.25rem;
 	--focus-ring-width: 3px;
@@ -220,7 +206,6 @@
 	--focus-ring: var(--focus-ring-width) solid var(--color-focus-ring);
 	--focus-ring-offset-compact: 2px;
 
-	/* Shadows */
 	--shadow-xs: 0 1px 2px rgb(66 37 84 / 5%);
 	--shadow-sm: 0 2px 8px rgb(66 37 84 / 10%);
 	--shadow-md: 0 10px 26px rgb(66 37 84 / 10%);
@@ -245,7 +230,6 @@
 	--shadow-workspace-pulse-mid: 0 0 0 var(--space-3) var(--color-transparent);
 	--shadow-workspace-pulse-end: 0 0 0 var(--space-0) var(--color-transparent);
 
-	/* Motion */
 	--duration-instant: 0ms;
 	--duration-fast: 140ms;
 	--duration-normal: 220ms;
@@ -323,7 +307,6 @@
 	--opacity-visible: 1;
 	--opacity-disabled: 0.5;
 
-	/* Layout */
 	--container-max-width: 1240px;
 	--public-header-control-border: #b7d1f6;
 	--public-hero-min-height: 744px;
@@ -338,7 +321,6 @@
 	--inbox-filter-width: 17rem;
 	--message-detail-width: 28rem;
 
-	/* Public component geometry */
 	--size-brand-mark: 2.5rem;
 	--size-brand-mark-footer: 2.4rem;
 	--size-touch-target: 2.75rem;
@@ -356,7 +338,6 @@
 	--size-faq-glyph-stroke: 1.5px;
 	--opacity-cta-accent: 0.58;
 
-	/* Dashboard application tokens */
 	--app-shell-gap: var(--space-6);
 	--app-sidebar-bg: var(--color-bg-surface);
 	--app-topbar-bg: rgb(255 255 255 / 86%);

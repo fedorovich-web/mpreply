@@ -172,6 +172,8 @@ function AutomationRulesWorkspaceContent({
 
   const selectedRule =
     rulesQuery.data?.items.find((rule) => rule.id === selectedRuleId) ?? rulesQuery.data?.items[0] ?? null;
+  const editingRule = rulesQuery.data?.items.find((rule) => rule.id === selectedRuleId);
+  const isEditorOpen = editorMode === "create" || (editorMode === "edit" && Boolean(editingRule));
 
   async function refreshRules() {
     await queryClient.invalidateQueries({ queryKey: ["automation-rules", organizationId] });
@@ -180,10 +182,11 @@ function AutomationRulesWorkspaceContent({
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = editorPayload(editor, organizationId);
-      if (editorMode === "edit" && selectedRule) {
+      if (editorMode === "edit") {
+        if (!editingRule) throw new Error(t.saveError);
         const updatePayload = { ...payload };
         delete (updatePayload as Partial<typeof payload>).organization_id;
-        return apiRequest(`/api/automation-rules/${selectedRule.id}`, automationRuleSchema, {
+        return apiRequest(`/api/automation-rules/${editingRule.id}`, automationRuleSchema, {
           method: "PATCH",
           body: updatePayload,
         });
@@ -407,7 +410,7 @@ function AutomationRulesWorkspaceContent({
           </div>
 
           <div ref={detailPanelRef} className="automation-detail-panel">
-            {editorMode ? (
+            {editorMode && isEditorOpen ? (
               <RuleEditor
                 error={mutationError ? userErrorMessage(mutationError, t.saveError, locale) : null}
                 isPending={saveMutation.isPending}
@@ -441,12 +444,12 @@ function AutomationRulesWorkspaceContent({
         </>
       ) : null}
 
-      {mutationError && !editorMode ? (
+      {mutationError && !isEditorOpen ? (
         <p className="automation-action-error" role="alert">
           {userErrorMessage(mutationError, t.changeError, locale)}
         </p>
       ) : null}
-      {mutationSuccess && !mutationError && !editorMode ? (
+      {mutationSuccess && !mutationError && !isEditorOpen ? (
         <p className="automation-action-success" role="status">{mutationSuccess}</p>
       ) : null}
 

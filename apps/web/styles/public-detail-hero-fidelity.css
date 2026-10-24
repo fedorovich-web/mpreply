@@ -1,4 +1,3 @@
-/* Marketplace detail hero refinements from the approved render. */
 
 .mockup-page .detail-sidebar-item {
   display: flex;
@@ -46,7 +45,6 @@
   object-fit: contain;
 }
 
-/* Marketplace card in the render is a white logo surface, not a synthetic brand gradient. */
 .mockup-page .detail-market-logo {
   background: transparent;
 }
@@ -68,7 +66,6 @@
   pointer-events: none;
 }
 
-/* Buyer metadata in the approved card starts with a soft user/avatar badge. */
 .mockup-page .detail-market-message strong {
   display: flex;
   align-items: center;
@@ -87,7 +84,6 @@
   content: '';
 }
 
-/* Keep the context visual at the approved 40px geometry for every marketplace. */
 .mockup-page .detail-product-thumb {
   display: flex;
   align-items: center;
@@ -99,7 +95,6 @@
   background-color: #f4f6fb;
 }
 
-/* Only the product-question scenario uses the approved Wildberries product crop. */
 .mockup-page .detail-product-thumb.is-product.is-wildberries {
   background-image: url("/images/mockups/product-shoe.webp");
   background-position: center;
@@ -119,12 +114,10 @@
   height: 19px;
 }
 
-/* The approved Wildberries app question card has no secondary context row. */
 .mockup-page.marketplace-detail-page.is-wildberries .detail-question > p {
   display: none;
 }
 
-/* The approved detail FAQ uses compact rows rather than full-height cards. */
 .mockup-page .detail-faq-summary {
   grid-template-columns: 28px minmax(0, 1fr) auto;
   gap: 10px;

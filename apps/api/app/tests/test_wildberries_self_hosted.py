@@ -81,7 +81,6 @@ async def test_own_installation_cannot_be_combined_with_cloud_auth(cloud: bool, 
 
 
 async def test_production_own_registry_keeps_coordination_for_both_adapter_roles(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Provider IO is simulated; the production registry and adapter paths are real.
     paths: list[str] = []
 
     class RecordingLimiter(WildberriesRequestLimiter):

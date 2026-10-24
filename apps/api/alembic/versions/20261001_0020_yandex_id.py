@@ -39,7 +39,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Fail closed instead of inventing local passwords when OAuth-only users already exist.
     connection = op.get_bind()
     if connection.scalar(sa.text("SELECT EXISTS (SELECT 1 FROM users WHERE password_hash IS NULL)")):
         raise RuntimeError("Cannot remove OAuth while passwordless accounts exist; retain migration and use feature flag")

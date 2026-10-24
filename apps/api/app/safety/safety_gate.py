@@ -34,7 +34,6 @@ class SafetyResult(BaseModel):
 
 
 class SafetyGate:
-    """Deterministic post-generation guardrail for marketplace replies."""
 
     _PROMISE_PATTERNS = (
         re.compile(r"\bгарантир(?:уем|ую|овано)\b", re.IGNORECASE),

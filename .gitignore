@@ -1,8 +1,6 @@
-# OS
 .DS_Store
 Thumbs.db
 
-# env / secrets
 .env
 .env.*
 !.env.example
@@ -12,7 +10,6 @@ Thumbs.db
 *.key
 *.crt
 
-# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -26,7 +23,6 @@ dist/
 build/
 *.egg-info/
 
-# Node
 node_modules/
 .next/
 out/
@@ -35,22 +31,18 @@ coverage/
 .npm/
 .pnpm-store/
 
-# Logs
 *.log
 logs/
 
-# IDE
 .vscode/
 .idea/
 
-# Docker/local data
 postgres-data/
 redis-data/
 
 apps/web/tsconfig.tsbuildinfo
 apps/web/.next/
 apps/web/node_modules/
-# Frontend QA / browser tooling
 apps/web/playwright-report/
 apps/web/test-results/
 apps/web/blob-report/

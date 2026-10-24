@@ -118,7 +118,6 @@ async def test_callback_without_browser_binding_redirects_to_safe_error(monkeypa
         async def database(db_factory: async_sessionmaker[AsyncSession] = factory) -> AsyncIterator[AsyncSession]:
             async with db_factory() as session:
                 yield session
-        # Signature-free dependency wrapper avoids exposing a factory as a query field.
         async def dependency() -> AsyncIterator[AsyncSession]:
             async for session in database():
                 yield session

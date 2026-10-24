@@ -9,7 +9,6 @@ from uuid import UUID
 
 
 def token_payload(credential: str) -> dict[str, object] | None:
-    """Decode routing metadata only; WB remains the signature/auth authority."""
     if not credential or credential != credential.strip() or len(credential) > 16_384:
         return None
     segments = credential.split(".")
@@ -36,7 +35,6 @@ def quota_identity(credential: str) -> str:
 
 
 def seller_identity_hash(credential: str) -> str | None:
-    """Bind an own installation to a seller, without exposing its UUID or key."""
     payload = token_payload(credential)
     seller = payload.get("sid") if payload else None
     if not isinstance(seller, str):

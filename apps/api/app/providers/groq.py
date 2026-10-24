@@ -69,7 +69,6 @@ class GroqProvider:
 
     async def research_product(self, *, name: str, sku: str | None, brand: str | None,
                                compatibility_models: tuple[str, ...] = ()) -> ProductResearch:
-        """Only public product identity is sent; customer and tenant data stay out of search."""
         self._validate_api_key()
         started_at = time.perf_counter()
         payload = {
@@ -94,7 +93,6 @@ class GroqProvider:
             "tools": [{"type": "browser_search"}], "tool_choice": "required",
             "reasoning_effort": "low", "max_completion_tokens": 4000,
         }
-        # A failed search is recorded and routed to review, without repeated browsing attempts.
         async with httpx.AsyncClient(timeout=min(self.timeout_seconds, 60), transport=self.transport) as client:
             try:
                 response = await client.post(f"{self.base_url}/chat/completions", headers=self._headers(), json=payload)
@@ -114,7 +112,6 @@ class GroqProvider:
 
     @staticmethod
     def extract_research_sources(data: dict[str, object], *, focus_terms: tuple[str, ...] = ()) -> list[dict[str, str]]:
-        """Accept provider tool evidence, never links invented in assistant prose."""
         choices = data.get("choices")
         if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
             raise GroqProviderError("Groq research has no choices", error_code="groq_malformed_response")
@@ -334,8 +331,6 @@ def _research_excerpt(content: str, title: str, focus_terms: tuple[str, ...]) ->
     content = content.strip()[:200_000]
     if len(content) <= 6000:
         return content
-    # Product tables often follow long menus. Preserve raw evidence around
-    # identifiers/compatibility instead of keeping only the first menu block.
     terms = [*focus_terms, *(token for token in re.findall(r"[\w-]+", title) if any(char.isdigit() for char in token))]
     terms.extend(["compatible", "compatibility", "suitable", "совмест", "подход", "примен", "модел"])
     windows = [(0, 800)]

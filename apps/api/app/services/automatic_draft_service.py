@@ -28,11 +28,6 @@ _LEASE = timedelta(seconds=300)
 
 
 class AutomaticDraftService:
-    """Durable bridge from imported messages to the existing generation/send paths.
-
-    Public API generation remains explicit. Each background message has one job;
-    credit operation replay recovers a crash after generation without a second charge.
-    """
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -127,7 +122,6 @@ class AutomaticDraftService:
                 await self.session.rollback()
                 return
             actor = await self._actor(job)
-            # Serialize routing with human actions and marketplace refreshes.
             message = await self.session.scalar(select(CustomerMessage).where(
                 CustomerMessage.id == message_id, CustomerMessage.organization_id == job.organization_id,
             ).with_for_update().execution_options(populate_existing=True))
@@ -176,8 +170,6 @@ class AutomaticDraftService:
                 ReplyCreditOperation.operation_key == job.operation_key,
                 ReplyCreditOperation.state == "released",
             ))):
-                # Verify the release now so the next retry can generate directly,
-                # without spending a separate processing attempt on HTTP 410.
                 job.operation_key = uuid4()
             reservation_running = exc.status_code == 409 and bool(await self.session.scalar(select(exists().where(
                 ReplyCreditOperation.organization_id == job.organization_id,
@@ -191,8 +183,6 @@ class AutomaticDraftService:
             else:
                 await self._finish(job, "failed", f"generation_http_{exc.status_code}")
             await self.session.commit()
-        # Unexpected persistence/programming errors propagate. The durable lease
-        # lets another delivery recover without swallowing errors or charging twice.
 
     async def _actor(self, job: AutomaticDraftJob) -> User:
         actor = await self.session.scalar(select(User)

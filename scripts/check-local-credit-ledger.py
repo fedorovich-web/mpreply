@@ -1,8 +1,3 @@
-"""Run migrations and credit concurrency tests against a separate native local database.
-
-Uses synthetic credentials created by start-local-demo-api.py. Does not connect to
-providers or modify the demo database. Leaves the test database for inspection.
-"""
 
 from __future__ import annotations
 

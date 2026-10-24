@@ -10,11 +10,6 @@ class CredentialEncryptionError(RuntimeError):
 
 
 class CredentialService:
-    """Backend-only credential encryption helper.
-
-    This service must be the only layer that decrypts marketplace credentials.
-    Decrypted credentials should remain in memory only for the duration of an adapter call.
-    """
 
     def __init__(self, encryption_key: str) -> None:
         self._fernet = Fernet(encryption_key.encode("utf-8"))

@@ -44,8 +44,6 @@ def check_public_routes() -> None:
 def resolve_ts_import(source: Path, specifier: str) -> bool:
     if not specifier.startswith("."):
         return True
-    # Next.js writes these declarations during type generation/build. The
-    # repository integrity gate also runs before any frontend build in CI.
     if source == WEB / "next-env.d.ts" and specifier in {
         "./.next/types/routes.d.ts",
         "./.next/types/root-params.d.ts",
@@ -426,12 +424,6 @@ def check_deployment_contract() -> None:
 
 
 def _git_tracked_paths() -> list[Path] | None:
-    """Return tracked repository paths when Git metadata is available.
-
-    Local developer caches such as .venv, node_modules and .next are expected to
-    exist in a working tree and must not make the integrity gate fail. The release
-    rule is that generated artifacts must not be tracked or shipped.
-    """
     git = shutil.which("git")
     if git is None:
         return None
@@ -463,8 +455,6 @@ def check_generated_artifacts_absent() -> None:
     paths = _git_tracked_paths()
 
     if paths is None:
-        # Extracted release archives have no .git directory, so inspect the archive
-        # tree itself. Developer working trees use the tracked-file path above.
         paths = [path for path in ROOT.rglob("*") if path.is_file()]
 
     reported: set[Path] = set()

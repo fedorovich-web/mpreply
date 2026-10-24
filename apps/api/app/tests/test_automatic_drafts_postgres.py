@@ -186,7 +186,6 @@ async def test_postgres_expired_delivery_token_cannot_start_generation(
 async def test_postgres_import_ai_rules_and_adapter_send_complete_with_one_credit(
     postgres_credits: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Real persistence and Ozon adapter, synthetic credentials and mocked HTTP only."""
     monkeypatch.setattr(GroqProvider, "research_product", AsyncMock(return_value=ProductResearch(
         [{"url": "https://parts.example/tp123", "title": "TP123", "excerpt": "Test product TP123"}],
         "search-test", LLMUsage(1, 2, 3, None), 1,
@@ -231,7 +230,6 @@ async def test_postgres_import_ai_rules_and_adapter_send_complete_with_one_credi
 async def test_postgres_concurrent_auto_sends_reserve_organization_quota(
     postgres_credits: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Concurrent workers must reserve quota before either performs provider I/O."""
     settings = get_settings()
     monkeypatch.setattr(settings, "auto_reply_daily_limit_default", 100)
     monkeypatch.setattr(
@@ -403,8 +401,6 @@ async def test_postgres_unresolved_auto_writes_reserve_only_their_tenants_quota(
         )
         assert owner_id is not None
         now = datetime.now(UTC)
-        # Losing an execution lease must not erase a possible publication from
-        # the hourly/daily window. Every case is older than that lease.
         last_attempt_at = now - timedelta(seconds=settings.auto_reply_execution_lease_seconds + 1)
         message.status = "sending" if reply_status == "sending" else "needs_manual_check"
         session.add(Reply(
