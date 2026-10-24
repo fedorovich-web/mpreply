@@ -15,7 +15,7 @@ npm install --ignore-scripts --no-audit --no-fund --save-exact @playwright/test@
 
 curl --fail --location --retry 2 --output /qa/brave.deb https://github.com/brave/brave-browser/releases/download/v1.98.60/brave-browser_1.98.60_amd64.deb
 echo '812a001d7631b5ab49e55dec6148a0bc2d459e9fc03106c286295ee03fd062fc  /qa/brave.deb' | sha256sum --check --strict
-dpkg-deb --extract /qa/brave.deb /qa/browser
+dpkg-deb --threads-max=1 --extract /qa/brave.deb /qa/browser
 export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/qa/browser/opt/brave.com/brave/brave
 "$PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH" --version
 
