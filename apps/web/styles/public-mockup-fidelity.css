@@ -140,7 +140,6 @@
   font-weight: 700;
 }
 
-/* Product scene used by the approved features render. */
 .features-mockup-scene {
   position: relative;
   min-height: 480px;
@@ -332,7 +331,6 @@
 .mockup-cta .mockup-actions { justify-content: center; }
 .mockup-cta .mockup-trust-row { justify-content: center; }
 
-/* Marketplace mockup */
 .marketplaces-mockup-hero .mockup-hero-grid { grid-template-columns: minmax(0, .92fr) minmax(480px, 1.08fr); }
 
 .marketplace-hub-scene {

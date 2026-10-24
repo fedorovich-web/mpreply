@@ -17,7 +17,7 @@ from app.models.enums import Marketplace, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.marketplace_sync_state import MarketplaceSyncState
-from app.models.organization import OrganizationUser
+from app.models.organization import Organization, OrganizationUser
 from app.models.user import User
 from app.schemas.marketplace_account import MarketplaceAccountResponse
 from app.services.audit_service import AuditService
@@ -55,6 +55,7 @@ class MarketplaceAccountService:
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
+        await self.session.scalar(select(Organization.id).where(Organization.id == organization_id).with_for_update(key_share=True))
         limit_decision = await self.plan_limits.evaluate_metric(
             organization_id=organization_id,
             metric="marketplace_accounts",
@@ -232,16 +233,12 @@ class MarketplaceAccountService:
         return account
 
     async def delete_account(self, *, actor: User, account_id: UUID) -> MarketplaceAccount:
-        """Remove a connection, destroy its credentials and retain historical records."""
         account = await self.get_account(actor=actor, account_id=account_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=account.organization_id,
             user_id=actor.id,
             allowed_roles=_ALLOWED_MANAGE_ROLES,
         )
-        # Retain the tenant-scoped identity for historical messages and the
-        # immutable credit ledger. The connection is permanently removed from
-        # management and cannot be reactivated or use its discarded secret.
         account.status = "deleted"
         account.credentials_status = "revoked"
         account.credentials_encrypted = ""
@@ -304,8 +301,6 @@ class MarketplaceAccountService:
             entity_id=str(account.id),
             metadata={"marketplace": account.marketplace},
         )
-        # Persist the authorization/audit boundary before the provider call. This
-        # also guarantees that no database transaction is held open during I/O.
         await self.session.commit()
         result = await adapter.validate_credentials(credential, seller_id)
         current_result = await self.session.execute(
@@ -406,8 +401,6 @@ class MarketplaceAccountService:
         ))).all())
         last_success = account.last_success_sync_at
         last_error = account.last_error_sync_at
-        # Only completion of every configured stream can supersede an old
-        # account-level failure. Partial imports never become success.
         successes = [state.last_success_at for state in states if state.last_success_at is not None]
         if states and len(successes) == len(states):
             completed_at = min(value.replace(tzinfo=UTC) for value in successes)

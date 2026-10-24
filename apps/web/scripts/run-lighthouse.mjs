@@ -12,8 +12,6 @@ const profile = await mkdtemp(join(profileParent, "mpreply-lighthouse-"));
 let browser;
 
 try {
-  // Own one isolated browser for all URLs. Lighthouse's per-URL launcher can
-  // remove a Windows profile before the browser releases its files.
   browser = await puppeteer.launch({
     ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: "chrome" }),
     headless: true,

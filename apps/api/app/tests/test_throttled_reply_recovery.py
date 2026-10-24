@@ -75,7 +75,6 @@ async def test_legacy_throttle_recovery_rechecks_safety_preserves_history_and_is
             manual = ManualReplyService(session)
             queue, _ = await manual.list_review_queue(actor=actor, organization_id=message.organization_id, page=1, page_size=25)
             assert reply.id in {item[0].id for item in queue}
-            # Reproduce the previous deployment's automatic recovery mode.
             reply.mode = "auto"
             await session.commit()
             await service.recover_throttled_replies()
@@ -86,12 +85,9 @@ async def test_legacy_throttle_recovery_rechecks_safety_preserves_history_and_is
                             safety_flags_json=["missing_product_context", "needs_manual_review"], created_by=actor.id)
             session.add(fresh)
             await session.flush()
-            # A handoff can arrive before the scheduler repairs this mode.
             reply.mode = "auto"
             await session.commit()
             if session.get_bind().dialect.name == "postgresql":
-                # A concurrent review submission owns Reply first. A new
-                # handoff must return conflict without waiting on that lock.
                 async with automatic_db() as concurrent:
                     await concurrent.scalar(select(Reply).where(Reply.id == reply.id).with_for_update())
                     async with asyncio.timeout(2):

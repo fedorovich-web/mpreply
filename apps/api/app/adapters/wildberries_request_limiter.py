@@ -18,7 +18,7 @@ logger = structlog.get_logger(__name__)
 
 
 class WildberriesCoordinationUnavailable(RuntimeError):
-    """The coordination gate failed before any request reached WB."""
+    pass
 
 _ACQUIRE = """
 local ttl = redis.call('TTL', KEYS[1])
@@ -37,11 +37,8 @@ return 0
 
 
 class WildberriesRequestLimiter:
-    """Share provider cooldowns between API, workers and duplicate connections."""
 
     async def request(self, credential: str, path: str, request: Callable[[], Awaitable[httpx.Response]]) -> httpx.Response:
-        # Reviews/questions share the seller's category budget across methods.
-        # Ping has its own budget. Neither tokens nor seller IDs appear in keys.
         category = "ping" if path == "/ping" else "feedbacks-and-questions"
         digest = sha256(f"{quota_identity(credential)}\x00{category}".encode()).hexdigest()
         prefix = f"marketplace:wb:category:v2:{digest}"
@@ -66,8 +63,6 @@ class WildberriesRequestLimiter:
                 cooldown = parse_retry_after(response.headers.get("X-Ratelimit-Reset"), now=datetime.now(UTC), maximum_seconds=86400) or 0
             return response
         except RedisError as exc:
-            # Do not send an uncoordinated request when the safety boundary is
-            # unavailable. The normal scheduler backoff will try again later.
             raise WildberriesCoordinationUnavailable("WB request coordination is unavailable") from exc
         finally:
             try:
@@ -75,9 +70,6 @@ class WildberriesRequestLimiter:
                     try:
                         await redis.eval(_RELEASE, len(keys), *keys, owner, cooldown)
                     except RedisError:
-                        # Preserve a received write receipt or original timeout.
-                        # The request lock still expires, and future acquisition
-                        # remains closed whenever Redis is unavailable.
                         logger.warning("wb_request_coordination_release_failed")
             finally:
                 try:

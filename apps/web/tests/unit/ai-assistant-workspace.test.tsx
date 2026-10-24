@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AIAssistantWorkspace } from "../../components/ai-assistant/AIAssistantWorkspace";
@@ -159,6 +159,127 @@ function renderWorkspace() {
 }
 
 describe("AIAssistantWorkspace", () => {
+  it("preserves the newer generation key when an earlier message finishes during its pending request", async () => {
+    mockWorkspace("manager");
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false })));
+    const nextMessage = { ...chatMessage, product: { ...message.product, name: "Другой товар" } };
+    const nextDraft = { ...draft, message_id: nextMessage.id };
+    let finishFirst!: (response: Response) => void;
+    let failSecond!: (error: Error) => void;
+    const firstGeneration = new Promise<Response>((resolve) => { finishFirst = resolve; });
+    const secondGeneration = new Promise<Response>((_resolve, reject) => { failSecond = reject; });
+    const nextKeys: unknown[] = [];
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/messages")) return Response.json({ items: [message, nextMessage], total: 2, page: 1, page_size: 50 });
+      if (url.endsWith("/api/ai/drafts/generate")) {
+        const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        if (body.message_id === message.id) return firstGeneration;
+        nextKeys.push(body.operation_key);
+        return nextKeys.length === 1 ? secondGeneration : Response.json(nextDraft);
+      }
+      if (url.includes("/api/ai/drafts")) return Response.json({ items: [], total: 0 });
+      throw new Error(`Unexpected request: ${url}`);
+    }));
+    renderWorkspace();
+    await screen.findByRole("button", { name: /Термокружка/ });
+    fireEvent.click(screen.getByRole("button", { name: "Подготовить черновик" }));
+    fireEvent.click(screen.getByRole("button", { name: /Другой товар/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Подготовить черновик" }));
+    await waitFor(() => expect(nextKeys).toHaveLength(1));
+    await act(async () => { finishFirst(Response.json(draft)); await firstGeneration; });
+    await act(async () => { failSecond(new TypeError("Lost response")); await secondGeneration.catch(() => undefined); });
+    await screen.findByRole("alert");
+    fireEvent.click(screen.getByRole("button", { name: "Подготовить черновик" }));
+    await screen.findByLabelText("Ответ для проверки");
+    expect(nextKeys).toHaveLength(2);
+    expect(nextKeys[1]).toBe(nextKeys[0]);
+  });
+
+  it.each(["select", "refresh"])("keeps delayed manual-reply errors on their original draft after a message %s", async (change) => {
+    mockWorkspace("manager");
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false })));
+    const nextMessage = { ...chatMessage, product: { ...message.product, name: "Другой товар" } };
+    const nextDraft = { ...draft, id: "66666666-6666-4666-8666-666666666666", message_id: nextMessage.id, draft_text: "Ответ для другого обращения" };
+    let finishCreate!: (response: Response) => void;
+    let hideFirst = false;
+    const pendingCreate = new Promise<Response>((resolve) => { finishCreate = resolve; });
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/messages")) return Response.json({ items: hideFirst ? [nextMessage] : [message, nextMessage], total: hideFirst ? 1 : 2, page: 1, page_size: 50 });
+      if (url.includes("/api/ai/drafts")) return Response.json({ items: [new URL(url).searchParams.get("message_id") === message.id ? draft : nextDraft], total: 1 });
+      if (url.endsWith("/api/replies/manual")) return pendingCreate;
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+    await screen.findByLabelText("Ответ для проверки");
+    fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
+    await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => String(input).endsWith("/api/replies/manual"))).toBe(true));
+    if (change === "refresh") {
+      hideFirst = true;
+      fireEvent.click(screen.getByRole("button", { name: "Обновить обращения" }));
+    } else fireEvent.click(screen.getByRole("button", { name: /Другой товар/ }));
+    await waitFor(() => expect(screen.getByLabelText("Ответ для проверки")).toHaveValue(nextDraft.draft_text));
+    await act(async () => { finishCreate(new Response("{}", { status: 503 })); await pendingCreate; });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Передать на проверку" })).toBeEnabled());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    if (change === "refresh") {
+      hideFirst = false;
+      fireEvent.click(screen.getByRole("button", { name: "Обновить обращения" }));
+    } else fireEvent.click(screen.getByRole("button", { name: /Термокружка/ }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Не удалось сохранить ответ. Попробуйте ещё раз.");
+  });
+
+  it.each([
+    { status: 200, retry: false }, { status: 503, retry: false },
+    { status: 200, retry: true }, { status: 503, retry: true },
+  ])("keeps a delayed review handoff ($status, retry=$retry) attached to its original draft after switching messages", async ({ status, retry }) => {
+    mockWorkspace("manager");
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false })));
+    const nextMessage = { ...chatMessage, product: { ...message.product, name: "Другой товар" } };
+    const nextDraft = { ...draft, id: "66666666-6666-4666-8666-666666666666", message_id: nextMessage.id, draft_text: "Ответ для другого обращения" };
+    let finishSubmit!: (response: Response) => void;
+    let submitAttempts = 0;
+    const pendingSubmit = new Promise<Response>((resolve) => { finishSubmit = resolve; });
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/messages")) return Response.json({ items: [message, nextMessage], total: 2, page: 1, page_size: 50 });
+      if (url.includes("/api/ai/drafts")) {
+        const currentDraft = new URL(url).searchParams.get("message_id") === message.id ? draft : nextDraft;
+        return Response.json({ items: [currentDraft], total: 1 });
+      }
+      if (url.endsWith("/api/replies/manual")) return Response.json({ reply, safety });
+      if (url.endsWith("/submit-review")) {
+        submitAttempts += 1;
+        if (retry && submitAttempts === 1) return new Response("{}", { status: 503 });
+        return pendingSubmit;
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+    await screen.findByLabelText("Ответ для проверки");
+    fireEvent.click(screen.getByRole("button", { name: "Передать на проверку" }));
+    if (retry) fireEvent.click(await screen.findByRole("button", { name: "Попробовать ещё раз" }));
+    await waitFor(() => expect(submitAttempts).toBe(retry ? 2 : 1));
+    fireEvent.click(screen.getByRole("button", { name: /Другой товар/ }));
+    await waitFor(() => expect(screen.getByLabelText("Ответ для проверки")).toHaveValue(nextDraft.draft_text));
+    fireEvent.click(screen.getByRole("button", { name: /Термокружка/ }));
+    expect(await screen.findByRole("button", { name: "Передаём..." })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /Другой товар/ }));
+    await waitFor(() => expect(screen.getByLabelText("Ответ для проверки")).toHaveValue(nextDraft.draft_text));
+    await act(async () => {
+      finishSubmit(status === 200 ? Response.json({ reply: { ...reply, status: "waiting_review" }, safety }) : new Response("{}", { status }));
+      await pendingSubmit;
+    });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Передать на проверку" })).toBeEnabled());
+    expect(screen.queryByText("Ответ передан на проверку")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Попробовать ещё раз" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Термокружка/ }));
+    expect(await screen.findByText(status === 200 ? "Ответ передан на проверку" : "Ответ сохранён, но пока не передан на проверку")).toBeInTheDocument();
+  });
+
   it("keeps the generation key after a lost response and uses a new key for a new variant", async () => {
     mockWorkspace("manager");
     const keys: unknown[] = [];

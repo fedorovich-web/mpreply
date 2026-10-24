@@ -55,7 +55,6 @@ class LavaWebhookService:
                                                  "product_id": str(UUID(str(product["id"]))), "currency": currency,
                                                  "amount_minor": money_minor(data.get("amount"))}
             else:
-                # Retain a digest and financial event identifiers; buyer PII is unnecessary for payment matching.
                 event_data = data.get("data")
                 normalized = {"eventType": kind, "event_id": str(data.get("event_id", ""))[:128],
                               "payload_digest": hashlib.sha256(payload).hexdigest()}
@@ -75,10 +74,9 @@ class LavaWebhookService:
                                                     state="pending" if kind in {"payment.success", "payment.failed"} else "review_required"))
                     await self.session.flush()
             except IntegrityError:
-                # A concurrent request inserted this exact immutable event.
                 if await self.session.scalar(select(BillingWebhook.id).where(BillingWebhook.event_digest == digest)) is None:
                     raise
-        await self.session.commit()  # Acknowledgement requires a durable receipt.
+        await self.session.commit()
 
     async def process_due(self, *, now: datetime, limit: int) -> int:
         processed = 0
@@ -98,7 +96,7 @@ class LavaWebhookService:
             await self.session.commit()
             try:
                 invoice_id = UUID(str(payload["contractId"]))
-                invoice = await self.client.get_invoice(invoice_id)  # No database lock held during external I/O.
+                invoice = await self.client.get_invoice(invoice_id)
                 if invoice.amount_minor != payload["amount_minor"] or invoice.currency != payload["currency"]:
                     raise ValueError("payment_terms_mismatch")
                 event = await self.session.scalar(select(BillingWebhook).where(BillingWebhook.id == event_id).with_for_update()

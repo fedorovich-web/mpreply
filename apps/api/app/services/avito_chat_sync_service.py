@@ -155,8 +155,6 @@ class AvitoChatSyncService:
                     return self._failure(state, "malformed_payload", stats, skipped)
 
                 if projection.can_mark_read:
-                    # The unread list shrinks after mark-read. Persist offset zero
-                    # before that provider mutation so a crash cannot skip a chat.
                     checkpoint.cursor = None
                 else:
                     checkpoint.skipped_versions[chat.external_id] = chat.updated_unix

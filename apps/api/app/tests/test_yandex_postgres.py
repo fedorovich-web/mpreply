@@ -56,7 +56,6 @@ async def test_concurrent_registration_creates_one_identity_and_user(identity_pg
     async with identity_pg_db() as session:
         assert await session.scalar(select(func.count()).select_from(User).where(User.email == email)) == 1
         assert await session.scalar(select(func.count()).select_from(AuthIdentity).where(AuthIdentity.subject == subject)) == 1
-        # Synthetic test users retain a placeholder hash only after the assertions, so the downgrade guard stays testable.
         user = await session.get(User, users[0])
         assert user is not None and user.password_hash is None
         user.password_hash = "synthetic-test-downgrade-placeholder"

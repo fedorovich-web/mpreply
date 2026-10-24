@@ -4,7 +4,6 @@ from collections import Counter
 from dataclasses import dataclass
 from types import MappingProxyType
 
-# Minor units, matching the product owner's approved catalogue. Clients cannot supply prices.
 PLANS = MappingProxyType({"start": (129000, 300), "team": (349000, 800), "business": (699000, 1600)})
 PACKS = MappingProxyType({
     50: 29900, 100: 54900, 250: 129000, 500: 249000, 1000: 479000, 2000: 929000,

@@ -7,6 +7,7 @@ import httpx
 from app.adapters.avito_auth import AvitoCredentialResolver, AvitoResolvedCredential
 from app.adapters.base import AdapterResult
 from app.adapters.http import (
+    MAX_PROVIDER_RETRY_AFTER_SECONDS,
     InvalidProviderPath,
     ReadRetryPolicy,
     ensure_relative_provider_path,
@@ -16,7 +17,6 @@ from app.adapters.http import (
 
 
 class AvitoApiClient:
-    """Authenticated requests to Avito's fixed API origin, without write retries."""
 
     def __init__(
         self,
@@ -112,9 +112,9 @@ class AvitoApiClient:
             parse_retry_after(
                 response.headers.get("Retry-After"),
                 now=datetime.now(UTC),
-                maximum_seconds=self._read_retry_policy.max_retry_after_seconds,
+                maximum_seconds=MAX_PROVIDER_RETRY_AFTER_SECONDS,
             )
-            if response.status_code == 429
+            if response.status_code in {429, 503}
             else None
         )
         if response.status_code == 401:

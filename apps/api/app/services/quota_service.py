@@ -84,7 +84,6 @@ class QuotaService:
         automation_rule_id: UUID | None,
         force_all_rules: bool = False,
     ) -> int:
-        """Count confirmed sends and unresolved provider writes that may have succeeded."""
         sent_in_window = and_(
             Reply.status == ReplyStatus.SENT.value,
             Reply.sent_at.is_not(None),

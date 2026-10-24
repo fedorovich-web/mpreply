@@ -1,4 +1,3 @@
-/* One vertical rhythm for top-level public sections across all public routes. */
 .public-root {
   --public-section-padding-block: 96px;
   --public-hero-padding-block: var(--public-section-padding-block);

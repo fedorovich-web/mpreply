@@ -210,6 +210,7 @@ const aiCopy = {
 } as const;
 
 type Tone = "neutral" | "friendly" | "formal" | "apologetic";
+type GenerationAttempt = { signature: string; key: string };
 type ReviewHandoffState =
   | { status: "submitted" }
   | { status: "draft_created"; error: unknown; replyId: string };
@@ -226,9 +227,11 @@ export function AIAssistantWorkspace() {
   const [brandRules, setBrandRules] = useState("");
   const [knowledgeBase, setKnowledgeBase] = useState("");
   const [latestDraft, setLatestDraft] = useState<AIDraft | null>(null);
-  const [reviewHandoff, setReviewHandoff] = useState<ReviewHandoffState | null>(null);
+  const [reviewHandoffs, setReviewHandoffs] = useState<Record<string, ReviewHandoffState | null>>({});
+  const [pendingReviews, setPendingReviews] = useState<Record<string, boolean>>({});
+  const [reviewErrors, setReviewErrors] = useState<Record<string, unknown>>({});
   const generatePanelRef = useRef<HTMLElement>(null);
-  const generationAttemptRef = useRef<{ signature: string; key: string } | null>(null);
+  const generationAttemptsRef = useRef(new Map<string, string>());
 
   const messagesQuery = useQuery({
     queryKey: ["ai-assistant", "messages", activeOrganization.id, messagePage],
@@ -265,16 +268,16 @@ export function AIAssistantWorkspace() {
     enabled: Boolean(selectedMessage),
   });
 
-  const invalidateReplyWork = async () => {
+  const invalidateReplyWork = async (organizationId: string) => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["review-queue", activeOrganization.id] }),
-      queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] }),
-      queryClient.invalidateQueries({ queryKey: ["ai-assistant", "messages", activeOrganization.id] }),
+      queryClient.invalidateQueries({ queryKey: ["review-queue", organizationId] }),
+      queryClient.invalidateQueries({ queryKey: ["messages", organizationId] }),
+      queryClient.invalidateQueries({ queryKey: ["ai-assistant", "messages", organizationId] }),
     ]);
   };
 
   const generateMutation = useMutation({
-    mutationFn: async (operationKey: string) => {
+    mutationFn: async (attempt: GenerationAttempt) => {
       if (!selectedMessage) throw new Error(t.chooseFirst);
       const request = (key: string) => apiRequest("/api/ai/drafts/generate", aiDraftSchema, {
         method: "POST",
@@ -287,32 +290,33 @@ export function AIAssistantWorkspace() {
         },
       });
       try {
-        return await request(operationKey);
+        return await request(attempt.key);
       } catch (error) {
-        // A lost response keeps its key. Only a confirmed released reservation
-        // permits a fresh attempt, so retries cannot consume another reply.
         if (!(error instanceof ApiError) || error.status !== 410) throw error;
         const key = crypto.randomUUID();
-        if (generationAttemptRef.current?.key === operationKey) generationAttemptRef.current.key = key;
+        if (generationAttemptsRef.current.get(attempt.signature) === attempt.key) {
+          generationAttemptsRef.current.set(attempt.signature, key);
+        }
+        attempt.key = key;
         return request(key);
       }
     },
-    onSuccess: async (draft) => {
-      generationAttemptRef.current = null;
+    onSuccess: async (draft, attempt) => {
+      if (generationAttemptsRef.current.get(attempt.signature) === attempt.key) {
+        generationAttemptsRef.current.delete(attempt.signature);
+      }
       setLatestDraft(draft);
-      setReviewHandoff(null);
       await queryClient.invalidateQueries({
-        queryKey: ["ai-assistant", "drafts", activeOrganization.id, selectedMessage?.id],
+        queryKey: ["ai-assistant", "drafts", draft.organization_id, draft.message_id],
       });
     },
   });
 
   const requestGeneration = () => {
     const signature = JSON.stringify([activeOrganization.id, selectedMessage?.id, tone, brandRules, knowledgeBase]);
-    if (generationAttemptRef.current?.signature !== signature) {
-      generationAttemptRef.current = { signature, key: crypto.randomUUID() };
-    }
-    generateMutation.mutate(generationAttemptRef.current.key);
+    const key = generationAttemptsRef.current.get(signature) ?? crypto.randomUUID();
+    generationAttemptsRef.current.set(signature, key);
+    generateMutation.mutate({ signature, key });
   };
 
   const reviewMutation = useMutation({
@@ -339,28 +343,43 @@ export function AIAssistantWorkspace() {
         return { status: "draft_created", error, replyId: created.reply.id } as ReviewHandoffState;
       }
     },
-    onMutate: () => {
-      setReviewHandoff(null);
+    onMutate: ({ draft }) => {
+      setReviewErrors((current) => ({ ...current, [draft.id]: null }));
+      setPendingReviews((current) => ({ ...current, [draft.id]: true }));
+      setReviewHandoffs((current) => ({ ...current, [draft.id]: null }));
     },
-    onSuccess: async (handoff) => {
-      setReviewHandoff(handoff);
-      await invalidateReplyWork();
+    onSuccess: async (handoff, { draft }) => {
+      setReviewHandoffs((current) => ({ ...current, [draft.id]: handoff }));
+      await invalidateReplyWork(draft.organization_id);
+    },
+    onError: (error, { draft }) => {
+      setReviewErrors((current) => ({ ...current, [draft.id]: error }));
+    },
+    onSettled: (_data, _error, { draft }) => {
+      setPendingReviews((current) => ({ ...current, [draft.id]: false }));
     },
   });
 
   const retryReviewMutation = useMutation({
-    mutationFn: (replyId: string) =>
+    mutationFn: ({ replyId }: { replyId: string; draftId: string; organizationId: string }) =>
       apiRequest(`/api/replies/${replyId}/submit-review`, manualReplyWorkflowSchema, { method: "POST" }),
-    onSuccess: async () => {
-      setReviewHandoff({ status: "submitted" });
-      await invalidateReplyWork();
+    onMutate: ({ draftId }) => {
+      setPendingReviews((current) => ({ ...current, [draftId]: true }));
     },
-    onError: (error) => {
-      setReviewHandoff((current) =>
-        current?.status === "draft_created"
-          ? { ...current, error }
-          : current,
-      );
+    onSuccess: async (_result, { draftId, organizationId }) => {
+      setReviewHandoffs((current) => ({ ...current, [draftId]: { status: "submitted" } }));
+      await invalidateReplyWork(organizationId);
+    },
+    onError: (error, { draftId }) => {
+      setReviewHandoffs((current) => {
+        const handoff = current[draftId];
+        return handoff?.status === "draft_created"
+          ? { ...current, [draftId]: { ...handoff, error } }
+          : current;
+      });
+    },
+    onSettled: (_data, _error, { draftId }) => {
+      setPendingReviews((current) => ({ ...current, [draftId]: false }));
     },
   });
 
@@ -371,7 +390,6 @@ export function AIAssistantWorkspace() {
   function selectMessage(messageId: string) {
     setSelectedMessageId(messageId);
     setLatestDraft(null);
-    setReviewHandoff(null);
     generateMutation.reset();
     reviewMutation.reset();
     retryReviewMutation.reset();
@@ -389,7 +407,6 @@ export function AIAssistantWorkspace() {
   function changeMessagePage(nextPage: number) {
     setSelectedMessageId(null);
     setLatestDraft(null);
-    setReviewHandoff(null);
     generateMutation.reset();
     reviewMutation.reset();
     retryReviewMutation.reset();
@@ -619,15 +636,15 @@ export function AIAssistantWorkspace() {
             <DraftResult
               canManage={canGenerate}
               draft={displayedDraft}
-              handoff={reviewHandoff}
+              handoff={reviewHandoffs[displayedDraft.id] ?? null}
               isGenerating={generateMutation.isPending}
-              isRetryingReview={retryReviewMutation.isPending}
-              isSubmitting={reviewMutation.isPending}
+              isRetryingReview={pendingReviews[displayedDraft.id] ?? false}
+              isSubmitting={pendingReviews[displayedDraft.id] ?? false}
               key={displayedDraft.id}
               onRegenerate={requestGeneration}
-              onRetryReview={(replyId) => retryReviewMutation.mutate(replyId)}
+              onRetryReview={(replyId) => retryReviewMutation.mutate({ replyId, draftId: displayedDraft.id, organizationId: displayedDraft.organization_id })}
               onSubmit={(replyText) => reviewMutation.mutate({ draft: displayedDraft, replyText })}
-              submitError={reviewMutation.error}
+              submitError={reviewErrors[displayedDraft.id]}
               locale={locale}
             />
           ) : (

@@ -50,7 +50,7 @@ function CheckoutForm({ catalog, organizationId, userId, locale }: { catalog: Ca
   const pollingStarted = useRef(started);
   const save = (order: string | null) => {
     try { localStorage.setItem(storageKey, JSON.stringify({ key: key.current, orderId: order, purchase })); }
-    catch { /* The current tab still retains its key if browser storage is unavailable. */ }
+    catch {   }
   };
   const create = useMutation({
     mutationFn: () => {
@@ -61,7 +61,7 @@ function CheckoutForm({ catalog, organizationId, userId, locale }: { catalog: Ca
     onError: (error) => {
       if (!(error instanceof ApiError) || !error.orderNotCreated) return;
       key.current = null; setLocked(false);
-      try { localStorage.removeItem(storageKey); } catch { /* The in-memory key was cleared after explicit server proof. */ }
+      try { localStorage.removeItem(storageKey); } catch {   }
     },
   });
   const status = useQuery({ queryKey: ["billing", "order", organizationId, orderId], enabled: orderId !== null,
@@ -77,7 +77,7 @@ function CheckoutForm({ catalog, organizationId, userId, locale }: { catalog: Ca
   const selectedPlan = catalog.plans.find((plan) => plan.code === purchase.plan_code);
   const amount = purchase.kind === "plan" ? (purchase.months === 12 ? selectedPlan?.amount_year_minor : selectedPlan?.amount_month_minor) ?? 0
     : purchase.packs.reduce((sum, row) => sum + (catalog.packs.find((pack) => pack.quantity === row.quantity)?.amount_minor ?? 0) * row.count, 0);
-  const nextPurchase = () => { key.current = null; setLocked(false); setOrderId(null); create.reset(); try { localStorage.removeItem(storageKey); } catch { /* No automatic purchase follows storage errors. */ } };
+  const nextPurchase = () => { key.current = null; setLocked(false); setOrderId(null); create.reset(); try { localStorage.removeItem(storageKey); } catch {   } };
   return <section className="billing-section" aria-labelledby="billing-checkout-title">
     <h2 id="billing-checkout-title">{ru ? "Оплата тарифа и ответов" : "Buy a plan or replies"}</h2>
     <p>{ru ? "Каждая покупка оплачивается вручную. Автосписаний нет. Другой тариф начнёт действовать после текущего оплаченного периода." : "Each purchase is paid manually, without automatic charges. A different plan starts after your current paid period."}</p>

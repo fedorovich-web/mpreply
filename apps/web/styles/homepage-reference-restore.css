@@ -55,7 +55,6 @@
   letter-spacing: -0.035em;
 }
 
-/* Hero. */
 .homepage-reference-root .home-reference-hero {
   position: relative;
   overflow: hidden;
@@ -134,7 +133,6 @@
   border-left-color: #d8e8fa;
 }
 
-/* Workspace. */
 .homepage-reference-root .home-reference-workspace {
   background:
     radial-gradient(circle at 77% 44%, rgb(122 190 255 / 9%), transparent 26rem),
@@ -289,7 +287,6 @@
   background: #0b61e8;
 }
 
-/* Model cards. */
 .homepage-reference-root .home-reference-models {
   background: #fff;
 }
@@ -324,7 +321,6 @@
   object-fit: contain;
 }
 
-/* Process and results. */
 .homepage-reference-root .home-reference-process {
   background: #fff;
 }
@@ -410,7 +406,6 @@
   height: 2rem;
 }
 
-/* Final CTA. */
 .homepage-reference-root .home-reference-final {
   background: #fff;
 }
@@ -448,7 +443,6 @@
   object-fit: contain;
 }
 
-/* Shared public footer. */
 .home-reference-footer {
   border-top: 1px solid #edf3fa;
   background: #fff;

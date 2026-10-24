@@ -7,8 +7,6 @@ import { resolveDomainRoute } from "./lib/domain-routing";
 export function proxy(request: NextRequest) {
   const publicOrigin = process.env.NEXT_PUBLIC_SITE_URL || "https://mpreply.ru";
   const appOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://app.mpreply.ru";
-  // Next.js can expose the container URL instead of the browser host behind Traefik.
-  // Accept only the two configured canonical hosts; never redirect to a header-supplied origin.
   const canonicalHosts = new Set([new URL(publicOrigin).hostname, new URL(appOrigin).hostname]);
   const effectiveUrl = new URL(request.url);
   for (const rawHost of [request.headers.get("host"), request.headers.get("x-forwarded-host")]) {
@@ -43,7 +41,6 @@ export function proxy(request: NextRequest) {
   const csp = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""}`,
-    // React controls use style attributes; script execution remains nonce-bound.
     "style-src 'self' 'unsafe-inline'",
     `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""}${development ? " ws://localhost:* ws://127.0.0.1:*" : ""}`,
     "img-src 'self' data: blob:",

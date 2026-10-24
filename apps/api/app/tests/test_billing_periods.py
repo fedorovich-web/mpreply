@@ -116,7 +116,6 @@ async def test_reservation_materializes_due_month_without_scheduler_or_overview(
         await service.materialize_current(organization_id=order.organization_id, now=NOW)
         first = await session.scalar(select(ReplyCreditGrant).where(ReplyCreditGrant.organization_id == order.organization_id))
         assert first is not None
-        # Simulate the opening balance after all first-month replies were spent.
         first.available, first.consumed = 0, first.quantity
         await session.commit()
         credits = ReplyCreditService(session)
