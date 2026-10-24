@@ -1,6 +1,4 @@
-/* Final small-fidelity overrides from the approved inner-page renders. */
 
-/* Features: the benefits group sits inside one soft rounded panel. */
 .mockup-page .public-section:has(.features-benefit-grid) {
   width: min(calc(100% - 42px), 1560px);
   margin-inline: auto;
@@ -16,7 +14,6 @@
   width: min(calc(100% - 88px), 1270px);
 }
 
-/* Marketplaces: four dotted connector arms and stacked logo/message cards. */
 .mockup-page .marketplace-hub-line {
   left: 50%;
   top: 49%;
@@ -85,7 +82,6 @@
   font-size: inherit;
 }
 
-/* Marketplace integration cards use the circular brand checks from the approved render. */
 .mockup-page .marketplace-logo-card li {
   display: flex;
   align-items: flex-start;
@@ -174,7 +170,6 @@
   margin: 0;
 }
 
-/* Marketplace detail FAQ: icon-led horizontal rows with a chevron at the right. */
 .mockup-page .marketplace-detail-faq details {
   padding: 0;
   overflow: hidden;
@@ -221,16 +216,13 @@
   padding: 0 16px 14px 60px;
 }
 
-/* Pricing section headings keep their approved compact labels. */
 
-/* Demo journey marketplace icons sit left-aligned beneath the first-step copy. */
 .mockup-page .demo-journey-marketplaces {
   margin-left: 0;
   margin-right: 0;
   justify-content: flex-start;
 }
 
-/* Demo scenarios: the popular badge is inline beside the type, not absolutely positioned like pricing. */
 .mockup-page .demo-scenario-popular {
   display: inline-flex;
   align-items: center;
@@ -243,7 +235,6 @@
   line-height: 1;
 }
 
-/* Demo hero: compact metadata rows and final review bubble from the approved render. */
 .mockup-page .demo-story-meta {
   display: flex;
   align-items: center;
@@ -311,7 +302,6 @@
   font-size: var(--font-size-body-sm);
 }
 
-/* Demo process: render-style buyer card, status icons and final answer panel. */
 .mockup-page .demo-process-message .demo-scenario-head > div {
   display: grid;
   gap: 2px;

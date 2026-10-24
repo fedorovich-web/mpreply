@@ -153,7 +153,6 @@ async def test_provider_failure_releases_credit_and_confirmed_ended_operation_ca
         job = await session.get(AutomaticDraftJob, job_id)
         assert job is not None and job.state == "pending"
         key = job.operation_key
-        # The failed generation already confirmed release and rotated the key.
         job_id, token = (await service.claim_due(now=datetime.now(UTC) + timedelta(minutes=2)))[0]
         await service.process(job_id=job_id, token=token)
         await session.refresh(job)

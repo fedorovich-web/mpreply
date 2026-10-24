@@ -390,6 +390,28 @@ describe("Specialized marketplace connection forms", () => {
 });
 
 describe("WildberriesIntegrationWorkspace", () => {
+  it("clears unsaved connection credentials when the active organization changes", async () => {
+    mockWorkspace("owner");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([]))));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(<QueryClientProvider client={client}><WildberriesIntegrationWorkspace /></QueryClientProvider>);
+    const form = await screen.findByRole("form", { name: "Новое подключение Wildberries" });
+    fireEvent.change(within(form).getByLabelText("Название подключения"), { target: { value: "Магазин A" } });
+    fireEvent.change(within(form).getByLabelText(/Идентификатор продавца/), { target: { value: "seller-a" } });
+    fireEvent.change(within(form).getByLabelText("Ключ доступа Wildberries"), { target: { value: "organization-a-key" } });
+    const workspace = mockedUseWorkspace();
+    mockedUseWorkspace.mockReturnValue({
+      ...workspace,
+      activeOrganization: { ...organization, id: "77777777-7777-4777-8777-777777777777", name: "Магазин B" },
+    });
+    view.rerender(<QueryClientProvider client={client}><WildberriesIntegrationWorkspace /></QueryClientProvider>);
+    const nextForm = screen.getByRole("form", { name: "Новое подключение Wildberries" });
+    expect(within(nextForm).getByLabelText("Ключ доступа Wildberries")).toHaveValue("");
+    expect(within(nextForm).getByLabelText("Название подключения")).toHaveValue("");
+    expect(within(nextForm).getByLabelText(/Идентификатор продавца/)).toHaveValue("");
+    expect(within(nextForm).getByRole("button", { name: "Добавить кабинет" })).toBeDisabled();
+  });
+
   it("lets an owner create a tenant-scoped account and never puts organization id into a manual field", async () => {
     mockWorkspace("owner");
     const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {

@@ -12,7 +12,7 @@ describe("automation operational workspace", () => {
   it("keeps rule management on the existing live API", () => {
     expect(workspace).toContain('buildApiQuery("/api/automation-rules"');
     expect(workspace).toContain('apiRequest("/api/automation-rules"');
-    expect(workspace).toContain("/api/automation-rules/${selectedRule.id}");
+    expect(workspace).toContain("/api/automation-rules/${editingRule.id}");
   });
 
   it("keeps write permissions explicit before actions are shown", () => {

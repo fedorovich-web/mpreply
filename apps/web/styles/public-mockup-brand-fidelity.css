@@ -1,8 +1,5 @@
-/* Approved MPReply palette for the public mockup-derived pages only.
-   This file is intentionally loaded after the legacy theme and does not recolor the approved homepage or dashboard. */
 
 .public-root:has(.mockup-page) {
-  /* The supplied renders are light-only presentation surfaces. Keep them stable even when dashboard theme=dark. */
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-elevated: #ffffff;
@@ -18,7 +15,6 @@
   --color-border-subtle: #dceafa;
   --color-border-strong: #bfd6f3;
 
-  /* Retarget legacy render tokens to the approved MPReply brand on these pages. */
   --mockup-blue: #0b68f6;
   --mockup-blue-deep: #0757d7;
   --mockup-sky: #0b68f6;
@@ -162,7 +158,6 @@
   box-shadow: 0 8px 18px rgb(11 104 246 / 8%);
 }
 
-/* Later fidelity layers refine geometry, but these demo accents must stay on the approved MPReply primary. */
 .public-root:has(.mockup-page) .mockup-page .demo-scenario-popular,
 .public-root:has(.mockup-page) .mockup-page .demo-story-ai-avatar,
 .public-root:has(.mockup-page) .mockup-page .demo-story-review-avatar,

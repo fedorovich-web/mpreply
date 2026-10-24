@@ -37,12 +37,6 @@ class ReplyCreditBalance:
 
 
 class ReplyCreditService:
-    """All mutations lock the tenant's organization row. The caller owns commit/rollback.
-
-    Reserve must be committed before external work. Persisting a draft and consuming
-    its reservation must share one transaction. Expired operations are fenced:
-    a late provider response cannot complete an operation recovered by another call.
-    """
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -182,7 +176,6 @@ class ReplyCreditService:
         if manual_period is not None:
             return True
         subscription = await self.session.scalar(select(Subscription).where(Subscription.organization_id == organization_id))
-        # A locally created 'active' subscription with no provider is not payment proof.
         return bool(
             subscription is not None
             and subscription.status == "active"
@@ -237,7 +230,6 @@ class ReplyCreditService:
             return previous
         grants = await self._grants(organization_id)
         eligible = [grant for grant in grants if grant.available > 0 and (grant.kind == "trial" or paid_entitled)]
-        # Expiring trial replies are spent before non-expiring paid replies.
         eligible.sort(key=lambda grant: (grant.kind != "trial", utc(grant.created_at), str(grant.id)))
         if not eligible:
             raise payment_required("No available replies: an active trial or paid subscription is required")
@@ -329,7 +321,6 @@ class ReplyCreditService:
 
 
 async def recover_due_credit_accounts(session: AsyncSession, *, now: datetime, limit: int = 25) -> int:
-    """Owns a bounded maintenance transaction, including expiration without new requests."""
     if type(limit) is not int or not 1 <= limit <= 100:
         raise ValueError("Credit recovery batch size must be between 1 and 100")
     due = select(ReplyCreditOperation.organization_id).where(

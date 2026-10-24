@@ -93,6 +93,24 @@ function renderWorkspace() {
 }
 
 describe("AutomationRulesWorkspace", () => {
+  it("closes a removed rule's editor instead of saving its fields onto the next rule", async () => {
+    mockWorkspace("owner");
+    const nextRule = { ...rule, id: "44444444-4444-4444-8444-444444444444", name: "Другое правило" };
+    let removed = false;
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ items: removed ? [nextRule] : [rule, nextRule], total: removed ? 1 : 2 }));
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+    await screen.findByRole("heading", { name: rule.name });
+    fireEvent.click(screen.getByRole("button", { name: "Редактировать" }));
+    const editor = screen.getByRole("form", { name: "Редактор правила автоматизации" });
+    fireEvent.change(within(editor).getByLabelText("Название"), { target: { value: "Изменение первого правила" } });
+    removed = true;
+    fireEvent.click(screen.getByRole("button", { name: "Обновить правила" }));
+    await waitFor(() => expect(screen.queryByRole("form", { name: "Редактор правила автоматизации" })).not.toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: nextRule.name })).toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH" || init?.method === "POST")).toBe(false);
+  });
+
   it("loads live rules and lets an owner create a buyer-message rule", async () => {
     mockWorkspace("owner");
     const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {

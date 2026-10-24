@@ -12,6 +12,7 @@ from app.core.auth import hash_password, verify_password
 from app.core.auth_tokens import digest_auth_token, new_auth_token
 from app.core.config import get_settings
 from app.core.errors import bad_request, forbidden, unauthorized
+from app.core.time import utc
 from app.models.auth_token import AuthToken
 from app.models.user import User
 from app.services.audit_service import AuditService
@@ -26,12 +27,6 @@ _DUMMY_PASSWORD_HASH = hash_password("respio-login-timing-equalizer")
 class AuthTokenGrant:
     raw_token: str
     expires_at: datetime
-
-
-def _as_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
 
 
 class AuthService:
@@ -195,7 +190,7 @@ class AuthService:
         )
         latest = latest_result.scalar_one_or_none()
         cooldown = timedelta(seconds=self.settings.auth_action_token_cooldown_seconds)
-        if latest is not None and _as_utc(latest.created_at) > now - cooldown:
+        if latest is not None and utc(latest.created_at) > now - cooldown:
             return None
 
         await self.session.execute(
@@ -232,7 +227,7 @@ class AuthService:
         )
         action_token = result.scalar_one_or_none()
         now = datetime.now(UTC)
-        if action_token is None or action_token.consumed_at is not None or _as_utc(action_token.expires_at) <= now:
+        if action_token is None or action_token.consumed_at is not None or utc(action_token.expires_at) <= now:
             raise bad_request("Invalid or expired token")
         return action_token
 

@@ -34,7 +34,7 @@ NOW = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
 
 
 class _Transaction:
-    def __init__(self, session: _Session) -> None:
+    def __init__(self, session: PaginationSession) -> None:
         self.session = session
 
     async def __aenter__(self) -> None:
@@ -51,7 +51,7 @@ class _Transaction:
         self.session.in_transaction = False
 
 
-class _Session:
+class PaginationSession:
     def __init__(self, account: MarketplaceAccount) -> None:
         self.account = account
         self.in_transaction = False
@@ -69,7 +69,7 @@ class _Session:
 
 
 class _CredentialService:
-    def __init__(self, session: _Session, states: _States, *, fail: bool = False) -> None:
+    def __init__(self, session: PaginationSession, states: _States, *, fail: bool = False) -> None:
         self.session = session
         self.states = states
         self.fail = fail
@@ -88,7 +88,7 @@ class _CredentialService:
 class _Adapter:
     def __init__(
         self,
-        session: _Session,
+        session: PaginationSession,
         pages: Sequence[AdapterResult[MarketplacePage[object]]],
     ) -> None:
         self.session = session
@@ -125,7 +125,7 @@ class _Registry:
 
 
 class _States:
-    def __init__(self, state: MarketplaceSyncState, session: _Session, *, acquire: bool = True) -> None:
+    def __init__(self, state: MarketplaceSyncState, session: PaginationSession, *, acquire: bool = True) -> None:
         self.state = state
         self.session = session
         self.allow_acquire = acquire
@@ -168,7 +168,7 @@ class _States:
 
 
 class _Ingest:
-    def __init__(self, session: _Session) -> None:
+    def __init__(self, session: PaginationSession) -> None:
         self.session = session
         self.pages = 0
 
@@ -178,7 +178,7 @@ class _Ingest:
         return IngestStats(created_messages=1)
 
 
-def _account() -> MarketplaceAccount:
+def pagination_account() -> MarketplaceAccount:
     return MarketplaceAccount(
         id=uuid4(),
         organization_id=uuid4(),
@@ -200,7 +200,7 @@ def _account() -> MarketplaceAccount:
     )
 
 
-def _state(account: MarketplaceAccount) -> MarketplaceSyncState:
+def pagination_state(account: MarketplaceAccount) -> MarketplaceSyncState:
     return MarketplaceSyncState(
         id=uuid4(),
         organization_id=account.organization_id,
@@ -223,9 +223,9 @@ def _service(
     acquire: bool = True,
     decrypt_failure: bool = False,
 ) -> tuple[ScheduledSyncService, _Adapter, _States, _CredentialService, _Ingest]:
-    account = _account()
-    state = _state(account)
-    session = _Session(account)
+    account = pagination_account()
+    state = pagination_state(account)
+    session = PaginationSession(account)
     states = _States(state, session, acquire=acquire)
     adapter = _Adapter(session, pages)
     credentials = _CredentialService(session, states, fail=decrypt_failure)
@@ -404,7 +404,7 @@ class _ContendedRunner:
 
 @pytest.mark.asyncio
 async def test_manual_sync_routes_every_supported_stream_through_the_common_runner() -> None:
-    account = _account()
+    account = pagination_account()
     states = [
         MarketplaceSyncState(
             id=uuid4(),
@@ -447,7 +447,7 @@ async def test_manual_sync_does_not_report_a_lease_contended_stream_as_success(
     every_stream: bool,
     expected_job_status: str,
 ) -> None:
-    account = _account()
+    account = pagination_account()
     previous_success = NOW - timedelta(days=1)
     account.last_success_sync_at = previous_success
     account.error_count = 0
@@ -508,7 +508,7 @@ class _IncompleteRunner(_ContendedRunner):
 
 @pytest.mark.asyncio
 async def test_manual_sync_preserves_success_timestamp_when_a_stream_needs_another_batch() -> None:
-    account = _account()
+    account = pagination_account()
     previous_success = NOW - timedelta(days=1)
     account.last_success_sync_at = previous_success
     states = [
@@ -559,7 +559,7 @@ class _AvitoReviewOnlySession(_ManualSession):
             stream = params["stream"]
             assert isinstance(stream, str)
             self.inserted_streams.append(stream)
-            state = _state(self.account)
+            state = pagination_state(self.account)
             state.stream = stream
             self.states.append(state)
             return _QueryResult()
@@ -583,7 +583,7 @@ class _AvitoRegistry:
 
 @pytest.mark.asyncio
 async def test_avito_reviews_only_manual_sync_creates_no_chat_state() -> None:
-    account = _account()
+    account = pagination_account()
     account.marketplace = Marketplace.AVITO.value
     account.seller_id = None
     account.scopes_json = {"scopes": ["reviews:read", "reviews:write"], "write_verification": "not_probed"}

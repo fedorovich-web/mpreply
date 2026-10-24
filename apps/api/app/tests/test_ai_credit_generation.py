@@ -50,7 +50,6 @@ async def test_generation_commits_reservation_before_provider_and_replay_returns
         await session.flush()
         await ReplyCreditService(session).grant(organization_id=message.organization_id, source_key="paid", kind="addon", quantity=50)
         await session.commit()
-        # Trial eligibility avoids fabricating an active paid provider subscription.
         await ReplyCreditService(session).grant(
             organization_id=message.organization_id,
             source_key="trial",

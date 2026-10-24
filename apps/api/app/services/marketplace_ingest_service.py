@@ -374,8 +374,6 @@ def _sanitize_metadata(
 
 
 def database_constraint_name(exc: IntegrityError) -> str | None:
-    # SQLAlchemy's asyncpg adapter wraps the native exception; unlike psycopg,
-    # it does not expose .diag. The original constraint lives on the cause.
     native = exc.orig.__cause__ if exc.orig is not None else None
     if native is not None:
         name: object = getattr(native, "constraint_name", None)

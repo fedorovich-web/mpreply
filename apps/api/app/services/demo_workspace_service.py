@@ -27,11 +27,6 @@ _SAMPLES = (
 
 
 async def ensure_demo_workspace(session: AsyncSession) -> User:
-    """Create one shared, read-only sample tenant for the real workspace UI.
-
-    Its marketplace accounts contain no usable seller credentials and are never active.
-    The demo user has a viewer membership and all authenticated mutations are denied.
-    """
     bind = session.get_bind()
     if bind.dialect.name == "postgresql":
         await session.execute(text("SELECT pg_advisory_xact_lock(410864541)"))

@@ -453,12 +453,12 @@ class ScheduledSyncService:
                 credential=credential,
             )
             if reconciliation_error is not None:
-                return await self._fail(
+                return await self._record_adapter_failure(
                     state,
                     stream,
                     owner,
                     reconciliation_error,
-                    now,
+                    self._now(),
                     totals,
                 )
         async with self.session.begin():
@@ -477,7 +477,7 @@ class ScheduledSyncService:
         account: MarketplaceAccount,
         adapter: YandexMarketAdapter,
         credential: str,
-    ) -> MarketplaceErrorCode | None:
+    ) -> AdapterResult[object] | None:
         result = await self.session.execute(
             select(CustomerMessage)
             .where(
@@ -516,7 +516,12 @@ class ScheduledSyncService:
                 ),
             )
             if not reconciliation.ok or reconciliation.data is None:
-                return reconciliation.error_code or "malformed_payload"
+                return AdapterResult(
+                    False,
+                    error_code=reconciliation.error_code or "malformed_payload",
+                    error_message_safe=reconciliation.error_message_safe,
+                    retry_after_seconds=reconciliation.retry_after_seconds,
+                )
             if reconciliation.data.exists and reconciliation.data.provider_state == "published":
                 published_ids.append(message_id)
         if published_ids:
@@ -695,7 +700,6 @@ async def release_marketplace_dispatch_claim(
     now: datetime,
     owner: str,
 ) -> bool:
-    """Requeue a scheduler claim when the worker message was not published."""
     _validate_scheduler_input(now, owner, 1)
     if not owner.startswith("scheduler:"):
         raise ValueError("marketplace dispatch owner must be a scheduler")

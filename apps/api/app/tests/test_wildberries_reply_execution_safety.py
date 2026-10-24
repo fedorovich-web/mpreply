@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, tzinfo
 from types import TracebackType
 from typing import cast
 from uuid import uuid4
@@ -18,6 +18,7 @@ from app.adapters.base import (
 )
 from app.adapters.capabilities import MarketplaceStream
 from app.adapters.registry import MarketplaceAdapterRegistry
+from app.core.config import get_settings
 from app.core.security import CredentialEncryptionError, CredentialService
 from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
@@ -69,7 +70,7 @@ class _Session:
         self.in_transaction = False
         self.commit_count = 0
         self.added: list[object] = []
-        self._owns_lock = False
+        self.owns_lock = False
 
     def begin(self) -> _Transaction:
         return _Transaction(self)
@@ -80,7 +81,11 @@ class _Session:
         if entity is Reply:
             if getattr(statement, "_for_update_arg", None) is not None:
                 await self.rows.lock.acquire()
-                self._owns_lock = True
+                self.owns_lock = True
+            params = cast(Select[tuple[object]], statement).compile().params
+            for field in ("status", "attempt_count", "idempotency_key"):
+                if f"{field}_1" in params and getattr(self.rows.reply, field) != params[f"{field}_1"]:
+                    return _ScalarResult(None)
             return _ScalarResult(self.rows.reply)
         if entity is CustomerMessage:
             return _ScalarResult(self.rows.message)
@@ -100,8 +105,8 @@ class _Session:
         self.added.append(value)
 
     def release_lock(self) -> None:
-        if self._owns_lock:
-            self._owns_lock = False
+        if self.owns_lock:
+            self.owns_lock = False
             self.rows.lock.release()
 
 
@@ -132,12 +137,16 @@ class _Adapter:
         send: AdapterResult[ProviderWriteReceipt],
         send_started: asyncio.Event | None = None,
         allow_send_to_finish: asyncio.Event | None = None,
+        preflight_started: asyncio.Event | None = None,
+        allow_preflight_to_finish: asyncio.Event | None = None,
     ) -> None:
         self.session = session
         self.preflight = preflight
         self.send = send
         self.send_started = send_started
         self.allow_send_to_finish = allow_send_to_finish
+        self.preflight_started = preflight_started
+        self.allow_preflight_to_finish = allow_preflight_to_finish
         self.preflight_calls = 0
         self.send_calls = 0
 
@@ -152,6 +161,10 @@ class _Adapter:
         assert seller_id == "seller-label"
         assert context.external_id == "feedback-1"
         self.preflight_calls += 1
+        if self.preflight_started is not None:
+            self.preflight_started.set()
+        if self.allow_preflight_to_finish is not None:
+            await self.allow_preflight_to_finish.wait()
         return self.preflight
 
     async def send_reply(
@@ -243,6 +256,8 @@ def _service(
     send: AdapterResult[ProviderWriteReceipt],
     send_started: asyncio.Event | None = None,
     allow_send_to_finish: asyncio.Event | None = None,
+    preflight_started: asyncio.Event | None = None,
+    allow_preflight_to_finish: asyncio.Event | None = None,
     credential_failure: bool = False,
 ) -> tuple[ReplyExecutionService, _Adapter, _Session]:
     session = _Session(rows)
@@ -252,6 +267,8 @@ def _service(
         send=send,
         send_started=send_started,
         allow_send_to_finish=allow_send_to_finish,
+        preflight_started=preflight_started,
+        allow_preflight_to_finish=allow_preflight_to_finish,
     )
     service = ReplyExecutionService(
         cast(AsyncSession, session),
@@ -263,6 +280,252 @@ def _service(
 
 def _absent() -> AdapterResult[ExistingReplyResult]:
     return AdapterResult(ok=True, data=ExistingReplyResult(exists=False))
+
+
+@pytest.fixture
+def execution_clock(monkeypatch: pytest.MonkeyPatch) -> list[datetime]:
+    current = [datetime.now(UTC)]
+
+    class _Clock(datetime):
+        @classmethod
+        def now(cls, tz: tzinfo | None = None) -> datetime:
+            return current[0]
+
+    monkeypatch.setattr("app.services.reply_execution_service.datetime", _Clock)
+    return current
+
+
+@pytest.mark.asyncio
+async def test_duplicate_delivery_preserves_future_retry_deadline_without_provider_io() -> None:
+    rows = _rows()
+    rows.reply.status = ReplyStatus.RETRY_PENDING.value
+    rows.reply.error_code = "rate_limited"
+    rows.reply.next_retry_at = datetime.now(UTC) + timedelta(seconds=120)
+    rows.message.status = MessageStatus.APPROVED.value
+    deadline = rows.reply.next_retry_at
+    service, adapter, _ = _service(
+        rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("unused")),
+    )
+
+    result = await service.execute_reply(reply_id=rows.reply.id)
+
+    assert result.status == ReplyStatus.RETRY_PENDING.value
+    assert result.retryable is True
+    assert result.error_code == "rate_limited"
+    assert rows.reply.next_retry_at == deadline
+    assert rows.reply.attempt_count == 0
+    assert rows.message.status == MessageStatus.APPROVED.value
+    assert adapter.preflight_calls == 0
+    assert adapter.send_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_due_retry_delivery_executes_once_after_cooldown() -> None:
+    rows = _rows()
+    rows.reply.status = ReplyStatus.RETRY_PENDING.value
+    rows.reply.error_code = "rate_limited"
+    rows.reply.next_retry_at = datetime.now(UTC) - timedelta(seconds=1)
+    rows.message.status = MessageStatus.APPROVED.value
+    service, adapter, _ = _service(
+        rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("sent-after-cooldown")),
+    )
+
+    result = await service.execute_reply(reply_id=rows.reply.id)
+
+    assert result.status == ReplyStatus.SENT.value
+    assert rows.reply.attempt_count == 1
+    assert rows.reply.next_retry_at is None
+    assert adapter.preflight_calls == 1
+    assert adapter.send_calls == 1
+
+
+@pytest.mark.parametrize(
+    "change",
+    ["revoked", "disabled", "rotated", "scope_removed", "seller_changed", "marketplace_changed", "message_binding_changed", "message_manual_review"],
+)
+@pytest.mark.asyncio
+async def test_preflight_cannot_send_after_persisted_account_eligibility_changes(change: str) -> None:
+    rows = _rows()
+    started, finish = asyncio.Event(), asyncio.Event()
+    service, adapter, _ = _service(
+        rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("must-not-send")),
+        preflight_started=started, allow_preflight_to_finish=finish,
+    )
+    execution = asyncio.create_task(service.execute_reply(reply_id=rows.reply.id))
+    await started.wait()
+    original_account = rows.account
+    rows.account = MarketplaceAccount(
+        id=original_account.id, organization_id=original_account.organization_id,
+        marketplace=original_account.marketplace, seller_id=original_account.seller_id,
+        status=original_account.status, credentials_status=original_account.credentials_status,
+        credentials_encrypted=original_account.credentials_encrypted, credentials_fingerprint=original_account.credentials_fingerprint,
+        credentials_last_rotated_at=original_account.credentials_last_rotated_at, scopes_json=dict(original_account.scopes_json),
+    )
+    if change == "revoked":
+        rows.account.credentials_status = "revoked"
+    elif change == "disabled":
+        rows.account.status = "disabled"
+    elif change == "rotated":
+        rows.account.credentials_encrypted = "rotated-encrypted"
+        rows.account.credentials_fingerprint = "rotated-fingerprint"
+        rows.account.credentials_last_rotated_at = datetime.now(UTC)
+    elif change == "scope_removed":
+        rows.account.scopes_json = {"scopes": ["reviews:read"]}
+    elif change == "seller_changed":
+        rows.account.seller_id = "changed-seller"
+    elif change == "marketplace_changed":
+        rows.account.marketplace = Marketplace.OZON.value
+    elif change in {"message_binding_changed", "message_manual_review"}:
+        original_message = rows.message
+        rows.message = CustomerMessage(
+            id=original_message.id, organization_id=original_message.organization_id,
+            marketplace_account_id=uuid4() if change == "message_binding_changed" else original_message.marketplace_account_id,
+            marketplace=original_message.marketplace, type=original_message.type, external_id=original_message.external_id,
+            status=MessageStatus.SENDING.value if change == "message_binding_changed" else MessageStatus.NEEDS_MANUAL_CHECK.value,
+        )
+    finish.set()
+    result = await execution
+
+    assert adapter.send_calls == 0
+    assert result.status != ReplyStatus.SENT.value
+    assert result.retryable is False
+    assert rows.reply.attempt_count == 1
+    assert rows.reply.next_retry_at is None
+    assert "provider_write_ambiguity" not in rows.reply.metadata_json
+    if change in {"message_binding_changed", "message_manual_review"}:
+        assert result.error_code == "execution_superseded"
+        assert rows.reply.status == ReplyStatus.SENDING.value
+        assert rows.message.status == (MessageStatus.SENDING.value if change == "message_binding_changed" else MessageStatus.NEEDS_MANUAL_CHECK.value)
+    else:
+        assert result.status == ReplyStatus.BLOCKED.value
+        assert rows.message.status == MessageStatus.BLOCKED_BY_MARKETPLACE.value
+        assert result.error_code == ("invalid_credentials" if change in {"revoked", "rotated"} else "insufficient_scope")
+
+
+@pytest.mark.parametrize("owner_change", ["none", "manual_review", "new_attempt"])
+@pytest.mark.asyncio
+async def test_expired_preflight_cannot_publish_after_lease_or_owner_changes(
+    execution_clock: list[datetime], owner_change: str,
+) -> None:
+    rows = _rows()
+    started, finish = asyncio.Event(), asyncio.Event()
+    service, adapter, _ = _service(
+        rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("must-not-send")),
+        preflight_started=started, allow_preflight_to_finish=finish,
+    )
+    execution = asyncio.create_task(service.execute_reply(reply_id=rows.reply.id))
+    await started.wait()
+    execution_clock[0] += timedelta(seconds=121)
+    if owner_change == "manual_review":
+        recovery, recovery_adapter, _ = _service(
+            rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("must-not-send")),
+        )
+        recovered = await recovery.execute_reply(reply_id=rows.reply.id)
+        assert recovered.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+        assert recovery_adapter.send_calls == 0
+    elif owner_change == "new_attempt":
+        rows.reply.attempt_count = 2
+        rows.reply.last_attempt_at = execution_clock[0]
+    status, metadata = rows.reply.status, dict(rows.reply.metadata_json)
+    attempts = rows.reply.attempt_count
+    finish.set()
+    result = await execution
+
+    assert adapter.send_calls == 0
+    assert result.status == status
+    assert rows.reply.status == status
+    assert rows.reply.metadata_json == metadata
+    assert rows.reply.attempt_count == attempts
+
+
+@pytest.mark.asyncio
+async def test_valid_preflight_renews_execution_lease_before_bounded_write(execution_clock: list[datetime]) -> None:
+    rows = _rows()
+    preflight_started, finish_preflight = asyncio.Event(), asyncio.Event()
+    send_started, finish_send = asyncio.Event(), asyncio.Event()
+    service, adapter, session = _service(
+        rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("provider-answer-1")),
+        preflight_started=preflight_started, allow_preflight_to_finish=finish_preflight,
+        send_started=send_started, allow_send_to_finish=finish_send,
+    )
+    execution = asyncio.create_task(service.execute_reply(reply_id=rows.reply.id))
+    await preflight_started.wait()
+    execution_clock[0] += timedelta(seconds=119)
+    finish_preflight.set()
+    await send_started.wait()
+    try:
+        assert rows.reply.last_attempt_at == execution_clock[0]
+        assert rows.reply.attempt_count == 1
+        assert not session.owns_lock
+        execution_clock[0] += timedelta(seconds=2)
+        duplicate, duplicate_adapter, _ = _service(
+            rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("must-not-send")),
+        )
+        duplicate_result = await duplicate.execute_reply(reply_id=rows.reply.id)
+        assert duplicate_result.error_code == "execution_in_progress"
+        assert duplicate_adapter.send_calls == 0
+    finally:
+        finish_send.set()
+        result = await execution
+    assert result.status == ReplyStatus.SENT.value
+    assert adapter.send_calls == 1
+
+
+@pytest.mark.parametrize("lease_seconds", [2, 120])
+@pytest.mark.asyncio
+async def test_write_timeout_finishes_within_lease_and_requires_manual_reconciliation(
+    monkeypatch: pytest.MonkeyPatch, execution_clock: list[datetime], lease_seconds: int,
+) -> None:
+    rows = _rows()
+    service, adapter, session = _service(
+        rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("must-not-mark-sent")),
+        allow_send_to_finish=asyncio.Event(),
+    )
+    settings = get_settings().model_copy(update={"auto_reply_execution_lease_seconds": lease_seconds})
+    monkeypatch.setattr("app.services.reply_execution_service.get_settings", lambda: settings)
+    actual_timeout = asyncio.timeout
+    budgets: list[float | None] = []
+
+    def short_timeout(delay: float | None) -> asyncio.Timeout:
+        budgets.append(delay)
+        return actual_timeout(0.01)
+
+    monkeypatch.setattr("app.services.reply_execution_service.asyncio.timeout", short_timeout)
+    result = await service.execute_reply(reply_id=rows.reply.id)
+
+    assert len(budgets) == 1
+    assert budgets[0] == lease_seconds
+    assert result.status == ReplyStatus.MANUAL_REVIEW_REQUIRED.value
+    assert result.error_code == "network_timeout"
+    assert not result.retryable
+    assert rows.reply.next_retry_at is None
+    assert "provider_write_ambiguity" in rows.reply.metadata_json
+    assert adapter.send_calls == 1
+    assert not session.owns_lock
+
+
+@pytest.mark.asyncio
+async def test_lease_expiring_during_write_claim_commit_prevents_provider_write(
+    monkeypatch: pytest.MonkeyPatch, execution_clock: list[datetime],
+) -> None:
+    rows = _rows()
+    service, adapter, session = _service(
+        rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("must-not-send")),
+    )
+    commit = session.commit
+
+    async def delayed_commit() -> None:
+        await commit()
+        if session.commit_count == 2:
+            execution_clock[0] += timedelta(seconds=121)
+
+    monkeypatch.setattr(session, "commit", delayed_commit)
+    result = await service.execute_reply(reply_id=rows.reply.id)
+
+    assert result.status == ReplyStatus.SENDING.value
+    assert result.error_code == "execution_lease_expired"
+    assert adapter.send_calls == 0
+    assert rows.reply.attempt_count == 1
 
 
 @pytest.mark.asyncio
@@ -403,7 +666,7 @@ async def test_preflight_read_retry_exhaustion_does_not_send() -> None:
 
 
 @pytest.mark.asyncio
-async def test_preflight_cooldown_does_not_exhaust_write_attempts() -> None:
+async def test_preflight_cooldown_does_not_exhaust_write_attempts(execution_clock: list[datetime]) -> None:
     rows = _rows()
     service, adapter, _ = _service(
         rows, preflight=AdapterResult(False, error_code="rate_limited", retry_after_seconds=600),
@@ -415,8 +678,10 @@ async def test_preflight_cooldown_does_not_exhaust_write_attempts() -> None:
         assert rows.reply.status == ReplyStatus.RETRY_PENDING.value
         assert rows.reply.attempt_count == 0
         assert rows.reply.next_retry_at is not None
-        assert rows.reply.next_retry_at >= datetime.now(UTC) + timedelta(seconds=599)
+        assert rows.reply.next_retry_at == execution_clock[0] + timedelta(seconds=600)
+        execution_clock[0] = rows.reply.next_retry_at
     assert adapter.send_calls == 0
+    assert adapter.preflight_calls == 6
     adapter.preflight = _absent()
     result = await service.execute_reply(reply_id=rows.reply.id)
     assert rows.reply.status == ReplyStatus.SENT.value
@@ -478,7 +743,7 @@ async def test_local_coordination_outage_retries_without_consuming_publication_a
 
 
 @pytest.mark.asyncio
-async def test_repeated_provider_throttle_does_not_turn_a_rejected_write_into_terminal_failure() -> None:
+async def test_repeated_provider_throttle_does_not_turn_a_rejected_write_into_terminal_failure(execution_clock: list[datetime]) -> None:
     rows = _rows()
     service, adapter, _ = _service(
         rows, preflight=_absent(), send=AdapterResult(False, error_code="rate_limited", retry_after_seconds=600),
@@ -486,6 +751,10 @@ async def test_repeated_provider_throttle_does_not_turn_a_rejected_write_into_te
     for _ in range(6):
         result = await service.execute_reply(reply_id=rows.reply.id)
         assert result.retryable and rows.reply.status == ReplyStatus.RETRY_PENDING.value
+        assert rows.reply.next_retry_at == execution_clock[0] + timedelta(seconds=600)
+        assert rows.reply.next_retry_at is not None
+        execution_clock[0] = rows.reply.next_retry_at
+    assert adapter.send_calls == 6
     adapter.send = AdapterResult(ok=True, data=ProviderWriteReceipt("sent-after-cooldown"))
     await service.execute_reply(reply_id=rows.reply.id)
     assert rows.reply.status == ReplyStatus.SENT.value

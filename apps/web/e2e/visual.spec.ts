@@ -17,8 +17,6 @@ const APPROVED_RENDER_VIEWPORTS = [
 ] as const;
 
 async function prepareFullPageCapture(page: Page) {
-  // Full-page screenshots do not scroll through lazy-loaded artwork.
-  // Exercise the actual loading behavior before comparing the complete page.
   for (const image of await page.locator("img").all()) {
     if (!(await image.isVisible())) continue;
     await image.scrollIntoViewIfNeeded();

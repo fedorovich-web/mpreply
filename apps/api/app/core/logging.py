@@ -63,7 +63,6 @@ def scrub_secrets(
 class QuerySafeAccessLogFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         if isinstance(record.args, tuple) and len(record.args) == 5 and isinstance(record.args[2], str):
-            # Preserve Uvicorn's five formatter arguments, including status, without URL query secrets.
             record.args = (*record.args[:2], record.args[2].split("?", 1)[0], *record.args[3:])
         return True
 

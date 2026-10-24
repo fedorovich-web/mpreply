@@ -47,11 +47,3 @@ class AIDraftListResponse(BaseModel):
 
     items: list[AIDraftResponse]
     total: int
-
-
-class AIDraftErrorResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    ok: bool = False
-    error_code: str
-    message: str

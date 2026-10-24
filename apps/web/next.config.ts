@@ -3,7 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  // Native image codecs include libraries loaded by the binary at runtime.
   outputFileTracingIncludes: {
     "/*": ["./node_modules/@img/sharp-*/lib/**/*", "./node_modules/@img/sharp-libvips-*/lib/**/*"],
   },

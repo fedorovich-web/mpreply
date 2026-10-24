@@ -110,7 +110,6 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
         await apiRequest("/api/auth/yandex/link/complete", messageResponseSchema, { method: "POST" });
         return { yandexLinkFailed: false };
       } catch {
-        // Password authentication succeeded; a stale linking attestation must not undo the login.
         return { yandexLinkFailed: true };
       }
     },

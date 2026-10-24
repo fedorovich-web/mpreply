@@ -22,7 +22,6 @@ test("production pages enforce script nonces and keep working after navigation",
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(await page.locator("script:not(#injected-test)").evaluateAll((scripts) => scripts.every((script) => script.nonce !== ""))).toBe(true);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  // Parser-inserted attack: privileged DevTools evaluation inherits script trust.
   await expect(page.locator("html")).not.toHaveAttribute("data-injected", "yes");
   const second = await page.reload();
   expect(second!.headers()["content-security-policy"]).not.toBe(csp);

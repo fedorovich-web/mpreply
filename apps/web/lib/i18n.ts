@@ -1,7 +1,7 @@
 export const locales = ["ru", "en"] as const;
 export type Locale = (typeof locales)[number];
 
-/** @public Exported locale contract checked by locale-routing-contract.test.ts. */
+/** @public */
 export const defaultLocale: Locale = "ru";
 export const localeRequestHeader = "x-mpreply-locale";
 

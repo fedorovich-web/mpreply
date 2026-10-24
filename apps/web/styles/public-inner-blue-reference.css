@@ -1,5 +1,3 @@
-/* Canonical brand layer for every public route except the immutable approved homepage.
-   Loaded after all public fidelity files and before homepage-reference-restore.css. */
 
 .public-root:not(.homepage-reference-root) {
   --color-bg-page: #ffffff;
@@ -72,7 +70,6 @@
   background: #0b68f6;
 }
 
-/* Approved mockup pages: keep geometry, replace the old violet brand family. */
 .public-root:not(.homepage-reference-root):has(.mockup-page) {
   --mockup-blue: #0b68f6;
   --mockup-blue-deep: #0757d7;
@@ -253,7 +250,6 @@
   border-color: #dceafa;
 }
 
-/* Keep marketplace identity colors distinct; only MPReply chrome follows the blue reference. */
 .public-root:not(.homepage-reference-root) .mockup-page .marketplace-logo-card,
 .public-root:not(.homepage-reference-root) .mockup-page .mockup-market-logo,
 .public-root:not(.homepage-reference-root) .mockup-page [class*="marketplace-logo-"] {
@@ -261,8 +257,6 @@
 }
 
 
-/* Final completeness pass: late fidelity surfaces that still carried lavender/indigo chrome.
-   Geometry remains owned by the render-fidelity files; only brand color is normalized here. */
 .public-root:not(.homepage-reference-root) .mockup-page .public-section:has(.features-benefit-grid) {
   border-color: #dceafa;
   background:

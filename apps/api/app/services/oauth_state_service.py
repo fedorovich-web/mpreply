@@ -86,8 +86,8 @@ class OAuthStateService:
         row.consumed_at = now
         encrypted = row.verifier_encrypted
         data = (row.mode, row.user_id, row.auth_version, row.locale, row.next_path, row.intent)
-        row.verifier_encrypted = ""  # A consumed verifier must not remain decryptable in the database.
-        await self.session.commit()  # Consume before code exchange, including canceled/error callbacks.
+        row.verifier_encrypted = ""
+        await self.session.commit()
         try:
             verifier = CredentialService(self.settings.credentials_encryption_key.get_secret_value()).decrypt(encrypted)
         except CredentialEncryptionError:

@@ -1,4 +1,3 @@
-"""Run the real local demo API with an isolated native PostgreSQL cluster on Windows."""
 
 from __future__ import annotations
 
@@ -82,8 +81,6 @@ def main() -> None:
     api = root / "apps" / "api"
     python = api / ".venv" / "Scripts" / "python.exe"
     subprocess.run([str(python), "-m", "alembic", "upgrade", "head"], cwd=api, env=env, check=True)
-    # Keep the API attached to its terminal: Windows command jobs can terminate
-    # detached descendants as soon as the startup command exits.
     os.environ.update(env)
     os.chdir(api)
     sys.path.insert(0, str(api))

@@ -21,7 +21,6 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     op.add_column("users", sa.Column("email_verified_at", sa.DateTime(timezone=True), nullable=True))
     op.add_column("users", sa.Column("auth_version", sa.Integer(), nullable=False, server_default="0"))
-    # Existing accounts predate mandatory verification; preserve their ability to log in.
     op.execute(sa.text("UPDATE users SET email_verified_at = CURRENT_TIMESTAMP WHERE email_verified_at IS NULL"))
 
     op.create_table(

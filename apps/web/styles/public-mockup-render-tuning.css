@@ -1,5 +1,3 @@
-/* Render-derived scale tuning for the approved public mockups.
-   Keeps the user's +15px section rhythm while removing oversized legacy dimensions. */
 
 .public-root {
   --public-header-height: 56px;

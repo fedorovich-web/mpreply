@@ -101,7 +101,6 @@ class LavaClient:
             if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or len(value) > 512:
                 raise LavaError("invalid_return_url")
             fields[name] = value
-        # Keep the provider's JSON number exact; Decimal's JSON default would send a string.
         body = json.dumps(fields).removesuffix("}") + ',"amount":' + str(Decimal(amount_minor) / 100) + "}"
         data = await self._request("POST", "/api/v3/invoice", body=body)
         try:

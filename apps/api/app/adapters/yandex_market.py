@@ -17,7 +17,7 @@ from app.adapters.base import (
     ReviewQuestionAdapter,
 )
 from app.adapters.capabilities import MarketplaceStream
-from app.adapters.http import ReadRetryPolicy, parse_retry_after, request_read_with_retry
+from app.adapters.http import MAX_PROVIDER_RETRY_AFTER_SECONDS, ReadRetryPolicy, parse_retry_after, request_read_with_retry
 from app.models.enums import Marketplace, MessageType
 
 _PAGE_SIZE = 50
@@ -594,9 +594,9 @@ class YandexMarketAdapter(ReviewQuestionAdapter):
             parse_retry_after(
                 response.headers.get("Retry-After"),
                 now=datetime.now(UTC),
-                maximum_seconds=self._read_retry_policy.max_retry_after_seconds,
+                maximum_seconds=MAX_PROVIDER_RETRY_AFTER_SECONDS,
             )
-            if response.status_code in {420, 429}
+            if response.status_code in {420, 429, 503}
             else None
         )
         if response.status_code == 401:
