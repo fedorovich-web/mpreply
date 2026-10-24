@@ -126,16 +126,43 @@ test("homepage reflects the ready marketplace integrations", async ({ page }) =>
   const pageCopy = await page.locator("main").innerText();
   expect(pageCopy).not.toMatch(/3\s+маркетплейса/i);
   expect(pageCopy).not.toMatch(/интеграц(?:ия|ии).{0,24}(?:скоро|планиру|в разработке)/i);
-  expect(pageCopy).not.toMatch(/GPT 6|Claude Sonnet 5\.5|Gemini 3\.8|DeepSeek V4\.1 Flash/);
-  await expect(page.getByRole("group", { name: "Контекст и контроль" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Четыре нейросети", exact: true })).toBeVisible();
 });
 
-test("homepage keeps context and results sections and contains preview controls", async ({ page }) => {
-  for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
+test("homepage keeps model and results sections and contains preview controls", async ({ page }, testInfo) => {
+  for (const viewport of [{ width: 320, height: 844 }, { width: 390, height: 844 }, { width: 1280, height: 720 }]) {
     await page.setViewportSize(viewport);
     await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator(".homepage-model-card")).toHaveCount(4);
+    await expect(page.locator(".homepage-model-card strong")).toHaveText([
+      "GPT-6 Luna", "Claude Sonnet 5.5", "Gemini 3.8", "DeepSeek V4.1",
+    ]);
+    for (const card of await page.locator(".homepage-model-card").all()) {
+      const logo = card.locator("img");
+      await logo.scrollIntoViewIfNeeded();
+      await expect(logo).toBeVisible();
+      await expect.poll(() => logo.evaluate((image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0)).toBe(true);
+      const bounds = await card.evaluate((element) => {
+        const cardRect = element.getBoundingClientRect();
+        const description = element.querySelector(".homepage-model-description")!.getBoundingClientRect();
+        return { left: cardRect.left, right: cardRect.right, bottom: cardRect.bottom, textLeft: description.left, textRight: description.right, textBottom: description.bottom };
+      });
+      expect(bounds.textLeft).toBeGreaterThanOrEqual(bounds.left);
+      expect(bounds.textRight).toBeLessThanOrEqual(bounds.right);
+      expect(bounds.textBottom).toBeLessThanOrEqual(bounds.bottom);
+    }
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      window.scrollTo(0, 0);
+    });
+    const capturePath = testInfo.outputPath(`restored-models-${viewport.width}px.png`);
+    await page.screenshot({ path: capturePath, fullPage: true, animations: "disabled" });
+    await testInfo.attach(`restored-models-${viewport.width}px.png`, {
+      path: capturePath,
+      contentType: "image/png",
+    });
     if (viewport.width > 768) await expect(page.locator(".homepage-process-path")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Меньше рутины. Больше времени на развитие бизнеса." })).toBeVisible();
     await expect(page.locator(".homepage-result-card")).toHaveCount(4);

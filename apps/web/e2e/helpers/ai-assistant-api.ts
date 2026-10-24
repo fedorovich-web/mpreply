@@ -1,6 +1,6 @@
 import type { Page, Route } from "@playwright/test";
 
-export type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
+type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
 
 export const aiDraftHistoryRoutePattern = /\/api\/ai\/drafts(?:\?.*)?$/;
 

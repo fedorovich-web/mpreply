@@ -28,6 +28,7 @@ const shared = {
   contactEmail: configuredContactEmail || "support@mpreply.ru",
 } as const;
 
+/** @public Exported navigation contract checked by locale-routing-contract.test.ts. */
 export const siteConfigs = {
   ru: {
     ...shared,
@@ -159,7 +160,7 @@ export const marketplaces: MarketplaceConfig[] = marketplaceDefinitionsRu.map((m
   localizeMarketplace(marketplace, "ru", marketplaceStatusLabel),
 );
 
-export const marketplacesEn: MarketplaceConfig[] = marketplaceDefinitionsEn.map((marketplace) =>
+const marketplacesEn: MarketplaceConfig[] = marketplaceDefinitionsEn.map((marketplace) =>
   localizeMarketplace(marketplace, "en", marketplaceStatusLabelEn),
 );
 
