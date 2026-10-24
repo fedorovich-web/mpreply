@@ -23,8 +23,8 @@ export const helpIcons = {
 
 export type HelpIconName = keyof typeof helpIcons;
 export type HelpCategoryId = "popular" | "start" | "integrations" | "messages" | "ai" | "team" | "pricing" | "problems";
-export type HelpQuestion = { id: string; icon: HelpIconName; question: string; answer: string; link?: { href: string; label: string } };
-export type HelpCategory = { id: HelpCategoryId; icon: HelpIconName; label: string; title: string; description: string; questions: string[] };
+type HelpQuestion = { id: string; icon: HelpIconName; question: string; answer: string; link?: { href: string; label: string } };
+type HelpCategory = { id: HelpCategoryId; icon: HelpIconName; label: string; title: string; description: string; questions: string[] };
 
 const ruQuestions: HelpQuestion[] = [
   { id: "connect", icon: "messages", question: "Как подключить Wildberries, Ozon, Яндекс Маркет и Авито?", answer: "В кабинете MPReply откройте «Интеграции», выберите площадку и следуйте инструкции на её странице. Укажите данные для подключения — поля отличаются у разных маркетплейсов. Пароль от кабинета продавца передавать не нужно.", link: { href: "/marketplaces", label: "Посмотреть интеграции" } },

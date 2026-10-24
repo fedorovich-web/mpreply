@@ -16,8 +16,8 @@
     "test:visual": "npm run build && npm run test:visual:run",
     "test:visual:update": "npm run build && npm run test:visual:run -- --update-snapshots",
     "test:report": "playwright show-report",
-    "lighthouse": "lhci autorun --config=./lighthouserc.cjs",
-    "lighthouse:mobile": "lhci autorun --config=./lighthouserc.mobile.json",
+    "lighthouse": "node scripts/run-lighthouse.mjs --config=./lighthouserc.cjs",
+    "lighthouse:mobile": "node scripts/run-lighthouse.mjs --config=./lighthouserc.mobile.json",
     "qa:web": "npm run test:frontend && npm run typecheck && npm run lint && npm run validate:css-syntax && npm run build && npm run validate:w3c",
     "test:unit": "vitest run tests/unit",
     "test:design-tokens": "vitest run tests/design",
@@ -25,14 +25,15 @@
     "validate:w3c:html": "node scripts/validate-w3c-html.mjs",
     "validate:w3c:css": "node scripts/validate-w3c-css.mjs",
     "validate:w3c": "npm run validate:w3c:css && npm run validate:w3c:html",
-    "validate:css-syntax": "csstree-validator styles"
+    "validate:css-syntax": "csstree-validator styles",
+    "test:unused": "knip"
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.12",
-    "next": "16.3.8",
+    "next": "16.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "zod": "4.2.0"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
@@ -45,20 +46,25 @@
     "@types/react-dom": "19.2.3",
     "csstree-validator": "4.0.1",
     "eslint": "9.39.2",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.3",
     "jsdom": "29.1.1",
+    "knip": "5.88.1",
     "playwright-core": "1.61.1",
+    "puppeteer-core": "25.16.0",
+    "sharp": "0.35.5",
     "typescript": "5.9.3",
-    "vitest": "5.0.0",
+    "vitest": "5.0.5",
     "vnu-jar": "26.7.11"
   },
   "overrides": {
     "postcss": "8.5.28",
     "qs": "6.16.0",
     "tmp": "0.2.7",
-    "uuid": "11.1.1"
+    "uuid": "11.1.1",
+    "lighthouse": "13.5.0",
+    "basic-ftp": "6.2.3"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.19.0"
   }
 }

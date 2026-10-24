@@ -133,6 +133,9 @@ jobs:
             - name: Production dependency security audit
               working-directory: apps/web
               run: npm audit --omit=dev --audit-level=high
+            - name: Tooling dependency security audit
+              working-directory: apps/web
+              run: npm audit --include=dev --audit-level=high
             - name: Frontend unit tests
               working-directory: apps/web
               run: npm run test:unit
@@ -145,6 +148,9 @@ jobs:
             - name: Lint
               working-directory: apps/web
               run: npm run lint
+            - name: Unused code analysis
+              working-directory: apps/web
+              run: npm run test:unused
             - name: CSS syntax validation
               working-directory: apps/web
               run: npm run validate:css-syntax

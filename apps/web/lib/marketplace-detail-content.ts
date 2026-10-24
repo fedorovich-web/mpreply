@@ -1,6 +1,6 @@
 import type { MarketplaceKey } from "./site-config";
 
-export type MarketplaceDetailIcon =
+type MarketplaceDetailIcon =
   | "inbox"
   | "sparkles"
   | "shield-check"

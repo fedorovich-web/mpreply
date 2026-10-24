@@ -99,6 +99,9 @@ try {
     Run-Step "Frontend production dependency security audit" {
         & $Npm audit --omit=dev --audit-level=high
     }
+    Run-Step "Frontend tooling dependency security audit" {
+        & $Npm audit --include=dev --audit-level=high
+    }
     Run-Step "Frontend unit tests" {
         & $Npm run test:unit
     }
@@ -110,6 +113,9 @@ try {
     }
     Run-Step "Frontend lint" {
         & $Npm run lint
+    }
+    Run-Step "Frontend unused code analysis" {
+        & $Npm run test:unused
     }
     Run-Step "Frontend CSS syntax validation" {
         & $Npm run validate:css-syntax
