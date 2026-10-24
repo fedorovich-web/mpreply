@@ -13,9 +13,10 @@ const tokens = readFileSync(join(root, "styles/tokens.css"), "utf8");
 describe("approved RU/EN homepage contract", () => {
   it("keeps the approved homepage composition in both locale routes", () => {
     for (const source of [page, englishPage]) {
-      for (const section of ["homepage-workspace-section", "homepage-models-section", "homepage-approved-process", "homepage-horizontal-process", "homepage-results-section", "homepage-approved-final-cta"]) expect(source).toContain(section);
+      for (const section of ["homepage-workspace-section", "HomeModelsSection", "homepage-approved-process", "homepage-horizontal-process", "homepage-results-section", "homepage-approved-final-cta"]) expect(source).toContain(section);
       expect(source).toContain("HomeWorkspaceTabs");
     }
+    expect(readFileSync(join(root, "components/public-site/HomeModelsSection.tsx"), "utf8")).toContain("homepage-models-section");
   });
   it("keeps decodable approved AVIF originals and uses their versioned responsive derivatives", async () => {
     for (const [asset, width, height] of [["01-home-hero.avif", 1481, 1062], ["04-marketplaces-cta.avif", 1448, 1086]] as const) {

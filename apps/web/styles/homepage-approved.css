@@ -604,6 +604,14 @@
 	line-height: 1.35;
 }
 
+.homepage-model-card .homepage-model-description {
+	grid-column: 1 / -1;
+	margin: 0.65rem 0 0;
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-body-sm);
+	line-height: 1.5;
+}
+
 /* Process */
 .homepage-approved-process {
 	background: #fff;
