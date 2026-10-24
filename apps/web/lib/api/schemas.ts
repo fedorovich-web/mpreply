@@ -355,24 +355,6 @@ export const teamAnalyticsSchema = z.object({
   })),
 });
 
-export const aiUsageAnalyticsSchema = z.object({
-  period: analyticsPeriodSchema,
-  drafts_generated: z.number().int().nonnegative(),
-  tokens_input: z.number().int().nonnegative(),
-  tokens_output: z.number().int().nonnegative(),
-  cost_estimate: z.number().nonnegative(),
-  average_latency_ms: z.number().nonnegative().nullable(),
-  safety_flagged_drafts: z.number().int().nonnegative(),
-  models: z.array(z.object({
-    model: z.string(),
-    drafts: z.number().int().nonnegative(),
-    tokens_input: z.number().int().nonnegative(),
-    tokens_output: z.number().int().nonnegative(),
-    cost_estimate: z.number().nonnegative(),
-    average_latency_ms: z.number().nonnegative().nullable(),
-  })),
-});
-
 const billingPlanSchema = z.object({
   id: uuidSchema,
   code: z.string(),

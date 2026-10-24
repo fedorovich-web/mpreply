@@ -15,7 +15,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("manual Lava purchases", () => {
   it("retains its locked key after a rejection without explicit server proof", async () => {
-    const fetch = vi.fn((url: string, init?: RequestInit) => Promise.resolve(init?.method === "POST"
+    const fetch = vi.fn((_url: string, init?: RequestInit) => Promise.resolve(init?.method === "POST"
       ? new Response(JSON.stringify({ detail: "Upstream unavailable" }), { status: 502 })
       : new Response(JSON.stringify(catalog))));
     vi.stubGlobal("fetch", fetch);
@@ -26,7 +26,7 @@ describe("manual Lava purchases", () => {
     expect(localStorage.getItem(`mpreply.billing.purchase.${workspace.user.id}.${workspace.activeOrganization.id}`)).toContain("key");
   });
   it("unlocks a definitively rejected purchase without retaining a key", async () => {
-    const fetch = vi.fn((url: string, init?: RequestInit) => Promise.resolve(init?.method === "POST"
+    const fetch = vi.fn((_url: string, init?: RequestInit) => Promise.resolve(init?.method === "POST"
       ? new Response(JSON.stringify({ detail: "Purchase exceeds supported amount" }), { status: 400, headers: { "X-Billing-Order-Not-Created": "1" } })
       : new Response(JSON.stringify(catalog))));
     vi.stubGlobal("fetch", fetch);
