@@ -13,10 +13,11 @@ cd /qa/work
 npm init --yes >/dev/null
 npm install --ignore-scripts --no-audit --no-fund --save-exact @playwright/test@1.61.1
 
-curl --fail --location --retry 2 --output /qa/brave.deb https://github.com/brave/brave-browser/releases/download/v1.98.60/brave-browser_1.98.60_amd64.deb
-echo '812a001d7631b5ab49e55dec6148a0bc2d459e9fc03106c286295ee03fd062fc  /qa/brave.deb' | sha256sum --check --strict
-dpkg-deb --threads-max=1 --extract /qa/brave.deb /qa/browser
-export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/qa/browser/opt/brave.com/brave/brave
+curl --fail --location --retry 2 --output /qa/brave.zip https://github.com/brave/brave-browser/releases/download/v1.98.60/brave-browser-1.98.60-linux-amd64.zip
+echo '0e49b5f84597fbbefdc8d791900d170d4f3792dc5d38056f6a3e35100706cdc7  /qa/brave.zip' | sha256sum --check --strict
+python3 -m zipfile -e /qa/brave.zip /qa/browser
+chmod -R u+rx /qa/browser
+export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/qa/browser/brave
 "$PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH" --version
 
 cat > playwright.remote-qa.config.ts <<'CONFIG'
