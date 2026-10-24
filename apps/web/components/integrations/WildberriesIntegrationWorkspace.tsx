@@ -283,7 +283,12 @@ export function WildberriesIntegrationWorkspace() {
   );
 }
 
-export function MarketplaceIntegrationWorkspace({
+export function MarketplaceIntegrationWorkspace(props: MarketplaceIntegrationWorkspaceProps) {
+  const { activeOrganization } = useWorkspace();
+  return <MarketplaceIntegrationWorkspaceContent key={`${activeOrganization.id}:${props.marketplace}`} {...props} />;
+}
+
+function MarketplaceIntegrationWorkspaceContent({
   marketplace,
   marketplaceName,
   credentialLabel,

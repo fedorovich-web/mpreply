@@ -1,4 +1,3 @@
-"""Migrate and test payments on a separate native PostgreSQL database; never Docker or remote hosts."""
 
 from __future__ import annotations
 
@@ -30,7 +29,6 @@ def main() -> None:
                            check=True, capture_output=True, text=True, env=env)
     if found.stdout.strip() != "1":
         subprocess.run([str(binaries / "createdb.exe"), *common, database], check=True, env=env)
-    # Fixed local DB, never a URL from production environment. Do not print credentials.
     url = f"postgresql+asyncpg://mpreply_local:{config['database_password']}@127.0.0.1:55432/{database}"
     env.update({"DATABASE_URL": url, "MPREPLY_BILLING_TEST_DATABASE_URL": url,
                 "MPREPLY_CREDIT_TEST_DATABASE_URL": url, "APP_ENV": "local",

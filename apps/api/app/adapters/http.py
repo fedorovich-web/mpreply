@@ -14,6 +14,7 @@ import httpx
 ReadMethod = Literal["GET", "POST"]
 Sleep = Callable[[float], Awaitable[None]]
 RequestParams = Mapping[str, str | int | bool]
+MAX_PROVIDER_RETRY_AFTER_SECONDS = 86_400
 
 _TRANSIENT_HTTP_STATUSES = frozenset({429, 500, 502, 503, 504})
 _DEFAULT_TIMEOUT = httpx.Timeout(connect=5.0, read=10.0, write=10.0, pool=5.0)
@@ -148,7 +149,6 @@ async def request_read_with_retry(
 ) -> httpx.Response:
     request_path = ensure_relative_provider_path(path)
     for attempt in range(1, policy.max_attempts + 1):
-        retry_response: httpx.Response | None = None
         try:
             response = await client.request(
                 method,
@@ -170,25 +170,15 @@ async def request_read_with_retry(
                         return response
                     await sleep(float(delay))
                     continue
-            retry_response = response
-        await sleep(_retry_delay(retry_response, attempt, policy))
+            retry_after = parse_retry_after(
+                response.headers.get("Retry-After"),
+                now=datetime.now(UTC),
+                maximum_seconds=MAX_PROVIDER_RETRY_AFTER_SECONDS,
+            )
+            if retry_after is not None:
+                if retry_after > policy.max_retry_after_seconds:
+                    return response
+                await sleep(float(retry_after))
+                continue
+        await sleep(min(policy.base_delay_seconds * (2 ** (attempt - 1)), policy.max_delay_seconds))
     raise RuntimeError("bounded retry loop exhausted without returning")
-
-
-def _retry_delay(
-    response: httpx.Response | None,
-    attempt: int,
-    policy: ReadRetryPolicy,
-) -> float:
-    retry_after = (
-        parse_retry_after(
-            response.headers.get("Retry-After"),
-            now=datetime.now(UTC),
-            maximum_seconds=policy.max_retry_after_seconds,
-        )
-        if response is not None
-        else None
-    )
-    if retry_after is not None:
-        return float(retry_after)
-    return min(policy.base_delay_seconds * (2 ** (attempt - 1)), policy.max_delay_seconds)

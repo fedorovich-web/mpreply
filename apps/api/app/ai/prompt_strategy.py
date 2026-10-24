@@ -10,7 +10,6 @@ ResponseTone = Literal["neutral", "friendly", "formal", "apologetic"]
 
 
 def compatibility_clarification(models: tuple[str, ...]) -> str:
-    """A review draft asks for evidence; it never asserts unverified stock or fit."""
     return (f"Здравствуйте! Чтобы проверить совместимость с моделью {', '.join(models)}, "
             "пришлите, пожалуйста, артикул заменяемой детали или фото её маркировки.")
 

@@ -16,7 +16,6 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Both indexes duplicate the indexes already maintained by their unique constraints.
     op.drop_index("ix_billing_plans_code", table_name="billing_plans")
     op.drop_index("ix_products_org_account_external", table_name="products")
 

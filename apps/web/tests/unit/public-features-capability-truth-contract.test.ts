@@ -16,8 +16,6 @@ describe("approved public features capability contract", () => {
   });
 
   it("preserves approved template, quality and team capabilities for the implementation audit", () => {
-    // These are owner-approved copy, not runtime certification. Gaps belong in the
-    // implementation audit; a contract must not silently remove the approved scope.
     for (const capability of [
       "Единая очередь обращений", "Шаблоны ответов", "Создавайте и сохраняйте шаблоны",
       "Проверка тональности, грамотности и соответствия правилам маркетплейсов",

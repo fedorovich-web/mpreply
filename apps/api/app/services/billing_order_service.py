@@ -32,7 +32,6 @@ class BillingOrderService:
         self.organizations = OrganizationService(session)
 
     async def _preorder_error(self, *, organization_id: UUID, key: UUID, status: int, message: str) -> HTTPException:
-        # Called only under the tenant lock before any provider POST. An existing key is never released as unused.
         existing = await self.session.scalar(select(BillingOrder.id).where(
             BillingOrder.organization_id == organization_id, BillingOrder.idempotency_key == key,
         ))
@@ -84,7 +83,7 @@ class BillingOrderService:
                                                                             "product_id": str(self.settings.lava_product_id)}, state="creating")
         self.session.add(order)
         await self.session.flush()
-        await self.session.commit()  # Persist before irreversible provider POST; replay cannot issue another invoice.
+        await self.session.commit()
         order_id = order.id
         return_url = self.settings.web_app_url.rstrip("/") + f"/app/billing?order={order_id}"
         try:
@@ -146,4 +145,4 @@ class BillingOrderService:
         else:
             await ReplyCreditService(self.session).grant(organization_id=order.organization_id, source_key=f"lava:order:{order.id}:addon",
                                                          kind="addon", quantity=order.addon_credits, now=now)
-        return order  # Caller commits settlement and inbox state together.
+        return order

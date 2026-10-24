@@ -28,7 +28,7 @@ const shared = {
   contactEmail: configuredContactEmail || "support@mpreply.ru",
 } as const;
 
-/** @public Exported navigation contract checked by locale-routing-contract.test.ts. */
+/** @public */
 export const siteConfigs = {
   ru: {
     ...shared,

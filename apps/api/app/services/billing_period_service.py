@@ -71,7 +71,6 @@ class BillingPeriodService:
         return period
 
     async def materialize_current(self, *, organization_id: UUID, now: datetime) -> BillingPeriod | None:
-        # The ledger primitive is loaded here so reservation can depend on this service without an import cycle.
         from app.services.reply_credit_service import ReplyCreditService
 
         first = await self.session.scalar(select(BillingPeriod.id).join(BillingOrder, BillingOrder.id == BillingPeriod.order_id).where(

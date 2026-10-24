@@ -78,7 +78,6 @@ test("authenticated navigation icons load from real bundled assets", async ({ pa
   await page.goto("/app/integrations", { waitUntil: "networkidle" });
 
   const icons = page.locator(".app-nav-icon-image");
-  // One real icon per workspace navigation entry plus the help link.
   await expect(icons).toHaveCount(approvedNavigation.length + 1);
   await expect.poll(async () => icons.evaluateAll((images) =>
     images.filter((image) => !(image instanceof HTMLImageElement) || !image.complete || image.naturalWidth === 0).length,

@@ -73,8 +73,6 @@ class WildberriesAdapter(ReviewQuestionAdapter):
                 error_code="insufficient_scope",
                 error_message_safe="Wildberries API key cannot read and answer feedbacks and questions",
             )
-        # WB provides a category-specific authentication probe. Do not spend a
-        # question-list request or make authentication depend on its records.
         result = await self._read("/ping", credential, params={})
         if not result.ok:
             return AdapterResult(

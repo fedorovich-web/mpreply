@@ -44,12 +44,6 @@ class ManualReplySendResult:
 
 
 class ManualReplyService:
-    """Manual and semi-automatic review workflow for marketplace replies.
-
-    The workflow intentionally keeps AI generation, human review, approval and
-    marketplace execution as separate transitions. Edited text is re-evaluated
-    by SafetyGate both at review submission and approval/send boundaries.
-    """
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -124,8 +118,6 @@ class ManualReplyService:
         ai_draft_id: UUID | None,
         reply_text: str | None,
     ) -> tuple[Reply, SafetyResult]:
-        # Serialize creation with automatic generation completion and routing.
-        # Refresh status after acquiring the lock before accepting a human draft.
         message, product = await self.messages.get_message(actor=actor, message_id=message_id, for_update=True)
         await self._require_write_role(actor=actor, organization_id=message.organization_id)
         await self._ensure_message_can_receive_reply(message)

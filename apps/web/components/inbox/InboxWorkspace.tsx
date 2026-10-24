@@ -1213,7 +1213,6 @@ function persistFilters(organizationId: string, filters: FilterState) {
   try {
     window.localStorage.setItem(filterStorageKey(organizationId), JSON.stringify(filters));
   } catch {
-    // Filter persistence is optional; the current queue must remain usable without browser storage.
   }
 }
 

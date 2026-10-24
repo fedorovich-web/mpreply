@@ -84,7 +84,6 @@ def upgrade() -> None:
                            "billing_webhooks": ["state", "next_attempt_at"]}.items():
         for column in columns:
             op.create_index(f"ix_{table}_{column}", table, [column])
-    # Preserve legacy plans/references; only seed approved purchasable plans.
     op.execute("UPDATE billing_plans SET price_month_minor = 129000 WHERE code = 'start' AND price_month_minor IS NULL")
     op.execute("UPDATE billing_plans SET price_month_minor = 349000 WHERE code = 'team' AND price_month_minor IS NULL")
     op.execute("""INSERT INTO billing_plans (id, code, name, price_month_minor, currency, limits_json, features_json,
@@ -112,4 +111,3 @@ def downgrade() -> None:
     op.drop_table("billing_webhooks")
     op.drop_table("billing_periods")
     op.drop_table("billing_orders")
-    # Catalog values remain: rolling back tables must not remove plans used by organizations.

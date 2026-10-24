@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -294,11 +295,8 @@ class ReplyExecutionService:
         return reply
 
     async def recover_throttled_replies(self, *, limit: int = 25) -> int:
-        """Recover legacy exhausted 429s without publishing stale question drafts."""
         if type(limit) is not int or not 1 <= limit <= 100:
             raise ValueError("reply recovery limit must be between 1 and 100")
-        # Earlier releases left automatic recovery drafts outside the review
-        # queue. Route only untouched drafts and preserve handled messages.
         legacy = (await self.session.execute(select(Reply, CustomerMessage).join(
             CustomerMessage, (CustomerMessage.id == Reply.message_id)
             & (CustomerMessage.organization_id == Reply.organization_id),
@@ -384,6 +382,9 @@ class ReplyExecutionService:
         if reply.status == ReplyStatus.SENT.value:
             await self.session.commit()
             return ExecuteReplyResult(reply.id, reply.status, False)
+        if reply.status == ReplyStatus.RETRY_PENDING.value and reply.next_retry_at is not None and reply.next_retry_at > datetime.now(UTC):
+            await self.session.commit()
+            return ExecuteReplyResult(reply.id, reply.status, True, reply.error_code)
         settings = get_settings()
         if (
             reply.status == ReplyStatus.SENDING.value
@@ -463,6 +464,11 @@ class ReplyExecutionService:
                 ),
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        expected_account_binding = (account.id, account.organization_id, account.marketplace, account.seller_id)
+        expected_credential_version = (account.credentials_encrypted, account.credentials_fingerprint, account.credentials_last_rotated_at)
+        expected_message_binding = (
+            message.id, message.organization_id, message.marketplace_account_id, message.marketplace, message.type, message.external_id,
+        )
         try:
             review_adapter: ReviewQuestionAdapter | None = None
             conversation_adapter: ConversationAdapter | None = None
@@ -483,9 +489,6 @@ class ReplyExecutionService:
             )
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         if reply.mode == ResponseMode.AUTO.value:
-            # Serialize auto-send quota reservations per organization. The SENDING
-            # state is committed below before any provider I/O, so the next worker
-            # sees this attempt while calculating its own quota.
             await self.session.scalar(
                 select(Organization.id)
                 .where(Organization.id == message.organization_id)
@@ -588,8 +591,6 @@ class ReplyExecutionService:
             message = await self._get_message(owned.message_id, organization_id=owned.organization_id)
             error_code = failed_result.error_code or "malformed_payload"
             if error_code in {"rate_limited", "coordination_unavailable"}:
-                # No write was attempted. Waiting for a shared/provider read
-                # cooldown must not consume the bounded write retry budget.
                 owned.attempt_count -= 1
             retryable = error_code in _RETRYABLE_ERRORS and owned.attempt_count < owned.max_attempts
             if retryable:
@@ -635,32 +636,94 @@ class ReplyExecutionService:
             )
             return ExecuteReplyResult(reply.id, reply.status, False, externally_already_answered=True)
 
-        if conversation_adapter is not None:
-            if account.seller_id is None:
-                result = AdapterResult[ProviderWriteReceipt](
+        reply = await self._get_owned_attempt_for_update(
+            reply_id,
+            attempt_count=attempt_count,
+            idempotency_key=idempotency_key,
+        )
+        if reply is None:
+            await self.session.commit()
+            current = await self._get_reply(reply_id)
+            return ExecuteReplyResult(current.id, current.status, False, "execution_superseded")
+        current_message = await self.session.execute(
+            select(CustomerMessage).where(
+                CustomerMessage.id == reply.message_id,
+                CustomerMessage.organization_id == reply.organization_id,
+            ).with_for_update().execution_options(populate_existing=True)
+        )
+        message = current_message.scalar_one_or_none()
+        if message is None or message.status != MessageStatus.SENDING.value or (
+            message.id, message.organization_id, message.marketplace_account_id, message.marketplace, message.type, message.external_id,
+        ) != expected_message_binding:
+            await self.session.commit()
+            return ExecuteReplyResult(reply.id, reply.status, False, "execution_superseded")
+        current_account = await self.session.execute(
+            select(MarketplaceAccount).where(
+                MarketplaceAccount.id == expected_account_binding[0],
+                MarketplaceAccount.organization_id == reply.organization_id,
+            ).with_for_update(key_share=True).execution_options(populate_existing=True)
+        )
+        account = current_account.scalar_one_or_none()
+        credential_changed = account is None or account.credentials_status != "valid" or (
+            account.credentials_encrypted, account.credentials_fingerprint, account.credentials_last_rotated_at,
+        ) != expected_credential_version
+        if credential_changed or account is None or account.status != "active" or (
+            account.id, account.organization_id, account.marketplace, account.seller_id,
+        ) != expected_account_binding or required_scope not in validated_scope_names(account.scopes_json or {}):
+            await self._mark_terminal_marketplace_failure(
+                reply=reply,
+                message=message,
+                result=AdapterResult(
                     False,
-                    error_code="marketplace_validation_error",
-                    error_message_safe="Marketplace conversation account ID is missing",
-                )
-            else:
-                result = await conversation_adapter.send_chat_message(
-                    credential,
-                    account.seller_id,
-                    context,
-                    reply.reply_text,
-                )
-        elif review_adapter is not None:
-            result = await review_adapter.send_reply(
-                credential,
-                account.seller_id,
-                context,
-                reply.reply_text,
+                    error_code="invalid_credentials" if credential_changed else "insufficient_scope",
+                    error_message_safe="Marketplace connection changed during reply preparation",
+                ),
             )
-        else:
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+        write_started_at = datetime.now(UTC)
+        if reply.last_attempt_at is None or reply.last_attempt_at <= write_started_at - timedelta(seconds=settings.auto_reply_execution_lease_seconds):
+            await self.session.commit()
+            return ExecuteReplyResult(reply.id, reply.status, False, "execution_lease_expired")
+        reply.last_attempt_at = write_started_at
+        await self.session.commit()
+        write_deadline = write_started_at + timedelta(seconds=settings.auto_reply_execution_lease_seconds)
+        write_timeout_seconds = (write_deadline - datetime.now(UTC)).total_seconds()
+        if write_timeout_seconds <= 0:
+            return ExecuteReplyResult(reply.id, reply.status, False, "execution_lease_expired")
+        try:
+            async with asyncio.timeout(write_timeout_seconds):
+                if conversation_adapter is not None:
+                    if account.seller_id is None:
+                        result = AdapterResult[ProviderWriteReceipt](
+                            False,
+                            error_code="marketplace_validation_error",
+                            error_message_safe="Marketplace conversation account ID is missing",
+                        )
+                    else:
+                        result = await conversation_adapter.send_chat_message(
+                            credential,
+                            account.seller_id,
+                            context,
+                            reply.reply_text,
+                        )
+                elif review_adapter is not None:
+                    result = await review_adapter.send_reply(
+                        credential,
+                        account.seller_id,
+                        context,
+                        reply.reply_text,
+                    )
+                else:
+                    result = AdapterResult[ProviderWriteReceipt](
+                        False,
+                        error_code="unsupported_capability",
+                        error_message_safe="Marketplace reply capability is not supported",
+                    )
+        except TimeoutError:
             result = AdapterResult[ProviderWriteReceipt](
                 False,
-                error_code="unsupported_capability",
-                error_message_safe="Marketplace reply capability is not supported",
+                error_code="network_timeout",
+                error_message_safe="Marketplace write outcome is unknown after timeout",
             )
         reply = await self._get_owned_attempt_for_update(
             reply_id,
@@ -701,8 +764,6 @@ class ReplyExecutionService:
             await self._mark_ambiguous_write(reply=reply, message=message, result=result)
             return ExecuteReplyResult(reply.id, reply.status, False, error_code)
         if error_code in {"rate_limited", "coordination_unavailable"}:
-            # A provider 429 explicitly rejected the write. It is a deferred
-            # request, not a failed/ambiguous publication attempt.
             reply.attempt_count -= 1
         retryable = error_code in _RETRYABLE_ERRORS and reply.attempt_count < reply.max_attempts
         if retryable:
@@ -755,6 +816,7 @@ class ReplyExecutionService:
                 Reply.idempotency_key == idempotency_key,
             )
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         return result.scalar_one_or_none()
 

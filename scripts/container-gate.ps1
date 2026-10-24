@@ -39,10 +39,10 @@ try {
         & $Docker compose -f $ComposeFile config --quiet
     }
 
+    $Started = $true
     Run-NativeStep "Build and start local stack" {
         & $Docker compose -f $ComposeFile up --build --detach --wait --wait-timeout 240
     }
-    $Started = $true
 
     Assert-HttpHealth "API readiness" "http://127.0.0.1:8000/health/ready"
     Assert-HttpHealth "Web readiness" "http://127.0.0.1:3000/api/health"

@@ -48,7 +48,6 @@ async def test_sent_analytics_exclude_external_answers_and_preserve_legacy_sends
                                                credentials_encrypted="unused", credentials_fingerprint="unused")
             session.add(other_account)
             await session.flush()
-            # Actual send, legacy send, preflight convergence, another tenant, an old send.
             cases = [(org, "auto", False, True, now), (org, "semi_auto", None, False, now),
                      (org, "auto", True, True, now), (other_org, "auto", False, False, now),
                      (org, "auto", False, False, now - timedelta(days=40))]
@@ -88,9 +87,6 @@ async def test_sent_analytics_exclude_external_answers_and_preserve_legacy_sends
             assert (overview.replies_sent, overview.auto_replies_sent, overview.manual_replies_sent) == (2, 1, 1)
             assert overview.ai_drafts_generated == 2
             assert overview.ai_acceptance_rate == 0.5
-            # SQLite cannot evaluate PostgreSQL timestamp subtraction as an interval.
-            # Execute the actual aggregate's input query to verify its provenance,
-            # tenant and period filters independently of that dialect difference.
             assert len(response_time_queries) == 1
             response_times = (await session.execute(response_time_queries[0].with_only_columns(
                 Reply.sent_at, CustomerMessage.marketplace_created_at,

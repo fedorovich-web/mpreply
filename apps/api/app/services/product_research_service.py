@@ -30,22 +30,16 @@ def product_identity(product: Product) -> str:
 
 
 def compatibility_models(customer_text: str) -> tuple[str, ...]:
-    """Extract only public-looking device identifiers, never buyer prose/contacts."""
     text = customer_text[:4096]
     text = re.sub(r"https?://\S+|[\w.+-]+@[\w.-]+|(?<!\w)\+?\d[\d ()-]{7,}\d", " ", text)
     private_labels = (r"(?:номер\s+)?заказ\w*|логин\w*|парол\w*|телеграм\w*|серийн\w*\s+номер|"
                       r"код\s+(?:подтвержден\w*|доступ\w*)|telegram|username|login|password|"
                       r"order(?:\s+(?:number|id))?|tracking(?:\s+number)?|serial(?:\s+number)?|otp|token")
-    # Drop the private fragment, including connectors such as "number is".
-    # Keeping its trailing identifier would let an earlier compatibility cue
-    # accidentally turn an order number into a public search term.
     text = re.sub(r"\b(?:" + private_labels + r")\b[^,;?!\n.]*", " ", text, flags=re.IGNORECASE)
     pattern = r"(?<![\w@])([A-Za-z]{1,12}[ -]?\d{1,6}[A-Za-z0-9]*(?:[-/._][A-Za-z0-9]+)*(?:\s+[A-Z][A-Z0-9]{0,3})?)(?![\w@])"
     context = r"\b(?:подойд\w*|подход\w*|совмест\w*|модел\w*|замен\w*|для|на|к|for|fits?|compatib\w*|model|replacement|old\s+belt)\b"
     models: list[str] = []
     for match in re.finditer(pattern, text):
-        # A model must follow a device/compatibility cue in this clause. An
-        # arbitrary buyer handle or order identifier is not a search term.
         prefix = re.split(r"[,;!?\n]|(?<!\d)\.(?!\d)", text[:match.start()])[-1][-100:]
         contact_context = r"\b(?:contact|reach|email|handle|связ\w*|контакт\w*|почт\w*)\b"
         if not re.search(contact_context, prefix, flags=re.IGNORECASE) and re.search(context, prefix, flags=re.IGNORECASE):
@@ -90,8 +84,6 @@ def _store_research(product: Product, models: tuple[str, ...], entry: dict[str, 
 
 
 def _contains_model(text: str, model: str) -> bool:
-    # Spaces/hyphens in appliance model spelling are interchangeable, but
-    # a prefix such as W84TX must not match W84TX2.
     letters = _normalized(model)
     pattern = r"(?<![a-z0-9])" + r"[\s./_-]*".join(re.escape(char) for char in letters) + r"(?![a-z0-9])"
     return bool(re.search(pattern, text.casefold()))
@@ -102,7 +94,6 @@ def _normalized(value: str) -> str:
 
 
 def source_matches_product(source: dict[str, str], product: Product) -> bool:
-    """Exact article/model evidence is required when present; broad category matches are insufficient."""
     text = source["title"] + " " + source["excerpt"]
     source_tokens = {_normalized(token) for token in re.findall(r"[\w-]+", text)}
     name = product.name or ""
@@ -125,10 +116,7 @@ def source_matches_product(source: dict[str, str], product: Product) -> bool:
             continue
         models.append(token)
     if models:
-        # A shared size/capacity never substitutes for the exact model or part identifier.
         model_matches = all(model in source_tokens for model in models)
-        # A reseller brand can differ from the OEM. Accept that exception only
-        # when a strong part identifier AND the complete product title match.
         exact_title = _normalized(name) in _normalized(source["title"])
         strong_part = any(sum(char.isdigit() for char in model) >= 6 for model in models)
         return model_matches and (brand_matches or (exact_title and strong_part))
@@ -143,7 +131,6 @@ def source_matches_product(source: dict[str, str], product: Product) -> bool:
 
 
 def research_context(metadata: dict[str, object], models: tuple[str, ...] = ()) -> dict[str, object]:
-    """Lease/expiry/usage telemetry never enters the reply hash or model instructions."""
     result = dict(metadata)
     raw = _research_entry(metadata, models)
     result.pop(COMPATIBILITY_KEY, None)
@@ -182,7 +169,6 @@ class ProductResearchService:
                 raise conflict("Product changed during research; start a new generation")
             return row
 
-        # A short database lease coalesces concurrent API/worker requests without holding a DB lock during HTTP.
         deadline = asyncio.get_running_loop().time() + 70
         while True:
             product = await load()
@@ -223,8 +209,6 @@ class ProductResearchService:
             matches = [source for source in research.sources if source_matches_product(source, product)][:5]
             verified = bool(matches) and all(any(_contains_model(source["title"] + " " + source["excerpt"], model)
                                                 for source in matches) for model in models)
-            # Retain actual provider evidence for a person even when seller/manufacturer identity differs.
-            # These candidates must never enable automatic sending.
             sources = matches or research.sources[:5]
         except GroqProviderError as exc:
             error_code = exc.error_code

@@ -1,5 +1,4 @@
 :root {
-	/* Shared MPReply palette derived from the approved blue homepage reference. */
 	--color-bg-page: #f7fbff;
 	--color-bg-surface: #ffffff;
 	--color-bg-elevated: #ffffff;
@@ -58,7 +57,6 @@
 	--shadow-public-cta: 0 28px 70px rgb(11 104 246 / 18%);
 	--shadow-secondary-button: inset 0 1px 0 rgb(255 255 255 / 80%), 0 8px 20px rgb(7 69 143 / 6%);
 
-	/* Authenticated application surfaces intentionally use the same brand family. */
 	--app-sidebar-bg: #ffffff;
 	--app-topbar-bg: rgb(255 255 255 / 90%);
 	--app-nav-active-bg: #eaf4ff;

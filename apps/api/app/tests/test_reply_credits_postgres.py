@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.models.ai_draft import AIDraft
 from app.models.customer_message import CustomerMessage
 from app.models.marketplace_account import MarketplaceAccount
-from app.models.organization import Organization
+from app.models.organization import Organization, OrganizationUser
 from app.models.product import Product
 from app.models.reply_credit import ReplyCreditEvent, ReplyCreditOperation
 from app.models.user import User
@@ -111,7 +111,10 @@ async def test_postgres_history_is_immutable_and_draft_reference_is_tenant_scope
             await session.execute(text("DELETE FROM reply_credit_events WHERE id = :id"), {"id": event_id})
         await session.rollback()
         user = await ensure_demo_workspace(session)
-        message = await session.scalar(select(CustomerMessage).where(CustomerMessage.organization_id != org_id))
+        message = await session.scalar(
+            select(CustomerMessage).join(OrganizationUser, OrganizationUser.organization_id == CustomerMessage.organization_id)
+            .where(OrganizationUser.user_id == user.id, CustomerMessage.organization_id != org_id)
+        )
         assert message is not None
         draft = AIDraft(
             organization_id=message.organization_id,
@@ -194,7 +197,6 @@ async def test_postgres_generation_rechecks_context_after_provider_without_holdi
         org_id, message_id, product_id = org.id, message.id, product.id
 
         async def complete(**_: object) -> object:
-            # This would time out if generation held row locks during provider I/O.
             async with asyncio.timeout(3), postgres_credits() as concurrent:
                 if change == "product":
                     await concurrent.execute(update(Product).where(Product.id == product_id).values(metadata_json={"size": "changed"}))
@@ -211,7 +213,6 @@ async def test_postgres_generation_rechecks_context_after_provider_without_holdi
         key = uuid4()
         if change == "unchanged":
             draft = await service.generate_draft(actor=actor, message_id=message_id, operation_key=key)
-            # A completed request remains replayable after the message is answered.
             message.status = "answered"
             await session.commit()
             repeated = await service.generate_draft(actor=actor, message_id=message_id, operation_key=key)
@@ -230,7 +231,6 @@ async def test_postgres_generation_rechecks_context_after_provider_without_holdi
 
 @pytest.mark.asyncio
 async def test_postgres_concurrent_maintenance_does_not_expire_or_release_twice(postgres_credits: async_sessionmaker[AsyncSession]) -> None:
-    # An earlier synthetic clock isolates these due accounts from the other cases.
     now = datetime(2000, 1, 1, tzinfo=UTC)
     organizations: list[UUID] = []
     async with postgres_credits() as session:

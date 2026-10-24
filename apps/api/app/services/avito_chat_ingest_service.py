@@ -19,7 +19,6 @@ class InvalidAvitoChatTurn(ValueError):
 
 
 class AvitoChatIngestService:
-    """Projects one Avito conversation into provider-neutral inbound messages."""
 
     def project(
         self,

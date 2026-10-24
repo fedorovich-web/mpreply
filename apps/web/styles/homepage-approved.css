@@ -12,7 +12,6 @@
 	padding: var(--homepage-section-pad) 0;
 }
 
-/* Header — approved preview */
 .public-root .public-header {
 	position: sticky;
 	top: 0;
@@ -106,7 +105,6 @@
 	padding-inline: 1.25rem;
 }
 
-/* Hero */
 .homepage-approved-hero {
 	position: relative;
 	isolation: isolate;
@@ -204,7 +202,6 @@
 	color: var(--homepage-brand);
 }
 
-/* Marketplace row inside hero */
 .homepage-approved-marketplaces {
 	position: relative;
 	z-index: 3;
@@ -287,7 +284,6 @@
 	line-height: 1.35;
 }
 
-/* Shared section typography */
 .homepage-section-heading-left {
 	display: grid;
 	max-width: 31rem;
@@ -316,7 +312,6 @@
 	margin-top: 0.55rem;
 }
 
-/* Unified workspace section */
 .homepage-workspace-section {
 	background:
 		radial-gradient(circle at 72% 48%, rgb(99 91 255 / 7%), transparent 25rem),
@@ -532,7 +527,6 @@
 	white-space: nowrap;
 }
 
-/* AI context cards */
 .homepage-models-section {
 	background: #fff;
 }
@@ -612,7 +606,6 @@
 	line-height: 1.5;
 }
 
-/* Process */
 .homepage-approved-process {
 	background: #fff;
 }
@@ -894,7 +887,6 @@
 	left: 1rem;
 }
 
-/* Results */
 .homepage-results-section {
 	background: linear-gradient(180deg, #fbfaff 0%, #f7f5ff 100%);
 }
@@ -952,7 +944,6 @@
 	line-height: 1.45;
 }
 
-/* CTA */
 .homepage-approved-final-cta {
 	background: #fff;
 }
@@ -1027,7 +1018,6 @@
 	font-size: var(--font-size-body-sm);
 }
 
-/* Tablet */
 @media (max-width: 1120px) {
 	.homepage-hero-grid,
 	.homepage-feature-layout,
@@ -1077,7 +1067,6 @@
 
 }
 
-/* Mobile */
 @media (max-width: 760px) {
 	.public-root {
 		--homepage-section-pad: 4.25rem;

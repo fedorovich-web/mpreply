@@ -210,6 +210,7 @@ Production использует `infra/docker/docker-compose.production.yml`: м
 - [Инструкции для участников и агентов](AGENTS.md)
 - [Архитектурные решения](docs/adr/)
 - [QA и свидетельства проверок](docs/qa/)
+- [Инженерная проверка и исправления от 24 октября 2026](docs/qa/2026-10-24-senior-cleanup.md)
 - [Эксплуатация, резервные копии и восстановление](docs/ops/)
 - [Чеклист развёртывания Dokploy](infra/dokploy/deployment-checklist.md)
 
