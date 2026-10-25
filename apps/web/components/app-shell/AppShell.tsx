@@ -11,6 +11,7 @@ import {
   localizedPath,
   type Locale,
 } from "../../lib/i18n";
+import { appOrigin } from "../../lib/site-config";
 import { PublicBrandMark } from "../public-site/PublicBrandMark";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
@@ -396,7 +397,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {isDemo ? <div className="app-demo-banner" role="status"><span>{labels.demoNotice}</span><Link href={localizedPath(locale, "/auth/register")}>{labels.demoSignup}</Link></div> : null}
+        {isDemo ? <div className="app-demo-banner" role="status"><span>{labels.demoNotice}</span><Link href={appOrigin + localizedPath(locale, "/auth/register")}>{labels.demoSignup}</Link></div> : null}
         <main className="app-main">{children}</main>
       </div>
     </div>

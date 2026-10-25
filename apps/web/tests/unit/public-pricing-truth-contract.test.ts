@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import PricingPage from "../../app/pricing/page";
 import PricingPageEn from "../../app/en/pricing/page";
 import { monthlyPlans, replyPacks } from "../../lib/pricing-calculator";
+import { appOrigin } from "../../lib/site-config";
 
 vi.mock("../../components/public-site/PublicShell", () => ({ PublicShell: ({ children }: { children: ReactNode }) => children }));
 vi.mock("../../components/public-site/PricingCalculators", () => ({ PricingCalculators: () => null }));
@@ -37,7 +38,7 @@ describe("approved public pricing contract", () => {
       const card = cardFor(doc, plan[locale]);
       expect(card.querySelector(".pricing-price strong")?.textContent).toBe(plan.price);
       expect(card.textContent).toContain(locale === "ru" ? plan.allowanceRu : plan.allowanceEn);
-      expect(card.querySelector("a")?.getAttribute("href")).toBe(`${locale === "en" ? "/en" : ""}/auth/register?intent=connect-marketplace`);
+      expect(card.querySelector("a")?.getAttribute("href")).toBe(`${appOrigin}${locale === "en" ? "/en" : ""}/auth/register?intent=connect-marketplace`);
     }
   });
 

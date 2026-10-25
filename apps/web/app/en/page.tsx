@@ -11,7 +11,7 @@ import { HomeLineIcon } from "../../components/public-site/HomeLineIcon";
 import { PublicIcon } from "../../components/public-site/PublicIcon";
 import { JsonLd } from "../../components/seo/JsonLd";
 import { createPageMetadata } from "../../lib/seo";
-import { getMarketplaceConfig, getSiteConfig } from "../../lib/site-config";
+import { appOrigin, getMarketplaceConfig, getSiteConfig } from "../../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
   title: "AI replies for marketplace reviews, questions, and customer messages",
@@ -58,7 +58,7 @@ export default function EnglishHomePage() {
             <h1>AI-assisted replies<br />for reviews, questions,<br />and customer<br /><span>messages</span></h1>
             <p className="homepage-hero-lead">Bring supported customer messages from Wildberries, Ozon, Yandex Market, and Avito into one queue. AI drafts replies from available context, with rules for automation and review before sending.</p>
             <div className="homepage-hero-actions">
-              <Link className="button button-primary" href="/en/auth/register?intent=connect-marketplace">Start free <span aria-hidden="true">→</span></Link>
+              <Link className="button button-primary" href={appOrigin + "/en/auth/register?intent=connect-marketplace"}>Start free <span aria-hidden="true">→</span></Link>
               <Link className="button button-secondary homepage-demo-button" href="/en/demo"><PublicIcon name="play" />View demo</Link>
             </div>
             <div className="homepage-hero-benefits" role="group" aria-label="Getting started"><span>✓ Shared queue</span><span>✓ 14-day trial</span><span>✓ Review before sending</span></div>
@@ -131,7 +131,7 @@ export default function EnglishHomePage() {
 
       <section className="public-section homepage-approved-final-cta home-reference-final">
         <div className="public-container homepage-final-cta-card">
-          <div className="homepage-final-cta-copy"><h2>Bring marketplace<br />customer communication<br />into one workflow</h2><p>Try MPReply for 14 days with 350 AI replies included in the trial.</p><div className="homepage-final-cta-actions"><Link className="button button-primary" href="/en/auth/register?intent=connect-marketplace">Start free&nbsp; →</Link><Link className="button button-secondary homepage-demo-button" href="/en/demo"><PublicIcon name="play" />View demo</Link></div><div className="homepage-final-benefits" role="group" aria-label="Getting started"><span>✓ 14-day trial</span><span>✓ Shared queue</span><span>✓ Review before sending</span></div></div>
+          <div className="homepage-final-cta-copy"><h2>Bring marketplace<br />customer communication<br />into one workflow</h2><p>Try MPReply for 14 days with 350 AI replies included in the trial.</p><div className="homepage-final-cta-actions"><Link className="button button-primary" href={appOrigin + "/en/auth/register?intent=connect-marketplace"}>Start free&nbsp; →</Link><Link className="button button-secondary homepage-demo-button" href="/en/demo"><PublicIcon name="play" />View demo</Link></div><div className="homepage-final-benefits" role="group" aria-label="Getting started"><span>✓ 14-day trial</span><span>✓ Shared queue</span><span>✓ Review before sending</span></div></div>
           <div className="homepage-cta-art home-reference-cta-art" aria-hidden="true"><Image alt="" height={1086} sizes="(max-width: 760px) 100vw, 38vw" src={homeCta} width={1448} quality={85} /></div>
         </div>
       </section>
