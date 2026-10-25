@@ -38,6 +38,8 @@ const copy = {
     noAccount: "Нет аккаунта?",
     createAccount: "Создать аккаунт",
     haveAccount: "Уже есть аккаунт?",
+    forgotPassword: "Забыли пароль?",
+    resendVerification: "Отправить письмо подтверждения ещё раз",
     verificationSent: "Если адрес доступен для регистрации, мы отправили письмо для подтверждения email. Откройте ссылку в письме, затем войдите в MPReply.",
   },
   en: {
@@ -63,6 +65,8 @@ const copy = {
     noAccount: "New to MPReply?",
     createAccount: "Create account",
     haveAccount: "Already have an account?",
+    forgotPassword: "Forgot password?",
+    resendVerification: "Resend verification email",
     verificationSent: "If this address is available for registration, we sent a link to verify your email. Open the link in the email, then log in to MPReply.",
   },
 } as const;
@@ -226,6 +230,10 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
               </form>
             )}
 
+            {isLogin ? (
+              <p className="auth-footer"><Link href={localizedPath(locale, "/auth/forgot-password")}>{labels.forgotPassword}</Link></p>
+            ) : null}
+            <p className="auth-footer"><Link href={localizedPath(locale, "/auth/resend-verification")}>{labels.resendVerification}</Link></p>
             {oauthError ? <p className="form-error" role="alert">{oauthError}</p> : null}
             <YandexAuthButton locale={locale} next={safeRequestedNext} intent={intent} />
             <p className="auth-footer">

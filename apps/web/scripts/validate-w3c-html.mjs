@@ -64,6 +64,8 @@ const renderedRoutes = [
   "/en/app/review-queue",
   "/en/auth/login",
   "/en/auth/register",
+  "/en/auth/forgot-password",
+  "/en/auth/resend-verification",
   "/en/contacts",
   "/en/demo",
   "/en/features",

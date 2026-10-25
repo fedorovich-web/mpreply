@@ -105,6 +105,7 @@ jobs:
                   pytest -q
                   --junitxml=postgres-integration-results.xml
                   app/tests/test_billing_orders_postgres.py
+                  app/tests/test_auth_service_postgres.py
                   app/tests/test_yandex_postgres.py
                   app/tests/test_reply_credits_postgres.py
                   app/tests/test_worker_async_runtime.py
