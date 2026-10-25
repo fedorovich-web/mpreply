@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.core.errors import conflict, forbidden, not_found
+from app.core.time import utc
 from app.models.billing_order import BillingOrder
 from app.models.billing_plan import BillingPlan
 from app.models.organization import Organization
@@ -21,7 +22,7 @@ from app.schemas.billing import PurchaseRequest
 from app.services.billing_catalog import PLANS, quote_purchase
 from app.services.billing_period_service import BillingPeriodService
 from app.services.organization_service import OrganizationService
-from app.services.reply_credit_service import ReplyCreditService, utc
+from app.services.reply_credit_service import ReplyCreditService
 
 
 class BillingOrderService:

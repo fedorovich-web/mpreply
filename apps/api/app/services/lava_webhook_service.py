@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import cast
 from uuid import UUID, uuid4
@@ -15,11 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.core.errors import bad_request, unauthorized
+from app.core.time import utc
 from app.models.billing_order import BillingOrder
 from app.models.billing_webhook import BillingWebhook
 from app.providers.lava import LavaClient, LavaError, money_minor
 from app.services.billing_order_service import BillingOrderService
-from app.services.reply_credit_service import utc
 
 MAX_WEBHOOK_BYTES = 65536
 
@@ -90,7 +90,7 @@ class LavaWebhookService:
             lease = uuid4()
             event.state = "processing"
             event.lease_token = lease
-            event.lease_expires_at = now + timedelta(seconds=60)
+            event.lease_expires_at = datetime.now(UTC) + timedelta(seconds=60)
             event.attempt_count += 1
             event_id, payload = event.id, dict(event.payload_json)
             await self.session.commit()
@@ -101,8 +101,9 @@ class LavaWebhookService:
                     raise ValueError("payment_terms_mismatch")
                 event = await self.session.scalar(select(BillingWebhook).where(BillingWebhook.id == event_id).with_for_update()
                                                   .execution_options(populate_existing=True))
+                verified_at = datetime.now(UTC)
                 if (event is None or event.lease_token != lease or event.state != "processing"
-                        or event.lease_expires_at is None or utc(event.lease_expires_at) <= utc(now)):
+                        or event.lease_expires_at is None or utc(event.lease_expires_at) <= verified_at):
                     await self.session.rollback()
                     continue
                 order = await self.session.scalar(select(BillingOrder).where(BillingOrder.provider_invoice_id == invoice.id))
@@ -115,7 +116,7 @@ class LavaWebhookService:
                     raise ValueError("payment_product_mismatch")
                 service = BillingOrderService(self.session, settings=self.settings, client=self.client)
                 if invoice.status == "completed":
-                    await service.settle(order_id=order.id, invoice=invoice, event_product_id=product_id, now=now)
+                    await service.settle(order_id=order.id, invoice=invoice, event_product_id=product_id, now=verified_at)
                 elif invoice.status == "failed":
                     order = await service.lock_order(order.id)
                     if order.state != "paid":
@@ -133,7 +134,9 @@ class LavaWebhookService:
                 await self.session.rollback()
                 current = await self.session.scalar(select(BillingWebhook).where(BillingWebhook.id == event_id).with_for_update()
                                                     .execution_options(populate_existing=True))
-                if current is None or current.lease_token != lease:
+                failed_at = datetime.now(UTC)
+                if (current is None or current.lease_token != lease or current.state != "processing"
+                        or current.lease_expires_at is None or utc(current.lease_expires_at) <= failed_at):
                     await self.session.rollback()
                     continue
                 code = error.code if isinstance(error, LavaError) else "payment_verification_mismatch"
@@ -141,7 +144,7 @@ class LavaWebhookService:
                 current.state = "pending" if retry else "review_required"
                 current.last_error = code
                 delays = (1, 5, 15, 60)
-                current.next_attempt_at = now + timedelta(seconds=delays[min(current.attempt_count - 1, 3)] if current.attempt_count <= 4 else 3600)
+                current.next_attempt_at = failed_at + timedelta(seconds=delays[min(current.attempt_count - 1, 3)] if current.attempt_count <= 4 else 3600)
                 current.lease_token = None
                 current.lease_expires_at = None
                 await self.session.commit()

@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import bad_request, forbidden, not_found, payment_required
+from app.core.errors import bad_request, forbidden, not_found
 from app.models.billing_plan import BillingPlan
 from app.models.enums import ResponseMode
 from app.models.organization import Organization, OrganizationUser
@@ -17,8 +17,6 @@ from app.models.user import User
 from app.services.audit_service import AuditService
 from app.services.plan_limit_service import PlanLimitService
 from app.services.reply_credit_service import ReplyCreditService
-
-_ALLOWED_ROLES = {"owner", "admin", "manager", "viewer"}
 
 
 def slugify(value: str) -> str:
@@ -31,7 +29,6 @@ class OrganizationService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.audit = AuditService(session)
-        self.plan_limits = PlanLimitService(session)
 
     async def create_organization(self, *, owner: User, name: str, slug: str | None) -> Organization:
         await self.session.scalar(select(User.id).where(User.id == owner.id).with_for_update(key_share=True))
@@ -167,47 +164,3 @@ class OrganizationService:
             },
         )
         return organization
-
-    async def add_user(
-        self,
-        *,
-        organization_id: UUID,
-        actor: User,
-        user_id: UUID,
-        role: str,
-    ) -> OrganizationUser:
-        if role not in _ALLOWED_ROLES:
-            raise bad_request("Unsupported organization role")
-        await self.require_membership_role(
-            organization_id=organization_id,
-            user_id=actor.id,
-            allowed_roles={"owner", "admin"},
-        )
-        limit_decision = await self.plan_limits.evaluate_metric(
-            organization_id=organization_id,
-            metric="members",
-        )
-        if not limit_decision.allowed:
-            raise payment_required("Member limit is exhausted for the current plan")
-        membership = OrganizationUser(
-            organization_id=organization_id,
-            user_id=user_id,
-            role=role,
-            status="active",
-        )
-        self.session.add(membership)
-        try:
-            await self.session.flush()
-        except IntegrityError as exc:
-            await self.session.rollback()
-            raise bad_request("User is already a member of this organization") from exc
-
-        await self.audit.write(
-            action="organization.user.added",
-            entity_type="organization_user",
-            organization_id=organization_id,
-            actor_user_id=actor.id,
-            entity_id=str(membership.id),
-            metadata={"user_id": str(user_id), "role": role},
-        )
-        return membership
