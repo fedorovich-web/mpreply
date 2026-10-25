@@ -29,20 +29,4 @@ describe("AuthShell", () => {
     expect(screen.queryByText(/\b\d+%\b/)).not.toBeInTheDocument();
   });
 
-  it("offers only the planned Yandex social entry point", () => {
-    render(
-      <AuthShell
-        description="Создайте аккаунт."
-        eyebrow="Аккаунт MPReply"
-        showYandexButton
-        title="Создать аккаунт"
-      >
-        <div>Форма регистрации</div>
-      </AuthShell>,
-    );
-
-    const yandex = screen.getByRole("button", { name: "Продолжить с Яндекс ID — скоро" });
-    expect(yandex).toBeDisabled();
-    expect(screen.queryByText(/Google/i)).not.toBeInTheDocument();
-  });
 });

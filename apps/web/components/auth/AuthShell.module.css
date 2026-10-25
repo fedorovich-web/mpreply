@@ -53,66 +53,6 @@
   gap: var(--space-4);
 }
 
-.socialSection {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  height: var(--border-width-hairline);
-  flex: 1;
-  background: var(--color-border-subtle);
-}
-
-.yandexButton {
-  min-height: var(--size-touch-target);
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
-  border: var(--border-width-hairline) solid var(--color-border-strong);
-  border-radius: var(--radius-control);
-  padding-inline: var(--space-4);
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  font: inherit;
-  font-weight: var(--font-weight-semibold);
-  text-align: left;
-}
-
-.yandexButton:disabled {
-  cursor: not-allowed;
-  opacity: var(--opacity-disabled);
-}
-
-.yandexMark {
-  width: var(--space-7);
-  height: var(--space-7);
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-round);
-  background: var(--color-bg-brand-soft);
-  color: var(--color-brand-text-on-soft);
-  font-weight: var(--font-weight-bold);
-}
-
-.soon {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-}
-
 .footer {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);

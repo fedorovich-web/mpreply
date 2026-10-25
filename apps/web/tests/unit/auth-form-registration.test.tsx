@@ -32,6 +32,14 @@ describe("AuthForm registration response contract", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
+  it.each(["ru", "en"] as const)("makes password recovery and verification reachable from %s login", (locale) => {
+    const client = new QueryClient();
+    render(<QueryClientProvider client={client}><AuthForm mode="login" locale={locale} /></QueryClientProvider>);
+    const prefix = locale === "en" ? "/en" : "";
+    expect(screen.getByRole("link", { name: locale === "ru" ? "Забыли пароль?" : "Forgot password?" })).toHaveAttribute("href", `${prefix}/auth/forgot-password`);
+    expect(screen.getByRole("link", { name: locale === "ru" ? "Отправить письмо подтверждения ещё раз" : "Resend verification email" })).toHaveAttribute("href", `${prefix}/auth/resend-verification`);
+  });
+
   it.each(["ru", "en"] as const)("accepts the real HTTP 202 message response in %s without entering the workspace", async (locale) => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({ message: "Если адрес доступен для регистрации, мы отправили письмо для подтверждения email." }), { status: 202 }));
     submit("register", locale);

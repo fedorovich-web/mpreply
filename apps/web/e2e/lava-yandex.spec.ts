@@ -74,6 +74,47 @@ test("Yandex login preserves the marketplace intent", async ({ page }) => {
   expect(url.searchParams.get("intent")).toBe("connect-marketplace");
 });
 
+for (const locale of ["ru", "en"] as const) {
+  test(`auth recovery actions reach working forms in ${locale}`, async ({ page }) => {
+    const prefix = locale === "en" ? "/en" : "";
+    const requests: string[] = [];
+    await page.route("**/api/**", async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+      const headers = {
+        "Access-Control-Allow-Origin": new URL(page.url()).origin,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Headers": "Content-Type, X-CSRF-Token",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      };
+      if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+      if (path === "/api/auth/providers") return route.fulfill({ headers, json: { yandex: false } });
+      if (request.method() === "POST" && ["/api/auth/forgot-password", "/api/auth/resend-verification"].includes(path)) {
+        expect(request.postDataJSON()).toEqual({ email: "synthetic-auth@example.test" });
+        expect(request.headers()["x-csrf-token"]).toBe("1");
+        requests.push(path);
+        return route.fulfill({ headers, json: { message: "Если аккаунт существует, мы отправим инструкции по восстановлению пароля." } });
+      }
+      return route.abort("blockedbyclient");
+    });
+
+    for (const action of ["forgot-password", "resend-verification"]) {
+      await page.goto(`${prefix}/auth/login`);
+      await page.locator(`a[href="${prefix}/auth/${action}"]`).click();
+      await expect(page).toHaveURL(new RegExp(`${prefix}/auth/${action}$`));
+      const formViolations = (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()).violations;
+      expect(formViolations).toEqual([]);
+      await page.getByLabel("Email", { exact: true }).fill("synthetic-auth@example.test");
+      await page.locator("form").getByRole("button").click();
+      await expect(page.getByRole("status")).toContainText(locale === "en" ? /check.*email/i : /Если аккаунт существует/);
+      if (locale === "en") await expect(page.getByRole("status")).not.toContainText("Если аккаунт");
+      const violations = (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()).violations;
+      expect(violations).toEqual([]);
+    }
+    expect(requests).toEqual(["/api/auth/forgot-password", "/api/auth/resend-verification"]);
+  });
+}
+
 test("payment and linked account screens fit mobile and pass accessibility checks", async ({ page }, testInfo) => {
   await mockBilling(page);
   await page.route("**/api/auth/identities", (route) => route.fulfill({ json: { yandex_linked: true, can_link_yandex: false } }));
