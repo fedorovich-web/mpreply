@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import event, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import ORMExecuteState
 
 from app.core.auth_tokens import digest_auth_token
 from app.models.auth_session import AuthSession
@@ -115,6 +117,56 @@ async def test_refresh_rejects_auth_version_changed_after_password_change(
 
     with pytest.raises(SessionError, match="invalid_refresh_session"):
         await service.rotate(grant.raw_token)
+
+
+@pytest.mark.parametrize("delayed_query", [1, 2])
+async def test_refresh_rejects_token_expiring_while_database_query_runs(
+    session_fixture: SessionFixture, delayed_query: int,
+) -> None:
+    session, user = session_fixture
+    now = datetime(2026, 9, 11, 12, 0, tzinfo=UTC)
+    service = SessionService(session, now=lambda: now, ttl=timedelta(seconds=1))
+    grant = await service.issue(user_id=user.id, auth_version=user.auth_version)
+    await session.commit()
+    query_count = 0
+
+    def advance_clock(_: ORMExecuteState) -> None:
+        nonlocal now, query_count
+        query_count += 1
+        if query_count == delayed_query:
+            now += timedelta(seconds=2)
+
+    event.listen(session.sync_session, "do_orm_execute", advance_clock)
+    try:
+        with pytest.raises(SessionError, match="invalid_refresh_session"):
+            await service.rotate(grant.raw_token)
+    finally:
+        event.remove(session.sync_session, "do_orm_execute", advance_clock)
+    assert await session.scalar(select(func.count()).select_from(AuthSession)) == 1
+
+
+@pytest.mark.parametrize("invalidation", ["revoked", "auth_version"])
+async def test_refresh_uses_committed_invalidation_over_cached_objects(
+    session_fixture: SessionFixture, invalidation: Literal["revoked", "auth_version"],
+) -> None:
+    session, user = session_fixture
+    now = datetime(2026, 9, 11, 12, 0, tzinfo=UTC)
+    service = SessionService(session, now=lambda: now)
+    grant = await service.issue(user_id=user.id, auth_version=user.auth_version)
+    await session.commit()
+    cached = (await session.execute(select(AuthSession))).scalar_one()
+    await session.commit()
+
+    async with AsyncSession(bind=session.bind) as other:
+        if invalidation == "revoked":
+            await other.execute(update(AuthSession).where(AuthSession.id == cached.id).values(revoked_at=now))
+        else:
+            await other.execute(update(User).where(User.id == user.id).values(auth_version=user.auth_version + 1))
+        await other.commit()
+
+    with pytest.raises(SessionError, match="invalid_refresh_session"):
+        await service.rotate(grant.raw_token)
+    assert await session.scalar(select(func.count()).select_from(AuthSession)) == 1
 
 
 @pytest.mark.asyncio
