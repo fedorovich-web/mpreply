@@ -6,7 +6,7 @@ import { apiRequest, buildApiQuery } from "../../lib/api/client";
 import { billingOrdersSchema } from "../../lib/api/schemas";
 import type { Locale } from "../../lib/i18n";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { billingMoney } from "./BillingCheckout";
+import { billingMoney } from "./format-money";
 
 export function BillingOrders() {
   const { activeOrganization, locale } = useWorkspace();
