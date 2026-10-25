@@ -11,7 +11,7 @@ import { HomeWorkspaceTabs } from "../components/public-site/HomeWorkspaceTabs";
 import { HomeModelsSection } from "../components/public-site/HomeModelsSection";
 import { JsonLd } from "../components/seo/JsonLd";
 import { createPageMetadata } from "../lib/seo";
-import { getMarketplaceConfig, siteConfig } from "../lib/site-config";
+import { appOrigin, getMarketplaceConfig, siteConfig } from "../lib/site-config";
 
 export const metadata: Metadata = createPageMetadata({
   title: "ИИ-ответы для обращений покупателей на маркетплейсах",
@@ -54,7 +54,7 @@ export default function HomePage() {
             <h1>Автоответы<br />на отзывы, вопросы<br />и сообщения<br /><span>покупателей</span></h1>
             <p className="homepage-hero-lead">Собирайте обращения с Wildberries, Ozon, Яндекс Маркета и Авито в одном окне. ИИ готовит ответы с учётом товара и стиля вашего бренда — автоматически или после проверки.</p>
             <div className="homepage-hero-actions">
-              <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать бесплатно <span aria-hidden="true">→</span></Link>
+              <Link className="button button-primary" href={appOrigin + "/auth/register?intent=connect-marketplace"}>Попробовать бесплатно <span aria-hidden="true">→</span></Link>
               <Link className="button button-secondary homepage-demo-button" href="/demo"><PublicIcon name="play" />Посмотреть демо</Link>
             </div>
             <div className="homepage-hero-benefits" role="group" aria-label="Условия старта"><span>✓ Быстрое подключение</span><span>✓ 14 дней бесплатно</span><span>✓ Без карты</span></div>
@@ -127,7 +127,7 @@ export default function HomePage() {
 
       <section className="public-section homepage-approved-final-cta home-reference-final">
         <div className="public-container homepage-final-cta-card">
-          <div className="homepage-final-cta-copy"><h2>Автоматизируйте<br />коммуникацию с покупателями</h2><p>Подключите маркетплейс и попробуйте MPReply в течение 14 дней: в пробный период включено 350 ИИ-ответов.</p><div className="homepage-final-cta-actions"><Link className="button button-primary" href="/auth/register?intent=connect-marketplace">Попробовать бесплатно&nbsp; →</Link><Link className="button button-secondary homepage-demo-button" href="/demo"><PublicIcon name="play" />Посмотреть демо</Link></div><div className="homepage-final-benefits" role="group" aria-label="Условия старта"><span>✓ Без карты</span><span>✓ 14 дней бесплатно</span><span>✓ Быстрое подключение</span></div></div>
+          <div className="homepage-final-cta-copy"><h2>Автоматизируйте<br />коммуникацию с покупателями</h2><p>Подключите маркетплейс и попробуйте MPReply в течение 14 дней: в пробный период включено 350 ИИ-ответов.</p><div className="homepage-final-cta-actions"><Link className="button button-primary" href={appOrigin + "/auth/register?intent=connect-marketplace"}>Попробовать бесплатно&nbsp; →</Link><Link className="button button-secondary homepage-demo-button" href="/demo"><PublicIcon name="play" />Посмотреть демо</Link></div><div className="homepage-final-benefits" role="group" aria-label="Условия старта"><span>✓ Без карты</span><span>✓ 14 дней бесплатно</span><span>✓ Быстрое подключение</span></div></div>
           <div className="homepage-cta-art home-reference-cta-art" aria-hidden="true"><Image alt="" height={1086} sizes="(max-width: 760px) 100vw, 38vw" src={homeCta} width={1448} quality={85} /></div>
         </div>
       </section>

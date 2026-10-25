@@ -24,6 +24,6 @@ describe("public commercial copy evidence contract", () => {
   it("preserves the approved marketplace workflow and a usable product demo destination", () => {
     for (const mechanism of ["Единая очередь обращений", "Статусы и синхронизация", "ИИ-автоответы", "Командная работа"]) expect(marketplaces).toContain(mechanism);
     expect(marketplaces).toContain('href="/demo"');
-    expect(marketplaces).toContain('href="/auth/register?intent=connect-marketplace"');
+    expect(marketplaces).toContain('href={appOrigin + "/auth/register?intent=connect-marketplace"}');
   });
 });

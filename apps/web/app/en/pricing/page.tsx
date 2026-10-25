@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { appOrigin } from "../../../lib/site-config";
 
 import { PublicIcon } from "../../../components/public-site/PublicIcon";
 import { PricingCalculators } from "../../../components/public-site/PricingCalculators";
@@ -196,7 +197,7 @@ export default function PricingPage() {
                   </ul>
                   <Link
                     className={`button ${plan.popular ? "button-primary" : "button-secondary"}`}
-                    href={index === 3 ? "/en/contacts#contact-form" : "/en/auth/register?intent=connect-marketplace"}
+                    href={index === 3 ? "/en/contacts#contact-form" : appOrigin + "/en/auth/register?intent=connect-marketplace"}
                   >
                     {index === 3 ? "Discuss your plan" : "Start free"} <span aria-hidden="true">→</span>
                   </Link>

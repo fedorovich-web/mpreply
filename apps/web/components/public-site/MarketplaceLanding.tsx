@@ -5,7 +5,7 @@ import { JsonLd } from "../seo/JsonLd";
 import { getMarketplaceDetailContent } from "../../lib/marketplace-detail-content";
 import { getMarketplaceDetailContentEn } from "../../lib/marketplace-detail-content-en";
 import type { Locale } from "../../lib/i18n";
-import { getSiteConfig, type MarketplaceConfig, type MarketplaceKey } from "../../lib/site-config";
+import { appOrigin, getSiteConfig, type MarketplaceConfig, type MarketplaceKey } from "../../lib/site-config";
 import { PublicBrandMark } from "./PublicBrandMark";
 import { PublicIcon } from "./PublicIcon";
 import { PublicShell } from "./PublicShell";
@@ -104,8 +104,8 @@ export function MarketplaceLanding({ marketplace, locale = "ru" }: MarketplaceLa
   const marketplacesPath = locale === "en" ? "/en/marketplaces" : "/marketplaces";
   const demoPath = locale === "en" ? "/en/demo" : "/demo";
   const registerPath = locale === "en"
-    ? "/en/auth/register?intent=connect-marketplace"
-    : "/auth/register?intent=connect-marketplace";
+    ? appOrigin + "/en/auth/register?intent=connect-marketplace"
+    : appOrigin + "/auth/register?intent=connect-marketplace";
   const sampleVisual = detailContent.sampleVisual;
   const useApprovedProductCrop = marketplace.key === "wildberries" && sampleVisual === "product";
   const sampleVisualIcon = useApprovedProductCrop ? null : sampleVisualIcons[sampleVisual];

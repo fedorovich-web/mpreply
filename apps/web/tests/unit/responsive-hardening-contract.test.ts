@@ -3,9 +3,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
-const shell = readFileSync(join(root, "styles/dashboard-shell-approved.css"), "utf8");
-const ai = readFileSync(join(root, "styles/dashboard-ai-assistant-approved.css"), "utf8");
-const fidelity = readFileSync(join(root, "styles/dashboard-final-fidelity.css"), "utf8");
+const readStyle = (path: string) => readFileSync(join(root, "styles", path), "utf8").replace(/\r\n/g, "\n");
+const shell = readStyle("dashboard-shell-approved.css");
+const ai = readStyle("dashboard-ai-assistant-approved.css");
+const fidelity = readStyle("dashboard-final-fidelity.css");
 
 describe("authenticated responsive hardening", () => {
   it("keeps mobile topbar controls within the available width", () => {

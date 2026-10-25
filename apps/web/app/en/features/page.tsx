@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { appOrigin } from "../../../lib/site-config";
 
 import { PublicBrandMark } from "../../../components/public-site/PublicBrandMark";
 import { PublicIcon, type PublicIconName } from "../../../components/public-site/PublicIcon";
@@ -191,7 +192,7 @@ export default function FeaturesPage() {
                 MPReply combines the queue, AI-assisted drafting, review controls, assignments, and automation in one seller-team workflow.
               </p>
               <div className="mockup-actions">
-                <Link className="button button-primary" href="/en/auth/register?intent=connect-marketplace">
+                <Link className="button button-primary" href={appOrigin + "/en/auth/register?intent=connect-marketplace"}>
                   Start free <span aria-hidden="true">→</span>
                 </Link>
                 <Link className="button button-secondary" href="/en/demo">

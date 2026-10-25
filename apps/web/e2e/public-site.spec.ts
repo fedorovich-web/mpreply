@@ -1,5 +1,29 @@
 import { expect, test, type Page } from "@playwright/test";
 import { PUBLIC_ROUTES, VISUAL_ROUTES } from "./helpers/public-routes";
+import { appOrigin } from "../lib/site-config";
+
+for (const locale of ["ru", "en"] as const) {
+  test(`public registration links go directly to the workspace (${locale})`, async ({ page }) => {
+    const prefix = locale === "en" ? "/en" : "";
+    const authPrefetches: string[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (url.pathname.includes("/auth/") && url.searchParams.has("_rsc")) authPrefetches.push(url.href);
+    });
+    for (const path of ["/", "/features", "/marketplaces", "/marketplaces/wildberries", "/pricing"]) {
+      await page.goto(prefix + (path === "/" ? "" : path) || "/", { waitUntil: "networkidle" });
+      const links = page.locator('main a[href*="/auth/register"]');
+      expect(await links.count()).toBeGreaterThan(0);
+      for (const link of await links.all()) {
+        await expect(link).toHaveAttribute("href", `${appOrigin}${prefix}/auth/register?intent=connect-marketplace`);
+      }
+    }
+    await mockDemoSession(page);
+    await page.goto(`${prefix}/demo`, { waitUntil: "networkidle" });
+    await expect(page.locator(".app-demo-banner a")).toHaveAttribute("href", `${appOrigin}${prefix}/auth/register`);
+    expect(authPrefetches).toEqual([]);
+  });
+}
 
 for (const route of PUBLIC_ROUTES) {
   test(`${route} renders a valid public page`, async ({ page }) => {
