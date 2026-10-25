@@ -7,27 +7,94 @@ import { ApiError, apiRequest, buildApiQuery } from "../../lib/api/client";
 import { billingCatalogSchema, billingOrderSchema } from "../../lib/api/schemas";
 import type { Locale } from "../../lib/i18n";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { billingMoney } from "./format-money";
 
-const purchaseSchema = z.object({ kind: z.enum(["plan", "addon"]), plan_code: z.string().nullable(), months: z.number().int().nullable(),
-  packs: z.array(z.object({ quantity: z.number().int().positive(), count: z.number().int().positive() })) });
-const storedSchema = z.object({ key: z.string().uuid(), orderId: z.string().uuid().nullable(), purchase: purchaseSchema });
-function readStored(key: string): z.infer<typeof storedSchema> | null {
+const ORDER_POLL_INTERVAL_MS = 5_000;
+const ORDER_POLL_DURATION_MS = 300_000;
+
+const purchaseSchema = z.object({
+  kind: z.enum(["plan", "addon"]),
+  plan_code: z.string().nullable(),
+  months: z.number().int().nullable(),
+  packs: z.array(z.object({
+    quantity: z.number().int().positive(),
+    count: z.number().int().positive(),
+  })),
+});
+const storedSchema = z.object({
+  key: z.string().uuid(),
+  orderId: z.string().uuid().nullable(),
+  purchase: purchaseSchema,
+});
+
+function readStoredPurchase(storageKey: string): z.infer<typeof storedSchema> | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
     const result = storedSchema.safeParse(JSON.parse(raw));
     return result.success ? result.data : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 type Purchase = z.infer<typeof purchaseSchema>;
 type Catalog = z.infer<typeof billingCatalogSchema>;
-const planNames: Record<Locale, Record<string, string>> = { ru: { start: "Старт", team: "Команда", business: "Бизнес" }, en: { start: "Start", team: "Team", business: "Business" } };
-export function billingMoney(minor: number, locale: Locale) { return new Intl.NumberFormat(locale === "ru" ? "ru-RU" : "en-US", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(minor / 100); }
+type CheckoutFormProps = {
+  catalog: Catalog;
+  organizationId: string;
+  userId: string;
+  locale: Locale;
+};
+
+const planNames: Record<Locale, Record<string, string>> = {
+  ru: { start: "Старт", team: "Команда", business: "Бизнес" },
+  en: { start: "Start", team: "Team", business: "Business" },
+};
+
+function saveStoredPurchase(storageKey: string, purchase: z.infer<typeof storedSchema>): void {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(purchase));
+  } catch {
+    return;
+  }
+}
+
+function clearStoredPurchase(storageKey: string): void {
+  try {
+    localStorage.removeItem(storageKey);
+  } catch {
+    return;
+  }
+}
+
+function initialPurchase(catalog: Catalog, kind: Purchase["kind"] = "plan"): Purchase {
+  if (kind === "addon") {
+    return {
+      kind,
+      plan_code: null,
+      months: null,
+      packs: [{ quantity: catalog.packs[0]?.quantity ?? 50, count: 1 }],
+    };
+  }
+  return {
+    kind,
+    plan_code: catalog.plans[0]?.code ?? "start",
+    months: 1,
+    packs: [],
+  };
+}
 
 export function BillingCheckout() {
   const { activeOrganization, locale, user } = useWorkspace();
-  const query = useQuery({ queryKey: ["billing", "catalog", activeOrganization.id], queryFn: () => apiRequest(buildApiQuery("/api/billing/catalog", { organization_id: activeOrganization.id }), billingCatalogSchema), retry: false });
+  const query = useQuery({
+    queryKey: ["billing", "catalog", activeOrganization.id],
+    queryFn: () => apiRequest(
+      buildApiQuery("/api/billing/catalog", { organization_id: activeOrganization.id }),
+      billingCatalogSchema,
+    ),
+    retry: false,
+  });
   const ru = locale === "ru";
   if (query.isPending) return <p role="status">{ru ? "Проверяем доступность оплаты…" : "Checking payment availability…"}</p>;
   if (query.error) return <p role="alert">{ru ? "Не удалось получить условия оплаты." : "Could not load payment options."} <button type="button" className="button button-secondary" onClick={() => void query.refetch()}>{ru ? "Повторить" : "Retry"}</button></p>;
@@ -37,36 +104,57 @@ export function BillingCheckout() {
   return <CheckoutForm key={`${user.id}:${activeOrganization.id}`} catalog={query.data} organizationId={activeOrganization.id} userId={user.id} locale={locale} />;
 }
 
-function CheckoutForm({ catalog, organizationId, userId, locale }: { catalog: Catalog; organizationId: string; userId: string; locale: Locale }) {
+function CheckoutForm({ catalog, organizationId, userId, locale }: CheckoutFormProps) {
   const ru = locale === "ru";
   const cache = useQueryClient();
   const storageKey = `mpreply.billing.purchase.${userId}.${organizationId}`;
-  const [saved] = useState(() => readStored(storageKey));
+  const [saved] = useState(() => readStoredPurchase(storageKey));
   const [started] = useState(() => Date.now());
-  const [purchase, setPurchase] = useState<Purchase>(saved?.purchase ?? { kind: "plan", plan_code: catalog.plans[0]?.code ?? "start", months: 1, packs: [] });
+  const [purchase, setPurchase] = useState<Purchase>(saved?.purchase ?? initialPurchase(catalog));
   const [orderId, setOrderId] = useState<string | null>(saved?.orderId ?? null);
   const [locked, setLocked] = useState(Boolean(saved));
-  const key = useRef<string | null>(saved?.key ?? null);
+  const idempotencyKey = useRef<string | null>(saved?.key ?? null);
   const pollingStarted = useRef(started);
   const save = (order: string | null) => {
-    try { localStorage.setItem(storageKey, JSON.stringify({ key: key.current, orderId: order, purchase })); }
-    catch {   }
+    if (!idempotencyKey.current) return;
+    saveStoredPurchase(storageKey, { key: idempotencyKey.current, orderId: order, purchase });
   };
   const create = useMutation({
     mutationFn: () => {
-      key.current ??= crypto.randomUUID(); setLocked(true); save(orderId);
-      return apiRequest("/api/billing/orders", billingOrderSchema, { method: "POST", body: { organization_id: organizationId, idempotency_key: key.current, ...purchase } });
+      idempotencyKey.current ??= crypto.randomUUID();
+      setLocked(true);
+      save(orderId);
+      return apiRequest("/api/billing/orders", billingOrderSchema, {
+        method: "POST",
+        body: { organization_id: organizationId, idempotency_key: idempotencyKey.current, ...purchase },
+      });
     },
-    onSuccess: (order) => { setOrderId(order.id); save(order.id); pollingStarted.current = Date.now(); },
+    onSuccess: (order) => {
+      setOrderId(order.id);
+      save(order.id);
+      pollingStarted.current = Date.now();
+    },
     onError: (error) => {
       if (!(error instanceof ApiError) || !error.orderNotCreated) return;
-      key.current = null; setLocked(false);
-      try { localStorage.removeItem(storageKey); } catch {   }
+      idempotencyKey.current = null;
+      setLocked(false);
+      clearStoredPurchase(storageKey);
     },
   });
-  const status = useQuery({ queryKey: ["billing", "order", organizationId, orderId], enabled: orderId !== null,
-    queryFn: () => apiRequest(buildApiQuery(`/api/billing/orders/${orderId}`, { organization_id: organizationId }), billingOrderSchema), retry: false,
-    refetchInterval: (query) => query.state.error || ["paid", "failed"].includes(query.state.data?.state ?? "") || Date.now() - pollingStarted.current > 300000 ? false : 5000 });
+  const status = useQuery({
+    queryKey: ["billing", "order", organizationId, orderId],
+    enabled: orderId !== null,
+    queryFn: () => apiRequest(
+      buildApiQuery(`/api/billing/orders/${orderId}`, { organization_id: organizationId }),
+      billingOrderSchema,
+    ),
+    retry: false,
+    refetchInterval: (query) => {
+      const terminal = ["paid", "failed"].includes(query.state.data?.state ?? "");
+      const expired = Date.now() - pollingStarted.current > ORDER_POLL_DURATION_MS;
+      return query.state.error || terminal || expired ? false : ORDER_POLL_INTERVAL_MS;
+    },
+  });
   const order = status.data ?? create.data;
   const paid = order?.state === "paid";
   useEffect(() => {
@@ -77,7 +165,13 @@ function CheckoutForm({ catalog, organizationId, userId, locale }: { catalog: Ca
   const selectedPlan = catalog.plans.find((plan) => plan.code === purchase.plan_code);
   const amount = purchase.kind === "plan" ? (purchase.months === 12 ? selectedPlan?.amount_year_minor : selectedPlan?.amount_month_minor) ?? 0
     : purchase.packs.reduce((sum, row) => sum + (catalog.packs.find((pack) => pack.quantity === row.quantity)?.amount_minor ?? 0) * row.count, 0);
-  const nextPurchase = () => { key.current = null; setLocked(false); setOrderId(null); create.reset(); try { localStorage.removeItem(storageKey); } catch {   } };
+  const nextPurchase = () => {
+    idempotencyKey.current = null;
+    setLocked(false);
+    setOrderId(null);
+    create.reset();
+    clearStoredPurchase(storageKey);
+  };
   return <section className="billing-section" aria-labelledby="billing-checkout-title">
     <h2 id="billing-checkout-title">{ru ? "Оплата тарифа и ответов" : "Buy a plan or replies"}</h2>
     <p>{ru ? "Каждая покупка оплачивается вручную. Автосписаний нет. Другой тариф начнёт действовать после текущего оплаченного периода." : "Each purchase is paid manually, without automatic charges. A different plan starts after your current paid period."}</p>
@@ -85,8 +179,8 @@ function CheckoutForm({ catalog, organizationId, userId, locale }: { catalog: Ca
       <fieldset disabled={locked || create.isPending}>
         <legend>{ru ? "Что оплачиваем" : "Purchase"}</legend>
         <label>{ru ? "Покупка" : "Type"}<select value={purchase.kind} onChange={(event) => setPurchase(event.target.value === "plan"
-          ? { kind: "plan", plan_code: catalog.plans[0]?.code ?? "start", months: 1, packs: [] }
-          : { kind: "addon", plan_code: null, months: null, packs: [{ quantity: catalog.packs[0]?.quantity ?? 50, count: 1 }] })}>
+          ? initialPurchase(catalog)
+          : initialPurchase(catalog, "addon"))}>
           <option value="plan">{ru ? "Тариф" : "Plan"}</option><option value="addon">{ru ? "Дополнительные ответы" : "Extra replies"}</option>
         </select></label>
         {purchase.kind === "plan" ? <>

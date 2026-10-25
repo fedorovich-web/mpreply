@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BillingCheckout } from "../../components/billing/BillingCheckout";
 
@@ -11,9 +11,32 @@ const order = { id: "44444444-4444-4444-8444-444444444444", organization_id: wor
   state: "review_required", payment_url: null, monthly_credits: 300, addon_credits: 0, created_at: "2026-10-01T12:00:00Z", paid_at: null, last_error: "lava_unavailable" };
 function show() { render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><BillingCheckout /></QueryClientProvider>); }
 beforeEach(() => { localStorage.clear(); workspace.user.status = "active"; workspace.activeOrganization.current_user_role = "owner"; });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe("manual Lava purchases", () => {
+  it("reuses the in-memory key after an uncertain response when browser storage is unavailable", async () => {
+    const attempts: string[] = [];
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Storage is unavailable", "QuotaExceededError");
+    });
+    vi.stubGlobal("fetch", vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method === "POST") {
+        attempts.push(JSON.parse(init.body as string).idempotency_key);
+        return Promise.resolve(new Response(JSON.stringify({ detail: "Upstream unavailable" }), { status: 502 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify(catalog)));
+    }));
+    show();
+    fireEvent.click(await screen.findByRole("button", { name: "Подготовить оплату" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Проверить платёж" }));
+    await waitFor(() => expect(attempts).toHaveLength(2));
+    expect(attempts[0]).toMatch(/^[\da-f-]{36}$/);
+    expect(attempts[1]).toBe(attempts[0]);
+    expect(screen.getByRole("combobox", { name: "Покупка" })).toBeDisabled();
+  });
   it("retains its locked key after a rejection without explicit server proof", async () => {
     const fetch = vi.fn((_url: string, init?: RequestInit) => Promise.resolve(init?.method === "POST"
       ? new Response(JSON.stringify({ detail: "Upstream unavailable" }), { status: 502 })
