@@ -112,6 +112,7 @@ jobs:
                   app/tests/test_marketplace_ingest_postgres.py
                   app/tests/test_marketplace_account_limits_postgres.py
                   app/tests/test_product_research_postgres.py
+                  app/tests/test_throttled_reply_recovery.py::test_postgres_throttle_recovery_preserves_authorization_and_publication_safety
             - name: Require all PostgreSQL integration tests to execute
               working-directory: apps/api
               run: |

@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.time import utc
 from app.models.user import User
 from app.schemas.billing import (
     BillingOverviewResponse,
@@ -15,7 +16,7 @@ from app.schemas.billing import (
 )
 from app.services.organization_service import OrganizationService
 from app.services.plan_limit_service import PlanLimitService
-from app.services.reply_credit_service import ReplyCreditService, utc
+from app.services.reply_credit_service import ReplyCreditService
 
 _READ_ROLES = {"owner", "admin", "manager", "viewer"}
 

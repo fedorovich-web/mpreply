@@ -13,10 +13,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth_tokens import digest_auth_token, new_auth_token
 from app.core.config import Settings, get_settings
 from app.core.security import CredentialEncryptionError, CredentialService
+from app.core.time import utc
 from app.models.oauth_state import OAuthState
 from app.models.user import User
 from app.providers.yandex_id import YandexIDError, pkce_challenge
-from app.services.reply_credit_service import utc
 
 
 @dataclass(frozen=True, slots=True)
