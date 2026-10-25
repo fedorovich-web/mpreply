@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal, Self, cast
+from typing import Annotated, Literal, Self, cast
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationInfo, field_validator, model_validator
+from pydantic.json_schema import SkipJsonSchema
 
 AutomationMode = Literal["auto", "semi_auto"]
 AutomationAppliesTo = Literal["all", "review", "question", "chat"]
 MarketplaceName = Literal["wildberries", "ozon", "yandex_market", "avito"]
+AutomationRuleName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=255)]
 _LIST_ITEM_MAX_LENGTHS = {
     "product_ids": 36,
     "category_ids": 255,
@@ -23,7 +25,7 @@ class AutomationRuleCreateRequest(BaseModel):
 
     organization_id: UUID
     marketplace_account_id: UUID | None = None
-    name: str = Field(min_length=2, max_length=255)
+    name: AutomationRuleName
     priority: int = Field(default=100, ge=0, le=10000)
     is_enabled: bool = True
     mode: AutomationMode = "auto"
@@ -65,26 +67,49 @@ class AutomationRuleCreateRequest(BaseModel):
 class AutomationRuleUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str | None = Field(default=None, min_length=2, max_length=255)
-    priority: int | None = Field(default=None, ge=0, le=10000)
-    is_enabled: bool | None = None
-    mode: AutomationMode | None = None
-    applies_to: AutomationAppliesTo | None = None
+    name: AutomationRuleName | SkipJsonSchema[None] = None
+    priority: int | SkipJsonSchema[None] = Field(default=None, ge=0, le=10000)
+    is_enabled: bool | SkipJsonSchema[None] = None
+    mode: AutomationMode | SkipJsonSchema[None] = None
+    applies_to: AutomationAppliesTo | SkipJsonSchema[None] = None
     marketplace_account_id: UUID | None = None
     marketplace: MarketplaceName | None = None
     min_rating: int | None = Field(default=None, ge=1, le=5)
     max_rating: int | None = Field(default=None, ge=1, le=5)
-    product_ids: list[str] | None = Field(default=None, max_length=500)
-    category_ids: list[str] | None = Field(default=None, max_length=500)
-    include_keywords: list[str] | None = Field(default=None, max_length=100)
-    exclude_keywords: list[str] | None = Field(default=None, max_length=100)
-    sensitive_topics: list[str] | None = Field(default=None, max_length=100)
+    product_ids: list[str] | SkipJsonSchema[None] = Field(default=None, max_length=500)
+    category_ids: list[str] | SkipJsonSchema[None] = Field(default=None, max_length=500)
+    include_keywords: list[str] | SkipJsonSchema[None] = Field(default=None, max_length=100)
+    exclude_keywords: list[str] | SkipJsonSchema[None] = Field(default=None, max_length=100)
+    sensitive_topics: list[str] | SkipJsonSchema[None] = Field(default=None, max_length=100)
     daily_limit: int | None = Field(default=None, ge=1, le=100000)
     hourly_limit: int | None = Field(default=None, ge=1, le=10000)
-    require_manual_review_on_flags: bool | None = None
-    stop_on_missing_product_context: bool | None = None
-    stop_on_low_confidence: bool | None = None
-    confidence_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+    require_manual_review_on_flags: bool | SkipJsonSchema[None] = None
+    stop_on_missing_product_context: bool | SkipJsonSchema[None] = None
+    stop_on_low_confidence: bool | SkipJsonSchema[None] = None
+    confidence_threshold: float | SkipJsonSchema[None] = Field(default=None, ge=0.0, le=1.0)
+
+    @field_validator(
+        "name",
+        "priority",
+        "is_enabled",
+        "mode",
+        "applies_to",
+        "product_ids",
+        "category_ids",
+        "include_keywords",
+        "exclude_keywords",
+        "sensitive_topics",
+        "require_manual_review_on_flags",
+        "stop_on_missing_product_context",
+        "stop_on_low_confidence",
+        "confidence_threshold",
+        mode="before",
+    )
+    @classmethod
+    def reject_null_for_required_values(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("Field cannot be null")
+        return value
 
     @field_validator(
         "product_ids",
@@ -96,8 +121,6 @@ class AutomationRuleUpdateRequest(BaseModel):
     )
     @classmethod
     def normalize_string_lists(cls, value: object, info: ValidationInfo) -> object:
-        if value is None:
-            return None
         return _normalize_string_list(value, field_name=_required_field_name(info))
 
     @model_validator(mode="after")
