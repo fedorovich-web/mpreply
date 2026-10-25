@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { appOrigin } from "../../lib/site-config";
 
 import { PublicIcon, type PublicIconName } from "../../components/public-site/PublicIcon";
 import { PublicShell } from "../../components/public-site/PublicShell";
@@ -182,7 +183,7 @@ export default function FeaturesPage() {
                 MPReply объединяет все инструменты для быстрой, удобной и профессиональной обработки отзывов, вопросов и сообщений на маркетплейсах.
               </p>
               <div className="mockup-actions">
-                <Link className="button button-primary" href="/auth/register?intent=connect-marketplace">
+                <Link className="button button-primary" href={appOrigin + "/auth/register?intent=connect-marketplace"}>
                   Попробовать бесплатно <span aria-hidden="true">→</span>
                 </Link>
                 <Link className="button button-secondary" href="/demo">

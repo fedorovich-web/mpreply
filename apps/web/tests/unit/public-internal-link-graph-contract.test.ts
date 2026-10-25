@@ -11,7 +11,7 @@ import PricingPage from "../../app/pricing/page";
 import ContactsPage from "../../app/contacts/page";
 import HelpPage from "../../app/help/page";
 import { getHelpContent } from "../../lib/help-content";
-import { getSiteConfig } from "../../lib/site-config";
+import { appOrigin, getSiteConfig } from "../../lib/site-config";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-nonce": "test-nonce" }) }));
@@ -44,7 +44,7 @@ describe("public internal link graph", () => {
     for (const Page of [HomePage, FeaturesPage, MarketplacesPage]) {
       const document = await page(Page);
       expect(destinations(document, "main a")).toContain("/demo");
-      expect(destinations(document, "main a")).toContain("/auth/register?intent=connect-marketplace");
+      expect(destinations(document, "main a")).toContain(`${appOrigin}/auth/register?intent=connect-marketplace`);
     }
     expect(destinations(await page(PricingPage), "main a")).toContain("/contacts#contact-form");
     expect((await page(ContactsPage)).querySelector("#contact-form")).not.toBeNull();

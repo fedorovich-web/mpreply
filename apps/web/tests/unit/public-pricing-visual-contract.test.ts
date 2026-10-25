@@ -27,7 +27,7 @@ describe("approved pricing visual", () => {
     expect(pricing).toContain('name: "Корпоративный"');
     expect(englishPricing).toContain('name: "Corporate"');
     expect(pricing).toContain('price: "По запросу"');
-    expect(pricing).toContain('index === 3 ? "/contacts#contact-form" : "/auth/register?intent=connect-marketplace"');
+    expect(pricing).toContain('index === 3 ? "/contacts#contact-form" : appOrigin + "/auth/register?intent=connect-marketplace"');
     expect(css).toContain("grid-template-columns: repeat(4, minmax(0, 1fr))");
     expect(css).toContain(".pricing-plan-card-icon");
     expect(css).toContain(".pricing-card-popular");
