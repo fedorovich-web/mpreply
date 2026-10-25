@@ -384,6 +384,50 @@ class _Runner:
         )
 
 
+@pytest.mark.asyncio
+async def test_manual_sync_starts_each_stream_with_current_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    current = NOW
+
+    class _Clock:
+        @staticmethod
+        def now(tz: object = None) -> datetime:
+            assert tz is UTC
+            return current
+
+    class _AdvancingRunner(_Runner):
+        def __init__(self) -> None:
+            super().__init__()
+            self.started_at: list[datetime] = []
+
+        async def run_stream(self, state_id: UUID, owner: str, now: datetime) -> StreamRunResult:
+            nonlocal current
+            self.started_at.append(now)
+            result = await super().run_stream(state_id, owner, now)
+            current += timedelta(minutes=6)
+            return result
+
+    monkeypatch.setattr("app.services.sync_service.datetime", _Clock)
+    account = pagination_account()
+    states = [pagination_state(account), pagination_state(account)]
+    states[1].stream = MarketplaceStream.QUESTIONS.value
+    session = _ManualSession(account, states)
+    runner = _AdvancingRunner()
+    service = MarketplaceSyncService(
+        cast(AsyncSession, session),
+        registry=cast(MarketplaceAdapterRegistry, _ManualRegistry()),
+        runner=cast(ScheduledSyncService, runner),
+    )
+    actor = User(id=uuid4(), email="synthetic@example.com", password_hash="hash", status="active")
+
+    result = await service.request_sync(actor=actor, account_id=account.id)
+
+    assert result.status == "success"
+    assert runner.started_at == [NOW, NOW + timedelta(minutes=6)]
+    job = next(item for item in session.added if isinstance(item, SyncJob))
+    assert job.started_at == NOW
+    assert job.finished_at == NOW + timedelta(minutes=12)
+
+
 class _ContendedRunner:
     def __init__(self, states: list[MarketplaceSyncState], *, every_stream: bool) -> None:
         self.calls: list[tuple[UUID, str]] = []

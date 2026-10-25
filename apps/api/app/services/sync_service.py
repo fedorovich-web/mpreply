@@ -126,7 +126,7 @@ class MarketplaceSyncService:
 
         runner = self.runner or ScheduledSyncService(self.session, registry=registry)
         owner = f"manual-sync:{job.id}"
-        results = [await runner.run_stream(state.id, owner, now) for state in states]
+        results = [await runner.run_stream(state.id, owner, datetime.now(UTC)) for state in states]
         stats = _sync_stats(results)
         first_failure = next((result for result in results if result.error_code is not None), None)
         lease_contended = any(not result.acquired for result in results)
