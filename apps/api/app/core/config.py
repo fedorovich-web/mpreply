@@ -95,6 +95,19 @@ class Settings(BaseSettings):
     groq_base_url: str = "https://api.groq.com/openai/v1"
     groq_default_model: str = "qwen/qwen3.8-27b"
     groq_timeout_seconds: float = 45.0
+    ai_reply_provider: Literal["groq", "openrouter"] = "groq"
+    openrouter_api_key: SecretStr = Field(default=SecretStr(""))
+    openrouter_timeout_seconds: float = Field(default=45.0, gt=0.0, le=120.0, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def validate_reply_provider(self) -> Self:
+        if self.ai_reply_provider == "openrouter":
+            key = self.openrouter_api_key.get_secret_value()
+            if (not 16 <= len(key) <= 1024 or not key.isascii() or any(char.isspace() for char in key)
+                    or key.lower().startswith(("replace-", "set_in_", "your-"))):
+                raise ValueError("OpenRouter requires a non-placeholder OPENROUTER_API_KEY")
+        return self
+
     wb_service_secret: SecretStr = Field(default=SecretStr(""))
     wb_integration_mode: Literal["cloud", "self_hosted"] = "cloud"
     wb_self_hosted_seller_hash: str = Field(default="", pattern=r"^(?:[0-9a-f]{64})?$")

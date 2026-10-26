@@ -14,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import conflict
 from app.models.product import Product
-from app.providers.groq import GroqProvider, GroqProviderError, LLMUsage
+from app.providers.groq import GroqProvider, GroqProviderError
+from app.providers.llm import LLMUsage
 
 RESEARCH_KEY = "web_research"
 COMPATIBILITY_KEY = "web_compatibility_research"

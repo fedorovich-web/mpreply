@@ -15,7 +15,8 @@ from app.models.audit_log import AuditLog
 from app.models.customer_message import CustomerMessage
 from app.models.organization import OrganizationUser
 from app.models.product import Product
-from app.providers.groq import GroqProvider, GroqProviderError, LLMCompletion, LLMUsage
+from app.providers.groq import GroqProvider, GroqProviderError
+from app.providers.llm import LLMCompletion, LLMUsage
 from app.services.ai_service import AIService
 from app.services.demo_workspace_service import ensure_demo_workspace
 from app.services.reply_credit_service import ReplyCreditService
