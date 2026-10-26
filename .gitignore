@@ -63,3 +63,13 @@ apps/web/lighthouse-report/
 # Release evidence and handoff staging
 .handoff/
 apps/web/next-env.d.ts
+/.handoff/
+/.codex/
+/DEVELOPMENT_EVIDENCE/
+/OPERATOR_RUNBOOK_0.1.104*.md
+/PATCH_README.md
+/docs/qa/dokploy-*
+*.bundle
+*.dump
+*.sqlite
+*.sqlite3
