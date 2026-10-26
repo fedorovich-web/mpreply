@@ -1,5 +1,15 @@
 .DS_Store
 Thumbs.db
+/.handoff/
+/.codex/
+/DEVELOPMENT_EVIDENCE/
+/OPERATOR_RUNBOOK_0.1.104*.md
+/PATCH_README.md
+/docs/qa/dokploy-*
+*.bundle
+*.dump
+*.sqlite
+*.sqlite3
 
 .env
 .env.*

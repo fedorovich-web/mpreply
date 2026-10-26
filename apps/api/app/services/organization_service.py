@@ -115,7 +115,7 @@ class OrganizationService:
             OrganizationUser.organization_id == organization_id,
             OrganizationUser.user_id == user_id,
             OrganizationUser.status == "active",
-        )
+        ).execution_options(populate_existing=True)
         result = await self.session.execute(stmt)
         membership = result.scalar_one_or_none()
         if membership is None:

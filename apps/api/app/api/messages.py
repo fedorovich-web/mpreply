@@ -81,6 +81,7 @@ async def update_message(
         message_id=message_id,
         status=payload.status,
         assigned_to=payload.assigned_to,
+        assigned_to_supplied="assigned_to" in payload.model_fields_set,
         priority=payload.priority,
     )
     await session.commit()

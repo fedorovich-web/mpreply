@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
-from app.core.errors import bad_request, not_found
+from app.core.errors import bad_request, conflict, not_found
 from app.models.customer_message import CustomerMessage
 from app.models.organization import OrganizationUser
 from app.models.product import Product
@@ -17,27 +17,8 @@ from app.services.organization_service import OrganizationService
 
 _ALLOWED_READ_ROLES = {"owner", "admin", "manager", "viewer"}
 _ALLOWED_WRITE_ROLES = {"owner", "admin", "manager"}
-_ALLOWED_STATUSES = {
-    "new",
-    "imported",
-    "needs_reply",
-    "auto_rule_matched",
-    "auto_reply_pending",
-    "ai_draft_ready",
-    "safety_blocked",
-    "needs_manual_check",
-    "waiting_review",
-    "approved",
-    "sending",
-    "answered",
-    "auto_reply_sent",
-    "failed",
-    "blocked_by_marketplace",
-    "duplicate",
-    "skipped",
-    "archived",
-    "escalated",
-}
+_MANUAL_STATUSES = {"archived", "escalated"}
+_PROTECTED_STATUSES = {"approved", "auto_reply_pending", "sending", "answered", "auto_reply_sent"}
 _ALLOWED_PRIORITIES = {"low", "normal", "high", "urgent"}
 
 
@@ -134,9 +115,10 @@ class MessageService:
         message_id: UUID,
         status: str | None = None,
         assigned_to: UUID | None = None,
+        assigned_to_supplied: bool = False,
         priority: str | None = None,
     ) -> CustomerMessage:
-        message, _ = await self.get_message(actor=actor, message_id=message_id)
+        message, _ = await self.get_message(actor=actor, message_id=message_id, for_update=True)
         await self.organization_service.require_membership_role(
             organization_id=message.organization_id,
             user_id=actor.id,
@@ -144,8 +126,10 @@ class MessageService:
         )
         changed: list[str] = []
         if status is not None:
-            if status not in _ALLOWED_STATUSES:
+            if status not in _MANUAL_STATUSES:
                 raise bad_request("Unsupported message status")
+            if message.status in _PROTECTED_STATUSES:
+                raise conflict("Message is already handled or is being sent")
             message.status = status
             changed.append("status")
         if assigned_to is not None:
@@ -158,6 +142,7 @@ class MessageService:
             )
             if membership_result.scalar_one_or_none() is None:
                 raise bad_request("Assigned user must be an active organization member")
+        if assigned_to_supplied or assigned_to is not None:
             message.assigned_to = assigned_to
             changed.append("assigned_to")
         if priority is not None:
