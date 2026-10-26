@@ -14,7 +14,8 @@ from app.adapters.base import MarketplacePage, NormalizedMessage, NormalizedProd
 from app.models.enums import MessageType
 from app.models.marketplace_account import MarketplaceAccount
 from app.models.product import Product
-from app.providers.groq import GroqProvider, LLMUsage, ProductResearch
+from app.providers.groq import GroqProvider, ProductResearch
+from app.providers.llm import LLMUsage
 from app.services.marketplace_ingest_service import MarketplaceIngestService
 from app.services.product_research_service import ProductResearchService
 from app.tests.test_automatic_drafts import seed, synthetic_encryption_key

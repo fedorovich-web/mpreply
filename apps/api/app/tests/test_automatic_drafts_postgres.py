@@ -25,7 +25,8 @@ from app.models.marketplace_account import MarketplaceAccount
 from app.models.organization import Organization, OrganizationUser
 from app.models.reply import Reply
 from app.models.user import User
-from app.providers.groq import GroqProvider, LLMCompletion, LLMUsage, ProductResearch
+from app.providers.groq import GroqProvider, ProductResearch
+from app.providers.llm import LLMCompletion, LLMUsage
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService
 from app.services.quota_service import QuotaDecision, QuotaService

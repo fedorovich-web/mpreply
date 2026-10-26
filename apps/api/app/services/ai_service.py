@@ -27,8 +27,11 @@ from app.models.reply import Reply
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.providers.groq import GroqProvider, GroqProviderError
+from app.providers.llm import LLMUsage
+from app.providers.openrouter import OpenRouterProvider, OpenRouterProviderError
 from app.safety.safety_gate import SafetyDecision, SafetyGate, SafetyInput
 from app.services.audit_service import AuditService
+from app.services.llm_route_resolver import select_reply_model
 from app.services.message_service import MessageService
 from app.services.organization_service import OrganizationService
 from app.services.product_research_service import ProductResearchService, compatibility_models, research_context
@@ -73,6 +76,15 @@ def _sum_usage(first: int | None, second: int | None) -> int | None:
     return None if first is None and second is None else (first or 0) + (second or 0)
 
 
+def _usage_metadata(usage: LLMUsage) -> dict[str, object]:
+    return {
+        "prompt_tokens": usage.prompt_tokens,
+        "completion_tokens": usage.completion_tokens,
+        "total_tokens": usage.total_tokens,
+        "cost": str(usage.cost) if usage.cost is not None else None,
+    }
+
+
 class AIService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -90,7 +102,7 @@ class AIService:
         operation_key: UUID,
         tone: ResponseTone = "neutral",
         temperature: float = 0.3,
-        max_tokens: int = 600,
+        max_tokens: int | None = None,
         brand_rules: str | None = None,
         knowledge_base: str | None = None,
         automatic_job: tuple[UUID, UUID] | None = None,
@@ -102,6 +114,9 @@ class AIService:
         )
         if not message.customer_text.strip():
             raise bad_request("Message has no customer text")
+        provider_name = get_settings().ai_reply_provider
+        if max_tokens is None:
+            max_tokens = 2048 if provider_name == "openrouter" else 600
         request_hash = sha256(json.dumps({
             "actor_id": str(actor_id), "message_id": str(message_id), "tone": tone,
             "temperature": temperature, "max_tokens": max_tokens,
@@ -136,17 +151,17 @@ class AIService:
                 error_code = "generation_cancelled"
             elif isinstance(exc, TimeoutError):
                 error_code = "generation_timeout"
-            elif isinstance(exc.__cause__, GroqProviderError):
+            elif isinstance(exc.__cause__, (GroqProviderError, OpenRouterProviderError)):
                 error_code = exc.__cause__.error_code
             elif isinstance(exc.__cause__, ModelOutputError):
-                error_code = "groq_malformed_response"
+                error_code = f"{provider_name}_malformed_response"
             elif isinstance(exc, HTTPException) and exc.status_code == 409:
                 error_code = "generation_conflict"
             await self.session.rollback()
             await self.credits.release(organization_id=org_id, operation_id=operation_id, reason=error_code)
             await self.audit.write(
                 action="ai_draft.failed", entity_type="customer_message", organization_id=org_id,
-                actor_user_id=actor_id, entity_id=str(message_id), metadata={"provider": "groq", "error_code": error_code},
+                actor_user_id=actor_id, entity_id=str(message_id), metadata={"provider": provider_name, "error_code": error_code},
             )
             await self.session.commit()
             if isinstance(exc, TimeoutError):
@@ -180,12 +195,23 @@ class AIService:
         organization_id = message.organization_id
 
         settings = get_settings()
-        provider = GroqProvider(
+        try:
+            routed_model = select_reply_model(message.type, message.rating)
+        except ValueError as exc:
+            raise bad_request("Message type is not supported for AI reply generation") from exc
+        research_provider = GroqProvider(
             api_key=settings.groq_api_key.get_secret_value(), base_url=settings.groq_base_url,
             timeout_seconds=settings.groq_timeout_seconds,
         )
+        provider_name = settings.ai_reply_provider
+        if provider_name == "openrouter" and routed_model == "anthropic/claude-sonnet-5.5" and max_tokens <= 1024:
+            raise bad_request("This reply model requires a token limit greater than 1024")
+        provider = (OpenRouterProvider(
+            api_key=settings.openrouter_api_key.get_secret_value(), timeout_seconds=settings.openrouter_timeout_seconds,
+        ) if provider_name == "openrouter" else research_provider)
+        selected_model = routed_model if provider_name == "openrouter" else settings.groq_default_model
         target_models = compatibility_models(message.customer_text)
-        research = await ProductResearchService(self.session).ensure(product=product, provider=provider, models=target_models)
+        research = await ProductResearchService(self.session).ensure(product=product, provider=research_provider, models=target_models)
         if automatic_job is not None:
             await self._require_automatic_generation(automatic_job, message, actor)
         prompt = build_marketplace_reply_prompt(
@@ -201,12 +227,12 @@ class AIService:
         await self.session.commit()
         try:
             completion = await provider.complete(
-                model=settings.groq_default_model,
+                model=selected_model,
                 messages=prompt.messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-        except GroqProviderError as exc:
+        except (GroqProviderError, OpenRouterProviderError) as exc:
             raise bad_gateway("AI provider request failed") from exc
 
         try:
@@ -263,7 +289,7 @@ class AIService:
         draft = AIDraft(
             organization_id=message.organization_id,
             message_id=message.id,
-            provider="groq",
+            provider=provider_name,
             model=completion.model,
             prompt_version=prompt.version,
             prompt_input_hash=prompt.input_hash,
@@ -295,15 +321,18 @@ class AIService:
             actor_user_id=actor.id,
             entity_id=str(message.id),
             metadata={
-                "provider": "groq",
+                "provider": provider_name,
                 "model": completion.model,
+                "selected_model": selected_model,
+                "completion_usage": _usage_metadata(completion.usage),
                 "prompt_version": prompt.version,
                 "latency_ms": completion.latency_ms,
                 "safety_decision": safety.decision.value,
                 "safety_flags": flags,
                 "safety_reasons": safety.reasons,
-                "product_research": {"verified": research.verified, "cached": research.cached,
-                                     "error_code": research.error_code, "latency_ms": research.latency_ms},
+                "product_research": {"provider": "groq", "verified": research.verified, "cached": research.cached,
+                                     "error_code": research.error_code, "latency_ms": research.latency_ms,
+                                     "usage": _usage_metadata(research.usage)},
             },
         )
         await self.session.flush()
