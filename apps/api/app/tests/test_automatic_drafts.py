@@ -23,7 +23,8 @@ from app.models.product import Product
 from app.models.reply import Reply
 from app.models.reply_credit import ReplyCreditOperation
 from app.models.user import User
-from app.providers.groq import GroqProvider, GroqProviderError, LLMCompletion, LLMUsage, ProductResearch
+from app.providers.groq import GroqProvider, GroqProviderError, ProductResearch
+from app.providers.llm import LLMCompletion, LLMUsage
 from app.services.ai_service import AIService
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.manual_reply_service import ManualReplyService

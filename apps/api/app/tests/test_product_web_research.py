@@ -16,7 +16,8 @@ from app.models.customer_message import CustomerMessage
 from app.models.organization import OrganizationUser
 from app.models.product import Product
 from app.models.user import User
-from app.providers.groq import GroqProvider, GroqProviderError, LLMCompletion, LLMUsage, ProductResearch, public_source_url
+from app.providers.groq import GroqProvider, GroqProviderError, ProductResearch, public_source_url
+from app.providers.llm import LLMCompletion, LLMUsage
 from app.services.ai_service import AIService
 from app.services.automatic_draft_service import AutomaticDraftService
 from app.services.demo_workspace_service import ensure_demo_workspace

@@ -14,24 +14,10 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from app.providers.llm import LLMCompletion, LLMUsage, reply_response_format
+
 _RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 _MAX_RETRY_DELAY_SECONDS = 8.0
-
-
-@dataclass(frozen=True)
-class LLMUsage:
-    prompt_tokens: int | None
-    completion_tokens: int | None
-    total_tokens: int | None
-    cost: Decimal | None
-
-
-@dataclass(frozen=True)
-class LLMCompletion:
-    text: str
-    model: str
-    usage: LLMUsage
-    latency_ms: int
 
 
 @dataclass(frozen=True)
@@ -223,23 +209,7 @@ class GroqProvider:
 
     @staticmethod
     def _response_format() -> dict[str, object]:
-        return {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "marketplace_reply",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "answer": {"type": "string", "minLength": 1},
-                        "confidence_score": {"type": "number", "minimum": 0, "maximum": 1},
-                        "safety_flags": {"type": "array", "items": {"type": "string"}},
-                    },
-                    "required": ["answer", "confidence_score", "safety_flags"],
-                    "additionalProperties": False,
-                },
-            },
-        }
+        return reply_response_format()
 
     @staticmethod
     def _retry_delay_seconds(*, response: httpx.Response, attempt: int) -> float:
