@@ -128,7 +128,6 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     rate_limit_enabled: bool = False
-    ai_daily_cost_limit_default: float = 5.00
     auto_reply_daily_limit_default: int = 100
     auto_reply_max_attempts: int = 4
     auto_reply_execution_lease_seconds: int = 120

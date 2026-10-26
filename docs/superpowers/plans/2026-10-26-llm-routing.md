@@ -51,5 +51,7 @@ Omitted API/service `max_tokens` becomes `None`, resolved to 2048 (OpenRouter) o
 
 - [x] Independently review the complete diff and fix material findings.
 - [x] Record source checks separately from CI/runtime/provider evidence.
-- [ ] Commit, push, open PR, merge and deploy API/web within existing authorization, preserving worker/scheduler pause.
-- [ ] Verify actual runtime source/settings and readiness; prepare exact synthetic per-model smoke budget and identified real-flow case before any paid/provider write.
+- [x] Commit, push, open PR, merge and deploy API/web within existing authorization, preserving worker/scheduler pause. Delivered as PR32, main `3adf3ee0`.
+- [x] Verify actual runtime source/settings and readiness. Imported module hashes matched main; API/web were healthy; the full-file Dokploy patch was updated to pass the new variables.
+
+The owner subsequently chose to keep Groq active and defer OpenRouter activation. The optional four-model live smoke is deferred, not completed or awaiting a key. No paid/provider write or processing resume is authorized by this plan.

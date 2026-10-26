@@ -18,6 +18,7 @@ def _success_response(request: httpx.Request) -> httpx.Response:
             "model": "qwen/qwen3.8-27b",
             "choices": [
                 {
+                    "finish_reason": "stop",
                     "message": {
                         "role": "assistant",
                         "content": json.dumps(
@@ -177,6 +178,7 @@ def test_extract_text_from_groq_payload() -> None:
         {
             "choices": [
                 {
+                    "finish_reason": "stop",
                     "message": {
                         "role": "assistant",
                         "content": "Здравствуйте! Спасибо за отзыв.",

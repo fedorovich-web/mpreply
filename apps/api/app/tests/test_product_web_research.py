@@ -68,7 +68,8 @@ async def test_compatibility_draft_uses_confirmed_fit_or_requests_marking_withou
 def search_response(request: httpx.Request, *, evidence: bool = True) -> httpx.Response:
     return httpx.Response(200, request=request, json={
         "model": "openai/gpt-oss-20b",
-        "choices": [{"message": {
+        "choices": [{"finish_reason": "stop", "message": {
+            "role": "assistant",
             "content": "Haier 0530023778, diameter 180 mm. https://invented.example/fake",
             "executed_tools": [{"type": "browser_search", "browser_results": [{
                 "title": "Haier 0530023778", "url": "https://parts.example/0530023778",
@@ -178,7 +179,7 @@ def test_exact_oem_product_name_does_not_require_reseller_brand_in_manufacturer_
 @pytest.mark.asyncio
 async def test_search_keeps_product_facts_after_long_page_navigation() -> None:
     content = ("Navigation and menus. " * 300) + "Haier 0530023778 compatible with HCE63. Diameter 180 mm."
-    payload: dict[str, object] = {"choices": [{"message": {"executed_tools": [{"browser_results": [{
+    payload: dict[str, object] = {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "executed_tools": [{"browser_results": [{
         "title": "Haier 0530023778", "url": "https://parts.example/0530023778", "content": content,
     }]}]}}]}
     sources = GroqProvider.extract_research_sources(payload)

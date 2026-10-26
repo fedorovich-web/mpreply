@@ -98,13 +98,8 @@ class GroqProvider:
 
     @staticmethod
     def extract_research_sources(data: dict[str, object], *, focus_terms: tuple[str, ...] = ()) -> list[dict[str, str]]:
-        choices = data.get("choices")
-        if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
-            raise GroqProviderError("Groq research has no choices", error_code="groq_malformed_response")
-        message = cast(dict[str, object], choices[0]).get("message")
-        if not isinstance(message, dict):
-            raise GroqProviderError("Groq research message is malformed", error_code="groq_malformed_response")
-        tools = cast(dict[str, object], message).get("executed_tools")
+        message = GroqProvider._completed_message(data)
+        tools = message.get("executed_tools")
         sources: list[dict[str, str]] = []
         if not isinstance(tools, list):
             return sources
@@ -243,19 +238,36 @@ class GroqProvider:
         return cast(dict[str, object], payload)
 
     @staticmethod
-    def extract_text(data: dict[str, object]) -> str:
+    def _completed_message(data: dict[str, object]) -> dict[str, object]:
+        if data.get("error") is not None:
+            raise GroqProviderError("Groq returned an error", error_code="groq_response_error")
         choices_value = data.get("choices")
-        if not isinstance(choices_value, list) or not choices_value:
-            raise GroqProviderError("Groq response has no choices", error_code="groq_empty_response")
+        if not isinstance(choices_value, list) or len(cast(list[object], choices_value)) != 1:
+            raise GroqProviderError("Groq response choices are malformed", error_code="groq_malformed_response")
         choices = cast(list[object], choices_value)
         first_choice = choices[0]
         if not isinstance(first_choice, dict):
             raise GroqProviderError("Groq response choice is malformed", error_code="groq_malformed_response")
         choice = cast(dict[str, object], first_choice)
+        if choice.get("error") is not None:
+            raise GroqProviderError("Groq returned an error", error_code="groq_response_error")
         message_value = choice.get("message")
         if not isinstance(message_value, dict):
             raise GroqProviderError("Groq response message is malformed", error_code="groq_malformed_response")
         message = cast(dict[str, object], message_value)
+        if message.get("error") is not None:
+            raise GroqProviderError("Groq returned an error", error_code="groq_response_error")
+        if message.get("role") != "assistant":
+            raise GroqProviderError("Groq response role is malformed", error_code="groq_malformed_response")
+        if message.get("refusal") or message.get("tool_calls") or message.get("function_call"):
+            raise GroqProviderError("Groq completion was refused or requires a tool", error_code="groq_refused_response")
+        if choice.get("finish_reason") != "stop":
+            raise GroqProviderError("Groq completion is incomplete", error_code="groq_incomplete_response")
+        return message
+
+    @staticmethod
+    def extract_text(data: dict[str, object]) -> str:
+        message = GroqProvider._completed_message(data)
         content = message.get("content")
         if not isinstance(content, str) or not content.strip():
             raise GroqProviderError("Groq response content is empty", error_code="groq_empty_response")
