@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic.json_schema import SkipJsonSchema
 
 
 class ProductSummary(BaseModel):
@@ -58,29 +59,13 @@ class CustomerMessageListResponse(BaseModel):
 class CustomerMessageUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    status: (
-        Literal[
-            "new",
-            "imported",
-            "needs_reply",
-            "auto_rule_matched",
-            "auto_reply_pending",
-            "ai_draft_ready",
-            "safety_blocked",
-            "needs_manual_check",
-            "waiting_review",
-            "approved",
-            "sending",
-            "answered",
-            "auto_reply_sent",
-            "failed",
-            "blocked_by_marketplace",
-            "duplicate",
-            "skipped",
-            "archived",
-            "escalated",
-        ]
-        | None
-    ) = None
+    status: Literal["archived", "escalated"] | SkipJsonSchema[None] = None
     assigned_to: UUID | None = None
-    priority: Literal["low", "normal", "high", "urgent"] | None = None
+    priority: Literal["low", "normal", "high", "urgent"] | SkipJsonSchema[None] = None
+
+    @field_validator("status", "priority", mode="before")
+    @classmethod
+    def reject_null_for_required_values(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("This field cannot be null")
+        return value
