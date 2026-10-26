@@ -1,5 +1,9 @@
 # Reply model activation and bounded verification
 
+## Current operational decision — 2026-10-26
+
+The owner chose to keep Groq active and defer OpenRouter activation. Do not request an OpenRouter key or run the four-model smoke unless the owner reopens that work. Worker/scheduler remain paused; this decision does not authorize paid Groq generation or marketplace writes. The optional OpenRouter adapter remains available in source.
+
 ## Configuration
 
 `AI_REPLY_PROVIDER=groq` preserves existing reply generation. Groq is required for product research in either mode.

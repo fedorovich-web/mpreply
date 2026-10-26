@@ -18,6 +18,7 @@ from app.models.product import Product
 from app.models.reply import Reply
 from app.models.reply_credit import ReplyCreditOperation
 from app.models.user import User
+from app.providers.groq import GroqProviderError
 from app.services.ai_service import AIService
 from app.services.audit_service import AuditService
 from app.services.manual_reply_service import ManualReplyService
@@ -175,7 +176,13 @@ class AutomaticDraftService:
                 ReplyCreditOperation.organization_id == job.organization_id,
                 ReplyCreditOperation.operation_key == job.operation_key, ReplyCreditOperation.state == "reserved",
             ))))
-            if (exc.status_code in (402, 410, 502, 503) or reservation_running) and job.attempt_count < 4:
+            provider_error = exc.__cause__
+            if isinstance(provider_error, GroqProviderError) and provider_error.error_code in {
+                "groq_incomplete_response", "groq_refused_response", "groq_response_error",
+                "groq_malformed_response", "groq_empty_response",
+            }:
+                await self._finish(job, "failed", provider_error.error_code)
+            elif (exc.status_code in (402, 410, 502, 503) or reservation_running) and job.attempt_count < 4:
                 job.state = "pending"
                 job.outcome = f"generation_http_{exc.status_code}"
                 job.next_attempt_at = datetime.now(UTC) + timedelta(minutes=5 if exc.status_code == 402 else 1)
