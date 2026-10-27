@@ -89,3 +89,29 @@ async def test_messages_api_forwards_assignment_filter_and_rejects_invalid_uuid(
 
     async with automatic_db() as session:
         assert await session.scalar(select(CustomerMessage.assigned_to).where(CustomerMessage.id == ids["foreign"])) == actor.id
+
+
+async def test_message_pages_use_stable_order_for_equal_marketplace_timestamps(
+    automatic_db: async_sessionmaker[AsyncSession],
+) -> None:
+    actor, organization_id, ids = await seed_assignments(automatic_db)
+    async with automatic_db() as session:
+        original = await session.get(CustomerMessage, ids["mine"])
+        assert original is not None
+        extra_ids = [uuid4() for _ in range(3)]
+        session.add_all([CustomerMessage(
+            id=message_id, organization_id=organization_id, marketplace_account_id=original.marketplace_account_id,
+            marketplace="ozon", external_id=str(message_id), type="question", status="needs_reply", customer_text="Same-time question",
+            imported_at=original.imported_at, last_synced_at=original.last_synced_at, marketplace_created_at=original.marketplace_created_at,
+        ) for message_id in extra_ids])
+        await session.commit()
+    expected = sorted([ids["mine"], ids["other"], ids["unassigned"], *extra_ids], reverse=True)
+    actual: list[UUID] = []
+    for page in range(1, len(expected) + 1):
+        async with automatic_db() as session:
+            rows, total = await MessageService(session).list_messages(
+                actor=actor, organization_id=organization_id, page=page, page_size=1,
+            )
+            assert total == len(expected)
+            actual.extend(message.id for message, _ in rows)
+    assert actual == expected

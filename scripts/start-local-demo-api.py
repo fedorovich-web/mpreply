@@ -74,6 +74,8 @@ def main() -> None:
         "AUTH_SECRET_KEY": config["auth_secret"],
         "CREDENTIALS_ENCRYPTION_KEY": config["encryption_key"],
         "GROQ_API_KEY": "", "RESEND_API_KEY": "", "SENTRY_DSN": "",
+        "AI_REPLY_PROVIDER": "groq", "OPENROUTER_API_KEY": "",
+        "LAVA_ENABLED": "false", "YANDEX_OAUTH_ENABLED": "false",
         "RATE_LIMIT_ENABLED": "false", "AUTH_COOKIE_SECURE": "false",
         "WEB_APP_URL": "http://localhost:3000", "PUBLIC_SITE_URL": "http://localhost:3000",
         "API_BASE_URL": "http://localhost:8000",

@@ -35,6 +35,7 @@ REDIS_URL
 AUTH_SECRET_KEY
 CREDENTIALS_ENCRYPTION_KEY
 GROQ_API_KEY
+RESEND_API_KEY
 CORS_ALLOWED_ORIGINS
 ALLOWED_HOSTS
 FORWARDED_ALLOW_IPS
@@ -80,16 +81,15 @@ Web health endpoint:
 /api/health
 ```
 
-Required order is enforced by Compose where applicable:
+Compose gates `api`, `worker` and `scheduler` on successful completion of `migrate`. These services can then start concurrently; the manifest does not gate worker or scheduler startup on API readiness, and `web` has no API dependency. An all-services deployment starts background processing, so preserve an operational pause explicitly until resumption is authorized.
+
+Verify the following before accepting a deployment:
 
 1. PostgreSQL and Redis are reachable.
 2. `migrate` runs `alembic upgrade head` and exits successfully.
-3. `api` starts and reaches `/health/ready`.
-4. `worker` starts.
-5. `scheduler` starts.
-6. `web` starts and reaches `/api/health`.
-7. Run production smoke checks.
-8. Only then enable/resume automatic reply execution.
+3. `api` reaches `/health/ready` and `web` reaches `/api/health`.
+4. Run production smoke checks while preserving any worker/scheduler pause.
+5. Start or resume background processing only after explicit operational authorization; confirm worker and scheduler health separately.
 
 ## 6. Security and operational checks
 

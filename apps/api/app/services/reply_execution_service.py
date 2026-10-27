@@ -277,6 +277,8 @@ class ReplyExecutionService:
         reply.failed_reason = None
         reply.worker_message_id = None
         reply.last_dispatched_at = None
+        if reply.mode == ResponseMode.SEMI_AUTO.value:
+            reply.sent_by = actor.id
         message = await self._get_message(
             reply.message_id,
             organization_id=reply.organization_id,
@@ -415,6 +417,10 @@ class ReplyExecutionService:
             ReplyStatus.SENDING.value,
         }:
             await self.session.commit()
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
+
+        if not await self._execution_authorized(reply):
+            await self._mark_final_failure(reply, "authorization_revoked", "Reply sender no longer has permission to send")
             return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
 
         message = await self._get_message(reply.message_id, organization_id=reply.organization_id)
@@ -657,6 +663,9 @@ class ReplyExecutionService:
         ) != expected_message_binding:
             await self.session.commit()
             return ExecuteReplyResult(reply.id, reply.status, False, "execution_superseded")
+        if not await self._execution_authorized(reply, lock=True):
+            await self._mark_final_failure(reply, "authorization_revoked", "Reply sender no longer has permission to send")
+            return ExecuteReplyResult(reply.id, reply.status, False, reply.error_code)
         current_account = await self.session.execute(
             select(MarketplaceAccount).where(
                 MarketplaceAccount.id == expected_account_binding[0],
@@ -771,6 +780,22 @@ class ReplyExecutionService:
         else:
             await self._mark_terminal_marketplace_failure(reply=reply, message=message, result=result)
         return ExecuteReplyResult(reply.id, reply.status, retryable, error_code)
+
+    async def _execution_authorized(self, reply: Reply, *, lock: bool = False) -> bool:
+        actor_id = reply.created_by if reply.mode == ResponseMode.AUTO.value else reply.sent_by
+        if actor_id is None:
+            return False
+        statement = select(User.id).join(OrganizationUser, OrganizationUser.user_id == User.id).join(
+            Organization, Organization.id == OrganizationUser.organization_id,
+        ).where(
+            User.id == actor_id, User.status == "active", User.email_verified_at.is_not(None),
+            OrganizationUser.organization_id == reply.organization_id,
+            OrganizationUser.status == "active", OrganizationUser.role.in_(_WRITE_ROLES),
+            Organization.status == "active",
+        )
+        if lock:
+            statement = statement.with_for_update(read=True, of=(User, OrganizationUser, Organization))
+        return await self.session.scalar(statement) is not None
 
     async def _get_draft(self, *, message: CustomerMessage, ai_draft_id: UUID | None) -> AIDraft:
         stmt = select(AIDraft).where(

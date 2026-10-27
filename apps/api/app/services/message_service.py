@@ -76,7 +76,10 @@ class MessageService:
         count_result = await self.session.execute(count_stmt)
         total = int(count_result.scalar_one())
 
-        result = await self.session.execute(stmt.order_by(CustomerMessage.marketplace_created_at.desc()).limit(page_size).offset((page - 1) * page_size))
+        result = await self.session.execute(
+            stmt.order_by(CustomerMessage.marketplace_created_at.desc(), CustomerMessage.id.desc())
+            .limit(page_size).offset((page - 1) * page_size)
+        )
         return [(row[0], row[1]) for row in result.all()], total
 
     async def get_message(self, *, actor: User, message_id: UUID, for_update: bool = False) -> tuple[CustomerMessage, Product | None]:

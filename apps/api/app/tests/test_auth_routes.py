@@ -414,6 +414,32 @@ async def test_refresh_replay_revokes_the_rotated_session_family(
         assert rotated_session.revoked_at is not None
 
 
+@pytest.mark.parametrize("refresh_state", ["missing", "unknown", "reused"])
+@pytest.mark.asyncio
+async def test_rejected_refresh_clears_browser_session_cookies(
+    auth_routes: AuthRouteHarness,
+    refresh_state: str,
+) -> None:
+    user_id, original = await _create_verified_session(auth_routes.session_factory)
+    _set_client_cookie(auth_routes.client, ACCESS_COOKIE_NAME, create_access_token(user_id=user_id), path="/")
+    if refresh_state == "unknown":
+        _set_client_cookie(auth_routes.client, REFRESH_COOKIE_NAME, "unknown-refresh-session", path="/api/auth")
+    elif refresh_state == "reused":
+        async with auth_routes.session_factory() as session:
+            await SessionService(session).rotate(original.raw_token)
+            await session.commit()
+        _set_client_cookie(auth_routes.client, REFRESH_COOKIE_NAME, original.raw_token, path="/api/auth")
+
+    response = await auth_routes.client.post("/api/auth/refresh", headers={"X-CSRF-Token": "1"})
+
+    assert response.status_code == 401
+    cleared_cookies = response.headers.get_list("set-cookie")
+    assert any(cookie.startswith('respio_access="";') and "Max-Age=0" in cookie and "Path=/;" in cookie for cookie in cleared_cookies)
+    assert any(cookie.startswith('respio_refresh="";') and "Max-Age=0" in cookie and "Path=/api/auth;" in cookie for cookie in cleared_cookies)
+    assert auth_routes.client.cookies.get(ACCESS_COOKIE_NAME) is None
+    assert auth_routes.client.cookies.get(REFRESH_COOKIE_NAME) is None
+
+
 @pytest.mark.asyncio
 async def test_immediate_resend_respects_cooldown_without_datetime_failure(
     auth_routes: AuthRouteHarness,

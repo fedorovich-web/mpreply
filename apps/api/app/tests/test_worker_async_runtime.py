@@ -11,7 +11,7 @@ import httpx
 import pytest
 from dramatiq.middleware import AsyncIO
 from dramatiq.worker import Worker
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -22,6 +22,7 @@ from app.core.config import get_settings
 from app.core.security import CredentialService
 from app.models.enums import Marketplace
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.organization import Organization
 from app.models.product import Product
 from app.models.reply import Reply
 from app.services.reply_execution_service import ReplyExecutionService
@@ -45,8 +46,10 @@ async def test_postgres_reply_write_fence_does_not_block_on_ingestion_foreign_ke
         account.credentials_encrypted = CredentialService(get_settings().credentials_encryption_key.get_secret_value()).encrypt("synthetic-api-key")
         message.metadata_json = {"sku": 646399170}
         message.status = "approved"
+        sender_id = await session.scalar(select(Organization.owner_user_id).where(Organization.id == message.organization_id))
+        assert sender_id is not None
         reply = Reply(organization_id=message.organization_id, message_id=message.id, reply_text="Synthetic reply",
-                      status="queued", mode="semi_auto", idempotency_key=str(uuid4()))
+                      status="queued", mode="semi_auto", idempotency_key=str(uuid4()), created_by=sender_id, sent_by=sender_id)
         session.add(reply)
         await session.commit()
         reply_id, organization_id, account_id = reply.id, account.organization_id, account.id

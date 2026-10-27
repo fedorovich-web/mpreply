@@ -9,6 +9,7 @@ const product = read("PRODUCT.md");
 const design = read("DESIGN.md");
 const agents = read("AGENTS.md");
 const readme = read("README.md");
+const englishReadme = read("README.en.md");
 const publicBrief = read("docs/product/public-site-master-brief.md");
 const seo = read("docs/seo/public-site-seo-spec.md");
 const adr = read("docs/adr/0008-public-site-seo-legal-foundation.md");
@@ -17,8 +18,12 @@ describe("MPReply authoritative product documentation", () => {
   it("uses MPReply and the four-marketplace product truth", () => {
     expect(product).toContain("# MPReply");
     expect(readme).toContain("# MPReply");
+    expect(englishReadme).toContain("# MPReply");
     for (const marketplace of ["Wildberries", "Ozon", "Yandex Market", "Avito"]) {
       expect(product).toContain(marketplace);
+      expect(englishReadme).toContain(marketplace);
+    }
+    for (const marketplace of ["Wildberries", "Ozon", "Яндекс Маркет", "Авито"]) {
       expect(readme).toContain(marketplace);
     }
     expect(product).toContain("release certification");
