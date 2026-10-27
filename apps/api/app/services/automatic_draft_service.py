@@ -8,6 +8,7 @@ from sqlalchemy import and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.prompt_strategy import build_marketplace_reply_prompt
+from app.core.config import get_settings
 from app.core.errors import conflict
 from app.models.ai_draft import AIDraft
 from app.models.automatic_draft_job import AutomaticDraftJob
@@ -19,13 +20,17 @@ from app.models.reply import Reply
 from app.models.reply_credit import ReplyCreditOperation
 from app.models.user import User
 from app.providers.groq import GroqProviderError
-from app.services.ai_service import AIService
+from app.services.ai_service import AIService, ModelOutputError
 from app.services.audit_service import AuditService
 from app.services.manual_reply_service import ManualReplyService
 from app.services.reply_execution_service import ReplyExecutionService
 
 _PENDING_MESSAGE_STATUSES = ("new", "imported", "needs_reply")
 _LEASE = timedelta(seconds=300)
+_TERMINAL_GENERATION_ERRORS = frozenset({
+    "groq_incomplete_response", "groq_refused_response", "groq_response_error",
+    "groq_malformed_response", "groq_empty_response", "openrouter_malformed_response",
+})
 
 
 class AutomaticDraftService:
@@ -166,21 +171,25 @@ class AutomaticDraftService:
             if job is None:
                 await self.session.rollback()
                 return
-            if await self.session.scalar(select(exists().where(
+            released_operation = await self.session.scalar(select(ReplyCreditOperation).where(
                 ReplyCreditOperation.organization_id == job.organization_id,
                 ReplyCreditOperation.operation_key == job.operation_key,
                 ReplyCreditOperation.state == "released",
-            ))):
+            ))
+            if released_operation is not None and released_operation.release_reason in _TERMINAL_GENERATION_ERRORS:
+                await self._finish(job, "failed", released_operation.release_reason)
+                await self.session.commit()
+                return
+            if released_operation is not None:
                 job.operation_key = uuid4()
             reservation_running = exc.status_code == 409 and bool(await self.session.scalar(select(exists().where(
                 ReplyCreditOperation.organization_id == job.organization_id,
                 ReplyCreditOperation.operation_key == job.operation_key, ReplyCreditOperation.state == "reserved",
             ))))
             provider_error = exc.__cause__
-            if isinstance(provider_error, GroqProviderError) and provider_error.error_code in {
-                "groq_incomplete_response", "groq_refused_response", "groq_response_error",
-                "groq_malformed_response", "groq_empty_response",
-            }:
+            if isinstance(provider_error, ModelOutputError):
+                await self._finish(job, "failed", f"{get_settings().ai_reply_provider}_malformed_response")
+            elif isinstance(provider_error, GroqProviderError) and provider_error.error_code in _TERMINAL_GENERATION_ERRORS:
                 await self._finish(job, "failed", provider_error.error_code)
             elif (exc.status_code in (402, 410, 502, 503) or reservation_running) and job.attempt_count < 4:
                 job.state = "pending"

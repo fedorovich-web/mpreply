@@ -64,7 +64,7 @@ def test_wb_default_cloud_and_valid_self_hosted_settings() -> None:
 
 
 def test_dokploy_example_targets_mpreply_hosts(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in ("APP_NAME", "API_BASE_URL", "WEB_APP_URL", "PUBLIC_SITE_URL", "CORS_ALLOWED_ORIGINS", "ALLOWED_HOSTS"):
+    for name in ("APP_ENV", "APP_NAME", "API_BASE_URL", "WEB_APP_URL", "PUBLIC_SITE_URL", "CORS_ALLOWED_ORIGINS", "ALLOWED_HOSTS"):
         monkeypatch.delenv(name, raising=False)
 
     settings = DokployExampleSettings(
@@ -74,6 +74,7 @@ def test_dokploy_example_targets_mpreply_hosts(monkeypatch: pytest.MonkeyPatch) 
         resend_api_key=SecretStr("re_production_test_key_123456789"),
     )
 
+    assert settings.app_env == "production"
     assert settings.app_name == "MPReply"
     assert settings.api_base_url == "https://api.mpreply.ru"
     assert settings.web_app_url == "https://app.mpreply.ru"

@@ -3,7 +3,8 @@ from __future__ import annotations
 from urllib.parse import urlencode
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import create_access_token
@@ -71,6 +72,12 @@ async def _notify_best_effort(message: TransactionalEmail, settings: Settings, *
 def _clear_session_cookies(response: Response) -> None:
     clear_access_cookie(response)
     clear_refresh_cookie(response)
+
+
+def _refresh_failure(detail: str) -> JSONResponse:
+    response = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": detail})
+    _clear_session_cookies(response)
+    return response
 
 
 @router.post("/register", response_model=MessageResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -334,14 +341,10 @@ async def refresh_session(
     response: Response,
     _: None = Depends(require_csrf_header),
     session: AsyncSession = Depends(get_db_session),
-) -> MessageResponse:
+) -> MessageResponse | JSONResponse:
     raw_refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
     if not raw_refresh_token:
-        _clear_session_cookies(response)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh session is missing",
-        )
+        return _refresh_failure("Refresh session is missing")
 
     session_service = SessionService(session)
     try:
@@ -351,11 +354,7 @@ async def refresh_session(
             await session.commit()
         else:
             await session.rollback()
-        _clear_session_cookies(response)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh session is invalid or expired",
-        ) from exc
+        return _refresh_failure("Refresh session is invalid or expired")
 
     access_token = create_access_token(
         user_id=grant.user_id,

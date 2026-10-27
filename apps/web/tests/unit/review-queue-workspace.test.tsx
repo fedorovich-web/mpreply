@@ -101,7 +101,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function mockWorkspace(role: "owner" | "viewer") {
+function mockWorkspace(role: "owner" | "viewer", locale: "ru" | "en" = "ru") {
   mockedUseWorkspace.mockReturnValue({
     user: {
       id: organization.owner_user_id,
@@ -118,7 +118,7 @@ function mockWorkspace(role: "owner" | "viewer") {
     logout: vi.fn(async () => undefined),
     isLoggingOut: false,
     logoutError: null,
-    locale: "ru",
+    locale,
   });
 }
 
@@ -143,6 +143,146 @@ function queueResponse(status = reply.status) {
 }
 
 describe("ReviewQueueWorkspace", () => {
+  it("adopts refreshed reply text when there are no unsaved edits", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>(async () => {
+      requests += 1;
+      const data = queueResponse("draft");
+      if (requests > 1) data.items[0].reply = { ...data.items[0].reply, revision: 2, reply_text: "Обновлённый ответ." };
+      return Response.json(data);
+    }));
+    renderWorkspace();
+
+    expect(await screen.findByLabelText("Ответ покупателю")).toHaveValue(reply.reply_text);
+    fireEvent.click(screen.getByRole("button", { name: "Обновить" }));
+    await waitFor(() => expect(screen.getByLabelText("Ответ покупателю")).toHaveValue("Обновлённый ответ."));
+    expect(screen.getByRole("button", { name: "Сохранить правки" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Передать на проверку" })).toBeEnabled();
+  });
+
+  it("preserves unsaved edits and their original revision when refreshed data changes", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "PATCH") {
+        return Response.json({ detail: "Reply revision changed" }, { status: 409 });
+      }
+      requests += 1;
+      const data = queueResponse("draft");
+      if (requests > 1) {
+        data.items[0].reply = { ...data.items[0].reply, revision: 2, reply_text: "Изменение другого сотрудника." };
+      }
+      return Response.json(data);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+
+    fireEvent.change(await screen.findByLabelText("Ответ покупателю"), { target: { value: "Мой несохранённый ответ." } });
+    fireEvent.click(screen.getByRole("button", { name: "Сохранить правки" }));
+    await screen.findByRole("alert");
+    fireEvent.click(screen.getByRole("button", { name: "Обновить" }));
+    await waitFor(() => expect(requests).toBe(2));
+    await waitFor(() => expect(screen.getByLabelText("Ответ покупателю")).toHaveValue("Мой несохранённый ответ."));
+
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH");
+    expect(JSON.parse(String(patch?.[1]?.body))).toEqual({ reply_text: "Мой несохранённый ответ.", expected_revision: 1 });
+    expect(screen.getByLabelText("Ответ покупателю")).toHaveValue("Мой несохранённый ответ.");
+  });
+
+  it.each(["ru", "en"] as const)("recovers from a revision conflict only after explicitly adopting the server text (%s)", async (locale) => {
+    mockWorkspace("owner", locale);
+    let requests = 0;
+    let saved = false;
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "PATCH") {
+        saved = true;
+        return Response.json({ reply: { ...reply, status: "draft", revision: 3, reply_text: "Новый согласованный ответ." }, safety });
+      }
+      requests += 1;
+      const data = queueResponse("draft");
+      if (requests > 1) data.items[0].reply = { ...data.items[0].reply, revision: saved ? 3 : 2, reply_text: saved ? "Новый согласованный ответ." : "Текущий ответ сотрудника." };
+      return Response.json(data);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+    const editorLabel = locale === "ru" ? "Ответ покупателю" : "Reply to customer";
+    const saveLabel = locale === "ru" ? "Сохранить правки" : "Save changes";
+    fireEvent.change(await screen.findByLabelText(editorLabel), { target: { value: "Мой несохранённый ответ." } });
+    fireEvent.click(screen.getByRole("button", { name: locale === "ru" ? "Обновить" : "Refresh" }));
+
+    expect(await screen.findByText("Текущий ответ сотрудника.")).toBeVisible();
+    expect(screen.getByLabelText(editorLabel)).toHaveValue("Мой несохранённый ответ.");
+    expect(screen.getByRole("button", { name: saveLabel })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: locale === "ru" ? "Использовать обновлённый текст" : "Use updated text" }));
+    expect(screen.getByLabelText(editorLabel)).toHaveValue("Текущий ответ сотрудника.");
+    fireEvent.change(screen.getByLabelText(editorLabel), { target: { value: "Новый согласованный ответ." } });
+    fireEvent.click(screen.getByRole("button", { name: saveLabel }));
+    await waitFor(() => expect(screen.getByRole("button", { name: saveLabel })).toBeDisabled());
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH");
+    expect(JSON.parse(String(patch?.[1]?.body))).toEqual({ reply_text: "Новый согласованный ответ.", expected_revision: 2 });
+    expect(screen.getByLabelText(editorLabel)).toHaveValue("Новый согласованный ответ.");
+  });
+
+  it.each([
+    ["waiting_review", "Одобрить ответ"],
+    ["approved", "Отправить в маркетплейс"],
+  ])("preserves dirty text across a background %s transition and blocks decisions until adoption", async (status, actionLabel) => {
+    mockWorkspace("owner");
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async () => Response.json(queueResponse(++requests === 1 ? "draft" : status)));
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+    fireEvent.change(await screen.findByLabelText("Ответ покупателю"), { target: { value: "Несохранённый текст." } });
+    fireEvent.click(screen.getByRole("button", { name: "Обновить" }));
+
+    expect(await screen.findByRole("button", { name: actionLabel })).toBeDisabled();
+    expect(screen.getByLabelText("Ответ покупателю")).toHaveValue("Несохранённый текст.");
+    fireEvent.click(screen.getByRole("button", { name: "Использовать обновлённый текст" }));
+    expect(screen.getByLabelText("Ответ покупателю")).toHaveValue(reply.reply_text);
+    expect(screen.getByRole("button", { name: actionLabel })).toBeEnabled();
+    expect(fetchMock.mock.calls.every(([, init]) => init?.method === undefined)).toBe(true);
+  });
+
+  it("keeps the acknowledged saved text and revision when the following queue refresh fails", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      if (init?.method === "PATCH") {
+        const body = JSON.parse(String(init.body)) as { reply_text: string; expected_revision: number };
+        return Response.json({ reply: { ...reply, status: "draft", revision: body.expected_revision + 1, reply_text: body.reply_text }, safety });
+      }
+      requests += 1;
+      return requests === 1 ? Response.json(queueResponse("draft")) : Response.json({ detail: "unavailable" }, { status: 503 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWorkspace();
+    fireEvent.change(await screen.findByLabelText("Ответ покупателю"), { target: { value: "Сохранённый текст." } });
+    fireEvent.click(screen.getByRole("button", { name: "Сохранить правки" }));
+
+    await screen.findByText("Не удалось обновить очередь проверки");
+    await waitFor(() => expect(screen.getByLabelText("Ответ покупателю")).toHaveValue("Сохранённый текст."));
+    expect(screen.getByRole("button", { name: "Сохранить правки" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Ответ покупателю"), { target: { value: "Следующая правка." } });
+    fireEvent.click(screen.getByRole("button", { name: "Сохранить правки" }));
+    await waitFor(() => expect(fetchMock.mock.calls.filter(([, init]) => init?.method === "PATCH")).toHaveLength(2));
+    const patches = fetchMock.mock.calls.filter(([, init]) => init?.method === "PATCH");
+    expect(JSON.parse(String(patches[1][1]?.body))).toEqual({ reply_text: "Следующая правка.", expected_revision: 2 });
+  });
+
+  it("does not reuse a typed rejection reason after the reply leaves and returns to review", async () => {
+    mockWorkspace("owner");
+    let requests = 0;
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>(async () => Response.json(queueResponse(++requests === 2 ? "approved" : "waiting_review"))));
+    renderWorkspace();
+    fireEvent.change(await screen.findByLabelText("Причина возврата на доработку"), { target: { value: "Старое замечание." } });
+    fireEvent.click(screen.getByRole("button", { name: "Обновить" }));
+    await screen.findByRole("button", { name: "Отправить в маркетплейс" });
+    fireEvent.click(screen.getByRole("button", { name: "Обновить" }));
+    expect(await screen.findByLabelText("Причина возврата на доработку")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Вернуть на доработку" })).toBeDisabled();
+  });
+
   it("translates internal safety metadata into seller-facing review reasons", async () => {
     mockWorkspace("owner");
     vi.stubGlobal(

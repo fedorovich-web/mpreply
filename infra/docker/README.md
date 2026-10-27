@@ -9,6 +9,7 @@ The local Compose stack includes:
 - one-shot Alembic migration job;
 - FastAPI API;
 - Dramatiq worker;
+- scheduler for polling and dispatching due background work;
 - production-built Next.js web container.
 
 From the repository root on Windows PowerShell:

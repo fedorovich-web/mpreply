@@ -33,6 +33,8 @@ Sprint 9 does not itself make the product legally or operationally ready for pub
 - rate limiting and abuse controls are enabled for public endpoints;
 - an actual staging deployment passes the deployment checklist.
 
-## Scheduler status
+## Scheduler status at the Sprint 9 decision
 
-The placeholder scheduler image is intentionally excluded from local and production deployment manifests until a real scheduler responsibility and implementation exist. No production-ready scheduler capability is claimed.
+At Sprint 9, the placeholder scheduler image was intentionally excluded from local and production deployment manifests until a real scheduler responsibility and implementation existed. No production-ready scheduler capability was claimed by that decision.
+
+The current local and production manifests include a scheduler running `app.workers.marketplace_scheduler`. It polls due work and dispatches background jobs; see [the service map](../../infra/dokploy/service-map.md) for the current topology. Its presence in the manifests does not certify a deployed release or authorize resuming paused background processing.

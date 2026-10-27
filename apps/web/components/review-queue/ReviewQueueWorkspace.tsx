@@ -18,6 +18,7 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const writeRoles = new Set(["owner", "admin", "manager"]);
 const reviewQueuePageSize = 20;
+type ReplyWorkflow = Pick<ReviewQueueItem, "reply" | "safety">;
 
 const statusLabels: Record<Locale, Record<string, string>> = {
   ru: {
@@ -110,6 +111,9 @@ const reviewCopy = {
     readOnly: "Ваша роль позволяет просматривать очередь и контекст ответа, но не редактировать, одобрять, возвращать или отправлять ответы.",
     saving: "Сохраняем...",
     save: "Сохранить правки",
+    editConflict: "Ответ или его статус изменились, пока вы редактировали текст. Ваши правки сохранены в поле выше. Сравните их с текущим ответом и используйте обновлённый текст, прежде чем продолжить.",
+    currentReply: "Текущий сохранённый ответ",
+    adoptCurrentReply: "Использовать обновлённый текст",
     submitting: "Передаём...",
     submit: "Передать на проверку",
     approving: "Одобряем...",
@@ -186,6 +190,9 @@ const reviewCopy = {
     readOnly: "Your role can view the review queue and reply context, but cannot edit, approve, return, or send replies.",
     saving: "Saving...",
     save: "Save changes",
+    editConflict: "The reply or its status changed while you were editing. Your changes remain in the field above. Compare them with the current reply and use the updated text before continuing.",
+    currentReply: "Current saved reply",
+    adoptCurrentReply: "Use updated text",
     submitting: "Submitting...",
     submit: "Submit for review",
     approving: "Approving...",
@@ -257,6 +264,16 @@ export function ReviewQueueWorkspace() {
       queryClient.invalidateQueries({ queryKey: ["messages", activeOrganization.id] }),
     ]);
   };
+
+  function cacheSavedReply(result: ReplyWorkflow) {
+    queryClient.setQueriesData<ReturnType<typeof reviewQueueListSchema.parse>>(
+      { queryKey: ["review-queue", activeOrganization.id] },
+      (current) => current ? {
+        ...current,
+        items: current.items.map((item) => item.reply.id === result.reply.id ? { ...item, ...result } : item),
+      } : current,
+    );
+  }
 
   function selectReviewItem(replyId: string) {
     setSelectedId(replyId);
@@ -409,8 +426,9 @@ export function ReviewQueueWorkspace() {
           <ReviewEditor
             canManage={canManageReview}
             item={selected}
-            key={`${selected.reply.id}:${selected.reply.revision}:${selected.reply.status}`}
+            key={selected.reply.id}
             onChanged={invalidateQueue}
+            onSaved={cacheSavedReply}
             locale={locale}
           />
         </div>
@@ -423,17 +441,25 @@ function ReviewEditor({
   item,
   canManage,
   onChanged,
+  onSaved,
   locale,
 }: {
   item: ReviewQueueItem;
   canManage: boolean;
   onChanged: () => Promise<void>;
+  onSaved: (result: ReplyWorkflow) => void;
   locale: Locale;
 }) {
   const t = reviewCopy[locale];
   const localizedStatusLabels = statusLabels[locale];
-  const [draftText, setDraftText] = useState(item.reply.reply_text);
+  const [editedDraft, setEditedDraft] = useState<{ text: string; revision: number } | null>(null);
+  const draftText = editedDraft?.text ?? item.reply.reply_text;
   const [rejectionReason, setRejectionReason] = useState(item.reply.rejection_reason ?? "");
+  const [rejectionStatus, setRejectionStatus] = useState(item.reply.status);
+  if (rejectionStatus !== item.reply.status) {
+    setRejectionStatus(item.reply.status);
+    setRejectionReason(item.reply.rejection_reason ?? "");
+  }
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -441,10 +467,14 @@ function ReviewEditor({
         method: "PATCH",
         body: {
           reply_text: draftText.trim(),
-          expected_revision: item.reply.revision,
+          expected_revision: editedDraft?.revision ?? item.reply.revision,
         },
       }),
-    onSuccess: onChanged,
+    onSuccess: (result) => {
+      onSaved(result);
+      setEditedDraft(null);
+      return onChanged();
+    },
   });
 
   const submitMutation = useMutation({
@@ -482,6 +512,7 @@ function ReviewEditor({
     rejectMutation.isPending ||
     sendMutation.isPending;
   const draftChanged = draftText !== item.reply.reply_text;
+  const editConflict = editedDraft !== null && (editedDraft.revision !== item.reply.revision || !isEditable(item.reply.status));
   const canEdit = canManage && isEditable(item.reply.status);
   const attentionReasons = reviewAttentionReasons(item, locale);
 
@@ -514,10 +545,35 @@ function ReviewEditor({
         <textarea
           disabled={!canEdit || isMutating}
           maxLength={12000}
-          onChange={(event) => setDraftText(event.target.value)}
+          onChange={(event) => {
+            const text = event.target.value;
+            setEditedDraft((current) => text === item.reply.reply_text ? null : {
+              text,
+              revision: current?.revision ?? item.reply.revision,
+            });
+          }}
           value={draftText}
         />
       </label>
+
+      {editConflict ? (
+        <section className="review-attention-reason" role="alert">
+          <p>{t.editConflict}</p>
+          <span>{t.currentReply}</span>
+          <p>{item.reply.reply_text}</p>
+          <button
+            className="button button-secondary"
+            disabled={isMutating}
+            onClick={() => {
+              setEditedDraft(null);
+              saveMutation.reset();
+            }}
+            type="button"
+          >
+            {t.adoptCurrentReply}
+          </button>
+        </section>
+      ) : null}
 
       <section
         className={"review-attention-reason review-attention-reason-" + reviewAttentionTone(item)}
@@ -577,7 +633,7 @@ function ReviewEditor({
             <>
               <button
                 className="button button-secondary"
-                disabled={isMutating || draftText.trim().length === 0 || !draftChanged}
+                disabled={isMutating || editConflict || draftText.trim().length === 0 || !draftChanged}
                 onClick={() => saveMutation.mutate()}
                 type="button"
               >
@@ -585,7 +641,7 @@ function ReviewEditor({
               </button>
               <button
                 className="button button-primary"
-                disabled={isMutating || draftText.trim().length === 0 || draftChanged}
+                disabled={isMutating || editConflict || draftText.trim().length === 0 || draftChanged}
                 onClick={() => submitMutation.mutate()}
                 type="button"
               >
@@ -596,12 +652,12 @@ function ReviewEditor({
 
           {item.reply.status === "waiting_review" ? (
             <>
-              <button className="button button-primary" disabled={isMutating} onClick={() => approveMutation.mutate()} type="button">
+              <button className="button button-primary" disabled={isMutating || editConflict} onClick={() => approveMutation.mutate()} type="button">
                 {approveMutation.isPending ? t.approving : t.approve}
               </button>
               <button
                 className="button button-secondary"
-                disabled={isMutating || rejectionReason.trim().length < 3}
+                disabled={isMutating || editConflict || rejectionReason.trim().length < 3}
                 onClick={() => rejectMutation.mutate()}
                 type="button"
               >
@@ -611,7 +667,7 @@ function ReviewEditor({
           ) : null}
 
           {item.reply.status === "approved" ? (
-            <button className="button button-primary" disabled={isMutating} onClick={() => sendMutation.mutate()} type="button">
+            <button className="button button-primary" disabled={isMutating || editConflict} onClick={() => sendMutation.mutate()} type="button">
               {sendMutation.isPending ? t.queueing : t.send}
             </button>
           ) : null}

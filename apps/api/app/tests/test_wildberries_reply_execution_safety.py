@@ -24,7 +24,9 @@ from app.models.customer_message import CustomerMessage
 from app.models.enums import Marketplace, MessageStatus, MessageType, ReplyStatus, ResponseMode
 from app.models.integration_event import IntegrationEvent
 from app.models.marketplace_account import MarketplaceAccount
+from app.models.organization import Organization, OrganizationUser
 from app.models.reply import Reply
+from app.models.user import User
 from app.services.reply_execution_service import ReplyExecutionService
 
 NOW = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
@@ -43,6 +45,11 @@ class _SharedRows:
         self.reply = reply
         self.message = message
         self.account = account
+        self.actor = User(id=uuid4(), email="synthetic@example.invalid", status="active", email_verified_at=NOW)
+        self.organization = Organization(id=reply.organization_id, status="active")
+        self.membership = OrganizationUser(organization_id=reply.organization_id, user_id=self.actor.id, role="manager", status="active")
+        reply.created_by = self.actor.id
+        reply.sent_by = self.actor.id
         self.lock = asyncio.Lock()
 
 
@@ -97,6 +104,20 @@ class _Session:
         self.commit_count += 1
         self.in_transaction = False
         self.release_lock()
+
+    async def scalar(self, statement: object) -> object | None:
+        query = cast(Select[tuple[object]], statement)
+        entity = query.column_descriptions[0].get("entity")
+        if entity is User:
+            rows = self.rows
+            params = query.compile().params
+            return rows.actor.id if (
+                rows.actor.id == params["id_1"] and rows.actor.status == "active" and rows.actor.email_verified_at is not None
+                and rows.membership.user_id == rows.actor.id and rows.membership.organization_id == rows.reply.organization_id
+                and rows.membership.status == "active" and rows.membership.role in {"owner", "admin", "manager"}
+                and rows.organization.status == "active"
+            ) else None
+        raise AssertionError(f"unexpected scalar entity: {entity}")
 
     async def flush(self) -> None:
         return None
@@ -336,6 +357,18 @@ async def test_due_retry_delivery_executes_once_after_cooldown() -> None:
     assert rows.reply.attempt_count == 1
     assert rows.reply.next_retry_at is None
     assert adapter.preflight_calls == 1
+    assert adapter.send_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_manual_execution_uses_current_sender_authority_when_creator_differs() -> None:
+    rows = _rows()
+    rows.reply.created_by = uuid4()
+    service, adapter, _ = _service(rows, preflight=_absent(), send=AdapterResult(ok=True, data=ProviderWriteReceipt("synthetic-answer")))
+
+    result = await service.execute_reply(reply_id=rows.reply.id)
+
+    assert result.status == ReplyStatus.SENT.value
     assert adapter.send_calls == 1
 
 

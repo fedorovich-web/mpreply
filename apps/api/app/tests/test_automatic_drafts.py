@@ -40,7 +40,7 @@ async def automatic_db() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
 
 
 async def seed(session: AsyncSession, mode: str = "auto") -> CustomerMessage:
-    actor = User(email=f"{uuid4()}@automatic.example", password_hash="synthetic-test-only", status="active")
+    actor = User(email=f"{uuid4()}@automatic.example", password_hash="synthetic-test-only", status="active", email_verified_at=datetime.now(UTC))
     session.add(actor)
     await session.flush()
     organization = Organization(name="Automatic test", slug=str(uuid4()), status="active", owner_user_id=actor.id, default_response_mode=mode)
@@ -408,3 +408,66 @@ async def test_released_operation_rotation_does_not_exhaust_provider_retry_budge
         assert completion.await_count == 3
         balance = await ReplyCreditService(session).balance(organization_id=message.organization_id)
         assert (balance.consumed, balance.reserved, balance.available) == (1, 0, 2)
+
+
+@pytest.mark.parametrize("output", ["not valid JSON", '{"answer":"Test response","confidence_score":2,"safety_flags":[]}'])
+async def test_invalid_model_output_ends_automatic_job_without_regeneration(
+    automatic_db: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch, output: str,
+) -> None:
+    completion = AsyncMock(return_value=LLMCompletion(
+        text=output, model="synthetic-model", usage=VALID_COMPLETION.usage, latency_ms=1,
+    ))
+    monkeypatch.setattr(GroqProvider, "complete", completion)
+    async with automatic_db() as session:
+        message = await seed(session)
+        service = AutomaticDraftService(session)
+        await service.discover()
+        job_id, token = (await service.claim_due(now=datetime.now(UTC)))[0]
+        await service.process(job_id=job_id, token=token)
+        job = await session.get(AutomaticDraftJob, job_id)
+        assert job is not None and (job.state, job.outcome) == ("failed", "groq_malformed_response")
+        assert await service.claim_due(now=datetime.now(UTC) + timedelta(minutes=10)) == ()
+        assert completion.await_count == 1
+        await session.refresh(message)
+        assert message.status == "needs_manual_check"
+        assert await session.scalar(select(func.count()).select_from(AIDraft)) == 0
+        balance = await ReplyCreditService(session).balance(organization_id=message.organization_id)
+        assert (balance.available, balance.reserved, balance.consumed) == (3, 0, 0)
+
+
+async def test_invalid_output_recovery_after_crash_preserves_terminal_failure(
+    automatic_db: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    completion = AsyncMock(return_value=LLMCompletion(
+        text="invalid JSON", model="synthetic-model", usage=VALID_COMPLETION.usage, latency_ms=1,
+    ))
+    monkeypatch.setattr(GroqProvider, "complete", completion)
+
+    class CrashAfterCreditRelease(AutomaticDraftService):
+        owned_calls = 0
+
+        async def _owned(self, job_id: UUID, token: UUID, state: str) -> AutomaticDraftJob | None:
+            self.owned_calls += 1
+            if self.owned_calls == 2:
+                raise RuntimeError("synthetic crash after invalid generation released its credit")
+            return await super()._owned(job_id, token, state)
+
+    async with automatic_db() as session:
+        await seed(session)
+        service = CrashAfterCreditRelease(session)
+        await service.discover()
+        job_id, token = (await service.claim_due(now=datetime.now(UTC)))[0]
+        with pytest.raises(RuntimeError, match="synthetic crash"):
+            await service.process(job_id=job_id, token=token)
+        await session.rollback()
+        await session.execute(update(AutomaticDraftJob).where(AutomaticDraftJob.id == job_id).values(
+            lease_expires_at=datetime.now(UTC) - timedelta(seconds=1),
+        ))
+        await session.commit()
+        recovered_id, recovered_token = (await service.claim_due(now=datetime.now(UTC)))[0]
+        assert recovered_id == job_id
+        await service.process(job_id=job_id, token=recovered_token)
+        job = await session.get(AutomaticDraftJob, job_id)
+        assert job is not None and (job.state, job.outcome) == ("failed", "groq_malformed_response")
+        assert await service.claim_due(now=datetime.now(UTC) + timedelta(minutes=10)) == ()
+        assert completion.await_count == 1
