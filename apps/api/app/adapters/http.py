@@ -148,6 +148,8 @@ def parse_retry_after(
             return None
         if retry_at.tzinfo is None:
             retry_at = retry_at.replace(tzinfo=UTC)
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=UTC)
         seconds = max(0, math.ceil((retry_at.astimezone(UTC) - now.astimezone(UTC)).total_seconds()))
     return seconds if seconds <= maximum_seconds else None
 

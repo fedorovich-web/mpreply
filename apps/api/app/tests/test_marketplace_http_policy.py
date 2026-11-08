@@ -142,6 +142,17 @@ def test_retry_after_parser_accepts_only_bounded_seconds_or_http_date(
     )
 
 
+def test_retry_after_parser_handles_naive_now_as_utc() -> None:
+    assert (
+        parse_retry_after(
+            "Thu, 01 Jan 2026 00:00:05 GMT",
+            now=datetime(2026, 1, 1, 0, 0, 0),
+            maximum_seconds=5,
+        )
+        == 5
+    )
+
+
 @pytest.mark.parametrize(
     "factory",
     [
