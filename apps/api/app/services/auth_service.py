@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -44,7 +45,7 @@ class AuthService:
         user = User(
             email=normalized_email,
             name=name.strip() if name else None,
-            password_hash=hash_password(password),
+            password_hash=await asyncio.to_thread(hash_password, password),
             status="active",
             email_verified_at=None,
             auth_version=0,
@@ -72,7 +73,7 @@ class AuthService:
         normalized_email = email.strip().lower()
         user = await self._find_user_by_email(normalized_email)
         password_hash = user.password_hash or _DUMMY_PASSWORD_HASH if user is not None else _DUMMY_PASSWORD_HASH
-        password_matches = verify_password(password, password_hash)
+        password_matches = await asyncio.to_thread(verify_password, password, password_hash)
         if user is None or not user.password_hash or not password_matches:
             raise unauthorized("Invalid email or password")
         if user.status != "active":
@@ -133,7 +134,7 @@ class AuthService:
         action_token, user = await self._get_usable_action_token(raw_token=raw_token, purpose=RESET_PASSWORD_PURPOSE)
         now = datetime.now(UTC)
         action_token.consumed_at = now
-        user.password_hash = hash_password(new_password)
+        user.password_hash = await asyncio.to_thread(hash_password, new_password)
         user.auth_version += 1
         await self._consume_outstanding_tokens(user_id=user.id, consumed_at=now)
         await SessionService(self.session).revoke_all(user.id, revoked_at=now)
@@ -150,13 +151,13 @@ class AuthService:
         user = await self._get_user(user.id)
         if not user.password_hash:
             raise bad_request("Use password reset to set a password for this account")
-        if not verify_password(current_password, user.password_hash):
+        if not await asyncio.to_thread(verify_password, current_password, user.password_hash):
             raise bad_request("Current password is incorrect")
-        if verify_password(new_password, user.password_hash):
+        if await asyncio.to_thread(verify_password, new_password, user.password_hash):
             raise bad_request("New password must be different")
 
         now = datetime.now(UTC)
-        user.password_hash = hash_password(new_password)
+        user.password_hash = await asyncio.to_thread(hash_password, new_password)
         user.auth_version += 1
         await self._consume_outstanding_tokens(user_id=user.id, consumed_at=now)
         await SessionService(self.session).revoke_all(user.id, revoked_at=now)

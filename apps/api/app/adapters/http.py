@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import math
+import os
+import random
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -22,6 +24,13 @@ _DEFAULT_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=10,
 _YANDEX_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=0)
 
 
+def sanitize_proxy_env() -> None:
+    for var in ("NO_PROXY", "no_proxy"):
+        val = os.environ.get(var)
+        if val and "[::1]" in val:
+            os.environ[var] = val.replace(",[::1]", "").replace("[::1],", "").replace("[::1]", "")
+
+
 class InvalidProviderPath(ValueError):
     pass
 
@@ -32,6 +41,7 @@ class ReadRetryPolicy:
     base_delay_seconds: float = 0.25
     max_delay_seconds: float = 2.0
     max_retry_after_seconds: int = 30
+    jitter: bool = False
 
     def __post_init__(self) -> None:
         if not 1 <= self.max_attempts <= 5:
@@ -40,6 +50,12 @@ class ReadRetryPolicy:
             raise ValueError("retry delays must be ordered and between 0 and 30 seconds")
         if not 0 <= self.max_retry_after_seconds <= 300:
             raise ValueError("max_retry_after_seconds must be between 0 and 300")
+
+    def compute_backoff(self, attempt: int) -> float:
+        limit = min(self.base_delay_seconds * (2 ** (attempt - 1)), self.max_delay_seconds)
+        if self.jitter:
+            return random.uniform(0.0, limit)
+        return limit
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +100,7 @@ def _create_client(
     transport: httpx.AsyncBaseTransport | None,
     limits: httpx.Limits = _DEFAULT_LIMITS,
 ) -> httpx.AsyncClient:
+    sanitize_proxy_env()
     return httpx.AsyncClient(
         base_url=base_url,
         timeout=_DEFAULT_TIMEOUT,
@@ -180,5 +197,5 @@ async def request_read_with_retry(
                     return response
                 await sleep(float(retry_after))
                 continue
-        await sleep(min(policy.base_delay_seconds * (2 ** (attempt - 1)), policy.max_delay_seconds))
+        await sleep(policy.compute_backoff(attempt))
     raise RuntimeError("bounded retry loop exhausted without returning")

@@ -209,3 +209,19 @@ async def test_application_lifespan_owns_registry_and_closes_clients() -> None:
         assert all(not client.is_closed for client in clients.all())
 
     assert all(client.is_closed for client in clients.all())
+
+
+def test_retry_policy_full_jitter_exponential_backoff() -> None:
+    deterministic_policy = ReadRetryPolicy(base_delay_seconds=0.5, max_delay_seconds=4.0, jitter=False)
+    assert deterministic_policy.compute_backoff(1) == 0.5
+    assert deterministic_policy.compute_backoff(2) == 1.0
+    assert deterministic_policy.compute_backoff(3) == 2.0
+    assert deterministic_policy.compute_backoff(4) == 4.0
+    assert deterministic_policy.compute_backoff(5) == 4.0
+
+    jitter_policy = ReadRetryPolicy(base_delay_seconds=0.5, max_delay_seconds=4.0, jitter=True)
+    for attempt in range(1, 6):
+        limit = min(0.5 * (2 ** (attempt - 1)), 4.0)
+        delays = [jitter_policy.compute_backoff(attempt) for _ in range(50)]
+        assert all(0.0 <= d <= limit for d in delays)
+        assert len({round(d, 4) for d in delays}) > 1
