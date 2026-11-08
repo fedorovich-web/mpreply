@@ -109,7 +109,24 @@ mpreply is a high-throughput multi-tenant SaaS service providing automated and A
 - **Contract Fidelity:**
   - Preserved strict contract requirements in `next.config.ts` (`qualities: [85]`) per `public-raster-only-icon-contract.test.ts`.
 
-### Layer 5: Repository Hygiene & Dead Code
+### Layer 5: Database Architecture, SQL Optimization & Indexing (Migration `20261108_0022`)
+- **Inbox Query Optimization (Multi-Tenant & Marketplace-Agnostic):**
+  - Added `ix_customer_messages_org_status_created` on `("organization_id", "status", "marketplace_created_at")`.
+  - Eliminates full in-memory sorting and table scans when users view all unreplied messages across all marketplaces (`needs_reply`, `pending`, etc.).
+- **Staff Workload & Assignment Queue:**
+  - Added `ix_customer_messages_org_assigned_created` on `("organization_id", "assigned_to", "marketplace_created_at")`.
+  - Accelerates queries filtering messages assigned to specific support team members.
+- **Message Import Analytics:**
+  - Added `ix_customer_messages_org_imported` on `("organization_id", "imported_at")`.
+  - Speeds up daily message volume aggregation in analytics dashboards.
+- **Review Queue filesort Elimination:**
+  - Added `ix_replies_review_queue` on `("organization_id", "mode", "status", "updated_at", "created_at")`.
+  - Covers the exact filter (`mode = 'semi_auto'`, review queue statuses) and satisfies `ORDER BY updated_at DESC, created_at DESC` directly via index scan without disk/memory filesort.
+- **Sent Replies Timeline & Delivery Tracking:**
+  - Added `ix_replies_org_status_sent` on `("organization_id", "status", "sent_at")`.
+  - Accelerates sent message metrics across automated and manual reply pipelines.
+
+### Layer 6: Repository Hygiene & Dead Code
 - **Zero Dead Code:** All added code and changes are fully covered by regression tests.
 - **No Blanket Exceptions:** Verified absence of silent `except: pass` or unlogged error swallowing in affected areas.
 - **Double-Proof Verification:** All contract dependencies, imports, styles, and assets verified against static references and runtime suites.
@@ -128,6 +145,8 @@ All commits were made directly to branch `main` in accordance with repository gu
 | `3b5a2a3` | `fix(web): preserve qualities [85] contract in next.config.ts` | 1 | +1 / -1 |
 | `a0dc903` | `docs: finalize Senior+ production audit report` | 1 | +218 / -0 |
 | `04efce6` | `fix(tooling): add container sandbox args and hostname fallback to lighthouse runner` | 1 | +5 / -0 |
+| `529b5ce` | `docs: expand audit report with complete 20-gate execution proof` | 1 | +83 / -26 |
+| `58deb9b` | `feat(sql): add compound indexes for inbox, review queue, and analytics query optimization` | 4 | +57 / -1 |
 
 ---
 
