@@ -131,6 +131,18 @@ mpreply is a high-throughput multi-tenant SaaS service providing automated and A
 - **No Blanket Exceptions:** Verified absence of silent `except: pass` or unlogged error swallowing in affected areas.
 - **Double-Proof Verification:** All contract dependencies, imports, styles, and assets verified against static references and runtime suites.
 
+### Layer 7: Marketplace HTTP Resilience & App Router Error Boundaries
+- **Marketplace HTTP Retry-After Normalization:**
+  - Hardened `parse_retry_after` (`apps/api/app/adapters/http.py`) against naive `datetime` instances, standardizing `now` with `now.replace(tzinfo=UTC)`.
+  - Guarantees deterministic, timezone-shift-immune backoff calculation for Wildberries, Ozon, and Yandex Market rate limits.
+  - Covered by unit test `test_retry_after_parser_handles_naive_now_as_utc` (28/28 passed in `test_marketplace_http_policy.py`).
+- **Next.js App Router Error Boundaries:**
+  - Implemented `apps/web/app/error.tsx`: Root route error boundary with branded card, Russian seller-facing copy, error reference digest (`error.digest`), retry action (`reset()`), and home navigation.
+  - Implemented `apps/web/app/global-error.tsx`: Global layout error boundary rendering self-contained `<html>` and `<body>` structure with zero external CSS dependencies.
+  - Implemented `apps/web/app/app/error.tsx`: Operational workspace error boundary keeping sellers in context with recovery navigation to `/app/dashboard`.
+  - Strict privacy: No stack traces or server internals leaked to the client DOM.
+  - Verified by contract suite `apps/web/tests/unit/error-boundary-contract.test.tsx` (132 test files, 633 tests passed).
+
 ---
 
 ## 4. Git Commit Log (`main_direct`)
@@ -147,6 +159,9 @@ All commits were made directly to branch `main` in accordance with repository gu
 | `04efce6` | `fix(tooling): add container sandbox args and hostname fallback to lighthouse runner` | 1 | +5 / -0 |
 | `529b5ce` | `docs: expand audit report with complete 20-gate execution proof` | 1 | +83 / -26 |
 | `58deb9b` | `feat(sql): add compound indexes for inbox, review queue, and analytics query optimization` | 4 | +57 / -1 |
+| `87d4d82` | `docs: document Layer 5 SQL optimizations in audit report` | 1 | +23 / -0 |
+| `6b0cc3d` | `fix(http): normalize naive datetime to utc in parse_retry_after` | 2 | +13 / -0 |
+| `0543e7a` | `feat(web): add root, workspace, and global error boundaries with contract tests` | 4 | +477 / -0 |
 
 ---
 
@@ -169,7 +184,7 @@ All checks were executed in the environment with verified exit codes:
 3. **Backend Unit & Integration Suite (`pytest`):**
    ```bash
    .venv/bin/pytest apps/api/app/tests
-   # Exit code: 0 (982 passed, 71 skipped, 2 warnings in 39.80s)
+   # Exit code: 0 (983 passed, 71 skipped, 2 warnings in 39.96s)
    ```
 
 4. **Backend Security Vulnerability Audit (`pip-audit`):**
@@ -194,7 +209,7 @@ All checks were executed in the environment with verified exit codes:
 7. **Web Unit & Contract Suite (`vitest`):**
    ```bash
    npm run test:unit
-   # Exit code: 0 (131 test files passed, 630 passed)
+   # Exit code: 0 (132 test files passed, 633 passed)
    ```
 
 8. **Web Design Tokens Contract (`vitest`):**
