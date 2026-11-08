@@ -14,6 +14,9 @@ class CustomerMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_customer_messages_org_marketplace_status_created", "organization_id", "marketplace", "status", "marketplace_created_at"),
         Index("ix_customer_messages_org_type_status", "organization_id", "type", "status"),
+        Index("ix_customer_messages_org_status_created", "organization_id", "status", "marketplace_created_at"),
+        Index("ix_customer_messages_org_assigned_created", "organization_id", "assigned_to", "marketplace_created_at"),
+        Index("ix_customer_messages_org_imported", "organization_id", "imported_at"),
         UniqueConstraint(
             "organization_id",
             "marketplace_account_id",

@@ -55,6 +55,8 @@ class Reply(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_replies_org_status_created", "organization_id", "status", "created_at"),
         Index("ix_replies_org_rule_sent", "organization_id", "automation_rule_id", "sent_at"),
         Index("ix_replies_org_mode_status_created", "organization_id", "mode", "status", "created_at"),
+        Index("ix_replies_review_queue", "organization_id", "mode", "status", "updated_at", "created_at"),
+        Index("ix_replies_org_status_sent", "organization_id", "status", "sent_at"),
         Index(
             "ix_replies_dispatch_due",
             "status",
