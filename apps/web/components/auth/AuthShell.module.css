@@ -1,5 +1,6 @@
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   background: var(--color-bg-page);
@@ -167,6 +168,7 @@
 
   .formPanel {
     min-height: 100vh;
+    min-height: 100dvh;
     padding: clamp(var(--space-8), 6vw, var(--space-12));
   }
 

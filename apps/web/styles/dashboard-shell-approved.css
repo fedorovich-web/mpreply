@@ -160,6 +160,7 @@
 @media (min-width: 861px) {
 	.app-sidebar {
 		min-height: 100vh;
+		min-height: 100dvh;
 	}
 
 	.app-sidebar-footer {

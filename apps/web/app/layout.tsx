@@ -98,6 +98,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang={htmlLanguage(locale)} suppressHydrationWarning>
       <head>
+        <link rel="preload" href="/fonts/onest/onest-400-ru-en.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/onest/onest-600-ru-en.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <script nonce={requestHeaders.get("x-nonce") ?? undefined} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>{children}</body>

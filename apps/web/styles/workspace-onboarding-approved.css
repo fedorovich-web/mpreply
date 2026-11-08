@@ -3,6 +3,7 @@
 	position: relative;
 	isolation: isolate;
 	min-height: 100vh;
+	min-height: 100dvh;
 	background:
 		radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--color-bg-brand-soft) 86%, transparent), transparent 34%),
 		radial-gradient(circle at 82% 28%, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 32%),
@@ -160,6 +161,7 @@
 	.workspace-onboarding-card {
 		width: 100%;
 		min-height: 100vh;
+		min-height: 100dvh;
 		border: 0;
 		border-radius: 0;
 		box-shadow: none;

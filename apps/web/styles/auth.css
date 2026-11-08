@@ -315,6 +315,7 @@
 
 	.auth-form-panel {
 		min-height: calc(100vh - 2rem);
+		min-height: calc(100dvh - 2rem);
 	}
 
 	.auth-brand {
@@ -329,6 +330,7 @@
 
 	.auth-shell {
 		min-height: calc(100vh - var(--space-6));
+		min-height: calc(100dvh - var(--space-6));
 		border-radius: 1.1rem;
 	}
 

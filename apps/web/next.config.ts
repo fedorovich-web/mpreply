@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   agentRules: false,
   images: {
     formats: ["image/webp"],
-    qualities: [85],
+    qualities: [75, 85],
   },
   deploymentId: process.env.DEPLOYMENT_VERSION || undefined,
   async headers() {
