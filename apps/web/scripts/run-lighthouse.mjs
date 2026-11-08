@@ -16,12 +16,17 @@ try {
     ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: "chrome" }),
     headless: true,
     userDataDir: profile,
+    args: process.env.CHROME_FLAGS ? process.env.CHROME_FLAGS.split(" ") : ["--no-sandbox", "--disable-setuid-sandbox"],
   });
   const port = new URL(browser.wsEndpoint()).port;
   const exitCode = await new Promise((resolveExit, reject) => {
     const child = spawn(process.execPath, [cli, "autorun", ...process.argv.slice(2), `--collect.settings.port=${port}`], {
       stdio: "inherit",
       windowsHide: true,
+      env: {
+        ...process.env,
+        HOSTNAME: process.env.LIGHTHOUSE_HOSTNAME || "0.0.0.0",
+      },
     });
     const interrupt = () => child.kill("SIGINT");
     process.once("SIGINT", interrupt);
