@@ -53,7 +53,16 @@ class SafetyGate:
         re.compile(r"\b\+?7[\s\-()]?\d{3}[\s\-()]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}\b"),
         re.compile(r"\b[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}\b"),
     )
-    _BLOCK_FLAGS: ClassVar[frozenset[str]] = frozenset({"unsafe_instruction", "personal_data_exposure", "policy_violation"})
+    _LINK_PATTERNS = (
+        re.compile(r"https?://[^\s]+", re.IGNORECASE),
+        re.compile(r"\b(?:www\.)[a-z0-9\-]+(?:\.[a-z0-9\-]+)+[^\s]*", re.IGNORECASE),
+        re.compile(r"\b(?:t\.me|wa\.me|vk\.com|viber://|tg://)[^\s]*", re.IGNORECASE),
+    )
+    _COMPETITOR_PATTERNS = (
+        re.compile(r"\bкупите\s+(?:на|в)\s+(?:ozon|wildberries|яндекс|wb|авито|aliexpress)\b", re.IGNORECASE),
+        re.compile(r"\bпереходите\s+(?:на|в)\s+(?:ozon|wildberries|яндекс|wb|авито)\b", re.IGNORECASE),
+    )
+    _BLOCK_FLAGS: ClassVar[frozenset[str]] = frozenset({"unsafe_instruction", "personal_data_exposure", "policy_violation", "prohibited_link"})
     _MANUAL_REVIEW_FLAGS: ClassVar[frozenset[str]] = frozenset(
         {
             "missing_product_context",
@@ -63,6 +72,7 @@ class SafetyGate:
             "unclear_customer_issue",
             "needs_manual_review",
             "sensitive_topic",
+            "competitor_mention",
         }
     )
 
@@ -89,6 +99,14 @@ class SafetyGate:
         if self._matches_any(payload.draft_text, self._PERSONAL_DATA_PATTERNS):
             flags.add("personal_data_exposure")
             reasons.append("Draft appears to contain personal contact data")
+
+        if self._matches_any(payload.draft_text, self._LINK_PATTERNS):
+            flags.add("prohibited_link")
+            reasons.append("Draft contains an unauthorized external link or messaging URL")
+
+        if self._matches_any(payload.draft_text, self._COMPETITOR_PATTERNS):
+            flags.add("competitor_mention")
+            reasons.append("Draft contains an unauthorized competitor mention or redirect")
 
         if payload.rating is not None and payload.rating <= 3:
             flags.add("negative_review")

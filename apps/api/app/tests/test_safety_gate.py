@@ -46,3 +46,33 @@ def test_safety_gate_blocks_personal_contact_data() -> None:
 
     assert result.decision is SafetyDecision.BLOCK
     assert "personal_data_exposure" in result.flags
+
+
+def test_safety_gate_blocks_external_links_and_urls() -> None:
+    result = SafetyGate().evaluate(
+        SafetyInput(
+            draft_text="Подробности смотрите на https://external-promo.site/discount или в t.me/my_channel",
+            confidence_score=0.95,
+            message_type="review",
+            has_product_context=True,
+        )
+    )
+
+    assert result.decision is SafetyDecision.BLOCK
+    assert result.auto_send_allowed is False
+    assert "prohibited_link" in result.flags
+
+
+def test_safety_gate_requires_manual_review_for_competitor_redirect() -> None:
+    result = SafetyGate().evaluate(
+        SafetyInput(
+            draft_text="Этот товар закончился, переходите на ozon для оформления заказа.",
+            confidence_score=0.92,
+            message_type="question",
+            has_product_context=True,
+        )
+    )
+
+    assert result.decision is SafetyDecision.MANUAL_REVIEW
+    assert result.auto_send_allowed is False
+    assert "competitor_mention" in result.flags
