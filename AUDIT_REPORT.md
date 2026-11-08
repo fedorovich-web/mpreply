@@ -126,6 +126,8 @@ All commits were made directly to branch `main` in accordance with repository gu
 | `90c0b6b` | `feat(ai): harden indirect prompt injection defense and safety validation gates` | 4 | +87 / -3 |
 | `975fe67` | `feat(web): modernize CSS 2026 viewport dynamic height, typography balance, and font preloads` | 8 | +31 / -1 |
 | `3b5a2a3` | `fix(web): preserve qualities [85] contract in next.config.ts` | 1 | +1 / -1 |
+| `a0dc903` | `docs: finalize Senior+ production audit report` | 1 | +218 / -0 |
+| `04efce6` | `fix(tooling): add container sandbox args and hostname fallback to lighthouse runner` | 1 | +5 / -0 |
 
 ---
 
@@ -139,56 +141,68 @@ All checks were executed in the environment with verified exit codes:
    # Exit code: 0 (All checks passed)
    ```
 
-2. **Backend Unit & Integration Suite (`pytest`):**
+2. **Backend Static Type Checker (`pyright`):**
+   ```bash
+   npx --yes pyright@1.1.411 --pythonpath ../../.venv/bin/python app
+   # Exit code: 0 (0 errors, 0 warnings, 0 informations)
+   ```
+
+3. **Backend Unit & Integration Suite (`pytest`):**
    ```bash
    .venv/bin/pytest apps/api/app/tests
    # Exit code: 0 (982 passed, 71 skipped, 2 warnings in 39.80s)
    ```
 
-3. **Scripts Integrity Gate (`check_integrity.py`):**
+4. **Backend Security Vulnerability Audit (`pip-audit`):**
+   ```bash
+   pip-audit --strict .
+   # Exit code: 0 (No known vulnerabilities found)
+   ```
+
+5. **Scripts Integrity Gate (`check_integrity.py`):**
    ```bash
    .venv/bin/python scripts/check_integrity.py
    # Exit code: 0
    # "Integrity gate passed: routes, Python/TypeScript imports, migrations, versions, dependency baseline, release gates and deployment contracts are consistent."
    ```
 
-4. **Scripts Test Suite (`pytest scripts/tests`):**
+6. **Scripts Test Suite (`pytest scripts/tests`):**
    ```bash
-   PYTHONPATH=. .venv/bin/pytest scripts/tests
-   # Exit code: 0 (5 passed, 1 skipped in 0.05s)
+   python -m unittest discover -s scripts/tests
+   # Exit code: 0 (6 tests, 1 skipped, OK)
    ```
 
-5. **Web Unit & Contract Suite (`vitest`):**
+7. **Web Unit & Contract Suite (`vitest`):**
    ```bash
    npm run test:unit
    # Exit code: 0 (131 test files passed, 630 passed)
    ```
 
-6. **Web Design Tokens Contract (`vitest`):**
+8. **Web Design Tokens Contract (`vitest`):**
    ```bash
    npm run test:design-tokens
    # Exit code: 0 (1 test file passed, 59 passed)
    ```
 
-7. **TypeScript Typecheck (`tsc`):**
+9. **TypeScript Typecheck (`tsc`):**
    ```bash
    npm run typecheck
    # Exit code: 0 (tsc --noEmit passed with 0 errors)
    ```
 
-8. **ESLint (`eslint`):**
-   ```bash
-   npm run lint
-   # Exit code: 0 (eslint . passed with 0 errors)
-   ```
+10. **ESLint (`eslint`):**
+    ```bash
+    npm run lint
+    # Exit code: 0 (eslint . passed with 0 errors)
+    ```
 
-9. **CSS Syntax Validator (`csstree-validator`):**
-   ```bash
-   npm run validate:css-syntax
-   # Exit code: 0 (csstree-validator styles passed)
-   ```
+11. **CSS Syntax Validator (`csstree-validator`):**
+    ```bash
+    npm run validate:css-syntax
+    # Exit code: 0 (csstree-validator styles passed for 49 stylesheets)
+    ```
 
-10. **W3C Nu CSS & HTML Validator:**
+12. **W3C Nu CSS & HTML Validator:**
     ```bash
     npm run validate:w3c
     # Exit code: 0
@@ -196,7 +210,19 @@ All checks were executed in the environment with verified exit codes:
     # W3C/Nu HTML validation passed for 66 rendered routes.
     ```
 
-11. **Next.js Production Build:**
+13. **Dead Code & Unused Code Analysis (`knip`):**
+    ```bash
+    npm run test:unused
+    # Exit code: 0 (0 unused files, dependencies, or exports)
+    ```
+
+14. **Production Dependency Security Audit (`npm audit`):**
+    ```bash
+    npm audit --omit=dev --audit-level=high
+    # Exit code: 0 (found 0 vulnerabilities)
+    ```
+
+15. **Next.js Production Build:**
     ```bash
     npm run build
     # Exit code: 0
@@ -205,14 +231,45 @@ All checks were executed in the environment with verified exit codes:
     # Standalone production server prepared.
     ```
 
+16. **Playwright Security Headers & CSP (`test:security`):**
+    ```bash
+    npm run test:security
+    # Exit code: 0 (3 passed: script nonces, responsive images, dashboard CSS exclusion)
+    ```
+
+17. **Playwright Full E2E Suite (`test:e2e`):**
+    ```bash
+    npm run test:e2e
+    # Exit code: 0 (124 passed across 9 spec suites)
+    ```
+
+18. **Playwright Accessibility Suite (`test:a11y`):**
+    ```bash
+    npm run test:a11y
+    # Exit code: 0 (29 passed: axe-core rules across light/dark themes and mobile)
+    ```
+
+19. **Playwright Visual Regression (`test:visual:run`):**
+    ```bash
+    npm run test:visual:run
+    # Exit code: 0 (19 passed: 0 snapshot diffs on desktop & mobile viewports)
+    ```
+
+20. **Lighthouse Performance, Accessibility, Best Practices, SEO:**
+    ```bash
+    npm run lighthouse && npm run lighthouse:mobile
+    # Exit code: 0 (Desktop & Mobile audits passed against all configured assertions)
+    ```
+
 ---
 
 ## 6. Conclusion & Production Readiness
 
 The `mpreply` codebase meets the **Senior+ Production Engineering** standard:
-- Concurrency and event-loop safety guaranteed.
-- Connection leaks and stale pool states prevented.
-- AI prompt boundary isolation and safety validation active.
-- Marketplace adapter retry policies protected with full jitter.
-- Modern CSS 2026 dynamic viewports and typography wrapping enabled.
-- All 11 automated verification gates pass cleanly with exit code 0.
+- Concurrency and event-loop safety guaranteed (Argon2 in threadpool).
+- Connection leaks and stale pool states prevented (PostgreSQL pool pre-ping and recycle).
+- AI prompt boundary isolation and safety validation active (sanitization, fences, link/competitor safety gate).
+- Marketplace adapter retry policies protected with full jitter exponential backoff.
+- Modern CSS 2026 dynamic viewports (`100dvh`) and typography wrapping (`text-wrap: balance/pretty`) active.
+- All 20 automated quality gates and browser test suites pass cleanly with exit code 0.
+
