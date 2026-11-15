@@ -63,6 +63,8 @@ The project uses Docker for containerization and GitHub Actions for automated ch
 
 ## Quality checks
 
+Developer documentation: [container setup](infra/docker/README.md), [local demo without Docker](docs/operations/local-demo-without-docker.md), [backup and restore](docs/operations/backup-restore.md), [rollback](docs/operations/rollback.md), and [incident handling](docs/operations/incident-runbook.md). Architecture decisions are in [docs/adr](docs/adr); integration requirements are in [docs/integrations](docs/integrations).
+
 pytest and Vitest cover server logic and interface behavior. PostgreSQL integration checks exercise data operations and concurrent processing. Playwright covers user flows, accessibility and visual checks.
 
 The automated suite also includes type checking, linters, builds, HTML/CSS validation, Lighthouse and container image checks. Configuration and run results are available in [GitHub Actions](https://github.com/fedorovich-web/mpreply/actions).

@@ -10,7 +10,7 @@ Read in order:
 3. `docs/product/public-site-master-brief.md` for public/marketing work
 4. `docs/seo/public-site-seo-spec.md` for SEO work
 5. `docs/design/ui-ux-quality-standard.md`
-6. Relevant current specs/plans under `docs/superpowers/`
+6. Relevant architecture and integration specifications under `docs/superpowers/specs/`
 7. Existing tokens/components before adding visual primitives
 
 ## Product truth

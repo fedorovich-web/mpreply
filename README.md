@@ -63,6 +63,8 @@ MPReply объединяет работу с обращениями: рядом 
 
 ## Проверка качества
 
+Инструкции для разработчика: [контейнерный запуск](infra/docker/README.md), [локальное демо без Docker](docs/operations/local-demo-without-docker.md), [резервное копирование](docs/operations/backup-restore.md), [откат](docs/operations/rollback.md) и [разбор инцидентов](docs/operations/incident-runbook.md). Архитектурные решения находятся в [docs/adr](docs/adr), требования к интеграциям — в [docs/integrations](docs/integrations).
+
 pytest и Vitest проверяют серверную логику и поведение интерфейса. Интеграционные проверки с PostgreSQL охватывают операции с данными и параллельную обработку. Playwright используется для пользовательских сценариев, доступности и визуальных проверок.
 
 Автоматический набор также включает проверку типов, линтеры, сборку, HTML/CSS-валидацию, Lighthouse и проверки контейнерных образов. Конфигурация и результаты запусков доступны в [GitHub Actions](https://github.com/fedorovich-web/mpreply/actions).

@@ -77,4 +77,4 @@
 - https://yandex.ru/dev/id/doc/ru/register-auth
 - https://yandex.ru/dev/id/doc/ru/codes/code-url
 - https://yandex.ru/dev/id/doc/ru/user-information
-- PRODUCT.md; docs/product/ai-reply-credit-contract-2026-09-27.md; docs/superpowers/plans/2026-09-30-reply-credit-ledger.md.
+- PRODUCT.md; docs/product/ai-reply-credit-contract-2026-09-27.md.
