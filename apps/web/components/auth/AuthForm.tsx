@@ -92,13 +92,14 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
     ?? (intent === "connect-marketplace" ? `${appRoot}/integrations` : `${appRoot}/dashboard`);
   const shouldCheckSession = isLogin && !searchParams.has("oauth_error");
   const session = useQuery({
-    queryKey: ["session", "me"],
+    queryKey: ["auth", "login-session"],
     queryFn: ({ signal }) => apiRequest("/api/auth/me", userSchema, { signal }),
     enabled: shouldCheckSession,
     refetchOnMount: "always",
     retry: false,
   });
-  const shouldResumeSession = shouldCheckSession && session.isFetchedAfterMount && session.isSuccess;
+  const shouldResumeSession = shouldCheckSession && session.isFetchedAfterMount
+    && session.isSuccess && session.data.status === "active";
   useEffect(() => {
     if (shouldResumeSession) router.replace(target);
   }, [router, shouldResumeSession, target]);

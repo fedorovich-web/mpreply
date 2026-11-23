@@ -173,9 +173,9 @@ def check_versions_and_frontend_security_baseline() -> None:
         fail(f"Web health route version != {EXPECTED_VERSION}")
 
     expected_dependencies = {
-        ("dependencies", "next"): "16.4.3",
+        ("dependencies", "next"): "16.4.6",
         ("dependencies", "zod"): "4.6.7",
-        ("devDependencies", "eslint-config-next"): "16.4.3",
+        ("devDependencies", "eslint-config-next"): "16.4.6",
         ("devDependencies", "vitest"): "5.0.5",
         ("devDependencies", "@testing-library/react"): "16.3.2",
         ("devDependencies", "@testing-library/jest-dom"): "6.9.1",

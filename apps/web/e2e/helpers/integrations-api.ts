@@ -4,6 +4,7 @@ type OrganizationRole = "owner" | "admin" | "manager" | "viewer";
 
 type MockIntegrationsApiOptions = {
   includeSecondOrganization?: boolean;
+  sessionStatus?: "active" | "demo";
 };
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
@@ -52,7 +53,7 @@ export async function mockIntegrationsApi(
       id: userId,
       email: "owner@example.com",
       name: "Owner",
-      status: "active",
+      status: options.sessionStatus ?? "active",
       is_superadmin: false,
       created_at: timestamp,
       updated_at: timestamp,

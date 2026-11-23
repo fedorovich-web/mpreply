@@ -176,3 +176,12 @@ test("returning to MPReply refreshes an expired access session", async ({ page, 
   await expect(page).toHaveURL(/\/app\/dashboard$/);
   expect(refreshCount).toBe(1);
 });
+
+test("MPReply sign-in is available while a demo session is active", async ({ page }) => {
+  await mockIntegrationsApi(page, "owner", { sessionStatus: "demo" });
+  await page.route("**/api/auth/providers", (route) => route.fulfill({ json: { yandex: true } }));
+
+  await page.goto("/auth/login");
+  await expect(page.getByRole("link", { name: "Войти через Яндекс" })).toBeVisible();
+  await expect(page).toHaveURL(/\/auth\/login$/);
+});
