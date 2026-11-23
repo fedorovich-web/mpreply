@@ -151,7 +151,7 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
   if (shouldResumeSession || (shouldCheckSession && !session.isFetchedAfterMount && session.isFetching)) {
     return (
       <main className="auth-page" aria-busy="true">
-        <section className="auth-card"><p role="status">{labels.pending}</p></section>
+        <div className="auth-card"><p role="status">{labels.pending}</p></div>
       </main>
     );
   }
