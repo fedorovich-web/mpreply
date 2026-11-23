@@ -128,3 +128,51 @@ test("payment and linked account screens fit mobile and pass accessibility check
     await page.screenshot({ path: testInfo.outputPath(path.endsWith("billing") ? "billing-mobile.png" : "account-mobile.png"), fullPage: true });
   }
 });
+
+test("return from the public site reuses the active MPReply session", async ({ page, baseURL, isMobile }) => {
+  await mockIntegrationsApi(page);
+  await page.route("**/api/auth/providers", (route) => route.fulfill({ json: { yandex: true } }));
+  await page.route("https://app.mpreply.ru/auth/login", (route) => route.fulfill({
+    status: 307,
+    headers: { location: new URL("/auth/login", baseURL).href },
+  }));
+
+  await page.goto("/", { waitUntil: "networkidle" });
+  if (isMobile) await page.getByRole("button", { name: "Открыть меню" }).click();
+  const signIn = page.getByRole("link", { name: "Войти", exact: true });
+  await expect(signIn).toHaveAttribute("href", "https://app.mpreply.ru/auth/login");
+  await signIn.click();
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
+  await expect(page.getByRole("heading", { name: "Войти в MPReply" })).toHaveCount(0);
+
+  await page.goto("/en/auth/login?next=%2Fen%2Fapp%2Fintegrations");
+  await expect(page).toHaveURL(/\/en\/app\/integrations$/);
+
+  await page.goto("/auth/login?oauth_error=account_link_required");
+  await expect(page.getByRole("button", { name: "Подтвердить и связать Яндекс" })).toBeVisible();
+});
+
+test("returning to MPReply refreshes an expired access session", async ({ page, baseURL }) => {
+  await mockIntegrationsApi(page);
+  const headers = {
+    "access-control-allow-origin": new URL(baseURL!).origin,
+    "access-control-allow-credentials": "true",
+    "access-control-allow-headers": "x-csrf-token",
+    "access-control-allow-methods": "GET,POST,OPTIONS",
+  };
+  let refreshCount = 0;
+  await page.route("**/api/auth/me", (route) => refreshCount
+    ? route.fallback()
+    : route.fulfill({ status: 401, headers }));
+  await page.route("**/api/auth/refresh", async (route) => {
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().headers()["x-csrf-token"]).toBe("1");
+    refreshCount += 1;
+    await route.fulfill({ status: 200, headers });
+  });
+
+  await page.goto("/auth/login");
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
+  expect(refreshCount).toBe(1);
+});

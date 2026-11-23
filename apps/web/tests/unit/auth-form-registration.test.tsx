@@ -13,10 +13,10 @@ vi.mock("next/navigation", () => ({
 
 const fetchMock = vi.fn();
 
-function submit(mode: "login" | "register", locale: "ru" | "en" = "ru") {
+async function submit(mode: "login" | "register", locale: "ru" | "en" = "ru") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><AuthForm mode={mode} locale={locale} /></QueryClientProvider>);
-  fireEvent.change(screen.getByRole("textbox", { name: "Email" }), { target: { value: "seller@example.com" } });
+  fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), { target: { value: "seller@example.com" } });
   fireEvent.change(document.querySelector('input[name="password"]')!, { target: { value: "a-valid-test-password" } });
   fireEvent.submit(document.querySelector("form")!);
 }
@@ -27,22 +27,28 @@ describe("AuthForm registration response contract", () => {
     router.replace.mockReset();
     router.refresh.mockReset();
     fetchMock.mockReset();
-    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => String(input).endsWith("/api/auth/providers")
-      ? Promise.resolve(new Response(JSON.stringify({ yandex: false }))) : fetchMock(input, init));
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = new URL(String(input)).pathname;
+      if (path === "/api/auth/providers") return Promise.resolve(Response.json({ yandex: false }));
+      if (path === "/api/auth/me" || path === "/api/auth/refresh") {
+        return Promise.resolve(new Response(null, { status: 401 }));
+      }
+      return fetchMock(input, init);
+    });
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it.each(["ru", "en"] as const)("makes password recovery and verification reachable from %s login", (locale) => {
+  it.each(["ru", "en"] as const)("makes password recovery and verification reachable from %s login", async (locale) => {
     const client = new QueryClient();
     render(<QueryClientProvider client={client}><AuthForm mode="login" locale={locale} /></QueryClientProvider>);
     const prefix = locale === "en" ? "/en" : "";
-    expect(screen.getByRole("link", { name: locale === "ru" ? "Забыли пароль?" : "Forgot password?" })).toHaveAttribute("href", `${prefix}/auth/forgot-password`);
+    expect(await screen.findByRole("link", { name: locale === "ru" ? "Забыли пароль?" : "Forgot password?" })).toHaveAttribute("href", `${prefix}/auth/forgot-password`);
     expect(screen.getByRole("link", { name: locale === "ru" ? "Отправить письмо подтверждения ещё раз" : "Resend verification email" })).toHaveAttribute("href", `${prefix}/auth/resend-verification`);
   });
 
   it.each(["ru", "en"] as const)("accepts the real HTTP 202 message response in %s without entering the workspace", async (locale) => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({ message: "Если адрес доступен для регистрации, мы отправили письмо для подтверждения email." }), { status: 202 }));
-    submit("register", locale);
+    await submit("register", locale);
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(locale === "ru" ? "подтверждения email" : "verify your email"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(document.querySelector('input[name="password"]')).not.toBeInTheDocument();
@@ -56,14 +62,14 @@ describe("AuthForm registration response contract", () => {
       id: "22222222-2222-4222-8222-222222222222", email: "seller@example.com", name: null,
       status: "active", is_superadmin: false, created_at: "2026-10-01T12:00:00Z", updated_at: "2026-10-01T12:00:00Z",
     } }), { status: 200 }));
-    submit("login");
+    await submit("login");
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/app/integrations"));
     expect(router.refresh).toHaveBeenCalledOnce();
   });
 
   it("rejects a malformed registration response instead of showing success", async () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({}), { status: 202 }));
-    submit("register");
+    await submit("register");
     await waitFor(() => expect(screen.getByRole("alert")).toBeVisible());
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalled();
@@ -75,7 +81,7 @@ describe("AuthForm registration response contract", () => {
       id: "22222222-2222-4222-8222-222222222222", email: "seller@example.com", name: null,
       status: "active", is_superadmin: false, created_at: "2026-10-01T12:00:00Z", updated_at: "2026-10-01T12:00:00Z",
     } }))).mockResolvedValueOnce(new Response(JSON.stringify({ message: "Yandex linked" })));
-    submit("login");
+    await submit("login");
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/app/dashboard"));
     expect(fetchMock.mock.calls.map((call) => new URL(String(call[0])).pathname)).toEqual([
       "/api/auth/login", "/api/auth/yandex/link/complete",
@@ -87,7 +93,7 @@ describe("AuthForm registration response contract", () => {
       id: "22222222-2222-4222-8222-222222222222", email: "seller@example.com", name: null,
       status: "active", is_superadmin: false, created_at: "2026-10-01T12:00:00Z", updated_at: "2026-10-01T12:00:00Z",
     } }))).mockResolvedValueOnce(new Response(JSON.stringify({ detail: "oauth_expired" }), { status: 409 }));
-    submit("login");
+    await submit("login");
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/app/account?oauth_error=link_retry_required"));
     expect(router.refresh).toHaveBeenCalledOnce();
     expect(fetchMock.mock.calls.map((call) => new URL(String(call[0])).pathname)).toEqual([

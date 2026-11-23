@@ -1,12 +1,12 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ApiError, apiRequest } from "../../lib/api/client";
-import { authSessionSchema, messageResponseSchema } from "../../lib/api/schemas";
+import { authSessionSchema, messageResponseSchema, userSchema } from "../../lib/api/schemas";
 import { localizedPath, type Locale } from "../../lib/i18n";
 import { getSiteConfig } from "../../lib/site-config";
 import { PublicBrandMark } from "../public-site/PublicBrandMark";
@@ -88,6 +88,21 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
   const publicHome = getSiteConfig(locale).origin + localizedPath(locale, "/");
 
   const safeRequestedNext = requestedNext?.startsWith(appPrefix) ? requestedNext : null;
+  const target = safeRequestedNext
+    ?? (intent === "connect-marketplace" ? `${appRoot}/integrations` : `${appRoot}/dashboard`);
+  const shouldCheckSession = isLogin && !searchParams.has("oauth_error");
+  const session = useQuery({
+    queryKey: ["session", "me"],
+    queryFn: ({ signal }) => apiRequest("/api/auth/me", userSchema, { signal }),
+    enabled: shouldCheckSession,
+    refetchOnMount: "always",
+    retry: false,
+  });
+  const shouldResumeSession = shouldCheckSession && session.isFetchedAfterMount && session.isSuccess;
+  useEffect(() => {
+    if (shouldResumeSession) router.replace(target);
+  }, [router, shouldResumeSession, target]);
+
 
   const alternateAuthHref = (() => {
     const query = new URLSearchParams();
@@ -127,14 +142,18 @@ export function AuthForm({ mode, locale = "ru" }: { mode: AuthMode; locale?: Loc
         router.refresh();
         return;
       }
-      const target = safeRequestedNext
-        ?? (intent === "connect-marketplace"
-          ? `${appRoot}/integrations`
-          : `${appRoot}/dashboard`);
       router.replace(target);
       router.refresh();
     },
   });
+
+  if (shouldResumeSession || (shouldCheckSession && !session.isFetchedAfterMount && session.isFetching)) {
+    return (
+      <main className="auth-page" aria-busy="true">
+        <section className="auth-card"><p role="status">{labels.pending}</p></section>
+      </main>
+    );
+  }
 
   return (
     <main className="auth-page">

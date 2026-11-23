@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.12",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zod": "4.6.7"
@@ -46,7 +46,7 @@
     "@types/react-dom": "19.2.3",
     "csstree-validator": "4.0.1",
     "eslint": "9.39.2",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "jsdom": "29.1.1",
     "knip": "5.88.1",
     "playwright-core": "1.61.1",
