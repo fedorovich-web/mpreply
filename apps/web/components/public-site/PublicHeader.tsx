@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import { buildApiUrl } from "../../lib/api/client";
 import {
   alternateLocale,
   basePathFromLocalizedPath,
@@ -20,6 +22,7 @@ const copy = {
     closeMenu: "Закрыть меню",
     openMenu: "Открыть меню",
     login: "Войти",
+    workspace: "В кабинет",
     cta: "Попробовать бесплатно",
     homeLabel: "MPReply — главная",
     switchLanguage: "Switch to English",
@@ -30,6 +33,7 @@ const copy = {
     closeMenu: "Close menu",
     openMenu: "Open menu",
     login: "Log in",
+    workspace: "My workspace",
     cta: "Start free",
     homeLabel: "MPReply — home",
     switchLanguage: "Переключить на русский",
@@ -43,12 +47,43 @@ function isActiveNavigationItem(href: string, pathname: string): boolean {
 
 export function PublicHeader({ locale = "ru" }: { locale?: Locale }) {
   const pathname = usePathname();
+  const [signedIn, setSignedIn] = useState(false);
   const config = getSiteConfig(locale);
   const labels = copy[locale];
   const otherLocale = alternateLocale(locale);
   const languageHref = localizedPath(otherLocale, basePathFromLocalizedPath(pathname));
   const loginHref = appOrigin + localizedPath(locale, "/auth/login");
   const registerHref = appOrigin + localizedPath(locale, "/auth/register?intent=connect-marketplace");
+  const workspaceHref = appOrigin + localizedPath(locale, "/app/dashboard");
+
+  useEffect(() => {
+    let pending: AbortController | undefined;
+    const checkSession = async () => {
+      pending?.abort();
+      const controller = new AbortController();
+      pending = controller;
+      try {
+        const response = await fetch(buildApiUrl("/api/auth/session-status"), {
+          credentials: "include",
+          cache: "no-store",
+          redirect: "error",
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(2_500)]),
+        });
+        if (!controller.signal.aborted) setSignedIn(response.status === 204);
+      } catch {
+        if (!controller.signal.aborted) setSignedIn(false);
+      }
+    };
+    const recheckOnRestore = (event: PageTransitionEvent) => {
+      if (event.persisted) void checkSession();
+    };
+    void checkSession();
+    window.addEventListener("pageshow", recheckOnRestore);
+    return () => {
+      pending?.abort();
+      window.removeEventListener("pageshow", recheckOnRestore);
+    };
+  }, [pathname]);
 
   return (
     <header className="public-header">
@@ -81,9 +116,9 @@ export function PublicHeader({ locale = "ru" }: { locale?: Locale }) {
           >
             {otherLocale.toUpperCase()}
           </Link>
-          <Link className="button button-secondary public-login-link" href={loginHref}>{labels.login}</Link>
-          <Link className="button button-primary public-header-cta" href={registerHref}>
-            {labels.cta} <span aria-hidden="true">→</span>
+          {!signedIn && <Link className="button button-secondary public-login-link" href={loginHref}>{labels.login}</Link>}
+          <Link className="button button-primary public-header-cta" href={signedIn ? workspaceHref : registerHref}>
+            {signedIn ? labels.workspace : labels.cta} <span aria-hidden="true">→</span>
           </Link>
         </div>
 
@@ -95,6 +130,7 @@ export function PublicHeader({ locale = "ru" }: { locale?: Locale }) {
           languageLabel={otherLocale.toUpperCase()}
           loginHref={loginHref}
           registerHref={registerHref}
+          workspaceHref={signedIn ? workspaceHref : undefined}
         />
       </div>
     </header>

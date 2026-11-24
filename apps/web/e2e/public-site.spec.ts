@@ -2,6 +2,34 @@ import { expect, test, type Page } from "@playwright/test";
 import { PUBLIC_ROUTES, VISUAL_ROUTES } from "./helpers/public-routes";
 import { appOrigin } from "../lib/site-config";
 
+test("public header shows the workspace button for an active session", async ({ page, baseURL }) => {
+  let active = false;
+  await page.route("**/api/auth/session-status", (route) => route.fulfill({
+    status: active ? 204 : 401,
+    headers: {
+      "access-control-allow-origin": new URL(baseURL!).origin,
+      "access-control-allow-credentials": "true",
+    },
+  }));
+  const header = page.locator(".public-header");
+  await page.goto("/");
+  await expect(header.getByRole("link", { name: "Войти", exact: true })).toBeVisible();
+  await expect(header.getByRole("link", { name: "Попробовать бесплатно", exact: false })).toBeVisible();
+
+  active = true;
+  await page.reload();
+  await expect(header.getByRole("link", { name: "В кабинет", exact: false })).toHaveAttribute("href", appOrigin + "/app/dashboard");
+  await expect(header.getByRole("link", { name: "Войти", exact: true })).toHaveCount(0);
+  await expect(header.getByRole("link", { name: "Попробовать бесплатно", exact: false })).toHaveCount(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/en", { waitUntil: "networkidle" });
+  await header.getByRole("button", { name: "Open menu" }).click();
+  await expect(header.getByRole("link", { name: "My workspace", exact: false })).toHaveAttribute("href", appOrigin + "/en/app/dashboard");
+  await expect(header.getByRole("link", { name: "Log in", exact: true })).toHaveCount(0);
+  await expect(header.getByRole("link", { name: "Start free", exact: false })).toHaveCount(0);
+});
+
 for (const locale of ["ru", "en"] as const) {
   test(`public registration links go directly to the workspace (${locale})`, async ({ page }) => {
     const prefix = locale === "en" ? "/en" : "";

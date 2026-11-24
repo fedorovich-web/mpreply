@@ -12,6 +12,7 @@ type PublicMobileNavigationProps = {
     closeMenu: string;
     mobileNav: string;
     login: string;
+    workspace: string;
     cta: string;
   };
   languageHref: string;
@@ -19,6 +20,7 @@ type PublicMobileNavigationProps = {
   languageLabel: string;
   loginHref: string;
   registerHref: string;
+  workspaceHref?: string;
 };
 
 const focusableSelector = 'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -31,6 +33,7 @@ export function PublicMobileNavigation({
   languageLabel,
   loginHref,
   registerHref,
+  workspaceHref,
 }: PublicMobileNavigationProps) {
   const menuId = useId();
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
@@ -129,9 +132,9 @@ export function PublicMobileNavigation({
           <Link className="button button-secondary" href={languageHref} hrefLang={languageHrefLang} onClick={closeMenu}>
             {languageLabel}
           </Link>
-          <Link className="button button-secondary" href={loginHref} onClick={closeMenu}>{labels.login}</Link>
-          <Link className="button button-primary" href={registerHref} onClick={closeMenu}>
-            {labels.cta} →
+          {!workspaceHref && <Link className="button button-secondary" href={loginHref} onClick={closeMenu}>{labels.login}</Link>}
+          <Link className="button button-primary" href={workspaceHref ?? registerHref} onClick={closeMenu}>
+            {workspaceHref ? labels.workspace : labels.cta} <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>

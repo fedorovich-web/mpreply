@@ -17,6 +17,7 @@ type AdminMetric = {
 };
 const adminCopy = {
   ru: {
+    manageUsers: "Управление пользователями",
     deniedDescription: "Системная панель доступна только внутреннему суперадминистратору MPReply.",
     deniedTitle: "Нет доступа к системной панели",
     loadingDescription: "Получаем актуальные показатели организаций, пользователей, подписок и фоновых процессов.",
@@ -74,6 +75,7 @@ const adminCopy = {
     permissions: "Права доступа",
   },
   en: {
+    manageUsers: "Manage users",
     deniedDescription: "The system console is available only to the internal MPReply super administrator.",
     deniedTitle: "No access to the system console",
     loadingDescription: "Loading current organization, user, subscription, and background-process metrics.",
@@ -265,6 +267,7 @@ export function AdminOverviewWorkspace() {
           <p>
             {t.intro}
           </p>
+          <a className="admin-users-link" href="#admin-users">{t.manageUsers}</a>
         </div>
 
         <aside

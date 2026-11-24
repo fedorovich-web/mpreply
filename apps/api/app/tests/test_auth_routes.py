@@ -109,6 +109,46 @@ async def _create_verified_session(
         return user.id, grant
 
 
+@pytest.mark.asyncio
+async def test_public_session_status_checks_refresh_without_rotating(auth_routes: AuthRouteHarness) -> None:
+    path = "/api/auth/session-status"
+    assert (await auth_routes.client.get(path)).status_code == 401
+    user_id, grant = await _create_verified_session(auth_routes.session_factory)
+    _set_client_cookie(auth_routes.client, REFRESH_COOKIE_NAME, grant.raw_token, path="/api/auth")
+
+    for _ in range(2):
+        response = await auth_routes.client.get(path)
+        assert response.status_code == 204
+        assert response.content == b""
+        assert response.headers["cache-control"] == "private, no-store"
+        assert "set-cookie" not in response.headers
+
+    async with auth_routes.session_factory() as session:
+        user = await session.get(User, user_id)
+        assert user is not None
+        user.auth_version += 1
+        await session.commit()
+
+    assert (await auth_routes.client.get(path)).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_public_session_status_rejects_a_blocked_users_access_cookie(auth_routes: AuthRouteHarness) -> None:
+    user_id, grant = await _create_verified_session(auth_routes.session_factory)
+    access = create_access_token(user_id=user_id, auth_version=grant.auth_version)
+    _set_client_cookie(auth_routes.client, ACCESS_COOKIE_NAME, access, path="/")
+    path = "/api/auth/session-status"
+    assert (await auth_routes.client.get(path)).status_code == 204
+
+    async with auth_routes.session_factory() as session:
+        user = await session.get(User, user_id)
+        assert user is not None
+        user.status = "blocked"
+        await session.commit()
+
+    assert (await auth_routes.client.get(path)).status_code == 401
+
+
 @pytest.mark.parametrize("path", ["/api/auth/refresh", "/api/auth/logout"])
 @pytest.mark.asyncio
 async def test_cookie_session_mutations_reject_missing_csrf_header(

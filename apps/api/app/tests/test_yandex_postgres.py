@@ -67,12 +67,12 @@ async def test_registration_race_after_identity_lookup_still_reuses_same_subject
     identity_pg_db: async_sessionmaker[AsyncSession], monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     subject, email = str(uuid4()), f"{uuid4()}@example.com"
-    original = cast(Callable[[YandexAuthService, str], Awaitable[User | None]], vars(YandexAuthService)["_identity_user"])
+    original = cast(Callable[..., Awaitable[User | None]], vars(YandexAuthService)["_identity_user"])
     looked_up, release = asyncio.Event(), asyncio.Event()
     first = True
-    async def paused_lookup(self: YandexAuthService, value: str) -> User | None:
+    async def paused_lookup(self: YandexAuthService, value: str, *, lock_for_login: bool = False) -> User | None:
         nonlocal first
-        user = await original(self, value)
+        user = await original(self, value, lock_for_login=lock_for_login)
         if first:
             first = False
             looked_up.set()

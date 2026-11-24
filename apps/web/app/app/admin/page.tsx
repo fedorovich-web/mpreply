@@ -1,4 +1,5 @@
 import { AdminOverviewWorkspace } from "../../../components/admin/AdminOverviewWorkspace";
+import { AdminUsersWorkspace } from "../../../components/admin/AdminUsersWorkspace";
 
 export default function AdminPage() {
   return (
@@ -11,6 +12,7 @@ export default function AdminPage() {
       </header>
 
       <AdminOverviewWorkspace />
+      <AdminUsersWorkspace />
     </section>
   );
 }

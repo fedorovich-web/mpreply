@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi import HTTPException
@@ -12,9 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.auth import verify_password
 from app.core.auth_tokens import digest_auth_token, new_auth_token
+from app.models.auth_session import AuthSession
 from app.models.auth_token import AuthToken
 from app.models.user import User
+from app.services.admin_service import AdminService
 from app.services.auth_service import RESET_PASSWORD_PURPOSE, VERIFY_EMAIL_PURPOSE, AuthService
+from app.services.session_service import SessionService
+from app.tests.test_admin_users import make_user
 from app.tests.test_auth_service import seed_auth_user
 from app.tests.test_reply_credits_postgres import postgres_credits
 
@@ -29,6 +33,38 @@ async def wait_for_database_block_or_completion(
             if await observer.scalar(text("SELECT cardinality(pg_blocking_pids(:pid)) > 0"), {"pid": pid}):
                 return
             await asyncio.sleep(0.01)
+
+
+async def test_postgres_admin_revocation_includes_a_concurrent_rotated_session(postgres_credits: async_sessionmaker[AsyncSession]) -> None:
+    actor = await make_user(postgres_credits, f"admin-{uuid4()}@example.test", superadmin=True)
+    target = await make_user(postgres_credits, f"target-{uuid4()}@example.test")
+    async with postgres_credits() as refresh, postgres_credits() as admin:
+        service = SessionService(refresh)
+        original = await service.issue(user_id=target.id, auth_version=target.auth_version)
+        await refresh.commit()
+        await service.rotate(original.raw_token)
+        pid = await admin.scalar(select(func.pg_backend_pid()))
+        assert isinstance(pid, int)
+
+        async def revoke() -> None:
+            await AdminService(admin).apply_user_action(actor_id=actor.id, user_id=target.id, action="revoke_sessions")
+            await admin.commit()
+
+        task = asyncio.create_task(revoke())
+        try:
+            await wait_for_database_block_or_completion(postgres_credits, pid=pid, finished=task.done)
+            await refresh.commit()
+            async with asyncio.timeout(5):
+                await task
+        finally:
+            if not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+
+    async with postgres_credits() as session:
+        sessions = (await session.scalars(select(AuthSession).where(AuthSession.user_id == target.id))).all()
+        assert len(sessions) == 2
+        assert all(item.revoked_at is not None for item in sessions)
 
 
 @pytest.mark.asyncio

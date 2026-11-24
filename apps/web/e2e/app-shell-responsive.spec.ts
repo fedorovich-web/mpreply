@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { mockIntegrationsApi } from "./helpers/integrations-api";
@@ -44,6 +45,7 @@ test("administration summary keeps loaded metrics inside the content area", asyn
     users_total: 123456, subscriptions_active: 8500, usage_events_30d: 123456789,
     ai_cost_estimate_30d: 123456.78, integration_failures_24h: 123, replies_failed_24h: 456,
   } }));
+  await page.route("**/api/admin/users?**", (route) => route.fulfill({ json: { items: [], total: 0 } }));
   for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/app/admin", { waitUntil: "networkidle" });
@@ -54,6 +56,77 @@ test("administration summary keeps loaded metrics inside the content area", asyn
     );
     expect(clipped).toEqual([]);
   }
+});
+
+test("administrators can search and moderate accounts on the mobile admin page", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 840 });
+  await mockIntegrationsApi(page, "owner");
+  const createdAt = "2026-09-30T06:00:00Z";
+  const admin = {
+    id: "22222222-2222-4222-8222-222222222222", email: "admin@example.com", name: "Administrator",
+    status: "active", is_superadmin: true, created_at: createdAt, updated_at: createdAt, email_verified_at: createdAt,
+  };
+  const buyer = {
+    ...admin, id: "11111111-1111-4111-8111-111111111111", email: `${"seller".repeat(42)}@example.com`,
+    name: "Продавец", is_superadmin: false,
+  };
+  await page.route("**/api/auth/me", (route) => route.fulfill({ json: admin }));
+  await page.route("**/api/admin/overview", (route) => route.fulfill({ status: 503 }));
+  await page.route("**/api/admin/users?**", (route) => {
+    const { searchParams } = new URL(route.request().url());
+    const offset = searchParams.get("offset");
+    if (searchParams.get("q") === buyer.email) return route.fulfill({ json: { items: [buyer], total: 1 } });
+    return route.fulfill({ json: { items: [offset === "20" ? buyer : admin], total: 21 } });
+  });
+  let actionAttempts = 0;
+  await page.route(`**/api/admin/users/${buyer.id}/actions`, (route) => {
+    expect(route.request().headers()["x-csrf-token"]).toBe("1");
+    const body = route.request().postDataJSON();
+    actionAttempts += 1;
+    if (actionAttempts === 1) return route.fulfill({ status: 503 });
+    buyer.status = body.action === "block" ? "blocked" : "active";
+    return route.fulfill({ json: buyer });
+  });
+
+  await page.goto("/app/admin");
+  const users = page.getByRole("region", { name: "Пользователи" });
+  await expect(users.getByText("Суперадминистратор", { exact: true })).toBeVisible();
+  await expect(users.getByRole("button", { name: "Заблокировать" })).toHaveCount(0);
+  await users.getByRole("button", { name: "Далее" }).click();
+  await expect(users.getByText(buyer.email)).toBeVisible();
+  const search = users.getByRole("searchbox", { name: "Имя или email" });
+  await search.fill(buyer.email);
+  await search.press("Enter");
+  await expect(users.getByRole("button", { name: "Далее" })).toBeDisabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+  expect((await new AxeBuilder({ page }).include("#admin-users").withTags(wcagTags).analyze()).violations).toEqual([]);
+
+  const block = users.getByRole("button", { name: "Заблокировать" });
+  await block.click();
+  const confirmation = page.getByRole("dialog", { name: "Заблокировать пользователя?" });
+  await expect(confirmation.getByRole("button", { name: "Отмена" })).toBeFocused();
+  expect((await new AxeBuilder({ page }).include(".admin-users-dialog").withTags(wcagTags).analyze()).violations).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(confirmation).toBeHidden();
+  await expect(block).toBeFocused();
+  await expect.poll(() => actionAttempts).toBe(0);
+
+  await block.click();
+  await confirmation.getByRole("button", { name: "Заблокировать" }).click();
+  await expect(confirmation.getByRole("alert")).toContainText("Не удалось выполнить действие");
+  await confirmation.getByRole("button", { name: "Заблокировать" }).click();
+  await expect(confirmation).toBeHidden();
+  await expect(users.getByText("Заблокирован", { exact: true })).toBeVisible();
+  await expect(users.getByRole("button", { name: "Разблокировать" })).toBeFocused();
+
+  await users.getByRole("button", { name: "Разблокировать" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Разблокировать" }).click();
+  await expect(users.getByText("Активен", { exact: true })).toBeVisible();
+
+  await users.getByRole("button", { name: "Завершить сеансы" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Завершить сеансы" }).click();
+  await expect(users.getByRole("status").filter({ hasText: "Все сеансы завершены" })).toBeVisible();
 });
 
 test("authenticated desktop shell exposes the approved product navigation", async ({ page }) => {

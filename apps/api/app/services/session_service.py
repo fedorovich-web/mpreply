@@ -70,9 +70,17 @@ class SessionService:
         )
 
     async def rotate(self, raw_token: str) -> RefreshSessionGrant:
+        digest = digest_auth_token(raw_token)
+        user_id = await self.session.scalar(select(AuthSession.user_id).where(AuthSession.token_digest == digest))
+        if user_id is None:
+            raise SessionError("invalid_refresh_session")
+        # Account-wide revocation holds this lock before updating refresh rows.
+        user = await self.session.scalar(
+            select(User).where(User.id == user_id).with_for_update(key_share=True).execution_options(populate_existing=True)
+        )
         result = await self.session.execute(
             select(AuthSession)
-            .where(AuthSession.token_digest == digest_auth_token(raw_token))
+            .where(AuthSession.token_digest == digest)
             .with_for_update()
             .execution_options(populate_existing=True)
         )
@@ -84,15 +92,8 @@ class SessionService:
                 await self.revoke_family(auth_session.family_id, revoked_at=self._now())
                 raise SessionError("refresh_session_reused")
             raise SessionError("invalid_refresh_session")
-        user_result = await self.session.execute(
-            select(User).where(
-                User.id == auth_session.user_id,
-                User.status.in_(("active", "demo")),
-            ).execution_options(populate_existing=True)
-        )
-        user = user_result.scalar_one_or_none()
         now = self._now()
-        if (utc(auth_session.expires_at) <= now or user is None
+        if (utc(auth_session.expires_at) <= now or user is None or user.status not in {"active", "demo"}
                 or user.email_verified_at is None or user.auth_version != auth_session.auth_version):
             raise SessionError("invalid_refresh_session")
 

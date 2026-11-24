@@ -1,15 +1,19 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 import structlog
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import create_access_token
+from app.core.auth_tokens import digest_auth_token
 from app.core.config import Settings, get_settings
 from app.core.cookies import (
+    ACCESS_COOKIE_NAME,
     REFRESH_COOKIE_NAME,
     clear_access_cookie,
     clear_refresh_cookie,
@@ -20,6 +24,7 @@ from app.core.csrf import require_csrf_header
 from app.core.rate_limit import enforce_auth_rate_limit
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
+from app.models.auth_session import AuthSession
 from app.models.user import User
 from app.schemas.auth import (
     AuthSessionResponse,
@@ -379,6 +384,37 @@ async def logout(
         await session.commit()
     _clear_session_cookies(response)
     return MessageResponse(message="Logged out")
+
+
+@router.get("/session-status", status_code=204, response_class=Response)
+async def session_status(request: Request, session: AsyncSession = Depends(get_db_session)) -> Response:
+    headers = {"cache-control": "private, no-store"}
+    access_cookie = request.cookies.get(ACCESS_COOKIE_NAME)
+    if access_cookie:
+        try:
+            user = await get_current_user(request, session, access_cookie=access_cookie, authorization=None)
+        except HTTPException as error:
+            if error.status_code != status.HTTP_401_UNAUTHORIZED:
+                raise
+        else:
+            if user.status == "active":
+                return Response(status_code=204, headers=headers)
+
+    refresh_cookie = request.cookies.get(REFRESH_COOKIE_NAME)
+    if refresh_cookie:
+        active_session = await session.scalar(
+            select(AuthSession.id).join(User, User.id == AuthSession.user_id).where(
+                AuthSession.token_digest == digest_auth_token(refresh_cookie),
+                AuthSession.revoked_at.is_(None),
+                AuthSession.expires_at > datetime.now(UTC),
+                User.status == "active",
+                User.email_verified_at.is_not(None),
+                User.auth_version == AuthSession.auth_version,
+            )
+        )
+        if active_session is not None:
+            return Response(status_code=204, headers=headers)
+    return Response(status_code=401, headers=headers)
 
 
 @router.get("/me", response_model=UserResponse)

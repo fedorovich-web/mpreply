@@ -76,6 +76,9 @@ class AuthService:
         password_matches = await asyncio.to_thread(verify_password, password, password_hash)
         if user is None or not user.password_hash or not password_matches:
             raise unauthorized("Invalid email or password")
+        user = await self._get_user(user.id)
+        if user.password_hash != password_hash:
+            raise unauthorized("Invalid email or password")
         if user.status != "active":
             raise unauthorized("User account is not active")
         if user.email_verified_at is None:
@@ -149,6 +152,8 @@ class AuthService:
 
     async def change_password(self, *, user: User, current_password: str, new_password: str) -> User:
         user = await self._get_user(user.id)
+        if user.status != "active":
+            raise unauthorized("User account is not active")
         if not user.password_hash:
             raise bad_request("Use password reset to set a password for this account")
         if not await asyncio.to_thread(verify_password, current_password, user.password_hash):
@@ -228,6 +233,8 @@ class AuthService:
         if user_id is None:
             raise bad_request("Invalid or expired token")
         user = await self._get_user(user_id)
+        if user.status != "active":
+            raise bad_request("Invalid or expired token")
         result = await self.session.execute(
             select(AuthToken)
             .where(

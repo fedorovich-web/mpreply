@@ -4,6 +4,175 @@
 	margin: 0 auto;
 }
 
+.admin-users-link {
+	justify-self: start;
+	color: var(--color-brand-primary-strong);
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
+}
+
+.admin-users {
+	min-width: 0;
+	margin-block-start: var(--space-6);
+	border: 1px solid var(--color-border-card);
+	border-radius: var(--radius-panel);
+	background: var(--color-bg-surface);
+	padding: var(--space-5);
+	scroll-margin-top: var(--space-8);
+}
+
+.admin-users h2,
+.admin-users-dialog h3 {
+	margin: 0;
+	color: var(--color-text-primary);
+	font-size: var(--font-size-xl);
+	line-height: 1.25;
+}
+
+.admin-users-search {
+	display: grid;
+	gap: var(--space-2);
+	max-width: 34rem;
+	margin-block: var(--space-4);
+}
+
+.admin-users-search label {
+	color: var(--color-text-primary);
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+}
+
+.admin-users-search-controls,
+.admin-users-row-actions,
+.admin-users-dialog-actions,
+.admin-users-pagination,
+.admin-users-pagination > div {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.admin-users-search input {
+	flex: 1 1 13rem;
+	min-width: 0;
+	min-height: 2.5rem;
+	border: 1px solid var(--color-border-strong);
+	border-radius: var(--radius-md);
+	background: var(--color-bg-surface);
+	color: var(--color-text-primary);
+	padding: var(--space-2) var(--space-3);
+	font: inherit;
+}
+
+.admin-users-search input:focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+.admin-users-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.admin-users-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1.5fr) minmax(7rem, 0.76fr) minmax(7rem, 0.72fr) minmax(10rem, 1fr);
+	gap: var(--space-4);
+	align-items: center;
+	min-width: 0;
+	border-top: 1px solid var(--color-border-subtle);
+	padding-block: var(--space-4);
+	font-size: var(--font-size-sm);
+}
+
+.admin-users-identity,
+.admin-users-account-state,
+.admin-users-date {
+	display: grid;
+	justify-items: start;
+	min-width: 0;
+	gap: var(--space-1);
+	overflow-wrap: anywhere;
+}
+
+.admin-users-identity strong {
+	font-size: var(--font-size-md);
+}
+
+.admin-users-identity small,
+.admin-users-account-state small,
+.admin-users-date small,
+.admin-users-row-actions > span {
+	color: var(--color-text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.admin-users-status {
+	font-weight: var(--font-weight-semibold);
+}
+
+.admin-users-status-active,
+.admin-users-notice {
+	color: var(--color-success-text);
+}
+
+.admin-users-status-blocked,
+.admin-users-error {
+	color: var(--color-danger-text);
+}
+
+.admin-users-pagination {
+	justify-content: space-between;
+	border-top: 1px solid var(--color-border-subtle);
+	padding-top: var(--space-4);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+}
+
+.admin-users-message,
+.admin-users-notice {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	align-items: center;
+	margin-block: var(--space-4);
+	overflow-wrap: anywhere;
+}
+
+.admin-users-dialog {
+	width: min(29rem, calc(100% - 2rem));
+	max-height: calc(100% - 2rem);
+	margin: auto;
+	border: 1px solid var(--color-border-card);
+	border-radius: var(--radius-panel);
+	background: var(--color-bg-surface);
+	color: var(--color-text-primary);
+	padding: var(--space-5);
+	overflow-wrap: anywhere;
+	box-shadow: var(--shadow-lg);
+}
+
+.admin-users-dialog::backdrop {
+	background: var(--color-overlay-dark);
+}
+
+.admin-users-dialog strong {
+	display: block;
+	margin-top: var(--space-3);
+}
+
+.admin-users-dialog p {
+	margin-block: var(--space-2) var(--space-4);
+}
+
+.admin-users-dialog-actions {
+	justify-content: flex-end;
+}
+
 .admin-overview-state {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
@@ -537,6 +706,14 @@
 }
 
 @media (max-width: 1050px) {
+	.admin-users-row {
+		grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.7fr);
+	}
+
+	.admin-users-row-actions {
+		grid-column: 1 / -1;
+	}
+
 	.admin-command-head {
 		grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
 	}
@@ -623,6 +800,19 @@
 }
 
 @media (max-width: 520px) {
+	.admin-users {
+		padding: var(--space-3);
+	}
+
+	.admin-users-row {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-3);
+	}
+
+	.admin-users-identity {
+		grid-column: 1 / -1;
+	}
+
 	.admin-overview-state {
 		grid-template-columns: 1fr;
 		min-height: 0;

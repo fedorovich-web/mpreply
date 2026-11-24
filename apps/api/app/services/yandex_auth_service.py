@@ -24,13 +24,16 @@ class YandexAuthService:
         self.session = session
         self.audit = AuditService(session)
 
-    async def _identity_user(self, subject: str) -> User | None:
-        return await self.session.scalar(select(User).join(AuthIdentity, AuthIdentity.user_id == User.id).where(
+    async def _identity_user(self, subject: str, *, lock_for_login: bool = False) -> User | None:
+        statement = select(User).join(AuthIdentity, AuthIdentity.user_id == User.id).where(
             AuthIdentity.provider == "yandex", AuthIdentity.subject == subject,
-        ))
+        )
+        if lock_for_login:
+            statement = statement.with_for_update(of=User, key_share=True).execution_options(populate_existing=True)
+        return await self.session.scalar(statement)
 
     async def resolve(self, *, profile: YandexProfile, attempt: OAuthAttempt, now: datetime, link_user: User | None = None) -> User:
-        existing = await self._identity_user(profile.subject)
+        existing = await self._identity_user(profile.subject, lock_for_login=attempt.mode == "login")
         if attempt.mode == "link":
             if link_user is None or link_user.id != attempt.user_id:
                 raise YandexIDError("oauth_expired")
@@ -63,7 +66,7 @@ class YandexAuthService:
             raise YandexIDError("email_required")
         email = profile.default_email.strip().lower()
         if await self.session.scalar(select(User.id).where(User.email == email)) is not None:
-            existing = await self._identity_user(profile.subject)
+            existing = await self._identity_user(profile.subject, lock_for_login=True)
             if existing is not None:
                 return _active(existing)
             raise YandexIDError("account_link_required")
@@ -75,7 +78,7 @@ class YandexAuthService:
                 self.session.add(AuthIdentity(provider="yandex", subject=profile.subject, user_id=user.id))
                 await self.session.flush()
         except IntegrityError:
-            existing = await self._identity_user(profile.subject)
+            existing = await self._identity_user(profile.subject, lock_for_login=True)
             if existing is not None:
                 return _active(existing)
             if await self.session.scalar(select(User.id).where(User.email == email)) is not None:
