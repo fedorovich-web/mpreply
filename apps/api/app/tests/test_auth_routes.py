@@ -112,14 +112,17 @@ async def _create_verified_session(
 @pytest.mark.asyncio
 async def test_public_session_status_checks_refresh_without_rotating(auth_routes: AuthRouteHarness) -> None:
     path = "/api/auth/session-status"
-    assert (await auth_routes.client.get(path)).status_code == 401
+    guest = await auth_routes.client.get(path)
+    assert guest.status_code == 200
+    assert guest.json() == {"authenticated": False}
+    assert guest.headers["cache-control"] == "private, no-store"
     user_id, grant = await _create_verified_session(auth_routes.session_factory)
     _set_client_cookie(auth_routes.client, REFRESH_COOKIE_NAME, grant.raw_token, path="/api/auth")
 
     for _ in range(2):
         response = await auth_routes.client.get(path)
-        assert response.status_code == 204
-        assert response.content == b""
+        assert response.status_code == 200
+        assert response.json() == {"authenticated": True}
         assert response.headers["cache-control"] == "private, no-store"
         assert "set-cookie" not in response.headers
 
@@ -129,7 +132,7 @@ async def test_public_session_status_checks_refresh_without_rotating(auth_routes
         user.auth_version += 1
         await session.commit()
 
-    assert (await auth_routes.client.get(path)).status_code == 401
+    assert (await auth_routes.client.get(path)).json() == {"authenticated": False}
 
 
 @pytest.mark.asyncio
@@ -138,7 +141,7 @@ async def test_public_session_status_rejects_a_blocked_users_access_cookie(auth_
     access = create_access_token(user_id=user_id, auth_version=grant.auth_version)
     _set_client_cookie(auth_routes.client, ACCESS_COOKIE_NAME, access, path="/")
     path = "/api/auth/session-status"
-    assert (await auth_routes.client.get(path)).status_code == 204
+    assert (await auth_routes.client.get(path)).json() == {"authenticated": True}
 
     async with auth_routes.session_factory() as session:
         user = await session.get(User, user_id)
@@ -146,7 +149,7 @@ async def test_public_session_status_rejects_a_blocked_users_access_cookie(auth_
         user.status = "blocked"
         await session.commit()
 
-    assert (await auth_routes.client.get(path)).status_code == 401
+    assert (await auth_routes.client.get(path)).json() == {"authenticated": False}
 
 
 @pytest.mark.parametrize("path", ["/api/auth/refresh", "/api/auth/logout"])

@@ -5,7 +5,7 @@ import { appOrigin } from "../lib/site-config";
 test("public header shows the workspace button for an active session", async ({ page, baseURL }) => {
   let active = false;
   await page.route("**/api/auth/session-status", (route) => route.fulfill({
-    status: active ? 204 : 401,
+    json: { authenticated: active },
     headers: {
       "access-control-allow-origin": new URL(baseURL!).origin,
       "access-control-allow-credentials": "true",

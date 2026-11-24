@@ -386,9 +386,11 @@ async def logout(
     return MessageResponse(message="Logged out")
 
 
-@router.get("/session-status", status_code=204, response_class=Response)
-async def session_status(request: Request, session: AsyncSession = Depends(get_db_session)) -> Response:
-    headers = {"cache-control": "private, no-store"}
+@router.get("/session-status")
+async def session_status(
+    request: Request, response: Response, session: AsyncSession = Depends(get_db_session),
+) -> dict[str, bool]:
+    response.headers["cache-control"] = "private, no-store"
     access_cookie = request.cookies.get(ACCESS_COOKIE_NAME)
     if access_cookie:
         try:
@@ -398,7 +400,7 @@ async def session_status(request: Request, session: AsyncSession = Depends(get_d
                 raise
         else:
             if user.status == "active":
-                return Response(status_code=204, headers=headers)
+                return {"authenticated": True}
 
     refresh_cookie = request.cookies.get(REFRESH_COOKIE_NAME)
     if refresh_cookie:
@@ -413,8 +415,8 @@ async def session_status(request: Request, session: AsyncSession = Depends(get_d
             )
         )
         if active_session is not None:
-            return Response(status_code=204, headers=headers)
-    return Response(status_code=401, headers=headers)
+            return {"authenticated": True}
+    return {"authenticated": False}
 
 
 @router.get("/me", response_model=UserResponse)
